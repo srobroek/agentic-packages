@@ -1,0 +1,16 @@
+name: my-project
+version: 0.1.0
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - git@github.com:srobroek/agentic-packages.git
+
+scripts:
+  install-agentic-tools: "apm install --target claude,codex,agent-skills"
+  compile-agentic-tools: "apm compile --target codex"
+  compile-agentic-tools-claude: "apm compile --target claude"
+  patch-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
+  audit-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/audit-agentic-assets.py"
+  setup-agentic-tools: "apm run install-agentic-tools && apm run compile-agentic-tools && apm run patch-agentic-tools && apm run audit-agentic-tools"

@@ -1,0 +1,17 @@
+apm.lock.yaml
+apm_modules/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.codex/
+.claude/
+.github/
+.cursor/
+.opencode/
+.gemini/
+.windsurf/
+.agents/
+build/
+dist/
+__pycache__/
+*.pyc

@@ -1,0 +1,115 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/branch-check.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/agentic-source-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/bash-guard.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
+            "command": "./scripts/gh-rate-guard.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git *)",
+            "command": "./scripts/git-guard.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/pre-commit-test-gate.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/attribution-guard.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git merge*)",
+            "command": "./scripts/no-ff-guard.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr merge*)|Bash(*gh pr merge*)",
+            "command": "./scripts/squash-merge-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/allow-chezmoi-apply.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/agentic-source-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/speckit-task-issue-sync.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(cargo test*)|Bash(cargo nextest*)|Bash(pnpm test*)|Bash(pnpm run test*)|Bash(npm test*)|Bash(pytest*)|Bash(python -m pytest*)|Bash(uv run pytest*)|Bash(go test*)|Bash(just test*)|Bash(task test*)|Bash(vitest*)|Bash(jest*)|Bash(mocha*)|Bash(pre-commit run*)|Bash(make test*)",
+            "command": "./scripts/test-state-tracker.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/speckit-task-commit-check.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/stuck-reset.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/uncommitted-warn.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
