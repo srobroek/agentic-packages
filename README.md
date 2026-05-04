@@ -13,6 +13,7 @@ From this package directory:
 
 ```bash
 apm run sync-agent-metadata
+apm run build-marketplace
 apm compile --validate --local-only --target codex
 ```
 
@@ -21,16 +22,25 @@ installed on the machine yet.
 
 ## Project usage
 
-Add this package to a project `apm.yml`, then expose project-local scripts that
-call the finalizers from `apm_modules/_local/agentic-packages` or the installed
-Git dependency path. See `templates/project-apm.yml`.
+Register the marketplace, browse available packages, then add selected package
+entries to the project `apm.yml`. Project setup should call the finalizers from
+`apm_modules/_local/agentic-packages` or the installed Git dependency path. See
+`templates/project-apm.yml`.
 
-For GitHub installation:
+For marketplace installation:
+
+```bash
+apm marketplace add srobroek/agentic-packages --name agentic
+apm marketplace browse agentic
+apm install agentic-core@agentic
+```
+
+For direct GitHub installation:
 
 ```yaml
 dependencies:
   apm:
-    - git@github.com:srobroek/agentic-packages.git
+    - srobroek/agentic-packages
 ```
 
 The important order is:

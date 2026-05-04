@@ -29,8 +29,9 @@
       - mattpocock/skills/skills/engineering/to-issues
   ```
 - Version policy: always track the latest upstream default branch for Matt
-  Pocock skills. Do not pin `matt-*` marketplace entries unless a project
-  explicitly needs reproducibility for a migration or audit.
+  Pocock skills with `ref: main`. Do not pin `matt-*` marketplace entries to a
+  commit unless a project explicitly needs reproducibility for a migration or
+  audit.
 - Installation source: upstream `.claude-plugin/plugin.json` marketplace
   plugin, plus upstream `apm.yml`.
 - Skills observed during APM verification: `caveman`, `diagnose`, `grill-me`,

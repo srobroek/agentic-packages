@@ -301,51 +301,64 @@ marketplace:
     - name: matt-skills
       description: "Full Matt Pocock skills package."
       source: mattpocock/skills
+      ref: main
     - name: matt-caveman
       description: "Ultra-compressed communication mode."
       source: mattpocock/skills
       subdir: skills/productivity/caveman
+      ref: main
     - name: matt-diagnose
       description: "Disciplined diagnosis loop for hard bugs and regressions."
       source: mattpocock/skills
       subdir: skills/engineering/diagnose
+      ref: main
     - name: matt-grill-me
       description: "Planning grill without project docs."
       source: mattpocock/skills
       subdir: skills/productivity/grill-me
+      ref: main
     - name: matt-grill-with-docs
       description: "Planning grill using domain docs and ADRs."
       source: mattpocock/skills
       subdir: skills/engineering/grill-with-docs
+      ref: main
     - name: matt-improve-codebase-architecture
       description: "Find architecture deepening opportunities."
       source: mattpocock/skills
       subdir: skills/engineering/improve-codebase-architecture
+      ref: main
     - name: matt-setup-skills
       description: "Scaffold repo-local docs consumed by Matt Pocock skills."
       source: mattpocock/skills
       subdir: skills/engineering/setup-matt-pocock-skills
+      ref: main
     - name: matt-tdd
       description: "Test-driven development loop."
       source: mattpocock/skills
       subdir: skills/engineering/tdd
+      ref: main
     - name: matt-to-issues
       description: "Break plans and specs into independently grabbable issues."
       source: mattpocock/skills
       subdir: skills/engineering/to-issues
+      ref: main
     - name: matt-to-prd
       description: "Turn current conversation context into a PRD."
       source: mattpocock/skills
       subdir: skills/engineering/to-prd
+      ref: main
     - name: matt-triage
       description: "Triage issues through a role/state machine."
       source: mattpocock/skills
       subdir: skills/engineering/triage
+      ref: main
     - name: matt-write-a-skill
       description: "Create new agent skills."
       source: mattpocock/skills
       subdir: skills/productivity/write-a-skill
+      ref: main
     - name: matt-zoom-out
       description: "Ask for broader codebase context."
       source: mattpocock/skills
       subdir: skills/engineering/zoom-out
+      ref: main

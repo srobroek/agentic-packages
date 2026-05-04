@@ -3,17 +3,21 @@
 
 from __future__ import annotations
 
+import json
+from collections import OrderedDict
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 APM_YML = ROOT / "apm.yml"
+MARKETPLACE_JSON = ROOT / "marketplace.json"
+LOCAL_SOURCE = "srobroek/agentic-packages"
 
 
 CORE_PACKAGE = {
     "name": "agentic-core",
     "description": "Full shared package: agents, skills, hooks, instructions, contexts, and scripts.",
-    "source": "srobroek/agentic-packages",
+    "source": LOCAL_SOURCE,
     "ref": "main",
 }
 
@@ -55,7 +59,7 @@ def package_yaml(package: dict[str, str]) -> str:
     return "\n".join(lines)
 
 
-def build_marketplace_block() -> str:
+def build_packages() -> list[dict[str, str]]:
     packages: list[dict[str, str]] = [CORE_PACKAGE]
     for skill_dir in sorted((ROOT / ".apm" / "skills").iterdir()):
         if not (skill_dir / "SKILL.md").is_file():
@@ -64,7 +68,7 @@ def build_marketplace_block() -> str:
             {
                 "name": f"agentic-skill-{skill_dir.name}",
                 "description": description_for_skill(skill_dir),
-                "source": "srobroek/agentic-packages",
+                "source": LOCAL_SOURCE,
                 "subdir": f".apm/skills/{skill_dir.name}",
                 "ref": "main",
             }
@@ -74,6 +78,7 @@ def build_marketplace_block() -> str:
             "name": "matt-skills",
             "description": "Full Matt Pocock skills package.",
             "source": "mattpocock/skills",
+            "ref": "main",
         }
     )
     for name, description, subdir in MATT_SKILLS:
@@ -83,8 +88,14 @@ def build_marketplace_block() -> str:
                 "description": description,
                 "source": "mattpocock/skills",
                 "subdir": subdir,
+                "ref": "main",
             }
         )
+    return packages
+
+
+def build_marketplace_block() -> str:
+    packages = build_packages()
 
     body = [
         "marketplace:",
@@ -99,13 +110,51 @@ def build_marketplace_block() -> str:
     return "\n".join(body) + "\n"
 
 
+def source_json(package: dict[str, str]) -> OrderedDict[str, str]:
+    source = OrderedDict()
+    if subdir := package.get("subdir"):
+        source["source"] = "git-subdir"
+        source["url"] = package["source"]
+        source["path"] = subdir
+    else:
+        source["source"] = "github"
+        source["repo"] = package["source"]
+    if ref := package.get("ref"):
+        source["ref"] = ref
+    return source
+
+
+def build_marketplace_json() -> dict:
+    doc = OrderedDict()
+    doc["name"] = "agentic-packages"
+    doc["owner"] = OrderedDict(
+        [
+            ("name", "srobroek"),
+            ("url", "https://github.com/srobroek"),
+        ]
+    )
+    doc["plugins"] = []
+    for package in build_packages():
+        plugin = OrderedDict()
+        plugin["name"] = package["name"]
+        plugin["description"] = package["description"]
+        plugin["source"] = source_json(package)
+        doc["plugins"].append(plugin)
+    return doc
+
+
 def main() -> int:
     text = APM_YML.read_text(encoding="utf-8")
     marker = "\nmarketplace:\n"
     if marker in text:
         text = text[: text.index(marker)].rstrip() + "\n\n"
     APM_YML.write_text(text.rstrip() + "\n\n" + build_marketplace_block(), encoding="utf-8")
+    MARKETPLACE_JSON.write_text(
+        json.dumps(build_marketplace_json(), indent=2) + "\n",
+        encoding="utf-8",
+    )
     print(f"updated {APM_YML}")
+    print(f"updated {MARKETPLACE_JSON}")
     return 0
 
 
