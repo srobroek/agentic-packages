@@ -355,14 +355,9 @@ marketplace:
       subdir: .apm/wrappers/docs-architecture
       ref: main
     - name: frontend
-      description: "Frontend development bundle with Impeccable design, Playwright browser automation MCP, and Hobson frontend patterns."
+      description: "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents."
       source: srobroek/agentic-packages
       subdir: .apm/wrappers/frontend
-      ref: main
-    - name: frontend-design
-      description: "Frontend design bundle with browser automation, design skills, and Hobson frontend/UI/accessibility agents."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/frontend-design
       ref: main
     - name: governance
       description: "Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows."

@@ -13,6 +13,7 @@ APM = ROOT / ".apm"
 WRAPPERS = APM / "wrappers"
 HOBSON = "wshobson/agents/plugins"
 MATT = "mattpocock/skills/skills"
+RETIRED_GENERATED_WRAPPERS = ("frontend-design",)
 
 
 @dataclass(frozen=True)
@@ -295,18 +296,7 @@ BUNDLES: tuple[Bundle, ...] = (
     ),
     Bundle(
         name="frontend",
-        description="Frontend development bundle with Impeccable design, Playwright browser automation MCP, and Hobson frontend patterns.",
-        skills=("playwright",),
-        instructions=("30-frontend", "31-frontend-ui"),
-        dependencies=(
-            "pbakaus/impeccable/.agents/skills/impeccable#main",
-            f"{HOBSON}/frontend-mobile-development#main",
-        ),
-        mcp_dependencies=(PLAYWRIGHT_MCP,),
-    ),
-    Bundle(
-        name="frontend-design",
-        description="Frontend design bundle with browser automation, design skills, and Hobson frontend/UI/accessibility agents.",
+        description="Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents.",
         skills=("playwright",),
         instructions=("30-frontend", "31-frontend-ui"),
         dependencies=(
@@ -468,6 +458,12 @@ def materialize_bundle(bundle: Bundle) -> None:
 
 
 def main() -> int:
+    for wrapper_name in RETIRED_GENERATED_WRAPPERS:
+        wrapper = WRAPPERS / wrapper_name
+        if wrapper.exists():
+            shutil.rmtree(wrapper)
+            print(f"removed {wrapper}")
+
     for bundle in BUNDLES:
         materialize_bundle(bundle)
         print(f"updated {WRAPPERS / bundle.name}")

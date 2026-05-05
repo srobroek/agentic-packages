@@ -33,10 +33,8 @@ Additional bundles:
   first-party skill writing, documentation standards, and plugin evaluation
 - `debugging`: diagnose, unstuck, adversarial challenger, error diagnosis, and
   incident debugging workflows
-- `frontend`: Impeccable design, Playwright browser automation MCP, and Hobson
-  frontend patterns
-- `frontend-design`: Playwright, design/interface skills, and Hobson
-  frontend/UI/accessibility agents
+- `frontend`: Impeccable, Interface Design, Stitch skills, Playwright browser
+  automation MCP, and Hobson frontend/UI/accessibility agents
 - `docs-architecture`: Hobson HADS, code docs, documentation generation, and C4
   workflows
 - `infrastructure`: Hobson cloud, Kubernetes, CI/CD, deployment, Terraform, and
