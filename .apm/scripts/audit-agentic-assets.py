@@ -136,7 +136,6 @@ def main() -> int:
         "mattpocock/skills:to-issues",
         "mattpocock/skills:to-prd",
         "mattpocock/skills:triage",
-        "mattpocock/skills:write-a-skill",
         "mattpocock/skills:zoom-out",
         "remotion",
         "interface-design",

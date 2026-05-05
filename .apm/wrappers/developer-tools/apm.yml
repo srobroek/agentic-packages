@@ -1,0 +1,16 @@
+name: developer-tools
+version: 0.1.0
+description: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/developer-essentials#main
+    - wshobson/agents/plugins/debugging-toolkit#main
+    - wshobson/agents/plugins/comprehensive-review#main
+    - wshobson/agents/plugins/git-pr-workflows#main
+    - wshobson/agents/plugins/documentation-generation#main

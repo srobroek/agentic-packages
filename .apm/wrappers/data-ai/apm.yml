@@ -1,0 +1,17 @@
+name: data-ai
+version: 0.1.0
+description: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/llm-application-dev#main
+    - wshobson/agents/plugins/data-engineering#main
+    - wshobson/agents/plugins/machine-learning-ops#main
+    - wshobson/agents/plugins/database-design#main
+    - wshobson/agents/plugins/database-migrations#main
+    - wshobson/agents/plugins/database-cloud-optimization#main

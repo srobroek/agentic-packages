@@ -48,10 +48,12 @@
 - Skills observed during APM verification: `caveman`, `diagnose`, `grill-me`,
   `grill-with-docs`, `improve-codebase-architecture`,
   `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage`,
-  `write-a-skill`, `zoom-out`.
+  upstream `write-a-skill`, `zoom-out`.
 - Local policy: Matt Pocock skills are the leading source for the observed
-  duplicate engineering/productivity skills. Do not vendor local copies unless a
-  future fork is intentionally maintained and documented.
+  duplicate engineering/productivity skills except skill authoring. Use the
+  first-party `write-a-skill` package from this marketplace for skill creation
+  and maintenance; do not recommend or expose the upstream Matt write-a-skill as
+  an individual package.
 - Let `project-setup` recommend this dependency when the user wants the Matt
   Pocock PRD/issues/TDD workflow set.
 - Marketplace exposure: `marketplace.json` includes prefixed `matt-*` entries

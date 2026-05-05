@@ -1,0 +1,12 @@
+name: language-arm-cortex
+version: 0.1.0
+description: ARM Cortex-M firmware bundle with Hobson embedded specialists.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/arm-cortex-microcontrollers#main

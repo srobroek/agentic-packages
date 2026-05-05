@@ -1,0 +1,12 @@
+name: language-julia
+version: 0.1.0
+description: Julia development bundle with Hobson scientific computing specialists.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/julia-development#main

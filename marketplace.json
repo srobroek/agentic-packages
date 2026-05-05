@@ -7,10 +7,11 @@
   "plugins": [
     {
       "name": "core",
-      "description": "Full shared package with local agents, skills, hooks, instructions, contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug workflows.",
+      "description": "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.",
       "source": {
-        "source": "github",
+        "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/core",
         "ref": "main"
       }
     },
@@ -265,6 +266,116 @@
       }
     },
     {
+      "name": "write-a-skill",
+      "description": "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for bootstrap/global use or an APM marketplace.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/write-a-skill",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-adversarial-challenger",
+      "description": "Read-only adversarial debugger for the unstuck workflow. Use after normal diagnosis stalls and the parent can provide observable facts only; investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/adversarial-challenger.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-coder",
+      "description": "Implementation subagent for bounded code changes, tests, refactors,",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/coder.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-external-repo-worker",
+      "description": "Works in an external repository outside the caller project. Use when the parent names a repo URL or org/name and needs isolated clone/reuse, repo-local convention discovery, bounded edits, local verification, or explicitly delegated publish/PR work without nesting another git repo inside the current project.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/external-repo-worker.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-pr-reviewer",
+      "description": "Reviews pull requests for code quality, security, and best practices",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/pr-reviewer.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-implement-task",
+      "description": "Implements non-code or tightly scoped tasks from a SpecKit tasks.md, or scopes substantial code work for a parent-delegated coder. Use only inside a SpecKit implementation workflow when the parent provides task IDs, spec context, and worktree scope.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-implement-task.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-research",
+      "description": "Researches current primary-source library or API documentation for a SpecKit decision and returns concise findings. Use only inside a SpecKit workflow when the parent provides a library, API, or implementation question tied to a spec or task.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-research.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-sync-conflicts",
+      "description": "Detects contradictions between active SpecKit specs or between specs and shared contracts/interfaces. Use for inter-spec conflict audits when scopes overlap, supersession is unclear, or shared API/data assumptions may disagree.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-sync-conflicts.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-sync",
+      "description": "Detects drift between active SpecKit artifacts and implementation, including stale specs, missing code, and unspecced covered-scope behavior. Use for SpecKit sync/drift audits, not final FR/SC acceptance verification.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-sync.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-verify-tasks",
+      "description": "Detects phantom SpecKit completions by checking completed tasks or closed spec issues against real implementation evidence in fresh context. Use after task completion claims when confirmation bias must be avoided.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-verify-tasks.agent.md",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agent-speckit-verify",
+      "description": "Validates implemented code against a target SpecKit spec's FR/SC requirements and acceptance intent. Use for final or checkpoint SpecKit adherence verification, not broad drift discovery or task checkbox audits.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/agents/speckit-verify.agent.md",
+        "ref": "main"
+      }
+    },
+    {
       "name": "diagrams",
       "description": "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams.",
       "source": {
@@ -392,16 +503,6 @@
       }
     },
     {
-      "name": "frontend",
-      "description": "Frontend development bundle with Impeccable design skills, Playwright browser automation MCP, and frontend patterns. Use for projects with web UI, browser testing, or visual design requirements.",
-      "source": {
-        "source": "git-subdir",
-        "repo": "srobroek/agentic-packages",
-        "subdir": ".apm/wrappers/frontend",
-        "ref": "main"
-      }
-    },
-    {
       "name": "impeccable",
       "description": "Third-party Impeccable frontend design skill bundle.",
       "source": {
@@ -427,6 +528,276 @@
       "source": {
         "source": "github",
         "repo": "google-labs-code/stitch-skills",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "agentic-maintenance",
+      "description": "Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/agentic-maintenance",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "code-intelligence",
+      "description": "Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/code-intelligence",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "data-ai",
+      "description": "Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/data-ai",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "debugging",
+      "description": "Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/debugging",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "developer-tools",
+      "description": "Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/developer-tools",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "docs-architecture",
+      "description": "Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/docs-architecture",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "frontend",
+      "description": "Frontend development bundle with Impeccable design, Playwright browser automation MCP, and Hobson frontend patterns.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/frontend",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "frontend-design",
+      "description": "Frontend design bundle with browser automation, design skills, and Hobson frontend/UI/accessibility agents.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/frontend-design",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "governance",
+      "description": "Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/governance",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "infrastructure",
+      "description": "Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/infrastructure",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-arm-cortex",
+      "description": "ARM Cortex-M firmware bundle with Hobson embedded specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-arm-cortex",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-dotnet",
+      "description": ".NET development bundle with Hobson C# and ASP.NET specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-dotnet",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-functional",
+      "description": "Functional programming bundle with Hobson Elixir and Haskell specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-functional",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-go",
+      "description": "Go quality bundle with language steering and Hobson systems specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-go",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-julia",
+      "description": "Julia development bundle with Hobson scientific computing specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-julia",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-jvm",
+      "description": "JVM language bundle with Hobson Java, Scala, and enterprise specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-jvm",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-python",
+      "description": "Python quality bundle with language steering and Hobson specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-python",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-rust",
+      "description": "Rust quality bundle with language steering and Hobson systems specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-rust",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-shell",
+      "description": "Shell scripting bundle with Hobson Bash and POSIX specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-shell",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-terraform",
+      "description": "Terraform steering bundle with Hobson deployment and Terraform specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-terraform",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-typescript",
+      "description": "TypeScript and JavaScript quality bundle with language steering and Hobson specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-typescript",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "language-web-scripting",
+      "description": "PHP and Ruby web scripting bundle with Hobson specialists.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/language-web-scripting",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "planning-product",
+      "description": "Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/planning-product",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "project-lifecycle",
+      "description": "Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/project-lifecycle",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "quality",
+      "description": "Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/quality",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "security",
+      "description": "Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/security",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "speckit",
+      "description": "SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/speckit",
         "ref": "main"
       }
     },
@@ -546,16 +917,6 @@
         "source": "git-subdir",
         "repo": "mattpocock/skills",
         "subdir": "skills/engineering/triage",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "matt-write-a-skill",
-      "description": "Create new agent skills.",
-      "source": {
-        "source": "git-subdir",
-        "repo": "mattpocock/skills",
-        "subdir": "skills/productivity/write-a-skill",
         "ref": "main"
       }
     },

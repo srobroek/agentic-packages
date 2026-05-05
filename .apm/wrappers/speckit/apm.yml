@@ -1,0 +1,8 @@
+name: speckit
+version: 0.1.0
+description: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto

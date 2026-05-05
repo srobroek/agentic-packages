@@ -16,8 +16,9 @@ LOCAL_SOURCE = "srobroek/agentic-packages"
 
 CORE_PACKAGE = {
     "name": "core",
-    "description": "Full shared package with local agents, skills, hooks, instructions, contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug workflows.",
+    "description": "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.",
     "source": LOCAL_SOURCE,
+    "subdir": ".apm/wrappers/core",
     "ref": "main",
 }
 
@@ -33,7 +34,6 @@ MATT_SKILLS = [
     ("matt-to-issues", "Break plans and specs into independently grabbable issues.", "skills/engineering/to-issues"),
     ("matt-to-prd", "Turn current conversation context into a PRD.", "skills/engineering/to-prd"),
     ("matt-triage", "Triage issues through a role/state machine.", "skills/engineering/triage"),
-    ("matt-write-a-skill", "Create new agent skills.", "skills/productivity/write-a-skill"),
     ("matt-zoom-out", "Ask for broader codebase context.", "skills/engineering/zoom-out"),
 ]
 
@@ -174,6 +174,13 @@ def description_for_wrapper(wrapper_dir: Path) -> str:
     return f"{wrapper_dir.name} wrapper package from agentic-packages."
 
 
+def description_for_agent(agent_path: Path) -> str:
+    for line in agent_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("description: "):
+            return line.removeprefix("description: ").strip().strip('"')
+    return f"{agent_path.stem.removesuffix('.agent')} agent from agentic-packages."
+
+
 def package_yaml(package: dict[str, str]) -> str:
     lines = [
         f"    - name: {package['name']}",
@@ -198,6 +205,17 @@ def build_packages() -> list[dict[str, str]]:
                 "description": description_for_skill(skill_dir),
                 "source": LOCAL_SOURCE,
                 "subdir": f".apm/skills/{skill_dir.name}",
+                "ref": "main",
+            }
+        )
+    for agent_path in sorted((ROOT / ".apm" / "agents").glob("*.agent.md")):
+        name = agent_path.name.removesuffix(".agent.md")
+        packages.append(
+            {
+                "name": f"agent-{name}",
+                "description": description_for_agent(agent_path),
+                "source": LOCAL_SOURCE,
+                "subdir": f".apm/agents/{agent_path.name}",
                 "ref": "main",
             }
         )

@@ -1,0 +1,15 @@
+name: docs-architecture
+version: 0.1.0
+description: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/documentation-standards#main
+    - wshobson/agents/plugins/code-documentation#main
+    - wshobson/agents/plugins/documentation-generation#main
+    - wshobson/agents/plugins/c4-architecture#main

@@ -1,0 +1,17 @@
+name: planning-product
+version: 0.1.0
+description: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - mattpocock/skills/skills/engineering/to-prd#main
+    - mattpocock/skills/skills/engineering/to-issues#main
+    - mattpocock/skills/skills/engineering/tdd#main
+    - mattpocock/skills/skills/engineering/triage#main
+    - mattpocock/skills/skills/engineering/zoom-out#main
+    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main

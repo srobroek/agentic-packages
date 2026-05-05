@@ -1,15 +1,16 @@
 name: frontend
 version: 0.1.0
-description: Frontend development bundle with Impeccable design skills, Playwright browser automation, and frontend-mobile-development patterns.
+description: Frontend development bundle with Impeccable design, Playwright browser automation MCP, and Hobson frontend patterns.
 author: Sjors Robroek
 license: MIT
-type: skill
+type: hybrid
 target: all
 includes: auto
 
 dependencies:
   apm:
     - pbakaus/impeccable/.agents/skills/impeccable#main
+    - wshobson/agents/plugins/frontend-mobile-development#main
   mcp:
     - name: playwright
       registry: false
@@ -17,4 +18,4 @@ dependencies:
       command: npx
       args:
         - -y
-        - "@anthropic-ai/playwright-mcp@latest"
+        - '@anthropic-ai/playwright-mcp@latest'

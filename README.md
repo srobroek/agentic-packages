@@ -7,16 +7,60 @@ APM package repository for shared agentic tooling:
 - Claude and Codex hook manifests
 - finalizers that patch generated runtime agents after APM install
 
-## Root package usage
+## Bundle usage
 
-The `core` bundle installs the local shared package contents, including shared
-agents, personal workflow skills such as `activity-tracker` and
-`sfdc-activity`, and Matt Pocock's `diagnose` skill as an upstream APM
-dependency for the default bug-diagnosis loop.
+The `core` bundle is the deterministic shared project baseline. It installs the
+core agents, code-intelligence skills, project lifecycle skills, agentic
+maintenance skills, first-party `write-a-skill`, and Matt Pocock's
+`diagnose`, `grill-me`, and `grill-with-docs` workflows. It also installs
+Hobson `context-management` and `agent-orchestration` for baseline context and
+coordination support.
+
+Personal workflow tools such as Salesforce or activity tracking remain outside
+`core` and are available only through the explicit `work-tools` bundle.
+
+Additional bundles:
+
+- `developer-tools`: Hobson developer essentials, debugging, review, PR, and
+  documentation generation workflows
+- `code-intelligence`: graph/index/search/research skills plus `pr-reviewer`,
+  Hobson documentation generation, and C4 architecture support
+- `project-lifecycle`: catchup, handover, commit, PR, merge, and verify flow
+- `quality`: cross-language review, verification, testing, TDD, and review
+  workflows
+- `speckit`: SpecKit skill and agents
+- `agentic-maintenance`: steering audit, steering optimization, prompt lookup,
+  first-party skill writing, documentation standards, and plugin evaluation
+- `debugging`: diagnose, unstuck, adversarial challenger, error diagnosis, and
+  incident debugging workflows
+- `frontend`: Impeccable design, Playwright browser automation MCP, and Hobson
+  frontend patterns
+- `frontend-design`: Playwright, design/interface skills, and Hobson
+  frontend/UI/accessibility agents
+- `docs-architecture`: Hobson HADS, code docs, documentation generation, and C4
+  workflows
+- `infrastructure`: Hobson cloud, Kubernetes, CI/CD, deployment, Terraform, and
+  observability workflows
+- `security`: Hobson security scanning, compliance, API/frontend security, and
+  reverse-engineering workflows
+- `data-ai`: Hobson LLM application, data engineering, MLOps, and database
+  workflows
+- `governance`: Hobson MCP protection, signed audit trails, review policy, and
+  git hook bypass protection workflows
+- `planning-product`: first-party debate/research plus Matt PRD, issue, TDD,
+  triage, zoom-out, and architecture workflows
+- `language-typescript`, `language-python`, `language-go`, `language-rust`,
+  `language-terraform`, `language-shell`, `language-dotnet`, `language-jvm`,
+  `language-web-scripting`, `language-functional`, `language-julia`, and
+  `language-arm-cortex`: language-specific bundles
+
+`sniff` still exists as an individual first-party skill, but it is not part of
+`core` or `debugging`.
 
 From this package directory:
 
 ```bash
+apm run build-bundles
 apm run build-marketplace
 apm compile --validate --local-only --target codex
 ```

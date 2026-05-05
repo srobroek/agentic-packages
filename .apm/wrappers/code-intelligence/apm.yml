@@ -1,0 +1,14 @@
+name: code-intelligence
+version: 0.1.0
+description: Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/code-documentation#main
+    - wshobson/agents/plugins/documentation-generation#main
+    - wshobson/agents/plugins/c4-architecture#main

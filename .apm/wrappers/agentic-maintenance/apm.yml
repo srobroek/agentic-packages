@@ -1,0 +1,13 @@
+name: agentic-maintenance
+version: 0.1.0
+description: Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/documentation-standards#main
+    - wshobson/agents/plugins/plugin-eval#main

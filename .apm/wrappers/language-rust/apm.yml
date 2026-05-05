@@ -1,0 +1,12 @@
+name: language-rust
+version: 0.1.0
+description: Rust quality bundle with language steering and Hobson systems specialists.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/systems-programming#main

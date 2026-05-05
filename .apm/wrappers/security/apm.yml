@@ -1,0 +1,16 @@
+name: security
+version: 0.1.0
+description: Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/security-scanning#main
+    - wshobson/agents/plugins/security-compliance#main
+    - wshobson/agents/plugins/backend-api-security#main
+    - wshobson/agents/plugins/frontend-mobile-security#main
+    - wshobson/agents/plugins/reverse-engineering#main

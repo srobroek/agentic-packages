@@ -1,0 +1,17 @@
+name: debugging
+version: 0.1.0
+description: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - mattpocock/skills/skills/engineering/diagnose#main
+    - wshobson/agents/plugins/debugging-toolkit#main
+    - wshobson/agents/plugins/error-debugging#main
+    - wshobson/agents/plugins/error-diagnostics#main
+    - wshobson/agents/plugins/distributed-debugging#main
+    - wshobson/agents/plugins/incident-response#main

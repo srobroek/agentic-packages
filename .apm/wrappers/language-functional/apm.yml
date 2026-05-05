@@ -1,0 +1,12 @@
+name: language-functional
+version: 0.1.0
+description: Functional programming bundle with Hobson Elixir and Haskell specialists.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/functional-programming#main

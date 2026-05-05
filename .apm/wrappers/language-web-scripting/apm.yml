@@ -1,0 +1,12 @@
+name: language-web-scripting
+version: 0.1.0
+description: PHP and Ruby web scripting bundle with Hobson specialists.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/web-scripting#main
