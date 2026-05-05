@@ -13,6 +13,13 @@ fi
 
 [[ "${SKIP_TEST_GATE:-}" == "1" ]] && exit 0
 
+# Skip gate if only agentic infrastructure files are staged (no source changes)
+staged="$(git diff --cached --name-only 2>/dev/null || true)"
+if [[ -n "$staged" ]]; then
+  non_infra="$(printf '%s\n' "$staged" | grep -vE '^(\.agents/|\.claude/|\.codex/|apm\.yml|apm\.lock\.yaml|AGENTS\.md|\.gitignore|\.gitleaksignore)' || true)"
+  [[ -z "$non_infra" ]] && exit 0
+fi
+
 key="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 state_file="/tmp/codex-test-state-$(echo "$key" | md5 2>/dev/null || echo "$key" | md5sum 2>/dev/null | cut -d' ' -f1).json"
 
