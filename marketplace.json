@@ -392,6 +392,16 @@
       }
     },
     {
+      "name": "frontend",
+      "description": "Frontend development bundle with Impeccable design skills, Playwright browser automation MCP, and frontend patterns. Use for projects with web UI, browser testing, or visual design requirements.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/frontend",
+        "ref": "main"
+      }
+    },
+    {
       "name": "impeccable",
       "description": "Third-party Impeccable frontend design skill bundle.",
       "source": {

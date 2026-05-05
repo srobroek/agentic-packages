@@ -6,309 +6,399 @@ license: MIT
 type: hybrid
 target: all
 includes: auto
-
 dependencies:
   apm:
-    - mattpocock/skills/skills/engineering/diagnose#main
-
+  - mattpocock/skills/skills/engineering/diagnose#main
+  mcp:
+  - name: codebase-memory-mcp
+    registry: false
+    transport: stdio
+    command: codebase-memory-mcp
+  - name: context7
+    registry: false
+    transport: stdio
+    command: npx
+    args:
+    - -y
+    - '@anthropic-ai/context7-mcp@latest'
+  - name: github
+    registry: false
+    transport: stdio
+    command: npx
+    args:
+    - -y
+    - '@modelcontextprotocol/server-github'
+  - name: repomix
+    registry: false
+    transport: stdio
+    command: npx
+    args:
+    - -y
+    - repomix
+    - --mcp
 scripts:
-  build-marketplace: "python3 .apm/scripts/build-marketplace.py"
-  build-indexes: "python3 .apm/scripts/build-agentic-indexes.py"
-  build-artifacts: "apm run build-marketplace && apm run build-indexes"
-  install: "apm install --target claude,codex,agent-skills"
-  compile: "apm compile --target codex"
-  compile-codex: "apm compile --target codex"
-  compile-claude: "apm compile --target claude"
-  patch-agents: "python3 .apm/scripts/patch-runtime-agents.py --all"
-  patch-codex-agents: "python3 .apm/scripts/patch-runtime-agents.py --codex"
-  patch-claude-agents: "python3 .apm/scripts/patch-runtime-agents.py --claude"
-  audit-agentic-assets: "python3 .apm/scripts/audit-agentic-assets.py"
-  setup: "apm run install && apm run compile && apm run patch-agents && apm run audit-agentic-assets"
-
+  build-marketplace: python3 .apm/scripts/build-marketplace.py
+  build-indexes: python3 .apm/scripts/build-agentic-indexes.py
+  build-artifacts: apm run build-marketplace && apm run build-indexes
+  install: apm install --target claude,codex,agent-skills
+  compile: apm compile --target codex
+  compile-codex: apm compile --target codex
+  compile-claude: apm compile --target claude
+  patch-agents: python3 .apm/scripts/patch-runtime-agents.py --all
+  patch-codex-agents: python3 .apm/scripts/patch-runtime-agents.py --codex
+  patch-claude-agents: python3 .apm/scripts/patch-runtime-agents.py --claude
+  audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
+  setup: apm run install && apm run compile && apm run patch-agents && apm run audit-agentic-assets
 compilation:
   strategy: distributed
   placement:
     min_instructions_per_file: 1
     source_attribution: true
-
 marketplace:
   owner:
     name: srobroek
     url: https://github.com/srobroek
   build:
-    tagPattern: "v{version}"
+    tagPattern: v{version}
   packages:
-    - name: core
-      description: "Full shared package with local agents, skills, hooks, instructions, contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug workflows."
-      source: srobroek/agentic-packages
-      ref: main
-    - name: catchup
-      description: "Resume interrupted project work by locating and following the best handover before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup/continue/resume/handover, or when asked what changed or what is next."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/catchup
-      ref: main
-    - name: code-review
-      description: "Use for review requests. Prioritizes bugs, regressions, risks, and missing tests."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/code-review
-      ref: main
-    - name: codebase-index
-      description: "Use when the codebase graph is missing or stale. Rebuild the codebase-memory index first."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/codebase-index
-      ref: main
-    - name: codebase-memory
-      description: "Use for graph-aware codebase exploration, tracing, and reference lookup."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/codebase-memory
-      ref: main
-    - name: commit-push-merge
-      description: "Publish and merge a branch by committing local changes when needed, pushing, and merging after inferring or confirming the target and method. Use when the user asks to commit, push, and merge or to direct-merge a branch."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/commit-push-merge
-      ref: main
-    - name: commit-push-pr
-      description: "Publish a branch by committing local changes when needed, pushing, and opening or updating a pull request. Use when the user explicitly asks to commit and push with a PR, open a PR, or publish the current branch for review."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/commit-push-pr
-      ref: main
-    - name: debate
-      description: "Use for deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. Agents may suggest this when the user faces a non-trivial decision."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/debate
-      ref: main
-    - name: eli5
-      description: "Explains a topic at multiple depth levels. Use when a topic needs layered explanation, when the user is confused about a concept, or when the user says 'explain X.' Agents may suggest this when the user seems unfamiliar with a topic or asks 'what is' / 'how does' questions."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/eli5
-      ref: main
-    - name: explore
-      description: "Use for read-only codebase orientation, file discovery, and path tracing."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/explore
-      ref: main
-    - name: go-quality
-      description: "Use to run Go format, lint, and test checks with the project toolchain."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/go-quality
-      ref: main
-    - name: handover
-      description: "Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when ending or pausing work, switching context, preserving unfinished implementation state, or when the user asks for a handover."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/handover
-      ref: main
-    - name: optimize-steering
-      description: "Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `steering-audit` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/optimize-steering
-      ref: main
-    - name: playwright
-      description: "Use when automating browser interactions through a Playwright MCP server."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/playwright
-      ref: main
-    - name: prompt-lookup
-      description: "Use when finding, comparing, or improving prompt templates and prompt-engineering patterns."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/prompt-lookup
-      ref: main
-    - name: python-quality
-      description: "Use to run Python format, lint, type-check, and test commands with the project toolchain."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/python-quality
-      ref: main
-    - name: quick-commit
-      description: "Create a deliberate local git commit without pushing or opening a PR. Use when the user asks to commit local changes, make a checkpoint commit, or run a fast commit-only workflow."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/quick-commit
-      ref: main
-    - name: research
-      description: "Use when the user needs open-ended research requiring synthesis across multiple sources — comparisons, technology evaluations, tradeoff analysis. NOT for single-repo 'where is X' lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/research
-      ref: main
-    - name: rust-quality
-      description: "Use to run Rust format, lint, and test checks with the project toolchain."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/rust-quality
-      ref: main
-    - name: sniff
-      description: "Use for a stability, hardening, and cleanup audit across a codebase."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/sniff
-      ref: main
-    - name: speckit-bugfix
-      description: "Use when fixing bugs in a SpecKit repo. Scales from quick fixes to full bug workflows."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/speckit-bugfix
-      ref: main
-    - name: steering-audit
-      description: "Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/steering-audit
-      ref: main
-    - name: typescript-quality
-      description: "Use to run TypeScript or JavaScript format, lint, type-check, and test commands."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/typescript-quality
-      ref: main
-    - name: unstuck
-      description: "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed. Use when repeated fixes, same-file re-editing, flaky evidence, circular hypotheses, or going in circles suggest the agent is stuck; bundled diagnose owns first-pass debugging."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/unstuck
-      ref: main
-    - name: verify
-      description: "Run and report a final local verification pass before handoff, commit, push, merge, or PR. Use when the user asks to verify, test everything, check readiness, or prove local changes are safe to hand off."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/verify
-      ref: main
-    - name: web-fetch
-      description: "Retrieve current or URL-specific information from the web with source-aware tool routing. Use when the user asks to fetch, open, browse, cite, verify online, inspect a URL, or answer a question whose facts may have changed."
-      source: srobroek/agentic-packages
-      subdir: .apm/skills/web-fetch
-      ref: main
-    - name: diagrams
-      description: "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/diagrams
-      ref: main
-    - name: drawio-skill
-      description: "Third-party draw.io diagram skill for editable architecture, UML, ERD, sequence, flowchart, and process diagrams with local PNG/SVG/PDF export."
-      source: Agents365-ai/drawio-skill
-      ref: main
-    - name: excalidraw-diagram-skill
-      description: "Third-party Excalidraw diagram skill for visual argument diagrams, architecture explanations, and workflow sketches with render validation."
-      source: coleam00/excalidraw-diagram-skill
-      ref: main
-    - name: d2-diagram
-      description: "Third-party D2 diagram skill for text-based architecture, flowchart, data-flow, database, and topology diagrams."
-      source: neuro-synapse/network-topology-agent
-      subdir: .claude/skills/d2-diagram
-      ref: master
-    - name: resume
-      description: "Resume bundle that installs the preferred advanced resume-tailoring workflow plus the broader ResumeSkills career-support bundle."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/resume
-      ref: main
-    - name: presentation
-      description: "Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts for general decks, Marp slides, and PowerPoint template workflows."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/presentation
-      ref: main
-    - name: ppt-creator
-      description: "Third-party general-purpose presentation skill for persuasive, data-driven slide decks with speaker notes and PPTX output."
-      source: daymade/claude-code-skills
-      subdir: daymade-docs/ppt-creator
-      ref: main
-    - name: marp-slide
-      description: "Third-party Marp slide skill with multiple themes, image layouts, and slide design improvements."
-      source: softaworks/agent-toolkit
-      subdir: skills/marp-slide
-      ref: main
-    - name: pptx-from-layouts
-      description: "Third-party PowerPoint skill that generates editable PPTX decks from markdown using real slide-master layouts and placeholders."
-      source: tristan-mcinnis/pptx-from-layouts-skill
-      subdir: .claude/skills/pptx-from-layouts
-      ref: main
-    - name: resume-tailoring
-      description: "Third-party advanced resume tailoring skill with company research, branching experience discovery, matching strategies, and multi-format output."
-      source: varunr89/resume-tailoring-skill
-      subdir: skills/resume-tailoring
-      ref: master
-    - name: tailored-resume-generator
-      description: "Third-party focused resume tailoring skill that maps job descriptions to candidate experience and ATS-friendly resume output."
-      source: ComposioHQ/awesome-claude-skills
-      subdir: tailored-resume-generator
-      ref: master
-    - name: resumeskills
-      description: "Third-party career skills bundle for ATS optimization, resume bullets, job-description analysis, tailoring, interview prep, and job-search support."
-      source: Paramchoudhary/ResumeSkills
-      ref: main
-    - name: hyperresearch
-      description: "Third-party HyperResearch deep research harness wrapper. Uses upstream HyperResearch's Python installer for runtime Claude assets."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/hyperresearch
-      ref: main
-    - name: impeccable
-      description: "Third-party Impeccable frontend design skill bundle."
-      source: pbakaus/impeccable
-      subdir: .agents/skills/impeccable
-      ref: main
-    - name: interface-design
-      description: "Third-party Interface Design skill for dashboards, admin panels, SaaS apps, tools, and product interfaces."
-      source: Dammyjay93/interface-design
-      subdir: .claude/skills/interface-design
-      ref: main
-    - name: stitch-skills
-      description: "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows."
-      source: google-labs-code/stitch-skills
-      ref: main
-    - name: work-tools
-      description: "Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection."
-      source: srobroek/agentic-packages
-      subdir: .apm/wrappers/work-tools
-      ref: main
-    - name: matt-skills
-      description: "Full Matt Pocock skills package."
-      source: mattpocock/skills
-      ref: main
-    - name: matt-caveman
-      description: "Ultra-compressed communication mode."
-      source: mattpocock/skills
-      subdir: skills/productivity/caveman
-      ref: main
-    - name: matt-diagnose
-      description: "Disciplined diagnosis loop for hard bugs and regressions."
-      source: mattpocock/skills
-      subdir: skills/engineering/diagnose
-      ref: main
-    - name: matt-grill-me
-      description: "Planning grill without project docs."
-      source: mattpocock/skills
-      subdir: skills/productivity/grill-me
-      ref: main
-    - name: matt-grill-with-docs
-      description: "Planning grill using domain docs and ADRs."
-      source: mattpocock/skills
-      subdir: skills/engineering/grill-with-docs
-      ref: main
-    - name: matt-improve-codebase-architecture
-      description: "Find architecture deepening opportunities."
-      source: mattpocock/skills
-      subdir: skills/engineering/improve-codebase-architecture
-      ref: main
-    - name: matt-setup-skills
-      description: "Scaffold repo-local docs consumed by Matt Pocock skills."
-      source: mattpocock/skills
-      subdir: skills/engineering/setup-matt-pocock-skills
-      ref: main
-    - name: matt-tdd
-      description: "Test-driven development loop."
-      source: mattpocock/skills
-      subdir: skills/engineering/tdd
-      ref: main
-    - name: matt-to-issues
-      description: "Break plans and specs into independently grabbable issues."
-      source: mattpocock/skills
-      subdir: skills/engineering/to-issues
-      ref: main
-    - name: matt-to-prd
-      description: "Turn current conversation context into a PRD."
-      source: mattpocock/skills
-      subdir: skills/engineering/to-prd
-      ref: main
-    - name: matt-triage
-      description: "Triage issues through a role/state machine."
-      source: mattpocock/skills
-      subdir: skills/engineering/triage
-      ref: main
-    - name: matt-write-a-skill
-      description: "Create new agent skills."
-      source: mattpocock/skills
-      subdir: skills/productivity/write-a-skill
-      ref: main
-    - name: matt-zoom-out
-      description: "Ask for broader codebase context."
-      source: mattpocock/skills
-      subdir: skills/engineering/zoom-out
-      ref: main
+  - name: core
+    description: Full shared package with local agents, skills, hooks, instructions,
+      contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug
+      workflows.
+    source: srobroek/agentic-packages
+    ref: main
+  - name: catchup
+    description: Resume interrupted project work by locating and following the best
+      handover before doing fresh discovery. Use when starting in an existing repo/worktree,
+      after context loss or /clear, when the user says catchup/continue/resume/handover,
+      or when asked what changed or what is next.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/catchup
+    ref: main
+  - name: code-review
+    description: Use for review requests. Prioritizes bugs, regressions, risks, and
+      missing tests.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/code-review
+    ref: main
+  - name: codebase-index
+    description: Use when the codebase graph is missing or stale. Rebuild the codebase-memory
+      index first.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/codebase-index
+    ref: main
+  - name: codebase-memory
+    description: Use for graph-aware codebase exploration, tracing, and reference
+      lookup.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/codebase-memory
+    ref: main
+  - name: commit-push-merge
+    description: Publish and merge a branch by committing local changes when needed,
+      pushing, and merging after inferring or confirming the target and method. Use
+      when the user asks to commit, push, and merge or to direct-merge a branch.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/commit-push-merge
+    ref: main
+  - name: commit-push-pr
+    description: Publish a branch by committing local changes when needed, pushing,
+      and opening or updating a pull request. Use when the user explicitly asks to
+      commit and push with a PR, open a PR, or publish the current branch for review.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/commit-push-pr
+    ref: main
+  - name: debate
+    description: Use for deep tradeoff analysis on architectural decisions, technology
+      choices, and feature proposals. Tests an idea from both sides before recommending
+      a path. Agents may suggest this when the user faces a non-trivial decision.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/debate
+    ref: main
+  - name: eli5
+    description: Explains a topic at multiple depth levels. Use when a topic needs
+      layered explanation, when the user is confused about a concept, or when the
+      user says 'explain X.' Agents may suggest this when the user seems unfamiliar
+      with a topic or asks 'what is' / 'how does' questions.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/eli5
+    ref: main
+  - name: explore
+    description: Use for read-only codebase orientation, file discovery, and path
+      tracing.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/explore
+    ref: main
+  - name: go-quality
+    description: Use to run Go format, lint, and test checks with the project toolchain.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/go-quality
+    ref: main
+  - name: handover
+    description: Save a self-contained recovery prompt for a later agent session in
+      the shared handover store. Use when ending or pausing work, switching context,
+      preserving unfinished implementation state, or when the user asks for a handover.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/handover
+    ref: main
+  - name: optimize-steering
+    description: Audit and optimize agent-facing markdown files (steering docs, skills,
+      agent definitions) for token efficiency, structural compliance, and cross-model
+      compatibility. Applies research-backed formatting conventions (R1-R7). Runs
+      `steering-audit` first for drift/hook/lint detection. Use when asked to audit
+      agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions,
+      reduce token waste, or fix agent compliance issues. To create a new skill from
+      scratch, use `write-a-skill` instead.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/optimize-steering
+    ref: main
+  - name: playwright
+    description: Use when automating browser interactions through a Playwright MCP
+      server.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/playwright
+    ref: main
+  - name: prompt-lookup
+    description: Use when finding, comparing, or improving prompt templates and prompt-engineering
+      patterns.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/prompt-lookup
+    ref: main
+  - name: python-quality
+    description: Use to run Python format, lint, type-check, and test commands with
+      the project toolchain.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/python-quality
+    ref: main
+  - name: quick-commit
+    description: Create a deliberate local git commit without pushing or opening a
+      PR. Use when the user asks to commit local changes, make a checkpoint commit,
+      or run a fast commit-only workflow.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/quick-commit
+    ref: main
+  - name: research
+    description: Use when the user needs open-ended research requiring synthesis across
+      multiple sources — comparisons, technology evaluations, tradeoff analysis. NOT
+      for single-repo 'where is X' lookups (use explore), URL-specific fetches (use
+      web-fetch), or speckit research workflows.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/research
+    ref: main
+  - name: rust-quality
+    description: Use to run Rust format, lint, and test checks with the project toolchain.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/rust-quality
+    ref: main
+  - name: sniff
+    description: Use for a stability, hardening, and cleanup audit across a codebase.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/sniff
+    ref: main
+  - name: speckit-bugfix
+    description: Use when fixing bugs in a SpecKit repo. Scales from quick fixes to
+      full bug workflows.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/speckit-bugfix
+    ref: main
+  - name: steering-audit
+    description: Use to audit agent rules, hooks, skills, and guardrails for drift
+      and cleanup.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/steering-audit
+    ref: main
+  - name: typescript-quality
+    description: Use to run TypeScript or JavaScript format, lint, type-check, and
+      test commands.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/typescript-quality
+    ref: main
+  - name: unstuck
+    description: Escalate stalled debugging by challenging assumptions after the normal
+      diagnosis loop has failed. Use when repeated fixes, same-file re-editing, flaky
+      evidence, circular hypotheses, or going in circles suggest the agent is stuck;
+      bundled diagnose owns first-pass debugging.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/unstuck
+    ref: main
+  - name: verify
+    description: Run and report a final local verification pass before handoff, commit,
+      push, merge, or PR. Use when the user asks to verify, test everything, check
+      readiness, or prove local changes are safe to hand off.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/verify
+    ref: main
+  - name: web-fetch
+    description: Retrieve current or URL-specific information from the web with source-aware
+      tool routing. Use when the user asks to fetch, open, browse, cite, verify online,
+      inspect a URL, or answer a question whose facts may have changed.
+    source: srobroek/agentic-packages
+    subdir: .apm/skills/web-fetch
+    ref: main
+  - name: diagrams
+    description: Diagram generation bundle that installs draw.io, Excalidraw, and
+      D2 diagram skills for editable architecture, workflow, flowchart, and visual
+      explanation diagrams.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/diagrams
+    ref: main
+  - name: drawio-skill
+    description: Third-party draw.io diagram skill for editable architecture, UML,
+      ERD, sequence, flowchart, and process diagrams with local PNG/SVG/PDF export.
+    source: Agents365-ai/drawio-skill
+    ref: main
+  - name: excalidraw-diagram-skill
+    description: Third-party Excalidraw diagram skill for visual argument diagrams,
+      architecture explanations, and workflow sketches with render validation.
+    source: coleam00/excalidraw-diagram-skill
+    ref: main
+  - name: d2-diagram
+    description: Third-party D2 diagram skill for text-based architecture, flowchart,
+      data-flow, database, and topology diagrams.
+    source: neuro-synapse/network-topology-agent
+    subdir: .claude/skills/d2-diagram
+    ref: master
+  - name: resume
+    description: Resume bundle that installs the preferred advanced resume-tailoring
+      workflow plus the broader ResumeSkills career-support bundle.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/resume
+    ref: main
+  - name: presentation
+    description: Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts
+      for general decks, Marp slides, and PowerPoint template workflows.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/presentation
+    ref: main
+  - name: ppt-creator
+    description: Third-party general-purpose presentation skill for persuasive, data-driven
+      slide decks with speaker notes and PPTX output.
+    source: daymade/claude-code-skills
+    subdir: daymade-docs/ppt-creator
+    ref: main
+  - name: marp-slide
+    description: Third-party Marp slide skill with multiple themes, image layouts,
+      and slide design improvements.
+    source: softaworks/agent-toolkit
+    subdir: skills/marp-slide
+    ref: main
+  - name: pptx-from-layouts
+    description: Third-party PowerPoint skill that generates editable PPTX decks from
+      markdown using real slide-master layouts and placeholders.
+    source: tristan-mcinnis/pptx-from-layouts-skill
+    subdir: .claude/skills/pptx-from-layouts
+    ref: main
+  - name: resume-tailoring
+    description: Third-party advanced resume tailoring skill with company research,
+      branching experience discovery, matching strategies, and multi-format output.
+    source: varunr89/resume-tailoring-skill
+    subdir: skills/resume-tailoring
+    ref: master
+  - name: tailored-resume-generator
+    description: Third-party focused resume tailoring skill that maps job descriptions
+      to candidate experience and ATS-friendly resume output.
+    source: ComposioHQ/awesome-claude-skills
+    subdir: tailored-resume-generator
+    ref: master
+  - name: resumeskills
+    description: Third-party career skills bundle for ATS optimization, resume bullets,
+      job-description analysis, tailoring, interview prep, and job-search support.
+    source: Paramchoudhary/ResumeSkills
+    ref: main
+  - name: hyperresearch
+    description: Third-party HyperResearch deep research harness wrapper. Uses upstream
+      HyperResearch's Python installer for runtime Claude assets.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/hyperresearch
+    ref: main
+  - name: frontend
+    description: Frontend development bundle with Impeccable design skills, Playwright
+      browser automation MCP, and frontend patterns.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/frontend
+    ref: main
+  - name: impeccable
+    description: Third-party Impeccable frontend design skill bundle.
+    source: pbakaus/impeccable
+    subdir: .agents/skills/impeccable
+    ref: main
+  - name: interface-design
+    description: Third-party Interface Design skill for dashboards, admin panels,
+      SaaS apps, tools, and product interfaces.
+    source: Dammyjay93/interface-design
+    subdir: .claude/skills/interface-design
+    ref: main
+  - name: stitch-skills
+    description: Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md,
+      React, Remotion, shadcn/ui, and taste-design workflows.
+    source: google-labs-code/stitch-skills
+    ref: main
+  - name: work-tools
+    description: Personal work workflow bundle for Salesforce activity logging, Excel
+      activity tracking, and read-only work context collection.
+    source: srobroek/agentic-packages
+    subdir: .apm/wrappers/work-tools
+    ref: main
+  - name: matt-skills
+    description: Full Matt Pocock skills package.
+    source: mattpocock/skills
+    ref: main
+  - name: matt-caveman
+    description: Ultra-compressed communication mode.
+    source: mattpocock/skills
+    subdir: skills/productivity/caveman
+    ref: main
+  - name: matt-diagnose
+    description: Disciplined diagnosis loop for hard bugs and regressions.
+    source: mattpocock/skills
+    subdir: skills/engineering/diagnose
+    ref: main
+  - name: matt-grill-me
+    description: Planning grill without project docs.
+    source: mattpocock/skills
+    subdir: skills/productivity/grill-me
+    ref: main
+  - name: matt-grill-with-docs
+    description: Planning grill using domain docs and ADRs.
+    source: mattpocock/skills
+    subdir: skills/engineering/grill-with-docs
+    ref: main
+  - name: matt-improve-codebase-architecture
+    description: Find architecture deepening opportunities.
+    source: mattpocock/skills
+    subdir: skills/engineering/improve-codebase-architecture
+    ref: main
+  - name: matt-setup-skills
+    description: Scaffold repo-local docs consumed by Matt Pocock skills.
+    source: mattpocock/skills
+    subdir: skills/engineering/setup-matt-pocock-skills
+    ref: main
+  - name: matt-tdd
+    description: Test-driven development loop.
+    source: mattpocock/skills
+    subdir: skills/engineering/tdd
+    ref: main
+  - name: matt-to-issues
+    description: Break plans and specs into independently grabbable issues.
+    source: mattpocock/skills
+    subdir: skills/engineering/to-issues
+    ref: main
+  - name: matt-to-prd
+    description: Turn current conversation context into a PRD.
+    source: mattpocock/skills
+    subdir: skills/engineering/to-prd
+    ref: main
+  - name: matt-triage
+    description: Triage issues through a role/state machine.
+    source: mattpocock/skills
+    subdir: skills/engineering/triage
+    ref: main
+  - name: matt-write-a-skill
+    description: Create new agent skills.
+    source: mattpocock/skills
+    subdir: skills/productivity/write-a-skill
+    ref: main
+  - name: matt-zoom-out
+    description: Ask for broader codebase context.
+    source: mattpocock/skills
+    subdir: skills/engineering/zoom-out
+    ref: main
