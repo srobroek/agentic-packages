@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Report runtime parity and known external-source candidates."""
+"""Report runtime parity and agent metadata completeness."""
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 
@@ -16,10 +15,10 @@ def names(path: Path, suffix: str) -> set[str]:
 def package_root(root: Path) -> Path | None:
     candidates = [
         root,
-        root / "apm_modules" / "_local" / "agentic-packages",
-        root / "apm_modules" / "srobroek" / "agentic-packages",
+        root / "apm_modules" / "_local" / "skills",
+        root / "apm_modules" / "srobroek" / "skills",
     ]
-    candidates.extend(root.glob("apm_modules/**/agentic-packages"))
+    candidates.extend(root.glob("apm_modules/**/skills"))
     for candidate in candidates:
         if (candidate / ".apm").is_dir():
             return candidate
@@ -57,29 +56,6 @@ def parse_scalar_map(frontmatter: str) -> dict:
             parent[key.strip()] = child
             stack.append((indent, child))
     return root
-
-
-def parse_recommendations(path: Path) -> dict[str, dict[str, str]]:
-    if not path.is_file():
-        return {}
-    recommendations: dict[str, dict[str, str]] = {}
-    row_pattern = re.compile(r"^\| `([^`]+)` \|")
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not row_pattern.match(line):
-            continue
-        columns = [column.strip() for column in line.strip("|").split("|")]
-        if len(columns) < 10:
-            continue
-        codex_model_effort = re.findall(r"`([^`]+)`", columns[2])
-        if len(codex_model_effort) < 2:
-            continue
-        recommendations[columns[0].strip("`")] = {
-            "model": codex_model_effort[0],
-            "effort": codex_model_effort[1],
-            "access": columns[3].strip("`"),
-            "approval": columns[4].strip("`"),
-        }
-    return recommendations
 
 
 def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
@@ -172,25 +148,20 @@ def main() -> int:
     ]:
         print(f"- {candidate}")
 
-    recommendations = parse_recommendations(package / "reviews" / "voltagent-agent-metadata-recommendations.md")
     metadata = source_agent_metadata(package)
     print("\nAgent metadata")
-    mismatches = []
+    missing = []
     for agent, actual in sorted(metadata.items()):
-        expected = recommendations.get(agent)
-        if expected is None:
-            mismatches.append(f"{agent}: no recommendation")
-            continue
         for key in ("model", "effort", "access", "approval"):
-            if actual.get(key) != expected.get(key):
-                mismatches.append(f"{agent}: {key} expected {expected.get(key)} got {actual.get(key)}")
+            if not actual.get(key):
+                missing.append(f"{agent}: missing {key}")
     print(f"- checked: {len(metadata)}")
-    print(f"- mismatches: {len(mismatches)}")
-    for mismatch in mismatches[:30]:
-        print(f"  - {mismatch}")
-    if len(mismatches) > 30:
-        print(f"  - ... {len(mismatches) - 30} more")
-    if mismatches:
+    print(f"- missing fields: {len(missing)}")
+    for item in missing[:30]:
+        print(f"  - {item}")
+    if len(missing) > 30:
+        print(f"  - ... {len(missing) - 30} more")
+    if missing:
         return 1
     return 0
 

@@ -20,38 +20,15 @@
           },
           {
             "type": "command",
-            "if": "Edit(*.rs)|Write(*.rs)",
-            "command": "./scripts/lint-rust.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Rust formatting..."
-          },
-          {
-            "type": "command",
-            "if": "Edit(*.py)|Write(*.py)",
-            "command": "./scripts/lint-python.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Python lint..."
-          },
-          {
-            "type": "command",
-            "if": "Edit(*.ts)|Write(*.ts)|Edit(*.tsx)|Write(*.tsx)|Edit(*.js)|Write(*.js)|Edit(*.jsx)|Write(*.jsx)",
-            "command": "./scripts/lint-js.sh",
-            "timeout": 10,
-            "statusMessage": "Checking JS/TS lint..."
-          },
-          {
-            "type": "command",
-            "if": "Edit(*.go)|Write(*.go)",
-            "command": "./scripts/lint-go.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Go format..."
-          },
-          {
-            "type": "command",
             "if": "Edit(*.d2)|Write(*.d2)",
             "command": "./scripts/validate-d2.sh",
             "timeout": 5,
             "statusMessage": "Checking D2 diagram quality..."
+          },
+          {
+            "type": "command",
+            "command": "./scripts/quality-edit-advisory.sh",
+            "timeout": 3
           },
           {
             "type": "command",
@@ -93,6 +70,13 @@
             "if": "Bash(git merge*)",
             "command": "./scripts/post-merge-cleanup.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "if": "Bash(git switch -c*)|Bash(git switch --create*)|Bash(git checkout -b*)|Bash(git checkout -B*)|Bash(git worktree add*)|Bash(git merge*)|Bash(git pull*)|Bash(git rebase*)",
+            "command": "./scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30
           }
         ]
       }
@@ -156,6 +140,11 @@
             "type": "command",
             "if": "Bash(git commit*)",
             "command": "./scripts/pre-commit-test-gate.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/quality-before-commit.sh"
           },
           {
             "type": "command",

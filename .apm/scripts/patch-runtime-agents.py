@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Patch APM-generated runtime agents from namespaced source frontmatter.
+"""Patch APM-generated runtime agents from source metadata.
 
 APM can convert `.agent.md` into runtime-native files, but some Codex and
 Claude fields are still runtime-specific. This finalizer is intended to run via
 `apm run patch-agents` after `apm install`.
+
+Patch precedence:
+
+1. First-party `x-agentic` metadata from `.apm/agents/*.agent.md`.
+2. Explicit external runtime overrides from `.apm/runtime-agent-overrides.yml`.
+3. External Claude agent frontmatter from installed APM modules.
+
+External Claude model aliases are only a routing signal. They patch Codex model
+and reasoning effort, not filesystem access or approvals.
 """
 
 from __future__ import annotations
@@ -55,26 +64,147 @@ def parse_scalar_map(frontmatter: str) -> dict:
     return root
 
 
-def source_agents_dir(root: Path) -> Path:
+def first_party_agent_dirs(root: Path) -> list[Path]:
     candidates = [
         root / ".apm" / "agents",
         root / "apm_modules" / "_local" / "agentic-packages" / ".apm" / "agents",
         root / "apm_modules" / "srobroek" / "agentic-packages" / ".apm" / "agents",
     ]
     candidates.extend(root.glob("apm_modules/**/agentic-packages/.apm/agents"))
+    candidates.extend(root.glob("apm_modules/**/.apm/agents"))
+
+    seen: set[Path] = set()
+    dirs: list[Path] = []
     for candidate in candidates:
-        if candidate.is_dir():
-            return candidate
-    raise SystemExit("No source .apm/agents directory found.")
+        if candidate.is_dir() and candidate not in seen:
+            seen.add(candidate)
+            dirs.append(candidate)
+    return dirs
+
+
+def codex_from_claude_model(model: str) -> dict[str, str]:
+    match model.strip().lower():
+        case "opus":
+            return {"model": "gpt-5.5", "reasoning_effort": "high"}
+        case "sonnet":
+            return {"model": "gpt-5.4", "reasoning_effort": "medium"}
+        case "haiku":
+            return {"model": "gpt-5.4-mini", "reasoning_effort": "low"}
+        case _:
+            return {}
+
+
+def runtime_override_files(root: Path) -> list[Path]:
+    candidates = [
+        root / ".apm" / "runtime-agent-overrides.yml",
+        Path(__file__).resolve().parents[1] / "runtime-agent-overrides.yml",
+    ]
+    candidates.extend(root.glob("apm_modules/**/agentic-packages/.apm/runtime-agent-overrides.yml"))
+
+    seen: set[Path] = set()
+    paths: list[Path] = []
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if candidate.is_file() and resolved not in seen:
+            seen.add(resolved)
+            paths.append(candidate)
+    return paths
+
+
+def runtime_overrides(root: Path) -> dict:
+    merged: dict = {}
+    for path in runtime_override_files(root):
+        parsed = parse_scalar_map(path.read_text(encoding="utf-8"))
+        merge_dict(merged, parsed)
+    return merged
+
+
+def merge_dict(target: dict, source: dict) -> dict:
+    for key, value in source.items():
+        if isinstance(value, dict) and isinstance(target.get(key), dict):
+            merge_dict(target[key], value)
+        else:
+            target[key] = value
+    return target
+
+
+def external_agent_paths(root: Path) -> list[Path]:
+    paths = list(root.glob("apm_modules/**/agents/*.md"))
+    paths.extend(root.glob("apm_modules/**/categories/*/*.md"))
+    return sorted(path for path in paths if path.name.lower() != "readme.md")
+
+
+def external_agent_source(path: Path) -> tuple[str, str]:
+    parts = path.parts
+    if "apm_modules" not in parts:
+        return "", ""
+
+    module_index = parts.index("apm_modules")
+    module_parts = parts[module_index + 1 :]
+
+    if len(module_parts) >= 5 and module_parts[2] == "plugins":
+        return "/".join(module_parts[:2]), module_parts[3]
+
+    if len(module_parts) >= 5 and module_parts[2] == "categories":
+        return "/".join(module_parts[:2]), module_parts[3]
+
+    return "/".join(module_parts[:2]) if len(module_parts) >= 2 else "", ""
+
+
+def codex_external_override(name: str, path: Path, overrides: dict) -> dict[str, str]:
+    codex = overrides.get("codex", {})
+    if not isinstance(codex, dict):
+        return {}
+
+    marketplace, package = external_agent_source(path)
+    source_overrides = codex.get("source_overrides", {})
+    if isinstance(source_overrides, dict):
+        marketplace_overrides = source_overrides.get(marketplace, {})
+        if isinstance(marketplace_overrides, dict):
+            package_overrides = marketplace_overrides.get(package, {})
+            if isinstance(package_overrides, dict):
+                override = package_overrides.get(name, {})
+                if isinstance(override, dict) and override:
+                    return {key: str(value) for key, value in override.items() if value}
+
+    agent_overrides = codex.get("agent_overrides", {})
+    override = agent_overrides.get(name, {}) if isinstance(agent_overrides, dict) else {}
+    if isinstance(override, dict):
+        return {key: str(value) for key, value in override.items() if value}
+    return {}
+
+
+def external_claude_agent_metadata(root: Path) -> dict[str, dict]:
+    agents: dict[str, dict] = {}
+    overrides = runtime_overrides(root)
+    for path in external_agent_paths(root):
+        frontmatter, _ = split_frontmatter(path.read_text(encoding="utf-8"))
+        parsed = parse_scalar_map(frontmatter)
+        name = str(parsed.get("name") or path.name.removesuffix(".md"))
+        source_model = str(parsed.get("model") or "")
+        explicit = codex_external_override(name, path, overrides)
+        codex = explicit or codex_from_claude_model(source_model)
+        if codex:
+            agents[name] = {
+                "codex": codex,
+                "source": {
+                    "path": str(path),
+                    "model": source_model,
+                    "override": "explicit" if explicit else "claude-model-fallback",
+                },
+            }
+    return agents
 
 
 def source_agent_metadata(root: Path) -> dict[str, dict]:
-    agents: dict[str, dict] = {}
-    for path in sorted(source_agents_dir(root).glob("*.agent.md")):
-        frontmatter, _ = split_frontmatter(path.read_text(encoding="utf-8"))
-        parsed = parse_scalar_map(frontmatter)
-        name = str(parsed.get("name") or path.name.removesuffix(".agent.md"))
-        agents[name] = parsed.get("x-agentic", {}) if isinstance(parsed.get("x-agentic"), dict) else {}
+    agents = external_claude_agent_metadata(root)
+    for agents_dir in first_party_agent_dirs(root):
+        for path in sorted(agents_dir.glob("*.agent.md")):
+            frontmatter, _ = split_frontmatter(path.read_text(encoding="utf-8"))
+            parsed = parse_scalar_map(frontmatter)
+            name = str(parsed.get("name") or path.name.removesuffix(".agent.md"))
+            x_agentic = parsed.get("x-agentic", {})
+            agents[name] = x_agentic if isinstance(x_agentic, dict) else {}
     return agents
 
 

@@ -1,6 +1,7 @@
 # Adversarial Challenge Pattern
 
-Use this pattern when the current debugging path is going in circles.
+Use this pattern when invoking the `adversarial-challenger` agent after the
+normal diagnosis loop is going in circles.
 
 ## Inputs
 
@@ -11,6 +12,8 @@ Give the challenger only observable facts:
 - affected files
 - recent edits
 - what has already been tried
+- current reproduction or feedback loop
+- why the main agent believes it is stuck
 
 Do not give the challenger your preferred root-cause theory up front.
 

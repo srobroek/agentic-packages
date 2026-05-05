@@ -15,8 +15,8 @@ LOCAL_SOURCE = "srobroek/agentic-packages"
 
 
 CORE_PACKAGE = {
-    "name": "agentic-core",
-    "description": "Full shared package: agents, skills, hooks, instructions, contexts, and scripts.",
+    "name": "core",
+    "description": "Full shared package with local agents, skills, hooks, instructions, contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug workflows.",
     "source": LOCAL_SOURCE,
     "ref": "main",
 }
@@ -38,12 +38,140 @@ MATT_SKILLS = [
 ]
 
 
+EXTERNAL_BUNDLES = [
+    {
+        "name": "diagrams",
+        "description": "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams.",
+        "source": LOCAL_SOURCE,
+        "subdir": ".apm/wrappers/diagrams",
+        "ref": "main",
+    },
+    {
+        "name": "drawio-skill",
+        "description": "Third-party draw.io diagram skill for editable architecture, UML, ERD, sequence, flowchart, and process diagrams with local PNG/SVG/PDF export.",
+        "source": "Agents365-ai/drawio-skill",
+        "ref": "main",
+    },
+    {
+        "name": "excalidraw-diagram-skill",
+        "description": "Third-party Excalidraw diagram skill for visual argument diagrams, architecture explanations, and workflow sketches with render validation.",
+        "source": "coleam00/excalidraw-diagram-skill",
+        "ref": "main",
+    },
+    {
+        "name": "d2-diagram",
+        "description": "Third-party D2 diagram skill for text-based architecture, flowchart, data-flow, database, and topology diagrams.",
+        "source": "neuro-synapse/network-topology-agent",
+        "subdir": ".claude/skills/d2-diagram",
+        "ref": "master",
+    },
+    {
+        "name": "resume",
+        "description": "Resume bundle that installs the preferred advanced resume-tailoring workflow plus the broader ResumeSkills career-support bundle.",
+        "source": LOCAL_SOURCE,
+        "subdir": ".apm/wrappers/resume",
+        "ref": "main",
+    },
+    {
+        "name": "presentation",
+        "description": "Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts for general decks, Marp slides, and PowerPoint template workflows.",
+        "source": LOCAL_SOURCE,
+        "subdir": ".apm/wrappers/presentation",
+        "ref": "main",
+    },
+    {
+        "name": "ppt-creator",
+        "description": "Third-party general-purpose presentation skill for persuasive, data-driven slide decks with speaker notes and PPTX output.",
+        "source": "daymade/claude-code-skills",
+        "subdir": "daymade-docs/ppt-creator",
+        "ref": "main",
+    },
+    {
+        "name": "marp-slide",
+        "description": "Third-party Marp slide skill with multiple themes, image layouts, and slide design improvements.",
+        "source": "softaworks/agent-toolkit",
+        "subdir": "skills/marp-slide",
+        "ref": "main",
+    },
+    {
+        "name": "pptx-from-layouts",
+        "description": "Third-party PowerPoint skill that generates editable PPTX decks from markdown using real slide-master layouts and placeholders.",
+        "source": "tristan-mcinnis/pptx-from-layouts-skill",
+        "subdir": ".claude/skills/pptx-from-layouts",
+        "ref": "main",
+    },
+    {
+        "name": "resume-tailoring",
+        "description": "Third-party advanced resume tailoring skill with company research, branching experience discovery, matching strategies, and multi-format output.",
+        "source": "varunr89/resume-tailoring-skill",
+        "subdir": "skills/resume-tailoring",
+        "ref": "master",
+    },
+    {
+        "name": "tailored-resume-generator",
+        "description": "Third-party focused resume tailoring skill that maps job descriptions to candidate experience and ATS-friendly resume output.",
+        "source": "ComposioHQ/awesome-claude-skills",
+        "subdir": "tailored-resume-generator",
+        "ref": "master",
+    },
+    {
+        "name": "resumeskills",
+        "description": "Third-party career skills bundle for ATS optimization, resume bullets, job-description analysis, tailoring, interview prep, and job-search support.",
+        "source": "Paramchoudhary/ResumeSkills",
+        "ref": "main",
+    },
+    {
+        "name": "hyperresearch",
+        "description": "Third-party HyperResearch deep research harness wrapper. Uses upstream HyperResearch's Python installer for runtime Claude assets.",
+        "source": LOCAL_SOURCE,
+        "subdir": ".apm/wrappers/hyperresearch",
+        "ref": "main",
+    },
+    {
+        "name": "impeccable",
+        "description": "Third-party Impeccable frontend design skill bundle.",
+        "source": "pbakaus/impeccable",
+        "subdir": ".agents/skills/impeccable",
+        "ref": "main",
+    },
+    {
+        "name": "interface-design",
+        "description": "Third-party Interface Design skill for dashboards, admin panels, SaaS apps, tools, and product interfaces.",
+        "source": "Dammyjay93/interface-design",
+        "subdir": ".claude/skills/interface-design",
+        "ref": "main",
+    },
+    {
+        "name": "stitch-skills",
+        "description": "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows.",
+        "source": "google-labs-code/stitch-skills",
+        "ref": "main",
+    },
+]
+
+
 def description_for_skill(skill_dir: Path) -> str:
     skill = skill_dir / "SKILL.md"
     for line in skill.read_text(encoding="utf-8").splitlines():
         if line.startswith("description: "):
             return line.removeprefix("description: ").strip().strip('"')
     return f"{skill_dir.name} skill from agentic-packages."
+
+
+def description_for_wrapper(wrapper_dir: Path) -> str:
+    skill = wrapper_dir / "SKILL.md"
+    if skill.is_file():
+        for line in skill.read_text(encoding="utf-8").splitlines():
+            if line.startswith("description: "):
+                return line.removeprefix("description: ").strip().strip('"')
+
+    manifest = wrapper_dir / "apm.yml"
+    if manifest.is_file():
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            if line.startswith("description: "):
+                return line.removeprefix("description: ").strip().strip('"')
+
+    return f"{wrapper_dir.name} wrapper package from agentic-packages."
 
 
 def package_yaml(package: dict[str, str]) -> str:
@@ -66,13 +194,28 @@ def build_packages() -> list[dict[str, str]]:
             continue
         packages.append(
             {
-                "name": f"agentic-skill-{skill_dir.name}",
+                "name": skill_dir.name,
                 "description": description_for_skill(skill_dir),
                 "source": LOCAL_SOURCE,
                 "subdir": f".apm/skills/{skill_dir.name}",
                 "ref": "main",
             }
         )
+    packages.extend(EXTERNAL_BUNDLES)
+    published = {package["name"] for package in packages}
+    for wrapper_dir in sorted((ROOT / ".apm" / "wrappers").iterdir()):
+        if not wrapper_dir.is_dir() or wrapper_dir.name in published:
+            continue
+        packages.append(
+            {
+                "name": wrapper_dir.name,
+                "description": description_for_wrapper(wrapper_dir),
+                "source": LOCAL_SOURCE,
+                "subdir": f".apm/wrappers/{wrapper_dir.name}",
+                "ref": "main",
+            }
+        )
+        published.add(wrapper_dir.name)
     packages.append(
         {
             "name": "matt-skills",
@@ -114,8 +257,8 @@ def source_json(package: dict[str, str]) -> OrderedDict[str, str]:
     source = OrderedDict()
     if subdir := package.get("subdir"):
         source["source"] = "git-subdir"
-        source["url"] = package["source"]
-        source["path"] = subdir
+        source["repo"] = package["source"]
+        source["subdir"] = subdir
     else:
         source["source"] = "github"
         source["repo"] = package["source"]
@@ -126,7 +269,7 @@ def source_json(package: dict[str, str]) -> OrderedDict[str, str]:
 
 def build_marketplace_json() -> dict:
     doc = OrderedDict()
-    doc["name"] = "agentic-packages"
+    doc["name"] = "srobroek-agentic"
     doc["owner"] = OrderedDict(
         [
             ("name", "srobroek"),

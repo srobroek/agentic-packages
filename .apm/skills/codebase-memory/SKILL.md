@@ -16,7 +16,7 @@ Use this skill when graph-aware codebase tooling is more effective than manual f
 
 ## Intent Routing
 
-- Explore architecture or locate symbols: `references/explore.md`
+- Explore architecture or locate symbols: use `get_graph_schema` → `get_architecture` → `search_graph` → `get_code_snippet`
 - Trace callers, callees, or impact: `references/trace.md`
 - Check tool capabilities or query patterns: `references/reference.md`
 - Look for dead code, hotspots, or refactor targets: `references/quality.md`

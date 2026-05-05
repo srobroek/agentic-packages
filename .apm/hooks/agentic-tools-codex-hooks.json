@@ -40,6 +40,11 @@
           {
             "type": "command",
             "if": "Bash(git commit*)",
+            "command": "./scripts/quality-before-commit.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
             "command": "./scripts/attribution-guard.sh"
           },
           {
@@ -68,11 +73,24 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/quality-edit-advisory.sh"
+          }
+        ]
+      },
+      {
         "matcher": "apply_patch",
         "hooks": [
           {
             "type": "command",
             "command": "./scripts/agentic-source-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/quality-edit-advisory.sh"
           },
           {
             "type": "command",
@@ -97,6 +115,16 @@
             "type": "command",
             "if": "Bash(git commit*)",
             "command": "./scripts/stuck-reset.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "./scripts/reindex-after-commit.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git switch -c*)|Bash(git switch --create*)|Bash(git checkout -b*)|Bash(git checkout -B*)|Bash(git worktree add*)|Bash(git merge*)|Bash(git pull*)|Bash(git rebase*)",
+            "command": "./scripts/repomix-refresh-snapshot.sh"
           }
         ]
       }

@@ -1,28 +1,28 @@
 ---
 name: research
-description: Use when the user needs structured research rather than implementation.
+description: Use when the user needs open-ended research requiring synthesis across multiple sources — comparisons, technology evaluations, tradeoff analysis. NOT for single-repo "where is X" lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows.
 ---
 
 # Research
 
-Use this skill when the task is primarily investigation rather than code changes.
+Route and coordinate multi-source research. This skill decides which tools and
+delegation targets to use, then synthesizes findings into a structured report.
 
 ## Workflow
 
-1. Check for existing local notes or prior research before starting fresh.
-2. Break the topic into a small set of concrete research angles.
-3. Use parallel subagents for independent angles when the topic splits cleanly.
-4. Prefer primary sources and recent material for unstable topics.
-5. Save or present findings in a structure the next session can reuse.
+1. Clarify the research question — narrow scope before searching.
+2. Check for existing local notes or prior research.
+3. Map the question to sources:
+   - Codebase exploration → delegate to **explore** skill
+   - Library/framework docs → orchestrator should pass Context7 or web search
+   - Live URLs → delegate to **web-fetch** skill
+   - Deep multi-source → delegate to **hyperresearch** wrapper
+   - Independent angles → parallel subagents
+4. Synthesize findings. Distinguish facts, inferred conclusions, and open questions.
+5. Save findings by default. Read `references/report-template.md` for output format.
 
-## Steering
+## Delegation
 
-- Prefer official docs, specs, or primary sources over derivative summaries.
-- If the topic involves a library or framework, consult context7 before relying on training data.
-- Distinguish facts, inferred conclusions, and open questions.
-- Keep research read-only unless the user explicitly asked to save a report.
-- Use subagents only for independent angles that do not block the next local step.
-
-## References
-
-Read `references/report-template.md` when producing a written report.
+This skill coordinates — it does not implement research directly.
+Prefer primary sources over derivative summaries.
+For questions a single explore or web-fetch call can answer, skip this skill and use those directly.

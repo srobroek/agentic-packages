@@ -25,6 +25,35 @@ extract_paths() {
   ' 2>/dev/null || true
 }
 
+is_read_only_shell_command() {
+  local command="$1"
+  local first
+
+  # Shell payloads are command strings, not file edits. Allow common read-only
+  # inspection commands against generated runtime assets so skills and agents
+  # can be invoked or inspected without turning the guard into a read blocker.
+  # Editing generated assets remains blocked through write tools and mutating
+  # shell commands below.
+  if printf '%s' "$command" | grep -Eq '(^|[[:space:]])(>|>>|tee|dd|truncate|install|cp|mv|rm|touch|chmod|chown|python[0-9.]*|node|perl|ruby|awk|ed|ex|vim|nvim|nano)([[:space:]]|$)'; then
+    return 1
+  fi
+  if printf '%s' "$command" | grep -Eq '(^|[[:space:]])sed[[:space:]].*(-i|--in-place)([[:space:]]|=|$)'; then
+    return 1
+  fi
+  if printf '%s' "$command" | grep -Eq '[;&|`$()]'; then
+    return 1
+  fi
+
+  first="$(printf '%s\n' "$command" | sed -E 's/^[[:space:]]*(env[[:space:]]+)?//; s/[[:space:]].*$//')"
+  case "$first" in
+    cat|sed|head|tail|less|more|bat|rg|grep|fd|find|ls|tree|wc|jq|yq|stat|file|pwd|realpath|readlink)
+      return 0
+      ;;
+  esac
+
+  return 1
+}
+
 blocked_regex='(^|/)(\.codex/(agents|hooks|plugins|skills)(/|$)|\.claude/(agents|commands|hooks|rules|skills)(/|$)|\.agents/skills(/|$)|dotfiles/dot_codex/(agents|hooks|plugins|private_rules)(/|$)|dotfiles/dot_codex/hooks\.json$|dotfiles/dot_codex/symlink_config\.toml$|dotfiles/external-managed/codex/(config\.toml|rules/)|dotfiles/dot_claude/(agents|commands|hooks|workflows)(/|$)|dotfiles/dot_claude/private_(managed-)?settings\.json\.tmpl$|dotfiles/\.chezmoitemplates/claude(/|$)|dotfiles/modify_dot_claude\.json\.tmpl$|dotfiles/external-managed/config/agentic-tools/(skills|hooks|steering|project-setup)(/|$))'
 
 mcp_config_regex='(^|/)(\.codex/config\.toml|\.claude/settings[^/]*\.json|dotfiles/external-managed/codex/config\.toml|dotfiles/dot_claude/private_(managed-)?settings\.json\.tmpl)$'
@@ -32,6 +61,10 @@ mcp_config_regex='(^|/)(\.codex/config\.toml|\.claude/settings[^/]*\.json|dotfil
 blocked_hit=""
 while IFS= read -r item; do
   [ -z "$item" ] && continue
+
+  if printf '%s' "$payload" | jq -e '.tool_input.command? == $item' --arg item "$item" >/dev/null 2>&1 && is_read_only_shell_command "$item"; then
+    continue
+  fi
 
   if printf '%s' "$item" | grep -Eq "$blocked_regex"; then
     blocked_hit="$item"

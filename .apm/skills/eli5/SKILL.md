@@ -1,32 +1,51 @@
 ---
 name: eli5
-description: Use when a topic needs explanation at multiple difficulty levels.
+description: Explains a topic at multiple depth levels. Use when a topic needs layered explanation, when the user is confused about a concept, or when the user says "explain X." Agents may suggest this when the user seems unfamiliar with a topic or asks "what is" / "how does" questions.
 ---
 
 # ELI5
 
-Use this skill to explain a topic at one or more depth levels.
+Explain this topic: **$ARGUMENTS**
 
-## Workflow
+## Staging
 
-1. Ask what level(s) the user wants if not specified.
-2. Decide whether the topic is stable enough to explain directly or needs research first.
-3. Generate only the requested levels -- do not always produce all four.
-4. Keep each level genuinely calibrated to its audience.
-5. Make higher levels add nuance, not just length.
+Before explaining, ask these questions:
 
-## Default Levels
+1. **Depth**: How deep? All 5 levels (default), or specific levels?
+2. **Research**: Pair with a research skill?
+   - `research` — topic changed materially in the last 12 months, or competing schools of thought exist
+   - `hyperresearch` — very in-depth research (expensive)
+   - none — explain from existing knowledge (default)
 
-| Level | Audience | Approach |
-|-------|----------|----------|
-| beginner | No prior knowledge | Concrete analogies, no jargon |
-| generalist | Broadly technical | Standard terminology, practical framing |
-| practitioner | Domain experience | Implementation details, tradeoffs |
-| expert | Deep specialist | Edge cases, formal properties, open problems |
+If the user doesn't specify, default to all 5 levels with no research skill.
 
-## Steering
+## Depth levels
+
+| Level | Name | Goal | Words |
+|-------|------|------|-------|
+| 1 | **Metaphor** | What it's like. Pure analogy, zero jargon. A child could follow. | ~80-120 |
+| 2 | **Concept** | What it is. Plain language, core ideas, when you'd reach for it. | ~80-120 |
+| 3 | **Mechanism** | How it works. Technical detail, components, data flow, key algorithms. | ~80-120 |
+| 4 | **Tradeoffs** | Why it matters. Design choices, alternatives, when to use vs. avoid, failure modes, cost. | ~80-120 |
+| 5 | **Frontier** | What's next. Edge cases, open problems, competing research, where the field is heading. | ~150 |
+
+## Output format
+
+Each level gets its own heading with a one-line summary:
+
+```
+## 1. Metaphor
+The shortest version: It's like sending a sealed envelope through a chain of trusted couriers.
+
+[3-5 short paragraphs]
+```
+
+Repeat for each requested level.
+
+## Rules
 
 - Prefer accuracy over cute analogies.
 - Do not flatten meaningful uncertainty just to simplify.
 - If the user asks for one level only, give one level only.
-- If the topic is current or disputed, pair this with the research skill first.
+- Make higher levels add nuance, not just length.
+- Word budgets are soft targets — use judgment.

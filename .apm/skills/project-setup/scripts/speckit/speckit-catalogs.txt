@@ -1,3 +1,0 @@
-# Required extension catalogs for Codex-era SpecKit bootstrap.
-# One catalog URL per line. Blank lines and comments are ignored.
-https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json

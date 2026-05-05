@@ -6,6 +6,7 @@ as runtime-specific generated output.
 Load only the relevant topic:
 
 - [Agent routing](agent-routing.context.md)
+- [External agent marketplaces](external-agent-marketplaces.context.md)
 - [Project structure](project-structure.context.md)
 - [Agentic source of truth](source-of-truth.context.md)
 - [External asset audit](external-assets.context.md)

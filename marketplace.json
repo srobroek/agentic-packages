@@ -1,13 +1,13 @@
 {
-  "name": "agentic-packages",
+  "name": "srobroek-agentic",
   "owner": {
     "name": "srobroek",
     "url": "https://github.com/srobroek"
   },
   "plugins": [
     {
-      "name": "agentic-core",
-      "description": "Full shared package: agents, skills, hooks, instructions, contexts, and scripts.",
+      "name": "core",
+      "description": "Full shared package with local agents, skills, hooks, instructions, contexts, MCP assets, scripts, wrappers, plus bundled Matt diagnose for bug workflows.",
       "source": {
         "source": "github",
         "repo": "srobroek/agentic-packages",
@@ -15,522 +15,418 @@
       }
     },
     {
-      "name": "agentic-skill-catchup",
-      "description": "Use when resuming work in an existing project. Restores context from a handover instead of rediscovering it.",
+      "name": "catchup",
+      "description": "Resume interrupted project work by locating and following the best handover before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup/continue/resume/handover, or when asked what changed or what is next.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/catchup",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/catchup",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-chezmoi-editor",
-      "description": "Use when editing chezmoi-managed dotfiles. Edit source files, not live targets.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/chezmoi-editor",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-code-review",
+      "name": "code-review",
       "description": "Use for review requests. Prioritizes bugs, regressions, risks, and missing tests.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/code-review",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/code-review",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-codebase-index",
+      "name": "codebase-index",
       "description": "Use when the codebase graph is missing or stale. Rebuild the codebase-memory index first.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/codebase-index",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/codebase-index",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-codebase-memory",
+      "name": "codebase-memory",
       "description": "Use for graph-aware codebase exploration, tracing, and reference lookup.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/codebase-memory",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/codebase-memory",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-commit-push-merge",
-      "description": "Use only for explicit direct-merge requests. Commit, push, and merge with confirmation.",
+      "name": "commit-push-merge",
+      "description": "Publish and merge a branch by committing local changes when needed, pushing, and merging after inferring or confirming the target and method. Use when the user asks to commit, push, and merge or to direct-merge a branch.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/commit-push-merge",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/commit-push-merge",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-commit-push-pr",
-      "description": "Use when the user wants the current branch committed, pushed, and opened as a PR.",
+      "name": "commit-push-pr",
+      "description": "Publish a branch by committing local changes when needed, pushing, and opening or updating a pull request. Use when the user explicitly asks to commit and push with a PR, open a PR, or publish the current branch for review.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/commit-push-pr",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/commit-push-pr",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-debate",
-      "description": "Use for deep tradeoff analysis. Tests an idea from both sides before recommending a path.",
+      "name": "debate",
+      "description": "Use for deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. Agents may suggest this when the user faces a non-trivial decision.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/debate",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/debate",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-design-md",
-      "description": "Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files",
+      "name": "eli5",
+      "description": "Explains a topic at multiple depth levels. Use when a topic needs layered explanation, when the user is confused about a concept, or when the user says \"explain X.\" Agents may suggest this when the user seems unfamiliar with a topic or asks \"what is\" / \"how does\" questions.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/design-md",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/eli5",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-diagnose",
-      "description": "Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce \u2192 minimise \u2192 hypothesise \u2192 instrument \u2192 fix \u2192 regression-test. Use when user says \"diagnose this\" / \"debug this\", reports a bug, says something is broken/throwing/failing, or describes a performance regression.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/diagnose",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-diagram",
-      "description": "Use when generating diagrams from text, code, or docs. Produces d2-based visuals.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/diagram",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-eli5",
-      "description": "Use when a topic needs explanation at multiple difficulty levels.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/eli5",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-enhance-prompt",
-      "description": "Transforms vague UI ideas into polished, Stitch-optimized prompts. Enhances specificity, adds UI/UX keywords, injects design system context, and structures output for better generation results.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/enhance-prompt",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-explore",
+      "name": "explore",
       "description": "Use for read-only codebase orientation, file discovery, and path tracing.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/explore",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/explore",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-find-skills",
-      "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/find-skills",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-flowchart",
-      "description": "Use when generating color-coded flowcharts or dependency diagrams with d2.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/flowchart",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-github-admin",
-      "description": "Use for GitHub operations beyond local git, including issues, labels, projects, and PR admin.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/github-admin",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-go-quality",
+      "name": "go-quality",
       "description": "Use to run Go format, lint, and test checks with the project toolchain.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/go-quality",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/go-quality",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-grill-me",
-      "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions \"grill me\".",
+      "name": "handover",
+      "description": "Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when ending or pausing work, switching context, preserving unfinished implementation state, or when the user asks for a handover.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/grill-me",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/handover",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-grill-with-docs",
-      "description": "Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.",
+      "name": "optimize-steering",
+      "description": "Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `steering-audit` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/grill-with-docs",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/optimize-steering",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-handover",
-      "description": "Use when ending a session or switching context. Saves a recovery prompt for the next session.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/handover",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-impeccable",
-      "description": "Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/impeccable",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-improve-codebase-architecture",
-      "description": "Find deepening opportunities in a codebase, informed by the domain language in CONTEXT.md and the decisions in docs/adr/. Use when the user wants to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more testable and AI-navigable.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/improve-codebase-architecture",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-interface-design",
-      "description": "Design, audit, and normalize product interfaces with intent, DESIGN.md authority, and systematic UI consistency. Use when building or reviewing dashboards, admin panels, SaaS apps, tools, settings pages, forms, data interfaces, component systems, or when the user asks for UI craft, design-system, or interface consistency.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/interface-design",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-optimize-docs",
-      "description": "Use to audit docs for agent-context cost, redundancy, and routing opportunities.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/optimize-docs",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-optimize-steering",
-      "description": "Optimize markdown steering files, skills, and agent definitions for cross-model agent consumption. Applies research-backed formatting conventions. Use when asked to optimize, refactor, or normalize agent instructions, steering docs, SKILL.md files, or agent definitions for better agent compliance.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/optimize-steering",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-playwright",
+      "name": "playwright",
       "description": "Use when automating browser interactions through a Playwright MCP server.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/playwright",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/playwright",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-presentation",
-      "description": "Use when creating slide decks. Produces Marp slides and exports them for review.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/presentation",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-project-setup",
-      "description": "Use when bootstrapping a new repo or adding a package. Interactively selects project shape, stacks, APM setup, tooling, and quality gates before running setup scripts.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/project-setup",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-prompt-lookup",
+      "name": "prompt-lookup",
       "description": "Use when finding, comparing, or improving prompt templates and prompt-engineering patterns.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/prompt-lookup",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/prompt-lookup",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-python-quality",
+      "name": "python-quality",
       "description": "Use to run Python format, lint, type-check, and test commands with the project toolchain.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/python-quality",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/python-quality",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-quick-commit",
-      "description": "Use for a fast local commit without opening a PR.",
+      "name": "quick-commit",
+      "description": "Create a deliberate local git commit without pushing or opening a PR. Use when the user asks to commit local changes, make a checkpoint commit, or run a fast commit-only workflow.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/quick-commit",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/quick-commit",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-react-components",
-      "description": "Converts Stitch designs into modular Vite and React components using system-level networking and AST-based validation.",
+      "name": "research",
+      "description": "Use when the user needs open-ended research requiring synthesis across multiple sources \u2014 comparisons, technology evaluations, tradeoff analysis. NOT for single-repo \"where is X\" lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/react-components",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/research",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-remotion",
-      "description": "Generate walkthrough videos from Stitch projects using Remotion with smooth transitions, zooming, and text overlays",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/remotion",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-research",
-      "description": "Use when the user needs structured research rather than implementation.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/research",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-resume",
-      "description": "Create, update, or tailor ATS-compliant resumes. Use when user wants a new resume, resume update, or resume customized for a specific job posting.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/resume",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-rust-quality",
+      "name": "rust-quality",
       "description": "Use to run Rust format, lint, and test checks with the project toolchain.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/rust-quality",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/rust-quality",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-session-review",
-      "description": "Use when wrapping up a session. Reviews corrections, loose ends, and follow-up work.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/session-review",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-setup-matt-pocock-skills",
-      "description": "Sets up an `## Agent skills` block in AGENTS.md/CLAUDE.md and `docs/agents/` so the engineering skills know this repo's issue tracker (GitHub or local markdown), triage label vocabulary, and domain doc layout. Run before first use of `to-issues`, `to-prd`, `triage`, `diagnose`, `tdd`, `improve-codebase-architecture`, or `zoom-out` \u2014 or if those skills appear to be missing context about the issue tracker, triage labels, or domain docs.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/setup-matt-pocock-skills",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-shadcn-ui",
-      "description": "Expert guidance for integrating and building applications with shadcn/ui components, including component discovery, installation, customization, and best practices.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/shadcn-ui",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-sniff",
+      "name": "sniff",
       "description": "Use for a stability, hardening, and cleanup audit across a codebase.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/sniff",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/sniff",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-speckit-bugfix",
+      "name": "speckit-bugfix",
       "description": "Use when fixing bugs in a SpecKit repo. Scales from quick fixes to full bug workflows.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/speckit-bugfix",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/speckit-bugfix",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-steering-audit",
+      "name": "steering-audit",
       "description": "Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/steering-audit",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/steering-audit",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-stitch-design",
-      "description": "Unified entry point for Stitch design work. Handles prompt enhancement (UI/UX keywords, atmosphere), design system synthesis (.stitch/DESIGN.md), and high-fidelity screen generation/editing via Stitch MCP.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/stitch-design",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-stitch-loop",
-      "description": "Teaches agents to iteratively build websites using Stitch with an autonomous baton-passing loop pattern",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/stitch-loop",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-triage",
-      "description": "Triage issues through a state machine driven by triage roles. Use when user wants to create an issue, triage issues, review incoming bugs or feature requests, prepare issues for an AFK agent, or manage issue workflow.",
-      "source": {
-        "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/triage",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "agentic-skill-typescript-quality",
+      "name": "typescript-quality",
       "description": "Use to run TypeScript or JavaScript format, lint, type-check, and test commands.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/typescript-quality",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/typescript-quality",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-unstuck",
-      "description": "Use when debugging has stalled. Reframes the problem and challenges weak assumptions.",
+      "name": "unstuck",
+      "description": "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed. Use when repeated fixes, same-file re-editing, flaky evidence, circular hypotheses, or going in circles suggest the agent is stuck; bundled diagnose owns first-pass debugging.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/unstuck",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/unstuck",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-verify",
-      "description": "Use for a final local verification pass across the repo before handoff, commit, or PR.",
+      "name": "verify",
+      "description": "Run and report a final local verification pass before handoff, commit, push, merge, or PR. Use when the user asks to verify, test everything, check readiness, or prove local changes are safe to hand off.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/verify",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/verify",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-web-fetch",
-      "description": "Use when information must be retrieved from the web or a specific URL.",
+      "name": "web-fetch",
+      "description": "Retrieve current or URL-specific information from the web with source-aware tool routing. Use when the user asks to fetch, open, browse, cite, verify online, inspect a URL, or answer a question whose facts may have changed.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/web-fetch",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/skills/web-fetch",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-write-a-skill",
-      "description": "Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, or build a new skill.",
+      "name": "diagrams",
+      "description": "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/write-a-skill",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/diagrams",
         "ref": "main"
       }
     },
     {
-      "name": "agentic-skill-zoom-out",
-      "description": "Tell the agent to zoom out and give broader context or a higher-level perspective. Use when you're unfamiliar with a section of code or need to understand how it fits into the bigger picture.",
+      "name": "drawio-skill",
+      "description": "Third-party draw.io diagram skill for editable architecture, UML, ERD, sequence, flowchart, and process diagrams with local PNG/SVG/PDF export.",
+      "source": {
+        "source": "github",
+        "repo": "Agents365-ai/drawio-skill",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "excalidraw-diagram-skill",
+      "description": "Third-party Excalidraw diagram skill for visual argument diagrams, architecture explanations, and workflow sketches with render validation.",
+      "source": {
+        "source": "github",
+        "repo": "coleam00/excalidraw-diagram-skill",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "d2-diagram",
+      "description": "Third-party D2 diagram skill for text-based architecture, flowchart, data-flow, database, and topology diagrams.",
       "source": {
         "source": "git-subdir",
-        "url": "srobroek/agentic-packages",
-        "path": ".apm/skills/zoom-out",
+        "repo": "neuro-synapse/network-topology-agent",
+        "subdir": ".claude/skills/d2-diagram",
+        "ref": "master"
+      }
+    },
+    {
+      "name": "resume",
+      "description": "Resume bundle that installs the preferred advanced resume-tailoring workflow plus the broader ResumeSkills career-support bundle.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/resume",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "presentation",
+      "description": "Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts for general decks, Marp slides, and PowerPoint template workflows.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/presentation",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "ppt-creator",
+      "description": "Third-party general-purpose presentation skill for persuasive, data-driven slide decks with speaker notes and PPTX output.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "daymade/claude-code-skills",
+        "subdir": "daymade-docs/ppt-creator",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "marp-slide",
+      "description": "Third-party Marp slide skill with multiple themes, image layouts, and slide design improvements.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "softaworks/agent-toolkit",
+        "subdir": "skills/marp-slide",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "pptx-from-layouts",
+      "description": "Third-party PowerPoint skill that generates editable PPTX decks from markdown using real slide-master layouts and placeholders.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "tristan-mcinnis/pptx-from-layouts-skill",
+        "subdir": ".claude/skills/pptx-from-layouts",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "resume-tailoring",
+      "description": "Third-party advanced resume tailoring skill with company research, branching experience discovery, matching strategies, and multi-format output.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "varunr89/resume-tailoring-skill",
+        "subdir": "skills/resume-tailoring",
+        "ref": "master"
+      }
+    },
+    {
+      "name": "tailored-resume-generator",
+      "description": "Third-party focused resume tailoring skill that maps job descriptions to candidate experience and ATS-friendly resume output.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "ComposioHQ/awesome-claude-skills",
+        "subdir": "tailored-resume-generator",
+        "ref": "master"
+      }
+    },
+    {
+      "name": "resumeskills",
+      "description": "Third-party career skills bundle for ATS optimization, resume bullets, job-description analysis, tailoring, interview prep, and job-search support.",
+      "source": {
+        "source": "github",
+        "repo": "Paramchoudhary/ResumeSkills",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "hyperresearch",
+      "description": "Third-party HyperResearch deep research harness wrapper. Uses upstream HyperResearch's Python installer for runtime Claude assets.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/hyperresearch",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "impeccable",
+      "description": "Third-party Impeccable frontend design skill bundle.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "pbakaus/impeccable",
+        "subdir": ".agents/skills/impeccable",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "interface-design",
+      "description": "Third-party Interface Design skill for dashboards, admin panels, SaaS apps, tools, and product interfaces.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "Dammyjay93/interface-design",
+        "subdir": ".claude/skills/interface-design",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "stitch-skills",
+      "description": "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows.",
+      "source": {
+        "source": "github",
+        "repo": "google-labs-code/stitch-skills",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "work-tools",
+      "description": "Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": ".apm/wrappers/work-tools",
         "ref": "main"
       }
     },
@@ -548,8 +444,8 @@
       "description": "Ultra-compressed communication mode.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/productivity/caveman",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/productivity/caveman",
         "ref": "main"
       }
     },
@@ -558,8 +454,8 @@
       "description": "Disciplined diagnosis loop for hard bugs and regressions.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/diagnose",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/diagnose",
         "ref": "main"
       }
     },
@@ -568,8 +464,8 @@
       "description": "Planning grill without project docs.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/productivity/grill-me",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/productivity/grill-me",
         "ref": "main"
       }
     },
@@ -578,8 +474,8 @@
       "description": "Planning grill using domain docs and ADRs.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/grill-with-docs",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/grill-with-docs",
         "ref": "main"
       }
     },
@@ -588,8 +484,8 @@
       "description": "Find architecture deepening opportunities.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/improve-codebase-architecture",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/improve-codebase-architecture",
         "ref": "main"
       }
     },
@@ -598,8 +494,8 @@
       "description": "Scaffold repo-local docs consumed by Matt Pocock skills.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/setup-matt-pocock-skills",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/setup-matt-pocock-skills",
         "ref": "main"
       }
     },
@@ -608,8 +504,8 @@
       "description": "Test-driven development loop.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/tdd",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/tdd",
         "ref": "main"
       }
     },
@@ -618,8 +514,8 @@
       "description": "Break plans and specs into independently grabbable issues.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/to-issues",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/to-issues",
         "ref": "main"
       }
     },
@@ -628,8 +524,8 @@
       "description": "Turn current conversation context into a PRD.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/to-prd",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/to-prd",
         "ref": "main"
       }
     },
@@ -638,8 +534,8 @@
       "description": "Triage issues through a role/state machine.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/triage",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/triage",
         "ref": "main"
       }
     },
@@ -648,8 +544,8 @@
       "description": "Create new agent skills.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/productivity/write-a-skill",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/productivity/write-a-skill",
         "ref": "main"
       }
     },
@@ -658,8 +554,8 @@
       "description": "Ask for broader codebase context.",
       "source": {
         "source": "git-subdir",
-        "url": "mattpocock/skills",
-        "path": "skills/engineering/zoom-out",
+        "repo": "mattpocock/skills",
+        "subdir": "skills/engineering/zoom-out",
         "ref": "main"
       }
     }

@@ -1,0 +1,14 @@
+name: diagrams
+version: 0.1.0
+description: Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.
+author: Sjors Robroek
+license: MIT
+type: skill
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - Agents365-ai/drawio-skill#main
+    - coleam00/excalidraw-diagram-skill#main
+    - neuro-synapse/network-topology-agent/.claude/skills/d2-diagram#master

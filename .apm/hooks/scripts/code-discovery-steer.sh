@@ -15,7 +15,7 @@ if [ -f "$GATE" ]; then
 fi
 touch "$GATE"
 
-CTX="CODE DISCOVERY: Prefer codebase-memory-mcp (search_graph, trace_path, get_code_snippet) or repomix (pack_codebase, grep_repomix_output) for code exploration. Grep/Glob/Read are fine for text content, config values, and non-code files."
+CTX="CODE DISCOVERY: Prefer codebase-memory-mcp (search_graph, trace_path, get_code_snippet) for symbol and call-path exploration. Use Repomix only when broad repository snapshot context is useful; it is a packer, not an incremental index. Grep/Glob/Read are fine for text content, config values, and non-code files."
 
 jq -n --arg ctx "$CTX" '{
   hookSpecificOutput: {

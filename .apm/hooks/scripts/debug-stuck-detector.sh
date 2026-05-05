@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # debug-stuck-detector.sh
 # PostToolUse → Edit|Write|MultiEdit (async)
-# Counts re-edits (same file edited again in current cycle), suggests /unstuck at threshold.
+# Counts re-edits (same file edited again in current cycle), suggests diagnose/unstuck at threshold.
 # Separate state from test-state-tracker — no coupling.
 
 INPUT=$(cat)
@@ -58,7 +58,8 @@ if [ "$REEDITS" -ge "$THRESHOLD" ] && [ "$COOLDOWN" != "true" ]; then
   cat >&2 <<EOF
 STUCK DETECTOR: ${REEDITS} re-edits to previously-edited source files without committing.
 Files in cycle: ${FILES}
-Consider running /unstuck for a fresh adversarial perspective on this bug.
+Use diagnose first if there is no trusted reproduction or fast feedback loop.
+Use unstuck when diagnosis is looping and you need an adversarial assumption check.
 EOF
 fi
 

@@ -1,4 +1,4 @@
-# agentic-packages
+# srobroek/agentic-packages
 
 APM package repository for shared agentic tooling:
 
@@ -9,10 +9,14 @@ APM package repository for shared agentic tooling:
 
 ## Root package usage
 
+The `core` bundle installs the local shared package contents, including shared
+agents, personal workflow skills such as `activity-tracker` and
+`sfdc-activity`, and Matt Pocock's `diagnose` skill as an upstream APM
+dependency for the default bug-diagnosis loop.
+
 From this package directory:
 
 ```bash
-apm run sync-agent-metadata
 apm run build-marketplace
 apm compile --validate --local-only --target codex
 ```
@@ -30,9 +34,9 @@ entries to the project `apm.yml`. Project setup should call the finalizers from
 For marketplace installation:
 
 ```bash
-apm marketplace add srobroek/agentic-packages --name agentic
-apm marketplace browse agentic
-apm install agentic-core@agentic
+apm marketplace add srobroek/agentic-packages --name srobroek-agentic
+apm marketplace browse srobroek-agentic
+apm install core@srobroek-agentic
 ```
 
 For direct GitHub installation:
@@ -59,7 +63,8 @@ runtime summary file.
 
 `patch-agentic-tools` is required because APM's conversion does not preserve
 all Codex and Claude runtime-specific model, effort, sandbox, and permission
-fields.
+fields for first-party agents. External marketplace agents can be audited and
+patched only through explicit project policy.
 
 Shared agentic assets are authored here, not in generated runtime directories
 or dotfiles. Add or update agents, skills, hooks, instructions, contexts, MCP

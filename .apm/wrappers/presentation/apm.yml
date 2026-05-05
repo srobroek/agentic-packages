@@ -1,0 +1,14 @@
+name: presentation
+version: 0.1.0
+description: Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.
+author: Sjors Robroek
+license: MIT
+type: skill
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - daymade/claude-code-skills/daymade-docs/ppt-creator#main
+    - softaworks/agent-toolkit/skills/marp-slide#main
+    - tristan-mcinnis/pptx-from-layouts-skill/.claude/skills/pptx-from-layouts#main
