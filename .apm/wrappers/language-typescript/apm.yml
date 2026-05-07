@@ -10,3 +10,15 @@ includes: auto
 dependencies:
   apm:
     - wshobson/agents/plugins/javascript-typescript#main
+  mcp:
+    - name: lsp-typescript
+      registry: false
+      transport: stdio
+      command: mcp-language-server
+      args:
+        - --workspace
+        - .
+        - --lsp
+        - typescript-language-server
+        - --lsp-arg
+        - --stdio

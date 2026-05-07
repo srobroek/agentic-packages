@@ -267,6 +267,12 @@
             "command": "./scripts/worktree-orphan-cleanup.sh",
             "async": true,
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "./scripts/apm-outdated-check.sh",
+            "asyncRewake": true,
+            "timeout": 30
           }
         ]
       }

@@ -10,3 +10,13 @@ includes: auto
 dependencies:
   apm:
     - wshobson/agents/plugins/systems-programming#main
+  mcp:
+    - name: lsp-go
+      registry: false
+      transport: stdio
+      command: mcp-language-server
+      args:
+        - --workspace
+        - .
+        - --lsp
+        - gopls

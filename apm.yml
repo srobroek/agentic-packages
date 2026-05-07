@@ -21,13 +21,13 @@ dependencies:
     args:
     - -y
     - '@anthropic-ai/context7-mcp@latest'
-  - name: github
+  - name: mcp-package-version
     registry: false
     transport: stdio
     command: npx
     args:
     - -y
-    - '@modelcontextprotocol/server-github'
+    - mcp-package-version
   - name: repomix
     registry: false
     transport: stdio

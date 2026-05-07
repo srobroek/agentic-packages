@@ -10,3 +10,15 @@ includes: auto
 dependencies:
   apm:
     - wshobson/agents/plugins/python-development#main
+  mcp:
+    - name: lsp-python
+      registry: false
+      transport: stdio
+      command: mcp-language-server
+      args:
+        - --workspace
+        - .
+        - --lsp
+        - pyright-langserver
+        - --lsp-arg
+        - --stdio

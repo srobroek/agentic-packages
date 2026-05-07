@@ -3,7 +3,7 @@ name: adversarial-challenger
 description: Read-only adversarial debugger for the unstuck workflow. Use after normal diagnosis stalls and the parent can provide observable facts only; investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files.
 model: opus
 maxTurns: 25
-tools: ["terminal", "file-manager", "context7", "openaiDeveloperDocs", "codebase-memory-mcp", "github", "fetcher", "playwright", "repomix", "terraform", "tool_search"]
+tools: ["terminal", "file-manager", "context7", "openaiDeveloperDocs", "codebase-memory-mcp", "fetcher", "playwright", "repomix", "terraform", "tool_search"]
 x-agentic:
   codex:
     model: "gpt-5.5"

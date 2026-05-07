@@ -6,6 +6,11 @@
           {
             "type": "command",
             "command": "./scripts/branch-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/apm-outdated-check.sh",
+            "timeout": 30
           }
         ]
       }

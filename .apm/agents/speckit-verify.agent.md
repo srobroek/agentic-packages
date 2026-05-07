@@ -4,7 +4,7 @@ description: Validates implemented code against a target SpecKit spec's FR/SC re
 model: opus
 effort: high
 memory: user
-tools: ["terminal", "file-manager", "github", "speckit", "codebase-memory-mcp", "repomix", "playwright"]
+tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix", "playwright"]
 x-agentic:
   codex:
     model: "gpt-5.5"
