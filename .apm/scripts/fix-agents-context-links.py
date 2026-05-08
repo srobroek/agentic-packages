@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path.cwd()
 PACKAGE_ROOT_CANDIDATES = (
     ROOT / "apm_modules" / "srobroek" / "agentic-packages" / "packages",
+    ROOT / "apm_modules" / "_local",
     ROOT / "apm_modules" / "_local" / "agentic-packages" / "packages",
 )
 PACKAGE_ROOT = next((path for path in PACKAGE_ROOT_CANDIDATES if path.exists()), PACKAGE_ROOT_CANDIDATES[0])
