@@ -42,7 +42,7 @@ scripts:
   build-indexes: "python3 .apm/scripts/build-agentic-indexes.py"
   build-artifacts: "apm run build-bundles && apm run build-marketplace && apm run build-indexes"
   install: "apm install --target claude,codex,agent-skills"
-  prune: "apm prune"
+  prune-stale-local-packages: "python3 .apm/scripts/prune-stale-local-packages.py"
   compile: "apm compile --target codex --no-constitution"
   compile-codex: "apm compile --target codex --no-constitution"
   strip-constitution-blocks: "python3 .apm/scripts/strip-constitution-blocks.py"
@@ -51,7 +51,7 @@ scripts:
   patch-codex-agents: "python3 .apm/scripts/patch-runtime-agents.py --codex"
   patch-claude-agents: "python3 .apm/scripts/patch-runtime-agents.py --claude"
   audit-agentic-assets: "python3 .apm/scripts/audit-agentic-assets.py"
-  setup: "apm run install && apm run prune && apm run compile && apm run strip-constitution-blocks && apm run write-claude-pointers && apm run patch-agents && apm run audit-agentic-assets"
+  setup: "apm run install && apm run prune-stale-local-packages && apm run compile && apm run strip-constitution-blocks && apm run write-claude-pointers && apm run patch-agents && apm run audit-agentic-assets"
 compilation:
   strategy: distributed
   source_attribution: false

@@ -334,7 +334,7 @@ BUNDLES: tuple[Bundle, ...] = (
         instructions=COMMON_INSTRUCTIONS,
         inline_instructions=(TOOL_ROUTING_INSTRUCTION,),
         contexts=COMMON_CONTEXTS,
-        scripts=("write-claude-pointers", "strip-constitution-blocks"),
+        scripts=("write-claude-pointers", "strip-constitution-blocks", "prune-stale-local-packages"),
         dependencies=(
             f"{MATT}/engineering/diagnose#main",
             f"{MATT}/productivity/grill-me#main",
