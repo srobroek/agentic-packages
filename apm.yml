@@ -44,12 +44,13 @@ scripts:
   install: "apm install --target claude,codex,agent-skills"
   compile: "apm compile --target codex --no-constitution"
   compile-codex: "apm compile --target codex --no-constitution"
+  strip-constitution-blocks: "python3 .apm/scripts/strip-constitution-blocks.py"
   write-claude-pointers: "python3 .apm/scripts/write-claude-pointers.py"
   patch-agents: "python3 .apm/scripts/patch-runtime-agents.py --all"
   patch-codex-agents: "python3 .apm/scripts/patch-runtime-agents.py --codex"
   patch-claude-agents: "python3 .apm/scripts/patch-runtime-agents.py --claude"
   audit-agentic-assets: "python3 .apm/scripts/audit-agentic-assets.py"
-  setup: "apm run install && apm run compile && apm run write-claude-pointers && apm run patch-agents && apm run audit-agentic-assets"
+  setup: "apm run install && apm run compile && apm run strip-constitution-blocks && apm run write-claude-pointers && apm run patch-agents && apm run audit-agentic-assets"
 compilation:
   strategy: distributed
   source_attribution: false

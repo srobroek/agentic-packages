@@ -40,6 +40,7 @@ class Bundle:
     instructions: tuple[str, ...] = ()
     inline_instructions: tuple[InlineInstruction, ...] = ()
     contexts: tuple[str, ...] = ()
+    scripts: tuple[str, ...] = ()
     dependencies: tuple[str, ...] = ()
     mcp_dependencies: tuple[McpDependency, ...] = ()
 
@@ -124,58 +125,6 @@ applyTo: "**/*"
 Use `semgrep` for targeted AST vulnerability checks, `trivy` for dependency,
 container, and IaC scans, and the language audit tool for new or changed
 dependencies (`npm audit`, `pip-audit`, `cargo audit`, or `bundler-audit`).
-""",
-)
-
-LSP_GO_INSTRUCTION = InlineInstruction(
-    filename="73-lsp-go.instructions.md",
-    content="""---
-description: Go LSP server usage via mcp-language-server
-applyTo: "**/*.go"
----
-
-Use `lsp-go` for Go symbol navigation, references, diagnostics, and safe
-renames. Prefer it over text search for symbols; use `rg` for string literals
-and build tags.
-""",
-)
-
-LSP_PYTHON_INSTRUCTION = InlineInstruction(
-    filename="72-lsp-python.instructions.md",
-    content="""---
-description: Python LSP server usage via mcp-language-server
-applyTo: "**/*.{py,pyi}"
----
-
-Use `lsp-python` for Python import/class/function navigation, references,
-diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
-for string patterns and runtime-constructed names.
-""",
-)
-
-LSP_RUST_INSTRUCTION = InlineInstruction(
-    filename="74-lsp-rust.instructions.md",
-    content="""---
-description: Rust LSP server usage via mcp-language-server
-applyTo: "**/*.rs"
----
-
-Use `lsp-rust` for Rust symbol navigation, trait/macro-aware references,
-diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
-for string literals and cfg attributes.
-""",
-)
-
-LSP_TYPESCRIPT_INSTRUCTION = InlineInstruction(
-    filename="71-lsp-typescript.instructions.md",
-    content="""---
-description: TypeScript LSP server usage via mcp-language-server
-applyTo: "**/*.{ts,tsx,js,jsx,mts,cts}"
----
-
-Use `lsp-typescript` for TypeScript/JavaScript symbol navigation, references,
-diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
-for string literals and non-symbol patterns.
 """,
 )
 
@@ -273,7 +222,6 @@ LANGUAGE_BUNDLES = (
         description="TypeScript and JavaScript quality bundle with language steering and Hobson specialists.",
         skills=("typescript-quality",),
         instructions=("70-language-typescript",),
-        inline_instructions=(LSP_TYPESCRIPT_INSTRUCTION,),
         contexts=(
             "languages/languages-index",
             "languages/typescript",
@@ -288,7 +236,6 @@ LANGUAGE_BUNDLES = (
         description="Python quality bundle with language steering and Hobson specialists.",
         skills=("python-quality",),
         instructions=("71-language-python",),
-        inline_instructions=(LSP_PYTHON_INSTRUCTION,),
         contexts=(
             "languages/languages-index",
             "languages/python",
@@ -303,7 +250,6 @@ LANGUAGE_BUNDLES = (
         description="Go quality bundle with language steering and Hobson systems specialists.",
         skills=("go-quality",),
         instructions=("72-language-go",),
-        inline_instructions=(LSP_GO_INSTRUCTION,),
         contexts=(
             "languages/languages-index",
             "languages/go",
@@ -318,7 +264,6 @@ LANGUAGE_BUNDLES = (
         description="Rust quality bundle with language steering and Hobson systems specialists.",
         skills=("rust-quality",),
         instructions=("73-language-rust",),
-        inline_instructions=(LSP_RUST_INSTRUCTION,),
         contexts=(
             "languages/languages-index",
             "languages/rust",
@@ -389,6 +334,7 @@ BUNDLES: tuple[Bundle, ...] = (
         instructions=COMMON_INSTRUCTIONS,
         inline_instructions=(TOOL_ROUTING_INSTRUCTION,),
         contexts=COMMON_CONTEXTS,
+        scripts=("write-claude-pointers", "strip-constitution-blocks"),
         dependencies=(
             f"{MATT}/engineering/diagnose#main",
             f"{MATT}/productivity/grill-me#main",
@@ -637,6 +583,10 @@ def materialize_bundle(bundle: Bundle) -> None:
     for context in bundle.contexts:
         filename = f"{context}.context.md"
         copy_file(APM / "context" / filename, nested_apm / "context" / filename)
+
+    for script in bundle.scripts:
+        filename = f"{script}.py"
+        copy_file(APM / "scripts" / filename, nested_apm / "scripts" / filename)
 
     lines = [
         f"name: {bundle.name}",
