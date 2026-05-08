@@ -180,6 +180,58 @@ COMMON_CONTEXTS = (
     "tools-scripts/tools-scripts-index",
 )
 
+LANGUAGE_CONTEXT_INDEXES = {
+    "language-typescript": """# Language Context Index
+
+Use this context for TypeScript and JavaScript code, package layout, tooling,
+tests, runtime validation, generated types, and framework boundaries.
+
+Read only the relevant detail:
+
+- [TypeScript and JavaScript](typescript.context.md)
+- [General language defaults](../toolchain-defaults/languages.context.md)
+""",
+    "language-python": """# Language Context Index
+
+Use this context for Python code, package layout, tooling, tests, typing, and
+framework boundaries.
+
+Read only the relevant detail:
+
+- [Python](python.context.md)
+- [General language defaults](../toolchain-defaults/languages.context.md)
+""",
+    "language-go": """# Language Context Index
+
+Use this context for Go code, module layout, tooling, tests, SQL, generated
+code, and service boundaries.
+
+Read only the relevant detail:
+
+- [Go](go.context.md)
+- [General language defaults](../toolchain-defaults/languages.context.md)
+""",
+    "language-rust": """# Language Context Index
+
+Use this context for Rust crates, workspace layout, tooling, tests, error
+handling, async/runtime choices, and boundary design.
+
+Read only the relevant detail:
+
+- [Rust](rust.context.md)
+- [General language defaults](../toolchain-defaults/languages.context.md)
+""",
+    "language-terraform": """# Language Context Index
+
+Use this context for Terraform and HCL modules, state boundaries, providers,
+workspaces, policy, and deployment conventions.
+
+Read only the relevant detail:
+
+- [Terraform and HCL](terraform.context.md)
+""",
+}
+
 CORE_SKILLS = (
     "catchup",
     "handover",
@@ -334,7 +386,12 @@ BUNDLES: tuple[Bundle, ...] = (
         instructions=COMMON_INSTRUCTIONS,
         inline_instructions=(TOOL_ROUTING_INSTRUCTION,),
         contexts=COMMON_CONTEXTS,
-        scripts=("write-claude-pointers", "strip-constitution-blocks", "prune-stale-local-packages"),
+        scripts=(
+            "write-claude-pointers",
+            "strip-constitution-blocks",
+            "prune-stale-local-packages",
+            "fix-agents-context-links",
+        ),
         dependencies=(
             f"{MATT}/engineering/diagnose#main",
             f"{MATT}/productivity/grill-me#main",
@@ -583,6 +640,13 @@ def materialize_bundle(bundle: Bundle) -> None:
     for context in bundle.contexts:
         filename = f"{context}.context.md"
         copy_file(APM / "context" / filename, nested_apm / "context" / filename)
+
+    language_index = LANGUAGE_CONTEXT_INDEXES.get(bundle.name)
+    if language_index is not None:
+        (nested_apm / "context" / "languages" / "languages-index.context.md").write_text(
+            language_index.rstrip() + "\n",
+            encoding="utf-8",
+        )
 
     for script in bundle.scripts:
         filename = f"{script}.py"
