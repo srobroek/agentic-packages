@@ -42,8 +42,8 @@
       "wshobson"
     ],
     "name": "agentic-maintenance",
-    "path": ".apm/wrappers/agentic-maintenance",
-    "type": "wrapper"
+    "path": "packages/agentic-maintenance",
+    "type": "package"
   },
   {
     "description": "Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents.",
@@ -86,8 +86,8 @@
       "wshobson"
     ],
     "name": "code-intelligence",
-    "path": ".apm/wrappers/code-intelligence",
-    "type": "wrapper"
+    "path": "packages/code-intelligence",
+    "type": "package"
   },
   {
     "description": "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.",
@@ -138,8 +138,8 @@
       "wshobson"
     ],
     "name": "core",
-    "path": ".apm/wrappers/core",
-    "type": "wrapper"
+    "path": "packages/core",
+    "type": "package"
   },
   {
     "description": "Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows.",
@@ -184,8 +184,8 @@
       "wshobson"
     ],
     "name": "data-ai",
-    "path": ".apm/wrappers/data-ai",
-    "type": "wrapper"
+    "path": "packages/data-ai",
+    "type": "package"
   },
   {
     "description": "Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents.",
@@ -229,8 +229,8 @@
       "wshobson"
     ],
     "name": "debugging",
-    "path": ".apm/wrappers/debugging",
-    "type": "wrapper"
+    "path": "packages/debugging",
+    "type": "package"
   },
   {
     "description": "Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows.",
@@ -276,8 +276,8 @@
       "wshobson"
     ],
     "name": "developer-tools",
-    "path": ".apm/wrappers/developer-tools",
-    "type": "wrapper"
+    "path": "packages/developer-tools",
+    "type": "package"
   },
   {
     "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
@@ -323,8 +323,8 @@
       "visual"
     ],
     "name": "diagrams",
-    "path": ".apm/wrappers/diagrams",
-    "type": "wrapper"
+    "path": "packages/diagrams",
+    "type": "package"
   },
   {
     "description": "Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows.",
@@ -365,8 +365,8 @@
       "wshobson"
     ],
     "name": "docs-architecture",
-    "path": ".apm/wrappers/docs-architecture",
-    "type": "wrapper"
+    "path": "packages/docs-architecture",
+    "type": "package"
   },
   {
     "description": "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents.",
@@ -430,8 +430,8 @@
       "wshobson"
     ],
     "name": "frontend",
-    "path": ".apm/wrappers/frontend",
-    "type": "wrapper"
+    "path": "packages/frontend",
+    "type": "package"
   },
   {
     "description": "Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows.",
@@ -473,8 +473,8 @@
       "wshobson"
     ],
     "name": "governance",
-    "path": ".apm/wrappers/governance",
-    "type": "wrapper"
+    "path": "packages/governance",
+    "type": "package"
   },
   {
     "description": "Run the third-party HyperResearch deep research harness. Use when the user asks for deep research, adversarial source-backed research, long-form research reports, or HyperResearch specifically.",
@@ -581,8 +581,8 @@
       "wrapper"
     ],
     "name": "hyperresearch",
-    "path": ".apm/wrappers/hyperresearch",
-    "type": "wrapper"
+    "path": "packages/hyperresearch",
+    "type": "package"
   },
   {
     "description": "Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows.",
@@ -625,8 +625,8 @@
       "wshobson"
     ],
     "name": "infrastructure",
-    "path": ".apm/wrappers/infrastructure",
-    "type": "wrapper"
+    "path": "packages/infrastructure",
+    "type": "package"
   },
   {
     "description": "ARM Cortex-M firmware bundle with Hobson embedded specialists.",
@@ -661,8 +661,8 @@
       "wshobson"
     ],
     "name": "language-arm-cortex",
-    "path": ".apm/wrappers/language-arm-cortex",
-    "type": "wrapper"
+    "path": "packages/language-arm-cortex",
+    "type": "package"
   },
   {
     "description": ".NET development bundle with Hobson C# and ASP.NET specialists.",
@@ -698,8 +698,8 @@
       "wshobson"
     ],
     "name": "language-dotnet",
-    "path": ".apm/wrappers/language-dotnet",
-    "type": "wrapper"
+    "path": "packages/language-dotnet",
+    "type": "package"
   },
   {
     "description": "Functional programming bundle with Hobson Elixir and Haskell specialists.",
@@ -735,8 +735,8 @@
       "wshobson"
     ],
     "name": "language-functional",
-    "path": ".apm/wrappers/language-functional",
-    "type": "wrapper"
+    "path": "packages/language-functional",
+    "type": "package"
   },
   {
     "description": "Go quality bundle with language steering and Hobson systems specialists.",
@@ -785,8 +785,8 @@
       "wshobson"
     ],
     "name": "language-go",
-    "path": ".apm/wrappers/language-go",
-    "type": "wrapper"
+    "path": "packages/language-go",
+    "type": "package"
   },
   {
     "description": "Julia development bundle with Hobson scientific computing specialists.",
@@ -821,8 +821,8 @@
       "wshobson"
     ],
     "name": "language-julia",
-    "path": ".apm/wrappers/language-julia",
-    "type": "wrapper"
+    "path": "packages/language-julia",
+    "type": "package"
   },
   {
     "description": "JVM language bundle with Hobson Java, Scala, and enterprise specialists.",
@@ -859,8 +859,8 @@
       "wshobson"
     ],
     "name": "language-jvm",
-    "path": ".apm/wrappers/language-jvm",
-    "type": "wrapper"
+    "path": "packages/language-jvm",
+    "type": "package"
   },
   {
     "description": "Python quality bundle with language steering and Hobson specialists.",
@@ -909,8 +909,8 @@
       "wshobson"
     ],
     "name": "language-python",
-    "path": ".apm/wrappers/language-python",
-    "type": "wrapper"
+    "path": "packages/language-python",
+    "type": "package"
   },
   {
     "description": "Rust quality bundle with language steering and Hobson systems specialists.",
@@ -959,8 +959,8 @@
       "wshobson"
     ],
     "name": "language-rust",
-    "path": ".apm/wrappers/language-rust",
-    "type": "wrapper"
+    "path": "packages/language-rust",
+    "type": "package"
   },
   {
     "description": "Shell scripting bundle with Hobson Bash and POSIX specialists.",
@@ -996,8 +996,8 @@
       "wshobson"
     ],
     "name": "language-shell",
-    "path": ".apm/wrappers/language-shell",
-    "type": "wrapper"
+    "path": "packages/language-shell",
+    "type": "package"
   },
   {
     "description": "Terraform steering bundle with Hobson deployment and Terraform specialists.",
@@ -1032,8 +1032,8 @@
       "wshobson"
     ],
     "name": "language-terraform",
-    "path": ".apm/wrappers/language-terraform",
-    "type": "wrapper"
+    "path": "packages/language-terraform",
+    "type": "package"
   },
   {
     "description": "TypeScript and JavaScript quality bundle with language steering and Hobson specialists.",
@@ -1083,8 +1083,8 @@
       "wshobson"
     ],
     "name": "language-typescript",
-    "path": ".apm/wrappers/language-typescript",
-    "type": "wrapper"
+    "path": "packages/language-typescript",
+    "type": "package"
   },
   {
     "description": "PHP and Ruby web scripting bundle with Hobson specialists.",
@@ -1120,8 +1120,8 @@
       "wshobson"
     ],
     "name": "language-web-scripting",
-    "path": ".apm/wrappers/language-web-scripting",
-    "type": "wrapper"
+    "path": "packages/language-web-scripting",
+    "type": "package"
   },
   {
     "description": "Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows.",
@@ -1169,8 +1169,8 @@
       "zoom-out#main"
     ],
     "name": "planning-product",
-    "path": ".apm/wrappers/planning-product",
-    "type": "wrapper"
+    "path": "packages/planning-product",
+    "type": "package"
   },
   {
     "description": "Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.",
@@ -1215,8 +1215,8 @@
       "workflows."
     ],
     "name": "presentation",
-    "path": ".apm/wrappers/presentation",
-    "type": "wrapper"
+    "path": "packages/presentation",
+    "type": "package"
   },
   {
     "description": "Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification.",
@@ -1251,8 +1251,8 @@
       "version"
     ],
     "name": "project-lifecycle",
-    "path": ".apm/wrappers/project-lifecycle",
-    "type": "wrapper"
+    "path": "packages/project-lifecycle",
+    "type": "package"
   },
   {
     "description": "Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows.",
@@ -1295,8 +1295,8 @@
       "wshobson"
     ],
     "name": "quality",
-    "path": ".apm/wrappers/quality",
-    "type": "wrapper"
+    "path": "packages/quality",
+    "type": "package"
   },
   {
     "description": "Resume bundle for focused resume tailoring and broad career-support workflows.",
@@ -1333,8 +1333,8 @@
       "workflows."
     ],
     "name": "resume",
-    "path": ".apm/wrappers/resume",
-    "type": "wrapper"
+    "path": "packages/resume",
+    "type": "package"
   },
   {
     "description": "Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows.",
@@ -1375,8 +1375,8 @@
       "wshobson"
     ],
     "name": "security",
-    "path": ".apm/wrappers/security",
-    "type": "wrapper"
+    "path": "packages/security",
+    "type": "package"
   },
   {
     "description": "SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering.",
@@ -1406,8 +1406,8 @@
       "workflow"
     ],
     "name": "speckit",
-    "path": ".apm/wrappers/speckit",
-    "type": "wrapper"
+    "path": "packages/speckit",
+    "type": "package"
   },
   {
     "description": "Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection.",
@@ -1444,7 +1444,7 @@
       "workflow"
     ],
     "name": "work-tools",
-    "path": ".apm/wrappers/work-tools",
-    "type": "wrapper"
+    "path": "packages/work-tools",
+    "type": "package"
   }
 ]

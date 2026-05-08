@@ -58,7 +58,7 @@ Additional bundles:
 From this package directory:
 
 ```bash
-apm run build-bundles
+apm run build-packages
 apm run build-marketplace
 apm compile --validate --local-only --target codex
 ```
@@ -109,7 +109,8 @@ all Codex and Claude runtime-specific model, effort, sandbox, and permission
 fields for first-party agents. External marketplace agents can be audited and
 patched only through explicit project policy.
 
-Shared agentic assets are authored here, not in generated runtime directories
-or dotfiles. Add or update agents, skills, hooks, instructions, contexts, MCP
-definitions, and project setup scripts under `.apm/`, then reinstall the package
-in consuming projects.
+Shared agentic assets are authored under `.apm/`. Installable curated APM
+packages are materialized under `packages/` by `apm run build-packages`; do not
+edit generated runtime directories or dotfiles. After changing agents, skills,
+hooks, instructions, contexts, MCP definitions, or setup scripts, regenerate the
+packages and marketplace, then reinstall the package in consuming projects.

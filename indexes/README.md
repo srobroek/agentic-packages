@@ -11,13 +11,13 @@ hardcoding agentic asset recommendation matrices in steering.
 - `instructions.json`: generated from `.apm/instructions/*.instructions.md`.
 - `mcp.json`: generated from `.apm/mcp/**` when MCP assets exist.
 - `scripts.json`: generated from `.apm/scripts/*`.
-- `wrappers.json`: generated from `.apm/wrappers/*`.
+- `packages.json`: generated from `packages/*`.
 - `assets.json`: combined index across all generated asset indexes.
 - `external-sources.json`: curated external APM-compatible packages and
   virtual-package entries.
 
 Regenerate local indexes after changing agents, skills, hooks, contexts,
-instructions, MCP assets, scripts, or wrappers:
+instructions, MCP assets, scripts, or packages:
 
 ```bash
 python3 .apm/scripts/build-agentic-indexes.py

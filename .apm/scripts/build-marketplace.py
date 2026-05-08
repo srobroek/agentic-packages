@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the APM marketplace block from local skills and curated packages."""
+"""Generate the APM marketplace block from first-party skills and curated packages."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ CORE_PACKAGE = {
     "name": "core",
     "description": "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.",
     "source": LOCAL_SOURCE,
-    "subdir": ".apm/wrappers/core",
+    "subdir": "packages/core",
     "ref": "main",
 }
 
@@ -43,7 +43,7 @@ EXTERNAL_BUNDLES = [
         "name": "diagrams",
         "description": "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams.",
         "source": LOCAL_SOURCE,
-        "subdir": ".apm/wrappers/diagrams",
+        "subdir": "packages/diagrams",
         "ref": "main",
     },
     {
@@ -69,14 +69,14 @@ EXTERNAL_BUNDLES = [
         "name": "resume",
         "description": "Resume bundle that installs the preferred advanced resume-tailoring workflow plus the broader ResumeSkills career-support bundle.",
         "source": LOCAL_SOURCE,
-        "subdir": ".apm/wrappers/resume",
+        "subdir": "packages/resume",
         "ref": "main",
     },
     {
         "name": "presentation",
         "description": "Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts for general decks, Marp slides, and PowerPoint template workflows.",
         "source": LOCAL_SOURCE,
-        "subdir": ".apm/wrappers/presentation",
+        "subdir": "packages/presentation",
         "ref": "main",
     },
     {
@@ -122,9 +122,9 @@ EXTERNAL_BUNDLES = [
     },
     {
         "name": "hyperresearch",
-        "description": "Third-party HyperResearch deep research harness wrapper. Uses upstream HyperResearch's Python installer for runtime Claude assets.",
+        "description": "Third-party HyperResearch deep research harness package. Uses upstream HyperResearch's Python installer for runtime Claude assets.",
         "source": LOCAL_SOURCE,
-        "subdir": ".apm/wrappers/hyperresearch",
+        "subdir": "packages/hyperresearch",
         "ref": "main",
     },
     {
@@ -158,20 +158,20 @@ def description_for_skill(skill_dir: Path) -> str:
     return f"{skill_dir.name} skill from agentic-packages."
 
 
-def description_for_wrapper(wrapper_dir: Path) -> str:
-    skill = wrapper_dir / "SKILL.md"
+def description_for_package(package_dir: Path) -> str:
+    skill = package_dir / "SKILL.md"
     if skill.is_file():
         for line in skill.read_text(encoding="utf-8").splitlines():
             if line.startswith("description: "):
                 return line.removeprefix("description: ").strip().strip('"')
 
-    manifest = wrapper_dir / "apm.yml"
+    manifest = package_dir / "apm.yml"
     if manifest.is_file():
         for line in manifest.read_text(encoding="utf-8").splitlines():
             if line.startswith("description: "):
                 return line.removeprefix("description: ").strip().strip('"')
 
-    return f"{wrapper_dir.name} wrapper package from agentic-packages."
+    return f"{package_dir.name} package from agentic-packages."
 
 
 def description_for_agent(agent_path: Path) -> str:
@@ -221,19 +221,19 @@ def build_packages() -> list[dict[str, str]]:
         )
     packages.extend(EXTERNAL_BUNDLES)
     published = {package["name"] for package in packages}
-    for wrapper_dir in sorted((ROOT / ".apm" / "wrappers").iterdir()):
-        if not wrapper_dir.is_dir() or wrapper_dir.name in published:
+    for package_dir in sorted((ROOT / "packages").iterdir()):
+        if not package_dir.is_dir() or package_dir.name in published:
             continue
         packages.append(
             {
-                "name": wrapper_dir.name,
-                "description": description_for_wrapper(wrapper_dir),
+                "name": package_dir.name,
+                "description": description_for_package(package_dir),
                 "source": LOCAL_SOURCE,
-                "subdir": f".apm/wrappers/{wrapper_dir.name}",
+                "subdir": f"packages/{package_dir.name}",
                 "ref": "main",
             }
         )
-        published.add(wrapper_dir.name)
+        published.add(package_dir.name)
     packages.append(
         {
             "name": "matt-skills",

@@ -37,10 +37,11 @@ dependencies:
     - repomix
     - --mcp
 scripts:
+  build-packages: "python3 .apm/scripts/build-packages.py"
   build-bundles: "python3 .apm/scripts/build-bundles.py"
   build-marketplace: "python3 .apm/scripts/build-marketplace.py"
   build-indexes: "python3 .apm/scripts/build-agentic-indexes.py"
-  build-artifacts: "apm run build-bundles && apm run build-marketplace && apm run build-indexes"
+  build-artifacts: "python3 .apm/scripts/build-packages.py && python3 .apm/scripts/build-marketplace.py && python3 .apm/scripts/build-agentic-indexes.py"
   install: "apm install --target claude,codex,agent-skills"
   prune-stale-local-packages: "python3 .apm/scripts/prune-stale-local-packages.py"
   compile: "apm compile --target codex --no-constitution"
@@ -56,7 +57,7 @@ compilation:
   strategy: distributed
   source_attribution: false
   exclude:
-    - ".apm/wrappers/**"
+    - "packages/**"
     - ".apm/instructions/70-language-typescript.instructions.md"
     - ".apm/instructions/71-language-python.instructions.md"
     - ".apm/instructions/72-language-go.instructions.md"
@@ -75,7 +76,7 @@ marketplace:
     - name: core
       description: "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/core
+      subdir: packages/core
       ref: main
     - name: catchup
       description: "Resume interrupted project work by locating and following the best handover before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup/continue/resume/handover, or when asked what changed or what is next."
@@ -260,7 +261,7 @@ marketplace:
     - name: diagrams
       description: "Diagram generation bundle that installs draw.io, Excalidraw, and D2 diagram skills for editable architecture, workflow, flowchart, and visual explanation diagrams."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/diagrams
+      subdir: packages/diagrams
       ref: main
     - name: drawio-skill
       description: "Third-party draw.io diagram skill for editable architecture, UML, ERD, sequence, flowchart, and process diagrams with local PNG/SVG/PDF export."
@@ -278,12 +279,12 @@ marketplace:
     - name: resume
       description: "Resume bundle that installs the preferred advanced resume-tailoring workflow plus the broader ResumeSkills career-support bundle."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/resume
+      subdir: packages/resume
       ref: main
     - name: presentation
       description: "Presentation bundle that installs ppt-creator, marp-slide, and pptx-from-layouts for general decks, Marp slides, and PowerPoint template workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/presentation
+      subdir: packages/presentation
       ref: main
     - name: ppt-creator
       description: "Third-party general-purpose presentation skill for persuasive, data-driven slide decks with speaker notes and PPTX output."
@@ -315,9 +316,9 @@ marketplace:
       source: Paramchoudhary/ResumeSkills
       ref: main
     - name: hyperresearch
-      description: "Third-party HyperResearch deep research harness wrapper. Uses upstream HyperResearch's Python installer for runtime Claude assets."
+      description: "Third-party HyperResearch deep research harness package. Uses upstream HyperResearch's Python installer for runtime Claude assets."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/hyperresearch
+      subdir: packages/hyperresearch
       ref: main
     - name: impeccable
       description: "Third-party Impeccable frontend design skill bundle."
@@ -336,137 +337,137 @@ marketplace:
     - name: agentic-maintenance
       description: "Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/agentic-maintenance
+      subdir: packages/agentic-maintenance
       ref: main
     - name: code-intelligence
       description: "Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/code-intelligence
+      subdir: packages/code-intelligence
       ref: main
     - name: data-ai
       description: "Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/data-ai
+      subdir: packages/data-ai
       ref: main
     - name: debugging
       description: "Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/debugging
+      subdir: packages/debugging
       ref: main
     - name: developer-tools
       description: "Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/developer-tools
+      subdir: packages/developer-tools
       ref: main
     - name: docs-architecture
       description: "Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/docs-architecture
+      subdir: packages/docs-architecture
       ref: main
     - name: frontend
       description: "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/frontend
+      subdir: packages/frontend
       ref: main
     - name: governance
       description: "Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/governance
+      subdir: packages/governance
       ref: main
     - name: infrastructure
       description: "Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/infrastructure
+      subdir: packages/infrastructure
       ref: main
     - name: language-arm-cortex
       description: "ARM Cortex-M firmware bundle with Hobson embedded specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-arm-cortex
+      subdir: packages/language-arm-cortex
       ref: main
     - name: language-dotnet
       description: ".NET development bundle with Hobson C# and ASP.NET specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-dotnet
+      subdir: packages/language-dotnet
       ref: main
     - name: language-functional
       description: "Functional programming bundle with Hobson Elixir and Haskell specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-functional
+      subdir: packages/language-functional
       ref: main
     - name: language-go
       description: "Go quality bundle with language steering and Hobson systems specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-go
+      subdir: packages/language-go
       ref: main
     - name: language-julia
       description: "Julia development bundle with Hobson scientific computing specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-julia
+      subdir: packages/language-julia
       ref: main
     - name: language-jvm
       description: "JVM language bundle with Hobson Java, Scala, and enterprise specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-jvm
+      subdir: packages/language-jvm
       ref: main
     - name: language-python
       description: "Python quality bundle with language steering and Hobson specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-python
+      subdir: packages/language-python
       ref: main
     - name: language-rust
       description: "Rust quality bundle with language steering and Hobson systems specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-rust
+      subdir: packages/language-rust
       ref: main
     - name: language-shell
       description: "Shell scripting bundle with Hobson Bash and POSIX specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-shell
+      subdir: packages/language-shell
       ref: main
     - name: language-terraform
       description: "Terraform steering bundle with Hobson deployment and Terraform specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-terraform
+      subdir: packages/language-terraform
       ref: main
     - name: language-typescript
       description: "TypeScript and JavaScript quality bundle with language steering and Hobson specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-typescript
+      subdir: packages/language-typescript
       ref: main
     - name: language-web-scripting
       description: "PHP and Ruby web scripting bundle with Hobson specialists."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/language-web-scripting
+      subdir: packages/language-web-scripting
       ref: main
     - name: planning-product
       description: "Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/planning-product
+      subdir: packages/planning-product
       ref: main
     - name: project-lifecycle
       description: "Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/project-lifecycle
+      subdir: packages/project-lifecycle
       ref: main
     - name: quality
       description: "Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/quality
+      subdir: packages/quality
       ref: main
     - name: security
       description: "Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/security
+      subdir: packages/security
       ref: main
     - name: speckit
       description: "SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/speckit
+      subdir: packages/speckit
       ref: main
     - name: work-tools
       description: "Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection."
       source: srobroek/agentic-packages
-      subdir: .apm/wrappers/work-tools
+      subdir: packages/work-tools
       ref: main
     - name: matt-skills
       description: "Full Matt Pocock skills package."

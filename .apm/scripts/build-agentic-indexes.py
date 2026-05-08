@@ -263,15 +263,15 @@ def build_scripts() -> list[dict[str, object]]:
     ]
 
 
-def build_wrappers() -> list[dict[str, object]]:
+def build_packages() -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    wrappers_dir = ROOT / ".apm" / "wrappers"
-    if not wrappers_dir.is_dir():
+    packages_dir = ROOT / "packages"
+    if not packages_dir.is_dir():
         return rows
 
-    for wrapper_dir in sorted(path for path in wrappers_dir.iterdir() if path.is_dir()):
-        skill = wrapper_dir / "SKILL.md"
-        manifest = wrapper_dir / "apm.yml"
+    for package_dir in sorted(path for path in packages_dir.iterdir() if path.is_dir()):
+        skill = package_dir / "SKILL.md"
+        manifest = package_dir / "apm.yml"
         description = ""
         keywords_source = ""
         if skill.is_file():
@@ -285,11 +285,11 @@ def build_wrappers() -> list[dict[str, object]]:
 
         rows.append(
             {
-                "name": wrapper_dir.name,
+                "name": package_dir.name,
                 "description": description,
-                "path": str(wrapper_dir.relative_to(ROOT)),
-                "type": "wrapper",
-                "keywords": keywords(wrapper_dir.name, description, keywords_source),
+                "path": str(package_dir.relative_to(ROOT)),
+                "type": "package",
+                "keywords": keywords(package_dir.name, description, keywords_source),
             }
         )
     return rows
@@ -305,7 +305,7 @@ def asset_rows(indexes: dict[str, list[dict[str, object]]]) -> list[dict[str, ob
         "instructions": "instruction",
         "mcp": "mcp",
         "scripts": "script",
-        "wrappers": "wrapper",
+        "packages": "package",
     }
     for group, items in indexes.items():
         for item in items:
@@ -336,7 +336,7 @@ def main() -> int:
         ),
         "mcp": build_mcp(),
         "scripts": build_scripts(),
-        "wrappers": build_wrappers(),
+        "packages": build_packages(),
     }
     indexes["assets"] = asset_rows(indexes)
 
