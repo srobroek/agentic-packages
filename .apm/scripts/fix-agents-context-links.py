@@ -72,8 +72,12 @@ def repair_file(path: Path) -> bool:
         if suffix is None:
             return match.group(0)
 
-        start = max(0, match.start() - 500)
-        end = min(len(text), match.end() + 250)
+        start = text.rfind("\n## ", 0, match.start())
+        if start == -1:
+            start = 0
+        end = text.find("\n## ", match.end())
+        if end == -1:
+            end = len(text)
         package = choose_package(suffix, text[start:end])
         target = PACKAGE_ROOT / package / ".apm" / "context" / suffix
         relative = os.path.relpath(target, path.parent).replace(os.sep, "/")
