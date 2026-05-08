@@ -6,34 +6,69 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-import yaml
-
 
 ROOT = Path.cwd()
 LOCAL_MODULES = ROOT / "apm_modules" / "_local"
 LOCKFILE = ROOT / "apm.lock.yaml"
 
 
-def is_local_dependency(entry: object) -> bool:
-    if not isinstance(entry, dict):
-        return False
-    repo_url = str(entry.get("repo_url", ""))
-    host = str(entry.get("host", ""))
-    return repo_url == "_local" or repo_url.startswith("_local/") or host == "local"
+def is_local_dependency_block(block: list[str]) -> bool:
+    for line in block:
+        stripped = line.strip()
+        if stripped in {"repo_url: _local", "- repo_url: _local"}:
+            return True
+        if stripped.startswith(("repo_url: _local/", "- repo_url: _local/")):
+            return True
+        if stripped == "host: local":
+            return True
+    return False
+
+
+def split_top_level_dependency_blocks(lines: list[str], start: int, end: int) -> list[list[str]]:
+    blocks: list[list[str]] = []
+    current: list[str] = []
+
+    for line in lines[start:end]:
+        if line.startswith("- ") and current:
+            blocks.append(current)
+            current = [line]
+        else:
+            current.append(line)
+
+    if current:
+        blocks.append(current)
+
+    return blocks
 
 
 def prune_lockfile() -> int:
     if not LOCKFILE.exists():
         return 0
-    data = yaml.safe_load(LOCKFILE.read_text(encoding="utf-8")) or {}
-    dependencies = data.get("dependencies")
-    if not isinstance(dependencies, list):
+
+    lines = LOCKFILE.read_text(encoding="utf-8").splitlines(keepends=True)
+    try:
+        dependencies_header = next(index for index, line in enumerate(lines) if line == "dependencies:\n")
+    except StopIteration:
         return 0
-    kept = [entry for entry in dependencies if not is_local_dependency(entry)]
-    removed = len(dependencies) - len(kept)
+
+    start = dependencies_header + 1
+    end = next(
+        (
+            index
+            for index in range(start, len(lines))
+            if lines[index] and not lines[index].startswith((" ", "-"))
+        ),
+        len(lines),
+    )
+
+    blocks = split_top_level_dependency_blocks(lines, start, end)
+    kept_blocks = [block for block in blocks if not is_local_dependency_block(block)]
+    removed = len(blocks) - len(kept_blocks)
     if removed:
-        data["dependencies"] = kept
-        LOCKFILE.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+        rewritten: list[str] = []
+        for block in kept_blocks:
+            rewritten.extend(block)
+        LOCKFILE.write_text("".join(lines[:start] + rewritten + lines[end:]), encoding="utf-8")
     return removed
 
 
