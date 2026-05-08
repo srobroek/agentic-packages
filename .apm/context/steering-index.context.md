@@ -19,6 +19,6 @@ Load only the relevant topic:
 - [Agentic source of truth](source-of-truth.context.md)
 - [External asset audit](external-assets.context.md)
 
-Codex consumes this through compiled `AGENTS.md` links. Claude Code should use a
-minimal `CLAUDE.md` pointer to `AGENTS.md`; do not compile Claude steering by
-default because that duplicates full instruction bodies.
+Codex consumes this through compiled `AGENTS.md` links. Claude Code consumes the
+same distributed steering through compiled `CLAUDE.md` files when the Claude
+target is installed for a project.

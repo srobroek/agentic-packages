@@ -32,7 +32,7 @@ If that script is missing, use:
 ```bash
 apm install --target claude,codex,agent-skills
 apm compile --target codex --no-constitution
-python3 apm_modules/_local/agentic-packages/.apm/scripts/write-claude-pointers.py
+apm compile --target claude --no-constitution
 python3 apm_modules/_local/agentic-packages/.apm/scripts/patch-runtime-agents.py --all
 python3 apm_modules/_local/agentic-packages/.apm/scripts/audit-agentic-assets.py
 ```
