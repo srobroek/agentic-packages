@@ -20,7 +20,7 @@ dependencies:
     command: npx
     args:
     - -y
-    - '@anthropic-ai/context7-mcp@latest'
+    - '@upstash/context7-mcp'
   - name: mcp-package-version
     registry: false
     transport: stdio
@@ -366,7 +366,7 @@ marketplace:
       subdir: packages/docs-architecture
       ref: main
     - name: frontend
-      description: "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents."
+      description: "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents."
       source: srobroek/agentic-packages
       subdir: packages/frontend
       ref: main
@@ -439,6 +439,11 @@ marketplace:
       description: "PHP and Ruby web scripting bundle with Hobson specialists."
       source: srobroek/agentic-packages
       subdir: packages/language-web-scripting
+      ref: main
+    - name: mcp-playwright
+      description: "Playwright MCP server package for browser automation and UI verification."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-playwright
       ref: main
     - name: planning-product
       description: "Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows."

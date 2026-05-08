@@ -1,0 +1,18 @@
+name: mcp-playwright
+version: 0.1.0
+description: Playwright MCP server package for browser automation and UI verification.
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  mcp:
+    - name: playwright
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - '@playwright/mcp@latest'

@@ -48,31 +48,37 @@ class Bundle:
 PLAYWRIGHT_MCP = McpDependency(
     name="playwright",
     command="npx",
-    args=("-y", "@anthropic-ai/playwright-mcp@latest"),
+    args=("-y", "@playwright/mcp@latest"),
 )
 
-LSP_GO_MCP = McpDependency(
-    name="lsp-go",
-    command="mcp-language-server",
-    args=("--workspace", ".", "--lsp", "gopls"),
+CONTEXT7_MCP = McpDependency(
+    name="context7",
+    command="npx",
+    args=("-y", "@upstash/context7-mcp"),
 )
 
-LSP_PYTHON_MCP = McpDependency(
-    name="lsp-python",
-    command="mcp-language-server",
-    args=("--workspace", ".", "--lsp", "pyright-langserver", "--lsp-arg", "--stdio"),
+CODEBASE_MEMORY_MCP = McpDependency(
+    name="codebase-memory-mcp",
+    command="codebase-memory-mcp",
 )
 
-LSP_RUST_MCP = McpDependency(
-    name="lsp-rust",
-    command="mcp-language-server",
-    args=("--workspace", ".", "--lsp", "rust-analyzer"),
+REPOMIX_MCP = McpDependency(
+    name="repomix",
+    command="npx",
+    args=("-y", "repomix", "--mcp"),
 )
 
-LSP_TYPESCRIPT_MCP = McpDependency(
-    name="lsp-typescript",
-    command="mcp-language-server",
-    args=("--workspace", ".", "--lsp", "typescript-language-server", "--lsp-arg", "--stdio"),
+PACKAGE_VERSION_MCP = McpDependency(
+    name="mcp-package-version",
+    command="npx",
+    args=("-y", "mcp-package-version"),
+)
+
+MANDATORY_MCP = (
+    CODEBASE_MEMORY_MCP,
+    CONTEXT7_MCP,
+    PACKAGE_VERSION_MCP,
+    REPOMIX_MCP,
 )
 
 TOOL_ROUTING_INSTRUCTION = InlineInstruction(
@@ -281,7 +287,6 @@ LANGUAGE_BUNDLES = (
             "toolchain-defaults/toolchain-defaults-index",
         ),
         dependencies=(f"{HOBSON}/javascript-typescript#main",),
-        mcp_dependencies=(LSP_TYPESCRIPT_MCP,),
     ),
     Bundle(
         name="language-python",
@@ -295,7 +300,6 @@ LANGUAGE_BUNDLES = (
             "toolchain-defaults/toolchain-defaults-index",
         ),
         dependencies=(f"{HOBSON}/python-development#main",),
-        mcp_dependencies=(LSP_PYTHON_MCP,),
     ),
     Bundle(
         name="language-go",
@@ -309,7 +313,6 @@ LANGUAGE_BUNDLES = (
             "toolchain-defaults/toolchain-defaults-index",
         ),
         dependencies=(f"{HOBSON}/systems-programming#main",),
-        mcp_dependencies=(LSP_GO_MCP,),
     ),
     Bundle(
         name="language-rust",
@@ -323,7 +326,6 @@ LANGUAGE_BUNDLES = (
             "toolchain-defaults/toolchain-defaults-index",
         ),
         dependencies=(f"{HOBSON}/systems-programming#main",),
-        mcp_dependencies=(LSP_RUST_MCP,),
     ),
     Bundle(
         name="language-terraform",
@@ -373,6 +375,14 @@ LANGUAGE_BUNDLES = (
     ),
 )
 
+MCP_BUNDLES = (
+    Bundle(
+        name="mcp-playwright",
+        description="Playwright MCP server package for browser automation and UI verification.",
+        mcp_dependencies=(PLAYWRIGHT_MCP,),
+    ),
+)
+
 BUNDLES: tuple[Bundle, ...] = (
     Bundle(
         name="core",
@@ -399,6 +409,7 @@ BUNDLES: tuple[Bundle, ...] = (
             f"{HOBSON}/context-management#main",
             f"{HOBSON}/agent-orchestration#main",
         ),
+        mcp_dependencies=MANDATORY_MCP,
     ),
     Bundle(
         name="developer-tools",
@@ -506,7 +517,7 @@ BUNDLES: tuple[Bundle, ...] = (
     ),
     Bundle(
         name="frontend",
-        description="Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents.",
+        description="Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents.",
         skills=("playwright",),
         instructions=("30-frontend", "31-frontend-ui"),
         inline_instructions=(FRONTEND_TOOLS_INSTRUCTION,),
@@ -519,7 +530,6 @@ BUNDLES: tuple[Bundle, ...] = (
             f"{HOBSON}/accessibility-compliance#main",
             f"{HOBSON}/brand-landingpage#main",
         ),
-        mcp_dependencies=(PLAYWRIGHT_MCP,),
     ),
     Bundle(
         name="docs-architecture",
@@ -593,7 +603,7 @@ BUNDLES: tuple[Bundle, ...] = (
         ),
     ),
     *LANGUAGE_BUNDLES,
-)
+) + MCP_BUNDLES
 
 
 def copy_tree(src: Path, dst: Path) -> None:

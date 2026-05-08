@@ -14,3 +14,30 @@ dependencies:
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - wshobson/agents/plugins/context-management#main
     - wshobson/agents/plugins/agent-orchestration#main
+  mcp:
+    - name: codebase-memory-mcp
+      registry: false
+      transport: stdio
+      command: codebase-memory-mcp
+    - name: context7
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - '@upstash/context7-mcp'
+    - name: mcp-package-version
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - mcp-package-version
+    - name: repomix
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - repomix
+        - --mcp

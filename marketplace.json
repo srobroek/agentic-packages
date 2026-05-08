@@ -593,7 +593,7 @@
     },
     {
       "name": "frontend",
-      "description": "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents.",
+      "description": "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -738,6 +738,16 @@
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
         "subdir": "packages/language-web-scripting",
+        "ref": "main"
+      }
+    },
+    {
+      "name": "mcp-playwright",
+      "description": "Playwright MCP server package for browser automation and UI verification.",
+      "source": {
+        "source": "git-subdir",
+        "repo": "srobroek/agentic-packages",
+        "subdir": "packages/mcp-playwright",
         "ref": "main"
       }
     },

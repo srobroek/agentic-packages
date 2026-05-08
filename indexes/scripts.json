@@ -273,7 +273,6 @@
     "executable": false,
     "keywords": [
       "annotations",
-      "anthropic-ai",
       "apm",
       "args",
       "assets.",
@@ -306,6 +305,7 @@
       "inline",
       "inlineinstruction",
       "instructions",
+      "latest",
       "materialize",
       "matt",
       "mattpocock",
@@ -319,7 +319,6 @@
       "path",
       "pathlib",
       "playwright",
-      "playwright-mcp",
       "plugins",
       "python3",
       "registry",
