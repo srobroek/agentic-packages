@@ -9,7 +9,11 @@ from pathlib import Path
 
 
 ROOT = Path.cwd()
-PACKAGE_ROOT = ROOT / "apm_modules" / "srobroek" / "agentic-packages" / "packages"
+PACKAGE_ROOT_CANDIDATES = (
+    ROOT / "apm_modules" / "srobroek" / "agentic-packages" / "packages",
+    ROOT / "apm_modules" / "_local" / "agentic-packages" / "packages",
+)
+PACKAGE_ROOT = next((path for path in PACKAGE_ROOT_CANDIDATES if path.exists()), PACKAGE_ROOT_CANDIDATES[0])
 
 MARKDOWN_LINK = re.compile(r"\]\(([^)\n]+\.context\.md)\)")
 
