@@ -1,6 +1,6 @@
 name: language-python
 version: 0.1.0
-description: Python quality bundle with language steering and Hobson specialists.
+description: 'Bundle: Python quality bundle with language steering and Hobson specialists. Contains: skills python-quality; steering; packages python-development.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

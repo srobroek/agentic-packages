@@ -1,6 +1,6 @@
 name: language-go
 version: 0.1.0
-description: Go quality bundle with language steering and Hobson systems specialists.
+description: 'Bundle: Go quality bundle with language steering and Hobson systems specialists. Contains: skills go-quality; steering; packages systems-programming.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

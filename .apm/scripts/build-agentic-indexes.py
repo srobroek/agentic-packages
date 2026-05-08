@@ -344,6 +344,14 @@ def main() -> int:
         path = OUT / f"{name}.json"
         path.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n")
         print(f"wrote {path}")
+
+    source_indexes = ROOT / ".apm" / "indexes"
+    if source_indexes.is_dir():
+        for source in sorted(source_indexes.glob("*.json")):
+            parsed = json.loads(source.read_text(encoding="utf-8"))
+            path = OUT / source.name
+            path.write_text(json.dumps(parsed, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            print(f"wrote {path}")
     return 0
 
 

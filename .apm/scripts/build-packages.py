@@ -35,6 +35,7 @@ class InlineInstruction:
 class Bundle:
     name: str
     description: str
+    target: str = "all"
     skills: tuple[str, ...] = ()
     agents: tuple[str, ...] = ()
     instructions: tuple[str, ...] = ()
@@ -74,11 +75,16 @@ PACKAGE_VERSION_MCP = McpDependency(
     args=("-y", "mcp-package-version"),
 )
 
-MANDATORY_MCP = (
-    CODEBASE_MEMORY_MCP,
-    CONTEXT7_MCP,
-    PACKAGE_VERSION_MCP,
-    REPOMIX_MCP,
+SERENA_CODEX_MCP = McpDependency(
+    name="serena",
+    command="serena",
+    args=("start-mcp-server", "--context=codex", "--project-from-cwd"),
+)
+
+SERENA_CLAUDE_CODE_MCP = McpDependency(
+    name="serena",
+    command="serena",
+    args=("start-mcp-server", "--context", "claude-code", "--project-from-cwd"),
 )
 
 TOOL_ROUTING_INSTRUCTION = InlineInstruction(
@@ -377,9 +383,41 @@ LANGUAGE_BUNDLES = (
 
 MCP_BUNDLES = (
     Bundle(
+        name="mcp-codebase-memory",
+        description="Codebase Memory MCP server package for graph-aware project orientation.",
+        mcp_dependencies=(CODEBASE_MEMORY_MCP,),
+    ),
+    Bundle(
+        name="mcp-context7",
+        description="Context7 MCP server package for current library and framework documentation.",
+        mcp_dependencies=(CONTEXT7_MCP,),
+    ),
+    Bundle(
+        name="mcp-package-version",
+        description="Package Version MCP server package for dependency version discovery.",
+        mcp_dependencies=(PACKAGE_VERSION_MCP,),
+    ),
+    Bundle(
+        name="mcp-repomix",
+        description="Repomix MCP server package for bulk repository snapshots.",
+        mcp_dependencies=(REPOMIX_MCP,),
+    ),
+    Bundle(
         name="mcp-playwright",
         description="Playwright MCP server package for browser automation and UI verification.",
         mcp_dependencies=(PLAYWRIGHT_MCP,),
+    ),
+    Bundle(
+        name="mcp-serena-codex",
+        description="Serena MCP server package for Codex semantic code tools.",
+        target="codex",
+        mcp_dependencies=(SERENA_CODEX_MCP,),
+    ),
+    Bundle(
+        name="mcp-serena-claude-code",
+        description="Serena MCP server package for Claude Code semantic code tools.",
+        target="claude",
+        mcp_dependencies=(SERENA_CLAUDE_CODE_MCP,),
     ),
 )
 
@@ -409,7 +447,6 @@ BUNDLES: tuple[Bundle, ...] = (
             f"{HOBSON}/context-management#main",
             f"{HOBSON}/agent-orchestration#main",
         ),
-        mcp_dependencies=MANDATORY_MCP,
     ),
     Bundle(
         name="developer-tools",
@@ -623,6 +660,36 @@ def yaml_scalar(value: str) -> str:
     return value
 
 
+def dependency_label(dependency: str) -> str:
+    dependency = dependency.split("#", 1)[0]
+    return dependency.rsplit("/", 1)[-1]
+
+
+def bundle_description(bundle: Bundle) -> str:
+    contains: list[str] = []
+    if bundle.skills:
+        contains.append("skills " + ", ".join(bundle.skills))
+    if bundle.agents:
+        contains.append("agents " + ", ".join(bundle.agents))
+    if bundle.instructions or bundle.contexts or bundle.inline_instructions:
+        contains.append("steering")
+    if bundle.scripts:
+        contains.append("scripts " + ", ".join(bundle.scripts))
+    if bundle.dependencies:
+        contains.append("packages " + ", ".join(dependency_label(item) for item in bundle.dependencies))
+    if bundle.mcp_dependencies:
+        contains.append("MCP servers " + ", ".join(item.name for item in bundle.mcp_dependencies))
+
+    if bundle.mcp_dependencies and not (bundle.skills or bundle.agents or bundle.instructions or bundle.dependencies):
+        prefix = "MCP package"
+    else:
+        prefix = "Bundle"
+
+    if not contains:
+        return f"{prefix}: {bundle.description}"
+    return f"{prefix}: {bundle.description} Contains: {'; '.join(contains)}."
+
+
 def materialize_bundle(bundle: Bundle) -> None:
     target = PACKAGES / bundle.name
     target.mkdir(parents=True, exist_ok=True)
@@ -665,11 +732,11 @@ def materialize_bundle(bundle: Bundle) -> None:
     lines = [
         f"name: {bundle.name}",
         "version: 0.1.0",
-        f"description: {bundle.description}",
+        f"description: {yaml_scalar(bundle_description(bundle))}",
         "author: Sjors Robroek",
         "license: MIT",
         "type: hybrid",
-        "target: all",
+        f"target: {bundle.target}",
         "includes: auto",
     ]
     if bundle.dependencies or bundle.mcp_dependencies:

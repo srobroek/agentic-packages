@@ -1,6 +1,6 @@
 name: speckit
 version: 0.1.0
-description: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering.
+description: 'Bundle: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering. Contains: skills speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

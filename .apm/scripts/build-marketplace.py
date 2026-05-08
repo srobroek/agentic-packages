@@ -14,13 +14,18 @@ MARKETPLACE_JSON = ROOT / "marketplace.json"
 LOCAL_SOURCE = "srobroek/agentic-packages"
 
 
-CORE_PACKAGE = {
-    "name": "core",
-    "description": "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.",
-    "source": LOCAL_SOURCE,
-    "subdir": "packages/core",
-    "ref": "main",
-}
+def unquote_yaml_scalar(value: str) -> str:
+    return value.strip().strip('"').strip("'")
+
+
+def core_package() -> dict[str, str]:
+    return {
+        "name": "core",
+        "description": description_for_package(ROOT / "packages" / "core"),
+        "source": LOCAL_SOURCE,
+        "subdir": "packages/core",
+        "ref": "main",
+    }
 
 
 MATT_SKILLS = [
@@ -154,7 +159,7 @@ def description_for_skill(skill_dir: Path) -> str:
     skill = skill_dir / "SKILL.md"
     for line in skill.read_text(encoding="utf-8").splitlines():
         if line.startswith("description: "):
-            return line.removeprefix("description: ").strip().strip('"')
+            return unquote_yaml_scalar(line.removeprefix("description: "))
     return f"{skill_dir.name} skill from agentic-packages."
 
 
@@ -163,13 +168,13 @@ def description_for_package(package_dir: Path) -> str:
     if skill.is_file():
         for line in skill.read_text(encoding="utf-8").splitlines():
             if line.startswith("description: "):
-                return line.removeprefix("description: ").strip().strip('"')
+                return unquote_yaml_scalar(line.removeprefix("description: "))
 
     manifest = package_dir / "apm.yml"
     if manifest.is_file():
         for line in manifest.read_text(encoding="utf-8").splitlines():
             if line.startswith("description: "):
-                return line.removeprefix("description: ").strip().strip('"')
+                return unquote_yaml_scalar(line.removeprefix("description: "))
 
     return f"{package_dir.name} package from agentic-packages."
 
@@ -177,7 +182,7 @@ def description_for_package(package_dir: Path) -> str:
 def description_for_agent(agent_path: Path) -> str:
     for line in agent_path.read_text(encoding="utf-8").splitlines():
         if line.startswith("description: "):
-            return line.removeprefix("description: ").strip().strip('"')
+            return unquote_yaml_scalar(line.removeprefix("description: "))
     return f"{agent_path.stem.removesuffix('.agent')} agent from agentic-packages."
 
 
@@ -195,7 +200,7 @@ def package_yaml(package: dict[str, str]) -> str:
 
 
 def build_packages() -> list[dict[str, str]]:
-    packages: list[dict[str, str]] = [CORE_PACKAGE]
+    packages: list[dict[str, str]] = [core_package()]
     for skill_dir in sorted((ROOT / ".apm" / "skills").iterdir()):
         if not (skill_dir / "SKILL.md").is_file():
             continue

@@ -9,33 +9,6 @@ includes: auto
 dependencies:
   apm:
   - mattpocock/skills/skills/engineering/diagnose#main
-  mcp:
-  - name: codebase-memory-mcp
-    registry: false
-    transport: stdio
-    command: codebase-memory-mcp
-  - name: context7
-    registry: false
-    transport: stdio
-    command: npx
-    args:
-    - -y
-    - '@upstash/context7-mcp'
-  - name: mcp-package-version
-    registry: false
-    transport: stdio
-    command: npx
-    args:
-    - -y
-    - mcp-package-version
-  - name: repomix
-    registry: false
-    transport: stdio
-    command: npx
-    args:
-    - -y
-    - repomix
-    - --mcp
 scripts:
   build-packages: "python3 .apm/scripts/build-packages.py"
   build-bundles: "python3 .apm/scripts/build-bundles.py"
@@ -75,7 +48,7 @@ marketplace:
     tagPattern: "v{version}"
   packages:
     - name: core
-      description: "Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows."
+      description: "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration."
       source: srobroek/agentic-packages
       subdir: packages/core
       ref: main
@@ -336,137 +309,167 @@ marketplace:
       source: google-labs-code/stitch-skills
       ref: main
     - name: agentic-maintenance
-      description: "Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation."
+      description: "Bundle: Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation. Contains: skills optimize-steering, prompt-lookup, steering-audit, write-a-skill; agents coder, pr-reviewer; steering; packages documentation-standards, plugin-eval."
       source: srobroek/agentic-packages
       subdir: packages/agentic-maintenance
       ref: main
     - name: code-intelligence
-      description: "Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents."
+      description: "Bundle: Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents. Contains: skills codebase-index, codebase-memory, explore, prompt-lookup, research, web-fetch; agents pr-reviewer; steering; packages code-documentation, documentation-generation, c4-architecture."
       source: srobroek/agentic-packages
       subdir: packages/code-intelligence
       ref: main
     - name: data-ai
-      description: "Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows."
+      description: "Bundle: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows. Contains: steering; packages llm-application-dev, data-engineering, machine-learning-ops, database-design, database-migrations, database-cloud-optimization."
       source: srobroek/agentic-packages
       subdir: packages/data-ai
       ref: main
     - name: debugging
-      description: "Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents."
+      description: "Bundle: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents. Contains: skills unstuck; agents adversarial-challenger; packages diagnose, debugging-toolkit, error-debugging, error-diagnostics, distributed-debugging, incident-response."
       source: srobroek/agentic-packages
       subdir: packages/debugging
       ref: main
     - name: developer-tools
-      description: "Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows."
+      description: "Bundle: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows. Contains: packages developer-essentials, debugging-toolkit, comprehensive-review, git-pr-workflows, documentation-generation."
       source: srobroek/agentic-packages
       subdir: packages/developer-tools
       ref: main
     - name: docs-architecture
-      description: "Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows."
+      description: "Bundle: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows. Contains: packages documentation-standards, code-documentation, documentation-generation, c4-architecture."
       source: srobroek/agentic-packages
       subdir: packages/docs-architecture
       ref: main
     - name: frontend
-      description: "Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents."
+      description: "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-skills, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage."
       source: srobroek/agentic-packages
       subdir: packages/frontend
       ref: main
     - name: governance
-      description: "Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows."
+      description: "Bundle: Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows. Contains: packages protect-mcp, signed-audit-trails, review-agent-governance, block-no-verify."
       source: srobroek/agentic-packages
       subdir: packages/governance
       ref: main
     - name: infrastructure
-      description: "Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows."
+      description: "Bundle: Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows. Contains: steering; packages cloud-infrastructure, kubernetes-operations, cicd-automation, deployment-strategies, deployment-validation, observability-monitoring."
       source: srobroek/agentic-packages
       subdir: packages/infrastructure
       ref: main
     - name: language-arm-cortex
-      description: "ARM Cortex-M firmware bundle with Hobson embedded specialists."
+      description: "Bundle: ARM Cortex-M firmware bundle with Hobson embedded specialists. Contains: packages arm-cortex-microcontrollers."
       source: srobroek/agentic-packages
       subdir: packages/language-arm-cortex
       ref: main
     - name: language-dotnet
-      description: ".NET development bundle with Hobson C# and ASP.NET specialists."
+      description: "Bundle: .NET development bundle with Hobson C# and ASP.NET specialists. Contains: packages dotnet-contribution."
       source: srobroek/agentic-packages
       subdir: packages/language-dotnet
       ref: main
     - name: language-functional
-      description: "Functional programming bundle with Hobson Elixir and Haskell specialists."
+      description: "Bundle: Functional programming bundle with Hobson Elixir and Haskell specialists. Contains: packages functional-programming."
       source: srobroek/agentic-packages
       subdir: packages/language-functional
       ref: main
     - name: language-go
-      description: "Go quality bundle with language steering and Hobson systems specialists."
+      description: "Bundle: Go quality bundle with language steering and Hobson systems specialists. Contains: skills go-quality; steering; packages systems-programming."
       source: srobroek/agentic-packages
       subdir: packages/language-go
       ref: main
     - name: language-julia
-      description: "Julia development bundle with Hobson scientific computing specialists."
+      description: "Bundle: Julia development bundle with Hobson scientific computing specialists. Contains: packages julia-development."
       source: srobroek/agentic-packages
       subdir: packages/language-julia
       ref: main
     - name: language-jvm
-      description: "JVM language bundle with Hobson Java, Scala, and enterprise specialists."
+      description: "Bundle: JVM language bundle with Hobson Java, Scala, and enterprise specialists. Contains: packages jvm-languages."
       source: srobroek/agentic-packages
       subdir: packages/language-jvm
       ref: main
     - name: language-python
-      description: "Python quality bundle with language steering and Hobson specialists."
+      description: "Bundle: Python quality bundle with language steering and Hobson specialists. Contains: skills python-quality; steering; packages python-development."
       source: srobroek/agentic-packages
       subdir: packages/language-python
       ref: main
     - name: language-rust
-      description: "Rust quality bundle with language steering and Hobson systems specialists."
+      description: "Bundle: Rust quality bundle with language steering and Hobson systems specialists. Contains: skills rust-quality; steering; packages systems-programming."
       source: srobroek/agentic-packages
       subdir: packages/language-rust
       ref: main
     - name: language-shell
-      description: "Shell scripting bundle with Hobson Bash and POSIX specialists."
+      description: "Bundle: Shell scripting bundle with Hobson Bash and POSIX specialists. Contains: packages shell-scripting."
       source: srobroek/agentic-packages
       subdir: packages/language-shell
       ref: main
     - name: language-terraform
-      description: "Terraform steering bundle with Hobson deployment and Terraform specialists."
+      description: "Bundle: Terraform steering bundle with Hobson deployment and Terraform specialists. Contains: steering; packages deployment-strategies."
       source: srobroek/agentic-packages
       subdir: packages/language-terraform
       ref: main
     - name: language-typescript
-      description: "TypeScript and JavaScript quality bundle with language steering and Hobson specialists."
+      description: "Bundle: TypeScript and JavaScript quality bundle with language steering and Hobson specialists. Contains: skills typescript-quality; steering; packages javascript-typescript."
       source: srobroek/agentic-packages
       subdir: packages/language-typescript
       ref: main
     - name: language-web-scripting
-      description: "PHP and Ruby web scripting bundle with Hobson specialists."
+      description: "Bundle: PHP and Ruby web scripting bundle with Hobson specialists. Contains: packages web-scripting."
       source: srobroek/agentic-packages
       subdir: packages/language-web-scripting
       ref: main
+    - name: mcp-codebase-memory
+      description: "MCP package: Codebase Memory MCP server package for graph-aware project orientation. Contains: MCP servers codebase-memory-mcp."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-codebase-memory
+      ref: main
+    - name: mcp-context7
+      description: "MCP package: Context7 MCP server package for current library and framework documentation. Contains: MCP servers context7."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-context7
+      ref: main
+    - name: mcp-package-version
+      description: "MCP package: Package Version MCP server package for dependency version discovery. Contains: MCP servers mcp-package-version."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-package-version
+      ref: main
     - name: mcp-playwright
-      description: "Playwright MCP server package for browser automation and UI verification."
+      description: "MCP package: Playwright MCP server package for browser automation and UI verification. Contains: MCP servers playwright."
       source: srobroek/agentic-packages
       subdir: packages/mcp-playwright
       ref: main
+    - name: mcp-repomix
+      description: "MCP package: Repomix MCP server package for bulk repository snapshots. Contains: MCP servers repomix."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-repomix
+      ref: main
+    - name: mcp-serena-claude-code
+      description: "MCP package: Serena MCP server package for Claude Code semantic code tools. Contains: MCP servers serena."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-serena-claude-code
+      ref: main
+    - name: mcp-serena-codex
+      description: "MCP package: Serena MCP server package for Codex semantic code tools. Contains: MCP servers serena."
+      source: srobroek/agentic-packages
+      subdir: packages/mcp-serena-codex
+      ref: main
     - name: planning-product
-      description: "Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows."
+      description: "Bundle: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows. Contains: skills debate, eli5, research, web-fetch; packages to-prd, to-issues, tdd, triage, zoom-out, improve-codebase-architecture."
       source: srobroek/agentic-packages
       subdir: packages/planning-product
       ref: main
     - name: project-lifecycle
-      description: "Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification."
+      description: "Bundle: Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification. Contains: skills catchup, handover, commit-push-merge, commit-push-pr, quick-commit, verify; agents pr-reviewer."
       source: srobroek/agentic-packages
       subdir: packages/project-lifecycle
       ref: main
     - name: quality
-      description: "Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows."
+      description: "Bundle: Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows. Contains: skills code-review, go-quality, python-quality, rust-quality, typescript-quality, verify; agents pr-reviewer; steering; packages comprehensive-review, performance-testing-review, unit-testing, tdd-workflows."
       source: srobroek/agentic-packages
       subdir: packages/quality
       ref: main
     - name: security
-      description: "Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows."
+      description: "Bundle: Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows. Contains: steering; packages security-scanning, security-compliance, backend-api-security, frontend-mobile-security, reverse-engineering."
       source: srobroek/agentic-packages
       subdir: packages/security
       ref: main
     - name: speckit
-      description: "SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering."
+      description: "Bundle: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering. Contains: skills speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering."
       source: srobroek/agentic-packages
       subdir: packages/speckit
       ref: main

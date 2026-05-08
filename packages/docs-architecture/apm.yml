@@ -1,6 +1,6 @@
 name: docs-architecture
 version: 0.1.0
-description: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows.
+description: 'Bundle: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows. Contains: packages documentation-standards, code-documentation, documentation-generation, c4-architecture.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

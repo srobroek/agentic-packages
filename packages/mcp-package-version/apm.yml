@@ -1,0 +1,18 @@
+name: mcp-package-version
+version: 0.1.0
+description: 'MCP package: Package Version MCP server package for dependency version discovery. Contains: MCP servers mcp-package-version.'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  mcp:
+    - name: mcp-package-version
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - mcp-package-version

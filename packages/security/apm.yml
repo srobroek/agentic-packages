@@ -1,6 +1,6 @@
 name: security
 version: 0.1.0
-description: Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows.
+description: 'Bundle: Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows. Contains: steering; packages security-scanning, security-compliance, backend-api-security, frontend-mobile-security, reverse-engineering.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

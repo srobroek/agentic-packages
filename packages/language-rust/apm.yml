@@ -1,6 +1,6 @@
 name: language-rust
 version: 0.1.0
-description: Rust quality bundle with language steering and Hobson systems specialists.
+description: 'Bundle: Rust quality bundle with language steering and Hobson systems specialists. Contains: skills rust-quality; steering; packages systems-programming.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

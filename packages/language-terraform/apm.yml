@@ -1,6 +1,6 @@
 name: language-terraform
 version: 0.1.0
-description: Terraform steering bundle with Hobson deployment and Terraform specialists.
+description: 'Bundle: Terraform steering bundle with Hobson deployment and Terraform specialists. Contains: steering; packages deployment-strategies.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,6 +1,6 @@
 name: project-lifecycle
 version: 0.1.0
-description: Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification.
+description: 'Bundle: Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification. Contains: skills catchup, handover, commit-push-merge, commit-push-pr, quick-commit, verify; agents pr-reviewer.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,6 +1,6 @@
 name: core
 version: 0.1.0
-description: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows.
+description: 'Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.'
 author: Sjors Robroek
 license: MIT
 type: hybrid
@@ -14,30 +14,3 @@ dependencies:
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - wshobson/agents/plugins/context-management#main
     - wshobson/agents/plugins/agent-orchestration#main
-  mcp:
-    - name: codebase-memory-mcp
-      registry: false
-      transport: stdio
-      command: codebase-memory-mcp
-    - name: context7
-      registry: false
-      transport: stdio
-      command: npx
-      args:
-        - -y
-        - '@upstash/context7-mcp'
-    - name: mcp-package-version
-      registry: false
-      transport: stdio
-      command: npx
-      args:
-        - -y
-        - mcp-package-version
-    - name: repomix
-      registry: false
-      transport: stdio
-      command: npx
-      args:
-        - -y
-        - repomix
-        - --mcp

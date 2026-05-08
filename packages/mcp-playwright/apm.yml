@@ -1,6 +1,6 @@
 name: mcp-playwright
 version: 0.1.0
-description: Playwright MCP server package for browser automation and UI verification.
+description: 'MCP package: Playwright MCP server package for browser automation and UI verification. Contains: MCP servers playwright.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

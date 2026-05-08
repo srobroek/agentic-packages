@@ -1,6 +1,6 @@
 name: planning-product
 version: 0.1.0
-description: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows.
+description: 'Bundle: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows. Contains: skills debate, eli5, research, web-fetch; packages to-prd, to-issues, tdd, triage, zoom-out, improve-codebase-architecture.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

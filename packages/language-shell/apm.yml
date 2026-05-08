@@ -1,6 +1,6 @@
 name: language-shell
 version: 0.1.0
-description: Shell scripting bundle with Hobson Bash and POSIX specialists.
+description: 'Bundle: Shell scripting bundle with Hobson Bash and POSIX specialists. Contains: packages shell-scripting.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,0 +1,19 @@
+name: mcp-repomix
+version: 0.1.0
+description: 'MCP package: Repomix MCP server package for bulk repository snapshots. Contains: MCP servers repomix.'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  mcp:
+    - name: repomix
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - repomix
+        - --mcp

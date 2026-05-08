@@ -1,0 +1,18 @@
+name: mcp-context7
+version: 0.1.0
+description: 'MCP package: Context7 MCP server package for current library and framework documentation. Contains: MCP servers context7.'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  mcp:
+    - name: context7
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - '@upstash/context7-mcp'

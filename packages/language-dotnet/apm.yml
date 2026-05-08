@@ -1,6 +1,6 @@
 name: language-dotnet
 version: 0.1.0
-description: .NET development bundle with Hobson C# and ASP.NET specialists.
+description: 'Bundle: .NET development bundle with Hobson C# and ASP.NET specialists. Contains: packages dotnet-contribution.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

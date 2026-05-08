@@ -1,6 +1,6 @@
 name: language-web-scripting
 version: 0.1.0
-description: PHP and Ruby web scripting bundle with Hobson specialists.
+description: 'Bundle: PHP and Ruby web scripting bundle with Hobson specialists. Contains: packages web-scripting.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

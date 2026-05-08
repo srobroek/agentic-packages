@@ -1,6 +1,6 @@
 name: data-ai
 version: 0.1.0
-description: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows.
+description: 'Bundle: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows. Contains: steering; packages llm-application-dev, data-engineering, machine-learning-ops, database-design, database-migrations, database-cloud-optimization.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,6 +1,6 @@
 name: language-jvm
 version: 0.1.0
-description: JVM language bundle with Hobson Java, Scala, and enterprise specialists.
+description: 'Bundle: JVM language bundle with Hobson Java, Scala, and enterprise specialists. Contains: packages jvm-languages.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

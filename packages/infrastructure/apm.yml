@@ -1,6 +1,6 @@
 name: infrastructure
 version: 0.1.0
-description: Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows.
+description: 'Bundle: Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows. Contains: steering; packages cloud-infrastructure, kubernetes-operations, cicd-automation, deployment-strategies, deployment-validation, observability-monitoring.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,6 +1,6 @@
 name: debugging
 version: 0.1.0
-description: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents.
+description: 'Bundle: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents. Contains: skills unstuck; agents adversarial-challenger; packages diagnose, debugging-toolkit, error-debugging, error-diagnostics, distributed-debugging, incident-response.'
 author: Sjors Robroek
 license: MIT
 type: hybrid

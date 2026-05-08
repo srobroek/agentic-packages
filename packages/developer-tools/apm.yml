@@ -1,6 +1,6 @@
 name: developer-tools
 version: 0.1.0
-description: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows.
+description: 'Bundle: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows. Contains: packages developer-essentials, debugging-toolkit, comprehensive-review, git-pr-workflows, documentation-generation.'
 author: Sjors Robroek
 license: MIT
 type: hybrid
