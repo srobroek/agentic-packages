@@ -9,12 +9,13 @@ dependencies:
 
 scripts:
   install-agentic-tools: "apm install --target claude,codex,agent-skills"
+  prune-agentic-tools: "apm prune"
   compile-agentic-tools: "apm compile --target codex --no-constitution"
   strip-constitution-blocks: "python3 apm_modules/_local/agentic-packages/.apm/scripts/strip-constitution-blocks.py"
   write-claude-pointers: "python3 apm_modules/_local/agentic-packages/.apm/scripts/write-claude-pointers.py"
   patch-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
   audit-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/audit-agentic-assets.py"
-  setup-agentic-tools: "apm run install-agentic-tools && apm run compile-agentic-tools && apm run strip-constitution-blocks && apm run write-claude-pointers && apm run patch-agentic-tools && apm run audit-agentic-tools"
+  setup-agentic-tools: "apm run install-agentic-tools && apm run prune-agentic-tools && apm run compile-agentic-tools && apm run strip-constitution-blocks && apm run write-claude-pointers && apm run patch-agentic-tools && apm run audit-agentic-tools"
 
 compilation:
   strategy: distributed
