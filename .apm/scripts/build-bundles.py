@@ -26,12 +26,19 @@ class McpDependency:
 
 
 @dataclass(frozen=True)
+class InlineInstruction:
+    filename: str
+    content: str
+
+
+@dataclass(frozen=True)
 class Bundle:
     name: str
     description: str
     skills: tuple[str, ...] = ()
     agents: tuple[str, ...] = ()
     instructions: tuple[str, ...] = ()
+    inline_instructions: tuple[InlineInstruction, ...] = ()
     contexts: tuple[str, ...] = ()
     dependencies: tuple[str, ...] = ()
     mcp_dependencies: tuple[McpDependency, ...] = ()
@@ -41,6 +48,135 @@ PLAYWRIGHT_MCP = McpDependency(
     name="playwright",
     command="npx",
     args=("-y", "@anthropic-ai/playwright-mcp@latest"),
+)
+
+LSP_GO_MCP = McpDependency(
+    name="lsp-go",
+    command="mcp-language-server",
+    args=("--workspace", ".", "--lsp", "gopls"),
+)
+
+LSP_PYTHON_MCP = McpDependency(
+    name="lsp-python",
+    command="mcp-language-server",
+    args=("--workspace", ".", "--lsp", "pyright-langserver", "--lsp-arg", "--stdio"),
+)
+
+LSP_RUST_MCP = McpDependency(
+    name="lsp-rust",
+    command="mcp-language-server",
+    args=("--workspace", ".", "--lsp", "rust-analyzer"),
+)
+
+LSP_TYPESCRIPT_MCP = McpDependency(
+    name="lsp-typescript",
+    command="mcp-language-server",
+    args=("--workspace", ".", "--lsp", "typescript-language-server", "--lsp-arg", "--stdio"),
+)
+
+TOOL_ROUTING_INSTRUCTION = InlineInstruction(
+    filename="25-tool-routing.instructions.md",
+    content="""---
+description: Tool routing preferences for code discovery, GitHub operations, and MCP usage
+applyTo: "**/*"
+---
+
+Use codebase-memory-mcp for graph-aware code orientation, `rg` for exact text
+or path searches, and repomix only for bulk snapshots. Use `gh` for GitHub
+operations, context7 for current library docs, and mcp-package-version before
+adding dependencies.
+""",
+)
+
+FRONTEND_TOOLS_INSTRUCTION = InlineInstruction(
+    filename="25-frontend-tools.instructions.md",
+    content="""---
+description: Frontend tool routing including Playwright browser automation
+applyTo: "**/*"
+---
+
+For UI work, verify in-browser behavior with Playwright MCP after the dev server
+is running. Use terminal tools for API checks, static analysis, component unit
+tests, and performance benchmarks.
+""",
+)
+
+QUALITY_TOOLS_INSTRUCTION = InlineInstruction(
+    filename="25-quality-tools.instructions.md",
+    content="""---
+description: Quality analysis CLI tools for dead code, dependencies, and metrics
+applyTo: "**/*"
+---
+
+Use focused quality tools when their signal fits the task: `knip` for unused
+JS/TS exports and dependencies, `madge` for circular imports, `scc` for code
+size and complexity, and `sg`/ast-grep for structural searches.
+""",
+)
+
+SECURITY_TOOLS_INSTRUCTION = InlineInstruction(
+    filename="25-security-tools.instructions.md",
+    content="""---
+description: Security scanning tool routing and CLI patterns
+applyTo: "**/*"
+---
+
+Use `semgrep` for targeted AST vulnerability checks, `trivy` for dependency,
+container, and IaC scans, and the language audit tool for new or changed
+dependencies (`npm audit`, `pip-audit`, `cargo audit`, or `bundler-audit`).
+""",
+)
+
+LSP_GO_INSTRUCTION = InlineInstruction(
+    filename="73-lsp-go.instructions.md",
+    content="""---
+description: Go LSP server usage via mcp-language-server
+applyTo: "**/*.go"
+---
+
+Use `lsp-go` for Go symbol navigation, references, diagnostics, and safe
+renames. Prefer it over text search for symbols; use `rg` for string literals
+and build tags.
+""",
+)
+
+LSP_PYTHON_INSTRUCTION = InlineInstruction(
+    filename="72-lsp-python.instructions.md",
+    content="""---
+description: Python LSP server usage via mcp-language-server
+applyTo: "**/*.{py,pyi}"
+---
+
+Use `lsp-python` for Python import/class/function navigation, references,
+diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
+for string patterns and runtime-constructed names.
+""",
+)
+
+LSP_RUST_INSTRUCTION = InlineInstruction(
+    filename="74-lsp-rust.instructions.md",
+    content="""---
+description: Rust LSP server usage via mcp-language-server
+applyTo: "**/*.rs"
+---
+
+Use `lsp-rust` for Rust symbol navigation, trait/macro-aware references,
+diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
+for string literals and cfg attributes.
+""",
+)
+
+LSP_TYPESCRIPT_INSTRUCTION = InlineInstruction(
+    filename="71-lsp-typescript.instructions.md",
+    content="""---
+description: TypeScript LSP server usage via mcp-language-server
+applyTo: "**/*.{ts,tsx,js,jsx,mts,cts}"
+---
+
+Use `lsp-typescript` for TypeScript/JavaScript symbol navigation, references,
+diagnostics, and safe renames. Prefer it over text search for symbols; use `rg`
+for string literals and non-symbol patterns.
+""",
 )
 
 
@@ -63,11 +199,36 @@ COMMON_INSTRUCTIONS = (
 
 COMMON_CONTEXTS = (
     "agent-routing",
+    "backend/api-contracts",
+    "backend/background-work",
+    "backend/backend-index",
+    "data/data-index",
+    "docs-specs/docs-specs-index",
+    "docs-specs/project-docs",
+    "docs-specs/spec-workflow",
     "external-agent-marketplaces",
     "external-assets",
-    "project-structure",
+    "frontend/frontend-index",
+    "frontend/ui-components",
+    "infrastructure/infrastructure-index",
+    "languages/go",
+    "languages/languages-index",
+    "languages/python",
+    "languages/rust",
+    "languages/terraform",
+    "languages/typescript",
+    "project-structure/docs-files",
+    "project-structure/project-structure-index",
+    "project-structure/ownership",
+    "project-structure/top-level",
     "source-of-truth",
     "steering-index",
+    "toolchain-defaults/frontend",
+    "toolchain-defaults/toolchain-defaults-index",
+    "toolchain-defaults/infrastructure",
+    "toolchain-defaults/languages",
+    "toolchain-defaults/quality-observability",
+    "tools-scripts/tools-scripts-index",
 )
 
 CORE_SKILLS = (
@@ -112,33 +273,70 @@ LANGUAGE_BUNDLES = (
         description="TypeScript and JavaScript quality bundle with language steering and Hobson specialists.",
         skills=("typescript-quality",),
         instructions=("70-language-typescript",),
+        inline_instructions=(LSP_TYPESCRIPT_INSTRUCTION,),
+        contexts=(
+            "languages/languages-index",
+            "languages/typescript",
+            "toolchain-defaults/languages",
+            "toolchain-defaults/toolchain-defaults-index",
+        ),
         dependencies=(f"{HOBSON}/javascript-typescript#main",),
+        mcp_dependencies=(LSP_TYPESCRIPT_MCP,),
     ),
     Bundle(
         name="language-python",
         description="Python quality bundle with language steering and Hobson specialists.",
         skills=("python-quality",),
         instructions=("71-language-python",),
+        inline_instructions=(LSP_PYTHON_INSTRUCTION,),
+        contexts=(
+            "languages/languages-index",
+            "languages/python",
+            "toolchain-defaults/languages",
+            "toolchain-defaults/toolchain-defaults-index",
+        ),
         dependencies=(f"{HOBSON}/python-development#main",),
+        mcp_dependencies=(LSP_PYTHON_MCP,),
     ),
     Bundle(
         name="language-go",
         description="Go quality bundle with language steering and Hobson systems specialists.",
         skills=("go-quality",),
         instructions=("72-language-go",),
+        inline_instructions=(LSP_GO_INSTRUCTION,),
+        contexts=(
+            "languages/languages-index",
+            "languages/go",
+            "toolchain-defaults/languages",
+            "toolchain-defaults/toolchain-defaults-index",
+        ),
         dependencies=(f"{HOBSON}/systems-programming#main",),
+        mcp_dependencies=(LSP_GO_MCP,),
     ),
     Bundle(
         name="language-rust",
         description="Rust quality bundle with language steering and Hobson systems specialists.",
         skills=("rust-quality",),
         instructions=("73-language-rust",),
+        inline_instructions=(LSP_RUST_INSTRUCTION,),
+        contexts=(
+            "languages/languages-index",
+            "languages/rust",
+            "toolchain-defaults/languages",
+            "toolchain-defaults/toolchain-defaults-index",
+        ),
         dependencies=(f"{HOBSON}/systems-programming#main",),
+        mcp_dependencies=(LSP_RUST_MCP,),
     ),
     Bundle(
         name="language-terraform",
         description="Terraform steering bundle with Hobson deployment and Terraform specialists.",
         instructions=("74-language-terraform",),
+        contexts=(
+            "infrastructure/infrastructure-index",
+            "languages/languages-index",
+            "languages/terraform",
+        ),
         dependencies=(f"{HOBSON}/deployment-strategies#main",),
     ),
     Bundle(
@@ -189,6 +387,7 @@ BUNDLES: tuple[Bundle, ...] = (
         skills=CORE_SKILLS,
         agents=CORE_AGENTS,
         instructions=COMMON_INSTRUCTIONS,
+        inline_instructions=(TOOL_ROUTING_INSTRUCTION,),
         contexts=COMMON_CONTEXTS,
         dependencies=(
             f"{MATT}/engineering/diagnose#main",
@@ -221,7 +420,14 @@ BUNDLES: tuple[Bundle, ...] = (
             "web-fetch",
         ),
         agents=("pr-reviewer",),
-        contexts=("agent-routing", "project-structure", "source-of-truth"),
+        contexts=(
+            "agent-routing",
+            "project-structure/docs-files",
+            "project-structure/project-structure-index",
+            "project-structure/ownership",
+            "project-structure/top-level",
+            "source-of-truth",
+        ),
         dependencies=(
             f"{HOBSON}/code-documentation#main",
             f"{HOBSON}/documentation-generation#main",
@@ -253,6 +459,7 @@ BUNDLES: tuple[Bundle, ...] = (
             "verify",
         ),
         agents=("pr-reviewer",),
+        inline_instructions=(QUALITY_TOOLS_INSTRUCTION,),
         dependencies=(
             f"{HOBSON}/comprehensive-review#main",
             f"{HOBSON}/performance-testing-review#main",
@@ -299,6 +506,7 @@ BUNDLES: tuple[Bundle, ...] = (
         description="Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser automation MCP, and Hobson frontend/UI/accessibility agents.",
         skills=("playwright",),
         instructions=("30-frontend", "31-frontend-ui"),
+        inline_instructions=(FRONTEND_TOOLS_INSTRUCTION,),
         dependencies=(
             "pbakaus/impeccable/.agents/skills/impeccable#main",
             "Dammyjay93/interface-design/.claude/skills/interface-design#main",
@@ -336,6 +544,7 @@ BUNDLES: tuple[Bundle, ...] = (
     Bundle(
         name="security",
         description="Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows.",
+        inline_instructions=(SECURITY_TOOLS_INSTRUCTION,),
         dependencies=(
             f"{HOBSON}/security-scanning#main",
             f"{HOBSON}/security-compliance#main",
@@ -419,6 +628,11 @@ def materialize_bundle(bundle: Bundle) -> None:
     for instruction in bundle.instructions:
         filename = f"{instruction}.instructions.md"
         copy_file(APM / "instructions" / filename, nested_apm / "instructions" / filename)
+
+    for instruction in bundle.inline_instructions:
+        path = nested_apm / "instructions" / instruction.filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(instruction.content.rstrip() + "\n", encoding="utf-8")
 
     for context in bundle.contexts:
         filename = f"{context}.context.md"

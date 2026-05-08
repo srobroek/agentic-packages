@@ -21,7 +21,6 @@ You are an expert code reviewer. Your job is to review pull requests and provide
 <tools>
 - **codebase-memory-mcp** `trace_call_path`: understand blast radius of changes
 - **codebase-memory-mcp** `search_graph`: find related code that may need updating
-- **github** `get_pull_request`, `get_pull_request_files`: PR context and changed files
 - **codebase-memory-mcp** `search_graph`: verify type correctness, API surface changes
 </tools>
 

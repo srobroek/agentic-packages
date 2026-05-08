@@ -3,11 +3,5 @@ description: Python steering.
 applyTo: "**/*.py"
 ---
 
-# Python
-
-Use `src/<package>/` layouts with `api`, `domain`, `application`, `adapters`, and
-`settings.py` for services. Keep domain code independent from framework and IO
-concerns.
-
-For uv, Ruff, pytest, pyright, FastAPI, Pydantic, and Litestar defaults, use the
-always-loaded toolchain defaults and the project setup skill.
+For Python layout, services, domain code, framework boundaries, tooling, tests,
+linting, or typing, read [language context](../context/languages/languages-index.context.md).

@@ -93,15 +93,16 @@ The important order is:
 
 ```bash
 apm install --target claude,codex,agent-skills
-apm compile --target codex
+apm compile --target codex --no-constitution
+apm run write-claude-pointers
 apm run patch-agentic-tools
 apm run audit-agentic-tools
 ```
 
-Do not compile Claude by default. APM install deploys Claude Code rules under
-`.claude/rules`; compiling Claude additionally writes `CLAUDE.md` and duplicates
-that steering. Compile Claude only for workflows that explicitly need a single
-runtime summary file.
+Do not compile Claude by default. Compiled `CLAUDE.md` files duplicate full
+instruction bodies. The setup flow writes minimal `CLAUDE.md` pointer files
+beside generated `AGENTS.md` files instead, so Claude users can follow the same
+progressive-disclosure index through Claude Code's eager `@AGENTS.md` import.
 
 `patch-agentic-tools` is required because APM's conversion does not preserve
 all Codex and Claude runtime-specific model, effort, sandbox, and permission

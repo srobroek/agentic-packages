@@ -9,8 +9,14 @@ dependencies:
 
 scripts:
   install-agentic-tools: "apm install --target claude,codex,agent-skills"
-  compile-agentic-tools: "apm compile --target codex"
-  compile-agentic-tools-claude: "apm compile --target claude"
+  compile-agentic-tools: "apm compile --target codex --no-constitution"
+  write-claude-pointers: "python3 apm_modules/_local/agentic-packages/.apm/scripts/write-claude-pointers.py"
   patch-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
   audit-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/audit-agentic-assets.py"
-  setup-agentic-tools: "apm run install-agentic-tools && apm run compile-agentic-tools && apm run patch-agentic-tools && apm run audit-agentic-tools"
+  setup-agentic-tools: "apm run install-agentic-tools && apm run compile-agentic-tools && apm run write-claude-pointers && apm run patch-agentic-tools && apm run audit-agentic-tools"
+
+compilation:
+  strategy: distributed
+  source_attribution: false
+  placement:
+    min_instructions_per_file: 1

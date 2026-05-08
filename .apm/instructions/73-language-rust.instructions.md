@@ -3,11 +3,6 @@ description: Rust steering.
 applyTo: "**/*.rs"
 ---
 
-# Rust
-
-Keep crates domain-driven. Keep pure library crates free of runtime/framework
-dependencies unless the crate's purpose is explicitly integration or platform
-glue.
-
-For cargo workspace, error handling, CLI, HTTP, async, and desktop defaults, use
-the always-loaded toolchain defaults and the project setup skill.
+For Rust crates, workspace shape, domain boundaries, runtime dependencies,
+errors, CLIs, HTTP, async, desktop code, tests, or tooling, read
+[language context](../context/languages/languages-index.context.md).

@@ -220,7 +220,7 @@ def build_markdown_index(directory: Path, suffix: str, asset_type: str) -> list[
     rows: list[dict[str, object]] = []
     if not directory.is_dir():
         return rows
-    for path in sorted(directory.glob(f"*{suffix}")):
+    for path in sorted(directory.rglob(f"*{suffix}")):
         text = path.read_text(encoding="utf-8")
         frontmatter, body = split_frontmatter(text)
         rows.append(
