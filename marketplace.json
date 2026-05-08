@@ -792,22 +792,12 @@
       }
     },
     {
-      "name": "mcp-serena-claude-code",
-      "description": "MCP package: Serena MCP server package for Claude Code semantic code tools. Contains: MCP servers serena.",
+      "name": "mcp-serena",
+      "description": "MCP package: Serena MCP server package for semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. Contains: MCP servers serena.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
-        "subdir": "packages/mcp-serena-claude-code",
-        "ref": "main"
-      }
-    },
-    {
-      "name": "mcp-serena-codex",
-      "description": "MCP package: Serena MCP server package for Codex semantic code tools. Contains: MCP servers serena.",
-      "source": {
-        "source": "git-subdir",
-        "repo": "srobroek/agentic-packages",
-        "subdir": "packages/mcp-serena-codex",
+        "subdir": "packages/mcp-serena",
         "ref": "main"
       }
     },

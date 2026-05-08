@@ -13,7 +13,11 @@ APM = ROOT / ".apm"
 PACKAGES = ROOT / "packages"
 HOBSON = "wshobson/agents/plugins"
 MATT = "mattpocock/skills/skills"
-RETIRED_GENERATED_PACKAGES = ("frontend-design",)
+RETIRED_GENERATED_PACKAGES = (
+    "frontend-design",
+    "mcp-serena-claude-code",
+    "mcp-serena-codex",
+)
 
 
 @dataclass(frozen=True)
@@ -75,16 +79,20 @@ PACKAGE_VERSION_MCP = McpDependency(
     args=("-y", "mcp-package-version"),
 )
 
-SERENA_CODEX_MCP = McpDependency(
+SERENA_MCP = McpDependency(
     name="serena",
-    command="serena",
-    args=("start-mcp-server", "--context=codex", "--project-from-cwd"),
-)
-
-SERENA_CLAUDE_CODE_MCP = McpDependency(
-    name="serena",
-    command="serena",
-    args=("start-mcp-server", "--context", "claude-code", "--project-from-cwd"),
+    command="bash",
+    args=(
+        "-lc",
+        (
+            'ctx="${SERENA_MCP_CONTEXT:-}"; '
+            'if [ -z "$ctx" ]; then '
+            'parent="$(ps -o args= -p "$PPID" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; '
+            'case "$parent" in *claude*) ctx="claude-code" ;; *codex*) ctx="codex" ;; *) ctx="agent" ;; esac; '
+            "fi; "
+            'exec serena start-mcp-server --context "$ctx" --project-from-cwd'
+        ),
+    ),
 )
 
 TOOL_ROUTING_INSTRUCTION = InlineInstruction(
@@ -408,16 +416,13 @@ MCP_BUNDLES = (
         mcp_dependencies=(PLAYWRIGHT_MCP,),
     ),
     Bundle(
-        name="mcp-serena-codex",
-        description="Serena MCP server package for Codex semantic code tools.",
-        target="codex",
-        mcp_dependencies=(SERENA_CODEX_MCP,),
-    ),
-    Bundle(
-        name="mcp-serena-claude-code",
-        description="Serena MCP server package for Claude Code semantic code tools.",
-        target="claude",
-        mcp_dependencies=(SERENA_CLAUDE_CODE_MCP,),
+        name="mcp-serena",
+        description=(
+            "Serena MCP server package for semantic code tools. The launcher "
+            "selects the Codex or Claude Code context from the parent harness "
+            "and can be overridden with SERENA_MCP_CONTEXT."
+        ),
+        mcp_dependencies=(SERENA_MCP,),
     ),
 )
 

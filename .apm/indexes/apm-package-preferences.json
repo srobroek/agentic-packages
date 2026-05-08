@@ -165,26 +165,16 @@
       "reason": "Optional Playwright MCP server package for browser automation and UI verification; install separately from frontend bundles to avoid hidden MCP duplication.",
       "selection_count": 0
     },
-    "mcp-serena-claude-code@srobroek-agentic": {
+    "mcp-serena@srobroek-agentic": {
       "priority": 70,
       "profiles": [
         "claude",
-        "semantic-code",
-        "serena",
-        "all"
-      ],
-      "reason": "Optional Serena MCP package for Claude Code semantic code tools. Pair with project-local .serena/project.yml and language-server prerequisites.",
-      "selection_count": 0
-    },
-    "mcp-serena-codex@srobroek-agentic": {
-      "priority": 70,
-      "profiles": [
         "codex",
         "semantic-code",
         "serena",
         "all"
       ],
-      "reason": "Optional Serena MCP package for Codex semantic code tools. Pair with project-local .serena/project.yml and language-server prerequisites.",
+      "reason": "Optional Serena MCP package for semantic code tools. Pair with project-local .serena/project.yml and language-server prerequisites.",
       "selection_count": 0
     },
     "mcp-repomix@srobroek-agentic": {
