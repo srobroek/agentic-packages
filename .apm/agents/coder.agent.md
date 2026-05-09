@@ -6,7 +6,7 @@ model: opus
 tools: ["terminal", "file-manager", "context7", "codebase-memory-mcp", "repomix", "playwright", "stitch"]
 x-agentic:
   codex:
-    model: "gpt-5.3-codex"
+    model: "gpt-5.3-codex-spark"
     reasoning_effort: "high"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"

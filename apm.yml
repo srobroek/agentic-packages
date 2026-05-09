@@ -48,7 +48,7 @@ marketplace:
     tagPattern: "v{version}"
   packages:
     - name: core
-      description: "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration."
+      description: "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration."
       source: srobroek/agentic-packages
       subdir: packages/core
       ref: main

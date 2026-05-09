@@ -444,6 +444,8 @@ BUNDLES: tuple[Bundle, ...] = (
             "strip-constitution-blocks",
             "prune-stale-local-packages",
             "fix-agents-context-links",
+            "patch-runtime-agents",
+            "audit-agentic-assets",
         ),
         dependencies=(
             f"{MATT}/engineering/diagnose#main",
