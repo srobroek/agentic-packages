@@ -3,7 +3,7 @@ name: coder
 description: Implementation subagent for bounded code changes, tests, refactors,
   and migrations. Use when tasks have clear file/module ownership.
 model: sonnet
-tools: ["terminal", "file-manager", "context7", "codebase-memory-mcp", "repomix", "playwright", "stitch"]
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Task", "ToolSearch", "WebFetch", "WebSearch", "context7", "codebase-memory-mcp", "repomix", "playwright", "stitch"]
 x-agentic:
   codex:
     model: "gpt-5.3-codex-spark"
