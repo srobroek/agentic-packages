@@ -11,7 +11,7 @@ dependencies:
   apm:
     - pbakaus/impeccable/.agents/skills/impeccable#main
     - Dammyjay93/interface-design/.claude/skills/interface-design#main
-    - google-labs-code/stitch-skills#main
+    - google-labs-code/stitch-skills/plugins/stitch-design#main
     - wshobson/agents/plugins/frontend-mobile-development#main
     - wshobson/agents/plugins/ui-design#main
     - wshobson/agents/plugins/accessibility-compliance#main
