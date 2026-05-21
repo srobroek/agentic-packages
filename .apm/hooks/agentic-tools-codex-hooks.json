@@ -63,6 +63,15 @@
             "command": "./scripts/squash-merge-guard.sh"
           }
         ]
+      },
+      {
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/coder-delegation-reminder.sh"
+          }
+        ]
       }
     ],
     "PermissionRequest": [

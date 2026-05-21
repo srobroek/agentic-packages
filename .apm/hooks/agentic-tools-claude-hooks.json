@@ -107,6 +107,11 @@
             "type": "command",
             "if": "Edit(Cargo.toml)|Edit(package.json)|Edit(pyproject.toml)|Edit(go.mod)|Edit(Gemfile)|Edit(composer.json)|Write(Cargo.toml)|Write(package.json)|Write(pyproject.toml)|Write(go.mod)|Write(Gemfile)|Write(composer.json)",
             "command": "./scripts/package-file-warn.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/coder-delegation-reminder.sh",
+            "timeout": 3
           }
         ]
       },
