@@ -2,7 +2,7 @@
 name: coder
 description: Implementation subagent for bounded code changes, tests, refactors,
   and migrations. Use when tasks have clear file/module ownership.
-model: opus
+model: sonnet
 tools: ["terminal", "file-manager", "context7", "codebase-memory-mcp", "repomix", "playwright", "stitch"]
 x-agentic:
   codex:
@@ -11,8 +11,8 @@ x-agentic:
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"
   claude:
-    model: "opus"
-    effort: "high"
+    model: "sonnet"
+    effort: "medium"
     permissions:
       mode: "workspace-write"
 ---
