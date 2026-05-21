@@ -1,17 +1,16 @@
 ---
 name: speckit-implement-task
 description: Implements non-code or tightly scoped tasks from a SpecKit tasks.md, or scopes substantial code work for a parent-delegated coder. Use only inside a SpecKit implementation workflow when the parent provides task IDs, spec context, and worktree scope.
-model: opus
-tools: ["terminal", "file-manager", "speckit", "context7", "codebase-memory-mcp", "repomix"]
+model: sonnet
 x-agentic:
   codex:
-    model: "gpt-5.5"
-    reasoning_effort: "high"
+    model: "gpt-5.4"
+    reasoning_effort: "medium"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"
   claude:
-    model: "opus"
-    effort: "high"
+    model: "sonnet"
+    effort: "medium"
     permissions:
       mode: "workspace-write"
 ---
