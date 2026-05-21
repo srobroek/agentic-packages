@@ -526,8 +526,9 @@
       "name": "stitch-skills",
       "description": "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows.",
       "source": {
-        "source": "github",
+        "source": "git-subdir",
         "repo": "google-labs-code/stitch-skills",
+        "subdir": "plugins/stitch-design",
         "ref": "main"
       }
     },
@@ -593,7 +594,7 @@
     },
     {
       "name": "frontend",
-      "description": "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-skills, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.",
+      "description": "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-design, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",

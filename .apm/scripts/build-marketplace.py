@@ -150,6 +150,7 @@ EXTERNAL_BUNDLES = [
         "name": "stitch-skills",
         "description": "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows.",
         "source": "google-labs-code/stitch-skills",
+        "subdir": "plugins/stitch-design",
         "ref": "main",
     },
 ]

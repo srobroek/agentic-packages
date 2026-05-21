@@ -568,7 +568,7 @@ BUNDLES: tuple[Bundle, ...] = (
         dependencies=(
             "pbakaus/impeccable/.agents/skills/impeccable#main",
             "Dammyjay93/interface-design/.claude/skills/interface-design#main",
-            "google-labs-code/stitch-skills#main",
+            "google-labs-code/stitch-skills/plugins/stitch-design#main",
             f"{HOBSON}/frontend-mobile-development#main",
             f"{HOBSON}/ui-design#main",
             f"{HOBSON}/accessibility-compliance#main",

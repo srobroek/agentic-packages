@@ -8642,7 +8642,7 @@
     "type": "package"
   },
   {
-    "description": "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-skills, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.",
+    "description": "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-design, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.",
     "group": "packages",
     "keywords": [
       "0.1.0",
@@ -8689,8 +8689,9 @@
       "sjors",
       "steering",
       "stitch",
+      "stitch-design",
+      "stitch-design#main",
       "stitch-skills",
-      "stitch-skills#main",
       "target",
       "type",
       "ui",
