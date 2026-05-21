@@ -18,14 +18,7 @@ PROJECT=$(basename "$REPO_ROOT")
 
 # Base context for ALL subagents
 CTX="Project: $PROJECT. Branch: $BRANCH. "
-# Detect codebase-memory project name (path-based, replace / with -)
-CBM_PROJECT=$(echo "$REPO_ROOT" | sed "s|$HOME/||" | tr '/' '-')
-
-CTX+="MCP tools available via mcp-hub: "
-CTX+="Use mcp__mcp-hub__codebase_memory_mcp__search_graph (project '$CBM_PROJECT') for finding functions/types/symbols. "
-CTX+="Use mcp__mcp-hub__codebase_memory_mcp__get_code_snippet for reading symbol bodies (pass full qualified_name from search_graph). "
-CTX+="Use mcp__mcp-hub__context7__resolve-library-id then query-docs for library API documentation. "
-CTX+="Also use Grep/Read/Glob for direct file access. "
+CTX+="For code discovery prefer codebase-memory-mcp (search_graph, get_code_snippet) and context7 (resolve-library-id, query-docs) when available; otherwise Grep/Read/Glob for direct file access. "
 
 # Adversarial challenger: reinforce isolation
 if [ "$AGENT_TYPE" = "adversarial-challenger" ]; then
