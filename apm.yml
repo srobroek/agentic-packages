@@ -307,6 +307,7 @@ marketplace:
     - name: stitch-skills
       description: "Full Google Stitch Agent Skills bundle for Stitch MCP design, DESIGN.md, React, Remotion, shadcn/ui, and taste-design workflows."
       source: google-labs-code/stitch-skills
+      subdir: plugins/stitch-design
       ref: main
     - name: agentic-maintenance
       description: "Bundle: Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation. Contains: skills optimize-steering, prompt-lookup, steering-audit, write-a-skill; agents coder, pr-reviewer; steering; packages documentation-standards, plugin-eval."
