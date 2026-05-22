@@ -16,3 +16,5 @@ dependencies:
     - wshobson/agents/plugins/ui-design#main
     - wshobson/agents/plugins/accessibility-compliance#main
     - wshobson/agents/plugins/brand-landingpage#main
+    - msitarzewski/agency-agents/engineering/engineering-frontend-developer.md#main
+    - msitarzewski/agency-agents/testing/testing-accessibility-auditor.md#main

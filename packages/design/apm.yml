@@ -1,0 +1,19 @@
+name: design
+version: 0.1.0
+description: 'Bundle: Design bundle with brand, UI, UX, visual-storytelling, and inclusive-visuals agents from msitarzewski/agency-agents. Contains: agency-brand-guardian, agency-ui-designer, agency-ux-architect, agency-ux-researcher, agency-image-prompt-engineer, agency-inclusive-visuals-specialist, agency-visual-storyteller, agency-whimsy-injector.'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - msitarzewski/agency-agents/design/design-brand-guardian.md#main
+    - msitarzewski/agency-agents/design/design-ui-designer.md#main
+    - msitarzewski/agency-agents/design/design-ux-architect.md#main
+    - msitarzewski/agency-agents/design/design-ux-researcher.md#main
+    - msitarzewski/agency-agents/design/design-image-prompt-engineer.md#main
+    - msitarzewski/agency-agents/design/design-inclusive-visuals-specialist.md#main
+    - msitarzewski/agency-agents/design/design-visual-storyteller.md#main
+    - msitarzewski/agency-agents/design/design-whimsy-injector.md#main

@@ -15,3 +15,6 @@ dependencies:
     - wshobson/agents/plugins/deployment-strategies#main
     - wshobson/agents/plugins/deployment-validation#main
     - wshobson/agents/plugins/observability-monitoring#main
+    - msitarzewski/agency-agents/engineering/engineering-devops-automator.md#main
+    - msitarzewski/agency-agents/engineering/engineering-sre.md#main
+    - msitarzewski/agency-agents/support/support-infrastructure-maintainer.md#main

@@ -10,3 +10,4 @@ includes: auto
 dependencies:
   apm:
     - wshobson/agents/plugins/arm-cortex-microcontrollers#main
+    - msitarzewski/agency-agents/engineering/engineering-embedded-firmware-engineer.md#main

@@ -11,3 +11,9 @@ dependencies:
   apm:
     - wshobson/agents/plugins/documentation-standards#main
     - wshobson/agents/plugins/plugin-eval#main
+    - msitarzewski/agency-agents/specialized/specialized-mcp-builder.md#main
+    - msitarzewski/agency-agents/specialized/specialized-workflow-architect.md#main
+    - msitarzewski/agency-agents/specialized/agents-orchestrator.md#main
+    - msitarzewski/agency-agents/specialized/automation-governance-architect.md#main
+    - msitarzewski/agency-agents/specialized/identity-graph-operator.md#main
+    - msitarzewski/agency-agents/specialized/agentic-identity-trust.md#main

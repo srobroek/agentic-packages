@@ -14,3 +14,7 @@ dependencies:
     - wshobson/agents/plugins/backend-api-security#main
     - wshobson/agents/plugins/frontend-mobile-security#main
     - wshobson/agents/plugins/reverse-engineering#main
+    - msitarzewski/agency-agents/engineering/engineering-security-engineer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-threat-detection-engineer.md#main
+    - msitarzewski/agency-agents/specialized/compliance-auditor.md#main
+    - msitarzewski/agency-agents/support/support-legal-compliance-checker.md#main

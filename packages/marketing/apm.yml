@@ -1,0 +1,28 @@
+name: marketing
+version: 0.1.0
+description: 'Bundle: Marketing bundle (Western/global) with SEO, content, social-media, growth, paid-discoverability, and editorial agents from msitarzewski/agency-agents. Excludes all China-platform agents (Baidu, Bilibili, Douyin, Kuaishou, Weibo, WeChat, Xiaohongshu, Zhihu, and Chinese e-commerce/livestream/localization agents).'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - msitarzewski/agency-agents/marketing/marketing-content-creator.md#main
+    - msitarzewski/agency-agents/marketing/marketing-growth-hacker.md#main
+    - msitarzewski/agency-agents/marketing/marketing-seo-specialist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-social-media-strategist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-linkedin-content-creator.md#main
+    - msitarzewski/agency-agents/marketing/marketing-reddit-community-builder.md#main
+    - msitarzewski/agency-agents/marketing/marketing-instagram-curator.md#main
+    - msitarzewski/agency-agents/marketing/marketing-tiktok-strategist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-twitter-engager.md#main
+    - msitarzewski/agency-agents/marketing/marketing-podcast-strategist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-app-store-optimizer.md#main
+    - msitarzewski/agency-agents/marketing/marketing-ai-citation-strategist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-agentic-search-optimizer.md#main
+    - msitarzewski/agency-agents/marketing/marketing-book-co-author.md#main
+    - msitarzewski/agency-agents/marketing/marketing-carousel-growth-engine.md#main
+    - msitarzewski/agency-agents/marketing/marketing-video-optimization-specialist.md#main
+    - msitarzewski/agency-agents/marketing/marketing-short-video-editing-coach.md#main

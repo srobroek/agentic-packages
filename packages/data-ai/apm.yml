@@ -15,3 +15,12 @@ dependencies:
     - wshobson/agents/plugins/database-design#main
     - wshobson/agents/plugins/database-migrations#main
     - wshobson/agents/plugins/database-cloud-optimization#main
+    - msitarzewski/agency-agents/engineering/engineering-database-optimizer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-data-engineer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-ai-engineer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-ai-data-remediation-engineer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-voice-ai-integration-engineer.md#main
+    - msitarzewski/agency-agents/specialized/specialized-model-qa.md#main
+    - msitarzewski/agency-agents/specialized/data-consolidation-agent.md#main
+    - msitarzewski/agency-agents/specialized/report-distribution-agent.md#main
+    - msitarzewski/agency-agents/specialized/sales-data-extraction-agent.md#main

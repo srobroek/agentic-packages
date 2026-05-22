@@ -211,3 +211,45 @@
   to the upstream skill directory.
 - Local policy: do not vendor or copy Interface Design into this repository
   unless a future fork is intentionally maintained and documented.
+
+## msitarzewski/agency-agents
+
+- Source: https://github.com/msitarzewski/agency-agents
+- License: MIT, "AgentLand Contributors", 2025.
+- APM status: exposed as a curated set of third-party agent entries plus six
+  bundle packages that aggregate them. Individual agents are published with
+  the `agency-` prefix (one marketplace entry per adopted agent file). Bundles
+  are published as local `packages/<bundle>/` directories whose `apm.yml`
+  lists the upstream agent files as dependencies.
+- Version policy: always track the latest upstream default branch with
+  `ref: main`. Do not pin `agency-*` marketplace entries to a commit unless a
+  project explicitly requires reproducibility.
+- Adopted scope:
+  - Extend existing bundles: `data-ai`, `infrastructure`, `security`,
+    `docs-architecture`, `frontend`, `language-arm-cortex`,
+    `planning-product`, `quality`, `agentic-maintenance`.
+  - New bundles: `design`, `project-management`, `marketing`, `finance`,
+    `game-development`, `worldbuilding`.
+- Skipped scope (do NOT register without explicit user opt-in):
+  - Categories: paid-media, sales, spatial-computing.
+  - Regional: all China-platform marketing agents; all regional business
+    navigators (French, Korean, China presales, supply chain, study abroad).
+  - Verticals: legal, healthcare, real-estate, hospitality, retail returns,
+    HR/recruitment/training agents.
+  - First-party overlap: `code-reviewer`, `senior-developer`,
+    `minimal-change-engineer`, `git-workflow-master`,
+    `codebase-onboarding-engineer`, `lsp-index-engineer`, `tool-evaluator`.
+  - User-skip list: `incident-response-commander`,
+    `solidity-smart-contract-engineer`, `reality-checker`,
+    `blockchain-security-auditor`; no additions to `work-tools`;
+    `support-responder` and `support-finance-tracker` excluded from
+    `work-tools` (Finance Tracker is routed into the `finance` bundle).
+- Style caveat: upstream agents use personality-first frontmatter (`color`,
+  `emoji`, `vibe`) and short descriptions. Marketplace entries override only
+  the routing description for APM precision; upstream files remain untouched.
+  Most upstream agents do not declare a `tools:` allowlist, so project-setup
+  must narrow tool access at install time if required.
+- Local policy: do not vendor or copy `agency-agents` into this repository.
+  Agency bundles are opt-in only; project-setup must not include them in
+  default project setups. Future forks should land under
+  `third_party/agency-agents-fork/` with documented modifications.

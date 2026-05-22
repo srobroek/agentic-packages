@@ -156,6 +156,141 @@ EXTERNAL_BUNDLES = [
 ]
 
 
+# Third-party agents from msitarzewski/agency-agents (MIT, AgentLand Contributors).
+# Opt-in only; not auto-installed. See THIRD_PARTY.md.
+AGENCY_AGENTS = [
+    # engineering → data-ai
+    ("agency-database-optimizer", "Database schema, query, indexing, and partitioning specialist for Postgres, MySQL, and managed Postgres/MySQL platforms.", "engineering/engineering-database-optimizer.md"),
+    ("agency-data-engineer", "ETL/ELT, lakehouse, Spark, dbt, and streaming pipeline design and implementation.", "engineering/engineering-data-engineer.md"),
+    ("agency-ai-engineer", "ML model development, deployment, and AI-powered feature integration.", "engineering/engineering-ai-engineer.md"),
+    ("agency-ai-data-remediation", "Self-healing data pipelines that detect and repair upstream data quality issues via local SLMs.", "engineering/engineering-ai-data-remediation-engineer.md"),
+    ("agency-voice-ai", "Whisper/ASR pipelines, diarization, transcription, and subtitle generation for voice AI.", "engineering/engineering-voice-ai-integration-engineer.md"),
+    # engineering → infrastructure
+    ("agency-devops-automator", "Infrastructure as code, CI/CD pipeline, and cloud ops automation.", "engineering/engineering-devops-automator.md"),
+    ("agency-sre", "Site reliability engineering with SLOs, error budgets, observability, and chaos engineering.", "engineering/engineering-sre.md"),
+    # engineering → security
+    ("agency-security-engineer", "Application security, threat modeling, and secure code review specialist.", "engineering/engineering-security-engineer.md"),
+    ("agency-threat-detection", "SIEM rule authoring, MITRE ATT&CK coverage, and detection-as-code workflows.", "engineering/engineering-threat-detection-engineer.md"),
+    # engineering → docs-architecture
+    ("agency-technical-writer", "Developer documentation, API references, READMEs, and tutorial authoring.", "engineering/engineering-technical-writer.md"),
+    ("agency-software-architect", "System design, domain-driven design, and architectural pattern selection.", "engineering/engineering-software-architect.md"),
+    ("agency-backend-architect", "Scalable backend systems, database architecture, API surface, and cloud topology design.", "engineering/engineering-backend-architect.md"),
+    # engineering → frontend
+    ("agency-frontend-developer", "React, Vue, and Angular frontend implementation, modern web performance, and bundling.", "engineering/engineering-frontend-developer.md"),
+    # engineering → language-arm-cortex
+    ("agency-embedded-firmware", "Embedded firmware for ESP32, STM32, Nordic, FreeRTOS, and Zephyr targets.", "engineering/engineering-embedded-firmware-engineer.md"),
+    # engineering → planning-product
+    ("agency-rapid-prototyper", "Fast proof-of-concept and MVP development to validate ideas before production investment.", "engineering/engineering-rapid-prototyper.md"),
+    # testing → frontend
+    ("agency-accessibility-auditor", "WCAG and screen-reader accessibility auditor; defaults to declaring UIs not accessible until proven otherwise.", "testing/testing-accessibility-auditor.md"),
+    # testing → quality
+    ("agency-api-tester", "API validation, performance, and quality assurance testing.", "testing/testing-api-tester.md"),
+    ("agency-performance-benchmarker", "Performance measurement, benchmarking, and optimization analysis.", "testing/testing-performance-benchmarker.md"),
+    ("agency-test-results-analyzer", "Quality metrics analysis and trend detection from accumulated test runs.", "testing/testing-test-results-analyzer.md"),
+    ("agency-evidence-collector", "Screenshot-obsessed QA verifier; requires visual proof before accepting that a feature works.", "testing/testing-evidence-collector.md"),
+    # testing → planning-product
+    ("agency-workflow-optimizer", "Process improvement and automation opportunity analysis for engineering and ops workflows.", "testing/testing-workflow-optimizer.md"),
+    # design (new bundle)
+    ("agency-brand-guardian", "Brand identity consistency review and strategic brand positioning.", "design/design-brand-guardian.md"),
+    ("agency-ui-designer", "Visual design system, component library, and UI surface composition.", "design/design-ui-designer.md"),
+    ("agency-ux-architect", "Technical UX architecture, foundational CSS system, and design-to-code translation.", "design/design-ux-architect.md"),
+    ("agency-ux-researcher", "User research, usability testing planning, and data-driven UX insights.", "design/design-ux-researcher.md"),
+    ("agency-image-prompt-engineer", "Crafts precise, evocative prompts for AI image generation tools.", "design/design-image-prompt-engineer.md"),
+    ("agency-inclusive-visuals", "Defeats AI image bias for representative, inclusive imagery and video.", "design/design-inclusive-visuals-specialist.md"),
+    ("agency-visual-storyteller", "Visual narrative construction and multimedia content design.", "design/design-visual-storyteller.md"),
+    ("agency-whimsy-injector", "Adds personality, delight, and playful brand moments to product surfaces.", "design/design-whimsy-injector.md"),
+    # product → planning-product
+    ("agency-product-manager", "End-to-end product lifecycle management and roadmap ownership.", "product/product-manager.md"),
+    ("agency-sprint-prioritizer", "Agile sprint prioritization and velocity management.", "product/product-sprint-prioritizer.md"),
+    ("agency-trend-researcher", "Market intelligence and opportunity assessment for product strategy.", "product/product-trend-researcher.md"),
+    ("agency-feedback-synthesizer", "Multi-channel feedback aggregation and conversion into actionable product insights.", "product/product-feedback-synthesizer.md"),
+    ("agency-behavioral-nudge", "Behavioral psychology specialist for adaptive interaction cadences and engagement design.", "product/product-behavioral-nudge-engine.md"),
+    # project-management (new bundle)
+    ("agency-senior-pm", "Senior project manager translating specs to tasks, tracking project memory, and reality-checking scope.", "project-management/project-manager-senior.md"),
+    ("agency-project-shepherd", "Cross-functional project coordination and stakeholder alignment.", "project-management/project-management-project-shepherd.md"),
+    ("agency-studio-producer", "Senior creative and technical portfolio orchestration across studio projects.", "project-management/project-management-studio-producer.md"),
+    ("agency-studio-operations", "Day-to-day studio operations and efficiency management.", "project-management/project-management-studio-operations.md"),
+    ("agency-experiment-tracker", "A/B test design, tracking, and result interpretation.", "project-management/project-management-experiment-tracker.md"),
+    ("agency-jira-steward", "Enforces Jira-linked Git workflows, ticket hygiene, and traceability.", "project-management/project-management-jira-workflow-steward.md"),
+    # marketing (new bundle, Western/global only)
+    ("agency-content-creator", "Multi-platform editorial content creator across blogs, social, and long-form.", "marketing/marketing-content-creator.md"),
+    ("agency-growth-hacker", "Viral loop design, funnel optimization, and growth experiment execution.", "marketing/marketing-growth-hacker.md"),
+    ("agency-seo-specialist", "Technical SEO, content optimization, and link strategy.", "marketing/marketing-seo-specialist.md"),
+    ("agency-social-media-strategist", "Cross-platform professional social campaign strategy.", "marketing/marketing-social-media-strategist.md"),
+    ("agency-linkedin-creator", "LinkedIn thought leadership and personal brand content.", "marketing/marketing-linkedin-content-creator.md"),
+    ("agency-reddit-builder", "Authentic Reddit community engagement and culture-aware moderation.", "marketing/marketing-reddit-community-builder.md"),
+    ("agency-instagram-curator", "Instagram visual storytelling, community, and multi-format content strategy.", "marketing/marketing-instagram-curator.md"),
+    ("agency-tiktok-strategist", "TikTok viral content, algorithm, and community growth strategy.", "marketing/marketing-tiktok-strategist.md"),
+    ("agency-twitter-engager", "Real-time Twitter/X engagement and viral thread authoring.", "marketing/marketing-twitter-engager.md"),
+    ("agency-podcast-strategist", "Podcast positioning, distribution, and monetization strategy.", "marketing/marketing-podcast-strategist.md"),
+    ("agency-app-store-optimizer", "App Store Optimization and mobile app discoverability.", "marketing/marketing-app-store-optimizer.md"),
+    ("agency-ai-citation", "Answer-engine and generative-engine optimization for visibility in ChatGPT, Claude, Gemini, and Perplexity.", "marketing/marketing-ai-citation-strategist.md"),
+    ("agency-agentic-search", "WebMCP readiness audits and AI agent task-completion optimization for web surfaces.", "marketing/marketing-agentic-search-optimizer.md"),
+    ("agency-book-co-author", "Thought-leadership book chapter co-authoring for founders and executives.", "marketing/marketing-book-co-author.md"),
+    ("agency-carousel-growth", "Autonomous TikTok and Instagram carousel generation with analytics feedback loop.", "marketing/marketing-carousel-growth-engine.md"),
+    ("agency-video-optimization", "YouTube algorithm, retention, and thumbnail optimization.", "marketing/marketing-video-optimization-specialist.md"),
+    ("agency-short-video-editor", "Short-video post-production coaching for CapCut Pro, Premiere, DaVinci, and FCP.", "marketing/marketing-short-video-editing-coach.md"),
+    # finance (new bundle)
+    ("agency-bookkeeper", "Daily accounting, month-end close, GAAP discipline, and audit readiness.", "finance/finance-bookkeeper-controller.md"),
+    ("agency-financial-analyst", "Financial modeling, forecasting, and scenario analysis.", "finance/finance-financial-analyst.md"),
+    ("agency-fpa-analyst", "Budgeting, variance analysis, and rolling forecasts for FP&A.", "finance/finance-fpa-analyst.md"),
+    ("agency-investment-researcher", "Market research, due diligence, and valuation work for investments.", "finance/finance-investment-researcher.md"),
+    ("agency-tax-strategist", "Multi-jurisdictional tax planning and transfer pricing strategy.", "finance/finance-tax-strategist.md"),
+    ("agency-finance-tracker", "Financial planning, budget tracking, and cash flow oversight.", "support/support-finance-tracker.md"),
+    ("agency-accounts-payable", "Autonomous vendor payment processing across fiat, crypto, and stablecoins.", "specialized/accounts-payable-agent.md"),
+    # game-development (new bundle)
+    ("agency-game-designer", "Game design document authoring, economy design, and gameplay loop planning.", "game-development/game-designer.md"),
+    ("agency-game-audio", "Game audio engineering with FMOD, Wwise, and adaptive music systems.", "game-development/game-audio-engineer.md"),
+    ("agency-level-designer", "Level layout, pacing, and encounter design for games.", "game-development/level-designer.md"),
+    ("agency-narrative-designer", "Branching dialogue, lore, and narrative system design.", "game-development/narrative-designer.md"),
+    ("agency-technical-artist", "Game art-to-engine pipeline, tooling, and shader integration.", "game-development/technical-artist.md"),
+    ("agency-blender-addon", "Blender Python add-on engineering, exporters, and tooling.", "game-development/blender/blender-addon-engineer.md"),
+    ("agency-godot-gameplay", "Godot GDScript 2.0 gameplay scripting and signals architecture.", "game-development/godot/godot-gameplay-scripter.md"),
+    ("agency-godot-multiplayer", "Godot MultiplayerAPI, ENet, and WebRTC multiplayer engineering.", "game-development/godot/godot-multiplayer-engineer.md"),
+    ("agency-godot-shader", "Godot CanvasItem and Spatial shader development.", "game-development/godot/godot-shader-developer.md"),
+    ("agency-roblox-avatar", "Roblox UGC avatar creation pipeline.", "game-development/roblox-studio/roblox-avatar-creator.md"),
+    ("agency-roblox-experience", "Roblox experience design with engagement and monetization focus.", "game-development/roblox-studio/roblox-experience-designer.md"),
+    ("agency-roblox-systems", "Roblox Luau systems scripting with RemoteEvents and DataStore.", "game-development/roblox-studio/roblox-systems-scripter.md"),
+    ("agency-unity-architect", "Unity ScriptableObject-driven modular architecture design.", "game-development/unity/unity-architect.md"),
+    ("agency-unity-editor", "Unity EditorWindow, PropertyDrawer, and editor tooling development.", "game-development/unity/unity-editor-tool-developer.md"),
+    ("agency-unity-multiplayer", "Unity Netcode for GameObjects and UGS multiplayer engineering.", "game-development/unity/unity-multiplayer-engineer.md"),
+    ("agency-unity-shader", "Unity Shader Graph and HLSL authoring for URP and HDRP.", "game-development/unity/unity-shader-graph-artist.md"),
+    ("agency-unreal-multiplayer", "Unreal replication, GameMode, and GameState multiplayer architecture.", "game-development/unreal-engine/unreal-multiplayer-architect.md"),
+    ("agency-unreal-systems", "Unreal C++ and Blueprint systems engineering with Nanite, Lumen, and GAS.", "game-development/unreal-engine/unreal-systems-engineer.md"),
+    ("agency-unreal-tech-art", "Unreal Material Editor, Niagara VFX, and PCG technical art.", "game-development/unreal-engine/unreal-technical-artist.md"),
+    ("agency-unreal-world-builder", "Unreal World Partition, Landscape, and HLOD world construction.", "game-development/unreal-engine/unreal-world-builder.md"),
+    # worldbuilding (new bundle)
+    ("agency-anthropologist", "Cultural systems, rituals, kinship, and ethnographic method for worldbuilding.", "academic/academic-anthropologist.md"),
+    ("agency-geographer", "Physical and human geography, climate, cartography, and spatial analysis for worldbuilding.", "academic/academic-geographer.md"),
+    ("agency-historian", "Historical analysis, periodization, material culture, and historiography for worldbuilding.", "academic/academic-historian.md"),
+    ("agency-narratologist", "Narrative theory, story structure, and character arc analysis from Propp to Campbell.", "academic/academic-narratologist.md"),
+    ("agency-psychologist", "Personality theory, motivation, and cognitive patterns for psychologically credible characters.", "academic/academic-psychologist.md"),
+    # support → planning-product, security, infrastructure
+    ("agency-analytics-reporter", "Dashboard authoring, KPI definition, and statistical analysis.", "support/support-analytics-reporter.md"),
+    ("agency-exec-summary", "Executive summaries in McKinsey SCQA, BCG Pyramid, and Bain frameworks for C-suite consumption.", "support/support-executive-summary-generator.md"),
+    ("agency-legal-compliance", "Multi-jurisdiction regulatory compliance review.", "support/support-legal-compliance-checker.md"),
+    ("agency-infra-maintainer", "Reliability, performance optimization, and ops maintenance for infrastructure.", "support/support-infrastructure-maintainer.md"),
+    # specialized → agentic-maintenance
+    ("agency-mcp-builder", "Designs, builds, and tests Model Context Protocol servers.", "specialized/specialized-mcp-builder.md"),
+    ("agency-workflow-architect", "Maps complete workflow trees and produces build-ready automation specifications.", "specialized/specialized-workflow-architect.md"),
+    ("agency-agents-orchestrator", "Autonomous pipeline manager that orchestrates multi-agent development workflows.", "specialized/agents-orchestrator.md"),
+    ("agency-automation-governance", "n8n-first automation governance, audit trails, and policy enforcement.", "specialized/automation-governance-architect.md"),
+    ("agency-identity-graph", "Canonical entity resolution and identity graph operation across multi-agent systems.", "specialized/identity-graph-operator.md"),
+    ("agency-agentic-identity", "Identity, authentication, and trust architecture for autonomous agents.", "specialized/agentic-identity-trust.md"),
+    # specialized → docs-architecture
+    ("agency-zk-steward", "Zettelkasten knowledge-base steward operating in Luhmann, Feynman, Munger, or Ogilvy mode.", "specialized/zk-steward.md"),
+    ("agency-developer-advocate", "Developer relations, developer experience, and platform adoption advocacy.", "specialized/specialized-developer-advocate.md"),
+    ("agency-document-generator", "Code-based PDF, PPTX, DOCX, and XLSX generation with charts and tables.", "specialized/specialized-document-generator.md"),
+    # specialized → security
+    ("agency-compliance-auditor", "SOC2, ISO 27001, HIPAA, and PCI-DSS compliance auditing.", "specialized/compliance-auditor.md"),
+    # specialized → data-ai
+    ("agency-model-qa", "Independent ML and statistical model audit, replication, and validation.", "specialized/specialized-model-qa.md"),
+    ("agency-data-consolidation", "Consolidates sales and operational data into reporting dashboards.", "specialized/data-consolidation-agent.md"),
+    ("agency-report-distribution", "Automates territorial and segmented report distribution to stakeholders.", "specialized/report-distribution-agent.md"),
+    ("agency-sales-data-extraction", "Monitors Excel files and extracts MTD, YTD, and Year-End sales metrics.", "specialized/sales-data-extraction-agent.md"),
+]
+
+
 def description_for_skill(skill_dir: Path) -> str:
     skill = skill_dir / "SKILL.md"
     for line in skill.read_text(encoding="utf-8").splitlines():
@@ -254,6 +389,16 @@ def build_packages() -> list[dict[str, str]]:
                 "name": name,
                 "description": description,
                 "source": "mattpocock/skills",
+                "subdir": subdir,
+                "ref": "main",
+            }
+        )
+    for name, description, subdir in AGENCY_AGENTS:
+        packages.append(
+            {
+                "name": name,
+                "description": description,
+                "source": "msitarzewski/agency-agents",
                 "subdir": subdir,
                 "ref": "main",
             }

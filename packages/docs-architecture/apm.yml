@@ -13,3 +13,9 @@ dependencies:
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main
+    - msitarzewski/agency-agents/engineering/engineering-technical-writer.md#main
+    - msitarzewski/agency-agents/engineering/engineering-software-architect.md#main
+    - msitarzewski/agency-agents/engineering/engineering-backend-architect.md#main
+    - msitarzewski/agency-agents/specialized/zk-steward.md#main
+    - msitarzewski/agency-agents/specialized/specialized-developer-advocate.md#main
+    - msitarzewski/agency-agents/specialized/specialized-document-generator.md#main

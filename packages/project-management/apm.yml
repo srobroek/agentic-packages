@@ -1,0 +1,17 @@
+name: project-management
+version: 0.1.0
+description: 'Bundle: Project management bundle with senior PM, project shepherd, studio producer, studio operations, experiment tracker, and Jira workflow steward agents from msitarzewski/agency-agents. Contains: agency-senior-pm, agency-project-shepherd, agency-studio-producer, agency-studio-operations, agency-experiment-tracker, agency-jira-workflow-steward.'
+author: Sjors Robroek
+license: MIT
+type: hybrid
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - msitarzewski/agency-agents/project-management/project-manager-senior.md#main
+    - msitarzewski/agency-agents/project-management/project-management-project-shepherd.md#main
+    - msitarzewski/agency-agents/project-management/project-management-studio-producer.md#main
+    - msitarzewski/agency-agents/project-management/project-management-studio-operations.md#main
+    - msitarzewski/agency-agents/project-management/project-management-experiment-tracker.md#main
+    - msitarzewski/agency-agents/project-management/project-management-jira-workflow-steward.md#main
