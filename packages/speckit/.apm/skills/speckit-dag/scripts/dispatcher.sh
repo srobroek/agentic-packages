@@ -49,8 +49,14 @@ case "$event" in
 esac
 
 [ -n "$cmd" ] || exit 0
-case "$cmd" in speckit.*) ;; *) exit 0 ;; esac
-id="${cmd#speckit.}"
+# Normalise: Claude Code skill names use hyphens (speckit-foo-bar),
+# DAG node files use dots as segment separators but keep intra-segment
+# hyphens (agent-assign.execute). We strip the "speckit-" prefix and
+# match node files by converting their dots to hyphens for comparison.
+raw="${cmd#speckit-}"
+raw="${raw#speckit.}"
+[ -n "$raw" ] || exit 0
+raw="${raw//./-}"
 
 # Locate the nodes/ directory. APM doesn't ship files alongside hook
 # scripts by default, so the nodes/ tree usually lives in the APM
@@ -78,9 +84,21 @@ else
 fi
 [ -n "$nodes_dir" ] || exit 0
 
-node_file="$nodes_dir/${id}.${phase}.md"
-[ -f "$node_file" ] || exit 0
+# Find the node file by normalising both sides to hyphens.
+# Node file "agent-assign.execute.post.md" → stem "agent-assign.execute"
+# → normalised "agent-assign-execute" which matches $raw.
+node_file=""
+for candidate in "$nodes_dir"/*."${phase}".md; do
+  [ -f "$candidate" ] || continue
+  stem="$(basename "$candidate" ".${phase}.md")"
+  if [ "${stem//./-}" = "$raw" ]; then
+    node_file="$candidate"
+    break
+  fi
+done
+[ -n "$node_file" ] || exit 0
 node_body="$(cat "$node_file")"
+id="${raw}"
 
 # Resolve <feat> using SpecKit's canonical 3-tier priority (matches
 # .specify/scripts/bash/common.sh::get_feature_paths):

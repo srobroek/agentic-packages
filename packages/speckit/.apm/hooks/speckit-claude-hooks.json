@@ -2,7 +2,7 @@
   "hooks": {
     "UserPromptExpansion": [
       {
-        "matcher": "speckit\\..*",
+        "matcher": "speckit.*",
         "hooks": [
           {
             "type": "command",
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Skill(speckit\\..*)",
+            "if": "Skill(speckit-*)",
             "command": ".claude/skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["pre"],
             "timeout": 5,
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Skill(speckit\\..*)",
+            "if": "Skill(speckit-*)",
             "command": ".claude/skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["post"],
             "timeout": 5,
