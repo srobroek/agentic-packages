@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/dispatcher.sh",
+            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["pre"],
             "timeout": 5,
             "statusMessage": "Checking SpecKit DAG preconditions..."
@@ -21,7 +21,7 @@
           {
             "type": "command",
             "if": "Skill(speckit\\..*)",
-            "command": "./scripts/dispatcher.sh",
+            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["pre"],
             "timeout": 5,
             "statusMessage": "Checking SpecKit DAG preconditions..."
@@ -36,7 +36,7 @@
           {
             "type": "command",
             "if": "Skill(speckit\\..*)",
-            "command": "./scripts/dispatcher.sh",
+            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["post"],
             "timeout": 5,
             "statusMessage": "Loading SpecKit next-step context..."
