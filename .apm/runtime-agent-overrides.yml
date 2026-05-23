@@ -10,6 +10,141 @@
 # the main orchestrator should pass task-specific instructions to agents when
 # invoking them.
 
+claude:
+  agent_overrides:
+    # Coding / implementation agents → sonnet
+    angular-architect:
+      model: sonnet
+    bash-pro:
+      model: sonnet
+    build-engineer:
+      model: sonnet
+    c-pro:
+      model: sonnet
+    cli-developer:
+      model: sonnet
+    cpp-pro:
+      model: sonnet
+    csharp-developer:
+      model: sonnet
+    csharp-pro:
+      model: sonnet
+    debugger:
+      model: sonnet
+    dependency-manager:
+      model: sonnet
+    django-developer:
+      model: sonnet
+    django-pro:
+      model: sonnet
+    dotnet-core-expert:
+      model: sonnet
+    dotnet-framework-4.8-expert:
+      model: sonnet
+    dx-optimizer:
+      model: sonnet
+    electron-pro:
+      model: sonnet
+    elixir-expert:
+      model: sonnet
+    elixir-pro:
+      model: sonnet
+    error-detective:
+      model: sonnet
+    fastapi-developer:
+      model: sonnet
+    fastapi-pro:
+      model: sonnet
+    flutter-expert:
+      model: sonnet
+    frontend-developer:
+      model: sonnet
+    golang-pro:
+      model: sonnet
+    haskell-pro:
+      model: sonnet
+    java-pro:
+      model: sonnet
+    javascript-pro:
+      model: sonnet
+    julia-pro:
+      model: sonnet
+    kotlin-specialist:
+      model: sonnet
+    laravel-specialist:
+      model: sonnet
+    legacy-modernizer:
+      model: sonnet
+    mcp-developer:
+      model: sonnet
+    mobile-developer:
+      model: sonnet
+    nextjs-developer:
+      model: sonnet
+    node-specialist:
+      model: sonnet
+    php-pro:
+      model: sonnet
+    posix-shell-pro:
+      model: sonnet
+    postgres-pro:
+      model: sonnet
+    python-pro:
+      model: sonnet
+    rails-expert:
+      model: sonnet
+    react-specialist:
+      model: sonnet
+    refactoring-specialist:
+      model: sonnet
+    ruby-pro:
+      model: sonnet
+    rust-engineer:
+      model: sonnet
+    rust-pro:
+      model: sonnet
+    scala-pro:
+      model: sonnet
+    spring-boot-engineer:
+      model: sonnet
+    sql-pro:
+      model: sonnet
+    swift-expert:
+      model: sonnet
+    symfony-specialist:
+      model: sonnet
+    tdd-orchestrator:
+      model: sonnet
+    temporal-python-pro:
+      model: sonnet
+    terraform-engineer:
+      model: sonnet
+    terraform-specialist:
+      model: sonnet
+    terragrunt-expert:
+      model: sonnet
+    test-automator:
+      model: sonnet
+    tooling-engineer:
+      model: sonnet
+    typescript-pro:
+      model: sonnet
+    vue-expert:
+      model: sonnet
+    websocket-engineer:
+      model: sonnet
+    # Analysis / design agents → sonnet
+    accessibility-expert:
+      model: sonnet
+    design-system-architect:
+      model: sonnet
+    performance-engineer:
+      model: sonnet
+    ui-designer:
+      model: sonnet
+    context-manager:
+      model: sonnet
+
 codex:
   agent_overrides:
     angular-architect:
