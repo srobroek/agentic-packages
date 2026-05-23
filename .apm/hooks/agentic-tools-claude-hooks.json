@@ -216,7 +216,6 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Skill(speckit.plan)|Skill(speckit.tasks)|Skill(speckit.implement)",
             "command": "./scripts/speckit-context7-reminder.sh"
           }
         ]
