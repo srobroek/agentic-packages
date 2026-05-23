@@ -1,8 +1,8 @@
 # /speckit.cleanup — before you run this
 
 ## Came from
-- /speckit.qa.run (clean)
-- /speckit.verify (acceptable if qa skipped)
+- /speckit.code-review + /speckit.security-review (both clean)
+- /speckit.qa.run (acceptable if code/security review skipped)
 
 ## Preconditions
 - SOFT: implementation diff present

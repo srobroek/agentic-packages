@@ -1,7 +1,7 @@
 # /speckit.qa.run — what to do next
 
 ## Going to
-- /speckit.cleanup (clean)
+- /speckit.code-review + /speckit.security-review (parallel, clean)
 - /speckit.fix-findings (failed)
 
 ## Postconditions

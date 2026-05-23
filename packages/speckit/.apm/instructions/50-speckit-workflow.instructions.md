@@ -52,12 +52,14 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 |------|---------|------|------------|
 | 10 | `/speckit.verify-tasks` | parallel with 11 | subagent (fresh context) |
 | 11 | `/speckit.verify` | parallel with 10 | subagent |
-| 12 | `/speckit.cleanup` | main thread | Auto-fix small, issue for large |
-| 13 | `/speckit.sync.analyze` | parallel with 14 | subagent |
-| 14 | `/speckit.sync.conflicts` | parallel with 13 | subagent |
-| 15 | `/speckit.retro.run` | main thread | Needs full session context |
-| 16 | Documentation update | main thread | Update affected docs |
-| 17 | `/speckit.checkpoint.commit` | auto | Final commit |
+| 12 | `/speckit.code-review` | parallel with 13 | subagent |
+| 13 | `/speckit.security-review` | parallel with 12 | subagent |
+| 14 | `/speckit.cleanup` | main thread | Auto-fix small, issue for large |
+| 15 | `/speckit.sync.analyze` | parallel with 16 | subagent |
+| 16 | `/speckit.sync.conflicts` | parallel with 15 | subagent |
+| 17 | `/speckit.retro.run` | main thread | Needs full session context |
+| 18 | Documentation update | main thread | Update affected docs |
+| 19 | `/speckit.checkpoint.commit` | auto | Final commit |
 
 ## Scope Change (iterate)
 
