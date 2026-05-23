@@ -16,9 +16,10 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
   requiring review. Present them to the user and resolve together first.
 - NEVER silently deviate from spec. Material deviation → stop → explain →
   get approval → route through iterate. Minor deviation → flag in commit.
-- `/speckit.implement` is DEPRECATED. Use `/speckit.tinyspec.implement` for
-  single-task execution or `/taskwaves` for parallel dependency-ordered
-  execution. Do not invoke `/speckit.implement` in new workflows.
+- `/speckit.implement` is DEPRECATED. Use the agent-assign flow instead:
+  `/speckit.agent-assign.assign` → `/speckit.agent-assign.validate` →
+  `/speckit.agent-assign.execute`. This routes each task to a specialized
+  sub-agent for better quality. Do not invoke `/speckit.implement`.
 
 ## Workflow DAG
 
@@ -39,7 +40,9 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 
 | Step | Command | Mode | Notes |
 |------|---------|------|-------|
-| 9 | `/speckit.tinyspec.implement` | auto | Execute tasks from tasks.md. Checkpoint after each task. |
+| 9a | `/speckit.agent-assign.assign` | auto → approval | Route tasks to specialized sub-agents |
+| 9b | `/speckit.agent-assign.validate` | auto | Validate agent assignments |
+| 9c | `/speckit.agent-assign.execute` | auto | Execute with assigned agents. Checkpoint after each task. |
 
 ### Phase 3 — Post-implementation quality (ALL mandatory)
 
@@ -87,10 +90,13 @@ to the relevant earlier step directly.
 - `checkpoint.commit` — snapshot current state
 
 ### Implementation
+- `agent-assign.assign` — route tasks to specialized sub-agents
+- `agent-assign.validate` — validate agent assignments
+- `agent-assign.execute` — execute with assigned agents
 - `tinyspec.classify` — classify a change as spec-worthy or tiny
 - `tinyspec.tinyspec` — lightweight spec for small changes
-- `tinyspec.implement` — execute implementation tasks
-- `implement` — DEPRECATED, use tinyspec.implement or taskwaves
+- `tinyspec.implement` — execute a tinyspec task (ONLY after tinyspec.classify → tinyspec.tinyspec)
+- `implement` — DEPRECATED, use agent-assign flow for full specs, tinyspec.implement for tinyspecs
 
 ### Quality
 - `verify` — validate code against spec (subagent)
