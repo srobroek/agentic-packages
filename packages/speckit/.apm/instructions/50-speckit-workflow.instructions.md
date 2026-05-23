@@ -20,6 +20,8 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
   `/speckit.agent-assign.assign` → `/speckit.agent-assign.validate` →
   `/speckit.agent-assign.execute`. This routes each task to a specialized
   sub-agent for better quality. Do not invoke `/speckit.implement`.
+- Requires the `agent-assign` specify extension (`specify extension add
+  agent-assign`). Included in the canonical extension set for new projects.
 
 ## Workflow DAG
 
