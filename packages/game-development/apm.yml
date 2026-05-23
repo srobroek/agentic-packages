@@ -1,31 +1,7 @@
 name: game-development
 version: 0.1.0
-description: 'Bundle: Game development bundle with Unity, Unreal Engine, Godot, Roblox Studio, Blender, and general game design/audio/level/narrative/technical-art agents from msitarzewski/agency-agents.'
 author: Sjors Robroek
 license: MIT
 type: hybrid
 target: all
 includes: auto
-
-dependencies:
-  apm:
-    - msitarzewski/agency-agents/game-development/game-designer.md#main
-    - msitarzewski/agency-agents/game-development/game-audio-engineer.md#main
-    - msitarzewski/agency-agents/game-development/level-designer.md#main
-    - msitarzewski/agency-agents/game-development/narrative-designer.md#main
-    - msitarzewski/agency-agents/game-development/technical-artist.md#main
-    - msitarzewski/agency-agents/game-development/blender/blender-addon-engineer.md#main
-    - msitarzewski/agency-agents/game-development/godot/godot-gameplay-scripter.md#main
-    - msitarzewski/agency-agents/game-development/godot/godot-multiplayer-engineer.md#main
-    - msitarzewski/agency-agents/game-development/godot/godot-shader-developer.md#main
-    - msitarzewski/agency-agents/game-development/roblox-studio/roblox-avatar-creator.md#main
-    - msitarzewski/agency-agents/game-development/roblox-studio/roblox-experience-designer.md#main
-    - msitarzewski/agency-agents/game-development/roblox-studio/roblox-systems-scripter.md#main
-    - msitarzewski/agency-agents/game-development/unity/unity-architect.md#main
-    - msitarzewski/agency-agents/game-development/unity/unity-editor-tool-developer.md#main
-    - msitarzewski/agency-agents/game-development/unity/unity-multiplayer-engineer.md#main
-    - msitarzewski/agency-agents/game-development/unity/unity-shader-graph-artist.md#main
-    - msitarzewski/agency-agents/game-development/unreal-engine/unreal-multiplayer-architect.md#main
-    - msitarzewski/agency-agents/game-development/unreal-engine/unreal-systems-engineer.md#main
-    - msitarzewski/agency-agents/game-development/unreal-engine/unreal-technical-artist.md#main
-    - msitarzewski/agency-agents/game-development/unreal-engine/unreal-world-builder.md#main

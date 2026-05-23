@@ -1,18 +1,7 @@
 name: finance
 version: 0.1.0
-description: 'Bundle: Finance bundle with bookkeeping, financial analysis, FP&A, investment research, tax strategy, finance tracker, and accounts payable agents from msitarzewski/agency-agents.'
 author: Sjors Robroek
 license: MIT
 type: hybrid
 target: all
 includes: auto
-
-dependencies:
-  apm:
-    - msitarzewski/agency-agents/finance/finance-bookkeeper-controller.md#main
-    - msitarzewski/agency-agents/finance/finance-financial-analyst.md#main
-    - msitarzewski/agency-agents/finance/finance-fpa-analyst.md#main
-    - msitarzewski/agency-agents/finance/finance-investment-researcher.md#main
-    - msitarzewski/agency-agents/finance/finance-tax-strategist.md#main
-    - msitarzewski/agency-agents/support/support-finance-tracker.md#main
-    - msitarzewski/agency-agents/specialized/accounts-payable-agent.md#main

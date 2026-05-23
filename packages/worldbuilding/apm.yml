@@ -1,16 +1,7 @@
 name: worldbuilding
 version: 0.1.0
-description: 'Bundle: Worldbuilding bundle with anthropologist, geographer, historian, narratologist, and psychologist persona-builder agents from msitarzewski/agency-agents. Pairs with the game-development bundle and supports creative writing workflows.'
 author: Sjors Robroek
 license: MIT
 type: hybrid
 target: all
 includes: auto
-
-dependencies:
-  apm:
-    - msitarzewski/agency-agents/academic/academic-anthropologist.md#main
-    - msitarzewski/agency-agents/academic/academic-geographer.md#main
-    - msitarzewski/agency-agents/academic/academic-historian.md#main
-    - msitarzewski/agency-agents/academic/academic-narratologist.md#main
-    - msitarzewski/agency-agents/academic/academic-psychologist.md#main

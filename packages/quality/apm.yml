@@ -13,7 +13,3 @@ dependencies:
     - wshobson/agents/plugins/performance-testing-review#main
     - wshobson/agents/plugins/unit-testing#main
     - wshobson/agents/plugins/tdd-workflows#main
-    - msitarzewski/agency-agents/testing/testing-api-tester.md#main
-    - msitarzewski/agency-agents/testing/testing-performance-benchmarker.md#main
-    - msitarzewski/agency-agents/testing/testing-test-results-analyzer.md#main
-    - msitarzewski/agency-agents/testing/testing-evidence-collector.md#main
