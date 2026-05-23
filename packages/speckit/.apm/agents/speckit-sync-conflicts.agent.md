@@ -10,7 +10,7 @@ x-agentic:
     sandbox_mode: "read-only"
     approval_policy: "none"
   claude:
-    model: "opus"
+    model: "sonnet"
     effort: "high"
     permissions:
       mode: "read-only"
