@@ -52,7 +52,33 @@ esac
 case "$cmd" in speckit.*) ;; *) exit 0 ;; esac
 id="${cmd#speckit.}"
 
-node_file="$(cd "$(dirname "$0")/.." && pwd)/nodes/${id}.${phase}.md"
+# Locate the nodes/ directory. APM doesn't ship files alongside hook
+# scripts by default, so the nodes/ tree usually lives in the APM
+# cache at apm_modules/<owner>/<repo>/packages/speckit/.apm/hooks/nodes/.
+# Resolution order:
+#   1. SPECKIT_DAG_NODES_DIR env override (testing / custom layouts)
+#   2. sibling ../nodes/ (in-repo development, or if APM later ships
+#      them next to dispatcher.sh)
+#   3. apm_modules cache discovery under $CLAUDE_PROJECT_DIR / cwd
+nodes_dir=""
+if [ -n "${SPECKIT_DAG_NODES_DIR:-}" ] && [ -d "$SPECKIT_DAG_NODES_DIR" ]; then
+  nodes_dir="$SPECKIT_DAG_NODES_DIR"
+elif [ -d "$(dirname "$0")/../nodes" ]; then
+  nodes_dir="$(cd "$(dirname "$0")/.." && pwd)/nodes"
+else
+  for root in "${CLAUDE_PROJECT_DIR:-}" "$PWD"; do
+    [ -n "$root" ] || continue
+    [ -d "$root/apm_modules" ] || continue
+    candidate=$(find "$root/apm_modules" -maxdepth 8 -path "*/packages/speckit/.apm/hooks/nodes" -type d 2>/dev/null | head -1)
+    if [ -n "$candidate" ]; then
+      nodes_dir="$candidate"
+      break
+    fi
+  done
+fi
+[ -n "$nodes_dir" ] || exit 0
+
+node_file="$nodes_dir/${id}.${phase}.md"
 [ -f "$node_file" ] || exit 0
 node_body="$(cat "$node_file")"
 
