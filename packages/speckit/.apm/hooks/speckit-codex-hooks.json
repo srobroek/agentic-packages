@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
+            "command": ".claude/skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["pre"],
             "timeout": 5
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
+            "command": ".claude/skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["pre"],
             "timeout": 5
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "../skills/speckit-dag/scripts/dispatcher.sh",
+            "command": ".claude/skills/speckit-dag/scripts/dispatcher.sh",
             "args": ["post"],
             "timeout": 5
           }
