@@ -1,11 +1,8 @@
 # /speckit.plan — what to do next
 
 ## Going to
-- /speckit.critique.run (default — quality gate before tasks)
-- /speckit.tasks (acceptable if critique skipped)
+- /speckit.tasks (default)
+- /speckit.critique.run (only if user explicitly requests critique before tasks)
 
 ## Postconditions
 - `specs/<feat>/plan.md`
-
-## Conditional branching
-- If critique surfaces non-trivial concerns, loop back into the plan to address them before generating tasks.

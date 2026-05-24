@@ -3,7 +3,7 @@
 ## Came from
 - /speckit.checklist (preferred)
 - /speckit.memory-md.plan-with-memory (preferred when memory-md installed)
-- /speckit.clarify (acceptable if checklist skipped)
+- /speckit.clarify (only if user explicitly skips checklist)
 
 ## Preconditions
 - HARD-MISSING: specs/<feat>/spec.md

@@ -2,7 +2,7 @@
 
 ## Came from
 - /speckit.checkpoint.commit (default — after the mid-cycle checkpoint)
-- /speckit.tasks (acceptable if checkpoint was deferred)
+- /speckit.tasks (only if user explicitly defers checkpoint)
 
 ## Preconditions
 - HARD-MISSING: specs/<feat>/tasks.md

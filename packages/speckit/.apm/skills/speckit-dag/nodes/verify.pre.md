@@ -2,7 +2,7 @@
 
 ## Came from
 - /speckit.verify-tasks (default)
-- /speckit.agent-assign.execute (acceptable for short cycles)
+- /speckit.agent-assign.execute (only if user explicitly skips verify-tasks)
 - /speckit.bugfix.patch (post-bugfix verification)
 - /speckit.tinyspec.implement (tinyspec cycle)
 

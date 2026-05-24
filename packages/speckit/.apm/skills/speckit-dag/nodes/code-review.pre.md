@@ -2,7 +2,7 @@
 
 ## Came from
 - /speckit.qa.run (default)
-- /speckit.review.run (acceptable if qa skipped)
+- /speckit.review.run (only if user explicitly skips qa)
 
 ## Preconditions
 - SOFT: implementation diff present

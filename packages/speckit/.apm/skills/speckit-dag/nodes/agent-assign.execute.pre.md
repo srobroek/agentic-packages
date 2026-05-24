@@ -2,7 +2,7 @@
 
 ## Came from
 - /speckit.agent-assign.validate (preferred)
-- /speckit.agent-assign.assign (acceptable when assignments validate trivially)
+- /speckit.agent-assign.assign (only if user explicitly skips validation)
 
 ## Preconditions
 - HARD-MISSING: specs/<feat>/tasks.md

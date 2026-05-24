@@ -1,8 +1,8 @@
 # /speckit.tasks — what to do next
 
 ## Going to
-- /speckit.diagram.dependencies (default — visualise task DAG before analysis)
-- /speckit.analyze (acceptable if dependency diagram is overkill)
+- /speckit.critique.run + /speckit.security-review (parallel, default — review plan/tasks before implementation)
+- /speckit.diagram.dependencies (only if user explicitly skips critique + security-review)
 
 ## Postconditions
 - `specs/<feat>/tasks.md`

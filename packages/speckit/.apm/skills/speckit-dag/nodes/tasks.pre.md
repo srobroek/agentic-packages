@@ -2,7 +2,6 @@
 
 ## Came from
 - /speckit.plan
-- /speckit.critique.run
 
 ## Preconditions
 - HARD-MISSING: specs/<feat>/plan.md

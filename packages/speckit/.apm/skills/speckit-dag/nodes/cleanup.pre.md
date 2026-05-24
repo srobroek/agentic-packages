@@ -2,7 +2,7 @@
 
 ## Came from
 - /speckit.code-review + /speckit.security-review (both clean)
-- /speckit.qa.run (acceptable if code/security review skipped)
+- /speckit.qa.run (only if user explicitly skips code/security review)
 
 ## Preconditions
 - SOFT: implementation diff present

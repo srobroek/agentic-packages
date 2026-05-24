@@ -7,6 +7,9 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 
 ## Rules
 
+- All workflow steps are MANDATORY by default. Always suggest the next step in
+  the default path. Only skip a step when the user explicitly requests it.
+  Never silently omit steps because they seem "overkill" or "trivial."
 - ALWAYS invoke speckit via Skill tool. NEVER write spec artifacts manually.
 - ALWAYS get user approval between phases unless user says "run unattended."
   Even in unattended mode, INTERACTIVE commands (clarify, analyze, checklist)
@@ -34,6 +37,8 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 | 3 | `/speckit.checklist` | INTERACTIVE | Quality gate on requirements |
 | 4 | `/speckit.plan` | auto → approval | Architecture and approach |
 | 5 | `/speckit.tasks` | auto → approval | Task breakdown with dependencies |
+| 5b | `/speckit.critique.run` | parallel with 5c | Plan + task quality gate |
+| 5c | `/speckit.security-review` | parallel with 5b | Security review of plan/tasks |
 | 6 | `/speckit.analyze` | INTERACTIVE | Risk analysis, resolve before impl |
 | 7 | `/speckit.taskstoissues` | auto | Creates GitHub/GitLab issues |
 | 8 | `/speckit.checkpoint.commit` | auto | Snapshot before implementation |

@@ -2,7 +2,7 @@
 
 ## Going to
 - /speckit.checklist (preferred)
-- /speckit.plan (acceptable if checklist is overkill)
+- /speckit.plan (only if user explicitly skips checklist)
 
 ## Postconditions
 - `specs/<feat>/clarifications.md`
