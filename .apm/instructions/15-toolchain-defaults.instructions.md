@@ -4,4 +4,4 @@ applyTo: "**/*"
 ---
 
 For stack, tooling, framework, orchestration, quality, or observability work,
-read [toolchain defaults](../context/toolchain-defaults/toolchain-defaults-index.context.md).
+read [toolchain defaults](../context/toolchain-defaults.toolchain-defaults-index.context.md).

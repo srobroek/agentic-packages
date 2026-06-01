@@ -5,4 +5,4 @@ applyTo: "{workers/**,functions/scheduled/**,functions/events/**,services/**/job
 
 For background jobs, queues, events, retries, idempotency, dead-letter handling,
 ordering, or worker observability, read
-[backend context](../context/backend/backend-index.context.md).
+[backend context](../context/backend.backend-index.context.md).

@@ -8,5 +8,11 @@ Use Go tooling, editor integrations exposed by the host, and `rg` for
 definitions, references, diagnostics, and rename planning. Do not assume a Go
 LSP MCP server is configured.
 
-Use the project setup skill or [toolchain defaults](../toolchain-defaults/toolchain-defaults-index.context.md)
-for `urfave/cli`, `koanf`, routing, RPC, and SQL tooling defaults.
+## Defaults
+
+Keep existing project choices unless the task is explicitly about setup,
+migration, or standardization.
+
+- Use the standard library first.
+- Use `urfave/cli` for CLIs when basic flag parsing is not enough.
+- Use `koanf` for layered configuration.

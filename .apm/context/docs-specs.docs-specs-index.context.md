@@ -5,5 +5,5 @@ assets.
 
 Read only the relevant detail:
 
-- [Project docs](project-docs.context.md)
-- [Spec and SpecKit workflow](spec-workflow.context.md)
+- [Project docs](docs-specs.project-docs.context.md)
+- [Spec and SpecKit workflow](docs-specs.spec-workflow.context.md)

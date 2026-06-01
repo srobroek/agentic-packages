@@ -5,8 +5,8 @@ work, runtime-owned assets, prompts, evals, and deployable ownership.
 
 Read only the relevant detail:
 
-- [API contracts](api-contracts.context.md)
-- [Background work](background-work.context.md)
+- [API contracts](backend.api-contracts.context.md)
+- [Background work](backend.background-work.context.md)
 
 Separate backend runtime shapes:
 

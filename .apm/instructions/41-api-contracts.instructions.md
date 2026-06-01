@@ -4,4 +4,4 @@ applyTo: "{services/api/**,services/graphql/**,services/rpc/**,services/webhooks
 ---
 
 For API boundaries, schemas, generated clients, event contracts, or owner-local
-contracts, read [backend context](../context/backend/backend-index.context.md).
+contracts, read [backend context](../context/backend.backend-index.context.md).

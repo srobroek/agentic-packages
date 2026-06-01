@@ -5,4 +5,4 @@ applyTo: "{scripts/**,tools/**,justfile,Justfile,Taskfile.yml,Makefile,mise.toml
 
 For repo automation, scripts, maintained CLIs, generators, MCP implementations,
 task runners, or orchestration files, read
-[tools and scripts context](../context/tools-scripts/tools-scripts-index.context.md).
+[tools and scripts context](../context/tools-scripts.tools-scripts-index.context.md).

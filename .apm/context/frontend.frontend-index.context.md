@@ -5,8 +5,8 @@ state, server data, and frontend verification.
 
 Read only the relevant detail:
 
-- [Toolchain frontend defaults](../toolchain-defaults/frontend.context.md)
-- [UI components](ui-components.context.md)
+- [Toolchain frontend defaults](toolchain-defaults.frontend.context.md)
+- [UI components](frontend.ui-components.context.md)
 
 Choose frameworks by surface:
 
