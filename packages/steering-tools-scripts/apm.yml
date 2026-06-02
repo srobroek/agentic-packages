@@ -1,6 +1,9 @@
 name: steering-tools-scripts
-version: 0.0.1
-description: "Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering."
+version: 0.1.0
+description: >-
+  Opinionated conventions for repo tooling and automation: where scripts,
+  generators, maintained CLIs, and task runners live and how they are
+  structured. Opt-in steering.
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
