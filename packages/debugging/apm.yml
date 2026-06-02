@@ -1,11 +1,13 @@
 name: debugging
-version: 0.0.1
-description: "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle."
+version: 0.1.0
+description: >-
+  Local debugging escalation: the unstuck skill and the adversarial-challenger
+  agent for when you are blocked, plus Matt's diagnose workflow. For
+  production/distributed incident debugging, see the incident-response bundle.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - unstuck@srobroek-agentic
