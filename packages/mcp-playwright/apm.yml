@@ -1,11 +1,12 @@
 name: mcp-playwright
-version: 0.0.1
-description: "MCP server package for Playwright, providing browser automation and in-browser UI verification."
+version: 0.1.0
+description: >-
+  MCP server package for Playwright, providing browser automation and in-browser
+  UI verification.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   mcp:
     - name: playwright
@@ -13,5 +14,5 @@ dependencies:
       transport: stdio
       command: npx
       args:
-        - -y
+        - '-y'
         - '@playwright/mcp@latest'

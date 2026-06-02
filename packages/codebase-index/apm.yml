@@ -1,6 +1,6 @@
 name: codebase-index
-version: 0.0.1
-description: "Rebuild the codebase-memory graph index when it is missing or stale."
+version: 0.1.0
+description: Rebuild the codebase-memory graph index when it is missing or stale.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

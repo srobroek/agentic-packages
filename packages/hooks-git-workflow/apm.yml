@@ -1,6 +1,9 @@
 name: hooks-git-workflow
-version: 0.0.1
-description: "Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex)."
+version: 0.1.0
+description: >-
+  Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test
+  state, and warn about uncommitted work at session end. Cross-tool (Claude +
+  Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions

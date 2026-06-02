@@ -1,13 +1,15 @@
 name: language-python
-version: 0.0.1
-description: "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists."
+version: 0.1.0
+description: >-
+  Python toolkit: the python-quality skill, opinionated Python steering, and
+  Hobson's python-development specialists.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/python-quality#python-quality-v0.1.0
-    - srobroek/agentic-packages/packages/language-steering-python#language-steering-python-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/language-steering-python#language-steering-python-v0.1.0
     - wshobson/agents/plugins/python-development#main

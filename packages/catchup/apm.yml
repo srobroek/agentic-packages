@@ -1,6 +1,9 @@
 name: catchup
-version: 0.0.1
-description: "Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request."
+version: 0.1.0
+description: >-
+  Resume interrupted project work by locating and following the best handover
+  before doing fresh discovery, after context loss, /clear, or a continue/resume
+  request.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
@@ -8,8 +11,4 @@ target: all
 includes: auto
 dependencies:
   apm:
-    # catchup reads the recovery prompt that handover writes, so it pulls
-    # handover in. The reverse is intentionally NOT declared: a mutual dep is a
-    # cycle, which APM rejects at install time ("Cannot install packages with
-    # circular dependencies"). handover stands alone; catchup is its companion.
     - srobroek/agentic-packages/packages/handover#handover-v0.1.0

@@ -1,16 +1,22 @@
 name: core
-version: 0.0.1
-description: "Meta-bundle for the shared project baseline. Aggregates the project-lifecycle, code-intelligence, and agentic-maintenance bundles, plus grill/diagnose workflows and context/orchestration plugins. Install this to get a sensible default toolkit for any repo."
+version: 0.1.0
+description: >-
+  Meta-bundle for the shared project baseline. Aggregates the project-lifecycle,
+  code-intelligence, and agentic-maintenance bundles, plus grill/diagnose
+  workflows and context/orchestration plugins. Install this to get a sensible
+  default toolkit for any repo.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/project-lifecycle#project-lifecycle-v0.1.0
-    - srobroek/agentic-packages/packages/code-intelligence#code-intelligence-v0.1.0
-    - srobroek/agentic-packages/packages/agentic-maintenance#agentic-maintenance-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/project-lifecycle#project-lifecycle-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/code-intelligence#code-intelligence-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/agentic-maintenance#agentic-maintenance-v0.1.0
     - mattpocock/skills/skills/engineering/diagnose#main
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main

@@ -1,6 +1,6 @@
 name: playwright
-version: 0.0.1
-description: "Automate browser interactions through a Playwright MCP server."
+version: 0.1.0
+description: Automate browser interactions through a Playwright MCP server.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

@@ -1,11 +1,13 @@
 name: data-ai
-version: 0.0.1
-description: "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins."
+version: 0.1.0
+description: >-
+  Data and AI toolkit: data steering plus Hobson LLM application, data
+  engineering, MLOps, database design, migrations, and cloud optimization
+  plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/steering-data#steering-data-v0.1.0
