@@ -1,11 +1,12 @@
 name: language-rust
-version: 0.0.1
-description: "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists."
+version: 0.1.0
+description: >-
+  Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's
+  systems-programming specialists.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - rust-quality@srobroek-agentic

@@ -36,7 +36,7 @@
   "packages/language-julia": "0.0.1",
   "packages/language-jvm": "0.0.1",
   "packages/language-python": "0.0.1",
-  "packages/language-rust": "0.0.1",
+  "packages/language-rust": "0.1.0",
   "packages/language-shell": "0.0.1",
   "packages/language-steering-go": "0.0.1",
   "packages/language-steering-python": "0.0.1",
