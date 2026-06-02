@@ -39,7 +39,7 @@
   "packages/language-rust": "0.0.1",
   "packages/language-shell": "0.0.1",
   "packages/language-steering-go": "0.0.1",
-  "packages/language-steering-python": "0.0.1",
+  "packages/language-steering-python": "0.1.0",
   "packages/language-steering-rust": "0.0.1",
   "packages/language-steering-terraform": "0.0.1",
   "packages/language-steering-typescript": "0.0.1",
