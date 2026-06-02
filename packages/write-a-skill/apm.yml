@@ -1,6 +1,8 @@
 name: write-a-skill
-version: 0.0.1
-description: "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement."
+version: 0.1.0
+description: >-
+  Create or rewrite agent skills with precise triggers, progressive disclosure,
+  references, scripts, and source-of-truth placement.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

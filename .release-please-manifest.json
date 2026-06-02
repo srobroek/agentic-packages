@@ -84,5 +84,5 @@
   "packages/unstuck": "0.0.1",
   "packages/verify": "0.0.1",
   "packages/web-fetch": "0.0.1",
-  "packages/write-a-skill": "0.0.1"
+  "packages/write-a-skill": "0.1.0"
 }
