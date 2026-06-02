@@ -12,4 +12,4 @@ dependencies:
     # handover in. The reverse is intentionally NOT declared: a mutual dep is a
     # cycle, which APM rejects at install time ("Cannot install packages with
     # circular dependencies"). handover stands alone; catchup is its companion.
-    - handover@srobroek-agentic
+    - srobroek/agentic-packages/packages/handover#handover-v0.1.0

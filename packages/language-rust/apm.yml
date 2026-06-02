@@ -8,6 +8,6 @@ target: all
 
 dependencies:
   apm:
-    - rust-quality@srobroek-agentic
-    - language-steering-rust@srobroek-agentic
+    - srobroek/agentic-packages/packages/rust-quality#rust-quality-v0.1.0
+    - srobroek/agentic-packages/packages/language-steering-rust#language-steering-rust-v0.1.0
     - wshobson/agents/plugins/systems-programming#main

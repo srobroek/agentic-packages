@@ -8,9 +8,9 @@ target: all
 
 dependencies:
   apm:
-    - project-lifecycle@srobroek-agentic
-    - code-intelligence@srobroek-agentic
-    - agentic-maintenance@srobroek-agentic
+    - srobroek/agentic-packages/packages/project-lifecycle#project-lifecycle-v0.1.0
+    - srobroek/agentic-packages/packages/code-intelligence#code-intelligence-v0.1.0
+    - srobroek/agentic-packages/packages/agentic-maintenance#agentic-maintenance-v0.1.0
     - mattpocock/skills/skills/engineering/diagnose#main
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main

@@ -193,25 +193,33 @@ A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.y
 
 ## How bundles work
 
-A **bundle** is a hand-authored APM package whose job is to install a coherent set of primitives. Each bundle is its own directory under [`packages/`](packages/) with an `apm.yml` manifest. The manifest is a dependency aggregator: a `dependencies.apm:` list that references the member packages (skills, agents, steering) by their marketplace shortname, plus any external third-party packages (Matt Pocock skills, Hobson agents, ...).
+A **bundle** is a hand-authored APM package whose job is to install a coherent set of primitives. Each bundle is its own directory under [`packages/`](packages/) with an `apm.yml` manifest. The manifest is a dependency aggregator: a `dependencies.apm:` list referencing member packages plus any external third-party packages (Matt Pocock skills, Hobson agents, ...).
 
-A bundle `apm.yml` typically lists:
+**Member reference syntax.** Sibling packages in this monorepo are referenced as a **virtual subdirectory of the marketplace repo**, version-pinned to the member's release tag:
 
-- member skill/agent/steering packages by marketplace shortname (for example `code-review@srobroek-agentic`)
-- external dependencies (third-party APM packages) by their source
-- the bundle's own `name`, `version`, and `description`
+```yaml
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/code-review#code-review-v0.1.0   # member, pinned
+    - srobroek/agentic-packages/packages/verify#verify-v0.1.0
+    - wshobson/agents/plugins/comprehensive-review#main                   # external, by source
+```
 
-**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it depends on them, so a change to a member package propagates to every bundle that references it. Bundles can also depend on other bundles, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
+APM dependencies are repo-locators, not marketplace shortnames -- `code-review@srobroek-agentic` is **not** valid in `dependencies.apm` (that form only works on the `apm install` command line). The `owner/repo/path#ref` form resolves the same way for this repo's own dev checkout and for an external consumer installing from the marketplace.
+
+**Pinning and the bump workflow.** Member deps are pinned to a specific `#<member>-v<version>` tag (created by release-please on release). Pinning is deliberate: a bundle only moves to a newer member when you **edit its pin**, which is a `feat`/`fix` commit on the bundle that release-please then bumps. So updating a member is two explicit steps -- release the member, then re-pin (and thereby bump) each bundle that should adopt it. There is no automatic cascade.
+
+**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it pins a dependency on them. Bundles can also depend on other bundles, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
 
 **Hooks ship with their owning package.** A package can carry `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `scripts/` directory; hook commands reference their scripts via `${PLUGIN_ROOT}/scripts/<name>.sh`. On install, APM deploys the scripts under `.claude/hooks/<pkg>/` and `.codex/hooks/<pkg>/`, rewrites `${PLUGIN_ROOT}`, and merges the hook config into `settings.json` / `hooks.json`. Codex only supports `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, and `Stop`; lifecycle events like `SessionStart` and `SubagentStart` are Claude-only, so those hooks ship in the claude variant only.
 
-Each package (skill, agent, and bundle) carries its own `apm.yml` and is versioned independently via release-please. The marketplace itself is hand-authored in the root [`apm.yml`](apm.yml) `marketplace:` block using local-path sources, and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
+Each package carries its own `apm.yml` and is versioned independently via release-please. The marketplace itself is hand-authored in the root [`apm.yml`](apm.yml) `marketplace:` block using local-path sources, and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
 
 To regenerate artifacts after editing a manifest:
 
 ```bash
-apm pack                # regenerate the marketplace JSON only
-apm run build-artifacts # release-please config + indexes/*.json + README tables + apm pack
+apm pack                # regenerate the marketplace manifests only
+apm run build-artifacts # release-please config + README tables + apm pack
 ```
 
 ---
@@ -339,39 +347,39 @@ In the **Includes** column, each entry is a member package; an entry marked with
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `steering-audit`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`*, `plugin-eval`* |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `core` | Meta-bundle for the shared project baseline | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `diagnose`*, `grill-me`*, `grill-with-docs`*, `context-management`*, `agent-orchestration`* |
-| `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
-| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, `diagnose`* |
+| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`*, `prompt-lookup`*, `steering-audit`*, `write-a-skill`*, `agent-coder`*, `agent-pr-reviewer`*, `documentation-standards`*, `plugin-eval`* |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-index`*, `codebase-memory`*, `explore`*, `prompt-lookup`*, `research`*, `web-fetch`*, `agent-pr-reviewer`*, `steering-project-structure`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
+| `core` | Meta-bundle for the shared project baseline | `project-lifecycle`*, `code-intelligence`*, `agentic-maintenance`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `context-management`*, `agent-orchestration`* |
+| `data-ai` | Data and AI toolkit | `steering-data`*, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
+| `debugging` | Local debugging escalation | `unstuck`*, `agent-adversarial-challenger`*, `diagnose`* |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`*, `debugging-toolkit`*, `comprehensive-review`*, `git-pr-workflows`*, `documentation-generation`* |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`*, `excalidraw-diagram-skill`*, `d2-diagram`* |
 | `docs-architecture` | Documentation and architecture | `documentation-standards`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`*, `interface-design`*, `stitch-design`*, `frontend-mobile-development`*, `ui-design`*, `accessibility-compliance`*, `brand-landingpage`* |
+| `frontend` | Frontend development and design toolkit | `playwright`*, `steering-frontend`*, `impeccable`*, `interface-design`*, `stitch-design`*, `frontend-mobile-development`*, `ui-design`*, `accessibility-compliance`*, `brand-landingpage`* |
 | `governance` | Agent governance | `protect-mcp`*, `signed-audit-trails`*, `review-agent-governance`*, `block-no-verify`* |
 | `incident-response` | Incident response and production debugging | `error-debugging`*, `distributed-debugging`*, `incident-response`*, `error-diagnostics`*, `debugging-toolkit`* |
-| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`, `cloud-infrastructure`*, `kubernetes-operations`*, `cicd-automation`*, `deployment-strategies`*, `deployment-validation`*, `observability-monitoring`* |
+| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`*, `cloud-infrastructure`*, `kubernetes-operations`*, `cicd-automation`*, `deployment-strategies`*, `deployment-validation`*, `observability-monitoring`* |
 | `language-arm-cortex` | ARM Cortex-M firmware toolkit | `arm-cortex-microcontrollers`* |
 | `language-dotnet` | .NET development toolkit | `dotnet-contribution`* |
 | `language-functional` | Functional programming toolkit | `functional-programming`* |
-| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `systems-programming`* |
+| `language-go` | Go toolkit | `go-quality`*, `language-steering-go`*, `systems-programming`* |
 | `language-julia` | Julia development toolkit | `julia-development`* |
 | `language-jvm` | JVM language toolkit | `jvm-languages`* |
-| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `python-development`* |
-| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `systems-programming`* |
+| `language-python` | Python toolkit | `python-quality`*, `language-steering-python`*, `python-development`* |
+| `language-rust` | Rust toolkit | `rust-quality`*, `language-steering-rust`*, `systems-programming`* |
 | `language-shell` | Shell scripting toolkit | `shell-scripting`* |
-| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `deployment-strategies`* |
-| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `javascript-typescript`* |
+| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`*, `deployment-strategies`* |
+| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`*, `language-steering-typescript`*, `javascript-typescript`* |
 | `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`* |
 | `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `improve-codebase-architecture`*, `setup-matt-pocock-skills`*, `tdd`*, `to-issues`*, `to-prd`*, `triage`*, `zoom-out`* |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`*, `to-issues`*, `tdd`*, `triage`*, `zoom-out`*, `improve-codebase-architecture`* |
+| `planning-product` | Planning and product toolkit | `debate`*, `eli5`*, `research`*, `web-fetch`*, `to-prd`*, `to-issues`*, `tdd`*, `triage`*, `zoom-out`*, `improve-codebase-architecture`* |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`*, `marp-slide`*, `pptx-from-layouts`* |
-| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
+| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`*, `handover`*, `commit-push-merge`*, `commit-push-pr`*, `quick-commit`*, `verify`*, `agent-pr-reviewer`* |
 | `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`*, `ResumeSkills`* |
-| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`*, `performance-testing-review`*, `unit-testing`*, `tdd-workflows`* |
+| `review` | Code review and verification toolkit | `code-review`*, `verify`*, `agent-pr-reviewer`*, `comprehensive-review`*, `performance-testing-review`*, `unit-testing`*, `tdd-workflows`* |
 | `security` | Security toolkit | `security-scanning`*, `security-compliance`*, `backend-api-security`*, `frontend-mobile-security`*, `reverse-engineering`* |
 | `speckit` | SpecKit mechanism | self-contained |
-| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
+| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit`* |
 <!-- END:bundles -->
 
 ### MCP server packages

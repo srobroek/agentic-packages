@@ -8,7 +8,7 @@ target: all
 
 dependencies:
   apm:
-    - steering-data@srobroek-agentic
+    - srobroek/agentic-packages/packages/steering-data#steering-data-v0.1.0
     - wshobson/agents/plugins/llm-application-dev#main
     - wshobson/agents/plugins/data-engineering#main
     - wshobson/agents/plugins/machine-learning-ops#main

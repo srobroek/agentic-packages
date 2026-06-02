@@ -8,11 +8,11 @@ target: all
 
 dependencies:
   apm:
-    - optimize-steering@srobroek-agentic
-    - prompt-lookup@srobroek-agentic
-    - steering-audit@srobroek-agentic
-    - write-a-skill@srobroek-agentic
-    - agent-coder@srobroek-agentic
-    - agent-pr-reviewer@srobroek-agentic
+    - srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.0
+    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.0
+    - srobroek/agentic-packages/packages/steering-audit#steering-audit-v0.1.0
+    - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.0
+    - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0
     - wshobson/agents/plugins/documentation-standards#main
     - wshobson/agents/plugins/plugin-eval#main

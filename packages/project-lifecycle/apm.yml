@@ -8,10 +8,10 @@ target: all
 
 dependencies:
   apm:
-    - catchup@srobroek-agentic
-    - handover@srobroek-agentic
-    - commit-push-merge@srobroek-agentic
-    - commit-push-pr@srobroek-agentic
-    - quick-commit@srobroek-agentic
-    - verify@srobroek-agentic
-    - agent-pr-reviewer@srobroek-agentic
+    - srobroek/agentic-packages/packages/catchup#catchup-v0.1.0
+    - srobroek/agentic-packages/packages/handover#handover-v0.1.0
+    - srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.0
+    - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.0
+    - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.0
+    - srobroek/agentic-packages/packages/verify#verify-v0.1.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0

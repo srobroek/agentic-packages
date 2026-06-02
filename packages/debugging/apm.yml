@@ -8,6 +8,6 @@ target: all
 
 dependencies:
   apm:
-    - unstuck@srobroek-agentic
-    - agent-adversarial-challenger@srobroek-agentic
+    - srobroek/agentic-packages/packages/unstuck#unstuck-v0.1.0
+    - srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.1.0
     - mattpocock/skills/skills/engineering/diagnose#main
