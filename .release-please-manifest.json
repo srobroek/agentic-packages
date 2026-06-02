@@ -16,7 +16,7 @@
   "packages/debate": "0.0.1",
   "packages/debugging": "0.0.1",
   "packages/developer-tools": "0.0.1",
-  "packages/diagrams": "0.0.1",
+  "packages/diagrams": "0.1.0",
   "packages/docs-architecture": "0.0.1",
   "packages/eli5": "0.0.1",
   "packages/explore": "0.0.1",
