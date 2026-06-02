@@ -21,7 +21,7 @@
   "packages/eli5": "0.0.1",
   "packages/explore": "0.0.1",
   "packages/frontend": "0.0.1",
-  "packages/go-quality": "0.0.1",
+  "packages/go-quality": "0.1.0",
   "packages/governance": "0.0.1",
   "packages/handover": "0.0.1",
   "packages/hooks-git-workflow": "0.0.1",
