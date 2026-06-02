@@ -1,6 +1,6 @@
 name: speckit
 version: 0.1.0 # x-release-please-version
-description: "SpecKit mechanism: per-command DAG hook dispatcher, the six SpecKit agents, the bugfix and setup skills, and hooks. The opinionated mandatory-gated workflow lives in the separate steering-speckit package — install it to adopt that process."
+description: "SpecKit mechanism: the per-command DAG dispatcher skill (speckit-dag) and its ~173 node markdowns, the six SpecKit agents, and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the enforcement hooks)."
 type: hybrid
 target: all
 includes: auto

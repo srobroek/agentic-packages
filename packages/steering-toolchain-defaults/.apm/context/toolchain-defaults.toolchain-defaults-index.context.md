@@ -10,6 +10,6 @@ Read only the relevant detail:
 - [Infrastructure defaults](toolchain-defaults.infrastructure.context.md)
 - [Quality and observability defaults](toolchain-defaults.quality-observability.context.md)
 
-Language-specific defaults now live in each language context
-([Python](languages.python.context.md), [TypeScript](languages.typescript.context.md),
-[Go](languages.go.context.md), [Rust](languages.rust.context.md)).
+Language-specific defaults ship with each language: structural conventions in
+the `language-<lang>` package, and opinionated library/tool defaults in the
+opt-in `language-steering` package.
