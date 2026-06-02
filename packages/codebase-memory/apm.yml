@@ -1,6 +1,8 @@
 name: codebase-memory
-version: 0.0.1
-description: "Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index."
+version: 0.1.0
+description: >-
+  Graph-aware codebase exploration, tracing, and reference lookup using the
+  codebase-memory index.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
