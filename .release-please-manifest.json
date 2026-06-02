@@ -58,7 +58,7 @@
   "packages/playwright": "0.0.1",
   "packages/presentation": "0.0.1",
   "packages/project-lifecycle": "0.0.1",
-  "packages/prompt-lookup": "0.0.1",
+  "packages/prompt-lookup": "0.1.0",
   "packages/python-quality": "0.0.1",
   "packages/quick-commit": "0.0.1",
   "packages/research": "0.0.1",
