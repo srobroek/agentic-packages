@@ -11,7 +11,7 @@
   "packages/codebase-memory": "0.0.1",
   "packages/commit-push-merge": "0.0.1",
   "packages/commit-push-pr": "0.0.1",
-  "packages/core": "0.0.1",
+  "packages/core": "0.1.0",
   "packages/data-ai": "0.0.1",
   "packages/debate": "0.0.1",
   "packages/debugging": "0.0.1",
