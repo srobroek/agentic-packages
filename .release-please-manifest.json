@@ -29,7 +29,7 @@
   "packages/hyperresearch": "0.0.1",
   "packages/incident-response": "0.0.1",
   "packages/infrastructure": "0.0.1",
-  "packages/language-arm-cortex": "0.0.1",
+  "packages/language-arm-cortex": "0.1.0",
   "packages/language-dotnet": "0.0.1",
   "packages/language-functional": "0.0.1",
   "packages/language-go": "0.0.1",
