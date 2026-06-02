@@ -1,6 +1,8 @@
 name: code-review
-version: 0.0.1
-description: "Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests."
+version: 0.1.0
+description: >-
+  Review a diff or change set, prioritizing bugs, regressions, risks, and
+  missing tests.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
