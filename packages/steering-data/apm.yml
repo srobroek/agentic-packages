@@ -1,6 +1,8 @@
 name: steering-data
-version: 0.0.1
-description: "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering."
+version: 0.1.0
+description: >-
+  Opinionated data conventions: data ownership, database assets, migrations,
+  pipelines, and notebook practices. Opt-in steering.
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
