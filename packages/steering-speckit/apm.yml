@@ -1,0 +1,6 @@
+name: steering-speckit
+version: 0.1.0 # x-release-please-version
+description: "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in — install alongside the speckit package to adopt this specific spec-driven process."
+type: instructions
+target: all
+includes: auto

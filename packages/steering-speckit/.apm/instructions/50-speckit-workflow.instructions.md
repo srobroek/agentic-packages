@@ -28,6 +28,63 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 
 ## Workflow DAG
 
+```mermaid
+flowchart TD
+    classDef gate fill:#fff3cd,stroke:#d39e00,color:#333;
+    classDef interactive fill:#cfe2ff,stroke:#0d6efd,color:#333;
+    classDef auto fill:#e2e3e5,stroke:#6c757d,color:#333;
+    classDef parallel fill:#d1e7dd,stroke:#198754,color:#333;
+
+    subgraph P1["Phase 1 — Specification (human-gated)"]
+        direction TB
+        S1["1 specify"]:::gate --> S2["2 clarify"]:::interactive
+        S2 --> S3["3 checklist"]:::interactive
+        S3 --> S4["4 plan"]:::gate
+        S4 --> S5["5 tasks"]:::gate
+        S5 --> S5b["5b critique.run"]:::parallel
+        S5 --> S5c["5c security-review"]:::parallel
+        S5b --> S6["6 analyze"]:::interactive
+        S5c --> S6
+        S6 --> S7["7 taskstoissues"]:::auto
+        S7 --> S8["8 checkpoint.commit"]:::auto
+    end
+
+    subgraph P2["Phase 2 — Implementation"]
+        direction TB
+        A9a["9a agent-assign.assign"]:::gate --> A9b["9b agent-assign.validate"]:::auto
+        A9b --> A9c["9c agent-assign.execute<br/>(per-task subagents, checkpoint each)"]:::auto
+    end
+
+    subgraph P3["Phase 3 — Post-implementation quality (ALL mandatory)"]
+        direction TB
+        V10["10 verify-tasks"]:::parallel --> CL14
+        V11["11 verify"]:::parallel --> CL14
+        CR12["12 code-review"]:::parallel --> CL14
+        SR13["13 security-review"]:::parallel --> CL14["14 cleanup"]:::auto
+        CL14 --> SY15["15 sync.analyze"]:::parallel
+        CL14 --> SY16["16 sync.conflicts"]:::parallel
+        SY15 --> R17["17 retro.run"]:::auto
+        SY16 --> R17
+        R17 --> D18["18 docs update"]:::auto
+        D18 --> C19["19 checkpoint.commit"]:::auto
+    end
+
+    S8 --> A9a
+    A9c --> V10
+    A9c --> V11
+    A9c --> CR12
+    A9c --> SR13
+
+    ITER["iterate.define → iterate.apply<br/>(MANDATORY once tasks.md exists)"]:::interactive
+    A9c -. "requirements change /<br/>approach won't work" .-> ITER
+    P3 -. "scope change" .-> ITER
+    ITER -. "resume at trigger step" .-> S5
+```
+
+Legend: yellow = approval gate · blue = interactive (needs user) · green = runs parallel
+with its pair · grey = automatic. Dashed edges = the iterate loop (scope change). The tables
+below are the authoritative step reference.
+
 ### Phase 1 — Specification (human-gated)
 
 | Step | Command | Mode | Notes |

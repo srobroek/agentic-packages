@@ -1,8 +1,6 @@
 name: speckit
-version: 0.1.0
-description: 'Bundle: SpecKit workflow bundle with per-command DAG hook dispatcher, SpecKit agents, bugfix skill, and docs/spec steering. Contains: hook dispatcher + ~150 per-command node markdowns shipping to Claude (.claude/settings.json) and Codex (.codex/hooks.json); skill speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.'
-author: Sjors Robroek
-license: MIT
+version: 0.1.0 # x-release-please-version
+description: "SpecKit mechanism: per-command DAG hook dispatcher, the six SpecKit agents, the bugfix and setup skills, and hooks. The opinionated mandatory-gated workflow lives in the separate steering-speckit package — install it to adopt that process."
 type: hybrid
 target: all
 includes: auto
