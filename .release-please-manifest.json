@@ -63,7 +63,7 @@
   "packages/quick-commit": "0.0.1",
   "packages/research": "0.0.1",
   "packages/resume": "0.0.1",
-  "packages/review": "0.0.1",
+  "packages/review": "0.1.0",
   "packages/rust-quality": "0.0.1",
   "packages/security": "0.0.1",
   "packages/sniff": "0.0.1",
