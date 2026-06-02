@@ -9,7 +9,7 @@
   "packages/code-review": "0.0.1",
   "packages/codebase-index": "0.0.1",
   "packages/codebase-memory": "0.0.1",
-  "packages/commit-push-merge": "0.0.1",
+  "packages/commit-push-merge": "0.1.0",
   "packages/commit-push-pr": "0.0.1",
   "packages/core": "0.0.1",
   "packages/data-ai": "0.0.1",
