@@ -1,12 +1,13 @@
 name: developer-tools
-version: 0.0.1
-description: "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows."
+version: 0.1.0
+description: >-
+  Everyday developer tooling: Hobson developer-essentials, debugging,
+  comprehensive review, git/PR, and documentation-generation workflows.
 author: Sjors Robroek
 license: MIT
 type: hybrid
 target: all
 includes: auto
-
 dependencies:
   apm:
     - wshobson/agents/plugins/developer-essentials#main

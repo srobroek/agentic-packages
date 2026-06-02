@@ -1,0 +1,64 @@
+# Changelog
+
+## [0.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.0.1...srobroek-agentic-v0.1.0) (2026-06-02)
+
+
+### Features
+
+* add agentic APM package marketplace ([a031e45](https://github.com/srobroek/agentic-packages/commit/a031e450ce3ce40cd9ba51a85e7a04bbaa74ebe3))
+* add Claude model overrides for third-party agents + fix patch script [skip tests] ([b95eb43](https://github.com/srobroek/agentic-packages/commit/b95eb431c5358397a731287e5276e0e19e602300))
+* add MCP server deps to core + create frontend bundle ([292182e](https://github.com/srobroek/agentic-packages/commit/292182e4b43a1212689a1b05c8aaab7ec7c14484))
+* add page-composability rule to UI component steering ([f2ac2e1](https://github.com/srobroek/agentic-packages/commit/f2ac2e1231ab29076c04caa591fbed4a47b38acd))
+* add progressive APM steering indexes ([f186fd9](https://github.com/srobroek/agentic-packages/commit/f186fd900b47c0028610f6757f2ff88a95ab7517))
+* add soft coder-delegation reminder hook ([ed20a8f](https://github.com/srobroek/agentic-packages/commit/ed20a8f8efdf0b34f87eed27fa0ebbac1daede7c))
+* incorporate msitarzewski/agency-agents as opt-in marketplace entries ([7d6ed5b](https://github.com/srobroek/agentic-packages/commit/7d6ed5b713854d0e4c8e291f23664170c89b78a1))
+* **marketplace:** hand-authored local-path marketplace + apm pack outputs; drop dead packages [skip tests] ([ed11c25](https://github.com/srobroek/agentic-packages/commit/ed11c25cc54b9b31c41864f5d6ca24069c0588c8))
+* merge frontend bundle variants ([00085d5](https://github.com/srobroek/agentic-packages/commit/00085d5ca0938fccb3ccee58dd447e5d55c13c3d))
+* migrate hooks into packages, remove dead scripts, baseline 0.0.1 [skip tests] ([912cd0c](https://github.com/srobroek/agentic-packages/commit/912cd0ce7868e0406dd8ac0659320b1fbc577319))
+* optimize MCP marketplace — replace github MCP with gh CLI, add LSP servers and bundle steering [skip tests] ([e7e98a1](https://github.com/srobroek/agentic-packages/commit/e7e98a12bbd035fc446425a5274bd6d6dc2b57e4))
+* publish standalone mcp packages ([3145100](https://github.com/srobroek/agentic-packages/commit/31451002a7ae874e59c7f11868dd039ba597730c))
+* **release:** per-package release-please config + apm-action release workflow [skip tests] ([8b95c82](https://github.com/srobroek/agentic-packages/commit/8b95c8294404255944057b1f938d8356d89c7670))
+* split optional mcp package installs ([c774562](https://github.com/srobroek/agentic-packages/commit/c774562b84c66117e2ce714208aed32a4e9df65b))
+* **steering:** add per-language optional steering packages [skip tests] ([d576229](https://github.com/srobroek/agentic-packages/commit/d576229613e0926c2253c8901eb27f05356964b7))
+
+
+### Bug Fixes
+
+* avoid pruning transitive apm dependencies ([23e75e6](https://github.com/srobroek/agentic-packages/commit/23e75e60b094bb848c669d0a1bedb5f629816505))
+* bundle codex agent runtime patcher ([b73b361](https://github.com/srobroek/agentic-packages/commit/b73b3610bd169db9da3a4d4b9ae3f49042301c3a))
+* compile claude steering in setup guidance ([32d6fe3](https://github.com/srobroek/agentic-packages/commit/32d6fe31943fae7c274a8cf5365d23d0ec24269a))
+* dedupe language steering and strip constitution blocks ([de28232](https://github.com/srobroek/agentic-packages/commit/de28232e519e42da95d3103a76252a55f8e1c18f))
+* drop mcp-hub guidance from SubagentStart context injection ([871e2d3](https://github.com/srobroek/agentic-packages/commit/871e2d30eefe5a32e7de5fb741172092fa8f77d2))
+* drop tools list from coder agent source ([6821509](https://github.com/srobroek/agentic-packages/commit/682150956ed55c1d6b60378d9a8af1559a8f020e))
+* drop tools list from speckit-implement-task agent source ([0eee1c5](https://github.com/srobroek/agentic-packages/commit/0eee1c5aa5397cf6c7698a6a2d16be3478b22e2d))
+* **marketplace:** remove stale root marketplace.json so consumers read apm pack output [skip tests] ([2f2c7e0](https://github.com/srobroek/agentic-packages/commit/2f2c7e07251d446f38d1c543fd5342924879e102))
+* persist stitch-skills plugins/stitch-design subdir in build sources ([98344e4](https://github.com/srobroek/agentic-packages/commit/98344e4da518486dc164da3837b98165ce0bc6a7))
+* point stitch-skills marketplace entry at plugins/stitch-design ([d620b67](https://github.com/srobroek/agentic-packages/commit/d620b678d6051c3c7b1488510ab4b50682a659d2))
+* prune stale apm packages during setup ([ab0529a](https://github.com/srobroek/agentic-packages/commit/ab0529a4560ef0666f66b03078368c56f8907712))
+* **release-please:** consolidate into one release PR (separate-pull-requests false) [skip tests] ([867078f](https://github.com/srobroek/agentic-packages/commit/867078fdb4ec741b10d1f1191b6d16148bc39055))
+* remove pyyaml dependency from package pruner ([8abfefc](https://github.com/srobroek/agentic-packages/commit/8abfefc50f67af62d5b35a6bd367deb288ec54ed))
+* repair generated agents context links ([87a4b92](https://github.com/srobroek/agentic-packages/commit/87a4b92133966a8db34071e3ac8157d67b006174))
+* resolve direct local apm package links ([1e8f561](https://github.com/srobroek/agentic-packages/commit/1e8f5614123b3cbf9e316b31a1393e3351f45857))
+* scope agents context link routing ([efa0f89](https://github.com/srobroek/agentic-packages/commit/efa0f897575a3a414a79fa2019ad849bdc170fe0))
+* skip test gate for agentic-only commits ([f7f9771](https://github.com/srobroek/agentic-packages/commit/f7f97710680549bce6d9fcd9a8696d4751e3131c))
+* **speckit:** remove invalid Skill() if patterns from hooks — Skill is not a permission rule type ([a868530](https://github.com/srobroek/agentic-packages/commit/a86853092921f0b44e1eec34a1a953ea42e46d57))
+* support local package context links ([fa92080](https://github.com/srobroek/agentic-packages/commit/fa920801986ae0b8d3a1b1ca690bcdb4e337ba7c))
+* unify serena mcp package ([51f5d9d](https://github.com/srobroek/agentic-packages/commit/51f5d9d752c2a19b94b1148955b5091adad89333))
+* use valid repo-locator dependency syntax for bundle members [skip tests] ([855d9d6](https://github.com/srobroek/agentic-packages/commit/855d9d67b2e6c93e9dd1b603fd7cf958e172682a))
+* valid repo-locator dependency syntax for bundle members ([c4be60c](https://github.com/srobroek/agentic-packages/commit/c4be60cf8308c21be297b9fcf2381b3e6687ac61))
+
+
+### Refactors
+
+* APM-native bundles + marketplace + per-package release-please ([5e1a3e8](https://github.com/srobroek/agentic-packages/commit/5e1a3e8b6ba8039de7b737fe9e622e7bc775a43e))
+* **context:** flatten nested context layout to fix consumer link resolution [skip tests] ([498e7ce](https://github.com/srobroek/agentic-packages/commit/498e7cedd6f2b891f41694ba10e87474f41b241a))
+* **packages:** move skills and agents into own top-level packages [skip tests] ([c9ca8d1](https://github.com/srobroek/agentic-packages/commit/c9ca8d13a8dd52c3c90a077966fb3118edf1a189))
+* promote apm wrappers to packages ([bbe7484](https://github.com/srobroek/agentic-packages/commit/bbe748422b5f7dcc4ffbfe8354d21dc171c52add))
+* **speckit:** remove root duplicates; extract workflow to steering-speckit [skip tests] ([7ff5284](https://github.com/srobroek/agentic-packages/commit/7ff52846cdc17386f83ceb5e6de187196bb0f3de))
+* **steering:** drop maintainer-only meta context [skip tests] ([1c88308](https://github.com/srobroek/agentic-packages/commit/1c883087fb727a539b536814142552c7b11701c2))
+* **steering:** split baseline into 3 opt-in packages; extract speckit hooks [skip tests] ([9a19504](https://github.com/srobroek/agentic-packages/commit/9a195043c208f8d03d462507a2720d66e7addc2c))
+
+
+### Documentation
+
+* de-personalize, LOAD convention, README + inventory rewrite [skip tests] ([adf8e21](https://github.com/srobroek/agentic-packages/commit/adf8e210ff5721dd198f7c07f0022910af812df7))

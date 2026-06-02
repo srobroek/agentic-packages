@@ -1,12 +1,13 @@
 name: diagrams
-version: 0.0.1
-description: Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.
+version: 0.1.0
+description: >-
+  Diagram generation bundle for editable draw.io diagrams, visual Excalidraw
+  diagrams, and D2 architecture or flow diagrams.
 author: Sjors Robroek
 license: MIT
 type: skill
 target: all
 includes: auto
-
 dependencies:
   apm:
     - Agents365-ai/drawio-skill#main

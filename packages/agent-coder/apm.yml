@@ -1,6 +1,8 @@
 name: agent-coder
-version: 0.0.1
-description: "Implementation subagent for bounded code changes, tests, and refactors within a defined scope."
+version: 0.1.0
+description: >-
+  Implementation subagent for bounded code changes, tests, and refactors within
+  a defined scope.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
