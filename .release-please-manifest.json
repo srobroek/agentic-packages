@@ -60,7 +60,7 @@
   "packages/project-lifecycle": "0.0.1",
   "packages/prompt-lookup": "0.0.1",
   "packages/python-quality": "0.0.1",
-  "packages/quick-commit": "0.0.1",
+  "packages/quick-commit": "0.1.0",
   "packages/research": "0.0.1",
   "packages/resume": "0.0.1",
   "packages/review": "0.0.1",

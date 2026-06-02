@@ -1,6 +1,8 @@
 name: quick-commit
-version: 0.0.1
-description: "Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows."
+version: 0.1.0
+description: >-
+  Create a deliberate local git commit without pushing or opening a PR, for
+  checkpoints and fast commit-only workflows.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
