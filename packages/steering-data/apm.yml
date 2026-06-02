@@ -1,0 +1,12 @@
+name: steering-data
+version: 0.1.0 # x-release-please-version
+description: "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering."
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto
+category: data
+tags:
+  - steering
+  - data

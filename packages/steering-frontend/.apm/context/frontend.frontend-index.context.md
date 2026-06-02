@@ -5,8 +5,9 @@ state, server data, and frontend verification.
 
 Read only the relevant detail:
 
-- [Toolchain frontend defaults](toolchain-defaults.frontend.context.md)
 - [UI components](frontend.ui-components.context.md)
+- Frontend toolchain defaults ship in the `steering-toolchain-defaults` package
+  (install it for the default stack picks).
 
 Choose frameworks by surface:
 
