@@ -5,14 +5,6 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-category: infrastructure
-tags:
-  - bundle
-  - infrastructure
-  - cloud
-  - kubernetes
-  - cicd
-  - observability
 
 dependencies:
   apm:

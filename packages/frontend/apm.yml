@@ -5,13 +5,6 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-category: frontend
-tags:
-  - bundle
-  - frontend
-  - ui
-  - design
-  - accessibility
 
 dependencies:
   apm:

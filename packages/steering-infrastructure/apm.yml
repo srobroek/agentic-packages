@@ -6,7 +6,3 @@ license: Apache-2.0
 type: instructions
 target: all
 includes: auto
-category: infrastructure
-tags:
-  - steering
-  - infrastructure

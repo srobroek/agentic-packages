@@ -5,11 +5,6 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-category: languages
-tags:
-  - bundle
-  - languages
-  - go
 
 dependencies:
   apm:

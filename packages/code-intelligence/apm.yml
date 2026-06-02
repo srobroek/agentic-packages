@@ -5,13 +5,6 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-category: code-intelligence
-tags:
-  - bundle
-  - code-intelligence
-  - search
-  - documentation
-  - architecture
 
 dependencies:
   apm:

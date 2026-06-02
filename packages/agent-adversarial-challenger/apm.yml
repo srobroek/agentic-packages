@@ -1,0 +1,8 @@
+name: agent-adversarial-challenger
+version: 0.1.0 # x-release-please-version
+description: "Read-only adversarial debugger for the unstuck workflow. Investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files."
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto

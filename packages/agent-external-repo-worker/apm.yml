@@ -1,0 +1,8 @@
+name: agent-external-repo-worker
+version: 0.1.0 # x-release-please-version
+description: "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work."
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto

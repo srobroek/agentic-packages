@@ -5,12 +5,6 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-category: core
-tags:
-  - bundle
-  - core
-  - baseline
-  - meta
 
 dependencies:
   apm:

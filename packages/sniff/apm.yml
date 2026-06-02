@@ -1,0 +1,8 @@
+name: sniff
+version: 0.1.0 # x-release-please-version
+description: "Stability, hardening, and cleanup audit across a codebase."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto
