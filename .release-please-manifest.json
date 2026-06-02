@@ -73,7 +73,7 @@
   "packages/steering-backend": "0.0.1",
   "packages/steering-data": "0.0.1",
   "packages/steering-docs-specs": "0.0.1",
-  "packages/steering-frontend": "0.0.1",
+  "packages/steering-frontend": "0.1.0",
   "packages/steering-infrastructure": "0.0.1",
   "packages/steering-project-structure": "0.0.1",
   "packages/steering-speckit": "0.0.1",
