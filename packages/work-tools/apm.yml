@@ -1,8 +1,0 @@
-name: work-tools
-version: 0.1.0
-description: Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection.
-author: Sjors Robroek
-license: MIT
-type: hybrid
-target: all
-includes: auto

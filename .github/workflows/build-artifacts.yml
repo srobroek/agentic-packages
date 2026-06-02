@@ -1,0 +1,56 @@
+name: Check artifacts
+
+# PR-only drift check. Regenerates the non-destructive artifacts and fails if
+# the committed copies are stale, so a PR that changes a bundle/skill/agent
+# must include the regenerated output. Does NOT commit anything -- artifact
+# regeneration + commit happens in release-please.yml on release.
+#
+# build-packages.py is intentionally NOT run: it rmtrees and re-materializes
+# each packages/<bundle>/.apm tree from the bundle definition, which would wipe
+# hand-maintained content that has no generator source (notably the speckit
+# DAG: dispatcher, nodes/, hooks, workflow instructions). Run it locally and
+# review the diff.
+
+on:
+  pull_request:
+    paths:
+      - ".apm/**"
+      - "templates/**"
+      - "apm.yml"
+      - "indexes/**"
+      - "packages/**"
+      - "marketplace.json"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  check-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up APM
+        run: pip install apm-cli
+
+      - name: Regenerate non-destructive artifacts
+        run: |
+          apm pack --check-clean
+          python3 .apm/scripts/build-agentic-indexes.py
+          python3 .apm/scripts/build-readme-tables.py
+
+      - name: Fail if artifacts are stale
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::Generated artifacts are out of date. Run 'apm run build-artifacts' locally and commit the result."
+            git --no-pager diff --stat
+            exit 1
+          fi
+          echo "Generated artifacts are up to date."

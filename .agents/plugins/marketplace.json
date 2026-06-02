@@ -1,0 +1,1016 @@
+{
+  "name": "srobroek-agentic",
+  "interface": {
+    "displayName": "srobroek-agentic"
+  },
+  "plugins": [
+    {
+      "name": "agent-adversarial-challenger",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-adversarial-challenger"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "debugging"
+    },
+    {
+      "name": "agent-coder",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-coder"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "engineering"
+    },
+    {
+      "name": "agent-external-repo-worker",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-external-repo-worker"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "engineering"
+    },
+    {
+      "name": "agent-pr-reviewer",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-pr-reviewer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "agentic-maintenance",
+      "source": {
+        "source": "local",
+        "path": "./packages/agentic-maintenance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
+      "name": "catchup",
+      "source": {
+        "source": "local",
+        "path": "./packages/catchup"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "code-intelligence",
+      "source": {
+        "source": "local",
+        "path": "./packages/code-intelligence"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "code-review",
+      "source": {
+        "source": "local",
+        "path": "./packages/code-review"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "codebase-index",
+      "source": {
+        "source": "local",
+        "path": "./packages/codebase-index"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "codebase-memory",
+      "source": {
+        "source": "local",
+        "path": "./packages/codebase-memory"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "commit-push-merge",
+      "source": {
+        "source": "local",
+        "path": "./packages/commit-push-merge"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "commit-push-pr",
+      "source": {
+        "source": "local",
+        "path": "./packages/commit-push-pr"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "core",
+      "source": {
+        "source": "local",
+        "path": "./packages/core"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "core"
+    },
+    {
+      "name": "data-ai",
+      "source": {
+        "source": "local",
+        "path": "./packages/data-ai"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "data"
+    },
+    {
+      "name": "debate",
+      "source": {
+        "source": "local",
+        "path": "./packages/debate"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "planning-product"
+    },
+    {
+      "name": "debugging",
+      "source": {
+        "source": "local",
+        "path": "./packages/debugging"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "debugging"
+    },
+    {
+      "name": "developer-tools",
+      "source": {
+        "source": "local",
+        "path": "./packages/developer-tools"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "engineering"
+    },
+    {
+      "name": "diagrams",
+      "source": {
+        "source": "local",
+        "path": "./packages/diagrams"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "diagrams"
+    },
+    {
+      "name": "docs-architecture",
+      "source": {
+        "source": "local",
+        "path": "./packages/docs-architecture"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "docs"
+    },
+    {
+      "name": "eli5",
+      "source": {
+        "source": "local",
+        "path": "./packages/eli5"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "planning-product"
+    },
+    {
+      "name": "explore",
+      "source": {
+        "source": "local",
+        "path": "./packages/explore"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "frontend",
+      "source": {
+        "source": "local",
+        "path": "./packages/frontend"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "frontend"
+    },
+    {
+      "name": "go-quality",
+      "source": {
+        "source": "local",
+        "path": "./packages/go-quality"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "governance",
+      "source": {
+        "source": "local",
+        "path": "./packages/governance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "governance"
+    },
+    {
+      "name": "handover",
+      "source": {
+        "source": "local",
+        "path": "./packages/handover"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "hyperresearch",
+      "source": {
+        "source": "local",
+        "path": "./packages/hyperresearch"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "research"
+    },
+    {
+      "name": "incident-response",
+      "source": {
+        "source": "local",
+        "path": "./packages/incident-response"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "debugging"
+    },
+    {
+      "name": "infrastructure",
+      "source": {
+        "source": "local",
+        "path": "./packages/infrastructure"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "infrastructure"
+    },
+    {
+      "name": "language-arm-cortex",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-arm-cortex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-dotnet",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-dotnet"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-functional",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-functional"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-go",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-go"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-julia",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-julia"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-jvm",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-jvm"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-python",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-python"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-rust",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-rust"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-shell",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-shell"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-steering-go",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-steering-go"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-steering-python",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-steering-python"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-steering-rust",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-steering-rust"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-steering-terraform",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-steering-terraform"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-steering-typescript",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-steering-typescript"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-terraform",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-terraform"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-typescript",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-typescript"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "language-web-scripting",
+      "source": {
+        "source": "local",
+        "path": "./packages/language-web-scripting"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "matt-skills",
+      "source": {
+        "source": "local",
+        "path": "./packages/matt-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "planning-product"
+    },
+    {
+      "name": "mcp-codebase-memory",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-codebase-memory"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "mcp-context7",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-context7"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "mcp-package-version",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-package-version"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "mcp-playwright",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-playwright"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "mcp-repomix",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-repomix"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "mcp-serena",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-serena"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
+      "name": "optimize-steering",
+      "source": {
+        "source": "local",
+        "path": "./packages/optimize-steering"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
+      "name": "planning-product",
+      "source": {
+        "source": "local",
+        "path": "./packages/planning-product"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "planning-product"
+    },
+    {
+      "name": "playwright",
+      "source": {
+        "source": "local",
+        "path": "./packages/playwright"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "frontend"
+    },
+    {
+      "name": "presentation",
+      "source": {
+        "source": "local",
+        "path": "./packages/presentation"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "presentation"
+    },
+    {
+      "name": "project-lifecycle",
+      "source": {
+        "source": "local",
+        "path": "./packages/project-lifecycle"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "prompt-lookup",
+      "source": {
+        "source": "local",
+        "path": "./packages/prompt-lookup"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "python-quality",
+      "source": {
+        "source": "local",
+        "path": "./packages/python-quality"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "quick-commit",
+      "source": {
+        "source": "local",
+        "path": "./packages/quick-commit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "research",
+      "source": {
+        "source": "local",
+        "path": "./packages/research"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "resume",
+      "source": {
+        "source": "local",
+        "path": "./packages/resume"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "resume"
+    },
+    {
+      "name": "review",
+      "source": {
+        "source": "local",
+        "path": "./packages/review"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "rust-quality",
+      "source": {
+        "source": "local",
+        "path": "./packages/rust-quality"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "security",
+      "source": {
+        "source": "local",
+        "path": "./packages/security"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "security"
+    },
+    {
+      "name": "sniff",
+      "source": {
+        "source": "local",
+        "path": "./packages/sniff"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "speckit",
+      "source": {
+        "source": "local",
+        "path": "./packages/speckit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "speckit"
+    },
+    {
+      "name": "speckit-dag-hooks",
+      "source": {
+        "source": "local",
+        "path": "./packages/speckit-dag-hooks"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "speckit"
+    },
+    {
+      "name": "steering-audit",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-audit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
+      "name": "steering-backend",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-backend"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-data",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-data"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-docs-specs",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-docs-specs"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-frontend",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-frontend"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-infrastructure",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-infrastructure"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-project-structure",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-project-structure"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-speckit",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-speckit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-subagent-routing",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-subagent-routing"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-toolchain-defaults",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-toolchain-defaults"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-tools-scripts",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-tools-scripts"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "typescript-quality",
+      "source": {
+        "source": "local",
+        "path": "./packages/typescript-quality"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "languages"
+    },
+    {
+      "name": "unstuck",
+      "source": {
+        "source": "local",
+        "path": "./packages/unstuck"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "debugging"
+    },
+    {
+      "name": "verify",
+      "source": {
+        "source": "local",
+        "path": "./packages/verify"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "web-fetch",
+      "source": {
+        "source": "local",
+        "path": "./packages/web-fetch"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "write-a-skill",
+      "source": {
+        "source": "local",
+        "path": "./packages/write-a-skill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    }
+  ]
+}

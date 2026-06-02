@@ -1,0 +1,715 @@
+{
+  "name": "srobroek-agentic",
+  "owner": {
+    "name": "srobroek",
+    "url": "https://github.com/srobroek"
+  },
+  "plugins": [
+    {
+      "name": "agent-adversarial-challenger",
+      "tags": [
+        "agent",
+        "debugging",
+        "adversarial"
+      ],
+      "source": "./packages/agent-adversarial-challenger"
+    },
+    {
+      "name": "agent-coder",
+      "tags": [
+        "agent",
+        "engineering",
+        "implementation"
+      ],
+      "source": "./packages/agent-coder"
+    },
+    {
+      "name": "agent-external-repo-worker",
+      "tags": [
+        "agent",
+        "engineering",
+        "repos"
+      ],
+      "source": "./packages/agent-external-repo-worker"
+    },
+    {
+      "name": "agent-pr-reviewer",
+      "tags": [
+        "agent",
+        "quality",
+        "review"
+      ],
+      "source": "./packages/agent-pr-reviewer"
+    },
+    {
+      "name": "agentic-maintenance",
+      "tags": [
+        "bundle",
+        "steering"
+      ],
+      "source": "./packages/agentic-maintenance"
+    },
+    {
+      "name": "catchup",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "resume"
+      ],
+      "source": "./packages/catchup"
+    },
+    {
+      "name": "code-intelligence",
+      "tags": [
+        "bundle",
+        "graph"
+      ],
+      "source": "./packages/code-intelligence"
+    },
+    {
+      "name": "code-review",
+      "tags": [
+        "skill",
+        "quality",
+        "review"
+      ],
+      "source": "./packages/code-review"
+    },
+    {
+      "name": "codebase-index",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "graph"
+      ],
+      "source": "./packages/codebase-index"
+    },
+    {
+      "name": "codebase-memory",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "graph"
+      ],
+      "source": "./packages/codebase-memory"
+    },
+    {
+      "name": "commit-push-merge",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "git"
+      ],
+      "source": "./packages/commit-push-merge"
+    },
+    {
+      "name": "commit-push-pr",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "git"
+      ],
+      "source": "./packages/commit-push-pr"
+    },
+    {
+      "name": "core",
+      "tags": [
+        "bundle",
+        "baseline"
+      ],
+      "source": "./packages/core"
+    },
+    {
+      "name": "data-ai",
+      "tags": [
+        "bundle",
+        "data"
+      ],
+      "source": "./packages/data-ai"
+    },
+    {
+      "name": "debate",
+      "tags": [
+        "skill",
+        "planning",
+        "analysis"
+      ],
+      "source": "./packages/debate"
+    },
+    {
+      "name": "debugging",
+      "tags": [
+        "bundle",
+        "debugging"
+      ],
+      "source": "./packages/debugging"
+    },
+    {
+      "name": "developer-tools",
+      "tags": [
+        "bundle",
+        "tooling"
+      ],
+      "source": "./packages/developer-tools"
+    },
+    {
+      "name": "diagrams",
+      "tags": [
+        "bundle",
+        "diagrams"
+      ],
+      "source": "./packages/diagrams"
+    },
+    {
+      "name": "docs-architecture",
+      "tags": [
+        "bundle",
+        "documentation"
+      ],
+      "source": "./packages/docs-architecture"
+    },
+    {
+      "name": "eli5",
+      "tags": [
+        "skill",
+        "planning",
+        "explanation"
+      ],
+      "source": "./packages/eli5"
+    },
+    {
+      "name": "explore",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "navigation"
+      ],
+      "source": "./packages/explore"
+    },
+    {
+      "name": "frontend",
+      "tags": [
+        "bundle",
+        "frontend"
+      ],
+      "source": "./packages/frontend"
+    },
+    {
+      "name": "go-quality",
+      "tags": [
+        "skill",
+        "languages",
+        "go"
+      ],
+      "source": "./packages/go-quality"
+    },
+    {
+      "name": "governance",
+      "tags": [
+        "bundle",
+        "governance"
+      ],
+      "source": "./packages/governance"
+    },
+    {
+      "name": "handover",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "handover"
+      ],
+      "source": "./packages/handover"
+    },
+    {
+      "name": "hyperresearch",
+      "tags": [
+        "skill",
+        "research",
+        "deep-research"
+      ],
+      "source": "./packages/hyperresearch"
+    },
+    {
+      "name": "incident-response",
+      "tags": [
+        "bundle",
+        "incident"
+      ],
+      "source": "./packages/incident-response"
+    },
+    {
+      "name": "infrastructure",
+      "tags": [
+        "bundle",
+        "infrastructure"
+      ],
+      "source": "./packages/infrastructure"
+    },
+    {
+      "name": "language-arm-cortex",
+      "tags": [
+        "bundle",
+        "embedded",
+        "arm"
+      ],
+      "source": "./packages/language-arm-cortex"
+    },
+    {
+      "name": "language-dotnet",
+      "tags": [
+        "bundle",
+        "dotnet"
+      ],
+      "source": "./packages/language-dotnet"
+    },
+    {
+      "name": "language-functional",
+      "tags": [
+        "bundle",
+        "functional"
+      ],
+      "source": "./packages/language-functional"
+    },
+    {
+      "name": "language-go",
+      "tags": [
+        "bundle",
+        "go"
+      ],
+      "source": "./packages/language-go"
+    },
+    {
+      "name": "language-julia",
+      "tags": [
+        "bundle",
+        "julia"
+      ],
+      "source": "./packages/language-julia"
+    },
+    {
+      "name": "language-jvm",
+      "tags": [
+        "bundle",
+        "jvm"
+      ],
+      "source": "./packages/language-jvm"
+    },
+    {
+      "name": "language-python",
+      "tags": [
+        "bundle",
+        "python"
+      ],
+      "source": "./packages/language-python"
+    },
+    {
+      "name": "language-rust",
+      "tags": [
+        "bundle",
+        "rust"
+      ],
+      "source": "./packages/language-rust"
+    },
+    {
+      "name": "language-shell",
+      "tags": [
+        "bundle",
+        "shell"
+      ],
+      "source": "./packages/language-shell"
+    },
+    {
+      "name": "language-steering-go",
+      "tags": [
+        "steering",
+        "go"
+      ],
+      "source": "./packages/language-steering-go"
+    },
+    {
+      "name": "language-steering-python",
+      "tags": [
+        "steering",
+        "python"
+      ],
+      "source": "./packages/language-steering-python"
+    },
+    {
+      "name": "language-steering-rust",
+      "tags": [
+        "steering",
+        "rust"
+      ],
+      "source": "./packages/language-steering-rust"
+    },
+    {
+      "name": "language-steering-terraform",
+      "tags": [
+        "steering",
+        "terraform"
+      ],
+      "source": "./packages/language-steering-terraform"
+    },
+    {
+      "name": "language-steering-typescript",
+      "tags": [
+        "steering",
+        "typescript"
+      ],
+      "source": "./packages/language-steering-typescript"
+    },
+    {
+      "name": "language-terraform",
+      "tags": [
+        "bundle",
+        "terraform"
+      ],
+      "source": "./packages/language-terraform"
+    },
+    {
+      "name": "language-typescript",
+      "tags": [
+        "bundle",
+        "typescript"
+      ],
+      "source": "./packages/language-typescript"
+    },
+    {
+      "name": "language-web-scripting",
+      "tags": [
+        "bundle",
+        "php",
+        "ruby"
+      ],
+      "source": "./packages/language-web-scripting"
+    },
+    {
+      "name": "matt-skills",
+      "tags": [
+        "bundle",
+        "matt-pocock",
+        "workflows"
+      ],
+      "source": "./packages/matt-skills"
+    },
+    {
+      "name": "mcp-codebase-memory",
+      "tags": [
+        "mcp",
+        "codebase"
+      ],
+      "source": "./packages/mcp-codebase-memory"
+    },
+    {
+      "name": "mcp-context7",
+      "tags": [
+        "mcp",
+        "docs"
+      ],
+      "source": "./packages/mcp-context7"
+    },
+    {
+      "name": "mcp-package-version",
+      "tags": [
+        "mcp",
+        "versions"
+      ],
+      "source": "./packages/mcp-package-version"
+    },
+    {
+      "name": "mcp-playwright",
+      "tags": [
+        "mcp",
+        "browser"
+      ],
+      "source": "./packages/mcp-playwright"
+    },
+    {
+      "name": "mcp-repomix",
+      "tags": [
+        "mcp",
+        "repomix"
+      ],
+      "source": "./packages/mcp-repomix"
+    },
+    {
+      "name": "mcp-serena",
+      "tags": [
+        "mcp",
+        "semantic"
+      ],
+      "source": "./packages/mcp-serena"
+    },
+    {
+      "name": "optimize-steering",
+      "tags": [
+        "skill",
+        "maintenance",
+        "steering"
+      ],
+      "source": "./packages/optimize-steering"
+    },
+    {
+      "name": "planning-product",
+      "tags": [
+        "bundle",
+        "planning"
+      ],
+      "source": "./packages/planning-product"
+    },
+    {
+      "name": "playwright",
+      "tags": [
+        "skill",
+        "frontend",
+        "browser"
+      ],
+      "source": "./packages/playwright"
+    },
+    {
+      "name": "presentation",
+      "tags": [
+        "bundle",
+        "slides"
+      ],
+      "source": "./packages/presentation"
+    },
+    {
+      "name": "project-lifecycle",
+      "tags": [
+        "bundle",
+        "lifecycle"
+      ],
+      "source": "./packages/project-lifecycle"
+    },
+    {
+      "name": "prompt-lookup",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "prompts"
+      ],
+      "source": "./packages/prompt-lookup"
+    },
+    {
+      "name": "python-quality",
+      "tags": [
+        "skill",
+        "languages",
+        "python"
+      ],
+      "source": "./packages/python-quality"
+    },
+    {
+      "name": "quick-commit",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "git"
+      ],
+      "source": "./packages/quick-commit"
+    },
+    {
+      "name": "research",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "research"
+      ],
+      "source": "./packages/research"
+    },
+    {
+      "name": "resume",
+      "tags": [
+        "bundle",
+        "resume"
+      ],
+      "source": "./packages/resume"
+    },
+    {
+      "name": "review",
+      "tags": [
+        "bundle",
+        "review"
+      ],
+      "source": "./packages/review"
+    },
+    {
+      "name": "rust-quality",
+      "tags": [
+        "skill",
+        "languages",
+        "rust"
+      ],
+      "source": "./packages/rust-quality"
+    },
+    {
+      "name": "security",
+      "tags": [
+        "bundle",
+        "security"
+      ],
+      "source": "./packages/security"
+    },
+    {
+      "name": "sniff",
+      "tags": [
+        "skill",
+        "quality",
+        "hardening"
+      ],
+      "source": "./packages/sniff"
+    },
+    {
+      "name": "speckit",
+      "tags": [
+        "bundle",
+        "speckit"
+      ],
+      "source": "./packages/speckit"
+    },
+    {
+      "name": "speckit-dag-hooks",
+      "tags": [
+        "bundle",
+        "speckit",
+        "hooks"
+      ],
+      "source": "./packages/speckit-dag-hooks"
+    },
+    {
+      "name": "steering-audit",
+      "tags": [
+        "skill",
+        "maintenance",
+        "steering"
+      ],
+      "source": "./packages/steering-audit"
+    },
+    {
+      "name": "steering-backend",
+      "tags": [
+        "steering",
+        "backend"
+      ],
+      "source": "./packages/steering-backend"
+    },
+    {
+      "name": "steering-data",
+      "tags": [
+        "steering",
+        "data"
+      ],
+      "source": "./packages/steering-data"
+    },
+    {
+      "name": "steering-docs-specs",
+      "tags": [
+        "steering",
+        "docs"
+      ],
+      "source": "./packages/steering-docs-specs"
+    },
+    {
+      "name": "steering-frontend",
+      "tags": [
+        "steering",
+        "frontend"
+      ],
+      "source": "./packages/steering-frontend"
+    },
+    {
+      "name": "steering-infrastructure",
+      "tags": [
+        "steering",
+        "infrastructure"
+      ],
+      "source": "./packages/steering-infrastructure"
+    },
+    {
+      "name": "steering-project-structure",
+      "tags": [
+        "steering",
+        "structure"
+      ],
+      "source": "./packages/steering-project-structure"
+    },
+    {
+      "name": "steering-speckit",
+      "tags": [
+        "steering",
+        "speckit"
+      ],
+      "source": "./packages/steering-speckit"
+    },
+    {
+      "name": "steering-subagent-routing",
+      "tags": [
+        "steering",
+        "routing"
+      ],
+      "source": "./packages/steering-subagent-routing"
+    },
+    {
+      "name": "steering-toolchain-defaults",
+      "tags": [
+        "steering",
+        "toolchain"
+      ],
+      "source": "./packages/steering-toolchain-defaults"
+    },
+    {
+      "name": "steering-tools-scripts",
+      "tags": [
+        "steering",
+        "tooling"
+      ],
+      "source": "./packages/steering-tools-scripts"
+    },
+    {
+      "name": "typescript-quality",
+      "tags": [
+        "skill",
+        "languages",
+        "typescript"
+      ],
+      "source": "./packages/typescript-quality"
+    },
+    {
+      "name": "unstuck",
+      "tags": [
+        "skill",
+        "debugging",
+        "escalation"
+      ],
+      "source": "./packages/unstuck"
+    },
+    {
+      "name": "verify",
+      "tags": [
+        "skill",
+        "quality",
+        "verification"
+      ],
+      "source": "./packages/verify"
+    },
+    {
+      "name": "web-fetch",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "web"
+      ],
+      "source": "./packages/web-fetch"
+    },
+    {
+      "name": "write-a-skill",
+      "tags": [
+        "skill",
+        "maintenance",
+        "authoring"
+      ],
+      "source": "./packages/write-a-skill"
+    }
+  ]
+}
