@@ -341,6 +341,30 @@
         }
       ]
     },
+    "packages/hooks-git-workflow": {
+      "release-type": "simple",
+      "component": "hooks-git-workflow",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-quality": {
+      "release-type": "simple",
+      "component": "hooks-quality",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hyperresearch": {
       "release-type": "simple",
       "component": "hyperresearch",

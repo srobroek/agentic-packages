@@ -1,5 +1,5 @@
 name: language-steering-typescript
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions."
 author: Sjors Robroek
 license: Apache-2.0

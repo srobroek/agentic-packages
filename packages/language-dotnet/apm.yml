@@ -1,5 +1,5 @@
 name: language-dotnet
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists."
 author: Sjors Robroek
 license: Apache-2.0

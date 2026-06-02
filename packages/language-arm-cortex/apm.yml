@@ -1,5 +1,5 @@
 name: language-arm-cortex
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists."
 author: Sjors Robroek
 license: Apache-2.0

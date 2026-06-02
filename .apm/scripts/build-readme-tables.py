@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Generate README inventory tables from indexes/*.json.
 
-Renders markdown tables for bundles, MCP packages, agents, and skills, then
-injects each table into README.md between named HTML-comment markers:
+Renders markdown tables for bundles, MCP packages, agents, skills, steering,
+and hook packages, then injects each table into README.md between named
+HTML-comment markers:
 
     <!-- BEGIN:bundles -->   ... generated table ...   <!-- END:bundles -->
     <!-- BEGIN:mcp -->       ...                        <!-- END:mcp -->
     <!-- BEGIN:agents -->    ...                        <!-- END:agents -->
     <!-- BEGIN:skills -->    ...                        <!-- END:skills -->
+    <!-- BEGIN:steering -->  ...                        <!-- END:steering -->
+    <!-- BEGIN:hooks -->     ...                        <!-- END:hooks -->
+
+The bundle table additionally renders a "Includes" column parsed from each
+bundle's apm.yml dependency list (first-party members by name, third-party
+deps summarized as "+N external").
 
 Run after `build-agentic-indexes.py`. Idempotent: re-running with unchanged
 indexes produces no diff. Pass --check to fail (exit 1) when README.md is out
@@ -49,7 +56,7 @@ PACKAGES_DIR = ROOT / "packages"
 def _classify(name: str) -> str:
     """Classify a package by name + on-disk shape.
 
-    Returns one of: agent, mcp, steering, skill, bundle.
+    Returns one of: agent, mcp, steering, hooks, skill, bundle.
     """
     if name.startswith("agent-"):
         return "agent"
@@ -57,6 +64,8 @@ def _classify(name: str) -> str:
         return "mcp"
     if name.startswith("steering-") or name.startswith("language-steering-"):
         return "steering"
+    if name.startswith("hooks-"):
+        return "hooks"
     # A single-skill package has SKILL.md at its root.
     if (PACKAGES_DIR / name / "SKILL.md").is_file():
         return "skill"
@@ -72,8 +81,78 @@ def _rows_for(kind: str) -> list[list[str]]:
     ]
 
 
+# --- Bundle "Includes" column: parse each bundle's apm.yml dependency list ---
+
+_DEP_BLOCK = re.compile(r"dependencies:\s*\n\s*apm:\s*\n((?:[ \t]*-[ \t]*.*\n?)+)")
+
+
+def _bundle_includes(name: str) -> str:
+    """Render a bundle's members as a compact list.
+
+    First-party members (``<pkg>@srobroek-agentic``) are shown by bare name as
+    inline code. Third-party deps are summarized as ``+N external`` so the cell
+    stays scannable.
+    """
+    manifest = PACKAGES_DIR / name / "apm.yml"
+    if not manifest.is_file():
+        return ""
+    m = _DEP_BLOCK.search(manifest.read_text(encoding="utf-8"))
+    if not m:
+        return ""
+    first_party: list[str] = []
+    external = 0
+    for line in m.group(1).strip().splitlines():
+        dep = line.strip().lstrip("-").strip()
+        if not dep:
+            continue
+        if dep.endswith("@srobroek-agentic"):
+            first_party.append(dep.rsplit("@", 1)[0])
+        else:
+            external += 1
+    parts = [f"`{d}`" for d in first_party]
+    if external:
+        parts.append(f"+{external} external")
+    return ", ".join(parts)
+
+
+def _bundle_summary(description: str) -> str:
+    """First clause of a bundle description, before the colon-introduced list."""
+    text = description.strip()
+    # Bundle descriptions are written as "Short purpose: comma, list, of, parts."
+    # Prefer the clause before the first colon (the "Purpose: detail" pattern).
+    if ":" in text:
+        head = text.split(":", 1)[0].strip()
+        if head and len(head) <= 90:
+            return head.rstrip(".")
+    # No usable colon: take the first sentence, but only break on a period that
+    # actually ends a sentence (". " or trailing ".") so dotted tokens like
+    # "draw.io" don't truncate the summary mid-word.
+    m = re.search(r"\.(?:\s|$)", text)
+    head = text[: m.start()] if m else text
+    return head.strip().rstrip(".")
+
+
 def bundles_table() -> str:
-    return render_table(["Bundle", "Description"], _rows_for("bundle"))
+    packages = load("packages")
+    rows = []
+    for p in sorted(packages, key=lambda p: p["name"]):
+        if _classify(p["name"]) != "bundle":
+            continue
+        includes = _bundle_includes(p["name"])
+        if not includes:
+            # No apm dependency block: a self-contained package ships its own
+            # primitives under .apm/ rather than aggregating other packages.
+            includes = "self-contained" if (PACKAGES_DIR / p["name"] / ".apm").is_dir() else "external packages"
+        rows.append([
+            f"`{p['name']}`",
+            _bundle_summary(p.get("description", "")),
+            includes,
+        ])
+    return render_table(["Bundle", "What it gives you", "Includes"], rows)
+
+
+def hooks_table() -> str:
+    return render_table(["Hook Package", "Description"], _rows_for("hooks"))
 
 
 def mcp_table() -> str:
@@ -98,6 +177,7 @@ SECTIONS = {
     "agents": agents_table,
     "skills": skills_table,
     "steering": steering_table,
+    "hooks": hooks_table,
 }
 
 

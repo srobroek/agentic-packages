@@ -24,17 +24,6 @@
             "command": "./scripts/validate-d2.sh",
             "timeout": 5,
             "statusMessage": "Checking D2 diagram quality..."
-          },
-          {
-            "type": "command",
-            "command": "./scripts/quality-edit-advisory.sh",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "./scripts/debug-stuck-detector.sh",
-            "async": true,
-            "timeout": 3
           }
         ]
       },
@@ -43,55 +32,14 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(cargo test*)|Bash(just test*)|Bash(pnpm test*)|Bash(pnpm run test*)|Bash(pytest*)|Bash(python -m pytest*)|Bash(go test*)|Bash(dotnet test*)|Bash(vitest*)|Bash(jest*)|Bash(cargo clippy*)|Bash(ruff check*)|Bash(cargo build*)|Bash(just build*)|Bash(pnpm run build*)",
-            "command": "./scripts/test-state-tracker.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/speckit-task-commit-check.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/stuck-reset.sh",
-            "async": true,
-            "timeout": 2
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/reindex-after-commit.sh",
-            "async": true,
-            "timeout": 30
-          },
-          {
-            "type": "command",
             "if": "Bash(git merge*)",
             "command": "./scripts/post-merge-cleanup.sh",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "if": "Bash(git switch -c*)|Bash(git switch --create*)|Bash(git checkout -b*)|Bash(git checkout -B*)|Bash(git worktree add*)|Bash(git merge*)|Bash(git pull*)|Bash(git rebase*)",
-            "command": "./scripts/repomix-refresh-snapshot.sh",
-            "async": true,
-            "timeout": 30
           }
         ]
       }
     ],
     "PreToolUse": [
-      {
-        "matcher": "Grep|Glob|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/code-discovery-steer.sh",
-            "timeout": 3
-          }
-        ]
-      },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
@@ -102,16 +50,6 @@
           {
             "type": "command",
             "command": "./scripts/chezmoi-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Edit(Cargo.toml)|Edit(package.json)|Edit(pyproject.toml)|Edit(go.mod)|Edit(Gemfile)|Edit(composer.json)|Write(Cargo.toml)|Write(package.json)|Write(pyproject.toml)|Write(go.mod)|Write(Gemfile)|Write(composer.json)",
-            "command": "./scripts/package-file-warn.sh"
-          },
-          {
-            "type": "command",
-            "command": "./scripts/coder-delegation-reminder.sh",
-            "timeout": 3
           }
         ]
       },
@@ -133,23 +71,8 @@
           },
           {
             "type": "command",
-            "if": "Bash(pnpm add*)|Bash(cargo add*)|Bash(uv add*)|Bash(pip install*)",
-            "command": "./scripts/pkg-version-warn.sh"
-          },
-          {
-            "type": "command",
             "if": "Bash(git *)",
             "command": "./scripts/git-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/pre-commit-test-gate.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/quality-before-commit.sh"
           },
           {
             "type": "command",
@@ -168,29 +91,8 @@
           },
           {
             "type": "command",
-            "if": "Bash(gh issue close*)|Bash(*gh issue close*)|Bash(glab issue close*)",
-            "command": "./scripts/speckit-issue-close-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(gh pr create*)|Bash(*gh pr create*)|Bash(*gh-api.py*pr create*)|Bash(glab mr create*)|Bash(*glab mr create*)",
-            "command": "./scripts/speckit-pr-issue-refs.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(gh issue create*)|Bash(*gh issue create*)|Bash(glab issue create*)|Bash(*glab issue create*)",
-            "command": "./scripts/speckit-issue-label-guard.sh"
-          },
-          {
-            "type": "command",
             "if": "Bash(git merge*)",
             "command": "./scripts/no-ff-guard.sh",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/attribution-guard.sh",
             "timeout": 3
           },
           {
@@ -208,15 +110,6 @@
             "if": "Agent(*)",
             "command": "./scripts/concurrent-limit.sh",
             "timeout": 3
-          }
-        ]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/speckit-context7-reminder.sh"
           }
         ]
       }
@@ -245,27 +138,10 @@
         ]
       }
     ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/subagent-context-inject.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "startup",
         "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/codebase-index.sh",
-            "async": true,
-            "statusMessage": "Indexing codebase..."
-          },
           {
             "type": "command",
             "command": "./scripts/worktree-orphan-cleanup.sh",
@@ -287,20 +163,6 @@
           {
             "type": "command",
             "command": "./scripts/worktree-create.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/speckit-stop-gate.sh"
-          },
-          {
-            "type": "command",
-            "command": "./scripts/uncommitted-warn.sh"
           }
         ]
       }
@@ -352,10 +214,6 @@
           {
             "type": "command",
             "command": "./scripts/branch-check.sh"
-          },
-          {
-            "type": "command",
-            "command": "./scripts/speckit-deferred-issues.sh"
           }
         ]
       }

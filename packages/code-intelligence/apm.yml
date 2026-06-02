@@ -1,5 +1,5 @@
 name: code-intelligence
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins."
 author: Sjors Robroek
 license: Apache-2.0

@@ -9,12 +9,9 @@ dependencies:
 
 scripts:
   install-agentic-tools: "apm install --target claude,codex,agent-skills"
-  prune-stale-local-packages: "python3 apm_modules/_local/agentic-packages/.apm/scripts/prune-stale-local-packages.py"
-  compile-agentic-tools: "apm compile --target codex,claude --no-constitution"
-  fix-context-links: "python3 apm_modules/_local/agentic-packages/.apm/scripts/fix-context-links.py"
-  patch-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
-  audit-agentic-tools: "python3 apm_modules/_local/agentic-packages/.apm/scripts/audit-agentic-assets.py"
-  setup-agentic-tools: "apm run install-agentic-tools && apm run prune-stale-local-packages && apm run compile-agentic-tools && apm run fix-context-links && apm run patch-agentic-tools && apm run audit-agentic-tools"
+  patch-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
+  audit-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/audit-agentic-assets.py"
+  setup-agentic-tools: "apm run install-agentic-tools && apm compile --target codex,claude --no-constitution && apm run patch-agentic-tools && apm run audit-agentic-tools"
 
 compilation:
   strategy: distributed

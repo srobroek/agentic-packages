@@ -1,5 +1,5 @@
 name: language-functional
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists."
 author: Sjors Robroek
 license: Apache-2.0

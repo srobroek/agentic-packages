@@ -1,46 +1,58 @@
 [
   {
-    "description": "Read-only adversarial debugger for the unstuck workflow. Investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files.",
+    "description": "Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adversarial",
       "agent-adversarial-challenger",
       "all",
-      "alternative",
+      "alternatives",
       "and",
       "apache-2.0",
+      "application.",
       "assumptions",
+      "attacking",
       "author",
       "auto",
-      "behind",
-      "causes",
-      "challenges",
-      "debugger",
+      "by",
+      "challenger",
+      "counter-arguments",
+      "critic",
+      "critique",
+      "debugging",
       "description",
+      "design",
       "editing",
+      "escalation",
       "evidence-backed",
-      "failed",
       "files.",
-      "fixes",
-      "for",
+      "fix",
+      "generate",
+      "half",
       "hybrid",
+      "hypothesis",
       "includes",
       "independently",
-      "investigates",
+      "is",
+      "its",
       "license",
+      "loop",
       "name",
+      "of",
+      "one",
+      "or",
+      "plan",
       "read-only",
-      "returns",
+      "returning",
       "robroek",
       "sjors",
+      "stress-tests",
       "target",
       "the",
       "type",
       "unstuck",
       "version",
-      "without",
-      "workflow.",
-      "x-release-please-version"
+      "without"
     ],
     "name": "agent-adversarial-challenger",
     "path": "packages/agent-adversarial-challenger",
@@ -49,7 +61,7 @@
   {
     "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-coder",
       "all",
       "and",
@@ -76,8 +88,7 @@
       "tests",
       "type",
       "version",
-      "within",
-      "x-release-please-version"
+      "within"
     ],
     "name": "agent-coder",
     "path": "packages/agent-coder",
@@ -86,7 +97,7 @@
   {
     "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-external-repo-worker",
       "all",
       "an",
@@ -127,8 +138,7 @@
       "verification",
       "version",
       "work.",
-      "works",
-      "x-release-please-version"
+      "works"
     ],
     "name": "agent-external-repo-worker",
     "path": "packages/agent-external-repo-worker",
@@ -137,7 +147,7 @@
   {
     "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-pr-reviewer",
       "all",
       "and",
@@ -163,8 +173,7 @@
       "subagent",
       "target",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "agent-pr-reviewer",
     "path": "packages/agent-pr-reviewer",
@@ -173,7 +182,7 @@
   {
     "description": "Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-coder",
       "agent-pr-reviewer",
       "agentic",
@@ -225,7 +234,6 @@
       "write",
       "write-a-skill",
       "wshobson",
-      "x-release-please-version",
       "your"
     ],
     "name": "agentic-maintenance",
@@ -369,7 +377,7 @@
   {
     "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-pr-reviewer",
       "all",
       "and",
@@ -414,8 +422,7 @@
       "understanding",
       "version",
       "web-fetch",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "code-intelligence",
     "path": "packages/code-intelligence",
@@ -959,7 +966,7 @@
   {
     "description": "Meta-bundle for the shared project baseline. Aggregates the project-lifecycle, code-intelligence, and agentic-maintenance bundles, plus grill/diagnose workflows and context/orchestration plugins. Install this to get a sensible default toolkit for any repo.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-orchestration#main",
       "agentic-maintenance",
       "aggregates",
@@ -1012,8 +1019,7 @@
       "type",
       "version",
       "workflows",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "core",
     "path": "packages/core",
@@ -1022,7 +1028,7 @@
   {
     "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "ai",
       "all",
       "and",
@@ -1064,8 +1070,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "data-ai",
     "path": "packages/data-ai",
@@ -1212,7 +1217,7 @@
   {
     "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adversarial-challenger",
       "agent-adversarial-challenger",
       "all",
@@ -1252,7 +1257,6 @@
       "unstuck",
       "version",
       "workflow.",
-      "x-release-please-version",
       "you"
     ],
     "name": "debugging",
@@ -1260,20 +1264,17 @@
     "type": "package"
   },
   {
-    "description": "Bundle: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows. Contains: packages developer-essentials, debugging-toolkit, comprehensive-review, git-pr-workflows, documentation-generation.",
+    "description": "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apm",
       "author",
       "auto",
-      "bundle",
-      "comprehensive-review",
+      "comprehensive",
       "comprehensive-review#main",
-      "contains",
       "debugging",
-      "debugging-toolkit",
       "debugging-toolkit#main",
       "dependencies",
       "description",
@@ -1281,14 +1282,10 @@
       "developer-essentials",
       "developer-essentials#main",
       "developer-tools",
-      "development",
-      "documentation",
+      "documentation-generation",
       "documentation-generation#main",
-      "documentation-generation.",
       "everyday",
-      "for",
-      "generation",
-      "git-pr-workflows",
+      "git",
       "git-pr-workflows#main",
       "hobson",
       "hybrid",
@@ -1296,7 +1293,6 @@
       "license",
       "mit",
       "name",
-      "packages",
       "plugins",
       "pr",
       "review",
@@ -1316,7 +1312,7 @@
   {
     "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agents365-ai",
       "all",
       "and",
@@ -1361,43 +1357,37 @@
     "type": "package"
   },
   {
-    "description": "Bundle: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows. Contains: packages documentation-standards, code-documentation, documentation-generation, c4-architecture.",
+    "description": "Documentation and architecture: Hobson documentation standards, code documentation, doc generation, and C4 architecture workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apm",
       "architecture",
       "author",
       "auto",
-      "bundle",
       "c4",
       "c4-architecture#main",
-      "c4-architecture.",
-      "code-documentation",
+      "code",
       "code-documentation#main",
-      "contains",
       "dependencies",
       "description",
+      "doc",
       "docs-architecture",
       "documentation",
-      "documentation-generation",
       "documentation-generation#main",
-      "documentation-standards",
       "documentation-standards#main",
-      "hads",
+      "generation",
       "hobson",
       "hybrid",
       "includes",
       "license",
-      "mermaid",
       "mit",
       "name",
-      "openapi",
-      "packages",
       "plugins",
       "robroek",
       "sjors",
+      "standards",
       "target",
       "type",
       "version",
@@ -1602,7 +1592,7 @@
   {
     "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "accessibility",
       "accessibility-compliance#main",
       "all",
@@ -1653,8 +1643,7 @@
       "ui",
       "ui-design#main",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "frontend",
     "path": "packages/frontend",
@@ -1729,9 +1718,9 @@
     "type": "package"
   },
   {
-    "description": "Bundle: Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows. Contains: packages protect-mcp, signed-audit-trails, review-agent-governance, block-no-verify.",
+    "description": "Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apm",
@@ -1739,9 +1728,7 @@
       "author",
       "auto",
       "block-no-verify#main",
-      "block-no-verify.",
-      "bundle",
-      "contains",
+      "blocking",
       "dependencies",
       "description",
       "governance",
@@ -1752,18 +1739,15 @@
       "mcp",
       "mit",
       "name",
-      "packages",
+      "no-verify",
       "plugins",
       "policy",
-      "protect-mcp",
       "protect-mcp#main",
       "protection",
       "review",
-      "review-agent-governance",
       "review-agent-governance#main",
       "robroek",
       "signed",
-      "signed-audit-trails",
       "signed-audit-trails#main",
       "sjors",
       "target",
@@ -1923,6 +1907,94 @@
     "type": "package"
   },
   {
+    "description": "Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
+    "keywords": [
+      "0.0.1",
+      "about",
+      "all",
+      "and",
+      "apache-2.0",
+      "at",
+      "author",
+      "auto",
+      "claude",
+      "codex",
+      "commits",
+      "cross-tool",
+      "description",
+      "edit-vs-test",
+      "end.",
+      "gate",
+      "git",
+      "hooks",
+      "hooks-git-workflow",
+      "includes",
+      "instructions",
+      "license",
+      "name",
+      "on",
+      "opt-in",
+      "passing",
+      "robroek",
+      "session",
+      "sjors",
+      "state",
+      "target",
+      "tests",
+      "track",
+      "type",
+      "uncommitted",
+      "version",
+      "warn",
+      "work",
+      "workflow"
+    ],
+    "name": "hooks-git-workflow",
+    "path": "packages/hooks-git-workflow",
+    "type": "package"
+  },
+  {
+    "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex).",
+    "keywords": [
+      "0.0.1",
+      "advisory",
+      "after",
+      "all",
+      "and",
+      "apache-2.0",
+      "author",
+      "auto",
+      "before",
+      "check",
+      "claude",
+      "code-quality",
+      "codex",
+      "commits.",
+      "cross-tool",
+      "description",
+      "edits",
+      "feedback",
+      "formatting",
+      "hooks",
+      "hooks-quality",
+      "includes",
+      "instructions",
+      "license",
+      "linting",
+      "name",
+      "opt-in",
+      "quality",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "hooks-quality",
+    "path": "packages/hooks-quality",
+    "type": "package"
+  },
+  {
     "description": "Run the third-party HyperResearch deep research harness. Use when the user asks for deep research, adversarial source-backed research, long-form research reports, or HyperResearch specifically.",
     "keywords": [
       "1.",
@@ -2033,7 +2105,7 @@
   {
     "description": "Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2071,8 +2143,7 @@
       "target",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "incident-response",
     "path": "packages/incident-response",
@@ -2081,7 +2152,7 @@
   {
     "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2120,8 +2191,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "infrastructure",
     "path": "packages/infrastructure",
@@ -2130,7 +2200,7 @@
   {
     "description": "ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "apache-2.0",
       "apm",
@@ -2156,8 +2226,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-arm-cortex",
     "path": "packages/language-arm-cortex",
@@ -2166,7 +2235,7 @@
   {
     "description": ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2193,8 +2262,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-dotnet",
     "path": "packages/language-dotnet",
@@ -2203,7 +2271,7 @@
   {
     "description": "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2230,8 +2298,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-functional",
     "path": "packages/language-functional",
@@ -2240,7 +2307,7 @@
   {
     "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2270,8 +2337,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-go",
     "path": "packages/language-go",
@@ -2280,7 +2346,7 @@
   {
     "description": "Julia development toolkit: Hobson's scientific-computing julia-development specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "apache-2.0",
       "apm",
@@ -2305,8 +2371,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-julia",
     "path": "packages/language-julia",
@@ -2315,7 +2380,7 @@
   {
     "description": "JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2343,8 +2408,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-jvm",
     "path": "packages/language-jvm",
@@ -2353,7 +2417,7 @@
   {
     "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2383,8 +2447,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-python",
     "path": "packages/language-python",
@@ -2393,7 +2456,7 @@
   {
     "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2423,8 +2486,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-rust",
     "path": "packages/language-rust",
@@ -2433,7 +2495,7 @@
   {
     "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2460,8 +2522,7 @@
       "toolkit",
       "type",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-shell",
     "path": "packages/language-shell",
@@ -2470,7 +2531,7 @@
   {
     "description": "Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "apache-2.0",
@@ -2511,8 +2572,7 @@
       "to",
       "type",
       "urfave",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "language-steering-go",
     "path": "packages/language-steering-go",
@@ -2521,7 +2581,7 @@
   {
     "description": "Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "and",
@@ -2562,8 +2622,7 @@
       "tooling",
       "type",
       "uv",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "language-steering-python",
     "path": "packages/language-steering-python",
@@ -2572,7 +2631,7 @@
   {
     "description": "Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "anyhow",
@@ -2613,8 +2672,7 @@
       "thiserror",
       "to",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "language-steering-rust",
     "path": "packages/language-steering-rust",
@@ -2623,7 +2681,7 @@
   {
     "description": "Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "and",
@@ -2666,8 +2724,7 @@
       "to",
       "type",
       "validate",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "language-steering-terraform",
     "path": "packages/language-steering-terraform",
@@ -2676,7 +2733,7 @@
   {
     "description": "Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "and",
@@ -2716,7 +2773,6 @@
       "typescript",
       "version",
       "vitest",
-      "x-release-please-version",
       "zod"
     ],
     "name": "language-steering-typescript",
@@ -2726,7 +2782,7 @@
   {
     "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2760,7 +2816,6 @@
       "type",
       "version",
       "wshobson",
-      "x-release-please-version",
       "yet."
     ],
     "name": "language-terraform",
@@ -2770,7 +2825,7 @@
   {
     "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2803,8 +2858,7 @@
       "typescript",
       "typescript-quality",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-typescript",
     "path": "packages/language-typescript",
@@ -2813,7 +2867,7 @@
   {
     "description": "PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2840,8 +2894,7 @@
       "web",
       "web-scripting",
       "web-scripting#main",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "language-web-scripting",
     "path": "packages/language-web-scripting",
@@ -2850,7 +2903,7 @@
   {
     "description": "Bundle of Matt Pocock's engineering and productivity skills: diagnose, grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out, improve-codebase-architecture, caveman, and setup.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2896,7 +2949,6 @@
       "triage#main",
       "type",
       "version",
-      "x-release-please-version",
       "zoom-out",
       "zoom-out#main"
     ],
@@ -2907,7 +2959,7 @@
   {
     "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "apache-2.0",
       "author",
@@ -2944,8 +2996,7 @@
       "the",
       "transport",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-codebase-memory",
     "path": "packages/mcp-codebase-memory",
@@ -2954,7 +3005,7 @@
   {
     "description": "MCP server package for Context7, providing current library and framework documentation lookups.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -2989,8 +3040,7 @@
       "transport",
       "type",
       "upstash",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-context7",
     "path": "packages/mcp-context7",
@@ -2999,7 +3049,7 @@
   {
     "description": "MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adding",
       "all",
       "apache-2.0",
@@ -3032,8 +3082,7 @@
       "transport",
       "type",
       "upgrading",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-package-version",
     "path": "packages/mcp-package-version",
@@ -3042,7 +3091,7 @@
   {
     "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -3076,8 +3125,7 @@
       "type",
       "ui",
       "verification.",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-playwright",
     "path": "packages/mcp-playwright",
@@ -3086,7 +3134,7 @@
   {
     "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "analysis",
       "and",
@@ -3119,8 +3167,7 @@
       "target",
       "transport",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-repomix",
     "path": "packages/mcp-repomix",
@@ -3129,7 +3176,7 @@
   {
     "description": "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -3191,8 +3238,7 @@
       "transport",
       "type",
       "upper",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "mcp-serena",
     "path": "packages/mcp-serena",
@@ -3350,7 +3396,7 @@
   {
     "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -3391,7 +3437,6 @@
       "version",
       "web-fetch",
       "workflows.",
-      "x-release-please-version",
       "zoom-out",
       "zoom-out#main"
     ],
@@ -3519,7 +3564,7 @@
   {
     "description": "Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-toolkit",
       "all",
       "and",
@@ -3565,7 +3610,7 @@
   {
     "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "after",
       "agent-pr-reviewer",
       "agent.",
@@ -3615,8 +3660,7 @@
       "via",
       "work",
       "workflows",
-      "write",
-      "x-release-please-version"
+      "write"
     ],
     "name": "project-lifecycle",
     "path": "packages/project-lifecycle",
@@ -4075,7 +4119,7 @@
   {
     "description": "Resume bundle for focused resume tailoring and broad career-support workflows.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apm",
@@ -4113,7 +4157,7 @@
   {
     "description": "Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "agent-pr-reviewer",
       "all",
       "and",
@@ -4159,8 +4203,7 @@
       "verification",
       "verify",
       "version",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "review",
     "path": "packages/review",
@@ -4238,7 +4281,7 @@
   {
     "description": "Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "analysis",
       "and",
@@ -4273,8 +4316,7 @@
       "type",
       "version",
       "vulnerability",
-      "wshobson",
-      "x-release-please-version"
+      "wshobson"
     ],
     "name": "security",
     "path": "packages/security",
@@ -4403,9 +4445,11 @@
   {
     "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
+      "apache-2.0",
+      "author",
       "auto",
       "bugfix",
       "dag",
@@ -4416,14 +4460,17 @@
       "hybrid",
       "includes",
       "layers",
+      "license",
       "mandatory-gated",
       "mechanism",
       "name",
       "opinionated",
       "opt",
+      "robroek",
       "separately",
       "setup",
       "six",
+      "sjors",
       "skills.",
       "speckit",
       "speckit-dag-hooks",
@@ -4432,8 +4479,7 @@
       "the",
       "type",
       "version",
-      "workflow",
-      "x-release-please-version"
+      "workflow"
     ],
     "name": "speckit",
     "path": "packages/speckit",
@@ -4442,9 +4488,11 @@
   {
     "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
+      "apache-2.0",
       "apm",
+      "author",
       "auto",
       "be",
       "commands",
@@ -4460,6 +4508,7 @@
       "includes",
       "installed.",
       "instructions",
+      "license",
       "mandatory-gating",
       "name",
       "opinionated",
@@ -4469,7 +4518,9 @@
       "package",
       "precondition-violating",
       "requires",
+      "robroek",
       "ships",
+      "sjors",
       "speckit",
       "speckit-dag",
       "speckit-dag-hooks",
@@ -4481,8 +4532,7 @@
       "type",
       "version",
       "via",
-      "which",
-      "x-release-please-version"
+      "which"
     ],
     "name": "speckit-dag-hooks",
     "path": "packages/speckit-dag-hooks",
@@ -4620,7 +4670,7 @@
   {
     "description": "Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -4655,8 +4705,7 @@
       "target",
       "type",
       "version",
-      "worker",
-      "x-release-please-version"
+      "worker"
     ],
     "name": "steering-backend",
     "path": "packages/steering-backend",
@@ -4665,7 +4714,7 @@
   {
     "description": "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -4693,8 +4742,7 @@
       "steering.",
       "target",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "steering-data",
     "path": "packages/steering-data",
@@ -4703,7 +4751,7 @@
   {
     "description": "Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -4736,8 +4784,7 @@
       "target",
       "the",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "steering-docs-specs",
     "path": "packages/steering-docs-specs",
@@ -4746,7 +4793,7 @@
   {
     "description": "Opinionated frontend conventions: framework choice by surface (React/Vue/Next/Astro), UI library picks, app vs server state, and browser verification expectations. Opt-in steering -- install to adopt these frontend defaults.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "and",
@@ -4790,8 +4837,7 @@
       "verification",
       "version",
       "vs",
-      "vue",
-      "x-release-please-version"
+      "vue"
     ],
     "name": "steering-frontend",
     "path": "packages/steering-frontend",
@@ -4800,7 +4846,7 @@
   {
     "description": "Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -4830,8 +4876,7 @@
       "steering.",
       "target",
       "type",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "steering-infrastructure",
     "path": "packages/steering-infrastructure",
@@ -4840,9 +4885,11 @@
   {
     "description": "Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
+      "apache-2.0",
+      "author",
       "auto",
       "boundaries",
       "capability-first",
@@ -4854,13 +4901,16 @@
       "instructions",
       "layout",
       "libraries",
+      "license",
       "live.",
       "name",
       "opt-in",
       "ownership",
       "repo",
       "repository",
+      "robroek",
       "shared",
+      "sjors",
       "specs",
       "steering",
       "steering-project-structure",
@@ -4869,8 +4919,7 @@
       "tools",
       "type",
       "version",
-      "where",
-      "x-release-please-version"
+      "where"
     ],
     "name": "steering-project-structure",
     "path": "packages/steering-project-structure",
@@ -4879,11 +4928,13 @@
   {
     "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "alongside",
       "and",
+      "apache-2.0",
+      "author",
       "auto",
       "command",
       "dag",
@@ -4892,6 +4943,7 @@
       "includes",
       "install",
       "instructions",
+      "license",
       "mandatory-gated",
       "name",
       "opinionated",
@@ -4900,7 +4952,9 @@
       "phase",
       "process.",
       "reference.",
+      "robroek",
       "rules",
+      "sjors",
       "spec-driven",
       "specific",
       "speckit",
@@ -4911,8 +4965,7 @@
       "to",
       "type",
       "version",
-      "workflow",
-      "x-release-please-version"
+      "workflow"
     ],
     "name": "steering-speckit",
     "path": "packages/steering-speckit",
@@ -4921,9 +4974,11 @@
   {
     "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
+      "apache-2.0",
+      "author",
       "auto",
       "choice",
       "delegate",
@@ -4933,13 +4988,16 @@
       "for",
       "includes",
       "instructions",
+      "license",
       "model",
       "name",
       "opt-in",
       "owns",
       "parallel",
       "policy",
+      "robroek",
       "routing",
+      "sjors",
       "steering",
       "steering-subagent-routing",
       "subagents",
@@ -4950,8 +5008,7 @@
       "verification.",
       "version",
       "who",
-      "work",
-      "x-release-please-version"
+      "work"
     ],
     "name": "steering-subagent-routing",
     "path": "packages/steering-subagent-routing",
@@ -4960,10 +5017,12 @@
   {
     "description": "Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "adopt",
       "all",
       "and",
+      "apache-2.0",
+      "author",
       "auto",
       "choices",
       "default",
@@ -4975,6 +5034,7 @@
       "infrastructure",
       "install",
       "instructions",
+      "license",
       "name",
       "observability.",
       "opinionated",
@@ -4982,7 +5042,9 @@
       "or",
       "project.",
       "quality",
+      "robroek",
       "setting",
+      "sjors",
       "stack",
       "standardizing",
       "steering",
@@ -4992,8 +5054,7 @@
       "to",
       "type",
       "up",
-      "version",
-      "x-release-please-version"
+      "version"
     ],
     "name": "steering-toolchain-defaults",
     "path": "packages/steering-toolchain-defaults",
@@ -5002,7 +5063,7 @@
   {
     "description": "Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering.",
     "keywords": [
-      "0.1.0",
+      "0.0.1",
       "all",
       "and",
       "apache-2.0",
@@ -5037,8 +5098,7 @@
       "tooling",
       "type",
       "version",
-      "where",
-      "x-release-please-version"
+      "where"
     ],
     "name": "steering-tools-scripts",
     "path": "packages/steering-tools-scripts",

@@ -1,5 +1,5 @@
 name: security
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening."
 author: Sjors Robroek
 license: Apache-2.0

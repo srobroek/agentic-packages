@@ -1,5 +1,5 @@
 name: eli5
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Explain a topic at multiple depth levels, from simple to detailed, for layered understanding."
 author: Sjors Robroek
 license: Apache-2.0

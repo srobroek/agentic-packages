@@ -1,5 +1,5 @@
 name: language-steering-rust
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions."
 author: Sjors Robroek
 license: Apache-2.0

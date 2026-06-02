@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/package-file-warn.sh",
+            "if": "Edit(Cargo.toml)|Edit(package.json)|Edit(pyproject.toml)|Edit(go.mod)|Edit(Gemfile)|Edit(composer.json)|Write(Cargo.toml)|Write(package.json)|Write(pyproject.toml)|Write(go.mod)|Write(Gemfile)|Write(composer.json)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/pkg-version-warn.sh",
+            "if": "Bash(pnpm add*)|Bash(cargo add*)|Bash(uv add*)|Bash(pip install*)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 name: optimize-steering
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility."
 author: Sjors Robroek
 license: Apache-2.0

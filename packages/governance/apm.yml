@@ -1,6 +1,6 @@
 name: governance
-version: 0.1.0
-description: 'Bundle: Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows. Contains: packages protect-mcp, signed-audit-trails, review-agent-governance, block-no-verify.'
+version: 0.0.1
+description: "Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows."
 author: Sjors Robroek
 license: MIT
 type: hybrid

@@ -1,8 +1,8 @@
 name: srobroek-agentic
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
@@ -18,16 +18,9 @@ scripts:
   build-marketplace: "apm pack"
   build-artifacts: "python3 .apm/scripts/build-release-please.py && python3 .apm/scripts/build-agentic-indexes.py && python3 .apm/scripts/build-readme-tables.py && apm pack"
   install: "apm install --target claude,codex,agent-skills"
-  prune-stale-local-packages: "python3 .apm/scripts/prune-stale-local-packages.py"
-  compile: "apm compile --target codex,claude --no-constitution"
-  compile-codex: "apm compile --target codex --no-constitution"
-  compile-claude: "apm compile --target claude --no-constitution"
-  fix-context-links: "python3 .apm/scripts/fix-context-links.py"
   patch-agents: "python3 .apm/scripts/patch-runtime-agents.py --all"
-  patch-codex-agents: "python3 .apm/scripts/patch-runtime-agents.py --codex"
-  patch-claude-agents: "python3 .apm/scripts/patch-runtime-agents.py --claude"
   audit-agentic-assets: "python3 .apm/scripts/audit-agentic-assets.py"
-  setup: "apm run install && apm run prune-stale-local-packages && apm run compile && apm run fix-context-links && apm run patch-agents && apm run audit-agentic-assets"
+  setup: "apm run install && apm compile --target codex,claude --no-constitution && apm run patch-agents && apm run audit-agentic-assets"
 compilation:
   strategy: distributed
   source_attribution: true
@@ -153,6 +146,14 @@ marketplace:
       source: ./packages/handover
       category: project-lifecycle
       tags: [skill, lifecycle, handover]
+    - name: hooks-git-workflow
+      source: ./packages/hooks-git-workflow
+      category: project-lifecycle
+      tags: [hooks, git, commit]
+    - name: hooks-quality
+      source: ./packages/hooks-quality
+      category: quality
+      tags: [hooks, quality, lint]
     - name: hyperresearch
       source: ./packages/hyperresearch
       category: research

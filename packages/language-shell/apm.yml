@@ -1,5 +1,5 @@
 name: language-shell
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists."
 author: Sjors Robroek
 license: Apache-2.0

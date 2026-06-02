@@ -65,20 +65,23 @@ def parse_scalar_map(frontmatter: str) -> dict:
 
 
 def first_party_agent_dirs(root: Path) -> list[Path]:
-    candidates = [
-        root / ".apm" / "agents",
-        root / "apm_modules" / "_local" / "agentic-packages" / ".apm" / "agents",
-        root / "apm_modules" / "srobroek" / "agentic-packages" / ".apm" / "agents",
-    ]
-    candidates.extend(root.glob("apm_modules/**/agentic-packages/.apm/agents"))
-    candidates.extend(root.glob("apm_modules/**/.apm/agents"))
+    # Agent sources live in two shapes: flat per-agent packages
+    # (packages/agent-<name>/<name>.agent.md) and bundled agents under a
+    # package's .apm/agents/ (packages/speckit/.apm/agents/*.agent.md). In a
+    # consumer project both shapes appear under apm_modules/. Collect every
+    # directory that actually contains a *.agent.md source, layout-agnostic.
+    search_roots = [root, root / "packages", root / "apm_modules"]
 
     seen: set[Path] = set()
     dirs: list[Path] = []
-    for candidate in candidates:
-        if candidate.is_dir() and candidate not in seen:
-            seen.add(candidate)
-            dirs.append(candidate)
+    for base in search_roots:
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*.agent.md"):
+            parent = path.parent
+            if parent not in seen:
+                seen.add(parent)
+                dirs.append(parent)
     return dirs
 
 

@@ -1,6 +1,6 @@
 ---
 name: adversarial-challenger
-description: Read-only adversarial debugger for the unstuck workflow. Use after normal diagnosis stalls and the parent can provide observable facts only; investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files.
+description: Read-only adversarial challenger. Use to stress-test a plan, design, hypothesis, or proposed fix before committing to it: give it the claim plus observable facts and it investigates independently, attacks the assumptions, and returns evidence-backed counter-arguments and alternatives without editing files. The critic half of a generate/critique loop; escalating stalled debugging (after diagnosis loops) is one application.
 model: opus
 maxTurns: 25
 tools: ["terminal", "file-manager", "context7", "openaiDeveloperDocs", "codebase-memory-mcp", "fetcher", "playwright", "repomix", "terraform", "tool_search"]

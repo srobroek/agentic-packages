@@ -25,9 +25,10 @@ PACKAGES = ROOT / "packages"
 CONFIG = ROOT / "release-please-config.json"
 MANIFEST = ROOT / ".release-please-manifest.json"
 
-# Regex extra-file updater: bump the `version:` line in each package apm.yml.
-# release-please's generic updater keys off the `x-release-please-version`
-# annotation comment already present on those lines.
+# Each package tracks its own apm.yml `version:` via the yaml extra-file
+# updater (jsonpath $.version). The yaml updater rewrites the value in place
+# from the manifest by JSONPath, so the version line needs no release-please
+# annotation comment.
 CHANGELOG_SECTIONS = [
     {"type": "feat", "section": "Features"},
     {"type": "fix", "section": "Bug Fixes"},

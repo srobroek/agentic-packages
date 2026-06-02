@@ -1,5 +1,5 @@
 name: codebase-index
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Rebuild the codebase-memory graph index when it is missing or stale."
 author: Sjors Robroek
 license: Apache-2.0

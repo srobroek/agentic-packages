@@ -1,5 +1,5 @@
 name: language-terraform
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet."
 author: Sjors Robroek
 license: Apache-2.0

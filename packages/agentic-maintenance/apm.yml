@@ -1,5 +1,5 @@
 name: agentic-maintenance
-version: 0.1.0 # x-release-please-version
+version: 0.0.1
 description: "Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages."
 author: Sjors Robroek
 license: Apache-2.0

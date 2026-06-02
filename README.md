@@ -5,10 +5,13 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
 - **33 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **25 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **26 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
-- **16 steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **15 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **6 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **2 hook packages** -- opt-in lifecycle hooks (git-workflow, quality), cross-tool for Claude and Codex
+
+Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), unstuck (stuck detection), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
 
 ---
 
@@ -17,6 +20,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - [Quick start](#quick-start)
 - [Installing APM](#installing-apm)
 - [Adding the marketplace](#adding-the-marketplace)
+- [Consuming as a native plugin marketplace (no APM CLI)](#consuming-as-a-native-plugin-marketplace-no-apm-cli)
 - [Installing a bundle, package, or tool](#installing-a-bundle-package-or-tool)
 - [How bundles work](#how-bundles-work)
 - [Compiling for different targets](#compiling-for-different-targets)
@@ -98,6 +102,49 @@ dependencies:
 
 ---
 
+## Consuming as a native plugin marketplace (no APM CLI)
+
+`apm pack` generates native plugin-marketplace manifests committed at the repo root, so this catalog also works as a **first-class plugin marketplace** for Claude Code and Codex without installing the APM CLI:
+
+- `.claude-plugin/marketplace.json` -- Claude Code plugin marketplace (86 plugins)
+- `.agents/plugins/marketplace.json` -- Codex / cross-client plugin marketplace (86 plugins)
+
+Plugin `source` values are repo-relative (`./packages/<name>`). Claude resolves relative sources **only when the marketplace is added via Git** (the case here), so this works out of the box.
+
+### Claude Code
+
+Interactively:
+
+```text
+/plugin marketplace add srobroek/agentic-packages
+/plugin install core@srobroek-agentic
+```
+
+`/plugin marketplace add` accepts the `owner/repo` GitHub shorthand (append `@<ref>` to pin a branch or tag); `/plugin install <name>@srobroek-agentic` installs any catalog entry. Run `/plugin` for the interactive Discover menu.
+
+Non-interactively, in project `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "srobroek-agentic": {
+      "source": { "source": "github", "repo": "srobroek/agentic-packages" }
+    }
+  },
+  "enabledPlugins": [
+    { "marketplace": "srobroek-agentic", "plugin": "core" }
+  ]
+}
+```
+
+### Codex
+
+Codex reads the same catalog from `.agents/plugins/marketplace.json` (entries carry a `category` and an `installation`/`authentication` policy). Add the marketplace by repo and enable the plugins you want through Codex's plugin configuration; the entries resolve to the same `./packages/<name>` sources.
+
+> The APM CLI flow (above) and the native plugin flow (here) install the same packages from the same catalog -- pick whichever fits your setup. The APM flow additionally runs `apm compile` + `patch-agentic-tools`; native plugins are consumed directly by the runtime.
+
+---
+
 ## Installing a bundle, package, or tool
 
 All three are installed the same way -- by name from the marketplace, or by subdir from the repo.
@@ -122,19 +169,25 @@ Pick deployment targets explicitly with `--target` (otherwise APM auto-detects f
 apm install core@srobroek-agentic --target claude,codex,agent-skills
 ```
 
-After installing, run the **setup order** so steering lands in the right place and runtime agents are patched:
+After installing, compile steering into your runtime's context files:
 
 ```bash
 apm install --target claude,codex,agent-skills
 apm compile --target codex,claude --no-constitution
-apm run fix-context-links
-apm run patch-agentic-tools
-apm run audit-agentic-tools
 ```
 
-A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires these steps as `apm run setup-agentic-tools`.
+Then, **as an optional post-deploy step**, patch agent metadata that APM's generic conversion drops:
 
-> **Why the extra steps?** `apm install` deploys primitives (skills, agents, hooks, MCP); `apm compile` turns instructions into the root context files each runtime reads. `fix-context-links` repairs the relative `.context.md` links in the generated `AGENTS.md`/`CLAUDE.md` to point at the installed package location under `apm_modules/`. `patch-agentic-tools` restores Codex/Claude-specific model, reasoning-effort, sandbox, and permission fields that APM's generic conversion doesn't preserve.
+```bash
+apm run patch-agentic-tools   # apply tuned model / effort / sandbox / approval to deployed agents
+apm run audit-agentic-tools   # report runtime parity + agent metadata completeness
+```
+
+A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires all four steps as `apm run setup-agentic-tools`.
+
+> **Why patch?** `apm install` deploys primitives (skills, agents, hooks, MCP) and `apm compile` turns instructions into the root context files each runtime reads -- agents are **fully functional after these two steps**. APM preserves a Claude agent's top-level `model:`, but its generic conversion does not map the cross-tool `x-agentic` block: a Codex agent falls back to Codex defaults (no tuned model / reasoning-effort / sandbox / approval), and a Claude agent's `effort` / `permissions.mode` are not applied. `patch-agentic-tools` restores those fields on the already-deployed `.claude/agents/*.md` and `.codex/agents/*.toml`. Skip it if the runtime defaults are fine; run it to get the tuned profiles.
+>
+> Target one runtime by narrowing `--target` (for example `apm compile --target claude --no-constitution` for Claude-only); `--target codex,claude` compiles both in a single pass, and `patch-agentic-tools` patches whichever runtime dirs are present.
 
 ---
 
@@ -149,6 +202,8 @@ A bundle `apm.yml` typically lists:
 - the bundle's own `name`, `version`, and `description`
 
 **Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it depends on them, so a change to a member package propagates to every bundle that references it. Bundles can also depend on other bundles, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
+
+**Hooks ship with their owning package.** A package can carry `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `scripts/` directory; hook commands reference their scripts via `${PLUGIN_ROOT}/scripts/<name>.sh`. On install, APM deploys the scripts under `.claude/hooks/<pkg>/` and `.codex/hooks/<pkg>/`, rewrites `${PLUGIN_ROOT}`, and merges the hook config into `settings.json` / `hooks.json`. Codex only supports `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, and `Stop`; lifecycle events like `SessionStart` and `SubagentStart` are Claude-only, so those hooks ship in the claude variant only.
 
 Each package (skill, agent, and bundle) carries its own `apm.yml` and is versioned independently via release-please. The marketplace itself is hand-authored in the root [`apm.yml`](apm.yml) `marketplace:` block using local-path sources, and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
 
@@ -170,7 +225,6 @@ apm compile --target codex            # AGENTS.md only
 apm compile --target claude           # CLAUDE.md only
 apm compile --target codex,claude     # both (default for this project)
 apm compile --all                     # every canonical target
-apm run compile-claude                # convenience script for CLAUDE.md only
 ```
 
 `compilation.strategy: distributed` (set in `apm.yml`) places scoped instructions next to the code they apply to via `applyTo:` globs; `single-file` collapses everything into one root file.
@@ -181,7 +235,7 @@ apm run compile-claude                # convenience script for CLAUDE.md only
 
 ## SpecKit orchestration
 
-The `speckit` bundle installs a complete spec-driven development workflow: six SpecKit sub-agents, a `speckit-bugfix` skill, steering instructions, and a **hook-enforced orchestration DAG**. It turns ad-hoc "vibe coding" into a gated pipeline:
+SpecKit is delivered as three opt-in packages (see [Setting up a SpecKit project](#setting-up-a-speckit-project)): `speckit` (six sub-agents + bugfix/setup skills + the DAG node store + workflow guard hooks), `steering-speckit` (the gated workflow steering), and `speckit-dag-hooks` (the **hook-enforced orchestration DAG** dispatcher). Together they turn ad-hoc "vibe coding" into a gated pipeline:
 
 ```
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
@@ -204,22 +258,27 @@ The six agents are read-only analysts except where noted:
 
 ### Setting up a SpecKit project
 
-The `speckit` bundle in this repo supplies the orchestration layer (agents, DAG, hooks). The `/speckit.*` slash commands themselves come from the upstream [`github/spec-kit`](https://github.com/github/spec-kit) `specify` CLI plus a set of community extensions. The fastest path is the global **`project-setup`** skill, which wires both together.
+Three layers, installed separately so you can opt into exactly what you want:
 
-**Recommended -- via `project-setup`:**
+- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, and the `speckit-dag` node store. Also ships the SpecKit workflow guard hooks (issue/PR conventions, commit checks, stop gate).
+- **`steering-speckit`** -- the opinionated mandatory-gated Phase 1/2/3 workflow steering. Opt in to adopt the process.
+- **`speckit-dag-hooks`** -- the enforcement layer: the Python DAG dispatcher + `nodes.json` + hooks that hard-block out-of-order `/speckit.*` calls. Depends on `speckit`.
 
-```text
-Use project-setup with SpecKit enabled
+The `/speckit.*` slash commands themselves come from the upstream [`github/spec-kit`](https://github.com/github/spec-kit) `specify` CLI plus community extensions.
+
+**Recommended -- via the `speckit-setup` skill** (shipped in the `speckit` package):
+
+```bash
+apm install speckit@srobroek-agentic --target claude,codex,agent-skills
 ```
 
-The skill runs an interactive interview, installs `core@srobroek-agentic` plus the `speckit` bundle, then bootstraps SpecKit by:
+Then invoke the skill (it is self-describing -- ask the agent to "set up SpecKit"). It bootstraps SpecKit end-to-end:
 
 1. `specify init --here --integration codex --script sh` -- scaffolds `.specify/` (constitution, feature dirs, workflow state).
-2. Adding the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
-3. Installing and enabling the **required extension set** (26): `archive`, `brownfield`, `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`, `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`, `refine`, `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`, `verify-tasks`, `worktree`.
-4. Installing the workflow definitions: `speckit`, `speckit-quality`, `speckit-full`.
+2. Registers the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
+3. Installs and enables the required extension set and the workflow definitions (`speckit`, `speckit-quality`, `speckit-full`).
 
-**Manual setup** -- if you're not using `project-setup`:
+**Manual setup** -- if you prefer to drive `specify` yourself:
 
 ```bash
 # 1. Install the specify CLI (see github/spec-kit for current install)
@@ -232,16 +291,14 @@ specify init --here --integration codex --script sh
 specify extension catalog add --name community --install-allowed \
   https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json
 
-# 4. Add the required extensions (repeat per id from the list above)
-specify extension add critique && specify extension enable critique
-# ... archive, bugfix, security-review, verify, verify-tasks, worktree, etc.
-
-# 5. Install this repo's speckit orchestration bundle
+# 4. Install this repo's speckit layers
 apm install speckit@srobroek-agentic --target claude,codex,agent-skills
+apm install steering-speckit@srobroek-agentic        # opt-in: the gated workflow
+apm install speckit-dag-hooks@srobroek-agentic       # opt-in: hard-block enforcement
 apm compile --target codex,claude --no-constitution
 ```
 
-The orchestration hooks key off `.specify/feature.json` (or the git branch) to resolve the active feature, so a scaffolded `.specify/` directory is a prerequisite for the DAG's precondition checks to work.
+The enforcement hooks key off `.specify/feature.json` (or the git branch) to resolve the active feature, so a scaffolded `.specify/` directory is a prerequisite for the DAG's precondition checks to work.
 
 ---
 
@@ -251,19 +308,19 @@ The orchestration hooks key off `.specify/feature.json` (or the git branch) to r
 
 **How -- three layers.**
 
-1. **Declarative workflow** -- [`packages/speckit/.apm/instructions/50-speckit-workflow.instructions.md`](packages/speckit/.apm/instructions/50-speckit-workflow.instructions.md) defines the full Phase 1 (spec, human-gated) -> Phase 2 (implementation) -> Phase 3 (post-implementation QA) DAG and the standing rules: *all steps mandatory, always invoke via the Skill tool, always get approval between phases.*
+1. **Declarative workflow** -- [`packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md`](packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md) defines the full Phase 1 (spec, human-gated) -> Phase 2 (implementation) -> Phase 3 (post-implementation QA) DAG and the standing rules: *all steps mandatory, always invoke via the Skill tool, always get approval between phases.*
 
-2. **The DAG node store** -- [`packages/speckit/.apm/skills/speckit-dag/`](packages/speckit/.apm/skills/speckit-dag/) holds a `nodes/<step>.pre.md` and `nodes/<step>.post.md` pair for each step. `pre.md` declares legitimate predecessors and **preconditions**; `post.md` declares the default next step and **postconditions**. This is the graph -- edges live in these files, not in code.
+2. **The DAG node store** -- [`packages/speckit/.apm/skills/speckit-dag/nodes/`](packages/speckit/.apm/skills/speckit-dag/nodes/) holds a `<step>.pre.md` and `<step>.post.md` pair for each step. `pre.md` declares legitimate predecessors and **preconditions**; `post.md` declares the default next step and **postconditions**. This is the graph -- edges live in these files, not in code. The same edges are compiled into [`packages/speckit-dag-hooks/scripts/nodes.json`](packages/speckit-dag-hooks/scripts/nodes.json), which the dispatcher reads at runtime.
 
-3. **The hook dispatcher** -- [`dispatcher.sh`](packages/speckit/.apm/skills/speckit-dag/scripts/dispatcher.sh) runs on every `/speckit.*` invocation, wired through [`speckit-claude-hooks.json`](packages/speckit/.apm/hooks/speckit-claude-hooks.json) and [`speckit-codex-hooks.json`](packages/speckit/.apm/hooks/speckit-codex-hooks.json):
-   - **Pre phase** evaluates hard-block directives in the node file and **denies** the call if violated:
+3. **The hook dispatcher** -- [`packages/speckit-dag-hooks/scripts/dispatcher.py`](packages/speckit-dag-hooks/scripts/dispatcher.py) (a self-contained Python script, no build step) runs on every `/speckit.*` invocation, wired through [`speckit-claude-hooks.json`](packages/speckit-dag-hooks/.apm/hooks/speckit-claude-hooks.json) and [`speckit-codex-hooks.json`](packages/speckit-dag-hooks/.apm/hooks/speckit-codex-hooks.json):
+   - **Pre phase** evaluates hard-block directives from `nodes.json` and **denies** the call if violated:
      - `HARD-MISSING: specs/<feat>/spec.md` -- blocks if a required artifact is absent (e.g. `plan` before `spec`)
      - `HARD-EXISTS: <path>` -- blocks if an artifact that shouldn't exist yet does (routes to a refine path)
      - `HARD-DEPRECATED:` -- blocks unconditionally
    - It resolves the `<feat>` placeholder from `$SPECIFY_FEATURE_DIRECTORY`, then `.specify/feature.json`, then the git branch -- so preconditions are feature-aware.
    - Otherwise it injects the node body as `additionalContext` (soft steering -- "you came from X, go to Y next").
 
-**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse:Skill`, `PostToolUse:Skill`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
+**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, `PostToolUse`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
 
 **Mandatory-step enforcement.** Node `.pre.md` files phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify, verify-tasks, code-review, security-review) mandatory rather than optional.
 
@@ -278,41 +335,41 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 ### Bundles
 
 <!-- BEGIN:bundles -->
-| Bundle | Description |
-| --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages. |
-| `code-intelligence` | Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins. |
-| `core` | Meta-bundle for the shared project baseline. Aggregates the project-lifecycle, code-intelligence, and agentic-maintenance bundles, plus grill/diagnose workflows and context/orchestration plugins. Install this to get a sensible default toolkit for any repo. |
-| `data-ai` | Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins. |
-| `debugging` | Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle. |
-| `developer-tools` | Bundle: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows. Contains: packages developer-essentials, debugging-toolkit, comprehensive-review, git-pr-workflows, documentation-generation. |
-| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams. |
-| `docs-architecture` | Bundle: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows. Contains: packages documentation-standards, code-documentation, documentation-generation, c4-architecture. |
-| `frontend` | Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins. |
-| `governance` | Bundle: Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows. Contains: packages protect-mcp, signed-audit-trails, review-agent-governance, block-no-verify. |
-| `incident-response` | Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems. |
-| `infrastructure` | Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins. |
-| `language-arm-cortex` | ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists. |
-| `language-dotnet` | .NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists. |
-| `language-functional` | Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists. |
-| `language-go` | Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists. |
-| `language-julia` | Julia development toolkit: Hobson's scientific-computing julia-development specialists. |
-| `language-jvm` | JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists. |
-| `language-python` | Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists. |
-| `language-rust` | Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists. |
-| `language-shell` | Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists. |
-| `language-terraform` | Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet. |
-| `language-typescript` | TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists. |
-| `language-web-scripting` | PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists. |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills: diagnose, grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out, improve-codebase-architecture, caveman, and setup. |
-| `planning-product` | Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows. |
-| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows. |
-| `project-lifecycle` | Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent. |
-| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows. |
-| `review` | Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles. |
-| `security` | Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening. |
-| `speckit` | SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks). |
-| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed. |
+| Bundle | What it gives you | Includes |
+| --- | --- | --- |
+| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `steering-audit`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, +2 external |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, +3 external |
+| `core` | Meta-bundle for the shared project baseline | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, +5 external |
+| `data-ai` | Data and AI toolkit | `steering-data`, +6 external |
+| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, +1 external |
+| `developer-tools` | Everyday developer tooling | +5 external |
+| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | +3 external |
+| `docs-architecture` | Documentation and architecture | +4 external |
+| `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, +7 external |
+| `governance` | Agent governance | +4 external |
+| `incident-response` | Incident response and production debugging | +5 external |
+| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`, +6 external |
+| `language-arm-cortex` | ARM Cortex-M firmware toolkit | +1 external |
+| `language-dotnet` | .NET development toolkit | +1 external |
+| `language-functional` | Functional programming toolkit | +1 external |
+| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, +1 external |
+| `language-julia` | Julia development toolkit | +1 external |
+| `language-jvm` | JVM language toolkit | +1 external |
+| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, +1 external |
+| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, +1 external |
+| `language-shell` | Shell scripting toolkit | +1 external |
+| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, +1 external |
+| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, +1 external |
+| `language-web-scripting` | PHP and Ruby web scripting toolkit | +1 external |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | +11 external |
+| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, +6 external |
+| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | +3 external |
+| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
+| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | +2 external |
+| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, +4 external |
+| `security` | Security toolkit | +5 external |
+| `speckit` | SpecKit mechanism | self-contained |
+| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
 <!-- END:bundles -->
 
 ### MCP server packages
@@ -333,7 +390,7 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 <!-- BEGIN:agents -->
 | Agent | Description |
 | --- | --- |
-| `agent-adversarial-challenger` | Read-only adversarial debugger for the unstuck workflow. Investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files. |
+| `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application. |
 | `agent-coder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. |
 | `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
 | `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
@@ -396,19 +453,35 @@ Opt-in opinionated steering (instructions + context). Install only the conventio
 | `steering-tools-scripts` | Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering. |
 <!-- END:steering -->
 
+### Hook packages
+
+Opt-in lifecycle hooks. Most hooks ship inside their owning package (code-intelligence, agent-coder, unstuck, the MCP packages, speckit); these two are standalone cross-cutting policy packages.
+
+<!-- BEGIN:hooks -->
+| Hook Package | Description |
+| --- | --- |
+| `hooks-git-workflow` | Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
+| `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
+<!-- END:hooks -->
+
 ---
 
 ## Developing this repository
 
-Every installable asset -- each skill, agent, MCP package, and bundle -- is a hand-authored package directory under [`packages/`](packages/) with its own `apm.yml`. Edit packages directly; **do not edit generated runtime directories (`.claude/`, `.codex/`, `.agents/`, compiled `AGENTS.md`/`CLAUDE.md`) by hand.**
+Every installable asset -- each skill, agent, MCP package, bundle, steering package, and hook package -- is a hand-authored package directory under [`packages/`](packages/) with its own `apm.yml`. Edit packages directly; **do not edit generated runtime directories (`.claude/`, `.codex/`, `.agents/`, compiled `AGENTS.md`/`CLAUDE.md`) by hand.** Author agent sources in `packages/agent-*/<name>.agent.md` (and `packages/speckit/.apm/agents/`), skills in `packages/<name>/.apm/skills/` or a root `SKILL.md`, and hooks in `packages/<pkg>/.apm/hooks/` + `packages/<pkg>/scripts/`.
 
-Each package (skill, agent, bundle, MCP) has its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root `apm.yml` `marketplace:` block and generated to JSON via `apm pack`. After changing a package manifest or the marketplace block, regenerate artifacts and validate:
+Each package has its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root `apm.yml` `marketplace:` block and generated to JSON via `apm pack`. After changing a package manifest or the marketplace block, regenerate artifacts and validate:
 
 ```bash
 apm run build-artifacts                                   # release-please config, indexes, README tables, apm pack
 apm compile --validate --local-only --target codex,claude # validate primitives without writing
 ```
 
-The README inventory tables are regenerated as part of `build-artifacts`. CI runs `apm run check-readme-tables` to fail the build if the committed tables are stale.
+The README inventory tables are regenerated as part of `build-artifacts`. CI runs `apm run check-readme-tables` and `apm run check-release-please` to fail the build if the committed tables or release-please config are stale.
 
-License: MIT.
+**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): `apm install` -> `apm compile` -> `patch-agentic-tools` -> `audit-agentic-tools`. The two finalizers are this repo's `.apm/scripts/`:
+
+- `patch-runtime-agents.py` -- maps each agent's cross-tool `x-agentic` block to native Codex `.toml` and Claude `.md` fields that APM's generic conversion drops (model, reasoning-effort, sandbox, approval/permission). Required because agents are functional but un-tuned without it.
+- `audit-agentic-assets.py` -- reports agent/skill runtime parity (source vs `.claude`/`.codex`) and flags agents missing `x-agentic` fields. Complements `apm audit` (which only scans hidden Unicode and lockfile drift).
+
+License: Apache-2.0 (see [`LICENSE`](LICENSE)). Bundles that only aggregate third-party MIT-licensed packages retain their upstream MIT license, declared per package in `apm.yml`.

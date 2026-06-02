@@ -221,6 +221,24 @@
       "source": "./packages/handover"
     },
     {
+      "name": "hooks-git-workflow",
+      "tags": [
+        "hooks",
+        "git",
+        "commit"
+      ],
+      "source": "./packages/hooks-git-workflow"
+    },
+    {
+      "name": "hooks-quality",
+      "tags": [
+        "hooks",
+        "quality",
+        "lint"
+      ],
+      "source": "./packages/hooks-quality"
+    },
+    {
       "name": "hyperresearch",
       "tags": [
         "skill",

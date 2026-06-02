@@ -39,21 +39,6 @@
           },
           {
             "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/pre-commit-test-gate.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/quality-before-commit.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/attribution-guard.sh"
-          },
-          {
-            "type": "command",
             "if": "Bash(git merge*)",
             "command": "./scripts/no-ff-guard.sh"
           },
@@ -61,15 +46,6 @@
             "type": "command",
             "if": "Bash(gh pr merge*)|Bash(*gh pr merge*)",
             "command": "./scripts/squash-merge-guard.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "apply_patch|Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/coder-delegation-reminder.sh"
           }
         ]
       }
@@ -87,68 +63,11 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/quality-edit-advisory.sh"
-          }
-        ]
-      },
-      {
         "matcher": "apply_patch",
         "hooks": [
           {
             "type": "command",
             "command": "./scripts/agentic-source-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "./scripts/quality-edit-advisory.sh"
-          },
-          {
-            "type": "command",
-            "command": "./scripts/speckit-task-issue-sync.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Bash(cargo test*)|Bash(cargo nextest*)|Bash(pnpm test*)|Bash(pnpm run test*)|Bash(npm test*)|Bash(pytest*)|Bash(python -m pytest*)|Bash(uv run pytest*)|Bash(go test*)|Bash(just test*)|Bash(task test*)|Bash(vitest*)|Bash(jest*)|Bash(mocha*)|Bash(pre-commit run*)|Bash(make test*)",
-            "command": "./scripts/test-state-tracker.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/speckit-task-commit-check.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/stuck-reset.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "./scripts/reindex-after-commit.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git switch -c*)|Bash(git switch --create*)|Bash(git checkout -b*)|Bash(git checkout -B*)|Bash(git worktree add*)|Bash(git merge*)|Bash(git pull*)|Bash(git rebase*)",
-            "command": "./scripts/repomix-refresh-snapshot.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/uncommitted-warn.sh"
           }
         ]
       }

@@ -1,6 +1,6 @@
 name: agent-adversarial-challenger
-version: 0.1.0 # x-release-please-version
-description: "Read-only adversarial debugger for the unstuck workflow. Investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files."
+version: 0.0.1
+description: "Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application."
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
