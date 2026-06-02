@@ -1,6 +1,8 @@
 name: debate
-version: 0.0.1
-description: "Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path."
+version: 0.1.0
+description: >-
+  Deep tradeoff analysis for architectural decisions, technology choices, and
+  feature proposals. Tests an idea from both sides before recommending a path.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
