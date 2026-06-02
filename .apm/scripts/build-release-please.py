@@ -72,7 +72,12 @@ def build_config(pkgs: list[str]) -> dict:
         }
     return {
         "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-        "separate-pull-requests": True,
+        # One consolidated release PR for all components. With ~86 components,
+        # separate-pull-requests opens 86 PRs/branches in a single run and trips
+        # GitHub's ref-update / secondary rate limits. The single PR still writes
+        # a per-component CHANGELOG.md and cuts a per-component tag on merge, so
+        # independent versioning is preserved.
+        "separate-pull-requests": False,
         "tag-separator": "-",
         "include-component-in-tag": True,
         "changelog-sections": CHANGELOG_SECTIONS,
