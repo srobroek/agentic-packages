@@ -30,4 +30,4 @@ Use this skill to review and improve agent configuration surfaces.
 
 ## References
 
-- Read `references/checklist.md` for the full audit pass
+- For the full audit pass, LOAD references/checklist.md

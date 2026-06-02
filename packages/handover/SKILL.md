@@ -44,7 +44,7 @@ Create a durable recovery prompt that `catchup` can read before doing fresh disc
 
 ## References
 
-Read `references/template.md` when structuring the handover file.
+When structuring the handover file, LOAD references/template.md.
 
 ## Scripts
 

@@ -10,7 +10,7 @@ description: Use to run Rust format, lint, and test checks with the project tool
 1. Run `scripts/check.sh`.
 2. If issues are mechanical (formatting, simple clippy lints), run `scripts/fix.sh`.
 3. Re-run `scripts/check.sh` to confirm fixes.
-4. Read `references/idioms.md` when the agent needs API-design or library-specific guidance.
+4. When the agent needs API-design or library-specific guidance, LOAD references/idioms.md.
 
 ## Tooling Preference
 
@@ -27,4 +27,4 @@ description: Use to run Rust format, lint, and test checks with the project tool
 
 ## References
 
-Read `references/idioms.md` when making API design decisions or choosing between crate alternatives.
+When making API design decisions or choosing between crate alternatives, LOAD references/idioms.md.

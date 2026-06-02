@@ -36,4 +36,4 @@ after fetching the needed sources.
 
 ## References
 
-- Read `references/tool-selection.md` for detailed fetch tool comparison and options
+- For detailed fetch tool comparison and options, LOAD references/tool-selection.md

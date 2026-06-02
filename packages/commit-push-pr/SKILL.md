@@ -25,8 +25,8 @@ commits use `quick-commit`; for direct merge requests use `commit-push-merge`.
 8. Fetch remote state when network access is available.
 9. Inspect upstream and base-branch divergence before pushing.
 10. Push the current branch, setting upstream if needed.
-11. Create or update the PR with a factual title, summary, and test plan. Use
-   `references/pr-template.md` for structure.
+11. Create or update the PR with a factual title, summary, and test plan. For
+   structure, LOAD references/pr-template.md.
 12. Check initial PR status when available and start non-blocking CI monitoring
     if the runtime supports it.
 13. Run `git status --short`.
@@ -90,4 +90,4 @@ commits use `quick-commit`; for direct merge requests use `commit-push-merge`.
 
 ## References
 
-Read `references/pr-template.md` when structuring the PR body.
+When structuring the PR body, LOAD references/pr-template.md.

@@ -1,21 +1,19 @@
 ---
 name: write-a-skill
-description: Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for bootstrap/global use or an APM marketplace.
+description: Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for an APM package or marketplace.
 ---
 
 # Writing Skills
 
-Canonical local workflow for skill authoring. Use this instead of external
-skill-writing prompts when source-of-truth placement, APM packaging, or
-bootstrap scope matters.
+Canonical workflow for skill authoring. Use this instead of external
+skill-writing prompts when source-of-truth placement and APM packaging matter.
 
 ## Locate Source
 
-1. If the artifact is a first-party APM package, resolve a local checkout whose
-   git remote matches `srobroek/agentic-packages` and edit that source.
-2. If the artifact is global or bootstrap-only, resolve the chezmoi source with
-   chezmoi commands or the configured source tree and edit that source.
-3. Never edit generated runtime copies such as `.agents/skills`,
+1. Edit the skill's authoritative source under the APM package or marketplace
+   repo it belongs to (for example `packages/<skill>/SKILL.md` and its
+   `references/` and `scripts/`).
+2. Never edit generated runtime copies such as `.agents/skills`,
    `.codex/agents`, `.claude/agents`, `.claude/rules`, compiled `AGENTS.md`, or
    compiled `CLAUDE.md`.
 

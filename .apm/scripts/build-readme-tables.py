@@ -43,42 +43,53 @@ def render_table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join([head, sep, body])
 
 
-def bundles_table() -> str:
+PACKAGES_DIR = ROOT / "packages"
+
+
+def _classify(name: str) -> str:
+    """Classify a package by name + on-disk shape.
+
+    Returns one of: agent, mcp, steering, skill, bundle.
+    """
+    if name.startswith("agent-"):
+        return "agent"
+    if name.startswith("mcp-"):
+        return "mcp"
+    if name.startswith("steering-") or name.startswith("language-steering-"):
+        return "steering"
+    # A single-skill package has SKILL.md at its root.
+    if (PACKAGES_DIR / name / "SKILL.md").is_file():
+        return "skill"
+    return "bundle"
+
+
+def _rows_for(kind: str) -> list[list[str]]:
     packages = load("packages")
-    rows = [
-        [f"`{p['name']}`", p.get("description", "") or "_(meta-bundle)_"]
+    return [
+        [f"`{p['name']}`", p.get("description", "")]
         for p in sorted(packages, key=lambda p: p["name"])
-        if not p["name"].startswith("mcp-")
+        if _classify(p["name"]) == kind
     ]
-    return render_table(["Bundle", "Description"], rows)
+
+
+def bundles_table() -> str:
+    return render_table(["Bundle", "Description"], _rows_for("bundle"))
 
 
 def mcp_table() -> str:
-    packages = load("packages")
-    rows = [
-        [f"`{p['name']}`", p.get("description", "")]
-        for p in sorted(packages, key=lambda p: p["name"])
-        if p["name"].startswith("mcp-")
-    ]
-    return render_table(["MCP Package", "Description"], rows)
+    return render_table(["MCP Package", "Description"], _rows_for("mcp"))
 
 
 def agents_table() -> str:
-    agents = load("agents")
-    rows = [
-        [f"`{a['name']}`", a.get("description", "")]
-        for a in sorted(agents, key=lambda a: a["name"])
-    ]
-    return render_table(["Agent", "Description"], rows)
+    return render_table(["Agent", "Description"], _rows_for("agent"))
 
 
 def skills_table() -> str:
-    skills = load("skills")
-    rows = [
-        [f"`{s['name']}`", s.get("description", "")]
-        for s in sorted(skills, key=lambda s: s["name"])
-    ]
-    return render_table(["Skill", "Description"], rows)
+    return render_table(["Skill", "Description"], _rows_for("skill"))
+
+
+def steering_table() -> str:
+    return render_table(["Steering Package", "Description"], _rows_for("steering"))
 
 
 SECTIONS = {
@@ -86,6 +97,7 @@ SECTIONS = {
     "mcp": mcp_table,
     "agents": agents_table,
     "skills": skills_table,
+    "steering": steering_table,
 }
 
 

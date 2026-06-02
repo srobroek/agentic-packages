@@ -4,9 +4,10 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
-- **38 bundles** -- opinionated groupings of skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **26 first-party skills** -- reusable workflows (catchup, code-review, research, verify, ...)
-- **10 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, the SpecKit agents, ...)
+- **33 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **25 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
+- **16 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **6 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 
 ---
@@ -139,28 +140,23 @@ A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.y
 
 ## How bundles work
 
-A **bundle** is an APM package whose job is to install a coherent set of primitives. Bundles are not hand-written -- they are generated from declarative `Bundle(...)` definitions in [`.apm/scripts/build-packages.py`](.apm/scripts/build-packages.py) and materialized under [`packages/`](packages/).
+A **bundle** is a hand-authored APM package whose job is to install a coherent set of primitives. Each bundle is its own directory under [`packages/`](packages/) with an `apm.yml` manifest. The manifest is a dependency aggregator: a `dependencies.apm:` list that references the member packages (skills, agents, steering) by their marketplace shortname, plus any external third-party packages (Matt Pocock skills, Hobson agents, ...).
 
-Each bundle definition declares:
+A bundle `apm.yml` typically lists:
 
-- `skills` -- first-party skills from `.apm/skills/`
-- `agents` -- agent definitions from `.apm/agents/`
-- `instructions` / `contexts` -- steering docs
-- `scripts` -- maintenance scripts copied alongside
-- `dependencies` -- third-party packages (Matt Pocock skills, Hobson agents, ...)
+- member skill/agent/steering packages by marketplace shortname (for example `code-review@srobroek-agentic`)
+- external dependencies (third-party APM packages) by their source
+- the bundle's own `name`, `version`, and `description`
 
-Shared sets are defined once and reused: `CORE_SKILLS` (17 skills), `CORE_AGENTS` (4 agents), and `SPECKIT_AGENTS` (6 agents) are referenced by multiple bundles, so a change to the baseline propagates everywhere on the next build.
+**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it depends on them, so a change to a member package propagates to every bundle that references it. Bundles can also depend on other bundles, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
 
-**Composition over duplication.** Bundles can pull in other bundles' content by sharing those constants, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
+Each package (skill, agent, and bundle) carries its own `apm.yml` and is versioned independently via release-please. The marketplace itself is hand-authored in the root [`apm.yml`](apm.yml) `marketplace:` block using local-path sources, and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
 
-To regenerate every bundle after editing a definition:
+To regenerate artifacts after editing a manifest:
 
 ```bash
-apm run build-packages       # materialize packages/
-apm run build-marketplace    # regenerate marketplace.json
-apm run build-indexes        # regenerate indexes/*.json
-# or all of the above plus README tables:
-apm run build-artifacts
+apm pack                # regenerate the marketplace JSON only
+apm run build-artifacts # release-please config + indexes/*.json + README tables + apm pack
 ```
 
 ---
@@ -284,44 +280,39 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 <!-- BEGIN:bundles -->
 | Bundle | Description |
 | --- | --- |
-| `agentic-maintenance` | Bundle: Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation. Contains: skills optimize-steering, prompt-lookup, steering-audit, write-a-skill; agents coder, pr-reviewer; steering; packages documentation-standards, plugin-eval. |
-| `code-intelligence` | Bundle: Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents. Contains: skills codebase-index, codebase-memory, explore, prompt-lookup, research, web-fetch; agents pr-reviewer; steering; packages code-documentation, documentation-generation, c4-architecture. |
-| `core` | Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts prune-stale-local-packages, fix-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration. |
-| `data-ai` | Bundle: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows. Contains: steering; packages llm-application-dev, data-engineering, machine-learning-ops, database-design, database-migrations, database-cloud-optimization. |
-| `debugging` | Bundle: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents. Contains: skills unstuck; agents adversarial-challenger; packages diagnose, debugging-toolkit, error-debugging, error-diagnostics, distributed-debugging, incident-response. |
-| `design` | _(meta-bundle)_ |
+| `agentic-maintenance` | Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages. |
+| `code-intelligence` | Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins. |
+| `core` | Meta-bundle for the shared project baseline. Aggregates the project-lifecycle, code-intelligence, and agentic-maintenance bundles, plus grill/diagnose workflows and context/orchestration plugins. Install this to get a sensible default toolkit for any repo. |
+| `data-ai` | Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins. |
+| `debugging` | Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle. |
 | `developer-tools` | Bundle: Hobson developer tooling bundle for everyday development, debugging, review, PR, and documentation generation workflows. Contains: packages developer-essentials, debugging-toolkit, comprehensive-review, git-pr-workflows, documentation-generation. |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams. |
 | `docs-architecture` | Bundle: Documentation and architecture bundle with Hobson documentation, HADS, OpenAPI, Mermaid, and C4 workflows. Contains: packages documentation-standards, code-documentation, documentation-generation, c4-architecture. |
-| `finance` | _(meta-bundle)_ |
-| `frontend` | Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-design, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage. |
-| `game-development` | _(meta-bundle)_ |
+| `frontend` | Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins. |
 | `governance` | Bundle: Governance bundle with Hobson MCP protection, signed audit trails, and review policy workflows. Contains: packages protect-mcp, signed-audit-trails, review-agent-governance, block-no-verify. |
-| `hyperresearch` | Run the third-party HyperResearch deep research harness. Use when the user asks for deep research, adversarial source-backed research, long-form research reports, or HyperResearch specifically. |
-| `infrastructure` | Bundle: Infrastructure bundle with Hobson cloud, Kubernetes, CI/CD, observability, and deployment workflows. Contains: steering; packages cloud-infrastructure, kubernetes-operations, cicd-automation, deployment-strategies, deployment-validation, observability-monitoring. |
-| `language-arm-cortex` | Bundle: ARM Cortex-M firmware bundle with Hobson embedded specialists. Contains: packages arm-cortex-microcontrollers. |
-| `language-dotnet` | Bundle: .NET development bundle with Hobson C# and ASP.NET specialists. Contains: packages dotnet-contribution. |
-| `language-functional` | Bundle: Functional programming bundle with Hobson Elixir and Haskell specialists. Contains: packages functional-programming. |
-| `language-go` | Bundle: Go quality bundle with language steering and Hobson systems specialists. Contains: skills go-quality; steering; packages systems-programming. |
-| `language-julia` | Bundle: Julia development bundle with Hobson scientific computing specialists. Contains: packages julia-development. |
-| `language-jvm` | Bundle: JVM language bundle with Hobson Java, Scala, and enterprise specialists. Contains: packages jvm-languages. |
-| `language-python` | Bundle: Python quality bundle with language steering and Hobson specialists. Contains: skills python-quality; steering; packages python-development. |
-| `language-rust` | Bundle: Rust quality bundle with language steering and Hobson systems specialists. Contains: skills rust-quality; steering; packages systems-programming. |
-| `language-shell` | Bundle: Shell scripting bundle with Hobson Bash and POSIX specialists. Contains: packages shell-scripting. |
-| `language-terraform` | Bundle: Terraform steering bundle with Hobson deployment and Terraform specialists. Contains: steering; packages deployment-strategies. |
-| `language-typescript` | Bundle: TypeScript and JavaScript quality bundle with language steering and Hobson specialists. Contains: skills typescript-quality; steering; packages javascript-typescript. |
-| `language-web-scripting` | Bundle: PHP and Ruby web scripting bundle with Hobson specialists. Contains: packages web-scripting. |
-| `marketing` | _(meta-bundle)_ |
-| `planning-product` | Bundle: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows. Contains: skills debate, eli5, research, web-fetch; packages to-prd, to-issues, tdd, triage, zoom-out, improve-codebase-architecture. |
+| `incident-response` | Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems. |
+| `infrastructure` | Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins. |
+| `language-arm-cortex` | ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists. |
+| `language-dotnet` | .NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists. |
+| `language-functional` | Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists. |
+| `language-go` | Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists. |
+| `language-julia` | Julia development toolkit: Hobson's scientific-computing julia-development specialists. |
+| `language-jvm` | JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists. |
+| `language-python` | Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists. |
+| `language-rust` | Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists. |
+| `language-shell` | Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists. |
+| `language-terraform` | Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet. |
+| `language-typescript` | TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists. |
+| `language-web-scripting` | PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists. |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills: diagnose, grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out, improve-codebase-architecture, caveman, and setup. |
+| `planning-product` | Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows. |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows. |
-| `project-lifecycle` | Bundle: Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification. Contains: skills catchup, handover, commit-push-merge, commit-push-pr, quick-commit, verify; agents pr-reviewer. |
-| `project-management` | _(meta-bundle)_ |
-| `quality` | Bundle: Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows. Contains: skills code-review, go-quality, python-quality, rust-quality, typescript-quality, verify; agents pr-reviewer; steering; packages comprehensive-review, performance-testing-review, unit-testing, tdd-workflows. |
+| `project-lifecycle` | Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent. |
 | `resume` | Resume bundle for focused resume tailoring and broad career-support workflows. |
-| `security` | Bundle: Security bundle with Hobson scanning, compliance, API security, frontend security, and reverse-engineering workflows. Contains: steering; packages security-scanning, security-compliance, backend-api-security, frontend-mobile-security, reverse-engineering. |
-| `speckit` | Bundle: SpecKit workflow bundle with per-command DAG hook dispatcher, SpecKit agents, bugfix skill, and docs/spec steering. Contains: hook dispatcher + ~150 per-command node markdowns shipping to Claude (.claude/settings.json) and Codex (.codex/hooks.json); skill speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering. |
-| `work-tools` | Personal work workflow bundle for Salesforce activity logging, Excel activity tracking, and read-only work context collection. |
-| `worldbuilding` | _(meta-bundle)_ |
+| `review` | Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles. |
+| `security` | Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening. |
+| `speckit` | SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks). |
+| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed. |
 <!-- END:bundles -->
 
 ### MCP server packages
@@ -329,12 +320,12 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 <!-- BEGIN:mcp -->
 | MCP Package | Description |
 | --- | --- |
-| `mcp-codebase-memory` | MCP package: Codebase Memory MCP server package for graph-aware project orientation. Contains: MCP servers codebase-memory-mcp. |
-| `mcp-context7` | MCP package: Context7 MCP server package for current library and framework documentation. Contains: MCP servers context7. |
-| `mcp-package-version` | MCP package: Package Version MCP server package for dependency version discovery. Contains: MCP servers mcp-package-version. |
-| `mcp-playwright` | MCP package: Playwright MCP server package for browser automation and UI verification. Contains: MCP servers playwright. |
-| `mcp-repomix` | MCP package: Repomix MCP server package for bulk repository snapshots. Contains: MCP servers repomix. |
-| `mcp-serena` | MCP package: Serena MCP server package for semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. Contains: MCP servers serena. |
+| `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
+| `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
+| `mcp-package-version` | MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages. |
+| `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
+| `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
+| `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
 <!-- END:mcp -->
 
 ### Agents
@@ -342,16 +333,10 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 <!-- BEGIN:agents -->
 | Agent | Description |
 | --- | --- |
-| `adversarial-challenger` | Read-only adversarial debugger for the unstuck workflow. Use after normal diagnosis stalls and the parent can provide observable facts only; investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files. |
-| `coder` | Implementation subagent for bounded code changes, tests, refactors, |
-| `external-repo-worker` | Works in an external repository outside the caller project. Use when the parent names a repo URL or org/name and needs isolated clone/reuse, repo-local convention discovery, bounded edits, local verification, or explicitly delegated publish/PR work without nesting another git repo inside the current project. |
-| `pr-reviewer` | Reviews pull requests for code quality, security, and best practices |
-| `speckit-implement-task` | Implements non-code or tightly scoped tasks from a SpecKit tasks.md, or scopes substantial code work for a parent-delegated coder. Use only inside a SpecKit implementation workflow when the parent provides task IDs, spec context, and worktree scope. |
-| `speckit-research` | Researches current primary-source library or API documentation for a SpecKit decision and returns concise findings. Use only inside a SpecKit workflow when the parent provides a library, API, or implementation question tied to a spec or task. |
-| `speckit-sync` | Detects drift between active SpecKit artifacts and implementation, including stale specs, missing code, and unspecced covered-scope behavior. Use for SpecKit sync/drift audits, not final FR/SC acceptance verification. |
-| `speckit-sync-conflicts` | Detects contradictions between active SpecKit specs or between specs and shared contracts/interfaces. Use for inter-spec conflict audits when scopes overlap, supersession is unclear, or shared API/data assumptions may disagree. |
-| `speckit-verify` | Validates implemented code against a target SpecKit spec's FR/SC requirements and acceptance intent. Use for final or checkpoint SpecKit adherence verification, not broad drift discovery or task checkbox audits. |
-| `speckit-verify-tasks` | Detects phantom SpecKit completions by checking completed tasks or closed spec issues against real implementation evidence in fresh context. Use after task completion claims when confirmation bias must be avoided. |
+| `agent-adversarial-challenger` | Read-only adversarial debugger for the unstuck workflow. Investigates independently, challenges assumptions behind failed fixes, and returns evidence-backed alternative causes without editing files. |
+| `agent-coder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. |
+| `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
+| `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
 <!-- END:agents -->
 
 ### Skills
@@ -370,6 +355,7 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 | `explore` | Use for read-only codebase orientation, file discovery, and path tracing. |
 | `go-quality` | Use to run Go format, lint, and test checks with the project toolchain. |
 | `handover` | Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when ending or pausing work, switching context, preserving unfinished implementation state, or when the user asks for a handover. |
+| `hyperresearch` | Run the third-party HyperResearch deep research harness. Use when the user asks for deep research, adversarial source-backed research, long-form research reports, or HyperResearch specifically. |
 | `optimize-steering` | Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `steering-audit` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead. |
 | `playwright` | Use when automating browser interactions through a Playwright MCP server. |
 | `prompt-lookup` | Use when finding, comparing, or improving prompt templates and prompt-engineering patterns. |
@@ -378,25 +364,48 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 | `research` | Use when the user needs open-ended research requiring synthesis across multiple sources -- comparisons, technology evaluations, tradeoff analysis. NOT for single-repo "where is X" lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows. |
 | `rust-quality` | Use to run Rust format, lint, and test checks with the project toolchain. |
 | `sniff` | Use for a stability, hardening, and cleanup audit across a codebase. |
-| `speckit-bugfix` | Use when fixing bugs in a SpecKit repo. Scales from quick fixes to full bug workflows. |
-| `steering-audit` | Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
 | `typescript-quality` | Use to run TypeScript or JavaScript format, lint, type-check, and test commands. |
 | `unstuck` | Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed. Use when repeated fixes, same-file re-editing, flaky evidence, circular hypotheses, or going in circles suggest the agent is stuck; bundled diagnose owns first-pass debugging. |
 | `verify` | Run and report a final local verification pass before handoff, commit, push, merge, or PR. Use when the user asks to verify, test everything, check readiness, or prove local changes are safe to hand off. |
 | `web-fetch` | Retrieve current or URL-specific information from the web with source-aware tool routing. Use when the user asks to fetch, open, browse, cite, verify online, inspect a URL, or answer a question whose facts may have changed. |
-| `write-a-skill` | Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for bootstrap/global use or an APM marketplace. |
+| `write-a-skill` | Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for an APM package or marketplace. |
 <!-- END:skills -->
+
+### Steering packages
+
+Opt-in opinionated steering (instructions + context). Install only the conventions you want.
+
+<!-- BEGIN:steering -->
+| Steering Package | Description |
+| --- | --- |
+| `language-steering-go` | Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions. |
+| `language-steering-python` | Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions. |
+| `language-steering-rust` | Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions. |
+| `language-steering-terraform` | Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions. |
+| `language-steering-typescript` | Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions. |
+| `steering-audit` | Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
+| `steering-backend` | Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering. |
+| `steering-data` | Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering. |
+| `steering-docs-specs` | Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering. |
+| `steering-frontend` | Opinionated frontend conventions: framework choice by surface (React/Vue/Next/Astro), UI library picks, app vs server state, and browser verification expectations. Opt-in steering -- install to adopt these frontend defaults. |
+| `steering-infrastructure` | Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering. |
+| `steering-project-structure` | Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live. |
+| `steering-speckit` | Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process. |
+| `steering-subagent-routing` | Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification. |
+| `steering-toolchain-defaults` | Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project. |
+| `steering-tools-scripts` | Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering. |
+<!-- END:steering -->
 
 ---
 
 ## Developing this repository
 
-Shared assets are authored under [`.apm/`](.apm/). Installable bundles are generated into [`packages/`](packages/); **do not edit generated runtime directories or `packages/` by hand.**
+Every installable asset -- each skill, agent, MCP package, and bundle -- is a hand-authored package directory under [`packages/`](packages/) with its own `apm.yml`. Edit packages directly; **do not edit generated runtime directories (`.claude/`, `.codex/`, `.agents/`, compiled `AGENTS.md`/`CLAUDE.md`) by hand.**
 
-After changing agents, skills, hooks, instructions, contexts, MCP definitions, or bundle definitions, regenerate artifacts and validate:
+Each package (skill, agent, bundle, MCP) has its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root `apm.yml` `marketplace:` block and generated to JSON via `apm pack`. After changing a package manifest or the marketplace block, regenerate artifacts and validate:
 
 ```bash
-apm run build-artifacts                                   # packages, marketplace, indexes, README tables
+apm run build-artifacts                                   # release-please config, indexes, README tables, apm pack
 apm compile --validate --local-only --target codex,claude # validate primitives without writing
 ```
 

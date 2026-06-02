@@ -19,7 +19,7 @@ delegation targets to use, then synthesizes findings into a structured report.
    - Deep multi-source -> delegate to **hyperresearch** wrapper
    - Independent angles -> parallel subagents
 4. Synthesize findings. Distinguish facts, inferred conclusions, and open questions.
-5. Save findings by default. Read `references/report-template.md` for output format.
+5. Save findings by default. For output format, LOAD references/report-template.md.
 
 ## Delegation
 

@@ -32,8 +32,8 @@ ordinary bug work and return here when the diagnosis loop stalls.
 3. Name the current leading assumption and the evidence for it.
 4. Generate 1-3 alternative hypotheses that would explain all observations.
 5. Run the smallest check that can disprove the leading assumption.
-6. If still stuck, invoke the `adversarial-challenger` agent using
-   `references/adversarial.md` as the brief format.
+6. If still stuck, invoke the `adversarial-challenger` agent; LOAD
+   references/adversarial.md for the brief format.
 
 ## Rules
 
@@ -69,5 +69,5 @@ off.
 
 ## References
 
-- Read `references/adversarial.md` when invoking `adversarial-challenger`
-- Read `references/checklist.md` for the structured debugging checklist
+- When invoking `adversarial-challenger`, LOAD references/adversarial.md
+- For the structured debugging checklist, LOAD references/checklist.md

@@ -10,9 +10,9 @@ Audit and rewrite agent-facing markdown files for token efficiency and structura
 ## Workflow
 
 1. **Run `steering-audit`** -- lint, hooks, staleness, drift detection
-2. **Measure** -- discover agent-facing files, compute token estimates, map load patterns, detect redundancy (see `references/measurement.md`)
+2. **Measure** -- discover agent-facing files, compute token estimates, map load patterns, detect redundancy (LOAD references/measurement.md)
 3. **Scope** -- ask which files to optimize; note other candidates
-4. **Apply R1-R7** -- rewrite files applying the rules below (see `references/rules.md` for rationale)
+4. **Apply R1-R7** -- rewrite files applying the rules below (for rationale, LOAD references/rules.md)
 5. **Verify** -- check no ALL CAPS, no model names, consistent headings, no prose paragraphs, index files are routing-only, cross-references use canonical names
 6. **Report** -- changes per file: transformations applied, line count before/after, splits created
 
@@ -30,5 +30,5 @@ Audit and rewrite agent-facing markdown files for token efficiency and structura
 
 ## References
 
-- `references/rules.md` -- Rule rationale and application guidance
-- `references/measurement.md` -- Token estimation, load types, report format
+- LOAD references/rules.md -- Rule rationale and application guidance
+- LOAD references/measurement.md -- Token estimation, load types, report format

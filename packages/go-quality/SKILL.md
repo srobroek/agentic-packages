@@ -10,7 +10,7 @@ description: Use to run Go format, lint, and test checks with the project toolch
 1. Run `scripts/check.sh`.
 2. If issues are formatting-only, run `scripts/fix.sh`.
 3. Re-run `scripts/check.sh` to confirm fixes.
-4. Read `references/idioms.md` when the agent needs language-level design guidance or package-specific docs.
+4. When the agent needs language-level design guidance or package-specific docs, LOAD references/idioms.md.
 
 ## Tooling Preference
 
@@ -27,4 +27,4 @@ description: Use to run Go format, lint, and test checks with the project toolch
 
 ## References
 
-Read `references/idioms.md` when making API design decisions or choosing between package alternatives.
+When making API design decisions or choosing between package alternatives, LOAD references/idioms.md.

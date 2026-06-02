@@ -24,4 +24,4 @@ Use this skill when the user asks for a review.
 
 ## References
 
-- PR-focused checklist: Read `references/pr-review.md` when reviewing a pull request
+- PR-focused checklist: when reviewing a pull request, LOAD references/pr-review.md
