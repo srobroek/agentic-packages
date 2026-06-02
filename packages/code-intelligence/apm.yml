@@ -8,14 +8,14 @@ target: all
 
 dependencies:
   apm:
-    - codebase-index@srobroek-agentic
-    - codebase-memory@srobroek-agentic
-    - explore@srobroek-agentic
-    - prompt-lookup@srobroek-agentic
-    - research@srobroek-agentic
-    - web-fetch@srobroek-agentic
-    - agent-pr-reviewer@srobroek-agentic
-    - steering-project-structure@srobroek-agentic
+    - srobroek/agentic-packages/packages/codebase-index#codebase-index-v0.1.0
+    - srobroek/agentic-packages/packages/codebase-memory#codebase-memory-v0.1.0
+    - srobroek/agentic-packages/packages/explore#explore-v0.1.0
+    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.0
+    - srobroek/agentic-packages/packages/research#research-v0.1.0
+    - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0
+    - srobroek/agentic-packages/packages/steering-project-structure#steering-project-structure-v0.1.0
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main

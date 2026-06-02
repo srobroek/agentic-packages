@@ -8,5 +8,5 @@ target: all
 
 dependencies:
   apm:
-    - language-steering-terraform@srobroek-agentic
+    - srobroek/agentic-packages/packages/language-steering-terraform#language-steering-terraform-v0.1.0
     - wshobson/agents/plugins/deployment-strategies#main
