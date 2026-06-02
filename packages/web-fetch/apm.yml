@@ -1,6 +1,8 @@
 name: web-fetch
-version: 0.0.1
-description: "Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online."
+version: 0.1.0
+description: >-
+  Retrieve current or URL-specific information from the web with source-aware
+  tool routing for fetching, browsing, citing, and verifying online.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
