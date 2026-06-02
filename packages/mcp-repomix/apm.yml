@@ -1,11 +1,12 @@
 name: mcp-repomix
-version: 0.0.1
-description: "MCP server package for Repomix, providing bulk repository snapshots for analysis and review."
+version: 0.1.0
+description: >-
+  MCP server package for Repomix, providing bulk repository snapshots for
+  analysis and review.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   mcp:
     - name: repomix
@@ -13,6 +14,6 @@ dependencies:
       transport: stdio
       command: npx
       args:
-        - -y
+        - '-y'
         - repomix
-        - --mcp
+        - '--mcp'
