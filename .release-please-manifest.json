@@ -49,7 +49,7 @@
   "packages/matt-skills": "0.0.1",
   "packages/mcp-codebase-memory": "0.0.1",
   "packages/mcp-context7": "0.0.1",
-  "packages/mcp-package-version": "0.0.1",
+  "packages/mcp-package-version": "0.1.0",
   "packages/mcp-playwright": "0.0.1",
   "packages/mcp-repomix": "0.0.1",
   "packages/mcp-serena": "0.0.1",
