@@ -347,39 +347,39 @@ In the **Includes** column, each entry is a member package; an entry marked with
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`*, `prompt-lookup`*, `steering-audit`*, `write-a-skill`*, `agent-coder`*, `agent-pr-reviewer`*, `documentation-standards`*, `plugin-eval`* |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`*, `codebase-memory`*, `explore`*, `prompt-lookup`*, `research`*, `web-fetch`*, `agent-pr-reviewer`*, `steering-project-structure`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `core` | Meta-bundle for the shared project baseline | `project-lifecycle`*, `code-intelligence`*, `agentic-maintenance`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `context-management`*, `agent-orchestration`* |
-| `data-ai` | Data and AI toolkit | `steering-data`*, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
-| `debugging` | Local debugging escalation | `unstuck`*, `agent-adversarial-challenger`*, `diagnose`* |
-| `developer-tools` | Everyday developer tooling | `developer-essentials`*, `debugging-toolkit`*, `comprehensive-review`*, `git-pr-workflows`*, `documentation-generation`* |
-| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`*, `excalidraw-diagram-skill`*, `d2-diagram`* |
-| `docs-architecture` | Documentation and architecture | `documentation-standards`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `frontend` | Frontend development and design toolkit | `playwright`*, `steering-frontend`*, `impeccable`*, `interface-design`*, `stitch-design`*, `frontend-mobile-development`*, `ui-design`*, `accessibility-compliance`*, `brand-landingpage`* |
-| `governance` | Agent governance | `protect-mcp`*, `signed-audit-trails`*, `review-agent-governance`*, `block-no-verify`* |
-| `incident-response` | Incident response and production debugging | `error-debugging`*, `distributed-debugging`*, `incident-response`*, `error-diagnostics`*, `debugging-toolkit`* |
-| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`*, `cloud-infrastructure`*, `kubernetes-operations`*, `cicd-automation`*, `deployment-strategies`*, `deployment-validation`*, `observability-monitoring`* |
-| `language-arm-cortex` | ARM Cortex-M firmware toolkit | `arm-cortex-microcontrollers`* |
-| `language-dotnet` | .NET development toolkit | `dotnet-contribution`* |
-| `language-functional` | Functional programming toolkit | `functional-programming`* |
-| `language-go` | Go toolkit | `go-quality`*, `language-steering-go`*, `systems-programming`* |
-| `language-julia` | Julia development toolkit | `julia-development`* |
-| `language-jvm` | JVM language toolkit | `jvm-languages`* |
-| `language-python` | Python toolkit | `python-quality`*, `language-steering-python`*, `python-development`* |
-| `language-rust` | Rust toolkit | `rust-quality`*, `language-steering-rust`*, `systems-programming`* |
-| `language-shell` | Shell scripting toolkit | `shell-scripting`* |
-| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`*, `deployment-strategies`* |
-| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`*, `language-steering-typescript`*, `javascript-typescript`* |
-| `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`* |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `improve-codebase-architecture`*, `setup-matt-pocock-skills`*, `tdd`*, `to-issues`*, `to-prd`*, `triage`*, `zoom-out`* |
-| `planning-product` | Planning and product toolkit | `debate`*, `eli5`*, `research`*, `web-fetch`*, `to-prd`*, `to-issues`*, `tdd`*, `triage`*, `zoom-out`*, `improve-codebase-architecture`* |
-| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`*, `marp-slide`*, `pptx-from-layouts`* |
-| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`*, `handover`*, `commit-push-merge`*, `commit-push-pr`*, `quick-commit`*, `verify`*, `agent-pr-reviewer`* |
+| `agentic-maintenance` | >- | `>-`* |
+| `code-intelligence` | >- | `codebase-index`*, `codebase-memory`*, `explore`*, `prompt-lookup`*, `research`*, `web-fetch`*, `>-`* |
+| `core` | >- | `>-`* |
+| `data-ai` | >- | `steering-data`*, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
+| `debugging` | >- | `unstuck`*, `>-`* |
+| `developer-tools` | >- | `developer-essentials`*, `debugging-toolkit`*, `comprehensive-review`*, `git-pr-workflows`*, `documentation-generation`* |
+| `diagrams` | >- | `drawio-skill`*, `excalidraw-diagram-skill`*, `d2-diagram`* |
+| `docs-architecture` | >- | `documentation-standards`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
+| `frontend` | >- | `playwright`*, `>-`* |
+| `governance` | >- | `protect-mcp`*, `signed-audit-trails`*, `review-agent-governance`*, `block-no-verify`* |
+| `incident-response` | >- | `error-debugging`*, `distributed-debugging`*, `incident-response`*, `error-diagnostics`*, `debugging-toolkit`* |
+| `infrastructure` | >- | `>-`* |
+| `language-arm-cortex` | >- | `arm-cortex-microcontrollers`* |
+| `language-dotnet` | >- | `dotnet-contribution`* |
+| `language-functional` | >- | `functional-programming`* |
+| `language-go` | >- | `go-quality`*, `>-`* |
+| `language-julia` | >- | `julia-development`* |
+| `language-jvm` | >- | `jvm-languages`* |
+| `language-python` | >- | `python-quality`*, `>-`* |
+| `language-rust` | >- | `rust-quality`*, `>-`* |
+| `language-shell` | 'Shell scripting toolkit | `shell-scripting`* |
+| `language-terraform` | >- | `>-`* |
+| `language-typescript` | >- | `>-`* |
+| `language-web-scripting` | 'PHP and Ruby web scripting toolkit | `web-scripting`* |
+| `matt-skills` | >- | `caveman`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `improve-codebase-architecture`*, `setup-matt-pocock-skills`*, `tdd`*, `to-issues`*, `to-prd`*, `triage`*, `zoom-out`* |
+| `planning-product` | >- | `debate`*, `eli5`*, `research`*, `web-fetch`*, `to-prd`*, `to-issues`*, `tdd`*, `triage`*, `zoom-out`*, `improve-codebase-architecture`* |
+| `presentation` | >- | `ppt-creator`*, `marp-slide`*, `>-`* |
+| `project-lifecycle` | >- | `catchup`*, `handover`*, `>-`* |
 | `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`*, `ResumeSkills`* |
-| `review` | Code review and verification toolkit | `code-review`*, `verify`*, `agent-pr-reviewer`*, `comprehensive-review`*, `performance-testing-review`*, `unit-testing`*, `tdd-workflows`* |
-| `security` | Security toolkit | `security-scanning`*, `security-compliance`*, `backend-api-security`*, `frontend-mobile-security`*, `reverse-engineering`* |
-| `speckit` | SpecKit mechanism | self-contained |
-| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit`* |
+| `review` | >- | `code-review`*, `verify`*, `>-`* |
+| `security` | >- | `security-scanning`*, `security-compliance`*, `backend-api-security`*, `frontend-mobile-security`*, `reverse-engineering`* |
+| `speckit` | >- | self-contained |
+| `speckit-dag-hooks` | >- | `speckit`* |
 <!-- END:bundles -->
 
 ### MCP server packages
@@ -389,12 +389,12 @@ Pre-wired Model Context Protocol servers. Installing one adds the server's tools
 <!-- BEGIN:mcp -->
 | MCP Package | Description |
 | --- | --- |
-| `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
-| `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
-| `mcp-package-version` | MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages. |
-| `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
-| `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
-| `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
+| `mcp-codebase-memory` | >- |
+| `mcp-context7` | >- |
+| `mcp-package-version` | >- |
+| `mcp-playwright` | >- |
+| `mcp-repomix` | >- |
+| `mcp-serena` | >- |
 <!-- END:mcp -->
 
 ### Agents
@@ -404,10 +404,10 @@ Sub-agents the main thread can delegate to, each with its own model, tool access
 <!-- BEGIN:agents -->
 | Agent | Description |
 | --- | --- |
-| `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application. |
-| `agent-coder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. |
-| `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
-| `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
+| `agent-adversarial-challenger` | >- |
+| `agent-coder` | >- |
+| `agent-external-repo-worker` | >- |
+| `agent-pr-reviewer` | >- |
 <!-- END:agents -->
 
 ### Skills
@@ -417,31 +417,31 @@ Reusable workflows, each its own package, deployed to `.agents/skills/` (cross-c
 <!-- BEGIN:skills -->
 | Skill | Description |
 | --- | --- |
-| `catchup` | Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request. |
-| `code-review` | Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests. |
+| `catchup` | >- |
+| `code-review` | >- |
 | `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. |
-| `codebase-memory` | Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index. |
-| `commit-push-merge` | Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method. |
-| `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
-| `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
-| `eli5` | Explain a topic at multiple depth levels, from simple to detailed, for layered understanding. |
+| `codebase-memory` | >- |
+| `commit-push-merge` | >- |
+| `commit-push-pr` | >- |
+| `debate` | >- |
+| `eli5` | >- |
 | `explore` | Read-only codebase orientation, file discovery, and path tracing. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
-| `handover` | Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state. |
-| `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
-| `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. |
+| `handover` | >- |
+| `hyperresearch` | >- |
+| `optimize-steering` | >- |
 | `playwright` | Automate browser interactions through a Playwright MCP server. |
 | `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns. |
-| `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
-| `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
-| `research` | Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis. |
+| `python-quality` | >- |
+| `quick-commit` | >- |
+| `research` | >- |
 | `rust-quality` | Run Rust format, lint, and test checks with the project toolchain. |
 | `sniff` | Stability, hardening, and cleanup audit across a codebase. |
-| `typescript-quality` | Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain. |
-| `unstuck` | Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. |
-| `verify` | Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR. |
-| `web-fetch` | Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online. |
-| `write-a-skill` | Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. |
+| `typescript-quality` | >- |
+| `unstuck` | >- |
+| `verify` | >- |
+| `web-fetch` | >- |
+| `write-a-skill` | >- |
 <!-- END:skills -->
 
 ### Steering packages
@@ -451,22 +451,22 @@ Opt-in opinionated steering (instructions + context). Install only the conventio
 <!-- BEGIN:steering -->
 | Steering Package | Description |
 | --- | --- |
-| `language-steering-go` | Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions. |
-| `language-steering-python` | Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions. |
-| `language-steering-rust` | Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions. |
-| `language-steering-terraform` | Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions. |
-| `language-steering-typescript` | Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions. |
+| `language-steering-go` | >- |
+| `language-steering-python` | >- |
+| `language-steering-rust` | >- |
+| `language-steering-terraform` | >- |
+| `language-steering-typescript` | >- |
 | `steering-audit` | Audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
-| `steering-backend` | Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering. |
-| `steering-data` | Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering. |
-| `steering-docs-specs` | Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering. |
-| `steering-frontend` | Opinionated frontend conventions: framework choice by surface (React/Vue/Next/Astro), UI library picks, app vs server state, and browser verification expectations. Opt-in steering -- install to adopt these frontend defaults. |
-| `steering-infrastructure` | Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering. |
-| `steering-project-structure` | Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live. |
-| `steering-speckit` | Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process. |
-| `steering-subagent-routing` | Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification. |
-| `steering-toolchain-defaults` | Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project. |
-| `steering-tools-scripts` | Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering. |
+| `steering-backend` | >- |
+| `steering-data` | >- |
+| `steering-docs-specs` | >- |
+| `steering-frontend` | >- |
+| `steering-infrastructure` | >- |
+| `steering-project-structure` | >- |
+| `steering-speckit` | >- |
+| `steering-subagent-routing` | >- |
+| `steering-toolchain-defaults` | >- |
+| `steering-tools-scripts` | >- |
 <!-- END:steering -->
 
 ### Hook packages
@@ -476,8 +476,8 @@ Opt-in lifecycle hooks. Most hooks ship inside their owning package (code-intell
 <!-- BEGIN:hooks -->
 | Hook Package | Description |
 | --- | --- |
-| `hooks-git-workflow` | Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
-| `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
+| `hooks-git-workflow` | >- |
+| `hooks-quality` | >- |
 <!-- END:hooks -->
 
 ---
