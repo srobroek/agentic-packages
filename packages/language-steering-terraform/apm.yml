@@ -1,0 +1,13 @@
+name: language-steering-terraform
+version: 0.1.0 # x-release-please-version
+description: "Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions."
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto
+category: languages
+tags:
+  - steering
+  - languages
+  - terraform
