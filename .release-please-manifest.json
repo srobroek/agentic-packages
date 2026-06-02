@@ -52,7 +52,7 @@
   "packages/mcp-package-version": "0.0.1",
   "packages/mcp-playwright": "0.0.1",
   "packages/mcp-repomix": "0.0.1",
-  "packages/mcp-serena": "0.0.1",
+  "packages/mcp-serena": "0.1.0",
   "packages/optimize-steering": "0.0.1",
   "packages/planning-product": "0.0.1",
   "packages/playwright": "0.0.1",

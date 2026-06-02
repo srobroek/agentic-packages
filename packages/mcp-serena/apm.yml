@@ -1,11 +1,13 @@
 name: mcp-serena
-version: 0.0.1
-description: "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT."
+version: 0.1.0
+description: >-
+  MCP server package for Serena semantic code tools. The launcher selects the
+  Codex or Claude Code context from the parent harness and can be overridden
+  with SERENA_MCP_CONTEXT.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   mcp:
     - name: serena
@@ -13,5 +15,10 @@ dependencies:
       transport: stdio
       command: bash
       args:
-        - -lc
-        - 'ctx="${SERENA_MCP_CONTEXT:-}"; if [ -z "$ctx" ]; then parent="$(ps -o args= -p "$PPID" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; case "$parent" in *claude*) ctx="claude-code" ;; *codex*) ctx="codex" ;; *) ctx="agent" ;; esac; fi; exec serena start-mcp-server --context "$ctx" --project-from-cwd'
+        - '-lc'
+        - >-
+          ctx="${SERENA_MCP_CONTEXT:-}"; if [ -z "$ctx" ]; then parent="$(ps -o
+          args= -p "$PPID" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; case
+          "$parent" in *claude*) ctx="claude-code" ;; *codex*) ctx="codex" ;; *)
+          ctx="agent" ;; esac; fi; exec serena start-mcp-server --context "$ctx"
+          --project-from-cwd
