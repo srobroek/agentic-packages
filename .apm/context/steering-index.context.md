@@ -14,10 +14,7 @@ Load only the relevant topic:
 - [Infrastructure](infrastructure.infrastructure-index.context.md)
 - [Docs and specs](docs-specs.docs-specs-index.context.md)
 - [Tools and scripts](tools-scripts.tools-scripts-index.context.md)
-- [External agent marketplaces](external-agent-marketplaces.context.md)
 - [Project structure](project-structure.project-structure-index.context.md)
-- [Agentic source of truth](source-of-truth.context.md)
-- [External asset audit](external-assets.context.md)
 
 Codex consumes this through compiled `AGENTS.md` links. Claude Code consumes the
 same distributed steering through compiled `CLAUDE.md` files when the Claude
