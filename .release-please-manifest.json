@@ -77,7 +77,7 @@
   "packages/steering-infrastructure": "0.0.1",
   "packages/steering-project-structure": "0.0.1",
   "packages/steering-speckit": "0.0.1",
-  "packages/steering-subagent-routing": "0.0.1",
+  "packages/steering-subagent-routing": "0.1.0",
   "packages/steering-toolchain-defaults": "0.0.1",
   "packages/steering-tools-scripts": "0.0.1",
   "packages/typescript-quality": "0.0.1",
