@@ -1,12 +1,11 @@
 name: resume
-version: 0.0.1
+version: 0.1.0
 description: Resume bundle for focused resume tailoring and broad career-support workflows.
 author: Sjors Robroek
 license: MIT
 type: skill
 target: all
 includes: auto
-
 dependencies:
   apm:
     - varunr89/resume-tailoring-skill/skills/resume-tailoring#master
