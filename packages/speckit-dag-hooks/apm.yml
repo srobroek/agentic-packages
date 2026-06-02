@@ -1,6 +1,6 @@
 name: speckit-dag-hooks
 version: 0.1.0 # x-release-please-version
-description: "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating — requires the speckit package (which ships the dispatcher) to be installed."
+description: "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed."
 type: instructions
 target: all
 includes: auto

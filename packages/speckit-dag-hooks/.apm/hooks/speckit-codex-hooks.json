@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".agents/skills/speckit-dag/scripts/dispatcher.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
             "args": ["pre"],
             "timeout": 5
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".agents/skills/speckit-dag/scripts/dispatcher.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
             "args": ["pre"],
             "timeout": 5
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".agents/skills/speckit-dag/scripts/dispatcher.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
             "args": ["post"],
             "timeout": 5
           }
