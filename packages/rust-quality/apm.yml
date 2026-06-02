@@ -1,6 +1,6 @@
 name: rust-quality
-version: 0.0.1
-description: "Run Rust format, lint, and test checks with the project toolchain."
+version: 0.1.0
+description: Run Rust format, lint, and test checks with the project toolchain.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
