@@ -43,7 +43,7 @@
   "packages/language-steering-rust": "0.0.1",
   "packages/language-steering-terraform": "0.0.1",
   "packages/language-steering-typescript": "0.0.1",
-  "packages/language-terraform": "0.0.1",
+  "packages/language-terraform": "0.1.0",
   "packages/language-typescript": "0.0.1",
   "packages/language-web-scripting": "0.0.1",
   "packages/matt-skills": "0.0.1",
