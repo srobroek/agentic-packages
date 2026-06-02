@@ -1,17 +1,21 @@
 name: project-lifecycle
-version: 0.0.1
-description: "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent."
+version: 0.1.0
+description: >-
+  Day-to-day project lifecycle workflows: resume work after interruption
+  (catchup), write handovers, run verification, and commit/push via local merge,
+  PR, or quick commit. Bundles the matching skills and the PR reviewer agent.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/catchup#catchup-v0.1.0
     - srobroek/agentic-packages/packages/handover#handover-v0.1.0
-    - srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.0
     - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.0
     - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.0
     - srobroek/agentic-packages/packages/verify#verify-v0.1.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0
