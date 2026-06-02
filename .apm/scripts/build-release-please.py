@@ -49,14 +49,34 @@ def _package_dirs() -> list[str]:
     return out
 
 
+def _version_at(manifest: Path) -> str:
+    m = re.search(r"^version:\s*(\S+)", manifest.read_text(encoding="utf-8"), re.M)
+    return m.group(1) if m else "0.0.1"
+
+
 def _read_version(pkg: str) -> str:
-    text = (PACKAGES / pkg / "apm.yml").read_text(encoding="utf-8")
-    m = re.search(r"^version:\s*(\S+)", text, re.M)
-    return m.group(1) if m else "0.1.0"
+    return _version_at(PACKAGES / pkg / "apm.yml")
 
 
 def build_config(pkgs: list[str]) -> dict:
     packages = {}
+    # The repo root is itself a component (the `srobroek-agentic` marketplace +
+    # build tooling). exclude-paths keeps package commits from being attributed
+    # to it, so it only bumps on repo-infra changes (scripts, workflows, the
+    # marketplace block, README) -- not on changes under packages/.
+    packages["."] = {
+        "release-type": "simple",
+        "component": "srobroek-agentic",
+        "changelog-path": "CHANGELOG.md",
+        "exclude-paths": ["packages"],
+        "extra-files": [
+            {
+                "type": "yaml",
+                "path": "apm.yml",
+                "jsonpath": "$.version",
+            }
+        ],
+    }
     for p in pkgs:
         packages[f"packages/{p}"] = {
             "release-type": "simple",
@@ -86,7 +106,9 @@ def build_config(pkgs: list[str]) -> dict:
 
 
 def build_manifest(pkgs: list[str]) -> dict:
-    return {f"packages/{p}": _read_version(p) for p in pkgs}
+    manifest = {".": _version_at(ROOT / "apm.yml")}
+    manifest.update({f"packages/{p}": _read_version(p) for p in pkgs})
+    return manifest
 
 
 def main() -> int:

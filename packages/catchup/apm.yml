@@ -6,3 +6,10 @@ license: Apache-2.0
 type: skill
 target: all
 includes: auto
+dependencies:
+  apm:
+    # catchup reads the recovery prompt that handover writes, so it pulls
+    # handover in. The reverse is intentionally NOT declared: a mutual dep is a
+    # cycle, which APM rejects at install time ("Cannot install packages with
+    # circular dependencies"). handover stands alone; catchup is its companion.
+    - handover@srobroek-agentic

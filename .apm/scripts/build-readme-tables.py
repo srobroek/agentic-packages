@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate README inventory tables from indexes/*.json.
+"""Generate README inventory tables from packages/*/apm.yml.
 
 Renders markdown tables for bundles, MCP packages, agents, skills, steering,
 and hook packages, then injects each table into README.md between named
@@ -24,18 +24,45 @@ of date instead of writing it -- used by CI to enforce regeneration.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-INDEXES = ROOT / "indexes"
 README = ROOT / "README.md"
+PACKAGES_DIR = ROOT / "packages"
+
+# Match a top-level scalar in a package apm.yml without a YAML dependency. Each
+# field is authored on its own line, optionally quoted.
+_FIELD = {
+    key: re.compile(rf'^{key}:\s*(?:"([^"]*)"|\'([^\']*)\'|(.*?))\s*$', re.M)
+    for key in ("name", "description", "type")
+}
 
 
-def load(name: str) -> list[dict]:
-    return json.loads((INDEXES / f"{name}.json").read_text(encoding="utf-8"))
+def _field(text: str, key: str) -> str:
+    m = _FIELD[key].search(text)
+    if not m:
+        return ""
+    return next((g for g in m.groups() if g is not None), "").strip()
+
+
+def packages() -> list[dict]:
+    """Read every package straight from packages/<name>/apm.yml.
+
+    Replaces the former indexes/packages.json intermediate -- name, description,
+    and type all live in the manifest, and classification additionally inspects
+    on-disk shape (SKILL.md / .apm), so no generated index is needed.
+    """
+    out = []
+    for manifest in sorted(PACKAGES_DIR.glob("*/apm.yml")):
+        text = manifest.read_text(encoding="utf-8")
+        out.append({
+            "name": _field(text, "name") or manifest.parent.name,
+            "description": _field(text, "description"),
+            "type": _field(text, "type"),
+        })
+    return sorted(out, key=lambda p: p["name"])
 
 
 def escape_cell(text: str) -> str:
@@ -48,9 +75,6 @@ def render_table(headers: list[str], rows: list[list[str]]) -> str:
     sep = "| " + " | ".join("---" for _ in headers) + " |"
     body = "\n".join("| " + " | ".join(escape_cell(c) for c in row) + " |" for row in rows)
     return "\n".join([head, sep, body])
-
-
-PACKAGES_DIR = ROOT / "packages"
 
 
 def _classify(name: str) -> str:
@@ -73,10 +97,9 @@ def _classify(name: str) -> str:
 
 
 def _rows_for(kind: str) -> list[list[str]]:
-    packages = load("packages")
     return [
         [f"`{p['name']}`", p.get("description", "")]
-        for p in sorted(packages, key=lambda p: p["name"])
+        for p in packages()
         if _classify(p["name"]) == kind
     ]
 
@@ -86,12 +109,23 @@ def _rows_for(kind: str) -> list[list[str]]:
 _DEP_BLOCK = re.compile(r"dependencies:\s*\n\s*apm:\s*\n((?:[ \t]*-[ \t]*.*\n?)+)")
 
 
-def _bundle_includes(name: str) -> str:
-    """Render a bundle's members as a compact list.
+def _external_name(dep: str) -> str:
+    """Short, readable name for a third-party dependency reference.
 
-    First-party members (``<pkg>@srobroek-agentic``) are shown by bare name as
-    inline code. Third-party deps are summarized as ``+N external`` so the cell
-    stays scannable.
+    e.g. ``mattpocock/skills/skills/engineering/diagnose#main`` -> ``diagnose``;
+    ``wshobson/agents/plugins/context-management#main`` -> ``context-management``.
+    Falls back to the path basename before any ``#ref``.
+    """
+    ref = dep.split("#", 1)[0].rstrip("/")
+    return ref.rsplit("/", 1)[-1] if "/" in ref else ref
+
+
+def _bundle_includes(name: str) -> str:
+    """Render a bundle's members as an explicit list.
+
+    First-party members (``<pkg>@srobroek-agentic``) are listed by bare name.
+    Third-party members are listed by their short name with a trailing ``*``
+    marking them external. A footnote under each table explains the marker.
     """
     manifest = PACKAGES_DIR / name / "apm.yml"
     if not manifest.is_file():
@@ -99,19 +133,15 @@ def _bundle_includes(name: str) -> str:
     m = _DEP_BLOCK.search(manifest.read_text(encoding="utf-8"))
     if not m:
         return ""
-    first_party: list[str] = []
-    external = 0
+    parts: list[str] = []
     for line in m.group(1).strip().splitlines():
         dep = line.strip().lstrip("-").strip()
         if not dep:
             continue
         if dep.endswith("@srobroek-agentic"):
-            first_party.append(dep.rsplit("@", 1)[0])
+            parts.append(f"`{dep.rsplit('@', 1)[0]}`")
         else:
-            external += 1
-    parts = [f"`{d}`" for d in first_party]
-    if external:
-        parts.append(f"+{external} external")
+            parts.append(f"`{_external_name(dep)}`*")
     return ", ".join(parts)
 
 
@@ -133,9 +163,8 @@ def _bundle_summary(description: str) -> str:
 
 
 def bundles_table() -> str:
-    packages = load("packages")
     rows = []
-    for p in sorted(packages, key=lambda p: p["name"]):
+    for p in packages():
         if _classify(p["name"]) != "bundle":
             continue
         includes = _bundle_includes(p["name"])
