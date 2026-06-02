@@ -55,7 +55,7 @@
   "packages/mcp-serena": "0.0.1",
   "packages/optimize-steering": "0.0.1",
   "packages/planning-product": "0.0.1",
-  "packages/playwright": "0.0.1",
+  "packages/playwright": "0.1.0",
   "packages/presentation": "0.0.1",
   "packages/project-lifecycle": "0.0.1",
   "packages/prompt-lookup": "0.0.1",
