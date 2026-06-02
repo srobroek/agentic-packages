@@ -1,0 +1,8 @@
+name: unstuck
+version: 0.1.0 # x-release-please-version
+description: "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

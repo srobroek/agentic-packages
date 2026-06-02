@@ -2,6 +2,7 @@
 name: speckit-sync-conflicts
 description: Detects contradictions between active SpecKit specs or between specs and shared contracts/interfaces. Use for inter-spec conflict audits when scopes overlap, supersession is unclear, or shared API/data assumptions may disagree.
 model: sonnet
+tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix"]
 x-agentic:
   codex:
     model: "gpt-5.5"
@@ -9,7 +10,7 @@ x-agentic:
     sandbox_mode: "read-only"
     approval_policy: "none"
   claude:
-    model: "sonnet"
+    model: "opus"
     effort: "high"
     permissions:
       mode: "read-only"

@@ -1,8 +1,17 @@
 name: project-lifecycle
-version: 0.1.0
-description: 'Bundle: Project lifecycle bundle for catchup, handover, local commits, PRs, merges, and verification. Contains: skills catchup, handover, commit-push-merge, commit-push-pr, quick-commit, verify; agents pr-reviewer.'
+version: 0.1.0 # x-release-please-version
+description: "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+
+dependencies:
+  apm:
+    - catchup@srobroek-agentic
+    - handover@srobroek-agentic
+    - commit-push-merge@srobroek-agentic
+    - commit-push-pr@srobroek-agentic
+    - quick-commit@srobroek-agentic
+    - verify@srobroek-agentic
+    - agent-pr-reviewer@srobroek-agentic

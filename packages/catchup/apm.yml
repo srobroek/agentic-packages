@@ -1,0 +1,8 @@
+name: catchup
+version: 0.1.0 # x-release-please-version
+description: "Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

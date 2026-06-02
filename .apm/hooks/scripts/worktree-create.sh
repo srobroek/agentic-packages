@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: WorktreeCreate — create worktrees in /tmp to prevent nesting
+# Hook: WorktreeCreate -- create worktrees in /tmp to prevent nesting
 # Keeps worktrees outside the repo tree (eliminates nesting bugs entirely).
 
 INPUT=$(cat)
@@ -11,7 +11,7 @@ REF=$(echo "$INPUT" | jq -r '.git_ref // empty')
 [ -z "$NAME" ] && NAME="worktree-$$"
 [ -z "$REF" ] && REF="HEAD"
 
-# GUARD: reject if CWD is inside a worktree path — prevents nesting
+# GUARD: reject if CWD is inside a worktree path -- prevents nesting
 case "$CWD" in
   */worktrees/*|*/.claude/worktrees/*)
     echo "BLOCKED: CWD is inside a worktree ($CWD). Refusing to nest." >&2
@@ -28,7 +28,7 @@ else
   REPO_ROOT="$CWD"
 fi
 
-# Create worktrees in /tmp — outside repo tree, auto-cleaned on reboot
+# Create worktrees in /tmp -- outside repo tree, auto-cleaned on reboot
 REPO_NAME=$(basename "$REPO_ROOT")
 WORKTREE_PATH="/tmp/claude-worktrees/${REPO_NAME}/${NAME}"
 BRANCH_NAME="worktree-${NAME}"

@@ -1,11 +1,10 @@
 name: language-arm-cortex
-version: 0.1.0
-description: 'Bundle: ARM Cortex-M firmware bundle with Hobson embedded specialists. Contains: packages arm-cortex-microcontrollers.'
+version: 0.1.0 # x-release-please-version
+description: "ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:

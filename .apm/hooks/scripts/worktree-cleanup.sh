@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: WorktreeRemove — clean up worktree directory and branch after removal
+# Hook: WorktreeRemove -- clean up worktree directory and branch after removal
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 [ -z "$CWD" ] && exit 0

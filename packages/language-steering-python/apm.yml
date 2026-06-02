@@ -1,0 +1,8 @@
+name: language-steering-python
+version: 0.1.0 # x-release-please-version
+description: "Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions."
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto

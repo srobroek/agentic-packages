@@ -1,0 +1,8 @@
+name: verify
+version: 0.1.0 # x-release-please-version
+description: "Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

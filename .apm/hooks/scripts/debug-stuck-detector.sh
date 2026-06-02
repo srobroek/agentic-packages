@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # debug-stuck-detector.sh
-# PostToolUse → Edit|Write|MultiEdit (async)
+# PostToolUse -> Edit|Write|MultiEdit (async)
 # Counts re-edits (same file edited again in current cycle), suggests diagnose/unstuck at threshold.
-# Separate state from test-state-tracker — no coupling.
+# Separate state from test-state-tracker -- no coupling.
 
 INPUT=$(cat)
 
@@ -30,11 +30,11 @@ STATE=$(cat "$STATE_FILE")
 ALREADY_SEEN=$(echo "$STATE" | jq --arg f "$FILE" '[.seen_files // [] | .[] | select(. == $f)] | length > 0')
 
 if [ "$ALREADY_SEEN" = "true" ]; then
-  # Re-edit — increment counter
+  # Re-edit -- increment counter
   echo "$STATE" | jq '.re_edits += 1' \
     > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
 else
-  # First edit to this file — track it, don't increment
+  # First edit to this file -- track it, don't increment
   echo "$STATE" | jq --arg f "$FILE" '.seen_files = (.seen_files // [] | . + [$f])' \
     > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
 fi

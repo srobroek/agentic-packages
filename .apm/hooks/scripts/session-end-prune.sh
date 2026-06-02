@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Hook: SessionEnd — prune stale worktree metadata and orphaned branches
-# async: true — runs in background, doesn't delay exit
+# Hook: SessionEnd -- prune stale worktree metadata and orphaned branches
+# async: true -- runs in background, doesn't delay exit
 # NOTE: Build artifact cleanup is in SessionStart (PID-based orphan detection),
-# NOT here — cleaning on SessionEnd would nuke caches for ongoing work.
+# NOT here -- cleaning on SessionEnd would nuke caches for ongoing work.
 INPUT=$(cat)
 AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty')
 [ -n "$AGENT_ID" ] && exit 0  # Skip in subagents

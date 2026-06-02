@@ -1,0 +1,8 @@
+name: steering-backend
+version: 0.1.0 # x-release-please-version
+description: "Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering."
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto

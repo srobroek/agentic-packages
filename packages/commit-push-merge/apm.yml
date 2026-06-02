@@ -1,0 +1,8 @@
+name: commit-push-merge
+version: 0.1.0 # x-release-please-version
+description: "Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

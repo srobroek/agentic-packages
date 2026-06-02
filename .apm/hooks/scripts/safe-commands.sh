@@ -23,7 +23,7 @@ BASE=$(echo "$COMMAND" | sed -E 's/^([A-Z_]+=[^ ]+ )*//' | awk '{print $1}')
 ARGS="${COMMAND#*"$BASE"}"
 
 # ============================================================
-# UNIVERSAL SAFE FLAGS — any command with these is informational
+# UNIVERSAL SAFE FLAGS -- any command with these is informational
 # ============================================================
 
 if echo "$ARGS" | grep -qE '^\s+--version\s*$'; then allow; fi
@@ -86,7 +86,7 @@ for cmd in "${READONLY_COMMANDS[@]}"; do
 done
 
 # ============================================================
-# SHELL BUILTINS — always safe
+# SHELL BUILTINS -- always safe
 # ============================================================
 
 readonly BUILTINS=(
@@ -117,7 +117,7 @@ case "$BASE" in
     # Allow all mise subcommands except install/uninstall/self-update
     # (those modify the system)
     if echo "$ARGS" | grep -qE '^\s+(install|uninstall|self-update|upgrade|prune|implode)'; then
-      : # fallthrough — prompt user
+      : # fallthrough -- prompt user
     else
       allow
     fi
@@ -130,7 +130,7 @@ case "$BASE" in
 esac
 
 # ============================================================
-# GIT — read-only operations
+# GIT -- read-only operations
 # ============================================================
 
 if [ "$BASE" = "git" ]; then
@@ -172,7 +172,7 @@ if [ "$BASE" = "git" ]; then
 fi
 
 # ============================================================
-# BUILD & TEST — write to cwd only
+# BUILD & TEST -- write to cwd only
 # ============================================================
 
 case "$BASE" in
@@ -220,7 +220,7 @@ case "$BASE" in
     esac
     ;;
   npx)
-    # npx runs arbitrary packages — only allow known safe ones
+    # npx runs arbitrary packages -- only allow known safe ones
     SUBCMD=$(echo "$ARGS" | awk '{print $1}')
     case "$SUBCMD" in
       tsc|tsx|biome|vitest|jest|playwright)
@@ -306,7 +306,7 @@ case "$BASE" in
 esac
 
 # ============================================================
-# FILE OPERATIONS — safe subset
+# FILE OPERATIONS -- safe subset
 # ============================================================
 
 case "$BASE" in
@@ -324,11 +324,11 @@ case "$BASE" in
     # chmod 777 is blocked by permissions.deny, other chmod is fine
     allow ;;
   chown)
-    : ;;  # fallthrough — chown can be sensitive
+    : ;;  # fallthrough -- chown can be sensitive
   rm)
     # rm -rf is caught by rm-rf-guard; plain rm is safe enough
     if echo "$ARGS" | grep -qE '(-rf|-fr|-r\s+-f|-f\s+-r)'; then
-      : # fallthrough — rm-rf-guard handles this
+      : # fallthrough -- rm-rf-guard handles this
     else
       allow
     fi
@@ -345,7 +345,7 @@ esac
 
 readonly MISC_SAFE=(
   # version control helpers
-  gh glab  # GitHub/GitLab CLIs — hooks catch dangerous ops
+  gh glab  # GitHub/GitLab CLIs -- hooks catch dangerous ops
   pre-commit
 
   # editors/viewers (non-interactive use)
@@ -354,7 +354,7 @@ readonly MISC_SAFE=(
   pbcopy pbpaste xclip xsel
 
   # network tools
-  curl wget  # download tools — deny list catches pipe-to-shell
+  curl wget  # download tools -- deny list catches pipe-to-shell
   ssh scp rsync
 
   # chezmoi
@@ -401,7 +401,7 @@ for cmd in "${MISC_SAFE[@]}"; do
 done
 
 # ============================================================
-# PATH-BASED PATTERNS — scripts in known-safe locations
+# PATH-BASED PATTERNS -- scripts in known-safe locations
 # ============================================================
 
 # Scripts in tmp dirs
@@ -414,7 +414,7 @@ if echo "$BASE" | grep -qE '^\./'; then allow; fi
 if echo "$BASE" | grep -qE '^(\./)?(bin|scripts|tools|hack)/'; then allow; fi
 
 # ============================================================
-# FALLTHROUGH — unknown commands prompt the user
+# FALLTHROUGH -- unknown commands prompt the user
 # ============================================================
 
 exit 0

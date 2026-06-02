@@ -35,7 +35,7 @@ fi
 
 context=""
 if [[ -n "$unchecked" && "$unchecked" -gt 0 ]]; then
-  context="SPECKIT TASK CHECK: Commit created. Spec $active_spec has $checked completed / $unchecked remaining tasks. Check if this commit completes any tasks — mark them [X] in tasks.md."
+  context="SPECKIT TASK CHECK: Commit created. Spec $active_spec has $checked completed / $unchecked remaining tasks. Check if this commit completes any tasks -- mark them [X] in tasks.md."
 fi
 
 if [[ "$has_issue_ref" == false && -n "$active_spec" ]]; then

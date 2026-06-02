@@ -1,7 +1,7 @@
 [
   {
     "description": "Resume interrupted project work by locating and following the best handover before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup/continue/resume/handover, or when asked what changed or what is next.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/catchup",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/catchup",
     "keywords": [
       "1.",
       "2.",
@@ -120,7 +120,7 @@
   },
   {
     "description": "Use for review requests. Prioritizes bugs, regressions, risks, and missing tests.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/code-review",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/code-review",
     "keywords": [
       "1-2",
       "1.",
@@ -204,7 +204,7 @@
   },
   {
     "description": "Use when the codebase graph is missing or stale. Rebuild the codebase-memory index first.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/codebase-index",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/codebase-index",
     "keywords": [
       "1.",
       "2.",
@@ -274,7 +274,7 @@
   },
   {
     "description": "Use for graph-aware codebase exploration, tracing, and reference lookup.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/codebase-memory",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/codebase-memory",
     "keywords": [
       "1.",
       "2.",
@@ -377,7 +377,7 @@
   },
   {
     "description": "Publish and merge a branch by committing local changes when needed, pushing, and merging after inferring or confirming the target and method. Use when the user asks to commit, push, and merge or to direct-merge a branch.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/commit-push-merge",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/commit-push-merge",
     "keywords": [
       "1.",
       "2.",
@@ -497,7 +497,7 @@
   },
   {
     "description": "Publish a branch by committing local changes when needed, pushing, and opening or updating a pull request. Use when the user explicitly asks to commit and push with a PR, open a PR, or publish the current branch for review.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/commit-push-pr",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/commit-push-pr",
     "keywords": [
       "1.",
       "2.",
@@ -623,7 +623,7 @@
   },
   {
     "description": "Use for deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. Agents may suggest this when the user faces a non-trivial decision.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/debate",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/debate",
     "keywords": [
       "1.",
       "2.",
@@ -750,7 +750,7 @@
   },
   {
     "description": "Explains a topic at multiple depth levels. Use when a topic needs layered explanation, when the user is confused about a concept, or when the user says \"explain X.\" Agents may suggest this when the user seems unfamiliar with a topic or asks \"what is\" / \"how does\" questions.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/eli5",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/eli5",
     "keywords": [
       "1.",
       "12",
@@ -873,7 +873,7 @@
   },
   {
     "description": "Use for read-only codebase orientation, file discovery, and path tracing.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/explore",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/explore",
     "keywords": [
       "and",
       "answer",
@@ -926,7 +926,7 @@
   },
   {
     "description": "Use to run Go format, lint, and test checks with the project toolchain.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/go-quality",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/go-quality",
     "keywords": [
       "1.",
       "2.",
@@ -999,7 +999,7 @@
   },
   {
     "description": "Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when ending or pausing work, switching context, preserving unfinished implementation state, or when the user asks for a handover.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/handover",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/handover",
     "keywords": [
       "1.",
       "2.",
@@ -1131,7 +1131,7 @@
   },
   {
     "description": "Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `steering-audit` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/optimize-steering",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/optimize-steering",
     "keywords": [
       "1.",
       "2.",
@@ -1271,7 +1271,7 @@
   },
   {
     "description": "Use when automating browser interactions through a Playwright MCP server.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/playwright",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/playwright",
     "keywords": [
       "1.",
       "2.",
@@ -1382,7 +1382,7 @@
   },
   {
     "description": "Use when finding, comparing, or improving prompt templates and prompt-engineering patterns.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/prompt-lookup",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/prompt-lookup",
     "keywords": [
       "10",
       "activate",
@@ -1476,7 +1476,7 @@
   },
   {
     "description": "Use to run Python format, lint, type-check, and test commands with the project toolchain.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/python-quality",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/python-quality",
     "keywords": [
       "1.",
       "2.",
@@ -1559,7 +1559,7 @@
   },
   {
     "description": "Create a deliberate local git commit without pushing or opening a PR. Use when the user asks to commit local changes, make a checkpoint commit, or run a fast commit-only workflow.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/quick-commit",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/quick-commit",
     "keywords": [
       "1.",
       "2.",
@@ -1686,7 +1686,7 @@
   },
   {
     "description": "Use when the user needs open-ended research requiring synthesis across multiple sources \u2014 comparisons, technology evaluations, tradeoff analysis. NOT for single-repo \"where is X\" lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/research",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/research",
     "keywords": [
       "1.",
       "2.",
@@ -1811,7 +1811,7 @@
   },
   {
     "description": "Use to run Rust format, lint, and test checks with the project toolchain.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/rust-quality",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/rust-quality",
     "keywords": [
       "1.",
       "2.",
@@ -1885,7 +1885,7 @@
   },
   {
     "description": "Use for a stability, hardening, and cleanup audit across a codebase.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/sniff",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/sniff",
     "keywords": [
       "1.",
       "2.",
@@ -1988,7 +1988,7 @@
   },
   {
     "description": "Use when fixing bugs in a SpecKit repo. Scales from quick fixes to full bug workflows.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/speckit-bugfix",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/speckit-bugfix",
     "keywords": [
       "0-2",
       "0-6",
@@ -2118,7 +2118,7 @@
   },
   {
     "description": "Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/steering-audit",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/steering-audit",
     "keywords": [
       "1.",
       "2+",
@@ -2235,7 +2235,7 @@
   },
   {
     "description": "Use to run TypeScript or JavaScript format, lint, type-check, and test commands.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/typescript-quality",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/typescript-quality",
     "keywords": [
       "1.",
       "2.",
@@ -2325,7 +2325,7 @@
   },
   {
     "description": "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed. Use when repeated fixes, same-file re-editing, flaky evidence, circular hypotheses, or going in circles suggest the agent is stuck; bundled diagnose owns first-pass debugging.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/unstuck",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/unstuck",
     "keywords": [
       "1.",
       "10",
@@ -2448,7 +2448,7 @@
   },
   {
     "description": "Run and report a final local verification pass before handoff, commit, push, merge, or PR. Use when the user asks to verify, test everything, check readiness, or prove local changes are safe to hand off.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/verify",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/verify",
     "keywords": [
       "1.",
       "2.",
@@ -2569,7 +2569,7 @@
   },
   {
     "description": "Retrieve current or URL-specific information from the web with source-aware tool routing. Use when the user asks to fetch, open, browse, cite, verify online, inspect a URL, or answer a question whose facts may have changed.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/web-fetch",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/web-fetch",
     "keywords": [
       "403",
       "after",
@@ -2688,7 +2688,7 @@
   },
   {
     "description": "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. Use when the user asks to create, write, repair, optimize, or package a skill for bootstrap/global use or an APM marketplace.",
-    "install": "/home/sjors/dev/agentic-packages/.apm/skills/write-a-skill",
+    "install": "/Users/sjors/personal/dev/agentic-packages/.apm/skills/write-a-skill",
     "keywords": [
       "1.",
       "2.",

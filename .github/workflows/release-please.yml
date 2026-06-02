@@ -1,0 +1,65 @@
+name: Release Please
+
+# Maintains a release PR from Conventional Commits (feat/fix/...), updates
+# CHANGELOG.md and the version in apm.yml, and tags a release on merge.
+#
+# When a release is published, regenerates the marketplace, indexes, and README
+# inventory tables and commits them onto main so the released state is fresh.
+# (build-packages.py is excluded -- see build-artifacts.yml for why.)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  regenerate-artifacts:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up APM
+        run: pip install apm-cli
+
+      - name: Regenerate marketplace, indexes, README tables
+        run: |
+          apm pack
+          python3 .apm/scripts/build-agentic-indexes.py
+          python3 .apm/scripts/build-readme-tables.py
+
+      - name: Commit regenerated artifacts
+        run: |
+          if git diff --quiet; then
+            echo "No artifact drift to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add marketplace.json indexes/ README.md
+          git commit -m "chore: regenerate agentic artifacts for release [skip ci]"
+          git push

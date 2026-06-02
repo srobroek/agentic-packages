@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse:Bash — Warn on direct issue closure
+# Hook: PreToolUse:Bash -- Warn on direct issue closure
 # Issues should be closed via PR/MR merges (fixes #N in body), not directly.
 # Always warns. Only use gh issue close when PR-based closure is not possible
 # (e.g., GitLab mirror, cancelled work, duplicate).
@@ -15,7 +15,7 @@ if echo "$COMMAND" | grep -qE '(gh issue close|glab issue close)'; then
   REMOTE=$(git config --get remote.origin.url 2>/dev/null || echo "")
   if echo "$REMOTE" | grep -q "gitlab.com" && echo "$COMMAND" | grep -q "gh issue close"; then
     cat <<EOF >&2
-ISSUE CLOSE: $ISSUE_REF (GitLab mirror — manual close expected)
+ISSUE CLOSE: $ISSUE_REF (GitLab mirror -- manual close expected)
 EOF
     exit 0
   fi

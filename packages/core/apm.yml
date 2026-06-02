@@ -1,14 +1,16 @@
 name: core
-version: 0.1.0
-description: 'Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.'
+version: 0.1.0 # x-release-please-version
+description: "Meta-bundle for the shared project baseline. Aggregates the project-lifecycle, code-intelligence, and agentic-maintenance bundles, plus grill/diagnose workflows and context/orchestration plugins. Install this to get a sensible default toolkit for any repo."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:
+    - project-lifecycle@srobroek-agentic
+    - code-intelligence@srobroek-agentic
+    - agentic-maintenance@srobroek-agentic
     - mattpocock/skills/skills/engineering/diagnose#main
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main

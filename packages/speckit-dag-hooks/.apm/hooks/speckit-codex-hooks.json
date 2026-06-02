@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["pre"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["pre"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["post"],
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

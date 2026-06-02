@@ -1,11 +1,10 @@
 name: mcp-serena
-version: 0.1.0
-description: 'MCP package: Serena MCP server package for semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. Contains: MCP servers serena.'
+version: 0.1.0 # x-release-please-version
+description: "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   mcp:

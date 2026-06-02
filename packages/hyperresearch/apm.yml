@@ -1,0 +1,8 @@
+name: hyperresearch
+version: 0.1.0 # x-release-please-version
+description: "Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

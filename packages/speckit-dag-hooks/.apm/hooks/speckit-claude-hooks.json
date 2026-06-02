@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "UserPromptExpansion": [
+      {
+        "matcher": "speckit.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["pre"],
+            "timeout": 5,
+            "statusMessage": "Checking SpecKit DAG preconditions..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["pre"],
+            "timeout": 5,
+            "statusMessage": "Checking SpecKit DAG preconditions..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
+            "args": ["post"],
+            "timeout": 5,
+            "statusMessage": "Loading SpecKit next-step context..."
+          }
+        ]
+      }
+    ]
+  }
+}

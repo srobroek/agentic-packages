@@ -1,11 +1,10 @@
 name: language-julia
-version: 0.1.0
-description: 'Bundle: Julia development bundle with Hobson scientific computing specialists. Contains: packages julia-development.'
+version: 0.1.0 # x-release-please-version
+description: "Julia development toolkit: Hobson's scientific-computing julia-development specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:

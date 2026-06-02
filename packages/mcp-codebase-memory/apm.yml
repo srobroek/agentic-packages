@@ -1,11 +1,10 @@
 name: mcp-codebase-memory
-version: 0.1.0
-description: 'MCP package: Codebase Memory MCP server package for graph-aware project orientation. Contains: MCP servers codebase-memory-mcp.'
+version: 0.1.0 # x-release-please-version
+description: "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets)."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   mcp:

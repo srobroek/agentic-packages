@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# failure-logger.sh — PostToolUseFailure hook (async)
+# failure-logger.sh -- PostToolUseFailure hook (async)
 # Logs tool failures to ~/.claude/debug/tool-failures.log for diagnostics.
-# Async — does not block the session.
+# Async -- does not block the session.
 
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')

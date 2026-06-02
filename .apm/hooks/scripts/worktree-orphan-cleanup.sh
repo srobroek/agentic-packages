@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Hook: SessionStart — clean build artifacts from orphaned worktrees
-# async: true — runs in background, doesn't block session startup
+# Hook: SessionStart -- clean build artifacts from orphaned worktrees
+# async: true -- runs in background, doesn't block session startup
 #
 # Worktree naming convention: /tmp/claude-worktrees/{repo}/worktree-{PID}
 # A worktree is orphaned when its PID is no longer running.
@@ -33,7 +33,7 @@ for base in "$WORKTREE_BASE" "/private$WORKTREE_BASE"; do
             continue
         fi
 
-        # PID is dead — this worktree is orphaned. Clean build artifacts.
+        # PID is dead -- this worktree is orphaned. Clean build artifacts.
 
         # Rust
         if [ -f "$worktree/Cargo.toml" ]; then

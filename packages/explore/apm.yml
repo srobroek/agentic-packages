@@ -1,0 +1,8 @@
+name: explore
+version: 0.1.0 # x-release-please-version
+description: "Read-only codebase orientation, file discovery, and path tracing."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: SessionStart — index codebase if stale (async, non-blocking)
+# Hook: SessionStart -- index codebase if stale (async, non-blocking)
 INPUT=$(cat)
 AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty')
 [ -n "$AGENT_ID" ] && exit 0  # Skip in subagents

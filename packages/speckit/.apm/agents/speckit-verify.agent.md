@@ -2,17 +2,18 @@
 name: speckit-verify
 description: Validates implemented code against a target SpecKit spec's FR/SC requirements and acceptance intent. Use for final or checkpoint SpecKit adherence verification, not broad drift discovery or task checkbox audits.
 model: opus
-effort: high
+effort: xhigh
 memory: user
+tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix", "playwright"]
 x-agentic:
   codex:
     model: "gpt-5.5"
-    reasoning_effort: "high"
+    reasoning_effort: "xhigh"
     sandbox_mode: "read-only"
     approval_policy: "none"
   claude:
     model: "opus"
-    effort: "high"
+    effort: "xhigh"
     permissions:
       mode: "read-only"
 ---

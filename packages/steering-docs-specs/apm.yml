@@ -1,0 +1,8 @@
+name: steering-docs-specs
+version: 0.1.0 # x-release-please-version
+description: "Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering."
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto

@@ -1,11 +1,10 @@
 name: mcp-package-version
-version: 0.1.0
-description: 'MCP package: Package Version MCP server package for dependency version discovery. Contains: MCP servers mcp-package-version.'
+version: 0.1.0 # x-release-please-version
+description: "MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   mcp:

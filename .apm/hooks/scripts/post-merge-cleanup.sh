@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: PostToolUse — clean up worktree dir + branch after merge
+# Hook: PostToolUse -- clean up worktree dir + branch after merge
 # Triggers on: Bash(git merge*)
 # After a successful merge of a worktree branch, remove the worktree directory
 # and delete the branch so the concurrent-limit count stays accurate.

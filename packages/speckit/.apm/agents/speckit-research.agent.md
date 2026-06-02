@@ -4,6 +4,7 @@ description: Researches current primary-source library or API documentation for 
 model: sonnet
 maxTurns: 20
 background: true
+tools: ["terminal", "file-manager", "fetcher", "speckit", "context7", "codebase-memory-mcp"]
 x-agentic:
   codex:
     model: "gpt-5.4-mini"

@@ -1,0 +1,8 @@
+name: commit-push-pr
+version: 0.1.0 # x-release-please-version
+description: "Commit local changes when needed, push, and open or update a pull request for review."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

@@ -1,14 +1,17 @@
 name: planning-product
-version: 0.1.0
-description: 'Bundle: Planning and product bundle with first-party debate/research plus Matt PRD, issue, TDD, triage, and architecture workflows. Contains: skills debate, eli5, research, web-fetch; packages to-prd, to-issues, tdd, triage, zoom-out, improve-codebase-architecture.'
+version: 0.1.0 # x-release-please-version
+description: "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:
+    - debate@srobroek-agentic
+    - eli5@srobroek-agentic
+    - research@srobroek-agentic
+    - web-fetch@srobroek-agentic
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main
     - mattpocock/skills/skills/engineering/tdd#main

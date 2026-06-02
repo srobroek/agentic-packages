@@ -1,11 +1,10 @@
 name: language-functional
-version: 0.1.0
-description: 'Bundle: Functional programming bundle with Hobson Elixir and Haskell specialists. Contains: packages functional-programming.'
+version: 0.1.0 # x-release-please-version
+description: "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:

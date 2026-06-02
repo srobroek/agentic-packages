@@ -1,12 +1,13 @@
 name: language-rust
-version: 0.1.0
-description: 'Bundle: Rust quality bundle with language steering and Hobson systems specialists. Contains: skills rust-quality; steering; packages systems-programming.'
+version: 0.1.0 # x-release-please-version
+description: "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:
+    - rust-quality@srobroek-agentic
+    - language-steering-rust@srobroek-agentic
     - wshobson/agents/plugins/systems-programming#main

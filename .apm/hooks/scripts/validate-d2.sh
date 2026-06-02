@@ -44,7 +44,7 @@ fi
 
 # Check for font-size overrides (theme should handle)
 if grep -qE 'font-size:' "$FILE" 2>/dev/null; then
-  WARNINGS="${WARNINGS}D2 Quality: Custom font-size detected. D2 themes handle font sizes — custom overrides may conflict.\n"
+  WARNINGS="${WARNINGS}D2 Quality: Custom font-size detected. D2 themes handle font sizes -- custom overrides may conflict.\n"
 fi
 
 if [[ -n "$WARNINGS" ]]; then

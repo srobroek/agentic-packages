@@ -1,12 +1,13 @@
 name: language-python
-version: 0.1.0
-description: 'Bundle: Python quality bundle with language steering and Hobson specialists. Contains: skills python-quality; steering; packages python-development.'
+version: 0.1.0 # x-release-please-version
+description: "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:
+    - python-quality@srobroek-agentic
+    - language-steering-python@srobroek-agentic
     - wshobson/agents/plugins/python-development#main

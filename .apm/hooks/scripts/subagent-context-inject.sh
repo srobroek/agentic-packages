@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: SubagentStart — inject project context + MCP guidance into subagents
+# Hook: SubagentStart -- inject project context + MCP guidance into subagents
 # Fires for all subagent types. Injects additionalContext into the agent's system prompt.
 
 INPUT=$(cat)
@@ -25,7 +25,7 @@ if [ "$AGENT_TYPE" = "adversarial-challenger" ]; then
     CTX+="IMPORTANT: You are investigating independently. "
     CTX+="Do NOT read spec files, conversation history, or CLAUDE.md reasoning sections. "
     CTX+="Work ONLY from the Problem Brief provided in your prompt. "
-    CTX+="You may read source code, run tests, and grep — but form your own hypotheses. "
+    CTX+="You may read source code, run tests, and grep -- but form your own hypotheses. "
 fi
 
 # Extra context for implementation agents

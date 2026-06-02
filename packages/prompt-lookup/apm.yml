@@ -1,0 +1,8 @@
+name: prompt-lookup
+version: 0.1.0 # x-release-please-version
+description: "Find, compare, and improve prompt templates and prompt-engineering patterns."
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto

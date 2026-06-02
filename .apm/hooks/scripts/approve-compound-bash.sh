@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
-# approve-compound-bash — PreToolUse hook for Claude Code
+# approve-compound-bash -- PreToolUse hook for Claude Code
 #
 # Auto-approves compound Bash commands (pipes, chains, subshells, etc.)
 # when every sub-command matches your allow list and none match your deny
@@ -206,7 +206,7 @@ parse_compound() {
     if [[ "$line" =~ ^(env[[:space:]]+)?(/[^[:space:]]*/)?((ba)?sh)[[:space:]]+-c[[:space:]]*[\'\"](.*)[\'\"]$ ]]; then
       debug "Recursing into shell -c: ${BASH_REMATCH[5]}"
       if ! parse_compound "${BASH_REMATCH[5]}"; then
-        # Inner parse failed — emit wrapper as-is so it gets checked
+        # Inner parse failed -- emit wrapper as-is so it gets checked
         # against allow/deny lists (and likely falls through)
         printf '%s\0' "$line"
       fi
@@ -364,19 +364,19 @@ main() {
   debug "Loaded ${#allowed_prefixes[@]} allow, ${#denied_prefixes[@]} deny prefixes"
   [[ ${#allowed_prefixes[@]} -eq 0 ]] && exit 0
 
-  # Simple command — check directly without shfmt parsing
+  # Simple command -- check directly without shfmt parsing
   if ! needs_compound_parse "$command"; then
     debug "Simple command"
     is_allowed "$command" && approve
     exit 0
   fi
 
-  # Compound command — parse into segments and check each
+  # Compound command -- parse into segments and check each
   debug "Compound command"
   local -a extracted_commands=()
   mapfile -d '' extracted_commands < <(parse_compound "$command")
 
-  # Parse failure or empty result — fall through to prompt (don't auto-approve
+  # Parse failure or empty result -- fall through to prompt (don't auto-approve
   # unparseable commands that may contain dangerous sub-commands)
   [[ ${#extracted_commands[@]} -eq 0 || -z "${extracted_commands[0]}" ]] && exit 0
 

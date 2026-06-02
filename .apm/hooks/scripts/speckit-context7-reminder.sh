@@ -23,7 +23,7 @@ esac
 CONTEXT=""
 case "$SKILL_NAME" in
   speckit.plan)
-    CONTEXT="CONTEXT7 REMINDER: Before planning, use context7 MCP (resolve-library-id → query-docs) to research libraries being considered. Compare alternatives, check compatibility, verify current API status."
+    CONTEXT="CONTEXT7 REMINDER: Before planning, use context7 MCP (resolve-library-id -> query-docs) to research libraries being considered. Compare alternatives, check compatibility, verify current API status."
     ;;
   speckit.tasks)
     CONTEXT="CONTEXT7 REMINDER: Before defining tasks, use context7 MCP to look up API signatures, patterns, and constraints for chosen libraries. Tasks should reflect actual library capabilities."

@@ -1,14 +1,14 @@
 name: data-ai
-version: 0.1.0
-description: 'Bundle: Data and AI bundle with Hobson LLM application, data engineering, MLOps, and database optimization workflows. Contains: steering; packages llm-application-dev, data-engineering, machine-learning-ops, database-design, database-migrations, database-cloud-optimization.'
+version: 0.1.0 # x-release-please-version
+description: "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
 
 dependencies:
   apm:
+    - steering-data@srobroek-agentic
     - wshobson/agents/plugins/llm-application-dev#main
     - wshobson/agents/plugins/data-engineering#main
     - wshobson/agents/plugins/machine-learning-ops#main
