@@ -24,7 +24,7 @@
   "packages/go-quality": "0.0.1",
   "packages/governance": "0.0.1",
   "packages/handover": "0.0.1",
-  "packages/hooks-git-workflow": "0.0.1",
+  "packages/hooks-git-workflow": "0.1.0",
   "packages/hooks-quality": "0.0.1",
   "packages/hyperresearch": "0.0.1",
   "packages/incident-response": "0.0.1",
