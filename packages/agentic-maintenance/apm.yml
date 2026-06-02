@@ -1,13 +1,25 @@
 name: agentic-maintenance
-version: 0.1.0
-description: 'Bundle: Agentic asset maintenance bundle with steering audit, optimization, prompt lookup, first-party skill writing, and Hobson plugin/documentation evaluation. Contains: skills optimize-steering, prompt-lookup, steering-audit, write-a-skill; agents coder, pr-reviewer; steering; packages documentation-standards, plugin-eval.'
+version: 0.1.0 # x-release-please-version
+description: "Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: agentic-maintenance
+tags:
+  - bundle
+  - agentic-maintenance
+  - steering
+  - skills
+  - meta
 
 dependencies:
   apm:
+    - optimize-steering@srobroek-agentic
+    - prompt-lookup@srobroek-agentic
+    - steering-audit@srobroek-agentic
+    - write-a-skill@srobroek-agentic
+    - agent-coder@srobroek-agentic
+    - agent-pr-reviewer@srobroek-agentic
     - wshobson/agents/plugins/documentation-standards#main
     - wshobson/agents/plugins/plugin-eval#main

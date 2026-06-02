@@ -1,12 +1,18 @@
 name: language-terraform
-version: 0.1.0
-description: 'Bundle: Terraform steering bundle with Hobson deployment and Terraform specialists. Contains: steering; packages deployment-strategies.'
+version: 0.1.0 # x-release-please-version
+description: "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: languages
+tags:
+  - bundle
+  - languages
+  - terraform
+  - infrastructure
 
 dependencies:
   apm:
+    - language-steering-terraform@srobroek-agentic
     - wshobson/agents/plugins/deployment-strategies#main

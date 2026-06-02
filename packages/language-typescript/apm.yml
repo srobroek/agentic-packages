@@ -1,12 +1,19 @@
 name: language-typescript
-version: 0.1.0
-description: 'Bundle: TypeScript and JavaScript quality bundle with language steering and Hobson specialists. Contains: skills typescript-quality; steering; packages javascript-typescript.'
+version: 0.1.0 # x-release-please-version
+description: "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: languages
+tags:
+  - bundle
+  - languages
+  - typescript
+  - javascript
 
 dependencies:
   apm:
+    - typescript-quality@srobroek-agentic
+    - language-steering-typescript@srobroek-agentic
     - wshobson/agents/plugins/javascript-typescript#main

@@ -1,11 +1,16 @@
 name: language-dotnet
-version: 0.1.0
-description: 'Bundle: .NET development bundle with Hobson C# and ASP.NET specialists. Contains: packages dotnet-contribution.'
+version: 0.1.0 # x-release-please-version
+description: ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: languages
+tags:
+  - bundle
+  - languages
+  - dotnet
+  - csharp
 
 dependencies:
   apm:

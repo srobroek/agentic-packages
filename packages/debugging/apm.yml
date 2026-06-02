@@ -1,17 +1,19 @@
 name: debugging
-version: 0.1.0
-description: 'Bundle: Debugging escalation bundle with diagnose, unstuck, adversarial challenge, and Hobson debugging agents. Contains: skills unstuck; agents adversarial-challenger; packages diagnose, debugging-toolkit, error-debugging, error-diagnostics, distributed-debugging, incident-response.'
+version: 0.1.0 # x-release-please-version
+description: "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: debugging
+tags:
+  - bundle
+  - debugging
+  - unstuck
+  - escalation
 
 dependencies:
   apm:
+    - unstuck@srobroek-agentic
+    - agent-adversarial-challenger@srobroek-agentic
     - mattpocock/skills/skills/engineering/diagnose#main
-    - wshobson/agents/plugins/debugging-toolkit#main
-    - wshobson/agents/plugins/error-debugging#main
-    - wshobson/agents/plugins/error-diagnostics#main
-    - wshobson/agents/plugins/distributed-debugging#main
-    - wshobson/agents/plugins/incident-response#main

@@ -1,14 +1,28 @@
 name: code-intelligence
-version: 0.1.0
-description: 'Bundle: Codebase understanding bundle with graph/index/search skills, PR review, and Hobson documentation/architecture agents. Contains: skills codebase-index, codebase-memory, explore, prompt-lookup, research, web-fetch; agents pr-reviewer; steering; packages code-documentation, documentation-generation, c4-architecture.'
+version: 0.1.0 # x-release-please-version
+description: "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: code-intelligence
+tags:
+  - bundle
+  - code-intelligence
+  - search
+  - documentation
+  - architecture
 
 dependencies:
   apm:
+    - codebase-index@srobroek-agentic
+    - codebase-memory@srobroek-agentic
+    - explore@srobroek-agentic
+    - prompt-lookup@srobroek-agentic
+    - research@srobroek-agentic
+    - web-fetch@srobroek-agentic
+    - agent-pr-reviewer@srobroek-agentic
+    - steering-project-structure@srobroek-agentic
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main

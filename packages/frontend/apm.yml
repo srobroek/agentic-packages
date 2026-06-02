@@ -1,14 +1,22 @@
 name: frontend
-version: 0.1.0
-description: 'Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-design, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.'
+version: 0.1.0 # x-release-please-version
+description: "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: frontend
+tags:
+  - bundle
+  - frontend
+  - ui
+  - design
+  - accessibility
 
 dependencies:
   apm:
+    - playwright@srobroek-agentic
+    - steering-frontend@srobroek-agentic
     - pbakaus/impeccable/.agents/skills/impeccable#main
     - Dammyjay93/interface-design/.claude/skills/interface-design#main
     - google-labs-code/stitch-skills/plugins/stitch-design#main

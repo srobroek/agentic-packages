@@ -1,0 +1,21 @@
+name: incident-response
+version: 0.1.0 # x-release-please-version
+description: "Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems."
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+category: debugging
+tags:
+  - bundle
+  - debugging
+  - incident-response
+  - observability
+
+dependencies:
+  apm:
+    - wshobson/agents/plugins/error-debugging#main
+    - wshobson/agents/plugins/distributed-debugging#main
+    - wshobson/agents/plugins/incident-response#main
+    - wshobson/agents/plugins/error-diagnostics#main
+    - wshobson/agents/plugins/debugging-toolkit#main

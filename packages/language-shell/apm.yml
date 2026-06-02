@@ -1,11 +1,16 @@
 name: language-shell
-version: 0.1.0
-description: 'Bundle: Shell scripting bundle with Hobson Bash and POSIX specialists. Contains: packages shell-scripting.'
+version: 0.1.0 # x-release-please-version
+description: "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: languages
+tags:
+  - bundle
+  - languages
+  - shell
+  - bash
 
 dependencies:
   apm:

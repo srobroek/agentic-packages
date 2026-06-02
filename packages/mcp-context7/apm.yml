@@ -1,11 +1,15 @@
 name: mcp-context7
-version: 0.1.0
-description: 'MCP package: Context7 MCP server package for current library and framework documentation. Contains: MCP servers context7.'
+version: 0.1.0 # x-release-please-version
+description: "MCP server package for Context7, providing current library and framework documentation lookups."
 author: Sjors Robroek
-license: MIT
+license: Apache-2.0
 type: hybrid
 target: all
-includes: auto
+category: mcp
+tags:
+  - bundle
+  - mcp
+  - documentation
 
 dependencies:
   mcp:
