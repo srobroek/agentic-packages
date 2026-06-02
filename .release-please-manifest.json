@@ -13,7 +13,7 @@
   "packages/commit-push-pr": "0.0.1",
   "packages/core": "0.0.1",
   "packages/data-ai": "0.0.1",
-  "packages/debate": "0.0.1",
+  "packages/debate": "0.1.0",
   "packages/debugging": "0.0.1",
   "packages/developer-tools": "0.0.1",
   "packages/diagrams": "0.0.1",
