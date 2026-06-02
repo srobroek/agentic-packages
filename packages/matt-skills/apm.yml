@@ -1,6 +1,9 @@
 name: matt-skills
-version: 0.0.1
-description: "Bundle of Matt Pocock's engineering and productivity skills: diagnose, grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out, improve-codebase-architecture, caveman, and setup."
+version: 0.1.0
+description: >-
+  Bundle of Matt Pocock's engineering and productivity skills: diagnose,
+  grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out,
+  improve-codebase-architecture, caveman, and setup.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

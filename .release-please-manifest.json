@@ -46,7 +46,7 @@
   "packages/language-terraform": "0.0.1",
   "packages/language-typescript": "0.0.1",
   "packages/language-web-scripting": "0.0.1",
-  "packages/matt-skills": "0.0.1",
+  "packages/matt-skills": "0.1.0",
   "packages/mcp-codebase-memory": "0.0.1",
   "packages/mcp-context7": "0.0.1",
   "packages/mcp-package-version": "0.0.1",
