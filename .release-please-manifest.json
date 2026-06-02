@@ -25,7 +25,7 @@
   "packages/governance": "0.0.1",
   "packages/handover": "0.0.1",
   "packages/hooks-git-workflow": "0.0.1",
-  "packages/hooks-quality": "0.0.1",
+  "packages/hooks-quality": "0.1.0",
   "packages/hyperresearch": "0.0.1",
   "packages/incident-response": "0.0.1",
   "packages/infrastructure": "0.0.1",
