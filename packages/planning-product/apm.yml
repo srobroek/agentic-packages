@@ -1,11 +1,13 @@
 name: planning-product
-version: 0.0.1
-description: "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows."
+version: 0.1.0
+description: >-
+  Planning and product toolkit: the debate, eli5, research, and web-fetch skills
+  plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and
+  architecture-improvement workflows.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - debate@srobroek-agentic
