@@ -53,7 +53,7 @@
   "packages/mcp-playwright": "0.0.1",
   "packages/mcp-repomix": "0.0.1",
   "packages/mcp-serena": "0.0.1",
-  "packages/optimize-steering": "0.0.1",
+  "packages/optimize-steering": "0.1.0",
   "packages/planning-product": "0.0.1",
   "packages/playwright": "0.0.1",
   "packages/presentation": "0.0.1",
