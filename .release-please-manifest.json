@@ -1,7 +1,7 @@
 {
   "packages/agent-adversarial-challenger": "0.0.1",
   "packages/agent-coder": "0.0.1",
-  "packages/agent-external-repo-worker": "0.0.1",
+  "packages/agent-external-repo-worker": "0.1.0",
   "packages/agent-pr-reviewer": "0.0.1",
   "packages/agentic-maintenance": "0.0.1",
   "packages/catchup": "0.0.1",
