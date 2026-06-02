@@ -27,26 +27,26 @@ Break the topic into 4-6 investigation angles tailored to the decision type. Eac
 
 If "Research with subagents":
 - Launch 3-5 parallel subagents, one per angle
-- Full context: use **Explore** agents — they examine local code
-- Isolated: use **general-purpose** agents — they must NOT reference local code or conversation history
+- Full context: use **Explore** agents -- they examine local code
+- Isolated: use **general-purpose** agents -- they must NOT reference local code or conversation history
 
 If "LLM knowledge only": skip to Phase 3.
 
 ### Phase 3: Main analysis
 
 Synthesize into structured sections:
-- **Problem Validation** — is the problem real and worth solving?
-- **Pros** — with evidence strength (strong / moderate / weak)
-- **Cons** — with severity (blocker / major / minor)
-- **Tradeoffs** — what you gain vs. what you give up
-- **Alternatives** — "Do nothing" is always first; "Simplest viable approach" is always second
-- **Overengineering Assessment** — answer these 5 questions:
+- **Problem Validation** -- is the problem real and worth solving?
+- **Pros** -- with evidence strength (strong / moderate / weak)
+- **Cons** -- with severity (blocker / major / minor)
+- **Tradeoffs** -- what you gain vs. what you give up
+- **Alternatives** -- "Do nothing" is always first; "Simplest viable approach" is always second
+- **Overengineering Assessment** -- answer these 5 questions:
   1. Would doing nothing solve the problem adequately?
   2. What is the simplest thing that could possibly work?
   3. Which part of this solution is solving a problem we don't have yet?
   4. If we had to ship this in 48 hours, what would we cut?
   5. How hard is this to undo if we're wrong?
-- **Reversibility** — one-way door, two-way door, or reversible with cost
+- **Reversibility** -- one-way door, two-way door, or reversible with cost
 
 ### Phase 4: Devil's advocate
 
@@ -69,6 +69,33 @@ Then offer interactive debate rounds, capped at 3. Each round genuinely updates 
 ### Phase 6: Save
 
 Save the report to `research/debate-<slug>.md` relative to the project root. Only skip if the user explicitly declines.
+
+## Workflow turbo-path (optional, Claude only)
+
+The prose Process above is the default. IF dynamic workflows are enabled (the user included the
+"workflow" keyword, ultracode is on, or they asked for orchestration), the research fan-out and
+devil's advocate become a single Workflow instead of manual subagent launches. Same phases, same
+outputs -- only the orchestration moves into a script. Workflows are a Claude-only feature; where
+they are unavailable, follow the prose Process.
+
+Shape (author the script inline; do not vendor it):
+
+- **Phase 0-1 stay in the main thread** -- context questions and angle decomposition need the user.
+- **Phase 2 (research):** `parallel()` one `agent()` per angle.
+  - `agentType: 'Explore'` when scope is Full context; `agentType: 'general-purpose'` when Isolated
+    (and instruct it NOT to reference local code or history).
+  - `model: 'sonnet'`, `effort: 'medium'` per angle (breadth, not depth).
+  - Barrier on all angles before synthesis.
+- **Phase 3 synthesis** in the main thread (or one `agent` at `effort: 'high'`).
+- **Phase 4 (devil's advocate):** one `agent()` with `agentType: 'adversarial-challenger'`,
+  `effort: 'xhigh'`, given ONLY the finished Phase 3 analysis (never the raw research) -- preserving
+  the structural isolation rule below.
+- **Phase 5-6** (merge, verdict, save) in the main thread.
+
+Per-agent `model`/`effort`/`agentType` are set at the `agent()` call. `adversarial-challenger`
+resolves to the existing agent definition -- do not duplicate it. First run shows a one-time
+approval prompt. If workflows are unavailable, fall back to the prose Process -- behavior is
+identical, only slower.
 
 ## Rules
 

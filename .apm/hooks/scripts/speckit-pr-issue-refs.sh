@@ -11,7 +11,7 @@ if ! echo "$COMMAND" | grep -qE '(gh pr create|gh-api\.py.*pr create|glab mr cre
   exit 0
 fi
 
-# Base guidance — always applies
+# Base guidance -- always applies
 read -r -d '' CONTEXT << 'GUIDANCE'
 PR TITLE = CHANGELOG ENTRY (via squash merge). Write for end users.
 
@@ -22,7 +22,7 @@ TITLE FORMAT:
 - Breaking change: "feat!: migrate config from TOML to SQLite-backed storage"
 - NEVER include spec IDs, task refs, phase names, or internal jargon
 
-PR BODY FORMAT — scale detail to significance:
+PR BODY FORMAT -- scale detail to significance:
 
 MAJOR FEATURES (new capability, large scope):
 ## Summary
@@ -33,18 +33,18 @@ MAJOR FEATURES (new capability, large scope):
 - Each bullet is a concrete capability, not an implementation detail
 
 ## Breaking changes
-<only if applicable — what breaks, what users need to do>
+<only if applicable -- what breaks, what users need to do>
 
 MINOR CHANGES & BUG FIXES (targeted fix or small enhancement):
 ## Summary
 - Short bullet(s) describing what changed and why
 
-BREAKING CHANGES — always flag explicitly:
+BREAKING CHANGES -- always flag explicitly:
 - Add `!` after type in title: "feat!: ..." or "fix!: ..."
 - Include a "## Breaking changes" section explaining what breaks and migration steps
 
 Spec context goes at the bottom under "## Spec Context" (not in the title).
-The release-please draft PR will be manually curated before publish — raw material matters.
+The release-please draft PR will be manually curated before publish -- raw material matters.
 GUIDANCE
 
 # Detect current branch
@@ -59,7 +59,7 @@ if [ -z "$BRANCH" ]; then
   exit 0
 fi
 
-# Extract spec number from branch name (e.g., 023-lifecycle-testing → 023)
+# Extract spec number from branch name (e.g., 023-lifecycle-testing -> 023)
 SPEC_ID=$(echo "$BRANCH" | grep -oE '[0-9]{3}' | head -1)
 
 if [ -z "$SPEC_ID" ]; then
@@ -97,7 +97,7 @@ SPEC CONTEXT FOR PR BODY: This branch is for spec $SPEC_ID. Include at the botto
 - Branch: $BRANCH"
 
 if [ -n "$ISSUES_JSON" ] && [ "$ISSUES_JSON" != "[]" ]; then
-  FIXES_LINES=$(echo "$ISSUES_JSON" | jq -r '.[] | "Fixes #\(.number) — \(.title)"')
+  FIXES_LINES=$(echo "$ISSUES_JSON" | jq -r '.[] | "Fixes #\(.number) -- \(.title)"')
   ISSUE_COUNT=$(echo "$ISSUES_JSON" | jq 'length')
   SPEC_CONTEXT="$SPEC_CONTEXT
 
@@ -106,7 +106,7 @@ Include each relevant \"Fixes #N\" on its own line in the PR body. Only include 
 
 $FIXES_LINES
 
-IMPORTANT: Each \"Fixes #N\" MUST be on its own line — do NOT combine as \"Fixes #1 #2 #3\"."
+IMPORTANT: Each \"Fixes #N\" MUST be on its own line -- do NOT combine as \"Fixes #1 #2 #3\"."
 fi
 
 FULL_CONTEXT="$CONTEXT$SPEC_CONTEXT"

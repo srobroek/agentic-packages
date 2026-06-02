@@ -13,9 +13,9 @@ Before explaining, ask these questions:
 
 1. **Depth**: How deep? All 5 levels (default), or specific levels?
 2. **Research**: Pair with a research skill?
-   - `research` — topic changed materially in the last 12 months, or competing schools of thought exist
-   - `hyperresearch` — very in-depth research (expensive)
-   - none — explain from existing knowledge (default)
+   - `research` -- topic changed materially in the last 12 months, or competing schools of thought exist
+   - `hyperresearch` -- very in-depth research (expensive)
+   - none -- explain from existing knowledge (default)
 
 If the user doesn't specify, default to all 5 levels with no research skill.
 
@@ -48,4 +48,4 @@ Repeat for each requested level.
 - Do not flatten meaningful uncertainty just to simplify.
 - If the user asks for one level only, give one level only.
 - Make higher levels add nuance, not just length.
-- Word budgets are soft targets — use judgment.
+- Word budgets are soft targets -- use judgment.

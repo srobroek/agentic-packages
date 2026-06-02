@@ -1,7 +1,7 @@
 # UI Component Context
 
 Pages must be composable. Build a page as a thin assembly of named primitives
-and components — never inline large JSX/template trees, repeated layout
+and components -- never inline large JSX/template trees, repeated layout
 fragments, or whole sub-features directly in a page module. When a region of
 a page owns its own state, layout role, or visual concern, lift it into a
 local component first; readability should rest on component names, not on

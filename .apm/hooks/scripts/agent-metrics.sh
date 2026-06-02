@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: SubagentStop — log agent metrics (async, non-blocking)
+# Hook: SubagentStop -- log agent metrics (async, non-blocking)
 INPUT=$(cat)
 AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type // "unknown"')
 AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // "unknown"')

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse — advisory steering toward codebase-memory and repomix
+# Hook: PreToolUse -- advisory steering toward codebase-memory and repomix
 # Injects additionalContext when agent uses plain Grep/Glob/Read for code discovery.
-# Never blocks — always exit 0.
+# Never blocks -- always exit 0.
 
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty')
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Skip on SessionStart — always exit 0 after first fire per session
+# Skip on SessionStart -- always exit 0 after first fire per session
 GATE="/tmp/code-discovery-steer-$PPID"
 find /tmp -maxdepth 1 -name 'code-discovery-steer-*' -mtime +1 -delete 2>/dev/null
 if [ -f "$GATE" ]; then

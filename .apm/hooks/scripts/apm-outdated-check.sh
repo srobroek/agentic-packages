@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: SessionStart — check for outdated APM deps (asyncRewake, exit 2 to notify agent)
+# Hook: SessionStart -- check for outdated APM deps (asyncRewake, exit 2 to notify agent)
 INPUT=$(cat)
 AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty')
 [ -n "$AGENT_ID" ] && exit 0  # Skip in subagents

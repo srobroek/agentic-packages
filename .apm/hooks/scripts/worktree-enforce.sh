@@ -22,11 +22,11 @@ basename=$(basename "$file_path")
 # Exempt: .md files not inside source directories
 if [[ "$basename" == *.md ]]; then
   case "$file_path" in
-    */src/*|*/crates/*|*/frontend/src/*|*/lib/*|*/cmd/*|*/internal/*|*/pkg/*) ;; # source dirs — not exempt
+    */src/*|*/crates/*|*/frontend/src/*|*/lib/*|*/cmd/*|*/internal/*|*/pkg/*) ;; # source dirs -- not exempt
     *) exit 0 ;;
   esac
 fi
 
-# If we reach here, it's a code edit outside /tmp/ worktree — block
+# If we reach here, it's a code edit outside /tmp/ worktree -- block
 echo "BLOCKED: Code edits must happen in a worktree. Use EnterWorktree first." >&2
 exit 2

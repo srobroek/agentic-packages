@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse:Write,PreToolUse:Edit — Check dependent crate/module APIs exist before writing code
-# Advisory only — reminds to verify imports compile before committing.
+# Hook: PreToolUse:Write,PreToolUse:Edit -- Check dependent crate/module APIs exist before writing code
+# Advisory only -- reminds to verify imports compile before committing.
 
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty')

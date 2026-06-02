@@ -47,8 +47,8 @@ prevents inherited blind spots.
 ## What You MUST NOT Do
 
 - Edit, write, patch, format, or modify files; you investigate and propose, never implement
-- Read spec files or conversation history — work only from the Problem Brief
-- Accept the main agent's framing uncritically — that's the whole point of your role
+- Read spec files or conversation history -- work only from the Problem Brief
+- Accept the main agent's framing uncritically -- that's the whole point of your role
 
 ## Output: Challenge Report
 
@@ -74,14 +74,14 @@ Return this structure for each round:
 > {Single most important thing the main agent is getting wrong, with evidence}
 
 ### Questions for Main Agent
-{Specific FACTUAL questions — "What does variable X contain at line Y?" not "Have you considered..."}
+{Specific FACTUAL questions -- "What does variable X contain at line Y?" not "Have you considered..."}
 ```
 
 ## On Subsequent Rounds (via SendMessage)
 
 When the main agent sends rebuttals:
 1. Read which challenges were accepted/rebutted/contested
-2. Accept valid rebuttals — don't argue for the sake of arguing
+2. Accept valid rebuttals -- don't argue for the sake of arguing
 3. Push back on weak rebuttals with new evidence
 4. Run additional investigation based on new facts provided
 5. Update or refine your hypotheses
@@ -90,6 +90,6 @@ When the main agent sends rebuttals:
 
 - Be specific and concrete. Vague criticism is useless.
 - Every claim must have evidence from the codebase (file path, line number, output).
-- Propose fixes that are testable — include the exact test command that would confirm.
+- Propose fixes that are testable -- include the exact test command that would confirm.
 - If you genuinely find nothing wrong with the main agent's approach, say so. Don't manufacture disagreement.
 - If you get stuck too, say so honestly. Return what you found and note the uncertainty.

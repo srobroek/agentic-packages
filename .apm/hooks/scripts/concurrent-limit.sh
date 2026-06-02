@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse — limit concurrent agents per project
+# Hook: PreToolUse -- limit concurrent agents per project
 MAX_AGENTS=20
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$REPO_ROOT" ] && exit 0
@@ -7,7 +7,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 # Prune stale worktrees before counting
 git -C "$REPO_ROOT" worktree prune 2>/dev/null
 
-# Count linked worktrees (excludes main tree — first line of worktree list)
+# Count linked worktrees (excludes main tree -- first line of worktree list)
 ACTIVE_WORKTREES=$(git -C "$REPO_ROOT" worktree list 2>/dev/null | tail -n +2 | grep -c "worktree-")
 
 if [ "$ACTIVE_WORKTREES" -ge "$MAX_AGENTS" ]; then

@@ -45,6 +45,28 @@ ordinary bug work and return here when the diagnosis loop stalls.
 - If no fast feedback loop exists, stop and use `diagnose` to create one before
   continuing.
 
+## Workflow turbo-path (optional, Claude only)
+
+The prose Workflow above is the default. IF dynamic workflows are enabled (the "workflow" keyword,
+ultracode, or an explicit ask), the challenger escalation (step 6) can run as a budget-bounded
+Workflow loop instead of manual SendMessage rounds. Steps 1-5 (fact-gathering, leading assumption,
+alternative hypotheses, the disproving check) stay in the main thread -- they need the live repro
+and the user. Workflows are a Claude-only feature; where they are unavailable, follow the prose
+steps.
+
+Shape (author inline):
+
+- One `agent()` per round, `agentType: 'adversarial-challenger'`, `effort: 'xhigh'`, given ONLY the
+  observable-facts brief (`references/adversarial.md` format) -- never your theory.
+- Loop while rounds < 5 AND a budget guard holds (`budget.total && budget.remaining() > 50_000`),
+  feeding each round the prior challenger output + any new evidence from a main-thread check.
+- The challenger proposes and never edits; the main thread runs the smallest disproving check
+  between rounds. Stop early when a hypothesis is confirmed or refuted.
+
+`adversarial-challenger` resolves to the existing agent definition -- do not duplicate it. This is a
+small win (one agent, serial rounds); the prose path remains entirely adequate when workflows are
+off.
+
 ## References
 
 - Read `references/adversarial.md` when invoking `adversarial-challenger`

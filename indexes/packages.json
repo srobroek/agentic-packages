@@ -113,7 +113,7 @@
     "type": "package"
   },
   {
-    "description": "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.",
+    "description": "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts prune-stale-local-packages, fix-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.",
     "keywords": [
       "0.1.0",
       "adversarial-challenger",
@@ -149,7 +149,7 @@
       "explore",
       "external-repo-worker",
       "first-party",
-      "fix-agents-context-links",
+      "fix-context-links",
       "grill",
       "grill-me",
       "grill-me#main",
@@ -183,7 +183,6 @@
       "sjors",
       "steering",
       "steering-audit",
-      "strip-constitution-blocks",
       "target",
       "type",
       "unstuck",
@@ -192,7 +191,6 @@
       "web-fetch",
       "workflows.",
       "write-a-skill",
-      "write-claude-pointers",
       "writing",
       "wshobson"
     ],
@@ -306,6 +304,29 @@
     ],
     "name": "debugging",
     "path": "packages/debugging",
+    "type": "package"
+  },
+  {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "design",
+      "hybrid",
+      "includes",
+      "license",
+      "mit",
+      "name",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "design",
+    "path": "packages/design",
     "type": "package"
   },
   {
@@ -458,6 +479,29 @@
     "type": "package"
   },
   {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "finance",
+      "hybrid",
+      "includes",
+      "license",
+      "mit",
+      "name",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "finance",
+    "path": "packages/finance",
+    "type": "package"
+  },
+  {
     "description": "Bundle: Frontend development and design bundle with Impeccable, Interface Design, Stitch skills, Playwright browser skill, and Hobson frontend/UI/accessibility agents. Contains: skills playwright; steering; packages impeccable, interface-design, stitch-design, frontend-mobile-development, ui-design, accessibility-compliance, brand-landingpage.",
     "keywords": [
       "0.1.0",
@@ -517,6 +561,29 @@
     ],
     "name": "frontend",
     "path": "packages/frontend",
+    "type": "package"
+  },
+  {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "game-development",
+      "hybrid",
+      "includes",
+      "license",
+      "mit",
+      "name",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "game-development",
+    "path": "packages/game-development",
     "type": "package"
   },
   {
@@ -1215,6 +1282,29 @@
     "type": "package"
   },
   {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "hybrid",
+      "includes",
+      "license",
+      "marketing",
+      "mit",
+      "name",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "marketing",
+    "path": "packages/marketing",
+    "type": "package"
+  },
+  {
     "description": "MCP package: Codebase Memory MCP server package for graph-aware project orientation. Contains: MCP servers codebase-memory-mcp.",
     "keywords": [
       "0.1.0",
@@ -1656,6 +1746,29 @@
     "type": "package"
   },
   {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "hybrid",
+      "includes",
+      "license",
+      "mit",
+      "name",
+      "project-management",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version"
+    ],
+    "name": "project-management",
+    "path": "packages/project-management",
+    "type": "package"
+  },
+  {
     "description": "Bundle: Cross-language quality bundle for reviews, verification, language checks, and Hobson test/review workflows. Contains: skills code-review, go-quality, python-quality, rust-quality, typescript-quality, verify; agents pr-reviewer; steering; packages comprehensive-review, performance-testing-review, unit-testing, tdd-workflows.",
     "keywords": [
       "0.1.0",
@@ -1802,24 +1915,36 @@
     "type": "package"
   },
   {
-    "description": "Bundle: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering. Contains: skills speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.",
+    "description": "Bundle: SpecKit workflow bundle with per-command DAG hook dispatcher, SpecKit agents, bugfix skill, and docs/spec steering. Contains: hook dispatcher + ~150 per-command node markdowns shipping to Claude (.claude/settings.json) and Codex (.codex/hooks.json); skill speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.",
     "keywords": [
       "0.1.0",
+      "150",
       "all",
       "and",
       "author",
       "auto",
       "bugfix",
       "bundle",
+      "claude",
+      "codex",
       "contains",
+      "dag",
       "description",
+      "dispatcher",
       "docs",
+      "hook",
+      "hooks.json",
       "hybrid",
       "includes",
       "license",
+      "markdowns",
       "mit",
       "name",
+      "node",
+      "per-command",
       "robroek",
+      "settings.json",
+      "shipping",
       "sjors",
       "spec",
       "speckit",
@@ -1832,6 +1957,7 @@
       "speckit-verify-tasks",
       "steering.",
       "target",
+      "to",
       "type",
       "version",
       "workflow"
@@ -1876,6 +2002,29 @@
     ],
     "name": "work-tools",
     "path": "packages/work-tools",
+    "type": "package"
+  },
+  {
+    "description": "",
+    "keywords": [
+      "0.1.0",
+      "all",
+      "author",
+      "auto",
+      "hybrid",
+      "includes",
+      "license",
+      "mit",
+      "name",
+      "robroek",
+      "sjors",
+      "target",
+      "type",
+      "version",
+      "worldbuilding"
+    ],
+    "name": "worldbuilding",
+    "path": "packages/worldbuilding",
     "type": "package"
   }
 ]

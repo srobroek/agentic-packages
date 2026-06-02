@@ -2,7 +2,7 @@
 # Claude Code notification script
 # Sends macOS notification that opens the terminal when clicked
 # Only notifies when the terminal is NOT in the foreground
-# No-op on Linux — notifications are macOS-only
+# No-op on Linux -- notifications are macOS-only
 
 # No-op on Linux
 [ "$(uname)" != "Darwin" ] && exit 0
@@ -62,7 +62,7 @@ APP_NAME="${TERM_PROGRAM:-Terminal}"
 
 # Build subtitle with notification type if available
 SUBTITLE="$APP_NAME"
-[[ -n "$TITLE" ]] && SUBTITLE="$APP_NAME · $TITLE"
+[[ -n "$TITLE" ]] && SUBTITLE="$APP_NAME - $TITLE"
 
 # Build the terminal-notifier command
 ARGS=(

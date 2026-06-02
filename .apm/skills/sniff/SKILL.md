@@ -15,7 +15,7 @@ Use this skill for codebase stabilization, hardening, and cleanup audits.
    - Unsafe/FFI/native: raw pointers, missing safe wrappers
    - Code structure: god objects (>500 lines), long functions (>50 lines), duplication, dead code
    - Concurrency: shared state, locks, missing timeouts, blocking operations
-   - Input boundaries: HTTP handlers, CLI parsers, file readers — validation and size limits
+   - Input boundaries: HTTP handlers, CLI parsers, file readers -- validation and size limits
 3. **Generate structured report** with findings per dimension, severity, file references, and recommendations.
 ## Language Adaptations
 

@@ -159,36 +159,36 @@ EXTERNAL_BUNDLES = [
 # Third-party agents from msitarzewski/agency-agents (MIT, AgentLand Contributors).
 # Opt-in only; not auto-installed. See THIRD_PARTY.md.
 AGENCY_AGENTS = [
-    # engineering → data-ai
+    # engineering -> data-ai
     ("agency-database-optimizer", "Database schema, query, indexing, and partitioning specialist for Postgres, MySQL, and managed Postgres/MySQL platforms.", "engineering/engineering-database-optimizer.md"),
     ("agency-data-engineer", "ETL/ELT, lakehouse, Spark, dbt, and streaming pipeline design and implementation.", "engineering/engineering-data-engineer.md"),
     ("agency-ai-engineer", "ML model development, deployment, and AI-powered feature integration.", "engineering/engineering-ai-engineer.md"),
     ("agency-ai-data-remediation", "Self-healing data pipelines that detect and repair upstream data quality issues via local SLMs.", "engineering/engineering-ai-data-remediation-engineer.md"),
     ("agency-voice-ai", "Whisper/ASR pipelines, diarization, transcription, and subtitle generation for voice AI.", "engineering/engineering-voice-ai-integration-engineer.md"),
-    # engineering → infrastructure
+    # engineering -> infrastructure
     ("agency-devops-automator", "Infrastructure as code, CI/CD pipeline, and cloud ops automation.", "engineering/engineering-devops-automator.md"),
     ("agency-sre", "Site reliability engineering with SLOs, error budgets, observability, and chaos engineering.", "engineering/engineering-sre.md"),
-    # engineering → security
+    # engineering -> security
     ("agency-security-engineer", "Application security, threat modeling, and secure code review specialist.", "engineering/engineering-security-engineer.md"),
     ("agency-threat-detection", "SIEM rule authoring, MITRE ATT&CK coverage, and detection-as-code workflows.", "engineering/engineering-threat-detection-engineer.md"),
-    # engineering → docs-architecture
+    # engineering -> docs-architecture
     ("agency-technical-writer", "Developer documentation, API references, READMEs, and tutorial authoring.", "engineering/engineering-technical-writer.md"),
     ("agency-software-architect", "System design, domain-driven design, and architectural pattern selection.", "engineering/engineering-software-architect.md"),
     ("agency-backend-architect", "Scalable backend systems, database architecture, API surface, and cloud topology design.", "engineering/engineering-backend-architect.md"),
-    # engineering → frontend
+    # engineering -> frontend
     ("agency-frontend-developer", "React, Vue, and Angular frontend implementation, modern web performance, and bundling.", "engineering/engineering-frontend-developer.md"),
-    # engineering → language-arm-cortex
+    # engineering -> language-arm-cortex
     ("agency-embedded-firmware", "Embedded firmware for ESP32, STM32, Nordic, FreeRTOS, and Zephyr targets.", "engineering/engineering-embedded-firmware-engineer.md"),
-    # engineering → planning-product
+    # engineering -> planning-product
     ("agency-rapid-prototyper", "Fast proof-of-concept and MVP development to validate ideas before production investment.", "engineering/engineering-rapid-prototyper.md"),
-    # testing → frontend
+    # testing -> frontend
     ("agency-accessibility-auditor", "WCAG and screen-reader accessibility auditor; defaults to declaring UIs not accessible until proven otherwise.", "testing/testing-accessibility-auditor.md"),
-    # testing → quality
+    # testing -> quality
     ("agency-api-tester", "API validation, performance, and quality assurance testing.", "testing/testing-api-tester.md"),
     ("agency-performance-benchmarker", "Performance measurement, benchmarking, and optimization analysis.", "testing/testing-performance-benchmarker.md"),
     ("agency-test-results-analyzer", "Quality metrics analysis and trend detection from accumulated test runs.", "testing/testing-test-results-analyzer.md"),
     ("agency-evidence-collector", "Screenshot-obsessed QA verifier; requires visual proof before accepting that a feature works.", "testing/testing-evidence-collector.md"),
-    # testing → planning-product
+    # testing -> planning-product
     ("agency-workflow-optimizer", "Process improvement and automation opportunity analysis for engineering and ops workflows.", "testing/testing-workflow-optimizer.md"),
     # design (new bundle)
     ("agency-brand-guardian", "Brand identity consistency review and strategic brand positioning.", "design/design-brand-guardian.md"),
@@ -199,7 +199,7 @@ AGENCY_AGENTS = [
     ("agency-inclusive-visuals", "Defeats AI image bias for representative, inclusive imagery and video.", "design/design-inclusive-visuals-specialist.md"),
     ("agency-visual-storyteller", "Visual narrative construction and multimedia content design.", "design/design-visual-storyteller.md"),
     ("agency-whimsy-injector", "Adds personality, delight, and playful brand moments to product surfaces.", "design/design-whimsy-injector.md"),
-    # product → planning-product
+    # product -> planning-product
     ("agency-product-manager", "End-to-end product lifecycle management and roadmap ownership.", "product/product-manager.md"),
     ("agency-sprint-prioritizer", "Agile sprint prioritization and velocity management.", "product/product-sprint-prioritizer.md"),
     ("agency-trend-researcher", "Market intelligence and opportunity assessment for product strategy.", "product/product-trend-researcher.md"),
@@ -265,25 +265,25 @@ AGENCY_AGENTS = [
     ("agency-historian", "Historical analysis, periodization, material culture, and historiography for worldbuilding.", "academic/academic-historian.md"),
     ("agency-narratologist", "Narrative theory, story structure, and character arc analysis from Propp to Campbell.", "academic/academic-narratologist.md"),
     ("agency-psychologist", "Personality theory, motivation, and cognitive patterns for psychologically credible characters.", "academic/academic-psychologist.md"),
-    # support → planning-product, security, infrastructure
+    # support -> planning-product, security, infrastructure
     ("agency-analytics-reporter", "Dashboard authoring, KPI definition, and statistical analysis.", "support/support-analytics-reporter.md"),
     ("agency-exec-summary", "Executive summaries in McKinsey SCQA, BCG Pyramid, and Bain frameworks for C-suite consumption.", "support/support-executive-summary-generator.md"),
     ("agency-legal-compliance", "Multi-jurisdiction regulatory compliance review.", "support/support-legal-compliance-checker.md"),
     ("agency-infra-maintainer", "Reliability, performance optimization, and ops maintenance for infrastructure.", "support/support-infrastructure-maintainer.md"),
-    # specialized → agentic-maintenance
+    # specialized -> agentic-maintenance
     ("agency-mcp-builder", "Designs, builds, and tests Model Context Protocol servers.", "specialized/specialized-mcp-builder.md"),
     ("agency-workflow-architect", "Maps complete workflow trees and produces build-ready automation specifications.", "specialized/specialized-workflow-architect.md"),
     ("agency-agents-orchestrator", "Autonomous pipeline manager that orchestrates multi-agent development workflows.", "specialized/agents-orchestrator.md"),
     ("agency-automation-governance", "n8n-first automation governance, audit trails, and policy enforcement.", "specialized/automation-governance-architect.md"),
     ("agency-identity-graph", "Canonical entity resolution and identity graph operation across multi-agent systems.", "specialized/identity-graph-operator.md"),
     ("agency-agentic-identity", "Identity, authentication, and trust architecture for autonomous agents.", "specialized/agentic-identity-trust.md"),
-    # specialized → docs-architecture
+    # specialized -> docs-architecture
     ("agency-zk-steward", "Zettelkasten knowledge-base steward operating in Luhmann, Feynman, Munger, or Ogilvy mode.", "specialized/zk-steward.md"),
     ("agency-developer-advocate", "Developer relations, developer experience, and platform adoption advocacy.", "specialized/specialized-developer-advocate.md"),
     ("agency-document-generator", "Code-based PDF, PPTX, DOCX, and XLSX generation with charts and tables.", "specialized/specialized-document-generator.md"),
-    # specialized → security
+    # specialized -> security
     ("agency-compliance-auditor", "SOC2, ISO 27001, HIPAA, and PCI-DSS compliance auditing.", "specialized/compliance-auditor.md"),
-    # specialized → data-ai
+    # specialized -> data-ai
     ("agency-model-qa", "Independent ML and statistical model audit, replication, and validation.", "specialized/specialized-model-qa.md"),
     ("agency-data-consolidation", "Consolidates sales and operational data into reporting dashboards.", "specialized/data-consolidation-agent.md"),
     ("agency-report-distribution", "Automates territorial and segmented report distribution to stakeholders.", "specialized/report-distribution-agent.md"),

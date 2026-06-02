@@ -8,9 +8,9 @@ Estimate tokens as `word_count * 1.3`. For precise counts, pipe through the proj
 
 | Load Type | When Read | Token Impact |
 |-----------|-----------|-------------|
-| Eager | Every session start | Highest — minimize aggressively |
-| Agent | When skill invoked | Medium — one skill per phase |
-| Lazy | When rule/procedure referenced | Lowest — load only when needed |
+| Eager | Every session start | Highest -- minimize aggressively |
+| Agent | When skill invoked | Medium -- one skill per phase |
+| Lazy | When rule/procedure referenced | Lowest -- load only when needed |
 
 ## Redundancy Detection
 

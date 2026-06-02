@@ -20,7 +20,7 @@ case "$FILE" in
     "$HOME_DIR/personal/"*|"$HOME_DIR/work/"*|"$HOME_DIR/Projects/"*)
         exit 0 ;; # project files, not chezmoi-managed
     "$HOME_DIR/"*)
-        ;; # home directory file, may be chezmoi-managed — continue
+        ;; # home directory file, may be chezmoi-managed -- continue
     *)
         exit 0 ;; # outside home entirely, skip
 esac
@@ -150,7 +150,7 @@ chezmoi_auto_commit() {
 
 # Main logic
 main() {
-    # Direct edit to chezmoi source — auto-commit and push
+    # Direct edit to chezmoi source -- auto-commit and push
     if [[ "$FILE" == "$CHEZMOI_SOURCE"* ]] || [[ "$FILE" == "$HOME_DIR/.local/share/chezmoi/"* ]]; then
         chezmoi_auto_commit "$FILE"
         exit 0

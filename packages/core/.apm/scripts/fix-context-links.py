@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repair generated AGENTS.md context links after distributed APM compilation."""
+"""Repair generated AGENTS.md and CLAUDE.md context links after distributed APM compilation."""
 
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ PACKAGE_ROOT = next((path for path in PACKAGE_ROOT_CANDIDATES if path.exists()),
 
 MARKDOWN_LINK = re.compile(r"\]\(([^)\n]+\.context\.md)\)")
 
+TARGET_NAMES = ("AGENTS.md", "CLAUDE.md")
+
 LANGUAGE_HINTS = (
     ("language-typescript", ("TypeScript", "JavaScript", "ts,tsx", "js,jsx")),
     ("language-python", ("Python",)),
@@ -29,11 +31,12 @@ LANGUAGE_HINTS = (
 
 def iter_agents_files() -> list[Path]:
     files: list[Path] = []
-    for path in ROOT.rglob("AGENTS.md"):
-        parts = set(path.parts)
-        if {".git", "node_modules", "apm_modules"} & parts:
-            continue
-        files.append(path)
+    for name in TARGET_NAMES:
+        for path in ROOT.rglob(name):
+            parts = set(path.parts)
+            if {".git", "node_modules", "apm_modules"} & parts:
+                continue
+            files.append(path)
     return sorted(files)
 
 
@@ -98,11 +101,11 @@ def repair_file(path: Path) -> bool:
 def main() -> int:
     changed = [str(path) for path in iter_agents_files() if repair_file(path)]
     if changed:
-        print(f"repaired context links in {len(changed)} AGENTS.md file(s)")
+        print(f"repaired context links in {len(changed)} context file(s)")
         for path in changed:
             print(f"- {path}")
     else:
-        print("no AGENTS.md context links needed repair")
+        print("no context links needed repair")
     return 0
 
 

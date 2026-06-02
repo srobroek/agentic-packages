@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse:Bash — enforce spec: and deferred labels on issue creation
+# Hook: PreToolUse:Bash -- enforce spec: and deferred labels on issue creation
 # Blocks (exit 2) if labels missing. Checks both CLI and GraphQL mutations.
 
 # Only activate in speckit projects
@@ -28,7 +28,7 @@ if echo "$COMMAND" | grep -qE '(gh issue create|glab issue create)'; then
     fi
     SPEC_COUNT=$(echo "$COMMAND" | grep -oE '\-\-label[= ]*[^ ]*spec:[^ ]*' | wc -l | tr -d ' ')
     if [ "$SPEC_COUNT" -lt 2 ]; then
-      echo "BLOCKED: Deferred issues must have TWO spec: labels — spec:{source} (where discovered) and spec:{blocking} (what must complete before this work can proceed). Found $SPEC_COUNT." >&2
+      echo "BLOCKED: Deferred issues must have TWO spec: labels -- spec:{source} (where discovered) and spec:{blocking} (what must complete before this work can proceed). Found $SPEC_COUNT." >&2
       exit 2
     fi
   fi

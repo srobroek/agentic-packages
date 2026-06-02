@@ -174,6 +174,29 @@ def codex_external_override(name: str, path: Path, overrides: dict) -> dict[str,
     return {}
 
 
+def claude_external_override(name: str, path: Path, overrides: dict) -> dict[str, str]:
+    claude = overrides.get("claude", {})
+    if not isinstance(claude, dict):
+        return {}
+
+    marketplace, package = external_agent_source(path)
+    source_overrides = claude.get("source_overrides", {})
+    if isinstance(source_overrides, dict):
+        marketplace_overrides = source_overrides.get(marketplace, {})
+        if isinstance(marketplace_overrides, dict):
+            package_overrides = marketplace_overrides.get(package, {})
+            if isinstance(package_overrides, dict):
+                override = package_overrides.get(name, {})
+                if isinstance(override, dict) and override:
+                    return {key: str(value) for key, value in override.items() if value}
+
+    agent_overrides = claude.get("agent_overrides", {})
+    override = agent_overrides.get(name, {}) if isinstance(agent_overrides, dict) else {}
+    if isinstance(override, dict):
+        return {key: str(value) for key, value in override.items() if value}
+    return {}
+
+
 def external_claude_agent_metadata(root: Path) -> dict[str, dict]:
     agents: dict[str, dict] = {}
     overrides = runtime_overrides(root)
@@ -184,15 +207,19 @@ def external_claude_agent_metadata(root: Path) -> dict[str, dict]:
         source_model = str(parsed.get("model") or "")
         explicit = codex_external_override(name, path, overrides)
         codex = explicit or codex_from_claude_model(source_model)
-        if codex:
-            agents[name] = {
-                "codex": codex,
-                "source": {
-                    "path": str(path),
-                    "model": source_model,
-                    "override": "explicit" if explicit else "claude-model-fallback",
-                },
+        claude = claude_external_override(name, path, overrides)
+        if codex or claude:
+            entry: dict = {}
+            if codex:
+                entry["codex"] = codex
+            if claude:
+                entry["claude"] = claude
+            entry["source"] = {
+                "path": str(path),
+                "model": source_model,
+                "override": "explicit" if (explicit or claude) else "claude-model-fallback",
             }
+            agents[name] = entry
     return agents
 
 

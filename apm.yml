@@ -27,7 +27,7 @@ scripts:
   setup: "apm run install && apm run prune-stale-local-packages && apm run compile && apm run fix-context-links && apm run patch-agents && apm run audit-agentic-assets"
 compilation:
   strategy: distributed
-  source_attribution: false
+  source_attribution: true
   exclude:
     - "packages/**"
     - ".apm/instructions/70-language-typescript.instructions.md"
@@ -131,7 +131,7 @@ marketplace:
       subdir: .apm/skills/quick-commit
       ref: main
     - name: research
-      description: "Use when the user needs open-ended research requiring synthesis across multiple sources — comparisons, technology evaluations, tradeoff analysis. NOT for single-repo 'where is X' lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows."
+      description: "Use when the user needs open-ended research requiring synthesis across multiple sources -- comparisons, technology evaluations, tradeoff analysis. NOT for single-repo 'where is X' lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows."
       source: srobroek/agentic-packages
       subdir: .apm/skills/research
       ref: main

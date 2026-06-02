@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "core",
-      "description": "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts write-claude-pointers, strip-constitution-blocks, prune-stale-local-packages, fix-agents-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.",
+      "description": "Bundle: Deterministic shared project baseline with core agents, code intelligence, project lifecycle, agentic maintenance, first-party skill writing, and Matt grill/diagnose workflows. Contains: skills catchup, handover, code-review, codebase-index, codebase-memory, commit-push-merge, commit-push-pr, explore, optimize-steering, prompt-lookup, quick-commit, research, steering-audit, unstuck, verify, web-fetch, write-a-skill; agents adversarial-challenger, coder, external-repo-worker, pr-reviewer; steering; scripts prune-stale-local-packages, fix-context-links, patch-runtime-agents, audit-agentic-assets; packages diagnose, grill-me, grill-with-docs, context-management, agent-orchestration.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -574,7 +574,7 @@
     },
     {
       "name": "design",
-      "description": "Bundle: Design bundle with brand, UI, UX, visual-storytelling, and inclusive-visuals agents from msitarzewski/agency-agents. Contains: agency-brand-guardian, agency-ui-designer, agency-ux-architect, agency-ux-researcher, agency-image-prompt-engineer, agency-inclusive-visuals-specialist, agency-visual-storyteller, agency-whimsy-injector.",
+      "description": "design package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -604,7 +604,7 @@
     },
     {
       "name": "finance",
-      "description": "Bundle: Finance bundle with bookkeeping, financial analysis, FP&A, investment research, tax strategy, finance tracker, and accounts payable agents from msitarzewski/agency-agents.",
+      "description": "finance package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -624,7 +624,7 @@
     },
     {
       "name": "game-development",
-      "description": "Bundle: Game development bundle with Unity, Unreal Engine, Godot, Roblox Studio, Blender, and general game design/audio/level/narrative/technical-art agents from msitarzewski/agency-agents.",
+      "description": "game-development package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -774,7 +774,7 @@
     },
     {
       "name": "marketing",
-      "description": "Bundle: Marketing bundle (Western/global) with SEO, content, social-media, growth, paid-discoverability, and editorial agents from msitarzewski/agency-agents. Excludes all China-platform agents (Baidu, Bilibili, Douyin, Kuaishou, Weibo, WeChat, Xiaohongshu, Zhihu, and Chinese e-commerce/livestream/localization agents).",
+      "description": "marketing package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -864,7 +864,7 @@
     },
     {
       "name": "project-management",
-      "description": "Bundle: Project management bundle with senior PM, project shepherd, studio producer, studio operations, experiment tracker, and Jira workflow steward agents from msitarzewski/agency-agents. Contains: agency-senior-pm, agency-project-shepherd, agency-studio-producer, agency-studio-operations, agency-experiment-tracker, agency-jira-workflow-steward.",
+      "description": "project-management package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -894,7 +894,7 @@
     },
     {
       "name": "speckit",
-      "description": "Bundle: SpecKit workflow bundle with SpecKit agents, bugfix skill, and docs/spec steering. Contains: skills speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.",
+      "description": "Bundle: SpecKit workflow bundle with per-command DAG hook dispatcher, SpecKit agents, bugfix skill, and docs/spec steering. Contains: hook dispatcher + ~150 per-command node markdowns shipping to Claude (.claude/settings.json) and Codex (.codex/hooks.json); skill speckit-bugfix; agents speckit-implement-task, speckit-research, speckit-sync, speckit-sync-conflicts, speckit-verify, speckit-verify-tasks; steering.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",
@@ -914,7 +914,7 @@
     },
     {
       "name": "worldbuilding",
-      "description": "Bundle: Worldbuilding bundle with anthropologist, geographer, historian, narratologist, and psychologist persona-builder agents from msitarzewski/agency-agents. Pairs with the game-development bundle and supports creative writing workflows.",
+      "description": "worldbuilding package from agentic-packages.",
       "source": {
         "source": "git-subdir",
         "repo": "srobroek/agentic-packages",

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse:Bash — Suggest preferred tools over deprecated ones
+# Hook: PreToolUse:Bash -- Suggest preferred tools over deprecated ones
 # Advisory only (additionalContext), does NOT block.
 
 INPUT=$(cat)
