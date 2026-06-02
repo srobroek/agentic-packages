@@ -1,12 +1,13 @@
 name: docs-architecture
-version: 0.0.1
-description: "Documentation and architecture: Hobson documentation standards, code documentation, doc generation, and C4 architecture workflows."
+version: 0.1.0
+description: >-
+  Documentation and architecture: Hobson documentation standards, code
+  documentation, doc generation, and C4 architecture workflows.
 author: Sjors Robroek
 license: MIT
 type: hybrid
 target: all
 includes: auto
-
 dependencies:
   apm:
     - wshobson/agents/plugins/documentation-standards#main
