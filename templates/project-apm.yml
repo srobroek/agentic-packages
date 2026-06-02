@@ -8,7 +8,7 @@ dependencies:
     - git@github.com:srobroek/agentic-packages.git
 
 scripts:
-  install-agentic-tools: "apm install --target claude,codex,agent-skills"
+  install-agentic-tools: "apm install --target claude,codex"
   patch-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
   audit-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/audit-agentic-assets.py"
   setup-agentic-tools: "apm run install-agentic-tools && apm compile --target codex,claude --no-constitution && apm run patch-agentic-tools && apm run audit-agentic-tools"

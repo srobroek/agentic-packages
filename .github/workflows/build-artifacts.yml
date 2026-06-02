@@ -1,15 +1,11 @@
 name: Check artifacts
 
 # PR-only drift check. Regenerates the non-destructive artifacts and fails if
-# the committed copies are stale, so a PR that changes a bundle/skill/agent
-# must include the regenerated output. Does NOT commit anything -- artifact
-# regeneration + commit happens in release-please.yml on release.
-#
-# build-packages.py is intentionally NOT run: it rmtrees and re-materializes
-# each packages/<bundle>/.apm tree from the bundle definition, which would wipe
-# hand-maintained content that has no generator source (notably the speckit
-# DAG: dispatcher, nodes/, hooks, workflow instructions). Run it locally and
-# review the diff.
+# the committed copies are stale, so a PR that changes a package or the
+# marketplace block must include the regenerated output. Does NOT commit
+# anything -- artifact regeneration + commit happens in release-please.yml on
+# release. The marketplace manifests, README inventory tables, and
+# release-please config are all generated; everything else is hand-authored.
 
 on:
   pull_request:
@@ -17,9 +13,7 @@ on:
       - ".apm/**"
       - "templates/**"
       - "apm.yml"
-      - "indexes/**"
       - "packages/**"
-      - "marketplace.json"
       - "README.md"
 
 permissions:
@@ -43,7 +37,7 @@ jobs:
       - name: Regenerate non-destructive artifacts
         run: |
           apm pack --check-clean
-          python3 .apm/scripts/build-agentic-indexes.py
+          python3 .apm/scripts/build-release-please.py
           python3 .apm/scripts/build-readme-tables.py
 
       - name: Fail if artifacts are stale

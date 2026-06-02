@@ -41,6 +41,21 @@
     }
   ],
   "packages": {
+    ".": {
+      "release-type": "simple",
+      "component": "srobroek-agentic",
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": [
+        "packages"
+      ],
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-adversarial-challenger": {
       "release-type": "simple",
       "component": "agent-adversarial-challenger",

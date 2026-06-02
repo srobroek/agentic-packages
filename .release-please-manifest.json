@@ -1,4 +1,5 @@
 {
+  ".": "0.0.1",
   "packages/agent-adversarial-challenger": "0.0.1",
   "packages/agent-coder": "0.0.1",
   "packages/agent-external-repo-worker": "0.0.1",

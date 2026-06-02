@@ -6,3 +6,7 @@ license: Apache-2.0
 type: skill
 target: all
 includes: auto
+dependencies:
+  apm:
+    # catchup reads the recovery prompt that handover writes; ship the pair together.
+    - handover@srobroek-agentic
