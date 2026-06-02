@@ -27,7 +27,7 @@
   "packages/hooks-git-workflow": "0.0.1",
   "packages/hooks-quality": "0.0.1",
   "packages/hyperresearch": "0.0.1",
-  "packages/incident-response": "0.0.1",
+  "packages/incident-response": "0.1.0",
   "packages/infrastructure": "0.0.1",
   "packages/language-arm-cortex": "0.0.1",
   "packages/language-dotnet": "0.0.1",
