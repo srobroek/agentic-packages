@@ -1,11 +1,14 @@
 name: frontend
-version: 0.0.1
-description: "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins."
+version: 0.1.0
+description: >-
+  Frontend development and design toolkit: the Playwright browser skill,
+  frontend steering, and external design/build skills (Impeccable, Interface
+  Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page
+  plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   apm:
     - playwright@srobroek-agentic
