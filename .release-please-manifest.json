@@ -7,7 +7,7 @@
   "packages/catchup": "0.0.1",
   "packages/code-intelligence": "0.0.1",
   "packages/code-review": "0.0.1",
-  "packages/codebase-index": "0.0.1",
+  "packages/codebase-index": "0.1.0",
   "packages/codebase-memory": "0.0.1",
   "packages/commit-push-merge": "0.0.1",
   "packages/commit-push-pr": "0.0.1",
