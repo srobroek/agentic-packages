@@ -1,6 +1,6 @@
 name: explore
-version: 0.0.1
-description: "Read-only codebase orientation, file discovery, and path tracing."
+version: 0.1.0
+description: Read-only codebase orientation, file discovery, and path tracing.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
