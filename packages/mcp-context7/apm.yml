@@ -1,11 +1,12 @@
 name: mcp-context7
-version: 0.0.1
-description: "MCP server package for Context7, providing current library and framework documentation lookups."
+version: 0.1.0
+description: >-
+  MCP server package for Context7, providing current library and framework
+  documentation lookups.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
-
 dependencies:
   mcp:
     - name: context7
@@ -13,5 +14,5 @@ dependencies:
       transport: stdio
       command: npx
       args:
-        - -y
+        - '-y'
         - '@upstash/context7-mcp'
