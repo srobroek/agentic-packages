@@ -9,6 +9,3 @@ license: Apache-2.0
 type: skill
 target: all
 includes: auto
-dependencies:
-  apm:
-    - srobroek/agentic-packages/packages/handover#handover-v0.1.0

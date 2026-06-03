@@ -11,12 +11,12 @@ target: all
 dependencies:
   apm:
     - >-
-      srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.0
-    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.0
-    - srobroek/agentic-packages/packages/audit-steering#audit-steering-v0.1.0
-    - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.0
-    - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.0
+      srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.1
+    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.1
+    - srobroek/agentic-packages/packages/audit-steering#audit-steering-v0.1.1
+    - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.1
+    - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
     - >-
-      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.0
+      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
     - wshobson/agents/plugins/documentation-standards#main
     - wshobson/agents/plugins/plugin-eval#main

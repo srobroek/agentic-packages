@@ -9,7 +9,7 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/python-quality#python-quality-v0.1.0
+    - srobroek/agentic-packages/packages/python-quality#python-quality-v0.1.1
     - >-
       srobroek/agentic-packages/packages/language-steering-python#language-steering-python-v0.1.0
     - wshobson/agents/plugins/python-development#main
