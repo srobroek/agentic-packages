@@ -25,9 +25,7 @@ Many packages also ship **hooks** directly: code-intelligence (indexing/discover
 - [How bundles work](#how-bundles-work)
 - [Compiling for different targets](#compiling-for-different-targets)
 - [SpecKit orchestration](#speckit-orchestration)
-  - [Setting up a SpecKit project](#setting-up-a-speckit-project)
-- [The how and why of SpecKit orchestration](#the-how-and-why-of-speckit-orchestration)
-- [Inventory](#inventory)
+- [Documentation](#documentation)
 - [Developing this repository](#developing-this-repository)
 
 ---
@@ -193,34 +191,11 @@ A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.y
 
 ## How bundles work
 
-A **bundle** is a hand-authored APM package whose job is to install a coherent set of primitives. Each bundle is its own directory under [`packages/`](packages/) with an `apm.yml` manifest. The manifest is a dependency aggregator: a `dependencies.apm:` list referencing member packages plus any external third-party packages (Matt Pocock skills, Hobson agents, ...).
+A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
 
-**Member reference syntax.** Sibling packages in this monorepo are referenced as a **virtual subdirectory of the marketplace repo**, version-pinned to the member's release tag:
+Members are referenced as a **virtual subdirectory of the marketplace repo**, version-pinned to a release tag (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`); externals by their own source ref. Each package is versioned independently via release-please.
 
-```yaml
-dependencies:
-  apm:
-    - srobroek/agentic-packages/packages/code-review#code-review-v0.1.0   # member, pinned
-    - srobroek/agentic-packages/packages/verify#verify-v0.1.0
-    - wshobson/agents/plugins/comprehensive-review#main                   # external, by source
-```
-
-APM dependencies are repo-locators, not marketplace shortnames -- `code-review@srobroek-agentic` is **not** valid in `dependencies.apm` (that form only works on the `apm install` command line). The `owner/repo/path#ref` form resolves the same way for this repo's own dev checkout and for an external consumer installing from the marketplace.
-
-**Pinning and the bump workflow.** Member deps are pinned to a specific `#<member>-v<version>` tag (created by release-please on release). Pinning is deliberate: a bundle only moves to a newer member when you **edit its pin**, which is a `feat`/`fix` commit on the bundle that release-please then bumps. So updating a member is two explicit steps -- release the member, then re-pin (and thereby bump) each bundle that should adopt it. There is no automatic cascade.
-
-**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it pins a dependency on them. Bundles can also depend on other bundles, so `core` aggregates project-lifecycle, code-intelligence, and agentic-maintenance, and language bundles layer a single quality skill plus language steering on top.
-
-**Hooks ship with their owning package.** A package can carry `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `scripts/` directory; hook commands reference their scripts via `${PLUGIN_ROOT}/scripts/<name>.sh`. On install, APM deploys the scripts under `.claude/hooks/<pkg>/` and `.codex/hooks/<pkg>/`, rewrites `${PLUGIN_ROOT}`, and merges the hook config into `settings.json` / `hooks.json`. Codex only supports `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, and `Stop`; lifecycle events like `SessionStart` and `SubagentStart` are Claude-only, so those hooks ship in the claude variant only.
-
-Each package carries its own `apm.yml` and is versioned independently via release-please. The marketplace itself is hand-authored in the root [`apm.yml`](apm.yml) `marketplace:` block using local-path sources, and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
-
-To regenerate artifacts after editing a manifest:
-
-```bash
-apm pack                # regenerate the marketplace manifests only
-apm run build-artifacts # release-please config + README tables + apm pack
-```
+Full detail -- the member-reference syntax, the pin-and-bump workflow, and how hooks ship with their owning package -- is in **[docs/bundles.md](docs/bundles.md#how-bundles-work)**.
 
 ---
 
@@ -243,7 +218,7 @@ apm compile --all                     # every canonical target
 
 ## SpecKit orchestration
 
-SpecKit is delivered as three opt-in packages (see [Setting up a SpecKit project](#setting-up-a-speckit-project)): `speckit` (six sub-agents + bugfix/setup skills + the DAG node store + workflow guard hooks), `steering-speckit` (the gated workflow steering), and `speckit-dag-hooks` (the **hook-enforced orchestration DAG** dispatcher). Together they turn ad-hoc "vibe coding" into a gated pipeline:
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (six sub-agents + bugfix/setup skills + the DAG node store + workflow guard hooks), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-dag-hooks` (a Python DAG dispatcher + hooks that hard-block out-of-order `/speckit.*` calls on both Claude and Codex).
 
 ```
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
@@ -253,260 +228,28 @@ specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
         -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
 ```
 
-The six agents are read-only analysts except where noted:
+Quick start: `apm install speckit@srobroek-agentic`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
 
-| Agent | Role |
-| --- | --- |
-| `speckit-research` | Pulls current library/API docs (Context7, official sources) tied to a spec decision; returns cited findings. |
-| `speckit-implement-task` | Executes scoped tasks from `tasks.md`, or delegates substantial code work to a coder. |
-| `speckit-verify` | Checks implementation against the spec's functional requirements and success criteria. |
-| `speckit-verify-tasks` | Detects *phantom completions* -- tasks marked done with no real implementation evidence. |
-| `speckit-sync` | Detects drift between specs and implementation. |
-| `speckit-sync-conflicts` | Detects contradictions between specs or against shared contracts. |
-
-### Setting up a SpecKit project
-
-Three layers, installed separately so you can opt into exactly what you want:
-
-- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, and the `speckit-dag` node store. Also ships the SpecKit workflow guard hooks (issue/PR conventions, commit checks, stop gate).
-- **`steering-speckit`** -- the opinionated mandatory-gated Phase 1/2/3 workflow steering. Opt in to adopt the process.
-- **`speckit-dag-hooks`** -- the enforcement layer: the Python DAG dispatcher + `nodes.json` + hooks that hard-block out-of-order `/speckit.*` calls. Depends on `speckit`.
-
-The `/speckit.*` slash commands themselves come from the upstream [`github/spec-kit`](https://github.com/github/spec-kit) `specify` CLI plus community extensions.
-
-**Recommended -- via the `speckit-setup` skill** (shipped in the `speckit` package):
-
-```bash
-apm install speckit@srobroek-agentic --target claude,codex
-```
-
-Then invoke the skill (it is self-describing -- ask the agent to "set up SpecKit"). It bootstraps SpecKit end-to-end:
-
-1. `specify init --here --integration codex --script sh` -- scaffolds `.specify/` (constitution, feature dirs, workflow state).
-2. Registers the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
-3. Installs and enables the required extension set and the workflow definitions (`speckit`, `speckit-quality`, `speckit-full`).
-
-**Manual setup** -- if you prefer to drive `specify` yourself:
-
-```bash
-# 1. Install the specify CLI (see github/spec-kit for current install)
-uv tool install specify-cli
-
-# 2. Scaffold .specify/ in your project
-specify init --here --integration codex --script sh
-
-# 3. Register the community extension catalog
-specify extension catalog add --name community --install-allowed \
-  https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json
-
-# 4. Install this repo's speckit layers
-apm install speckit@srobroek-agentic --target claude,codex
-apm install steering-speckit@srobroek-agentic        # opt-in: the gated workflow
-apm install speckit-dag-hooks@srobroek-agentic       # opt-in: hard-block enforcement
-apm compile --target codex,claude --no-constitution
-```
-
-The enforcement hooks key off `.specify/feature.json` (or the git branch) to resolve the active feature, so a scaffolded `.specify/` directory is a prerequisite for the DAG's precondition checks to work.
+Full setup, the agent roster, the DAG node store, and the hook-dispatcher architecture (how/why) live in **[docs/speckit.md](docs/speckit.md)**.
 
 ---
 
-## The how and why of SpecKit orchestration
+## Documentation
 
-**Why.** LLM coding agents skip steps. Left to their own judgment they call a security review "overkill," mark tasks complete that were never implemented, and let specs drift from code. The orchestration system removes that discretion: every step is mandatory by default, the ordering is fixed, and a hook layer can hard-block out-of-order or precondition-violating moves before the model acts.
+The full inventory lives in `docs/`:
 
-**How -- three layers.**
-
-1. **Declarative workflow** -- [`packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md`](packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md) defines the full Phase 1 (spec, human-gated) -> Phase 2 (implementation) -> Phase 3 (post-implementation QA) DAG and the standing rules: *all steps mandatory, always invoke via the Skill tool, always get approval between phases.*
-
-2. **The DAG node store** -- [`packages/speckit/.apm/skills/speckit-dag/nodes/`](packages/speckit/.apm/skills/speckit-dag/nodes/) holds a `<step>.pre.md` and `<step>.post.md` pair for each step. `pre.md` declares legitimate predecessors and **preconditions**; `post.md` declares the default next step and **postconditions**. This is the graph -- edges live in these files, not in code. The same edges are compiled into [`packages/speckit-dag-hooks/scripts/nodes.json`](packages/speckit-dag-hooks/scripts/nodes.json), which the dispatcher reads at runtime.
-
-3. **The hook dispatcher** -- [`packages/speckit-dag-hooks/scripts/dispatcher.py`](packages/speckit-dag-hooks/scripts/dispatcher.py) (a self-contained Python script, no build step) runs on every `/speckit.*` invocation, wired through [`speckit-claude-hooks.json`](packages/speckit-dag-hooks/.apm/hooks/speckit-claude-hooks.json) and [`speckit-codex-hooks.json`](packages/speckit-dag-hooks/.apm/hooks/speckit-codex-hooks.json):
-   - **Pre phase** evaluates hard-block directives from `nodes.json` and **denies** the call if violated:
-     - `HARD-MISSING: specs/<feat>/spec.md` -- blocks if a required artifact is absent (e.g. `plan` before `spec`)
-     - `HARD-EXISTS: <path>` -- blocks if an artifact that shouldn't exist yet does (routes to a refine path)
-     - `HARD-DEPRECATED:` -- blocks unconditionally
-   - It resolves the `<feat>` placeholder from `$SPECIFY_FEATURE_DIRECTORY`, then `.specify/feature.json`, then the git branch -- so preconditions are feature-aware.
-   - Otherwise it injects the node body as `additionalContext` (soft steering -- "you came from X, go to Y next").
-
-**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, `PostToolUse`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
-
-**Mandatory-step enforcement.** Node `.pre.md` files phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify, verify-tasks, code-review, security-review) mandatory rather than optional.
-
-**The payoff.** Security review and phantom-completion detection can't be silently dropped; specs can't be hand-edited around the Skill tool; and the same gated flow compiles to both Claude and Codex from one definition.
-
----
-
-## Inventory
-
-The tables below are generated from [`indexes/*.json`](indexes/) by [`build-readme-tables.py`](.apm/scripts/build-readme-tables.py) and kept current by CI -- do not edit them by hand.
-
-### Bundles
-
-In the **Includes** column, each entry is a member package; an entry marked with a trailing `^` is an external third-party package (Matt Pocock, Hobson, and others) rather than one of this marketplace's own packages.
-
-<!-- BEGIN:bundles -->
-| Bundle | What it gives you | Includes |
-| --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
-| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `diagnose`^, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^, `documentation-standards`^, `plugin-eval`^ |
-| `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, `diagnose`^ |
-| `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
-| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
-| `docs-architecture` | Documentation and architecture | `documentation-standards`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
-| `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^, `frontend-mobile-development`^, `ui-design`^, `accessibility-compliance`^, `brand-landingpage`^ |
-| `governance` | Agent governance | `protect-mcp`^, `signed-audit-trails`^, `review-agent-governance`^, `block-no-verify`^ |
-| `incident-response` | Incident response and production debugging | `error-debugging`^, `distributed-debugging`^, `incident-response`^, `error-diagnostics`^, `debugging-toolkit`^ |
-| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`, `cloud-infrastructure`^, `kubernetes-operations`^, `cicd-automation`^, `deployment-strategies`^, `deployment-validation`^, `observability-monitoring`^ |
-| `language-arm-cortex` | ARM Cortex-M firmware toolkit | `arm-cortex-microcontrollers`^ |
-| `language-dotnet` | .NET development toolkit | `dotnet-contribution`^ |
-| `language-functional` | Functional programming toolkit | `functional-programming`^ |
-| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `systems-programming`^ |
-| `language-julia` | Julia development toolkit | `julia-development`^ |
-| `language-jvm` | JVM language toolkit | `jvm-languages`^ |
-| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `python-development`^ |
-| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `systems-programming`^ |
-| `language-shell` | Shell scripting toolkit | `shell-scripting`^ |
-| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `deployment-strategies`^ |
-| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `javascript-typescript`^ |
-| `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`^ |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`^, `diagnose`^, `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^, `zoom-out`^ |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `zoom-out`^, `improve-codebase-architecture`^ |
-| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
-| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
-| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`^, `ResumeSkills`^ |
-| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
-| `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
-| `speckit` | SpecKit mechanism | self-contained |
-| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
-<!-- END:bundles -->
-
-### MCP server packages
-
-Pre-wired Model Context Protocol servers. Installing one adds the server's tools to your runtime's MCP config -- no manual server setup.
-
-<!-- BEGIN:mcp -->
-| MCP Package | Description |
-| --- | --- |
-| `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
-| `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
-| `mcp-package-version` | MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages. |
-| `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
-| `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
-| `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
-<!-- END:mcp -->
-
-### Agents
-
-Sub-agents the main thread can delegate to, each with its own model, tool access, and permission profile. Install an agent package to make it available to your runtime's delegation/`Task` tooling.
-
-<!-- BEGIN:agents -->
-| Agent | Description |
-| --- | --- |
-| `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application. |
-| `agent-coder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. |
-| `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
-| `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
-<!-- END:agents -->
-
-### Skills
-
-Reusable workflows, each its own package, deployed to `.agents/skills/` (cross-client). A skill is loaded on demand when its trigger matches; install only the workflows you want.
-
-<!-- BEGIN:skills -->
-| Skill | Description |
-| --- | --- |
-| `audit-steering` | Audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
-| `catchup` | Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request. |
-| `code-review` | Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests. |
-| `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. |
-| `codebase-memory` | Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index. |
-| `commit-push-merge` | Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method. |
-| `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
-| `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
-| `eli5` | Explain a topic at multiple depth levels, from simple to detailed, for layered understanding. |
-| `explore` | Read-only codebase orientation, file discovery, and path tracing. |
-| `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
-| `handover` | Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state. |
-| `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
-| `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. |
-| `playwright` | Automate browser interactions through a Playwright MCP server. |
-| `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns. |
-| `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
-| `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
-| `research` | Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis. |
-| `rust-quality` | Run Rust format, lint, and test checks with the project toolchain. |
-| `sniff` | Stability, hardening, and cleanup audit across a codebase. |
-| `typescript-quality` | Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain. |
-| `unstuck` | Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. |
-| `verify` | Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR. |
-| `web-fetch` | Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online. |
-| `write-a-skill` | Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. |
-<!-- END:skills -->
-
-### Steering packages
-
-Opt-in opinionated steering (instructions + context). Install only the conventions you want.
-
-<!-- BEGIN:steering -->
-| Steering Package | Description |
-| --- | --- |
-| `language-steering-go` | Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions. |
-| `language-steering-python` | Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions. |
-| `language-steering-rust` | Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions. |
-| `language-steering-terraform` | Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions. |
-| `language-steering-typescript` | Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions. |
-| `steering-backend` | Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering. |
-| `steering-data` | Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering. |
-| `steering-docs-specs` | Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering. |
-| `steering-frontend` | Opinionated frontend conventions: framework choice by surface (React/Vue/Next/Astro), UI library picks, app vs server state, and browser verification expectations. Opt-in steering -- install to adopt these frontend defaults. |
-| `steering-infrastructure` | Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering. |
-| `steering-project-structure` | Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live. |
-| `steering-speckit` | Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process. |
-| `steering-subagent-routing` | Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification. |
-| `steering-toolchain-defaults` | Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project. |
-| `steering-tools-scripts` | Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering. |
-<!-- END:steering -->
-
-### Hook packages
-
-Opt-in lifecycle hooks. Most hooks ship inside their owning package (code-intelligence, agent-coder, unstuck, the MCP packages, speckit); these two are standalone cross-cutting policy packages.
-
-<!-- BEGIN:hooks -->
-| Hook Package | Description |
-| --- | --- |
-| `hooks-git-workflow` | Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
-| `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
-<!-- END:hooks -->
-
-### External sources
-
-Bundles also pull in third-party skills and agents (marked `^` in the **Includes** column above). Their descriptions are owned and maintained upstream -- this table records only which repo each comes from. See the source repo for what each does.
-
-<!-- BEGIN:external-sources -->
-| Source repo | Count | Members pulled |
-| --- | --- | --- |
-| [`Agents365-ai/drawio-skill`](https://github.com/Agents365-ai/drawio-skill) | 1 | `drawio-skill` |
-| [`Dammyjay93/interface-design`](https://github.com/Dammyjay93/interface-design) | 1 | `interface-design` |
-| [`Paramchoudhary/ResumeSkills`](https://github.com/Paramchoudhary/ResumeSkills) | 1 | `ResumeSkills` |
-| [`coleam00/excalidraw-diagram-skill`](https://github.com/coleam00/excalidraw-diagram-skill) | 1 | `excalidraw-diagram-skill` |
-| [`daymade/claude-code-skills`](https://github.com/daymade/claude-code-skills) | 1 | `ppt-creator` |
-| [`google-labs-code/stitch-skills`](https://github.com/google-labs-code/stitch-skills) | 1 | `stitch-design` |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 11 | `caveman`, `diagnose`, `grill-me`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage`, `zoom-out` |
-| [`neuro-synapse/network-topology-agent`](https://github.com/neuro-synapse/network-topology-agent) | 1 | `d2-diagram` |
-| [`pbakaus/impeccable`](https://github.com/pbakaus/impeccable) | 1 | `impeccable` |
-| [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit) | 1 | `marp-slide` |
-| [`tristan-mcinnis/pptx-from-layouts-skill`](https://github.com/tristan-mcinnis/pptx-from-layouts-skill) | 1 | `pptx-from-layouts` |
-| [`varunr89/resume-tailoring-skill`](https://github.com/varunr89/resume-tailoring-skill) | 1 | `resume-tailoring` |
-| [`wshobson/agents`](https://github.com/wshobson/agents) | 53 | `accessibility-compliance`, `agent-orchestration`, `arm-cortex-microcontrollers`, `backend-api-security`, `block-no-verify`, `brand-landingpage`, `c4-architecture`, `cicd-automation`, `cloud-infrastructure`, `code-documentation`, `comprehensive-review`, `context-management`, `data-engineering`, `database-cloud-optimization`, `database-design`, `database-migrations`, `debugging-toolkit`, `deployment-strategies`, `deployment-validation`, `developer-essentials`, `distributed-debugging`, `documentation-generation`, `documentation-standards`, `dotnet-contribution`, `error-debugging`, `error-diagnostics`, `frontend-mobile-development`, `frontend-mobile-security`, `functional-programming`, `git-pr-workflows`, `incident-response`, `javascript-typescript`, `julia-development`, `jvm-languages`, `kubernetes-operations`, `llm-application-dev`, `machine-learning-ops`, `observability-monitoring`, `performance-testing-review`, `plugin-eval`, `protect-mcp`, `python-development`, `reverse-engineering`, `review-agent-governance`, `security-compliance`, `security-scanning`, `shell-scripting`, `signed-audit-trails`, `systems-programming`, `tdd-workflows`, `ui-design`, `unit-testing`, `web-scripting` |
-<!-- END:external-sources -->
+- **[docs/bundles.md](docs/bundles.md)** -- all bundles, what each gives you, and what it includes (plus how bundles work + external sources)
+- **[docs/skills.md](docs/skills.md)** -- the standalone skills
+- **[docs/agents.md](docs/agents.md)** -- the sub-agents (+ the SpecKit agents)
+- **[docs/steering.md](docs/steering.md)** -- the opt-in steering packages
+- **[docs/hooks-and-mcp.md](docs/hooks-and-mcp.md)** -- the hook packages and MCP server packages
+- **[docs/speckit.md](docs/speckit.md)** -- the SpecKit orchestration system: setup, the DAG, the hook dispatcher, and the how/why
 
 ---
 
 ## Developing this repository
 
-Every installable asset -- each skill, agent, MCP package, bundle, steering package, and hook package -- is a hand-authored package directory under [`packages/`](packages/) with its own `apm.yml`. Edit packages directly; **do not edit generated runtime directories (`.claude/`, `.codex/`, `.agents/`, compiled `AGENTS.md`/`CLAUDE.md`) by hand.** Author agent sources in `packages/agent-*/<name>.agent.md` (and `packages/speckit/.apm/agents/`), skills in `packages/<name>/.apm/skills/` or a root `SKILL.md`, and hooks in `packages/<pkg>/.apm/hooks/` + `packages/<pkg>/scripts/`.
+Every installable asset -- each skill, agent, MCP package, bundle, steering package, and hook package -- is a hand-authored package directory under [`packages/`](packages/) with its own `apm.yml`. Edit packages directly; **do not edit generated runtime directories (`.claude/`, `.codex/`, `.agents/`, compiled `AGENTS.md`/`CLAUDE.md`) by hand.** All primitives live under a package's `.apm/`: agents in `.apm/agents/<name>.agent.md`, skills in `.apm/skills/<name>/SKILL.md`, hooks in `.apm/hooks/` with their scripts in `scripts/` (referenced via `${PLUGIN_ROOT}/scripts/`).
 
 Each package has its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root `apm.yml` `marketplace:` block and generated to JSON via `apm pack`. After changing a package manifest or the marketplace block, regenerate artifacts and validate:
 
