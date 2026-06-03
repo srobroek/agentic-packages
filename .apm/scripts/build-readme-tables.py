@@ -32,23 +32,37 @@ ROOT = Path(__file__).resolve().parents[2]
 README = ROOT / "README.md"
 PACKAGES_DIR = ROOT / "packages"
 
-# Match a top-level scalar in a package apm.yml without a YAML dependency. Each
-# field is authored on its own line, optionally quoted.
-_FIELD = {
-    key: re.compile(rf'^{key}:\s*(?:"([^"]*)"|\'([^\']*)\'|(.*?))\s*$', re.M)
-    for key in ("name", "description", "type")
-}
+
+def _load_manifest(name: str) -> dict:
+    """Parse a package apm.yml with a real YAML loader.
+
+    Manifests are routinely reformatted (e.g. long ``description:`` strings and
+    dependency entries folded into ``>-`` block scalars), so regex scraping of
+    individual lines is unreliable -- parse the document instead.
+    """
+    import yaml
+
+    try:
+        return yaml.safe_load((PACKAGES_DIR / name / "apm.yml").read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
 
 
-def _field(text: str, key: str) -> str:
-    m = _FIELD[key].search(text)
-    if not m:
-        return ""
-    return next((g for g in m.groups() if g is not None), "").strip()
+def _apm_deps(name: str) -> list[str]:
+    """First-party + external apm dependency strings for a package."""
+    deps = (_load_manifest(name).get("dependencies") or {}).get("apm") or []
+    out = []
+    for dep in deps:
+        if isinstance(dep, str):
+            out.append(dep)
+        elif isinstance(dep, dict):
+            # object form: prefer git/id locator for naming
+            out.append(str(dep.get("git") or dep.get("id") or dep.get("path") or ""))
+    return [d for d in out if d]
 
 
 def packages() -> list[dict]:
-    """Read every package straight from packages/<name>/apm.yml.
+    """Read every package straight from packages/<name>/apm.yml via YAML.
 
     Replaces the former indexes/packages.json intermediate -- name, description,
     and type all live in the manifest, and classification additionally inspects
@@ -56,11 +70,12 @@ def packages() -> list[dict]:
     """
     out = []
     for manifest in sorted(PACKAGES_DIR.glob("*/apm.yml")):
-        text = manifest.read_text(encoding="utf-8")
+        name = manifest.parent.name
+        d = _load_manifest(name)
         out.append({
-            "name": _field(text, "name") or manifest.parent.name,
-            "description": _field(text, "description"),
-            "type": _field(text, "type"),
+            "name": str(d.get("name") or name),
+            "description": str(d.get("description") or "").strip(),
+            "type": str(d.get("type") or ""),
         })
     return sorted(out, key=lambda p: p["name"])
 
@@ -113,7 +128,9 @@ def _rows_for(kind: str) -> list[list[str]]:
 
 # --- Bundle "Includes" column: parse each bundle's apm.yml dependency list ---
 
-_DEP_BLOCK = re.compile(r"dependencies:\s*\n\s*apm:\s*\n((?:[ \t]*-[ \t]*.*\n?)+)")
+# A first-party member is a virtual-subdirectory dependency on this repo's own
+# packages: "srobroek/agentic-packages/packages/<name>#<ref>".
+_FIRST_PARTY = re.compile(r"srobroek/agentic-packages/packages/([\w-]+)")
 
 
 def _external_name(dep: str) -> str:
@@ -130,23 +147,15 @@ def _external_name(dep: str) -> str:
 def _bundle_includes(name: str) -> str:
     """Render a bundle's members as an explicit list.
 
-    First-party members (``<pkg>@srobroek-agentic``) are listed by bare name.
-    Third-party members are listed by their short name with a trailing ``*``
-    marking them external. A footnote under each table explains the marker.
+    First-party members (``srobroek/agentic-packages/packages/<name>#...``) are
+    listed by bare name. Third-party members are listed by their short name with
+    a trailing ``*`` marking them external; a footnote explains the marker.
     """
-    manifest = PACKAGES_DIR / name / "apm.yml"
-    if not manifest.is_file():
-        return ""
-    m = _DEP_BLOCK.search(manifest.read_text(encoding="utf-8"))
-    if not m:
-        return ""
     parts: list[str] = []
-    for line in m.group(1).strip().splitlines():
-        dep = line.strip().lstrip("-").strip()
-        if not dep:
-            continue
-        if dep.endswith("@srobroek-agentic"):
-            parts.append(f"`{dep.rsplit('@', 1)[0]}`")
+    for dep in _apm_deps(name):
+        fp = _FIRST_PARTY.search(dep)
+        if fp:
+            parts.append(f"`{fp.group(1)}`")
         else:
             parts.append(f"`{_external_name(dep)}`*")
     return ", ".join(parts)
