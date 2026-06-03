@@ -148,8 +148,10 @@ def _bundle_includes(name: str) -> str:
     """Render a bundle's members as an explicit list.
 
     First-party members (``srobroek/agentic-packages/packages/<name>#...``) are
-    listed by bare name. Third-party members are listed by their short name with
-    a trailing ``*`` marking them external; a footnote explains the marker.
+    listed by bare name. Third-party members get a trailing ``^`` marker; a
+    footnote explains it. ``^`` is used rather than ``*`` because a trailing
+    asterisk on inline code is parsed as markdown emphasis and italicises text
+    across adjacent table cells.
     """
     parts: list[str] = []
     for dep in _apm_deps(name):
@@ -157,7 +159,7 @@ def _bundle_includes(name: str) -> str:
         if fp:
             parts.append(f"`{fp.group(1)}`")
         else:
-            parts.append(f"`{_external_name(dep)}`*")
+            parts.append(f"`{_external_name(dep)}`^")
     return ", ".join(parts)
 
 

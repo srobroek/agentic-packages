@@ -342,42 +342,42 @@ The tables below are generated from [`indexes/*.json`](indexes/) by [`build-read
 
 ### Bundles
 
-In the **Includes** column, each entry is a member package; an entry marked with `*` is an external third-party package (Matt Pocock, Hobson, and others) rather than one of this marketplace's own packages.
+In the **Includes** column, each entry is a member package; an entry marked with a trailing `^` is an external third-party package (Matt Pocock, Hobson, and others) rather than one of this marketplace's own packages.
 
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`*, `plugin-eval`* |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `diagnose`*, `grill-me`*, `grill-with-docs`*, `context-management`*, `agent-orchestration`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`*, `documentation-standards`*, `plugin-eval`* |
-| `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
-| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, `diagnose`* |
-| `developer-tools` | Everyday developer tooling | `developer-essentials`*, `debugging-toolkit`*, `comprehensive-review`*, `git-pr-workflows`*, `documentation-generation`* |
-| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`*, `excalidraw-diagram-skill`*, `d2-diagram`* |
-| `docs-architecture` | Documentation and architecture | `documentation-standards`*, `code-documentation`*, `documentation-generation`*, `c4-architecture`* |
-| `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`*, `interface-design`*, `stitch-design`*, `frontend-mobile-development`*, `ui-design`*, `accessibility-compliance`*, `brand-landingpage`* |
-| `governance` | Agent governance | `protect-mcp`*, `signed-audit-trails`*, `review-agent-governance`*, `block-no-verify`* |
-| `incident-response` | Incident response and production debugging | `error-debugging`*, `distributed-debugging`*, `incident-response`*, `error-diagnostics`*, `debugging-toolkit`* |
-| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`, `cloud-infrastructure`*, `kubernetes-operations`*, `cicd-automation`*, `deployment-strategies`*, `deployment-validation`*, `observability-monitoring`* |
-| `language-arm-cortex` | ARM Cortex-M firmware toolkit | `arm-cortex-microcontrollers`* |
-| `language-dotnet` | .NET development toolkit | `dotnet-contribution`* |
-| `language-functional` | Functional programming toolkit | `functional-programming`* |
-| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `systems-programming`* |
-| `language-julia` | Julia development toolkit | `julia-development`* |
-| `language-jvm` | JVM language toolkit | `jvm-languages`* |
-| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `python-development`* |
-| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `systems-programming`* |
-| `language-shell` | Shell scripting toolkit | `shell-scripting`* |
-| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `deployment-strategies`* |
-| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `javascript-typescript`* |
-| `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`* |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`*, `diagnose`*, `grill-me`*, `grill-with-docs`*, `improve-codebase-architecture`*, `setup-matt-pocock-skills`*, `tdd`*, `to-issues`*, `to-prd`*, `triage`*, `zoom-out`* |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`*, `to-issues`*, `tdd`*, `triage`*, `zoom-out`*, `improve-codebase-architecture`* |
-| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`*, `marp-slide`*, `pptx-from-layouts`* |
+| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `diagnose`^, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^, `documentation-standards`^, `plugin-eval`^ |
+| `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
+| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, `diagnose`^ |
+| `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
+| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
+| `docs-architecture` | Documentation and architecture | `documentation-standards`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^, `frontend-mobile-development`^, `ui-design`^, `accessibility-compliance`^, `brand-landingpage`^ |
+| `governance` | Agent governance | `protect-mcp`^, `signed-audit-trails`^, `review-agent-governance`^, `block-no-verify`^ |
+| `incident-response` | Incident response and production debugging | `error-debugging`^, `distributed-debugging`^, `incident-response`^, `error-diagnostics`^, `debugging-toolkit`^ |
+| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure`, `cloud-infrastructure`^, `kubernetes-operations`^, `cicd-automation`^, `deployment-strategies`^, `deployment-validation`^, `observability-monitoring`^ |
+| `language-arm-cortex` | ARM Cortex-M firmware toolkit | `arm-cortex-microcontrollers`^ |
+| `language-dotnet` | .NET development toolkit | `dotnet-contribution`^ |
+| `language-functional` | Functional programming toolkit | `functional-programming`^ |
+| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `systems-programming`^ |
+| `language-julia` | Julia development toolkit | `julia-development`^ |
+| `language-jvm` | JVM language toolkit | `jvm-languages`^ |
+| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `python-development`^ |
+| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `systems-programming`^ |
+| `language-shell` | Shell scripting toolkit | `shell-scripting`^ |
+| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `deployment-strategies`^ |
+| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `javascript-typescript`^ |
+| `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`^ |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`^, `diagnose`^, `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^, `zoom-out`^ |
+| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `zoom-out`^, `improve-codebase-architecture`^ |
+| `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
-| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`*, `ResumeSkills`* |
-| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`*, `performance-testing-review`*, `unit-testing`*, `tdd-workflows`* |
-| `security` | Security toolkit | `security-scanning`*, `security-compliance`*, `backend-api-security`*, `frontend-mobile-security`*, `reverse-engineering`* |
+| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`^, `ResumeSkills`^ |
+| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
+| `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
 | `speckit` | SpecKit mechanism | self-contained |
 | `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
 <!-- END:bundles -->
