@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.1.0...code-intelligence-v0.1.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* exact-tag bundle pins, flatten core, decouple catchup/handover ([edc8535](https://github.com/srobroek/agentic-packages/commit/edc85355ba01fb779fe8f3e3afb6ee6303f557fe))
+* exact-tag bundle pins, flatten core, decouple catchup/handover [skip tests] ([11d803e](https://github.com/srobroek/agentic-packages/commit/11d803ec2c62944083795a48b830eed213bbd3a0))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.0.1...code-intelligence-v0.1.0) (2026-06-02)
 
 

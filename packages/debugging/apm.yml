@@ -1,5 +1,5 @@
 name: debugging
-version: 0.1.0
+version: 0.1.1
 description: >-
   Local debugging escalation: the unstuck skill and the adversarial-challenger
   agent for when you are blocked, plus Matt's diagnose workflow. For
