@@ -12,9 +12,10 @@ HTML-comment markers:
     <!-- BEGIN:steering -->  ...                        <!-- END:steering -->
     <!-- BEGIN:hooks -->     ...                        <!-- END:hooks -->
 
-The bundle table additionally renders a "Includes" column parsed from each
-bundle's apm.yml dependency list (first-party members by name, third-party
-deps summarized as "+N external").
+The bundle table renders an "Includes" column parsed from each bundle's apm.yml
+dependency list (first-party members by name; third-party members marked with a
+trailing "^"). A separate "external-sources" table groups every third-party
+member by its upstream repo (descriptions stay owned upstream).
 
 Run after `build-agentic-indexes.py`. Idempotent: re-running with unchanged
 indexes produces no diff. Pass --check to fail (exit 1) when README.md is out
@@ -148,8 +149,10 @@ def _bundle_includes(name: str) -> str:
     """Render a bundle's members as an explicit list.
 
     First-party members (``srobroek/agentic-packages/packages/<name>#...``) are
-    listed by bare name. Third-party members are listed by their short name with
-    a trailing ``*`` marking them external; a footnote explains the marker.
+    listed by bare name. Third-party members get a trailing ``^`` marker; a
+    footnote explains it. ``^`` is used rather than ``*`` because a trailing
+    asterisk on inline code is parsed as markdown emphasis and italicises text
+    across adjacent table cells.
     """
     parts: list[str] = []
     for dep in _apm_deps(name):
@@ -157,7 +160,7 @@ def _bundle_includes(name: str) -> str:
         if fp:
             parts.append(f"`{fp.group(1)}`")
         else:
-            parts.append(f"`{_external_name(dep)}`*")
+            parts.append(f"`{_external_name(dep)}`^")
     return ", ".join(parts)
 
 
@@ -216,6 +219,37 @@ def steering_table() -> str:
     return render_table(["Steering Package", "Description"], _rows_for("steering"))
 
 
+def _external_sources() -> dict[str, list[str]]:
+    """Map each upstream repo (owner/repo) to the external members we pull from it.
+
+    Scans every package's apm deps for entries that are NOT first-party
+    (i.e. not srobroek/agentic-packages/packages/...). The descriptions of those
+    members are owned and maintained upstream, so we only record where they come
+    from -- not what they do.
+    """
+    by_repo: dict[str, set[str]] = {}
+    for p in packages():
+        for dep in _apm_deps(p["name"]):
+            if _FIRST_PARTY.search(dep):
+                continue
+            ref = dep.split("#", 1)[0].rstrip("/")
+            parts = ref.split("/")
+            if len(parts) < 2:
+                continue
+            repo = "/".join(parts[:2])
+            by_repo.setdefault(repo, set()).add(parts[-1])
+    return {repo: sorted(members) for repo, members in sorted(by_repo.items())}
+
+
+def external_sources_table() -> str:
+    """Table of upstream repos we pull external members from (grouped by source)."""
+    rows = []
+    for repo, members in _external_sources().items():
+        link = f"[`{repo}`](https://github.com/{repo})"
+        rows.append([link, str(len(members)), ", ".join(f"`{m}`" for m in members)])
+    return render_table(["Source repo", "Count", "Members pulled"], rows)
+
+
 SECTIONS = {
     "bundles": bundles_table,
     "mcp": mcp_table,
@@ -223,6 +257,7 @@ SECTIONS = {
     "skills": skills_table,
     "steering": steering_table,
     "hooks": hooks_table,
+    "external-sources": external_sources_table,
 }
 
 
