@@ -1,5 +1,5 @@
 ---
-name: steering-audit
+name: audit-steering
 description: Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup.
 ---
 

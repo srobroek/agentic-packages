@@ -1,0 +1,63 @@
+name: Bug report
+description: A package fails to install, compile, or behave as documented.
+title: "fix: <short summary>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please confirm the basics first -- most install
+        issues come from a stale marketplace cache or an old APM version.
+  - type: input
+    id: package
+    attributes:
+      label: Affected package
+      description: The marketplace name, e.g. `core`, `frontend`, `agent-coder`. Use "repo tooling" for build/CI/marketplace issues.
+      placeholder: core
+    validations:
+      required: true
+  - type: input
+    id: apm-version
+    attributes:
+      label: APM version
+      description: Output of `apm --version`.
+      placeholder: 0.16.0
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Claude Code
+        - Codex
+        - Both
+        - Other / N/A
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you run, and what went wrong? Paste the exact command and the full error output.
+      placeholder: |
+        $ apm install core@srobroek-agentic
+        ...error...
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I am on APM 0.16.0 or newer.
+          required: true
+        - label: I refreshed the marketplace (`apm marketplace add srobroek/agentic-packages --name srobroek-agentic`) before reproducing.
+          required: true

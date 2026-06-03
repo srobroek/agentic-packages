@@ -417,6 +417,7 @@ Reusable workflows, each its own package, deployed to `.agents/skills/` (cross-c
 <!-- BEGIN:skills -->
 | Skill | Description |
 | --- | --- |
+| `audit-steering` | Audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
 | `catchup` | >- |
 | `code-review` | >- |
 | `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. |
@@ -456,7 +457,6 @@ Opt-in opinionated steering (instructions + context). Install only the conventio
 | `language-steering-rust` | >- |
 | `language-steering-terraform` | >- |
 | `language-steering-typescript` | >- |
-| `steering-audit` | Audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
 | `steering-backend` | >- |
 | `steering-data` | >- |
 | `steering-docs-specs` | >- |

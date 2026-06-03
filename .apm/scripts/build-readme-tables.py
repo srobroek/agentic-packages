@@ -90,8 +90,15 @@ def _classify(name: str) -> str:
         return "steering"
     if name.startswith("hooks-"):
         return "hooks"
-    # A single-skill package has SKILL.md at its root.
-    if (PACKAGES_DIR / name / "SKILL.md").is_file():
+    # A skill package ships exactly one skill under .apm/skills/<skill>/ and no
+    # agents. A bundle is either a pure dependency aggregator (no own primitives)
+    # or a multi-primitive package like speckit (skills + agents + hooks).
+    # (A skill may still declare a companion dependency, e.g. catchup -> handover,
+    # so primitive presence, not the dependency list, is the deciding signal.)
+    pkg = PACKAGES_DIR / name
+    skills = list((pkg / ".apm" / "skills").glob("*/SKILL.md"))
+    has_agents = (pkg / ".apm" / "agents").is_dir()
+    if len(skills) == 1 and not has_agents:
         return "skill"
     return "bundle"
 

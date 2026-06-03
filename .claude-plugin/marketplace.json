@@ -50,6 +50,15 @@
       "source": "./packages/agentic-maintenance"
     },
     {
+      "name": "audit-steering",
+      "tags": [
+        "skill",
+        "maintenance",
+        "steering"
+      ],
+      "source": "./packages/audit-steering"
+    },
+    {
       "name": "catchup",
       "tags": [
         "skill",
@@ -594,15 +603,6 @@
         "hooks"
       ],
       "source": "./packages/speckit-dag-hooks"
-    },
-    {
-      "name": "steering-audit",
-      "tags": [
-        "skill",
-        "maintenance",
-        "steering"
-      ],
-      "source": "./packages/steering-audit"
     },
     {
       "name": "steering-backend",

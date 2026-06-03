@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: APM CLI documentation
+    url: https://microsoft.github.io/apm/
+    about: How APM install, compile, dependencies, and marketplaces work. Check here first for usage questions.
+  - name: README -- consuming this marketplace
+    url: https://github.com/srobroek/agentic-packages#readme
+    about: Quick start, native plugin-marketplace setup, and the full package inventory.

@@ -1,4 +1,4 @@
-name: steering-audit
+name: audit-steering
 version: 0.1.0
 description: Audit agent rules, hooks, skills, and guardrails for drift and cleanup.
 author: Sjors Robroek
