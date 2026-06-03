@@ -349,7 +349,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | --- | --- | --- |
 | `agentic-maintenance` | >- | `>-`* |
 | `code-intelligence` | >- | `codebase-index`*, `codebase-memory`*, `explore`*, `prompt-lookup`*, `research`*, `web-fetch`*, `>-`* |
-| `core` | >- | external packages |
+| `core` | >- | `catchup`*, `handover`*, `>-`* |
 | `data-ai` | >- | `steering-data`*, `llm-application-dev`*, `data-engineering`*, `machine-learning-ops`*, `database-design`*, `database-migrations`*, `database-cloud-optimization`* |
 | `debugging` | >- | `unstuck`*, `>-`* |
 | `developer-tools` | >- | `developer-essentials`*, `debugging-toolkit`*, `comprehensive-review`*, `git-pr-workflows`*, `documentation-generation`* |
