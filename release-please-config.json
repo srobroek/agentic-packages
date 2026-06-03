@@ -116,6 +116,18 @@
         }
       ]
     },
+    "packages/audit-steering": {
+      "release-type": "simple",
+      "component": "audit-steering",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/catchup": {
       "release-type": "simple",
       "component": "catchup",
@@ -887,18 +899,6 @@
     "packages/speckit-dag-hooks": {
       "release-type": "simple",
       "component": "speckit-dag-hooks",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/steering-audit": {
-      "release-type": "simple",
-      "component": "steering-audit",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

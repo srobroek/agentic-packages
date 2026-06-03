@@ -82,6 +82,13 @@ marketplace:
       tags:
         - bundle
         - steering
+    - name: audit-steering
+      source: ./packages/audit-steering
+      category: agentic-maintenance
+      tags:
+        - skill
+        - maintenance
+        - steering
     - name: catchup
       source: ./packages/catchup
       category: project-lifecycle
@@ -498,13 +505,6 @@ marketplace:
         - bundle
         - speckit
         - hooks
-    - name: steering-audit
-      source: ./packages/steering-audit
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - steering
     - name: steering-backend
       source: ./packages/steering-backend
       category: steering

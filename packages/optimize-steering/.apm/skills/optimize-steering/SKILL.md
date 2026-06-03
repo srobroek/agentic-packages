@@ -1,6 +1,6 @@
 ---
 name: optimize-steering
-description: Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `steering-audit` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead.
+description: Audit and optimize agent-facing markdown files (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. Applies research-backed formatting conventions (R1-R7). Runs `audit-steering` first for drift/hook/lint detection. Use when asked to audit agent docs, optimize steering files, refactor SKILL.md, normalize agent instructions, reduce token waste, or fix agent compliance issues. To create a new skill from scratch, use `write-a-skill` instead.
 ---
 
 # Optimize Steering
@@ -9,7 +9,7 @@ Audit and rewrite agent-facing markdown files for token efficiency and structura
 
 ## Workflow
 
-1. **Run `steering-audit`** -- lint, hooks, staleness, drift detection
+1. **Run `audit-steering`** -- lint, hooks, staleness, drift detection
 2. **Measure** -- discover agent-facing files, compute token estimates, map load patterns, detect redundancy (LOAD references/measurement.md)
 3. **Scope** -- ask which files to optimize; note other candidates
 4. **Apply R1-R7** -- rewrite files applying the rules below (for rationale, LOAD references/rules.md)

@@ -65,6 +65,18 @@
       "category": "agentic-maintenance"
     },
     {
+      "name": "audit-steering",
+      "source": {
+        "source": "local",
+        "path": "./packages/audit-steering"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
       "name": "catchup",
       "source": {
         "source": "local",
@@ -843,18 +855,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "speckit"
-    },
-    {
-      "name": "steering-audit",
-      "source": {
-        "source": "local",
-        "path": "./packages/steering-audit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "agentic-maintenance"
     },
     {
       "name": "steering-backend",

@@ -1,0 +1,54 @@
+name: New package or capability request
+description: Propose a new skill, agent, bundle, steering, MCP, or hook package -- or a change to an existing one.
+title: "feat: <short summary>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for new marketplace entries or capability changes. For bugs,
+        use the Bug report template instead.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Package kind
+      options:
+        - Skill (one .apm/skills/<name>/SKILL.md)
+        - Agent (sub-agent with model/tool profile)
+        - Bundle (dependency aggregator)
+        - Steering (opt-in instructions + context)
+        - MCP server package
+        - Hook package
+        - Change to an existing package
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Proposed name
+      description: Marketplace shortname. Verb-first for action skills (e.g. `audit-steering`); `agent-` / `mcp-` / `steering-` / `hooks-` prefixes for those kinds.
+      placeholder: audit-steering
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What workflow does this enable or fix? Who needs it?
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: Proposed contents
+      description: For a bundle, list the member packages (and any external third-party deps). For a skill/agent, sketch the trigger and behavior.
+    validations:
+      required: false
+  - type: input
+    id: prior-art
+    attributes:
+      label: Existing / external prior art
+      description: Link any upstream package (Matt Pocock, Hobson, ...) this would wrap or extend.
+      placeholder: wshobson/agents/plugins/...
+    validations:
+      required: false
