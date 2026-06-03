@@ -480,6 +480,28 @@ Opt-in lifecycle hooks. Most hooks ship inside their owning package (code-intell
 | `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
 <!-- END:hooks -->
 
+### External sources
+
+Bundles also pull in third-party skills and agents (marked `^` in the **Includes** column above). Their descriptions are owned and maintained upstream -- this table records only which repo each comes from. See the source repo for what each does.
+
+<!-- BEGIN:external-sources -->
+| Source repo | Count | Members pulled |
+| --- | --- | --- |
+| [`Agents365-ai/drawio-skill`](https://github.com/Agents365-ai/drawio-skill) | 1 | `drawio-skill` |
+| [`Dammyjay93/interface-design`](https://github.com/Dammyjay93/interface-design) | 1 | `interface-design` |
+| [`Paramchoudhary/ResumeSkills`](https://github.com/Paramchoudhary/ResumeSkills) | 1 | `ResumeSkills` |
+| [`coleam00/excalidraw-diagram-skill`](https://github.com/coleam00/excalidraw-diagram-skill) | 1 | `excalidraw-diagram-skill` |
+| [`daymade/claude-code-skills`](https://github.com/daymade/claude-code-skills) | 1 | `ppt-creator` |
+| [`google-labs-code/stitch-skills`](https://github.com/google-labs-code/stitch-skills) | 1 | `stitch-design` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 11 | `caveman`, `diagnose`, `grill-me`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage`, `zoom-out` |
+| [`neuro-synapse/network-topology-agent`](https://github.com/neuro-synapse/network-topology-agent) | 1 | `d2-diagram` |
+| [`pbakaus/impeccable`](https://github.com/pbakaus/impeccable) | 1 | `impeccable` |
+| [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit) | 1 | `marp-slide` |
+| [`tristan-mcinnis/pptx-from-layouts-skill`](https://github.com/tristan-mcinnis/pptx-from-layouts-skill) | 1 | `pptx-from-layouts` |
+| [`varunr89/resume-tailoring-skill`](https://github.com/varunr89/resume-tailoring-skill) | 1 | `resume-tailoring` |
+| [`wshobson/agents`](https://github.com/wshobson/agents) | 53 | `accessibility-compliance`, `agent-orchestration`, `arm-cortex-microcontrollers`, `backend-api-security`, `block-no-verify`, `brand-landingpage`, `c4-architecture`, `cicd-automation`, `cloud-infrastructure`, `code-documentation`, `comprehensive-review`, `context-management`, `data-engineering`, `database-cloud-optimization`, `database-design`, `database-migrations`, `debugging-toolkit`, `deployment-strategies`, `deployment-validation`, `developer-essentials`, `distributed-debugging`, `documentation-generation`, `documentation-standards`, `dotnet-contribution`, `error-debugging`, `error-diagnostics`, `frontend-mobile-development`, `frontend-mobile-security`, `functional-programming`, `git-pr-workflows`, `incident-response`, `javascript-typescript`, `julia-development`, `jvm-languages`, `kubernetes-operations`, `llm-application-dev`, `machine-learning-ops`, `observability-monitoring`, `performance-testing-review`, `plugin-eval`, `protect-mcp`, `python-development`, `reverse-engineering`, `review-agent-governance`, `security-compliance`, `security-scanning`, `shell-scripting`, `signed-audit-trails`, `systems-programming`, `tdd-workflows`, `ui-design`, `unit-testing`, `web-scripting` |
+<!-- END:external-sources -->
+
 ---
 
 ## Developing this repository
