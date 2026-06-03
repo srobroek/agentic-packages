@@ -3,6 +3,9 @@ apm_modules/
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+# AGENTS.md is ignored anywhere (APM compiles AGENTS.md into subdirs per applyTo
+# globs). Negate the hand-authored docs page so it is tracked.
+!/docs/agents.md
 .codex/
 .claude/
 /.github/*
