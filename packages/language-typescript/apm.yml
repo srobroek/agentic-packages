@@ -10,7 +10,7 @@ target: all
 dependencies:
   apm:
     - >-
-      srobroek/agentic-packages/packages/typescript-quality#typescript-quality-v0.1.0
+      srobroek/agentic-packages/packages/typescript-quality#typescript-quality-v0.1.1
     - >-
       srobroek/agentic-packages/packages/language-steering-typescript#language-steering-typescript-v0.1.0
     - wshobson/agents/plugins/javascript-typescript#main

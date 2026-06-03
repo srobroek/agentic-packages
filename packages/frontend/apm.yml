@@ -11,7 +11,7 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/playwright#playwright-v0.1.0
+    - srobroek/agentic-packages/packages/playwright#playwright-v0.1.1
     - >-
       srobroek/agentic-packages/packages/steering-frontend#steering-frontend-v0.1.0
     - pbakaus/impeccable/.agents/skills/impeccable#main
