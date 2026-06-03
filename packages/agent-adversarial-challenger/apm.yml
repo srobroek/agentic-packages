@@ -1,5 +1,5 @@
 name: agent-adversarial-challenger
-version: 0.1.0
+version: 0.1.1
 description: >-
   Read-only adversarial challenger: independently stress-tests a plan,
   hypothesis, design, or fix by attacking its assumptions and returning

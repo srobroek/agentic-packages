@@ -1,5 +1,5 @@
 name: codebase-memory
-version: 0.1.0
+version: 0.1.1
 description: >-
   Graph-aware codebase exploration, tracing, and reference lookup using the
   codebase-memory index.

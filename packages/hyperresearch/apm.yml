@@ -1,5 +1,5 @@
 name: hyperresearch
-version: 0.1.0
+version: 0.1.1
 description: >-
   Thin APM wrapper that routes to the upstream third-party HyperResearch deep
   research harness for long-form, source-backed research reports.

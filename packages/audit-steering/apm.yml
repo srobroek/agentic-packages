@@ -1,5 +1,5 @@
 name: audit-steering
-version: 0.1.0
+version: 0.1.1
 description: Audit agent rules, hooks, skills, and guardrails for drift and cleanup.
 author: Sjors Robroek
 license: Apache-2.0
