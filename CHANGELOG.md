@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.1.3...srobroek-agentic-v0.2.0) (2026-06-03)
+
+
+### Features
+
+* **readme:** add external-sources table grouping third-party deps by upstream repo [skip tests] ([52887df](https://github.com/srobroek/agentic-packages/commit/52887df478b9cf10993968236b75e8c8525a25fc))
+
+
+### Bug Fixes
+
+* **docs:** track docs/agents.md (negate the AGENTS.md gitignore match) [skip tests] ([78fd5f5](https://github.com/srobroek/agentic-packages/commit/78fd5f524199c4f31568e9647835e741787d8aa9))
+* **readme:** mark external deps with ^ not * to avoid markdown italics ([17d4559](https://github.com/srobroek/agentic-packages/commit/17d4559f78fb52b86d5757bd4d41aa4434c68131))
+* **readme:** mark external deps with ^ not * to avoid markdown italics [skip tests] ([107164b](https://github.com/srobroek/agentic-packages/commit/107164bb3f5aa8189680e5535e1f222bfef5c6e2))
+
+
+### Documentation
+
+* split inventory + SpecKit into docs/, slim the README ([9d26dd8](https://github.com/srobroek/agentic-packages/commit/9d26dd861094b56b0fd9c87c8d7b70fde5a4bf3b))
+* split inventory + SpecKit into docs/, slim the README [skip tests] ([f348e76](https://github.com/srobroek/agentic-packages/commit/f348e766d290182d820882d21ad35d716f347acd))
+
 ## [0.1.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.1.2...srobroek-agentic-v0.1.3) (2026-06-03)
 
 
