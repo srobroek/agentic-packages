@@ -250,18 +250,32 @@ def external_sources_table() -> str:
     return render_table(["Source repo", "Count", "Members pulled"], rows)
 
 
+# Each generated section (marker -> builder) lives in a specific doc file.
+# Inventory tables live under docs/; the bundle table stays in the README so the
+# landing page shows what each bundle is for at a glance.
 SECTIONS = {
     "bundles": bundles_table,
-    "mcp": mcp_table,
-    "agents": agents_table,
     "skills": skills_table,
+    "agents": agents_table,
     "steering": steering_table,
     "hooks": hooks_table,
+    "mcp": mcp_table,
     "external-sources": external_sources_table,
 }
 
+# Which file each marker is injected into (relative to repo root).
+SECTION_FILE = {
+    "bundles": "docs/bundles.md",
+    "external-sources": "docs/bundles.md",
+    "skills": "docs/skills.md",
+    "agents": "docs/agents.md",
+    "steering": "docs/steering.md",
+    "hooks": "docs/hooks-and-mcp.md",
+    "mcp": "docs/hooks-and-mcp.md",
+}
 
-def inject(text: str, marker: str, payload: str) -> str:
+
+def inject(text: str, marker: str, payload: str, *, path: str) -> str:
     begin = f"<!-- BEGIN:{marker} -->"
     end = f"<!-- END:{marker} -->"
     pattern = re.compile(
@@ -270,7 +284,7 @@ def inject(text: str, marker: str, payload: str) -> str:
     )
     if not pattern.search(text):
         raise SystemExit(
-            f"marker pair {begin} / {end} not found in README.md -- "
+            f"marker pair {begin} / {end} not found in {path} -- "
             "add the markers where the table should render"
         )
     replacement = f"{begin}\n{payload}\n{end}"
@@ -282,28 +296,37 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Exit 1 if README.md is out of date; do not write.",
+        help="Exit 1 if any target doc is out of date; do not write.",
     )
     args = parser.parse_args()
 
-    original = README.read_text(encoding="utf-8")
-    updated = original
-    for marker, builder in SECTIONS.items():
-        updated = inject(updated, marker, builder())
+    # Group markers by their target file, then inject all of a file's markers.
+    by_file: dict[str, list[str]] = {}
+    for marker in SECTIONS:
+        by_file.setdefault(SECTION_FILE[marker], []).append(marker)
+
+    stale: list[str] = []
+    for rel, markers in sorted(by_file.items()):
+        path = ROOT / rel
+        original = path.read_text(encoding="utf-8")
+        updated = original
+        for marker in markers:
+            updated = inject(updated, marker, SECTIONS[marker](), path=rel)
+        if updated == original:
+            continue
+        if args.check:
+            stale.append(rel)
+        else:
+            path.write_text(updated, encoding="utf-8")
+            print(f"updated tables in {rel}")
 
     if args.check:
-        if updated != original:
-            print("README.md inventory tables are out of date. Run:")
-            print("  apm run build-readme-tables")
+        if stale:
+            print("Inventory tables out of date in: " + ", ".join(stale))
+            print("Run: apm run build-readme-tables")
             return 1
-        print("README.md inventory tables are up to date.")
+        print("Inventory tables are up to date.")
         return 0
-
-    if updated != original:
-        README.write_text(updated, encoding="utf-8")
-        print(f"updated inventory tables in {README}")
-    else:
-        print("README.md inventory tables already up to date.")
     return 0
 
 
