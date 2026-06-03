@@ -1,39 +1,38 @@
 name: core
-version: 0.1.0
+version: 0.1.1
 description: >-
   Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and
   agentic-maintenance skills/agents installed directly (no sub-bundle layer),
-  plus the Matt Pocock grill/diagnose workflows and Hobson
-  context/orchestration plugins.
+  plus the Matt Pocock grill/diagnose workflows and Hobson context/orchestration
+  plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
 dependencies:
   apm:
-    # Project lifecycle
     - srobroek/agentic-packages/packages/catchup#catchup-v0.1.1
     - srobroek/agentic-packages/packages/handover#handover-v0.1.1
-    - srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.1
+    - >-
+      srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.1
     - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.1
     - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.1
     - srobroek/agentic-packages/packages/verify#verify-v0.1.1
-    # Code intelligence
     - srobroek/agentic-packages/packages/codebase-index#codebase-index-v0.1.1
     - srobroek/agentic-packages/packages/codebase-memory#codebase-memory-v0.1.1
     - srobroek/agentic-packages/packages/explore#explore-v0.1.1
     - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.1
     - srobroek/agentic-packages/packages/research#research-v0.1.1
     - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.1
-    - srobroek/agentic-packages/packages/steering-project-structure#steering-project-structure-v0.1.0
-    # Agentic maintenance
-    - srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.1
+    - >-
+      srobroek/agentic-packages/packages/steering-project-structure#steering-project-structure-v0.1.0
+    - >-
+      srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.1
     - srobroek/agentic-packages/packages/audit-steering#audit-steering-v0.1.1
     - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.1
-    # Agents
     - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
-    # External workflows + plugins
+    - >-
+      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
     - mattpocock/skills/skills/engineering/diagnose#main
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main

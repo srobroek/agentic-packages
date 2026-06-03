@@ -1,5 +1,5 @@
 name: project-lifecycle
-version: 0.1.0
+version: 0.1.1
 description: >-
   Day-to-day project lifecycle workflows: resume work after interruption
   (catchup), write handovers, run verification, and commit/push via local merge,
