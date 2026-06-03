@@ -1,5 +1,5 @@
 name: prompt-lookup
-version: 0.1.0
+version: 0.1.1
 description: Find, compare, and improve prompt templates and prompt-engineering patterns.
 author: Sjors Robroek
 license: Apache-2.0

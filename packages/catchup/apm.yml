@@ -1,5 +1,5 @@
 name: catchup
-version: 0.1.0
+version: 0.1.1
 description: >-
   Resume interrupted project work by locating and following the best handover
   before doing fresh discovery, after context loss, /clear, or a continue/resume
