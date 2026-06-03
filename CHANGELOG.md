@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.1.2...srobroek-agentic-v0.1.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **readme:** parse package manifests as YAML for inventory tables ([2aba74d](https://github.com/srobroek/agentic-packages/commit/2aba74d66d4d0c643e8f97fcd46e6d97f28d57e0))
+* **readme:** parse package manifests as YAML for inventory tables [skip tests] ([88ad974](https://github.com/srobroek/agentic-packages/commit/88ad97485f5b967078b9a2aefe3e4a61091e8a77))
+
 ## [0.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.1.1...srobroek-agentic-v0.1.2) (2026-06-03)
 
 
