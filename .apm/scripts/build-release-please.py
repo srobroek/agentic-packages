@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = ROOT / "packages"
@@ -50,8 +51,8 @@ def _package_dirs() -> list[str]:
 
 
 def _version_at(manifest: Path) -> str:
-    m = re.search(r"^version:\s*(\S+)", manifest.read_text(encoding="utf-8"), re.M)
-    return m.group(1) if m else "0.0.1"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
+    return str(data.get("version", "0.0.1"))
 
 
 def _read_version(pkg: str) -> str:

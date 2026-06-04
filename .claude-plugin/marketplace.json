@@ -68,6 +68,15 @@
       "source": "./packages/catchup"
     },
     {
+      "name": "chezmoi-editor",
+      "tags": [
+        "skill",
+        "dotfiles",
+        "chezmoi"
+      ],
+      "source": "./packages/chezmoi-editor"
+    },
+    {
       "name": "code-intelligence",
       "tags": [
         "bundle",

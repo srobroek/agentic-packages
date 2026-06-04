@@ -89,6 +89,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "chezmoi-editor",
+      "source": {
+        "source": "local",
+        "path": "./packages/chezmoi-editor"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "dotfiles"
+    },
+    {
       "name": "code-intelligence",
       "source": {
         "source": "local",

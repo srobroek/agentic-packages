@@ -9,6 +9,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | --- | --- |
 | `audit-steering` | Audit agent rules, hooks, skills, and guardrails for drift and cleanup. |
 | `catchup` | Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request. |
+| `chezmoi-editor` | Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi. |
 | `code-review` | Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests. |
 | `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. |
 | `codebase-memory` | Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index. |

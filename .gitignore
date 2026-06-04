@@ -20,6 +20,8 @@ GEMINI.md
 !/.agents/plugins/
 /.agents/plugins/*
 !/.agents/plugins/marketplace.json
+# apm pack also emits a Claude plugin manifest; only the marketplace.json is tracked.
+/.claude-plugin/plugin.json
 build/
 dist/
 __pycache__/
