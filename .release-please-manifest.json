@@ -1,5 +1,5 @@
 {
-  ".": "0.3.0",
+  ".": "0.4.0",
   "packages/agent-adversarial-challenger": "0.1.1",
   "packages/agent-coder": "0.1.1",
   "packages/agent-external-repo-worker": "0.1.1",
@@ -15,7 +15,7 @@
   "packages/commit-push-merge": "0.1.1",
   "packages/commit-push-pr": "0.1.1",
   "packages/core": "0.1.1",
-  "packages/core-global": "0.1.0",
+  "packages/core-global": "0.2.0",
   "packages/data-ai": "0.1.0",
   "packages/debate": "0.1.1",
   "packages/debugging": "0.1.1",

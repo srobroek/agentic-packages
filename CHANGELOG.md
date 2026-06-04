@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.3.0...srobroek-agentic-v0.4.0) (2026-06-04)
+
+
+### Features
+
+* **core-global:** add recommended global baseline bundle [skip tests] ([#249](https://github.com/srobroek/agentic-packages/issues/249)) ([f966597](https://github.com/srobroek/agentic-packages/commit/f966597170541d4ea37207807a4f1a06c87e787d))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.2.0...srobroek-agentic-v0.3.0) (2026-06-04)
 
 
