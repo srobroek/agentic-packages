@@ -1,0 +1,11 @@
+name: hooks-bash-safety
+version: 0.1.0
+description: >-
+  Bash safety guards: block privilege escalation, curl|sh pipes, and obviously
+  destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard-
+  block it on system-critical paths. Cross-tool (Claude + Codex).
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto

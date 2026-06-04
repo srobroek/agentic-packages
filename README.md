@@ -22,6 +22,7 @@ Many packages also ship **hooks** directly: code-intelligence (indexing/discover
 - [Adding the marketplace](#adding-the-marketplace)
 - [Consuming as a native plugin marketplace (no APM CLI)](#consuming-as-a-native-plugin-marketplace-no-apm-cli)
 - [Installing a bundle, package, or tool](#installing-a-bundle-package-or-tool)
+- [Installing globally (user scope)](#installing-globally-user-scope)
 - [How bundles work](#how-bundles-work)
 - [Compiling for different targets](#compiling-for-different-targets)
 - [SpecKit orchestration](#speckit-orchestration)
@@ -189,6 +190,28 @@ A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.y
 
 ---
 
+## Installing globally (user scope)
+
+Some packages here are **reusable across every project**, not specific to one repo -- the working-style steering, the safety/guard hooks, the bootstrap skills. Install those once at **user scope** with `--global` instead of per-project:
+
+```bash
+# A single always-on steering package, for every session on this machine
+apm install steering-pragmatic@srobroek-agentic --global --target claude,codex
+
+# Guard hooks, deployed to both runtimes globally
+apm install hooks-bash-safety@srobroek-agentic --global --target claude,codex
+```
+
+`apm install --global` writes to `~/.apm/` and deploys into the per-tool user dirs (`~/.claude/`, `~/.codex/`) rather than the current project. It **merges** into existing `~/.claude/settings.json` and `~/.codex/hooks.json` (tagging its blocks with `_apm_source`), so it composes with hand-authored config; `apm uninstall <pkg>@srobroek-agentic --global` removes exactly those blocks.
+
+User-scope support varies by runtime: **fully supported for `claude`, `codex`, and `agent-skills`** (the cross-client `~/.agents/skills/` dir, which Codex also reads); MCP servers at global scope only target Copilot/Codex CLI. Skills, agents, hooks, and instructions all deploy globally for Claude and Codex.
+
+**Recommended global set:** the granular `hooks-*` guard packages (`hooks-bash-safety`, `hooks-git-safety`, `hooks-worktree`, and the opinionated `hooks-no-ff` / `hooks-squash-merge` / `hooks-tool-prefs` / `hooks-branch-check`), `steering-pragmatic`, the bootstrap skills, and the standalone `chezmoi-editor` skill. Pin them in a user-scope `~/.apm/apm.yml` and re-run `apm install --global --frozen` to reproduce the same global layer on any machine.
+
+> **Caveat — symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
+
+---
+
 ## How bundles work
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
@@ -259,6 +282,18 @@ apm compile --validate --local-only --target codex,claude # validate primitives 
 ```
 
 The README inventory tables are regenerated as part of `build-artifacts`. CI runs `apm run check-readme-tables` and `apm run check-release-please` to fail the build if the committed tables or release-please config are stale.
+
+### Adding a new package
+
+1. Create `packages/<name>/apm.yml` (`type:` one of `skill | agent | instructions | hybrid`; `target: all`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`).
+2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** — `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** — an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
+3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
+
+Gotchas worth knowing:
+
+- **`build-artifacts` needs `pyyaml`.** The generator scripts import `yaml`; if your toolchain Python lacks it, run them via `uv run --with pyyaml python3 .apm/scripts/<script>.py`. CI gets it transitively from `pip install apm-cli`.
+- **Root `apm.yml` uses `targets:` (a list), not `target: all`.** `apm pack` (0.17.x) rejects the `all` scalar; the list form (`targets: [claude, codex]`) matches the marketplace `outputs:` block and is what pack/compile both accept.
+- **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge — so a bundle that depends on a new package must land **after** that package is released.
 
 **Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): `apm install` -> `apm compile` -> `patch-agentic-tools` -> `audit-agentic-tools`. The two finalizers are this repo's `.apm/scripts/`:
 

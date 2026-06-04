@@ -229,6 +229,27 @@ marketplace:
         - skill
         - lifecycle
         - handover
+    - name: hooks-bash-safety
+      source: ./packages/hooks-bash-safety
+      category: project-lifecycle
+      tags:
+        - hooks
+        - bash
+        - safety
+    - name: hooks-branch-check
+      source: ./packages/hooks-branch-check
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - branch
+    - name: hooks-git-safety
+      source: ./packages/hooks-git-safety
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - safety
     - name: hooks-git-workflow
       source: ./packages/hooks-git-workflow
       category: project-lifecycle
@@ -236,6 +257,13 @@ marketplace:
         - hooks
         - git
         - commit
+    - name: hooks-no-ff
+      source: ./packages/hooks-no-ff
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - policy
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality
@@ -243,6 +271,27 @@ marketplace:
         - hooks
         - quality
         - lint
+    - name: hooks-squash-merge
+      source: ./packages/hooks-squash-merge
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - policy
+    - name: hooks-tool-prefs
+      source: ./packages/hooks-tool-prefs
+      category: project-lifecycle
+      tags:
+        - hooks
+        - tooling
+        - advisory
+    - name: hooks-worktree
+      source: ./packages/hooks-worktree
+      category: project-lifecycle
+      tags:
+        - hooks
+        - worktree
+        - lifecycle
     - name: hyperresearch
       source: ./packages/hyperresearch
       category: research
@@ -544,6 +593,13 @@ marketplace:
       tags:
         - steering
         - infrastructure
+    - name: steering-pragmatic
+      source: ./packages/steering-pragmatic
+      category: steering
+      tags:
+        - steering
+        - pragmatic
+        - personality
     - name: steering-project-structure
       source: ./packages/steering-project-structure
       category: steering

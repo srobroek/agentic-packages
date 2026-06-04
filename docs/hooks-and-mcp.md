@@ -9,8 +9,15 @@ A package ships hooks as `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `sc
 <!-- BEGIN:hooks -->
 | Hook Package | Description |
 | --- | --- |
+| `hooks-bash-safety` | Bash safety guards: block privilege escalation, curl\|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex). |
+| `hooks-branch-check` | Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex). |
+| `hooks-git-safety` | Git safety guards: block destructive git operations (reset --hard, force push, branch/stash/tag deletion, worktree remove) and throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex). |
 | `hooks-git-workflow` | Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
+| `hooks-no-ff` | Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex). |
 | `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
+| `hooks-squash-merge` | Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex). |
+| `hooks-tool-prefs` | Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex). |
+| `hooks-worktree` | Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events. |
 <!-- END:hooks -->
 
 ## MCP server packages

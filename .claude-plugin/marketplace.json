@@ -239,6 +239,33 @@
       "source": "./packages/handover"
     },
     {
+      "name": "hooks-bash-safety",
+      "tags": [
+        "hooks",
+        "bash",
+        "safety"
+      ],
+      "source": "./packages/hooks-bash-safety"
+    },
+    {
+      "name": "hooks-branch-check",
+      "tags": [
+        "hooks",
+        "git",
+        "branch"
+      ],
+      "source": "./packages/hooks-branch-check"
+    },
+    {
+      "name": "hooks-git-safety",
+      "tags": [
+        "hooks",
+        "git",
+        "safety"
+      ],
+      "source": "./packages/hooks-git-safety"
+    },
+    {
       "name": "hooks-git-workflow",
       "tags": [
         "hooks",
@@ -248,6 +275,15 @@
       "source": "./packages/hooks-git-workflow"
     },
     {
+      "name": "hooks-no-ff",
+      "tags": [
+        "hooks",
+        "git",
+        "policy"
+      ],
+      "source": "./packages/hooks-no-ff"
+    },
+    {
       "name": "hooks-quality",
       "tags": [
         "hooks",
@@ -255,6 +291,33 @@
         "lint"
       ],
       "source": "./packages/hooks-quality"
+    },
+    {
+      "name": "hooks-squash-merge",
+      "tags": [
+        "hooks",
+        "git",
+        "policy"
+      ],
+      "source": "./packages/hooks-squash-merge"
+    },
+    {
+      "name": "hooks-tool-prefs",
+      "tags": [
+        "hooks",
+        "tooling",
+        "advisory"
+      ],
+      "source": "./packages/hooks-tool-prefs"
+    },
+    {
+      "name": "hooks-worktree",
+      "tags": [
+        "hooks",
+        "worktree",
+        "lifecycle"
+      ],
+      "source": "./packages/hooks-worktree"
     },
     {
       "name": "hyperresearch",
@@ -652,6 +715,15 @@
         "infrastructure"
       ],
       "source": "./packages/steering-infrastructure"
+    },
+    {
+      "name": "steering-pragmatic",
+      "tags": [
+        "steering",
+        "pragmatic",
+        "personality"
+      ],
+      "source": "./packages/steering-pragmatic"
     },
     {
       "name": "steering-project-structure",
