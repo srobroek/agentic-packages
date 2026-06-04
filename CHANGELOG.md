@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.2.0...srobroek-agentic-v0.3.0) (2026-06-04)
+
+
+### Features
+
+* **chezmoi-editor:** add standalone dotfiles skill package [skip tests] ([#246](https://github.com/srobroek/agentic-packages/issues/246)) ([7ae2753](https://github.com/srobroek/agentic-packages/commit/7ae27531a106e7de0fd9cd0e6dd97f9666f57b3f))
+* **hooks,steering:** add granular global guard hooks + pragmatic steering [skip tests] ([#248](https://github.com/srobroek/agentic-packages/issues/248)) ([11d60ed](https://github.com/srobroek/agentic-packages/commit/11d60ed5e9c4b342742e421995beebde7a157fa0))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.1.3...srobroek-agentic-v0.2.0) (2026-06-03)
 
 
