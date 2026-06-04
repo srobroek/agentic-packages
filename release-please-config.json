@@ -140,6 +140,18 @@
         }
       ]
     },
+    "packages/chezmoi-editor": {
+      "release-type": "simple",
+      "component": "chezmoi-editor",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/code-intelligence": {
       "release-type": "simple",
       "component": "code-intelligence",
