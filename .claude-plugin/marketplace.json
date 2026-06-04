@@ -138,6 +138,15 @@
       "source": "./packages/core"
     },
     {
+      "name": "core-global",
+      "tags": [
+        "bundle",
+        "global",
+        "bootstrap"
+      ],
+      "source": "./packages/core-global"
+    },
+    {
       "name": "data-ai",
       "tags": [
         "bundle",

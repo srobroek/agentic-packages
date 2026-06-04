@@ -1,0 +1,25 @@
+name: core-global
+version: 0.1.0
+description: >-
+  Recommended global (user-scope) baseline: the bootstrap workflow skills shipped
+  directly, plus the reusable global skills and agents pulled in by dependency.
+  Install with 'apm install core-global@srobroek-agentic --global'.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/catchup#catchup-v0.1.2
+    - srobroek/agentic-packages/packages/codebase-memory#codebase-memory-v0.1.1
+    - srobroek/agentic-packages/packages/debate#debate-v0.1.1
+    - srobroek/agentic-packages/packages/eli5#eli5-v0.1.1
+    - srobroek/agentic-packages/packages/handover#handover-v0.1.1
+    - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.1
+    - srobroek/agentic-packages/packages/chezmoi-editor#chezmoi-editor-v0.2.0
+    - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
+    - srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.1.1
+    - srobroek/agentic-packages/packages/agent-external-repo-worker#agent-external-repo-worker-v0.1.1
+    - mattpocock/skills/skills/productivity/grill-me#main

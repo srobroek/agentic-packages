@@ -15,6 +15,7 @@
   "packages/commit-push-merge": "0.1.1",
   "packages/commit-push-pr": "0.1.1",
   "packages/core": "0.1.1",
+  "packages/core-global": "0.1.0",
   "packages/data-ai": "0.1.0",
   "packages/debate": "0.1.1",
   "packages/debugging": "0.1.1",

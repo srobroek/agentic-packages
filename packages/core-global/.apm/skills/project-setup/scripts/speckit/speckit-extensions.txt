@@ -1,0 +1,28 @@
+# Authoritative SpecKit extension set for project bootstrap.
+# One extension id per line. Blank lines and comments are ignored.
+archive
+brownfield
+bugfix
+checkpoint
+cleanup
+conduct
+critique
+diagram
+doctor
+fix-findings
+fleet
+github-issues
+iterate
+onboard
+optimize
+qa
+reconcile
+refine
+retro
+review
+security-review
+status
+tinyspec
+verify
+verify-tasks
+worktree
