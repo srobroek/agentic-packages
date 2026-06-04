@@ -380,6 +380,42 @@
         }
       ]
     },
+    "packages/hooks-bash-safety": {
+      "release-type": "simple",
+      "component": "hooks-bash-safety",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-branch-check": {
+      "release-type": "simple",
+      "component": "hooks-branch-check",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-git-safety": {
+      "release-type": "simple",
+      "component": "hooks-git-safety",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-git-workflow": {
       "release-type": "simple",
       "component": "hooks-git-workflow",
@@ -392,9 +428,57 @@
         }
       ]
     },
+    "packages/hooks-no-ff": {
+      "release-type": "simple",
+      "component": "hooks-no-ff",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-quality": {
       "release-type": "simple",
       "component": "hooks-quality",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-squash-merge": {
+      "release-type": "simple",
+      "component": "hooks-squash-merge",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-tool-prefs": {
+      "release-type": "simple",
+      "component": "hooks-tool-prefs",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-worktree": {
+      "release-type": "simple",
+      "component": "hooks-worktree",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -971,6 +1055,18 @@
     "packages/steering-infrastructure": {
       "release-type": "simple",
       "component": "steering-infrastructure",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/steering-pragmatic": {
+      "release-type": "simple",
+      "component": "steering-pragmatic",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
