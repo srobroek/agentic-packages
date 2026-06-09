@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.4.0...srobroek-agentic-v0.5.0) (2026-06-09)
+
+
+### Features
+
+* **agent-adversarial-challenger:** generalize challenger beyond debugging ([4a0899c](https://github.com/srobroek/agentic-packages/commit/4a0899c48e8345a8f5917adf58f00ff4cf1adec0))
+* **agent-adversarial-challenger:** generalize challenger beyond debugging [skip tests] ([d798ce3](https://github.com/srobroek/agentic-packages/commit/d798ce3491d3ac06a7b005c395bd1b71f90059a7))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.3.0...srobroek-agentic-v0.4.0) (2026-06-04)
 
 

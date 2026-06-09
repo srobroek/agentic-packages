@@ -1,6 +1,6 @@
 {
-  ".": "0.4.0",
-  "packages/agent-adversarial-challenger": "0.1.1",
+  ".": "0.5.0",
+  "packages/agent-adversarial-challenger": "0.2.0",
   "packages/agent-coder": "0.1.1",
   "packages/agent-external-repo-worker": "0.1.1",
   "packages/agent-pr-reviewer": "0.1.1",

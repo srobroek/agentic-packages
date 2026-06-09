@@ -1,12 +1,12 @@
 name: agent-adversarial-challenger
-version: 0.1.1
+version: 0.2.0
 description: >-
   Read-only adversarial challenger: independently stress-tests any claim, plan,
-  design, hypothesis, decision, or conclusion -- technical or not -- by attacking
-  its assumptions and returning evidence-backed counter-arguments and
-  alternatives, without changing anything. The critic half of a generate/critique
-  loop; debugging escalation, debate devil's-advocate, research and decision
-  review are all applications.
+  design, hypothesis, decision, or conclusion -- technical or not -- by
+  attacking its assumptions and returning evidence-backed counter-arguments and
+  alternatives, without changing anything. The critic half of a
+  generate/critique loop; debugging escalation, debate devil's-advocate,
+  research and decision review are all applications.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
