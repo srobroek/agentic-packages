@@ -22,7 +22,7 @@ dependencies:
     - >-
       srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
     - >-
-      srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.1.1
+      srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.2.0
     - >-
       srobroek/agentic-packages/packages/agent-external-repo-worker#agent-external-repo-worker-v0.1.1
     - mattpocock/skills/skills/productivity/grill-me#main

@@ -12,5 +12,5 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/unstuck#unstuck-v0.1.1
     - >-
-      srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.1.1
+      srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.2.0
     - mattpocock/skills/skills/engineering/diagnose#main
