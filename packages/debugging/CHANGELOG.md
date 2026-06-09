@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/debugging-v0.1.1...debugging-v0.1.2) (2026-06-09)
+
+
+### Bug Fixes
+
+* **core-global,debugging:** pin adversarial-challenger v0.2.0 ([ca03195](https://github.com/srobroek/agentic-packages/commit/ca03195616beedfb4aa52206d98f927acd81c8ae))
+* **core-global,debugging:** pin adversarial-challenger v0.2.0 [skip tests] ([c181378](https://github.com/srobroek/agentic-packages/commit/c181378f384e9636c8e31f34cf02406549b87193))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/debugging-v0.1.0...debugging-v0.1.1) (2026-06-03)
 
 
