@@ -9,7 +9,7 @@ The four standalone agents below are also bundled into domain bundles (e.g. `age
 <!-- BEGIN:agents -->
 | Agent | Description |
 | --- | --- |
-| `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests a plan, hypothesis, design, or fix by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without editing files. The critic half of a generate/critique loop; the unstuck debugging escalation is one application. |
+| `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications. |
 | `agent-coder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. |
 | `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
 | `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |

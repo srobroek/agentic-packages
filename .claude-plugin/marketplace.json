@@ -9,8 +9,10 @@
       "name": "agent-adversarial-challenger",
       "tags": [
         "agent",
-        "debugging",
-        "adversarial"
+        "adversarial",
+        "critique",
+        "decision-review",
+        "debugging"
       ],
       "source": "./packages/agent-adversarial-challenger"
     },
