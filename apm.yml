@@ -55,8 +55,10 @@ marketplace:
       category: debugging
       tags:
         - agent
-        - debugging
         - adversarial
+        - critique
+        - decision-review
+        - debugging
     - name: agent-coder
       source: ./packages/agent-coder
       category: engineering
