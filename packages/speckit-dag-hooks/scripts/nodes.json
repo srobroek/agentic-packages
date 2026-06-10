@@ -26,6 +26,11 @@
   },
   "agent-assign-execute": {
     "post": {
+      "context": [
+        "Orchestrator review gate: before accepting a task as done, review the ACTUAL code changes (git diff) against the task in `tasks.md` and the `spec.md`, not just the agent's `task-<n>.report.md`. Self-reports describe intent, not necessarily what landed.",
+        "Keep each task's sub-agent alive after it reports. If the work falls short, `SendMessage` specific corrections to the SAME agent so it fixes only those issues with full context -- do not silently accept incomplete work or re-delegate from scratch. This holds even when execution ran as a parallel Workflow: review each agent's emitted diff before its worktree is reconciled, and dismiss an agent only once its task passes review.",
+        "Unresolved gaps route forward to `/speckit.verify-tasks` (phantom-completion check) and `/speckit.fix-findings`."
+      ],
       "going_to": [
         "/speckit.verify-tasks (default -- confirm every task actually shipped code)",
         "/speckit.verify (only if user explicitly skips verify-tasks)"
@@ -437,7 +442,8 @@
         "/speckit.review.run (only if user explicitly skips qa)"
       ],
       "context": [
-        "General-purpose code review: correctness, regressions, security risks, missing tests, performance, maintainability. Complements the spec-aware review.run. Run the /code-review skill as a subagent against the current branch diff. Can run in parallel with /speckit.security-review."
+        "General-purpose code review: correctness, regressions, security risks, missing tests, performance, maintainability. Complements the spec-aware review.run. Run the /code-review skill as a subagent against the current branch diff. Can run in parallel with /speckit.security-review.",
+        "Spawn the review subagent with an explicit stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to clarify findings.' Triage the findings before routing to fix-findings."
       ],
       "soft": [
         "implementation diff present"
@@ -448,9 +454,13 @@
   "conduct-conduct": {
     "post": {
       "conditional": [
-        "After conduct completes, the regular DAG resumes -- pick the next node based on which artefact you just produced."
+        "After conduct completes AND the produced artefact passes your review, the regular DAG resumes -- pick the next node based on which artefact you just produced."
+      ],
+      "context": [
+        "Orchestrator review gate: do NOT dismiss the sub-agent the moment it reports. Review the produced artefact(s) first. If they fall short, `SendMessage` the specific issues to the SAME agent so it fixes only those with full context. Dismiss only once the artefact passes your review."
       ],
       "going_to": [
+        "/speckit.conduct.conduct (loop -- when review finds issues in the produced artefact)",
         "(return to surrounding phase; conduct does not advance the DAG)"
       ],
       "postconditions": [
@@ -463,7 +473,8 @@
         "(any phase -- single-phase executor)"
       ],
       "context": [
-        "Executes one speckit phase via a sub-agent. Lighter-weight than running a full workflow; use when you want one phase done in isolation."
+        "Executes one speckit phase via a sub-agent. Lighter-weight than running a full workflow; use when you want one phase done in isolation.",
+        "Spawn the sub-agent with a stay-alive instruction: 'produce the artefact, report it, and wait for my review -- do not end your turn; I may SendMessage corrections.'"
       ],
       "soft": [
         "a spec/plan/tasks artefact appropriate to the phase being conducted"
@@ -640,8 +651,12 @@
   },
   "fix-findings": {
     "post": {
+      "context": [
+        "Orchestrator review gate: do NOT dismiss the fixing sub-agent the moment it reports. Review the actual code changes against the original findings first. If a fix is incomplete or introduced new issues, `SendMessage` the specific problems to the SAME agent so it corrects only those with full context. Dismiss only once the fixes pass your review."
+      ],
       "going_to": [
-        "/speckit.review.run (loop until clean)",
+        "/speckit.fix-findings (loop -- when review shows the fix is incomplete or regressed)",
+        "/speckit.review.run (loop until clean, after the fixes pass review)",
         "/speckit.verify (re-verify after substantial fixes)"
       ],
       "title": "/speckit.fix-findings -- what to do next"
@@ -651,7 +666,8 @@
         "/speckit.review.run - /speckit.qa.run (when findings surfaced)"
       ],
       "context": [
-        "Automated analyze-fix-reanalyze loop bounded by `max_iterations` (default 10 in our override)."
+        "Automated analyze-fix-reanalyze loop bounded by `max_iterations` (default 10 in our override).",
+        "When you spawn the fixing sub-agent, instruct it to stay alive after reporting: 'apply the fixes, report what you changed, and wait for my review -- do not end your turn; I may SendMessage corrections.'"
       ],
       "soft": [
         "`specs/<feat>/review-report.md` or `qa-report.md` with findings"
@@ -1320,18 +1336,18 @@
       ],
       "context": [
         "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-        "If memory-md is installed and `memory-synthesis.md` is missing, STOP and run `/speckit.memory-md.plan-with-memory` first.",
+        "`memory-synthesis.md` is a HARD prerequisite for planning. If it is missing, STOP and run `/speckit.memory-md.plan-with-memory` first -- do not plan without synthesised memory.",
         "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch."
       ],
       "hard_exists": [
         "specs/<feat>/plan.md"
       ],
       "hard_missing": [
-        "specs/<feat>/spec.md"
+        "specs/<feat>/spec.md",
+        "specs/<feat>/memory-synthesis.md"
       ],
       "soft": [
-        "specs/<feat>/clarifications.md",
-        "specs/<feat>/memory-synthesis.md (when memory-md installed)"
+        "specs/<feat>/clarifications.md"
       ],
       "title": "/speckit.plan -- before you run this"
     }
@@ -1553,6 +1569,9 @@
         "/speckit.review.run (orchestrated)",
         "(direct invocation for a focused code review)"
       ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
+      ],
       "soft": [
         "implementation diff exists"
       ],
@@ -1569,6 +1588,9 @@
     "pre": {
       "came_from": [
         "/speckit.review.run - (direct invocation)"
+      ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
       ],
       "soft": [
         "implementation diff"
@@ -1587,6 +1609,9 @@
       "came_from": [
         "/speckit.review.run - (direct invocation)"
       ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
+      ],
       "soft": [
         "implementation diff"
       ],
@@ -1595,8 +1620,11 @@
   },
   "review-run": {
     "post": {
+      "context": [
+        "Orchestrator review gate: triage the review sub-agents' findings before routing to fix-findings -- keep each reviewer alive and `SendMessage` to clarify ambiguous or low-confidence findings rather than forwarding them wholesale. Dismiss a reviewer only once you have triaged its findings."
+      ],
       "going_to": [
-        "/speckit.fix-findings (if findings)",
+        "/speckit.fix-findings (if findings, after triage)",
         "/speckit.qa.run (clean)"
       ],
       "postconditions": [
@@ -1609,7 +1637,8 @@
         "/speckit.verify"
       ],
       "context": [
-        "Orchestrates the granular review.{code,comments,tests,errors,types,simplify} variants. Findings feed fix-findings."
+        "Orchestrates the granular review.{code,comments,tests,errors,types,simplify} variants. Findings feed fix-findings.",
+        "Spawn each review sub-agent with a stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to ask you to clarify or reassess a finding.'"
       ],
       "hard_missing": [
         "specs/<feat>/verify-report.md"
@@ -1629,6 +1658,9 @@
       "came_from": [
         "/speckit.review.run - (direct invocation)"
       ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
+      ],
       "soft": [
         "implementation diff"
       ],
@@ -1646,6 +1678,9 @@
       "came_from": [
         "/speckit.review.run - (direct invocation)"
       ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
+      ],
       "soft": [
         "test files in the diff"
       ],
@@ -1662,6 +1697,9 @@
     "pre": {
       "came_from": [
         "/speckit.review.run - (direct invocation)"
+      ],
+      "context": [
+        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
       ],
       "soft": [
         "typed source in the diff"
@@ -1688,7 +1726,8 @@
         "/speckit.review.run (only if user explicitly skips qa)"
       ],
       "context": [
-        "Dedicated security audit. In pre-impl, reviews plan and tasks for security risks. In post-impl, reviews the actual code diff. Run the /security-review skill as a subagent. In pre-impl, runs in parallel with /speckit.critique.run. In post-impl, runs in parallel with /speckit.code-review."
+        "Dedicated security audit. In pre-impl, reviews plan and tasks for security risks. In post-impl, reviews the actual code diff. Run the /security-review skill as a subagent. In pre-impl, runs in parallel with /speckit.critique.run. In post-impl, runs in parallel with /speckit.code-review.",
+        "Spawn the review subagent with an explicit stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to clarify findings.' Triage the findings before routing to fix-findings."
       ],
       "soft": [
         "implementation diff present (post-impl path)"
@@ -1958,6 +1997,7 @@
       ],
       "context": [
         "Catches phantom completions -- tasks marked done with no real implementation. Runs in a fresh context to avoid confirmation bias.",
+        "Verify against the ACTUAL diff, not the agents' task reports -- a task self-reported as done with no corresponding code change is a phantom completion and must route back to `/speckit.fix-findings`.",
         "Claude turbo-path for Phase 3 QA (dynamic workflows only): post-implementation QA runs as three parallel pairs -- verify-tasks + verify (10/11), code-review + security-review (12/13), sync.analyze + sync.conflicts (15/16); you MAY run all three as one Workflow instead of six manual subagent calls.",
         "If workflows are unavailable or the user declines, run the pairs the normal way per the 50-speckit-workflow steps (identical outputs, not orchestrated).",
         "`parallel()` the six read-only checks mapped to `speckit-verify-tasks`, `speckit-verify`, the `code-review` and `security-review` skills, `speckit-sync`, `speckit-sync-conflicts`.",

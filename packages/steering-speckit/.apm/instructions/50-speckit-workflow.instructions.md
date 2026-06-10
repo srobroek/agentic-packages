@@ -23,6 +23,15 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
   `/speckit.agent-assign.assign` -> `/speckit.agent-assign.validate` ->
   `/speckit.agent-assign.execute`. This routes each task to a specialized
   sub-agent for better quality. Do not invoke `/speckit.implement`.
+- ORCHESTRATOR REVIEW GATE: when sub-agents deliver work (execution, review,
+  or fixes), the main orchestrator MUST review the actual code changes against
+  the task requirements before accepting. Agent summaries describe intent, not
+  necessarily what landed. Keep the sub-agent alive after it reports back -- use
+  `SendMessage` to send corrections to the SAME agent so it retains its full
+  context and fixes only the specific issues, not the entire task. Only dismiss
+  the agent once the work passes review. This holds even under parallel
+  (worktree-isolated) execution: review each agent's emitted diff before its
+  worktree is reconciled.
 - Requires the `agent-assign` specify extension (`specify extension add
   agent-assign`). Included in the canonical extension set for new projects.
 

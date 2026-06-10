@@ -83,8 +83,22 @@ def main():
     assert "spec.md" in d["reason"], "T3 reason: %r" % d["reason"]
     print("T3 PASS: HARD-MISSING block on specs/<feat>/spec.md, reason=%r" % d["reason"])
 
-    # T4: HARD-EXISTS fires (spec.md + plan.md present) -> PreToolUse deny.
+    # T3b: memory-synthesis.md is a HARD prerequisite -> plan blocks when it is
+    # absent even though spec.md exists.
     open(os.path.join(proj, "specs", "001-demo", "spec.md"), "w").write("x")
+    d = run(
+        "pre",
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.plan"},
+        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo/"},
+        project_dir=proj,
+        cwd=proj,
+    )
+    assert d is not None and d["decision"] == "block", "T3b: expected block, got %r" % d
+    assert "memory-synthesis.md" in d["reason"], "T3b reason: %r" % d["reason"]
+    print("T3b PASS: HARD-MISSING block on memory-synthesis.md, reason=%r" % d["reason"])
+
+    # T4: HARD-EXISTS fires (spec.md + memory-synthesis.md + plan.md present) -> PreToolUse deny.
+    open(os.path.join(proj, "specs", "001-demo", "memory-synthesis.md"), "w").write("x")
     open(os.path.join(proj, "specs", "001-demo", "plan.md"), "w").write("x")
     d = run(
         "pre",
