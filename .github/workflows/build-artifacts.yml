@@ -36,7 +36,8 @@ jobs:
 
       - name: Regenerate non-destructive artifacts
         run: |
-          apm pack --check-clean
+          python3 .apm/scripts/build-marketplace-block.py
+          apm pack
           python3 .apm/scripts/build-release-please.py
           python3 .apm/scripts/build-readme-tables.py
 

@@ -47,6 +47,7 @@ jobs:
 
       - name: Regenerate marketplace + README tables
         run: |
+          python3 .apm/scripts/build-marketplace-block.py
           apm pack
           python3 .apm/scripts/build-readme-tables.py
 
@@ -58,6 +59,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
+          git add apm.yml .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
           git commit -m "chore: regenerate agentic artifacts for release [skip ci]"
           git push
