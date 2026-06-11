@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.5.0...srobroek-agentic-v0.6.0) (2026-06-10)
+
+
+### Features
+
+* **marketplace:** generate marketplace block from package manifests, sync description + version ([ce58db3](https://github.com/srobroek/agentic-packages/commit/ce58db369cc6b5239dcd89911acf18e5245ca263))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.4.0...srobroek-agentic-v0.5.0) (2026-06-09)
 
 

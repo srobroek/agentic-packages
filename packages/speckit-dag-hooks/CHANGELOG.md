@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.1.0...speckit-dag-hooks-v0.2.0) (2026-06-10)
+
+
+### Features
+
+* **speckit-dag-hooks,steering-speckit:** add orchestrator review gate + hard memory-synthesis precondition ([327329c](https://github.com/srobroek/agentic-packages/commit/327329c6531006f4d4094beb4d11114619d5575a))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.0.1...speckit-dag-hooks-v0.1.0) (2026-06-02)
 
 
