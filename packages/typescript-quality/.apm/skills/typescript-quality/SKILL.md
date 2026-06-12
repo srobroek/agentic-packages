@@ -14,18 +14,22 @@ description: Use to run TypeScript or JavaScript format, lint, type-check, and t
 
 ## Tooling Preference
 
-- Prefer project-native tooling if defined in `package.json` scripts
-- Otherwise prefer:
-  - `biome` for formatting and linting
-  - `eslint` as fallback linter
-  - `tsc --noEmit` for type checking
+Order the scripts implement (first available package manager wins):
+
+1. `pnpm exec`, then `bun`/`bunx`, then `npx --yes` to run `biome check` and `tsc --noEmit`
+2. Globally installed `biome` (and `tsc` if present) when `package.json` exists but no package manager is found
+3. If neither is available, the scripts warn and exit 0 (no hard failure) -- fall back to project-native `package.json` scripts or `eslint` manually
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/check.sh` | Run all checks (lint, typecheck, test) |
-| `scripts/fix.sh` | Apply mechanical fixes (format, auto-fix lint) |
+| `scripts/check.sh` | Run all checks (biome check, tsc --noEmit) |
+| `scripts/fix.sh` | Apply mechanical fixes only (biome check --write) |
+
+`fix.sh` is narrower than `check.sh`: it only applies formatting and
+auto-fixable lint rules. Type errors need manual fixes. Re-run `check.sh`
+after `fix.sh`.
 
 ## References
 
