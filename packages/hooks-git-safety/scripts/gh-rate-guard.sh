@@ -20,7 +20,7 @@ gh_count="$(printf '%s' "$stripped" | { grep -oE '(^|[;&|]\s*)gh\s+' || true; } 
 [[ "${gh_count:-0}" -lt 3 ]] && exit 0
 
 if printf '%s' "$stripped" | grep -qE '(^|[;&|]\s*)gh\s+(api|issue|pr|label|project|gist|release|repo|secret|variable)\b'; then
-  deny "Multiple GitHub CLI operations detected — use gh-api.py for large batch work that needs rate-limit accounting, retries, or throttling. For interactive one-off usage, plain gh is allowed."
+  deny "Multiple GitHub CLI operations detected — batch large gh work through a single 'gh api' call (GraphQL or --paginate) or a helper script with rate-limit handling, instead of many sequential gh invocations. For interactive one-off usage, plain gh is allowed."
 fi
 
 exit 0
