@@ -23,7 +23,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. |
 | `playwright` | Automate browser interactions through a Playwright MCP server. |
-| `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns. |
+| `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts. |
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
 | `research` | Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis. |
