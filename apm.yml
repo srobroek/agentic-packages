@@ -141,7 +141,7 @@ marketplace:
         - skill
         - quality
         - review
-      description: Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests.
+      description: Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.
       version: 0.1.1
     - name: codebase-index
       source: ./packages/codebase-index
