@@ -38,7 +38,8 @@ if [ -n "$ACTIVE_SPEC" ] && [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
     if [ -n "$REPO" ]; then
       PARENT_NUM=$(gh issue list -R "$REPO" --state open --label "type:spec" --label "spec:${SPEC_ID}" --json number -q '.[0].number' 2>/dev/null)
       if [ -n "$PARENT_NUM" ]; then
-        OPEN_SUBS=$(gh api graphql -f query="
+        # One query for all sub-issue states; derive open/total locally.
+        SUB_STATES=$(gh api graphql -f query="
           query {
             repository(owner: \"$(echo "$REPO" | cut -d/ -f1)\", name: \"$(echo "$REPO" | cut -d/ -f2)\") {
               issue(number: $PARENT_NUM) {
@@ -48,21 +49,14 @@ if [ -n "$ACTIVE_SPEC" ] && [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
               }
             }
           }
-        " --jq '[.data.repository.issue.subIssues.nodes[] | select(.state == "OPEN")] | length' 2>/dev/null)
-        if [ -n "$OPEN_SUBS" ] && [ "$OPEN_SUBS" -gt 0 ] 2>/dev/null; then
-          TOTAL_SUBS=$(gh api graphql -f query="
-            query {
-              repository(owner: \"$(echo "$REPO" | cut -d/ -f1)\", name: \"$(echo "$REPO" | cut -d/ -f2)\") {
-                issue(number: $PARENT_NUM) {
-                  subIssues(first: 50) {
-                    nodes { state }
-                  }
-                }
-              }
-            }
-          " --jq '.data.repository.issue.subIssues.nodes | length' 2>/dev/null)
-          CLOSED_SUBS=$((TOTAL_SUBS - OPEN_SUBS))
-          WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $OPEN_SUBS open sub-issues ($CLOSED_SUBS closed) on spec parent #${PARENT_NUM}"$'\n'
+        " --jq '[.data.repository.issue.subIssues.nodes[].state]' 2>/dev/null)
+        if [ -n "$SUB_STATES" ]; then
+          OPEN_SUBS=$(printf '%s' "$SUB_STATES" | jq '[.[] | select(. == "OPEN")] | length' 2>/dev/null)
+          TOTAL_SUBS=$(printf '%s' "$SUB_STATES" | jq 'length' 2>/dev/null)
+          if [ -n "$OPEN_SUBS" ] && [ "$OPEN_SUBS" -gt 0 ] 2>/dev/null; then
+            CLOSED_SUBS=$((TOTAL_SUBS - OPEN_SUBS))
+            WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $OPEN_SUBS open sub-issues ($CLOSED_SUBS closed) on spec parent #${PARENT_NUM}"$'\n'
+          fi
         fi
       fi
     fi

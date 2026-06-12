@@ -35,9 +35,10 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
 ## Workflow Steps
 
 Phases run in order (1 -> 2 -> 3); within a phase, steps run in numeric order
-and "parallel with" pairs run concurrently. Steps 10-13 start only after 9c
-completes; all four must finish before 14. Scope changes route through iterate
-(below) and resume at the triggering step.
+and "parallel with" pairs run concurrently. Phase 3 starts only after 9c
+completes and is a pipeline (10 -> 11 -> 11b -> 11c -> 12 + 13); all of it must
+finish before 14. Scope changes route through iterate (below) and resume at
+the triggering step.
 
 ### Phase 1 -- Specification (human-gated)
 
@@ -66,10 +67,12 @@ completes; all four must finish before 14. Scope changes route through iterate
 
 | Step | Command | Mode | Notes |
 |------|---------|------|-------|
-| 10 | `/speckit.verify-tasks` | parallel with 11 | Subagent, fresh context; phantom completion detection |
-| 11 | `/speckit.verify` | parallel with 10 | Subagent; validate code against spec |
-| 12 | `/speckit.code-review` | parallel with 13 | Subagent |
-| 13 | `/speckit.security-review` | parallel with 12 | Subagent |
+| 10 | `/speckit.verify-tasks` | subagent | Fresh context; phantom completion detection |
+| 11 | `/speckit.verify` | subagent, after 10 | Validate code against spec |
+| 11b | `/speckit.review.run` | auto, after 11 | Full review cycle; findings -> `fix-findings` after triage |
+| 11c | `/speckit.qa.run` | auto, after 11b | QA retest; failures -> `fix-findings` |
+| 12 | `/speckit.code-review` | parallel with 13, after 11c | Subagent |
+| 13 | `/speckit.security-review` | parallel with 12, after 11c | Subagent |
 | 14 | `/speckit.cleanup` | main thread | Auto-fix small, issue for large |
 | 15 | `/speckit.sync.analyze` | parallel with 16 | Subagent; drift detection between spec and code |
 | 16 | `/speckit.sync.conflicts` | parallel with 15 | Subagent; inter-spec contradiction check |
@@ -108,7 +111,7 @@ Commands outside the numbered workflow above.
   tinyspec.classify -> tinyspec.tinyspec)
 
 ### Review
-- `review.run` -- full review cycle
+- `review.run` -- full review cycle (step 11b in the numbered workflow)
 - `review.code` -- code review
 - `review.tests` -- test review
 - `review.types` -- type safety review
@@ -117,7 +120,7 @@ Commands outside the numbered workflow above.
 - `review.comments` -- comment review
 
 ### Process
-- `qa.run` -- QA cycle
+- `qa.run` -- QA cycle (step 11c in the numbered workflow)
 - `fix-findings` -- fix issues from verify/review/qa
 - `reconcile.reconcile` -- reconcile divergent state
 - `doctor.check` -- diagnose speckit health
