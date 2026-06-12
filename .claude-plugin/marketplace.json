@@ -63,7 +63,7 @@
     },
     {
       "name": "audit-steering",
-      "description": "Audit agent rules, hooks, skills, and guardrails for drift and cleanup.",
+      "description": "Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -106,7 +106,7 @@
     },
     {
       "name": "code-review",
-      "description": "Review a diff or change set, prioritizing bugs, regressions, risks, and missing tests.",
+      "description": "Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -117,7 +117,7 @@
     },
     {
       "name": "codebase-index",
-      "description": "Rebuild the codebase-memory graph index when it is missing or stale.",
+      "description": "Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -128,7 +128,7 @@
     },
     {
       "name": "codebase-memory",
-      "description": "Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index.",
+      "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -243,7 +243,7 @@
     },
     {
       "name": "eli5",
-      "description": "Explain a topic at multiple depth levels, from simple to detailed, for layered understanding.",
+      "description": "Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -254,7 +254,7 @@
     },
     {
       "name": "explore",
-      "description": "Read-only codebase orientation, file discovery, and path tracing.",
+      "description": "Lightweight read-only codebase orientation: file discovery, path tracing, and \"where is X\" lookups. For structured graph queries, use codebase-memory.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -296,7 +296,7 @@
     },
     {
       "name": "handover",
-      "description": "Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state.",
+      "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -680,7 +680,7 @@
     },
     {
       "name": "optimize-steering",
-      "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility.",
+      "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -701,7 +701,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser interactions through a Playwright MCP server.",
+      "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -732,7 +732,7 @@
     },
     {
       "name": "prompt-lookup",
-      "description": "Find, compare, and improve prompt templates and prompt-engineering patterns.",
+      "description": "Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts.",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -765,7 +765,7 @@
     },
     {
       "name": "research",
-      "description": "Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis.",
+      "description": "Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch).",
       "version": "0.1.1",
       "tags": [
         "skill",
@@ -817,7 +817,7 @@
     },
     {
       "name": "sniff",
-      "description": "Stability, hardening, and cleanup audit across a codebase.",
+      "description": "Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries.",
       "version": "0.1.1",
       "tags": [
         "skill",
