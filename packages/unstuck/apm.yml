@@ -2,7 +2,9 @@ name: unstuck
 version: 0.1.1
 description: >-
   Escalate stalled debugging by challenging assumptions after the normal
-  diagnosis loop has failed and the agent is going in circles.
+  diagnosis loop has failed and the agent is going in circles. Ships an
+  outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops)
+  with an escalating nudge/directive/edit-gate ladder on both runtimes.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

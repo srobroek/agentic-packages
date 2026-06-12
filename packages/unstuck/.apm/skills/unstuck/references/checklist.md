@@ -7,7 +7,8 @@ Baseline of observable facts to gather before naming assumptions or hypotheses.
 - Did `diagnose` run first? If not, why was it skipped?
 - What changed most recently? (`git diff --stat`, `git log --oneline -10`)
 - Which files are affected, and which were recently edited? (If a STUCK
-  DETECTOR advisory fired, start from its per-file edit counts and state what
-  each repeated edit was trying to fix.)
+  DETECTOR alert fired, start from its evidence: per-file edit counts, the
+  failing command and its streak, and any flip-flopped files -- state what
+  each repeated edit or rerun was trying to fix.)
 - Is the error from config, environment, or code?
 - What has already been tried, and what was the observed result?
