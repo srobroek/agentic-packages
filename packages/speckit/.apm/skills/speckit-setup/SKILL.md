@@ -86,10 +86,10 @@ flowchart TD
 
     subgraph P3["Phase 3 -- Post-implementation quality (ALL mandatory)"]
         direction TB
-        V10["10 verify-tasks"]:::parallel --> CL14
-        V11["11 verify"]:::parallel --> CL14
-        CR12["12 code-review"]:::parallel --> CL14
-        SR13["13 security-review"]:::parallel --> CL14["14 cleanup"]:::auto
+        V10["10 verify-tasks"]:::auto --> V11["11 verify"]:::auto
+        V11 --> RR["11b review.run"]:::auto --> QA["11c qa.run"]:::auto
+        QA --> CR12["12 code-review"]:::parallel --> CL14
+        QA --> SR13["13 security-review"]:::parallel --> CL14["14 cleanup"]:::auto
         CL14 --> SY15["15 sync.analyze"]:::parallel
         CL14 --> SY16["16 sync.conflicts"]:::parallel
         SY15 --> R17["17 retro.run"]:::auto
@@ -100,9 +100,6 @@ flowchart TD
 
     S8 --> A9a
     A9c --> V10
-    A9c --> V11
-    A9c --> CR12
-    A9c --> SR13
 
     ITER["iterate.define -> iterate.apply<br/>(MANDATORY once tasks.md exists)"]:::interactive
     A9c -. "requirements change /<br/>approach won't work" .-> ITER
@@ -133,16 +130,24 @@ Each row is a `/speckit.<step>` command. "Next (default -> conditions)" reflects
 | `agent-assign.assign` | Route each task to a specialized subagent | `agent-assignments.md` | `agent-assign.validate` |
 | `agent-assign.validate` | Validate agent assignments | (validated) | `agent-assign.execute` |
 | `agent-assign.execute` | Per-task subagent execution, checkpoint each | code + `task-<n>.report.md` | `verify-tasks` -> `verify` if verify-tasks skipped; scope change -> `iterate` |
-| `verify-tasks` | Detect phantom completions (fresh context) | `verify-tasks-report.md` | `verify` (pairs with it) |
-| `verify` | Validate code against FR/SC | `verify-report.md` | `code-review` |
-| `code-review` (12) | General code-quality review | findings | `security-review` (pairs with it) |
-| `security-review` (13) | Security/compliance review | findings | `cleanup` |
+| `verify-tasks` | Detect phantom completions (fresh context) | `verify-tasks-report.md` | `verify` |
+| `verify` | Validate code against FR/SC | `verify-report.md` | `review.run` |
+| `review.run` (11b) | Full review cycle | findings | `qa.run` -> `fix-findings` if findings (after triage) |
+| `qa.run` (11c) | QA retest of the implementation | QA results | `code-review` + `security-review` (parallel) -> `fix-findings` if failed |
+| `code-review` (12) | General code-quality review | findings | `cleanup` (with 13 clean) |
+| `security-review` (13) | Security/compliance review | findings | `cleanup` (with 12 clean) |
 | `cleanup` | Auto-fix small issues, file issues for large | `cleanup-report.md` | `memory-md.capture` -> `sync.analyze` if no lessons |
 | `sync.analyze` | Detect spec<->code drift | `sync-report.md` | `sync.conflicts` |
 | `sync.conflicts` | Detect inter-spec contradictions | findings | `retro.run` |
 | `retro.run` | Retrospective (needs full session context) | retro notes | docs update |
 | `checkpoint.commit` (19) | Final commit | commit | (done) |
 | `iterate.define` / `iterate.apply` | Scope change (MANDATORY once tasks.md exists) | `pending-iteration.md`, updated spec/plan/tasks | resume at the step where the change was triggered |
+
+This table covers the default workflow path. The node store guards ~86 commands
+in total, including optional/diagnostic ones (`status.*`, `doctor`, `diagram.*`,
+`memory-md.*`, `tinyspec.*`, `bugfix.*`, `worktree.*`, ...). Run
+`/speckit.status.show` for the current state, or see the steering-speckit
+Command Reference for the full list.
 
 ## Rules
 
