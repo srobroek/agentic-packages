@@ -11,7 +11,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `catchup` | Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request. |
 | `chezmoi-editor` | Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi. |
 | `code-review` | Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity. |
-| `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. |
+| `codebase-index` | Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration. |
 | `codebase-memory` | Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore. |
 | `commit-push-merge` | Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method. |
 | `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
