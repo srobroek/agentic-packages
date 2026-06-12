@@ -11,8 +11,8 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/code-review#code-review-v0.1.1
-    - srobroek/agentic-packages/packages/verify#verify-v0.1.1
+    - srobroek/agentic-packages/packages/code-review#code-review-v0.1.2
+    - srobroek/agentic-packages/packages/verify#verify-v0.1.2
     - >-
       srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
     - wshobson/agents/plugins/comprehensive-review#main

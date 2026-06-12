@@ -4,12 +4,12 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
-- **33 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **26 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **34 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **27 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
-- **15 steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **16 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **6 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **2 hook packages** -- opt-in lifecycle hooks (git-workflow, quality), cross-tool for Claude and Codex
+- **9 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 
 Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), unstuck (stuck detection), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
 
