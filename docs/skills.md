@@ -26,7 +26,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns. |
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
-| `research` | Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis. |
+| `research` | Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch). |
 | `rust-quality` | Run Rust format, lint, and test checks with the project toolchain. |
 | `sniff` | Stability, hardening, and cleanup audit across a codebase. |
 | `typescript-quality` | Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain. |

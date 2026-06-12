@@ -1,6 +1,6 @@
 ---
 name: research
-description: Use when the user needs open-ended research requiring synthesis across multiple sources -- comparisons, technology evaluations, tradeoff analysis. NOT for single-repo "where is X" lookups (use explore), URL-specific fetches (use web-fetch), or speckit research workflows.
+description: Multi-source research synthesis -- comparisons, technology evaluations, tradeoff analysis. Not for "where is X" lookups (use `explore`) or single-URL fetches (use `web-fetch`).
 ---
 
 # Research
