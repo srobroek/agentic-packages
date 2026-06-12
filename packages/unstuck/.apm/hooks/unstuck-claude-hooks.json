@@ -7,7 +7,6 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/debug-stuck-detector.sh",
-            "async": true,
             "timeout": 3
           }
         ]
@@ -18,7 +17,7 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/stuck-reset.sh",
-            "if": "Bash(git commit*)",
+            "if": "Bash(git commit*)|Bash(pytest*)|Bash(python -m pytest*)|Bash(uv run pytest*)|Bash(npm test*)|Bash(pnpm test*)|Bash(pnpm run test*)|Bash(cargo test*)|Bash(cargo nextest*)|Bash(go test*)|Bash(vitest*)|Bash(jest*)|Bash(mocha*)|Bash(just test*)|Bash(task test*)|Bash(make test*)|Bash(pre-commit run*)",
             "async": true,
             "timeout": 2
           }
