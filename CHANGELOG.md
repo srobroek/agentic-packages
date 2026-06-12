@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.7.0...srobroek-agentic-v0.7.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* bump bundle member pins to released versions, refresh README counts ([#307](https://github.com/srobroek/agentic-packages/issues/307)) ([a1c099b](https://github.com/srobroek/agentic-packages/commit/a1c099b9f03765459fdcb990e61b262aab967cbb))
+
 ## [0.7.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.6.0...srobroek-agentic-v0.7.0) (2026-06-12)
 
 

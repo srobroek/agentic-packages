@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.1.2...code-intelligence-v0.1.3) (2026-06-12)
+
+
+### Bug Fixes
+
+* bump bundle member pins to released versions, refresh README counts ([#307](https://github.com/srobroek/agentic-packages/issues/307)) ([a1c099b](https://github.com/srobroek/agentic-packages/commit/a1c099b9f03765459fdcb990e61b262aab967cbb))
+
 ## [0.1.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.1.1...code-intelligence-v0.1.2) (2026-06-12)
 
 
