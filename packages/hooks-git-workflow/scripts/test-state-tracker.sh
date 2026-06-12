@@ -12,6 +12,16 @@ if [[ ! -f "$state_file" ]] || ! jq -e type "$state_file" >/dev/null 2>&1; then
   echo '{"last_edit":0,"last_test":0,"test_passed":false}' > "$state_file"
 fi
 
+# Edit-type tools stamp last_edit so the pre-commit gate knows code changed
+# since the last passing test run.
+case "$tool" in
+  Edit|Write|MultiEdit|apply_patch)
+    jq --argjson now "$now" '.last_edit = $now' \
+      "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
+    exit 0
+    ;;
+esac
+
 if [[ "$tool" != "Bash" ]]; then
   exit 0
 fi
