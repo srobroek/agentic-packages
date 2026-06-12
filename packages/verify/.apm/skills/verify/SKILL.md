@@ -8,7 +8,8 @@ description: Run and report a final local verification pass before handoff, comm
 ## Preferred Flow
 
 1. Prefer project-native commands when they are obvious (`just verify`,
-   `make verify`, package scripts, language-specific quality skills).
+   `make verify`, `package.json` scripts, `Makefile`/`justfile` targets,
+   language-specific quality skills).
 2. Otherwise run `scripts/verify.sh`.
 3. Report what ran, what was skipped, and what failed.
 4. Distinguish environment gaps from real code or test failures.
@@ -16,10 +17,9 @@ description: Run and report a final local verification pass before handoff, comm
 
 ## Steering
 
-- Prefer project-native commands (`package.json` scripts, `Makefile`, `justfile`) over guessed generic fallbacks.
 - Do not claim coverage for checks that were skipped or unavailable.
 - Keep the report concrete: command, exit code, failure summary.
-- The agent MUST NOT silently swallow failures -- every non-zero exit gets reported.
+- Never silently swallow failures -- report every non-zero exit.
 - This is a final readiness pass, not a replacement for focused language
   quality skills such as `typescript-quality`, `python-quality`, `go-quality`,
   or `rust-quality`.
