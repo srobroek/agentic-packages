@@ -128,7 +128,7 @@
     },
     {
       "name": "codebase-memory",
-      "description": "Graph-aware codebase exploration, tracing, and reference lookup using the codebase-memory index.",
+      "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
       "version": "0.1.1",
       "tags": [
         "skill",
