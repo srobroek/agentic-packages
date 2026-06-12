@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.1...core-global-v0.2.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **core-global:** dead references, cross-runtime gaps, setup script bugs ([#266](https://github.com/srobroek/agentic-packages/issues/266)) ([1503a9b](https://github.com/srobroek/agentic-packages/commit/1503a9b2061327fae81f46e55a26885f20e60f78))
+
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.0...core-global-v0.2.1) (2026-06-09)
 
 

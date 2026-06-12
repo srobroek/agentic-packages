@@ -1,5 +1,5 @@
 name: language-steering-go
-version: 0.1.0
+version: 0.1.1
 description: >-
   Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for
   CLIs, koanf for layered config. Install to adopt these picks; the language-go

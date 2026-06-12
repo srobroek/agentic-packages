@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/optimize-steering-v0.1.1...optimize-steering-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **optimize-steering:** comply with own description-length rules ([#286](https://github.com/srobroek/agentic-packages/issues/286)) ([bff10ed](https://github.com/srobroek/agentic-packages/commit/bff10ed47653c7d0e157cad5c09e77543960909a))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/optimize-steering-v0.1.0...optimize-steering-v0.1.1) (2026-06-03)
 
 

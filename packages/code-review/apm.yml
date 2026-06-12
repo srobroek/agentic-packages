@@ -1,5 +1,5 @@
 name: code-review
-version: 0.1.1
+version: 0.1.2
 description: >-
   Review a diff, change set, or PR for bugs, regressions, security risks, and
   missing tests, reporting findings by severity.

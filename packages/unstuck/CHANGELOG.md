@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/unstuck-v0.1.1...unstuck-v0.2.0) (2026-06-12)
+
+
+### Features
+
+* **unstuck:** outcome-gated stuck detection with escalation ladder ([#300](https://github.com/srobroek/agentic-packages/issues/300)) ([5e8e772](https://github.com/srobroek/agentic-packages/commit/5e8e7727348b01db0902ad2810509ed24c021571))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/unstuck-v0.1.0...unstuck-v0.1.1) (2026-06-03)
 
 

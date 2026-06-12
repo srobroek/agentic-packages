@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/codebase-memory-v0.1.1...codebase-memory-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **codebase-memory:** document MCP dependency and explore boundary ([#263](https://github.com/srobroek/agentic-packages/issues/263)) ([de50df6](https://github.com/srobroek/agentic-packages/commit/de50df60429b3969f806de6e91014a582692053e))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/codebase-memory-v0.1.0...codebase-memory-v0.1.1) (2026-06-03)
 
 

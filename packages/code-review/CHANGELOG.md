@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/code-review-v0.1.1...code-review-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **code-review:** concrete trigger description, runtime-neutral subagents ([#261](https://github.com/srobroek/agentic-packages/issues/261)) ([f6a131c](https://github.com/srobroek/agentic-packages/commit/f6a131c56b3afe199f304d2800b47fc6f853440b))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/code-review-v0.1.0...code-review-v0.1.1) (2026-06-03)
 
 

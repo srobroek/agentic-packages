@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/research-v0.1.1...research-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **research:** tighten trigger description ([#291](https://github.com/srobroek/agentic-packages/issues/291)) ([fe00f77](https://github.com/srobroek/agentic-packages/commit/fe00f77a140c7dc447f4040c30077bf4852c4132))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/research-v0.1.0...research-v0.1.1) (2026-06-03)
 
 

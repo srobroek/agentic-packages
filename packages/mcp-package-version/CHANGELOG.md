@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/mcp-package-version-v0.1.0...mcp-package-version-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **mcp-package-version:** emit JSON hook output the model can see ([#285](https://github.com/srobroek/agentic-packages/issues/285)) ([be2eda0](https://github.com/srobroek/agentic-packages/commit/be2eda059639e64df972f1c4a5be6706b1de0455))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/mcp-package-version-v0.0.1...mcp-package-version-v0.1.0) (2026-06-02)
 
 

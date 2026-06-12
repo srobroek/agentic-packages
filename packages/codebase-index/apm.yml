@@ -1,5 +1,5 @@
 name: codebase-index
-version: 0.1.1
+version: 0.1.2
 description: >-
   Rebuild the codebase-memory graph index when it is missing or stale. Requires
   the codebase-memory-mcp binary; without it, fall back to grep/glob

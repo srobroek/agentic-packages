@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/prompt-lookup-v0.1.1...prompt-lookup-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **prompt-lookup:** trigger phrases and ARGUMENTS semantics ([#288](https://github.com/srobroek/agentic-packages/issues/288)) ([6e5d896](https://github.com/srobroek/agentic-packages/commit/6e5d896e3e0d4098f00469f522813290514c7364))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/prompt-lookup-v0.1.0...prompt-lookup-v0.1.1) (2026-06-03)
 
 

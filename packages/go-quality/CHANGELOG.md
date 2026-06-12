@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/go-quality-v0.1.1...go-quality-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **go-quality:** document actual tool order and fix.sh scope ([#270](https://github.com/srobroek/agentic-packages/issues/270)) ([f13ad9b](https://github.com/srobroek/agentic-packages/commit/f13ad9b90522bb4cab689632bcf027e3259c58ec))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/go-quality-v0.1.0...go-quality-v0.1.1) (2026-06-03)
 
 

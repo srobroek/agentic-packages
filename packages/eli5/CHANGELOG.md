@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/eli5-v0.1.1...eli5-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **eli5:** tighten description, soften word budgets ([#268](https://github.com/srobroek/agentic-packages/issues/268)) ([e29a737](https://github.com/srobroek/agentic-packages/commit/e29a737a3dc6a39a7715f9f1f9fce8336e0ce7bb))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/eli5-v0.1.0...eli5-v0.1.1) (2026-06-03)
 
 

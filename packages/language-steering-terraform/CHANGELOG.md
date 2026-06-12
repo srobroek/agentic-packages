@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-terraform-v0.1.0...language-steering-terraform-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **language-steering-terraform:** broaden remote-state guidance ([#283](https://github.com/srobroek/agentic-packages/issues/283)) ([e425c7c](https://github.com/srobroek/agentic-packages/commit/e425c7cf9e7c0caec5225da4a904b2fab8499eea))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-terraform-v0.0.1...language-steering-terraform-v0.1.0) (2026-06-02)
 
 

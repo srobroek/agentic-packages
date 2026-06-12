@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/debate-v0.1.1...debate-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **debate:** cross-runtime fallbacks for grill-me, agents, turbo-path ([#267](https://github.com/srobroek/agentic-packages/issues/267)) ([b6d47a5](https://github.com/srobroek/agentic-packages/commit/b6d47a58edf07e682325bdf890b20cbaa69cf9d6))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/debate-v0.1.0...debate-v0.1.1) (2026-06-03)
 
 

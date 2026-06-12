@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/codebase-index-v0.1.1...codebase-index-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **codebase-index:** document MCP dependency and concrete workflow ([#262](https://github.com/srobroek/agentic-packages/issues/262)) ([93099ab](https://github.com/srobroek/agentic-packages/commit/93099abeb94223e52a317529fc253205211202bb))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/codebase-index-v0.1.0...codebase-index-v0.1.1) (2026-06-03)
 
 

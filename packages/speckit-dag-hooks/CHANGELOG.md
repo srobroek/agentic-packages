@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.2.0...speckit-dag-hooks-v0.3.0) (2026-06-12)
+
+
+### Features
+
+* **speckit-dag-hooks:** enforce preconditions, gate checkpoint.commit ([#295](https://github.com/srobroek/agentic-packages/issues/295)) ([3346bb2](https://github.com/srobroek/agentic-packages/commit/3346bb202cd5f908a65eb519b9103b4b72cee24f))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.1.0...speckit-dag-hooks-v0.2.0) (2026-06-10)
 
 

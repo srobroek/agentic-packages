@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs-v0.1.0...steering-docs-specs-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **steering-docs-specs:** state SpecKit is opt-in per project ([#296](https://github.com/srobroek/agentic-packages/issues/296)) ([70ac232](https://github.com/srobroek/agentic-packages/commit/70ac2327bb2b9fcc097a3ddc24013a8aaff3096b))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs-v0.0.1...steering-docs-specs-v0.1.0) (2026-06-02)
 
 

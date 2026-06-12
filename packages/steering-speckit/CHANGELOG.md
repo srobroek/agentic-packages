@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.2.0...steering-speckit-v0.2.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **steering-speckit:** token-efficiency pass, true Phase 3 chain ([#297](https://github.com/srobroek/agentic-packages/issues/297)) ([60e42a9](https://github.com/srobroek/agentic-packages/commit/60e42a9dcae26c62e725743eb75983bf803dc740))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.1.0...steering-speckit-v0.2.0) (2026-06-10)
 
 

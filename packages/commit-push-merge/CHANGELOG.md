@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/commit-push-merge-v0.1.1...commit-push-merge-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **commit-push-merge:** single checklist load, align with commit-push-pr ([#264](https://github.com/srobroek/agentic-packages/issues/264)) ([e9d3d23](https://github.com/srobroek/agentic-packages/commit/e9d3d230bfd24d26b428ce1d88168b38492aa093))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/commit-push-merge-v0.1.0...commit-push-merge-v0.1.1) (2026-06-03)
 
 

@@ -1,5 +1,5 @@
 name: prompt-lookup
-version: 0.1.1
+version: 0.1.2
 description: >-
   Find, compare, and improve prompt templates and prompt-engineering patterns
   from prompt libraries: search, retrieve by ID, and enhance prompts.

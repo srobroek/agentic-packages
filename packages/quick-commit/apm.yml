@@ -1,5 +1,5 @@
 name: quick-commit
-version: 0.1.1
+version: 0.1.2
 description: >-
   Create a deliberate local git commit without pushing or opening a PR, for
   checkpoints and fast commit-only workflows.

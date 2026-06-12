@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/typescript-quality-v0.1.1...typescript-quality-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **typescript-quality:** degrade gracefully when toolchain is missing ([#299](https://github.com/srobroek/agentic-packages/issues/299)) ([455dc6c](https://github.com/srobroek/agentic-packages/commit/455dc6c186432a9e6db0f88af9cb4ff293dc2e24))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/typescript-quality-v0.1.0...typescript-quality-v0.1.1) (2026-06-03)
 
 

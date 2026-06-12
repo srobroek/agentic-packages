@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/playwright-v0.1.1...playwright-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **playwright:** imperative rules, dedupe guidance ([#287](https://github.com/srobroek/agentic-packages/issues/287)) ([19035a2](https://github.com/srobroek/agentic-packages/commit/19035a2fdde6270078687461c7e25d97802c63cf))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/playwright-v0.1.0...playwright-v0.1.1) (2026-06-03)
 
 

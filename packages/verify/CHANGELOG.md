@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/verify-v0.1.1...verify-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **verify:** dedupe guidance, imperative failure reporting ([#301](https://github.com/srobroek/agentic-packages/issues/301)) ([19ae66f](https://github.com/srobroek/agentic-packages/commit/19ae66f8eee838f2a34e1ca83fdf6a7fb073960a))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/verify-v0.1.0...verify-v0.1.1) (2026-06-03)
 
 
