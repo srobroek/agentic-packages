@@ -15,13 +15,16 @@ ordinary bug work and return here when the diagnosis loop stalls.
   loop, or minimized failing case.
 - Use `unstuck` when repeated fixes failed, the same files are being re-edited,
   hypotheses are circular, or evidence contradicts the current framing.
+- A `STUCK DETECTOR` hook advisory is a direct trigger: it reports which files
+  were re-edited how many times with no commit or passing test run in between.
 - Do not use `unstuck` as a replacement for normal test, build, or traceback
   diagnosis.
 
 ## Workflow
 
 1. Gather the observable-facts baseline: LOAD references/checklist.md and
-   answer each question.
+   answer each question. If a `STUCK DETECTOR` advisory fired, seed the answers
+   from its reported files and re-edit counts instead of re-deriving them.
 2. Name the current leading assumption and the evidence for it.
 3. Generate 1-3 alternative hypotheses that would explain all observations.
 4. Run the smallest check that can disprove the leading assumption.
