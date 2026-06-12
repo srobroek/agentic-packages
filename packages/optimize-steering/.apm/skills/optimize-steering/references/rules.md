@@ -10,7 +10,7 @@ Every file must have YAML frontmatter with a `description` field.
 
 - Reserve `MUST`/`NEVER`/`ALWAYS`/`CRITICAL` only for safety issues (secrets, data loss, destructive ops)
 - Remove model family names
-- Replace vendor paths with shared equivalents (`~/.claude/` -> `~/.config/agentic-tools/`, `CLAUDE.md` -> `AGENTS.md`)
+- Replace vendor paths with shared equivalents (`~/.<vendor>/` -> `~/.config/agentic-tools/`, `<VENDOR>.md` -> `AGENTS.md`)
 - Frame as actions to take, not things to avoid
 - For non-obvious rules, add a brief reason
 

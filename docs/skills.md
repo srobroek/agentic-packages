@@ -21,7 +21,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
 | `handover` | Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state. |
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
-| `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. |
+| `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7). |
 | `playwright` | Automate browser interactions through a Playwright MCP server. |
 | `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns. |
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |

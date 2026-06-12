@@ -680,7 +680,7 @@
     },
     {
       "name": "optimize-steering",
-      "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility.",
+      "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
       "version": "0.1.1",
       "tags": [
         "skill",
