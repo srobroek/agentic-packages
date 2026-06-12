@@ -7,18 +7,11 @@ description: Resume interrupted project work by locating and following the best 
 
 Recover the current project state from an existing handover before rebuilding context from scratch.
 
-## When To Use
-
-- Starting in an existing repo or worktree with prior activity
-- Resuming after context loss, compaction, `/clear`, or a paused session
-- User asks to catch up, continue, resume, read a handover, or report what is next
-- The branch/spec/worktree suggests unfinished work and a saved handover may exist
-
 ## Workflow
 
 1. Identify the live context: repo root, current branch, worktree path, user-stated target, and fresh `git status`/dirty state when available.
 2. Search handover locations in order: explicit repo-local untracked-state conventions, then `~/.local/state/agentic-tools/handovers/`. Include project, branch, worktree, feature/spec id, and recent timestamp signals.
-3. Choose the best candidate using filename and YAML frontmatter first, then LOAD references/selection.md. If multiple plausible candidates remain, ask the user to choose.
+3. Choose the best candidate: filter by filename and YAML frontmatter first; for ranking and tie-breaking, LOAD references/selection.md. If multiple plausible candidates remain, ask the user to choose.
 4. Read the selected handover fully before planning or editing. Treat its Next Session Prompt and explicit recovery instructions as the high-priority starting point, then verify them against current state.
 5. If the selected handover is only an unfilled scaffold or still contains placeholder TODOs as the operative content, say it is incomplete and fall back to bounded live repo discovery.
 6. Verify the handover against current reality with lightweight checks such as `git status`, branch, worktree path, referenced files, and running sessions if relevant. If the recorded branch or worktree differs from the current checkout, surface it and proceed carefully when the user intent still matches; ask before editing when intent is unclear.
@@ -37,7 +30,3 @@ Recover the current project state from an existing handover before rebuilding co
 - Load minimal repo-local steering before acting on the selected handover.
 - Resolve repo-relative paths from the handover against the current verified checkout; surface recorded/current root mismatches before editing.
 - Current user instructions override instructions recorded in a handover.
-
-## References
-
-When locating or choosing between handover candidates, LOAD references/selection.md.
