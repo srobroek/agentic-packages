@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
-            "args": ["pre"],
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json pre",
             "timeout": 5,
             "statusMessage": "Checking SpecKit DAG preconditions..."
           }
@@ -20,8 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
-            "args": ["pre"],
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json pre",
             "timeout": 5,
             "statusMessage": "Checking SpecKit DAG preconditions..."
           }
@@ -34,8 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json",
-            "args": ["post"],
+            "command": "python3 ${PLUGIN_ROOT}/scripts/dispatcher.py ${PLUGIN_ROOT}/scripts/nodes.json post",
             "timeout": 5,
             "statusMessage": "Loading SpecKit next-step context..."
           }
