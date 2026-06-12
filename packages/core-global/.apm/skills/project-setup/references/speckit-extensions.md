@@ -2,7 +2,7 @@
 
 This skill installs the required extension set declared in:
 
-- `scripts/speckit-extensions.txt`
+- `scripts/speckit/speckit-extensions.txt`
 
 The installer uses official `specify extension` commands only.
 

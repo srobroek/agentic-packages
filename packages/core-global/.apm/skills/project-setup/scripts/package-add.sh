@@ -23,14 +23,15 @@
 set -euo pipefail
 
 PKG_NAME=""
-LANG=""
+# Note: not named LANG to avoid clobbering the exported locale variable.
+PKG_LANG=""
 PKG_DIR="packages"
 LANG_ARGS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --name)      PKG_NAME="$2"; shift 2 ;;
-        --lang)      LANG="$2"; shift 2 ;;
+        --lang)      PKG_LANG="$2"; shift 2 ;;
         --dir)       PKG_DIR="$2"; shift 2 ;;
         --lang-args) LANG_ARGS="$2"; shift 2 ;;
         --help)
@@ -46,7 +47,7 @@ if [ -z "$PKG_NAME" ]; then
     exit 1
 fi
 
-if [ -z "$LANG" ]; then
+if [ -z "$PKG_LANG" ]; then
     echo "Error: --lang is required (ts, rust, python, go)" >&2
     exit 1
 fi
@@ -92,7 +93,7 @@ TARGET="$ROOT/$PKG_DIR/$PKG_NAME"
 echo "=== Adding Package: $PKG_NAME ==="
 echo "Root: $ROOT"
 echo "Target: $TARGET"
-echo "Language: $LANG"
+echo "Language: $PKG_LANG"
 
 # --- Create package directory ---
 if [ -d "$TARGET" ]; then
@@ -104,7 +105,7 @@ fi
 
 # --- Run language overlay ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LANG_SCRIPT="$SCRIPT_DIR/setup-${LANG}.sh"
+LANG_SCRIPT="$SCRIPT_DIR/setup-${PKG_LANG}.sh"
 
 if [ ! -x "$LANG_SCRIPT" ]; then
     echo "Error: $LANG_SCRIPT not found or not executable" >&2
@@ -112,7 +113,7 @@ if [ ! -x "$LANG_SCRIPT" ]; then
 fi
 
 echo ""
-echo "Running setup-${LANG}.sh in $TARGET..."
+echo "Running setup-${PKG_LANG}.sh in $TARGET..."
 cd "$TARGET"
 # shellcheck disable=SC2086
 "$LANG_SCRIPT" $LANG_ARGS
@@ -124,7 +125,7 @@ echo ""
 
 REL_PATH="$PKG_DIR/$PKG_NAME"
 
-case "$LANG" in
+case "$PKG_LANG" in
     ts)
         echo "Add to root package.json workspaces:"
         echo "  \"workspaces\": [\"$REL_PATH\"]"

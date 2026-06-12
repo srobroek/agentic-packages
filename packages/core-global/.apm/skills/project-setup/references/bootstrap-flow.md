@@ -21,6 +21,9 @@ APM packages, selected agents, selected skills, and verification steps.
 
 ## Codex Sandbox Escalation
 
+This section applies to Codex only; other runtimes (including Claude Code) run
+the executor directly with normal command approval.
+
 Run the main `scripts/project-setup.sh` executor outside the Codex sandbox when
 it writes protected bootstrap paths. In `workspace-write`, Codex protects
 `.git`, `.codex`, and `.agents` as read-only even when the repository root is

@@ -62,12 +62,16 @@ project scaffold.
      connectors, CLIs, steering, workflow tools, and quality gates
    - constraints: Codex/Claude target, local vs hosted, secrets, network,
      write access, security posture, and whether Claude Code is used
-   Require `find-tools` to start with the primary marketplace baseline, normally
-   `core@srobroek-agentic`. Install the mandatory baseline MCPs as standalone packages: `mcp-codebase-memory@srobroek-agentic`, `mcp-context7@srobroek-agentic`, `mcp-package-version@srobroek-agentic`, and `mcp-repomix@srobroek-agentic`. Recommend optional MCP-only packages, including `mcp-playwright` and `mcp-serena@srobroek-agentic`, only when the repository needs that capability. For Serena, read the global Serena language-server index, run the listed `mise use ...` commands in the project root for detected languages, create or repair `.serena/project.yml` with `serena project create`, and consider `serena project index` for large repositories. Then recommend first-party
-   extras, registered external marketplace packages, and public-source discovery
-   only for gaps. For Serena details, use the global project-setup reference
-   `references/serena.md` and do not generate docs-only language keys or
-   `added_modes` for Serena 1.2.0.
+   Require `find-tools` to start with the primary marketplace baseline,
+   normally `core@srobroek-agentic`, plus the standalone baseline MCP packages:
+   `mcp-codebase-memory@srobroek-agentic`, `mcp-context7@srobroek-agentic`,
+   `mcp-package-version@srobroek-agentic`, and `mcp-repomix@srobroek-agentic`.
+   Recommend optional MCP-only packages, including `mcp-playwright` and
+   `mcp-serena@srobroek-agentic`, only when the repository needs that
+   capability. Then recommend first-party extras, registered external
+   marketplace packages, and public-source discovery only for gaps. When Serena
+   is selected, follow the `project-setup` reference `references/serena.md` for
+   language-server setup, `.serena/project.yml` creation, and indexing.
 8. Run or apply `project-hygiene` to identify stale assets, missing packages,
    duplicate skills, generated-file edits, and bootstrap leakage.
 9. Ask before removing legacy/manual assets. Archive only files that contain
