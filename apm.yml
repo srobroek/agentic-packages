@@ -261,7 +261,7 @@ marketplace:
         - skill
         - code-intelligence
         - navigation
-      description: Read-only codebase orientation, file discovery, and path tracing.
+      description: 'Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory.'
       version: 0.1.1
     - name: frontend
       source: ./packages/frontend
