@@ -51,11 +51,3 @@ the user separately asks for that workflow.
 - If a changeset is required, create it before committing.
 - Stop and ask before committing if the intended scope cannot be separated
   safely.
-
-## Scripts
-
-- `scripts/status.sh`: status, diff stat, and changeset detection.
-
-## References
-
-When deciding whether a changeset entry is needed, LOAD references/changeset-policy.md.

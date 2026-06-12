@@ -5,17 +5,9 @@ normal diagnosis loop is going in circles.
 
 ## Inputs
 
-Give the challenger only observable facts:
-
-- exact failing command
-- exact error output
-- affected files
-- recent edits
-- what has already been tried
-- current reproduction or feedback loop
-- why the main agent believes it is stuck
-
-Do not give the challenger your preferred root-cause theory up front.
+Give the challenger only observable facts -- the answers gathered via
+`references/checklist.md` plus why the main agent believes it is stuck. Never
+include the preferred root-cause theory.
 
 ## Challenge Pass
 

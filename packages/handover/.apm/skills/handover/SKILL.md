@@ -1,6 +1,6 @@
 ---
 name: handover
-description: Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when ending or pausing work, switching context, preserving unfinished implementation state, or when the user asks for a handover.
+description: Save a self-contained recovery prompt for a later agent session in the shared handover store. Use when the user asks to save a handover, pause work, switch context, preserve unfinished implementation state, or hand off work to another session, or when ending a session with incomplete work.
 ---
 
 # Handover
@@ -17,15 +17,14 @@ Create a durable recovery prompt that `catchup` can read before doing fresh disc
    - architectural decisions made this session
    - open risks or blockers
    - next concrete steps
-4. Create `~/.local/state/agentic-tools/handovers/` if needed, using user-private permissions where supported.
-5. Invoke `scripts/new-handover.py` to scaffold the file. Pass `--task` when a spec id, issue id, or user-stated task is known; otherwise let the script use the branch.
-6. Replace the older handover for the same project/worktree/branch.
-7. Verify the written file exists and is readable.
-8. Tell the user where the handover was written and what the next session should load first.
+4. Invoke `scripts/new-handover.py` to scaffold the file in `~/.local/state/agentic-tools/handovers/`. Pass `--task` when a spec id, issue id, or user-stated task is known; otherwise let the script use the branch.
+5. Replace the older handover for the same project/worktree/branch.
+6. Verify the written file exists and is readable.
+7. Tell the user where the handover was written and what the next session should load first.
 
 ## Rules
 
-- The saved handover MUST be self-contained: no hidden chat context needed to resume.
+- The saved handover must be self-contained: no hidden chat context needed to resume.
 - Include enough metadata for selection: repo root, worktree path, branch, timestamp, and task/spec/issue identifiers when present.
 - Include a short Summary section with 2-4 factual bullets.
 - Record exact file paths and next steps, not vague summaries.
@@ -48,6 +47,4 @@ When structuring the handover file, LOAD references/template.md.
 
 ## Scripts
 
-Agents using this skill should invoke `scripts/new-handover.py` after gathering enough state to choose the project/task slug. Pass `--task` for known specs, issues, or user-stated tasks. The helper creates the shared handover directory, generates the filename/frontmatter, and writes the required markdown sections with private permissions.
-
-If the script is unavailable, manually create the same file contract: shared handover directory, `<project-slug>__<branch-or-task-slug>.md`, YAML frontmatter, required sections from `references/template.md`, and private permissions where supported.
+`scripts/new-handover.py` creates the shared handover directory, generates the filename and frontmatter, and writes the required markdown sections with user-private permissions where supported. If the script is unavailable, manually create the same file contract: shared handover directory, `<project-slug>__<branch-or-task-slug>.md`, YAML frontmatter, required sections from `references/template.md`, and private permissions.
