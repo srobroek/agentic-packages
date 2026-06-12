@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook: warn to use latest compatible version when installing packages
-# Triggers on package install/add commands
+# Triggers on package install/add commands.
+# Advisory only (additionalContext), never blocks.
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -9,17 +10,25 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 case "$COMMAND" in
   *"pnpm add"*|*"pnpm install"*|*"npm install"*|*"npm add"*|*"yarn add"*)
-    echo "PACKAGE VERSION: Ensure you're installing the latest compatible version. Use: pnpm add <pkg>@latest or check npm for the current version first." ;;
+    MSG="Ensure you're installing the latest compatible version. Use: pnpm add <pkg>@latest or check npm for the current version first." ;;
   *"uv add"*|*"uv pip install"*|*"pip install"*)
-    echo "PACKAGE VERSION: Ensure you're installing the latest compatible version. Use: uv add <pkg> (defaults to latest) or check PyPI first." ;;
+    MSG="Ensure you're installing the latest compatible version. Use: uv add <pkg> (defaults to latest) or check PyPI first." ;;
   *"cargo add"*)
-    ;; # cargo add fetches latest by default, no warning needed
+    exit 0 ;; # cargo add fetches latest by default, no warning needed
   *"go get"*)
-    echo "PACKAGE VERSION: Ensure you're installing the latest compatible version. Use: go get <pkg>@latest" ;;
+    MSG="Ensure you're installing the latest compatible version. Use: go get <pkg>@latest" ;;
   *"gem install"*|*"bundle add"*)
-    echo "PACKAGE VERSION: Ensure you're installing the latest compatible version. Check rubygems.org for the current version." ;;
+    MSG="Ensure you're installing the latest compatible version. Check rubygems.org for the current version." ;;
   *"composer require"*)
-    echo "PACKAGE VERSION: Ensure you're installing the latest compatible version. Composer defaults to latest constraint." ;;
+    MSG="Ensure you're installing the latest compatible version. Composer defaults to latest constraint." ;;
+  *)
+    exit 0 ;;
 esac
 
+jq -n --arg msg "PACKAGE VERSION: $MSG" '{
+  hookSpecificOutput: {
+    hookEventName: "PreToolUse",
+    additionalContext: $msg
+  }
+}'
 exit 0

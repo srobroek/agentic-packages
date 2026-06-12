@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook: warn when editing package files directly
-# Suggests using native package commands instead
+# Suggests using native package commands instead.
+# Advisory only (additionalContext), never blocks.
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.old_string // empty' 2>/dev/null)
@@ -14,19 +15,25 @@ BASENAME=$(basename "$FILE_PATH" 2>/dev/null)
 
 case "$BASENAME" in
   package.json)
-    echo "PACKAGE FILE EDIT: Editing package.json directly. Consider using native commands instead: pnpm add <pkg>, pnpm remove <pkg>. Ensure you install the latest compatible version." ;;
+    MSG="Editing package.json directly. Consider using native commands instead: pnpm add <pkg>, pnpm remove <pkg>. Ensure you install the latest compatible version." ;;
   Cargo.toml)
-    echo "PACKAGE FILE EDIT: Editing Cargo.toml directly. Consider using native commands instead: cargo add <crate>, cargo remove <crate>. cargo add fetches the latest compatible version automatically." ;;
+    MSG="Editing Cargo.toml directly. Consider using native commands instead: cargo add <crate>, cargo remove <crate>. cargo add fetches the latest compatible version automatically." ;;
   go.mod)
-    echo "PACKAGE FILE EDIT: Editing go.mod directly. Consider using native commands instead: go get <pkg>@latest, go mod tidy." ;;
+    MSG="Editing go.mod directly. Consider using native commands instead: go get <pkg>@latest, go mod tidy." ;;
   pyproject.toml)
-    echo "PACKAGE FILE EDIT: Editing pyproject.toml directly. Consider using native commands instead: uv add <pkg>, uv remove <pkg>." ;;
+    MSG="Editing pyproject.toml directly. Consider using native commands instead: uv add <pkg>, uv remove <pkg>." ;;
   Gemfile)
-    echo "PACKAGE FILE EDIT: Editing Gemfile directly. Consider using native commands instead: bundle add <gem>." ;;
+    MSG="Editing Gemfile directly. Consider using native commands instead: bundle add <gem>." ;;
   composer.json)
-    echo "PACKAGE FILE EDIT: Editing composer.json directly. Consider using native commands instead: composer require <pkg>." ;;
+    MSG="Editing composer.json directly. Consider using native commands instead: composer require <pkg>." ;;
   *)
     exit 0 ;;
 esac
 
+jq -n --arg msg "PACKAGE FILE EDIT: $MSG" '{
+  hookSpecificOutput: {
+    hookEventName: "PreToolUse",
+    additionalContext: $msg
+  }
+}'
 exit 0

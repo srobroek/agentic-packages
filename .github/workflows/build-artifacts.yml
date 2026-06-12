@@ -34,6 +34,12 @@ jobs:
       - name: Set up APM
         run: pip install apm-cli
 
+      - name: Validate hook JSON
+        run: |
+          find packages .apm -path '*/hooks/*.json' -print0 |
+            xargs -0 -I{} sh -c 'python3 -m json.tool "{}" > /dev/null || { echo "::error::Invalid JSON: {}"; exit 1; }'
+          echo "All hook JSON files are valid."
+
       - name: Regenerate non-destructive artifacts
         run: |
           python3 .apm/scripts/build-marketplace-block.py

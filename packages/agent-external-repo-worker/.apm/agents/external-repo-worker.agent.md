@@ -5,7 +5,7 @@ model: sonnet
 tools: ["terminal", "file-manager", "fetcher"]
 x-agentic:
   codex:
-    model: "gpt-5.4-mini"
+    model: "gpt-5.5"
     reasoning_effort: "medium"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"
