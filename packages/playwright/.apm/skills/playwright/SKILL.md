@@ -1,6 +1,6 @@
 ---
 name: playwright
-description: Use when automating browser interactions through a Playwright MCP server.
+description: Automate browser tasks through a Playwright MCP server -- navigate, click, fill forms, extract page data. Use when asked to browse, scrape, test a web UI, or interact with a live page.
 ---
 
 # Playwright Browser Automation
@@ -16,13 +16,6 @@ Automate browser tasks using a Playwright MCP server.
 | Data extraction | snapshot (structured, fast), screenshot (visual, slow), evaluate JS |
 | Tabs | open, close, list, switch |
 | Diagnostics | console messages, network requests |
-
-## Efficient Usage
-
-1. **Prefer snapshots over screenshots.** Snapshots return structured accessibility data and are fast. Screenshots require vision processing and are slow.
-2. **Batch operations.** Navigate, snapshot, and extract in sequence from a single page load. Minimize back-and-forth navigation.
-3. **Use specific selectors.** Prefer `button[data-testid='submit']` over vague text matching.
-4. **Minimize page loads.** Get all data from one page load before navigating elsewhere.
 
 ## Common Workflows
 
@@ -42,8 +35,9 @@ If after 3 attempts the agent cannot get the information: report what was tried,
 
 ## Rules
 
-- Prefer snapshot over screenshot in all cases unless visual verification is needed
-- Minimize number of page navigations
+- Use snapshots, not screenshots -- snapshots return structured accessibility data fast; take a screenshot only when visual verification is needed
+- Get all data from one page load before navigating elsewhere; batch navigate -> snapshot -> extract
+- Use specific selectors (`button[data-testid='submit']`) over vague text matching
 - Close the browser when done
-- Report findings concisely -- do not dump raw HTML
+- Report findings concisely; do not dump raw HTML
 - If a page requires login, ask the user for credentials or an alternative approach

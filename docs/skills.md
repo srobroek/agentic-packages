@@ -22,7 +22,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `handover` | Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. |
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7). |
-| `playwright` | Automate browser interactions through a Playwright MCP server. |
+| `playwright` | Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data. |
 | `prompt-lookup` | Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts. |
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
