@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.3.0...speckit-dag-hooks-v0.3.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* bump bundle member pins to released versions, refresh README counts ([#307](https://github.com/srobroek/agentic-packages/issues/307)) ([a1c099b](https://github.com/srobroek/agentic-packages/commit/a1c099b9f03765459fdcb990e61b262aab967cbb))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.2.0...speckit-dag-hooks-v0.3.0) (2026-06-12)
 
 

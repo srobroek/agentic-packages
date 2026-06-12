@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.2...core-global-v0.2.3) (2026-06-12)
+
+
+### Bug Fixes
+
+* bump bundle member pins to released versions, refresh README counts ([#307](https://github.com/srobroek/agentic-packages/issues/307)) ([a1c099b](https://github.com/srobroek/agentic-packages/commit/a1c099b9f03765459fdcb990e61b262aab967cbb))
+
 ## [0.2.2](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.1...core-global-v0.2.2) (2026-06-12)
 
 
