@@ -45,9 +45,15 @@ has_lang() {
   printf ' %s ' "$selected" | grep -Eq " (all|$wanted) "
 }
 
-changed_files() {
+# Compute once: every language block reuses this, instead of re-running
+# git diff per block (the hook fires on every commit attempt).
+all_changed="$(
   git diff --cached --name-only --diff-filter=ACMR
   git diff --name-only --diff-filter=ACMR
+)"
+
+changed_files() {
+  printf '%s\n' "$all_changed"
 }
 
 if has_lang go; then
