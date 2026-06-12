@@ -15,10 +15,15 @@ after fetching the needed sources.
 |------|------|
 | GitHub issues, PRs, releases, repo data | `gh` CLI or GitHub MCP |
 | OpenAI product/API docs | OpenAI docs MCP or official OpenAI docs |
-| Library or framework docs | Context7 or official docs |
+| Library or framework docs | Context7 MCP or official docs |
 | Known JSON/REST endpoint | `curl` or product CLI |
 | Static webpage or PDF | Simple web fetch |
 | JS-heavy page, login flow, bot block, visual state | Browser/rendered fetch |
+
+Context7 is an MCP server that serves versioned library/framework documentation
+(installed via the `mcp-context7` package). MCP tools in this table are
+optional: when one is not installed, use the next-best row for that need (CLI,
+`curl`, or plain web fetch of the official docs).
 
 ## Rules
 
