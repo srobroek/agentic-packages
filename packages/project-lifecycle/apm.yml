@@ -10,12 +10,12 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/catchup#catchup-v0.1.1
-    - srobroek/agentic-packages/packages/handover#handover-v0.1.1
+    - srobroek/agentic-packages/packages/catchup#catchup-v0.1.3
+    - srobroek/agentic-packages/packages/handover#handover-v0.1.2
     - >-
-      srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.1
-    - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.1
-    - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.1
-    - srobroek/agentic-packages/packages/verify#verify-v0.1.1
+      srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.2
+    - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.2
+    - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.2
+    - srobroek/agentic-packages/packages/verify#verify-v0.1.2
     - >-
       srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1

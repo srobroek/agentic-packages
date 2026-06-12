@@ -10,10 +10,10 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/debate#debate-v0.1.1
-    - srobroek/agentic-packages/packages/eli5#eli5-v0.1.1
-    - srobroek/agentic-packages/packages/research#research-v0.1.1
-    - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.1
+    - srobroek/agentic-packages/packages/debate#debate-v0.1.2
+    - srobroek/agentic-packages/packages/eli5#eli5-v0.1.2
+    - srobroek/agentic-packages/packages/research#research-v0.1.2
+    - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.2
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main
     - mattpocock/skills/skills/engineering/tdd#main
