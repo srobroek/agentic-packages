@@ -295,7 +295,7 @@ marketplace:
         - skill
         - lifecycle
         - handover
-      description: Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state.
+      description: Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.
       version: 0.1.1
     - name: hooks-bash-safety
       source: ./packages/hooks-bash-safety
