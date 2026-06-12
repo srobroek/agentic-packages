@@ -150,7 +150,7 @@ marketplace:
         - skill
         - code-intelligence
         - graph
-      description: Rebuild the codebase-memory graph index when it is missing or stale.
+      description: Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration.
       version: 0.1.1
     - name: codebase-memory
       source: ./packages/codebase-memory
