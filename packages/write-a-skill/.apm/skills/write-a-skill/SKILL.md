@@ -35,6 +35,17 @@ Create or update:
 - `references/*.md` for stable policy, source catalogues, schemas, or examples
 - `scripts/*` for deterministic validation, generation, formatting, or checks
 
+Expected layout (references and scripts only when needed):
+
+```
+packages/<skill>/.apm/skills/<skill>/
+  SKILL.md
+  references/
+    <topic>.md
+  scripts/
+    check.sh
+```
+
 ## Description Requirements
 
 The description is the trigger surface. Keep it under 1024 characters, third
