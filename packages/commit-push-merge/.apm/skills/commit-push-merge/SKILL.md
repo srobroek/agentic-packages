@@ -26,8 +26,8 @@ when the user asks for review or publication without merge.
 9. Inspect upstream and base-branch divergence before pushing.
 10. Push the branch, setting upstream if needed.
 11. If merging through a PR, inspect required/status checks.
-12. LOAD references/merge-checklist.md, then infer or confirm the target
-   branch and merge method.
+12. Infer or confirm the target branch and merge method. For the pre-merge
+    checks, LOAD references/merge-checklist.md.
 13. Merge when the branch/worktree clearly matches the work. Ask first if the
    branch appears wrong, the current branch is `main`, or evidence is ambiguous.
 14. If safe, fast-forward the local target branch after a successful merge.
@@ -76,7 +76,3 @@ when the user asks for review or publication without merge.
 - Treat this as a high-trust workflow, not a casual default.
 - Follow the active Git hosting steering and available runtime tools for PR
   checks, merge execution, and remote status.
-
-## References
-
-Before executing the merge step, LOAD references/merge-checklist.md.
