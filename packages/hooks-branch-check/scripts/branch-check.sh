@@ -135,7 +135,7 @@ if is_main_branch "$current_branch"; then
 fi
 
 uncommitted="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
-feature_branches="$(git branch --list 2>/dev/null | grep -v -E '^\*?\s*(main|master|develop)$' | tr -d ' *' | head -5 | tr '\n' ' ')"
+feature_branches="$(git branch --list 2>/dev/null | grep -v -E '^\*?\s*(main|master|develop)$' | sed -E 's/^[* ]+//' | head -5 | tr '\n' ' ')"
 
 if [[ "$is_main" == true ]]; then
   if active_worktree="$(detect_active_feature_worktree)"; then
