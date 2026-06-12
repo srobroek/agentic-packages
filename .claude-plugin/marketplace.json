@@ -701,7 +701,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser interactions through a Playwright MCP server.",
+      "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
       "version": "0.1.1",
       "tags": [
         "skill",
