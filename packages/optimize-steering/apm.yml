@@ -2,8 +2,7 @@ name: optimize-steering
 version: 0.1.1
 description: >-
   Audit and optimize agent-facing markdown (steering docs, skills, agent
-  definitions) for token efficiency, structural compliance, and cross-model
-  compatibility.
+  definitions) for token efficiency and cross-model compliance (rules R1-R7).
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

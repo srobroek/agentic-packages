@@ -1,8 +1,8 @@
 name: eli5
 version: 0.1.1
 description: >-
-  Explain a topic at multiple depth levels, from simple to detailed, for layered
-  understanding.
+  Explain a topic at five depth levels, from metaphor to frontier, for layered
+  understanding of unfamiliar concepts.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

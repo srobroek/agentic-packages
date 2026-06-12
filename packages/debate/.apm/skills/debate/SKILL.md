@@ -7,13 +7,13 @@ description: Use for deep tradeoff analysis on architectural decisions, technolo
 
 Analyze and debate: **$ARGUMENTS**
 
-Always start by lightly grilling the user (use the `grill-me` skill) to sharpen the topic: what is the decision, proposed approach, boundaries, constraints, and context. A well-formed topic makes a better debate.
+Always start by lightly grilling the user to sharpen the topic: what is the decision, proposed approach, boundaries, constraints, and context. Use the `grill-me` skill (ships separately in the `matt-skills` bundle); if `grill-me` is unavailable, ask the topic-sharpening and Phase 0 context questions inline yourself. A well-formed topic makes a better debate.
 
 ## Process
 
 ### Phase 0: Context questions
 
-Ask these THREE questions in a single call (they render as UI menus):
+Ask these three questions in a single call (on Claude Code they render as UI menus; on other runtimes ask them as plain text):
 
 1. **Decision type**: Feature proposal, Architecture decision, Technology choice, or Process change
 2. **Context scope**: Isolated (clean-room, no codebase) or Full context (codebase-aware)
@@ -28,7 +28,11 @@ Break the topic into 4-6 investigation angles tailored to the decision type. Eac
 If "Research with subagents":
 - Launch 3-5 parallel subagents, one per angle
 - Full context: use **Explore** agents -- they examine local code
-- Isolated: use **general-purpose** agents -- they must NOT reference local code or conversation history
+- Isolated: use **general-purpose** agents -- they must not reference local code or conversation history
+
+**Explore** and **general-purpose** are Claude Code agent types. On Codex or
+other runtimes without subagents, research each angle sequentially in the main
+thread, keeping the same Full-context / Isolated constraints.
 
 If "LLM knowledge only": skip to Phase 3.
 
@@ -57,6 +61,9 @@ Launch a single **adversarial-challenger** subagent with ONLY the finished Phase
 - Identify unstated assumptions
 - Name the single strongest argument against the proposal
 
+On runtimes without subagents, run this critique yourself as a separate pass,
+still using only the finished Phase 3 analysis as input.
+
 ### Phase 5: Synthesis
 
 Merge the main analysis with the devil's advocate critique:
@@ -70,9 +77,12 @@ Then offer interactive debate rounds, capped at 3. Each round genuinely updates 
 
 Save the report to `research/debate-<slug>.md` relative to the project root. Only skip if the user explicitly declines.
 
-## Workflow turbo-path (optional, Claude only)
+## Workflow turbo-path (optional)
 
-The prose Process above is the default. IF dynamic workflows are enabled (the user included the
+Claude Code only -- other runtimes (Codex, etc.) skip this section and follow
+the Process above.
+
+The prose Process above is the default. If dynamic workflows are enabled (the user included the
 "workflow" keyword, ultracode is on, or they asked for orchestration), the research fan-out and
 devil's advocate become a single Workflow instead of manual subagent launches. Same phases, same
 outputs -- only the orchestration moves into a script. Workflows are a Claude-only feature; where

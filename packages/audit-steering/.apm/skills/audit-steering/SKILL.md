@@ -1,6 +1,6 @@
 ---
 name: audit-steering
-description: Use to audit agent rules, hooks, skills, and guardrails for drift and cleanup.
+description: Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste. Use when asked to audit agent config, review steering health, or clean up hooks and rules.
 ---
 
 # Steering Audit
