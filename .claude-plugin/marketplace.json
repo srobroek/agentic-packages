@@ -765,7 +765,7 @@
     },
     {
       "name": "research",
-      "description": "Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis.",
+      "description": "Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch).",
       "version": "0.1.1",
       "tags": [
         "skill",
