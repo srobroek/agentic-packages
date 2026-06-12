@@ -14,16 +14,21 @@ description: Use to run Go format, lint, and test checks with the project toolch
 
 ## Tooling Preference
 
-- `gofmt` / `goimports` for formatting
-- `golangci-lint` when available
-- `go test ./...`
+Order the scripts implement:
+
+1. `gofmt` for formatting (always)
+2. `golangci-lint run` only when installed (skipped otherwise)
+3. `go test ./...`
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/check.sh` | Run all checks (fmt, lint, test) |
-| `scripts/fix.sh` | Apply formatting fixes (gofmt -w, goimports -w) |
+| `scripts/check.sh` | Run all checks (gofmt -l, golangci-lint if installed, go test) |
+| `scripts/fix.sh` | Apply formatting only (gofmt -w) |
+
+`fix.sh` is narrower than `check.sh`: it only formats. Lint findings and test
+failures need manual fixes. Re-run `check.sh` after `fix.sh`.
 
 ## References
 
