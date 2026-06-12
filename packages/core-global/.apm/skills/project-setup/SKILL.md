@@ -22,9 +22,8 @@ Read only what the task needs:
 - `references/bootstrap-flow.md` for execution and failure handling
 - `references/generated-files.md` for generated file ownership
 - `references/language-overlays.md` for selected language overlays
-- `references/serena.md` when Serena semantic code tooling is selected
-- `../../indexes/serena-language-servers.json` when Serena is selected or
-  semantic code tools are needed
+- `references/serena.md` when Serena semantic code tooling is selected; it
+  loads the global Serena language-server index
 - `references/bootstrap-skills.md` before moving skills in or out of global scope
 - `references/speckit-extensions.md` when full SpecKit is selected
 
@@ -51,10 +50,10 @@ Read only what the task needs:
    file ownership, and verification steps. The setup command must include APM
    install/compile behavior unless the user explicitly opts out.
 7. Run setup only when the user confirms or has clearly delegated end-to-end
-   execution with all required choices supplied. When running
-   `scripts/project-setup.sh`, use Codex sandbox escalation because the
-   executor owns protected bootstrap paths such as `.git`, `.codex`, and
-   `.agents`.
+   execution with all required choices supplied. On Codex, run
+   `scripts/project-setup.sh` with sandbox escalation because the executor owns
+   protected bootstrap paths such as `.git`, `.codex`, and `.agents`; other
+   runtimes run it directly.
 8. Fill only project-fact-dependent skeletons after scripts finish.
 9. Verify with APM install/compile/finalizers and selected language checks.
 10. Ask before committing.
@@ -82,13 +81,9 @@ Read only what the task needs:
 - For coding/development agents, do not bake MCP usage into model metadata.
   Tell the parent orchestrator to pass task-specific Context7,
   codebase-memory-mcp, repomix, Playwright, Stitch, or other guidance.
-- Prefer Serena for semantic code tools. When the project should use Serena,
-  install `mcp-serena@srobroek-agentic`. Read the Serena reference and
-  language-server index, run the listed `mise use ...` commands in the project
-  root for detected runtime-supported languages, create `.serena/project.yml`
-  with `serena project create`, and use Serena's
-  project-from-cwd startup for CLI agents. For large projects, run
-  `serena project index` after creation.
+- Prefer Serena for semantic code tools. When selected, install
+  `mcp-serena@srobroek-agentic` and follow `references/serena.md` for
+  language-server setup, project config, and indexing.
 - If a script lacks a needed supported behavior, patch the script instead of
   hand-creating scaffold output.
 - In Codex `workspace-write`, `.git`, `.codex`, and `.agents` are protected as

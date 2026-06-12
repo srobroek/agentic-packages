@@ -30,7 +30,8 @@ done
 if [ -z "$MODULE" ]; then
     REMOTE="$(git remote get-url origin 2>/dev/null || echo "")"
     if [ -n "$REMOTE" ]; then
-        MODULE="$(echo "$REMOTE" | sed 's|https://||; s|\.git$||')"
+        # Normalize https://, ssh://git@, and git@host:path remotes to host/path
+        MODULE="$(echo "$REMOTE" | sed -e 's|^https://||' -e 's|^ssh://git@||' -e 's|^git@\([^:]*\):|\1/|' -e 's|\.git$||')"
     else
         MODULE="example.com/$(basename "$(pwd)")"
         echo "  WARN: No git remote, using $MODULE"

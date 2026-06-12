@@ -1,12 +1,12 @@
 ---
 name: session-review
-description: Use when wrapping up a session. Audits corrections, lessons, TODOs, and follow-up work. Presents findings and recommends handoffs to handover, revise-claude-md, steering-audit, or memory.
+description: Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-a-skill`. Use when the user says wrap up, review this session, what did we learn, or before a handover.
 ---
 
 # Session Review
 
 Audit the session for patterns worth capturing. This skill diagnoses — it does
-not write rules, edit CLAUDE.md, or save memory directly.
+not write rules, edit steering files, or persist memory directly.
 
 ## Steps
 
@@ -14,19 +14,21 @@ not write rules, edit CLAUDE.md, or save memory directly.
 2. Scan changed files for unresolved TODO/FIXME markers without corresponding issues.
 3. Flag patterns that should become steering rules, hooks, or skills — but do not create them.
 4. Separate what should carry forward versus be dropped.
-5. Present findings. Ask before saving each item to long-term memory.
-6. If there is unfinished implementation work, recommend running **handover**.
+5. Present findings. Ask before persisting each item. Use the runtime's memory
+   feature when one exists; otherwise route durable lessons to `handover` or a
+   steering rule.
+6. If there is unfinished implementation work, recommend running `handover`.
 
 ## Output Format
 
-- **Corrections captured**: count
-- **Lessons to save**: list (ask before writing)
-- **TODOs without issues**: list
-- **Proposed improvements**: list with recommended action:
-  - Steering rule → run **steering-audit**
-  - CLAUDE.md update → run **revise-claude-md**
-  - New skill idea → run **write-a-skill**
-  - Hook needed → run **agent-management**
+- Corrections captured: count
+- Lessons to save: list (ask before writing)
+- TODOs without issues: list
+- Proposed improvements: list with recommended action:
+  - Steering rule or hook gap → run `audit-steering`
+  - Steering doc or compiled-instructions update → run `optimize-steering`
+  - New skill idea → run `write-a-skill`
+  - APM package or hook install → run `agent-management`
 
 ## Steering
 
