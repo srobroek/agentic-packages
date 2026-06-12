@@ -14,16 +14,22 @@ description: Use to run Python format, lint, type-check, and test commands with 
 
 ## Tooling Preference
 
-- Prefer `ruff` for linting and formatting
-- Prefer `pyright` for type checking when available
-- Prefer `pytest` for tests when present
+Order the scripts implement:
+
+1. `ruff check` + `ruff format --check` (always)
+2. `pyright` only when installed (skipped otherwise)
+3. `pytest` only when installed and `pyproject.toml` or `tests/` exists
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/check.sh` | Run all checks (ruff, pyright, pytest) |
-| `scripts/fix.sh` | Apply mechanical fixes (ruff format, ruff --fix) |
+| `scripts/check.sh` | Run all checks (ruff, pyright if installed, pytest if present) |
+| `scripts/fix.sh` | Apply mechanical fixes only (ruff check --fix, ruff format) |
+
+`fix.sh` is narrower than `check.sh`: it only applies auto-fixable lint rules
+and formatting. Type errors and test failures need manual fixes. Re-run
+`check.sh` after `fix.sh`.
 
 ## References
 
