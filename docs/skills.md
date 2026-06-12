@@ -17,7 +17,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
 | `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
 | `eli5` | Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts. |
-| `explore` | Read-only codebase orientation, file discovery, and path tracing. |
+| `explore` | Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
 | `handover` | Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. |
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
