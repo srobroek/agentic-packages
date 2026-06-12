@@ -1,11 +1,11 @@
 ---
 name: code-review
-description: Use for review requests. Prioritizes bugs, regressions, risks, and missing tests.
+description: Review code changes for bugs, regressions, security risks, and missing tests, reporting findings by severity. Use when the user asks to review a diff or the current changes, check a change for bugs or regressions, audit a change set, or review a PR by number or URL.
 ---
 
 # Code Review
 
-Use this skill when the user asks for a review.
+Review a diff, file, or PR and report findings ordered by severity.
 
 ## Review Order
 
@@ -20,7 +20,7 @@ Use this skill when the user asks for a review.
 - Findings first, ordered by severity, with file references (`file:line`)
 - Typical targets: current diff, a specific file, or a PR by number/URL
 - Output: **Summary** (1-2 sentences), **Suggestions** (`[file:line]` each), **Blockers** (critical only)
-- Use a subagent only when the diff is large enough that an independent read materially improves coverage
+- If the runtime supports subagents, use one only when the diff is large enough that an independent read materially improves coverage
 
 ## References
 
