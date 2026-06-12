@@ -7,8 +7,11 @@ INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty')
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Skip on SessionStart -- always exit 0 after first fire per session
-GATE="/tmp/code-discovery-steer-$PPID"
+# Fire at most once per session. Key the gate on the hook payload's
+# session_id; $PPID is a transient shell that changes per invocation and
+# would re-fire the advisory on every tool call.
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+GATE="/tmp/code-discovery-steer-${SESSION_ID:-$PPID}"
 find /tmp -maxdepth 1 -name 'code-discovery-steer-*' -mtime +1 -delete 2>/dev/null
 if [ -f "$GATE" ]; then
     exit 0
