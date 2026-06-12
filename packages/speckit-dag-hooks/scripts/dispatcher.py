@@ -214,18 +214,38 @@ def _subst(tmpl, feat):
     return tmpl.replace("<feat>", feat)
 
 
-def _evaluate_block(node, feat):
+def _resolve_path(tmpl, feat, proj_root):
+    path = _subst(tmpl, feat)
+    if not os.path.isabs(path):
+        path = os.path.join(proj_root, path)
+    return path
+
+
+def _evaluate_block(node, feat, proj_root):
     """Return a block reason string, or "" if nothing blocks."""
     for reason in node.get("hard_deprecated", []):
         # Deprecated always blocks, regardless of feat.
         return reason
     for tmpl in node.get("hard_missing", []):
-        path = _subst(tmpl, feat)
-        if feat and not os.path.exists(path):
+        # A <feat>-scoped precondition with no resolvable feature is the most
+        # out-of-order case of all: block with guidance instead of silently
+        # skipping the check (the old behaviour, which let the command run and
+        # fail confusingly downstream).
+        if "<feat>" in tmpl and not feat:
+            return (
+                "No active SpecKit feature resolved (no"
+                " SPECIFY_FEATURE_DIRECTORY, .specify/feature.json, or"
+                " specs/<branch>/ match) -- run /speckit.specify first or"
+                " switch to the feature branch"
+            )
+        path = _resolve_path(tmpl, feat, proj_root)
+        if not os.path.exists(path):
             return "Required artefact missing: " + path
     for tmpl in node.get("hard_exists", []):
-        path = _subst(tmpl, feat)
-        if feat and os.path.exists(path):
+        if "<feat>" in tmpl and not feat:
+            continue  # cannot conflict when no feature exists yet
+        path = _resolve_path(tmpl, feat, proj_root)
+        if os.path.exists(path):
             return (
                 "Conflicting artefact present: " + path
                 + " -- use /speckit.refine.update to amend instead of"
@@ -276,7 +296,7 @@ def main():
     feat = _resolve_feat(proj_root)
 
     if phase == "pre":
-        block_reason = _evaluate_block(node, feat)
+        block_reason = _evaluate_block(node, feat, proj_root)
         if block_reason:
             if event in ("UserPromptExpansion", "UserPromptSubmit"):
                 out = {
