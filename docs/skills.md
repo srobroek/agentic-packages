@@ -16,7 +16,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `commit-push-merge` | Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method. |
 | `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
 | `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
-| `eli5` | Explain a topic at multiple depth levels, from simple to detailed, for layered understanding. |
+| `eli5` | Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts. |
 | `explore` | Read-only codebase orientation, file discovery, and path tracing. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
 | `handover` | Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state. |

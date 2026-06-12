@@ -1,6 +1,6 @@
 ---
 name: eli5
-description: Explains a topic at multiple depth levels. Use when a topic needs layered explanation, when the user is confused about a concept, or when the user says "explain X." Agents may suggest this when the user seems unfamiliar with a topic or asks "what is" / "how does" questions.
+description: Explain a topic at five depth levels, from metaphor to frontier. Use when the user says "explain X", "ELI5", asks "what is" / "how does" questions, or needs a layered explanation of an unfamiliar concept.
 ---
 
 # ELI5
@@ -48,4 +48,4 @@ Repeat for each requested level.
 - Do not flatten meaningful uncertainty just to simplify.
 - If the user asks for one level only, give one level only.
 - Make higher levels add nuance, not just length.
-- Word budgets are soft targets -- use judgment.
+- Word budgets are soft targets -- adjust for topic complexity; accuracy always wins over budget.

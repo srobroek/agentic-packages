@@ -252,7 +252,7 @@ marketplace:
         - skill
         - planning
         - explanation
-      description: Explain a topic at multiple depth levels, from simple to detailed, for layered understanding.
+      description: Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts.
       version: 0.1.1
     - name: explore
       source: ./packages/explore
