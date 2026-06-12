@@ -1,7 +1,7 @@
 ---
 name: speckit-sync-conflicts
 description: Detects contradictions between active SpecKit specs or between specs and shared contracts/interfaces. Use for inter-spec conflict audits when scopes overlap, supersession is unclear, or shared API/data assumptions may disagree.
-model: sonnet
+model: opus
 tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix"]
 x-agentic:
   codex:
