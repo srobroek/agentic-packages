@@ -26,12 +26,22 @@ hyperresearch --help
 uv tool run --from hyperresearch hyperresearch install . --json
 ```
 
-4. For Claude Code projects, follow upstream's generated `/hyperresearch`
-   workflow after `hyperresearch install`.
-5. For Codex projects, treat this skill as a router to the upstream CLI and
-   vault. Use the HyperResearch command output and generated research files as
-   the source of truth; do not manually recreate the 16-step pipeline from
-   memory.
+4. Then follow the runtime path below.
+
+## Claude Code path
+
+Follow upstream's generated `/hyperresearch` workflow after
+`hyperresearch install`.
+
+## Codex / other runtimes path
+
+Treat this skill purely as a router to the upstream CLI and research vault --
+no Claude-only orchestration (no subagents, no generated Claude skills):
+
+1. Run the `hyperresearch` CLI directly with the user's research question.
+2. Use the command output and the generated research vault files as the source
+   of truth.
+3. Do not manually recreate the 16-step pipeline from memory.
 
 ## Notes
 
