@@ -647,7 +647,7 @@ marketplace:
         - skill
         - code-intelligence
         - prompts
-      description: Find, compare, and improve prompt templates and prompt-engineering patterns.
+      description: 'Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts.'
       version: 0.1.1
     - name: python-quality
       source: ./packages/python-quality

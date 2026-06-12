@@ -732,7 +732,7 @@
     },
     {
       "name": "prompt-lookup",
-      "description": "Find, compare, and improve prompt templates and prompt-engineering patterns.",
+      "description": "Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts.",
       "version": "0.1.1",
       "tags": [
         "skill",

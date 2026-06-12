@@ -1,19 +1,15 @@
 ---
 name: prompt-lookup
-description: Use when finding, comparing, or improving prompt templates and prompt-engineering patterns.
+description: Find, compare, and improve prompt templates and prompt-engineering patterns. Use when the user says "find me a prompt", "what prompts are available", "get prompt X", "make this prompt better", or mentions prompt libraries or prompt engineering.
 ---
 
 # Prompt Lookup
 
 Search for and improve AI prompts: **$ARGUMENTS**
 
-## When to Activate
-
-- User asks for prompt templates ("Find me a code review prompt")
-- User wants to search for prompts ("What prompts are available for writing?")
-- User needs a specific prompt ("Get prompt XYZ")
-- User wants to improve a prompt ("Make this prompt better")
-- User mentions prompt libraries or prompt engineering
+When invoked as a command (`/prompt-lookup <request>`), `$ARGUMENTS` above is
+replaced with the user's request text. If it is empty or still reads literally
+`$ARGUMENTS`, derive the request from the conversation or ask what to look up.
 
 ## Operations
 
