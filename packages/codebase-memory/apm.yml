@@ -1,8 +1,9 @@
 name: codebase-memory
 version: 0.1.1
 description: >-
-  Graph-aware codebase exploration, tracing, and reference lookup using the
-  codebase-memory index.
+  Structured graph queries against the indexed code graph: trace
+  callers/callees, find references, map architecture. Requires the
+  codebase-memory-mcp server; for lightweight orientation, use explore.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

@@ -1,11 +1,19 @@
 ---
 name: codebase-memory
-description: Use for graph-aware codebase exploration, tracing, and reference lookup.
+description: Structured graph queries against the indexed code graph -- trace callers/callees, find references, map architecture. Use for structural codebase questions. Requires the codebase-memory-mcp server; for lightweight read-only orientation, use `explore`.
 ---
 
 # Codebase Memory
 
-Use this skill when graph-aware codebase tooling is more effective than manual file search.
+`codebase-memory` is structured graph queries; `explore` is lightweight
+read-only orientation with grep/glob.
+
+## Dependency
+
+This skill requires the `codebase-memory-mcp` MCP server (installed via the
+`mcp-codebase-memory` package). If its tools are not available, skip the graph
+flow entirely and degrade to plain `grep` / `glob` exploration (the `explore`
+skill).
 
 ## Preferred Flow
 
@@ -29,4 +37,4 @@ Use this skill when graph-aware codebase tooling is more effective than manual f
 
 ## Scripts
 
-- Index refresh helper: `scripts/index.sh`
+- Index refresh helper: `scripts/index.sh` (errors if `codebase-memory-mcp` is not installed)
