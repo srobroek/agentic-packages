@@ -28,7 +28,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
 | `research` | Open-ended research that synthesizes across multiple sources for comparisons, technology evaluations, and tradeoff analysis. |
 | `rust-quality` | Run Rust format, lint, and test checks with the project toolchain. |
-| `sniff` | Stability, hardening, and cleanup audit across a codebase. |
+| `sniff` | Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries. |
 | `typescript-quality` | Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain. |
 | `unstuck` | Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. |
 | `verify` | Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR. |

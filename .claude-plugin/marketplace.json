@@ -817,7 +817,7 @@
     },
     {
       "name": "sniff",
-      "description": "Stability, hardening, and cleanup audit across a codebase.",
+      "description": "Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries.",
       "version": "0.1.1",
       "tags": [
         "skill",
