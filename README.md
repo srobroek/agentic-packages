@@ -247,7 +247,7 @@ SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
         -> analyze -> issues -> checkpoint
         -> assign -> validate -> execute (checkpoint per task)
-        -> verify-tasks + verify -> code-review + security-review
+        -> verify-tasks -> verify -> review -> qa -> code-review + security-review
         -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
 ```
 
