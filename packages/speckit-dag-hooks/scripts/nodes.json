@@ -369,6 +369,9 @@
       "context": [
         "Mid-cycle checkpoints lock in spec/plan/tasks before execution. The final checkpoint locks in the verified, reviewed, retroed feature before archive."
       ],
+      "hard_missing": [
+        "specs/<feat>/spec.md"
+      ],
       "soft": [
         "working tree contains changes worth committing"
       ],
