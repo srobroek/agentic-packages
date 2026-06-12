@@ -1,5 +1,5 @@
 name: verify
-version: 0.1.1
+version: 0.1.2
 description: >-
   Run and report a final local verification pass (tests, types, build, lint)
   before handoff, commit, push, merge, or PR.

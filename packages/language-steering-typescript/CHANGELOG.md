@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v0.1.0...language-steering-typescript-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **language-steering-typescript:** refresh Bun/pnpm guidance ([#284](https://github.com/srobroek/agentic-packages/issues/284)) ([abb8865](https://github.com/srobroek/agentic-packages/commit/abb88651c3ca82cd10a60cea1582caadc48486ce))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v0.0.1...language-steering-typescript-v0.1.0) (2026-06-02)
 
 

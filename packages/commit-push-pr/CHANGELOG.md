@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/commit-push-pr-v0.1.1...commit-push-pr-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **commit-push-pr:** dedupe template load instructions ([#265](https://github.com/srobroek/agentic-packages/issues/265)) ([205a766](https://github.com/srobroek/agentic-packages/commit/205a7666116dd92d46afa75f5410ccd78e8c6be3))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/commit-push-pr-v0.1.0...commit-push-pr-v0.1.1) (2026-06-03)
 
 

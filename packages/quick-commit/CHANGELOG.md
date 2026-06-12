@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/quick-commit-v0.1.1...quick-commit-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **quick-commit:** single changeset-policy load point ([#290](https://github.com/srobroek/agentic-packages/issues/290)) ([fe4de79](https://github.com/srobroek/agentic-packages/commit/fe4de7944675386b91f96cc8a06522d6e3867439))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/quick-commit-v0.1.0...quick-commit-v0.1.1) (2026-06-03)
 
 

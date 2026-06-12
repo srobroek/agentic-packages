@@ -1,5 +1,5 @@
 name: steering-toolchain-defaults
-version: 0.1.0
+version: 0.1.1
 description: >-
   Opt-in steering: opinionated default stack choices for frontend,
   infrastructure, and quality/observability. Install to adopt these defaults

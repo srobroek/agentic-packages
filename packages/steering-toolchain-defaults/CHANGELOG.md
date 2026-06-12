@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults-v0.1.0...steering-toolchain-defaults-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **steering-toolchain-defaults:** handoff note to steering-frontend ([#298](https://github.com/srobroek/agentic-packages/issues/298)) ([2264dfa](https://github.com/srobroek/agentic-packages/commit/2264dfa459fc755e6f281326a4e876514b550be2))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults-v0.0.1...steering-toolchain-defaults-v0.1.0) (2026-06-02)
 
 

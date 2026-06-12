@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/handover-v0.1.1...handover-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **handover:** concrete trigger description, dedupe steps ([#271](https://github.com/srobroek/agentic-packages/issues/271)) ([e9c3d09](https://github.com/srobroek/agentic-packages/commit/e9c3d09be65b98fdc5b415af664f57027dcb3887))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/handover-v0.1.0...handover-v0.1.1) (2026-06-03)
 
 

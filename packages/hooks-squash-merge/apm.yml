@@ -1,5 +1,5 @@
 name: hooks-squash-merge
-version: 0.2.0
+version: 0.2.1
 description: >-
   Opinionated git policy hook: require an explicit merge strategy on gh pr merge
   (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR

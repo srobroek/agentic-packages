@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/hyperresearch-v0.1.1...hyperresearch-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **hyperresearch:** explicit Codex routing path ([#279](https://github.com/srobroek/agentic-packages/issues/279)) ([7067171](https://github.com/srobroek/agentic-packages/commit/70671719b7f7530b8f084d69f2c4754a86d44061))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/hyperresearch-v0.1.0...hyperresearch-v0.1.1) (2026-06-03)
 
 

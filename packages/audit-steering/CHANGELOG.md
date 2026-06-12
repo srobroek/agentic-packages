@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/audit-steering-v0.1.1...audit-steering-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **audit-steering:** imperative trigger description ([#257](https://github.com/srobroek/agentic-packages/issues/257)) ([c80e9eb](https://github.com/srobroek/agentic-packages/commit/c80e9ebc35af4beab35054554d683aacf606f29b))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/audit-steering-v0.1.0...audit-steering-v0.1.1) (2026-06-03)
 
 

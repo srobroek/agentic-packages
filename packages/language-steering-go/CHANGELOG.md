@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-go-v0.1.0...language-steering-go-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **language-steering-go:** dedupe repeated caveat ([#280](https://github.com/srobroek/agentic-packages/issues/280)) ([f75e5bb](https://github.com/srobroek/agentic-packages/commit/f75e5bbf14188f987f97ffe15fd8bb1766391689))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-go-v0.0.1...language-steering-go-v0.1.0) (2026-06-02)
 
 

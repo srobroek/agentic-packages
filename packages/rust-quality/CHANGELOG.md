@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/rust-quality-v0.1.1...rust-quality-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **rust-quality:** document tool order and fix.sh scope ([#292](https://github.com/srobroek/agentic-packages/issues/292)) ([2a3db52](https://github.com/srobroek/agentic-packages/commit/2a3db52b8cce8b76943d6fa1f9aff6f7b877ec52))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/rust-quality-v0.1.0...rust-quality-v0.1.1) (2026-06-03)
 
 

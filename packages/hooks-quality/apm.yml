@@ -1,5 +1,5 @@
 name: hooks-quality
-version: 0.1.0
+version: 0.1.1
 description: >-
   Opt-in code-quality hooks: advisory linting/formatting feedback after edits
   and a quality check before commits. Cross-tool (Claude + Codex).

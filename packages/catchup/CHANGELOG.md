@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/srobroek/agentic-packages/compare/catchup-v0.1.2...catchup-v0.1.3) (2026-06-12)
+
+
+### Bug Fixes
+
+* **catchup:** single reference load point, drop redundant sections ([#258](https://github.com/srobroek/agentic-packages/issues/258)) ([05f1001](https://github.com/srobroek/agentic-packages/commit/05f1001a4acb938bbc6f63efdf5537b768136491))
+
 ## [0.1.2](https://github.com/srobroek/agentic-packages/compare/catchup-v0.1.1...catchup-v0.1.2) (2026-06-03)
 
 

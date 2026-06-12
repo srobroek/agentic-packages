@@ -1,8 +1,8 @@
 name: audit-steering
-version: 0.1.1
+version: 0.1.2
 description: >-
-  Audit agent rules, hooks, skills, and guardrails for drift, duplication,
-  stale files, and token waste.
+  Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale
+  files, and token waste.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

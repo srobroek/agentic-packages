@@ -1,5 +1,5 @@
 name: explore
-version: 0.1.1
+version: 0.1.2
 description: >-
   Lightweight read-only codebase orientation: file discovery, path tracing, and
   "where is X" lookups. For structured graph queries, use codebase-memory.

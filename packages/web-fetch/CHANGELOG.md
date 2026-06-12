@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/web-fetch-v0.1.1...web-fetch-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **web-fetch:** clarify Context7 and MCP degradation ([#302](https://github.com/srobroek/agentic-packages/issues/302)) ([c7100b2](https://github.com/srobroek/agentic-packages/commit/c7100b29a1315f36e5a5f9ccfa524f55b1509ac0))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/web-fetch-v0.1.0...web-fetch-v0.1.1) (2026-06-03)
 
 

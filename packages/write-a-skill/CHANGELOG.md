@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/write-a-skill-v0.1.1...write-a-skill-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **write-a-skill:** add expected layout example ([#303](https://github.com/srobroek/agentic-packages/issues/303)) ([f173b4b](https://github.com/srobroek/agentic-packages/commit/f173b4b2ca8c4fdaf90054914b3cf17bcfbbd721))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/write-a-skill-v0.1.0...write-a-skill-v0.1.1) (2026-06-03)
 
 

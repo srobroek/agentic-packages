@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker-v0.1.1...agent-external-repo-worker-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **agent-external-repo-worker:** bump Codex profile to gpt-5.5 ([#256](https://github.com/srobroek/agentic-packages/issues/256)) ([b5908b5](https://github.com/srobroek/agentic-packages/commit/b5908b5bad2833d564d842526a2b2151f3624cde))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker-v0.1.0...agent-external-repo-worker-v0.1.1) (2026-06-03)
 
 

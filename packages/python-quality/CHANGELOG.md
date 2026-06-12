@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/python-quality-v0.1.1...python-quality-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **python-quality:** document tool order and fix.sh scope ([#289](https://github.com/srobroek/agentic-packages/issues/289)) ([50511d7](https://github.com/srobroek/agentic-packages/commit/50511d76808a04e24e927b1ef321451afae4829c))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/python-quality-v0.1.0...python-quality-v0.1.1) (2026-06-03)
 
 

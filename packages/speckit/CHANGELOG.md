@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.0...speckit-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **speckit:** guard hardening, align workflow docs with node store ([#294](https://github.com/srobroek/agentic-packages/issues/294)) ([99de83c](https://github.com/srobroek/agentic-packages/commit/99de83c82eed004273f7f3774bb5da3cad96940b))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.0.1...speckit-v0.1.0) (2026-06-02)
 
 

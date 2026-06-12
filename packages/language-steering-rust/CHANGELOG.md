@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.1.0...language-steering-rust-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **language-steering-rust:** dedupe repeated caveats ([#282](https://github.com/srobroek/agentic-packages/issues/282)) ([ce25192](https://github.com/srobroek/agentic-packages/commit/ce2519274915248cd32512734ec57c6c26b7c969))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.0.1...language-steering-rust-v0.1.0) (2026-06-02)
 
 

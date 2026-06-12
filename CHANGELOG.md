@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.6.0...srobroek-agentic-v0.7.0) (2026-06-12)
+
+
+### Features
+
+* **unstuck:** outcome-gated stuck detection with escalation ladder ([#300](https://github.com/srobroek/agentic-packages/issues/300)) ([5e8e772](https://github.com/srobroek/agentic-packages/commit/5e8e7727348b01db0902ad2810509ed24c021571))
+
+
+### Bug Fixes
+
+* **audit-steering:** imperative trigger description ([#257](https://github.com/srobroek/agentic-packages/issues/257)) ([c80e9eb](https://github.com/srobroek/agentic-packages/commit/c80e9ebc35af4beab35054554d683aacf606f29b))
+* **code-review:** concrete trigger description, runtime-neutral subagents ([#261](https://github.com/srobroek/agentic-packages/issues/261)) ([f6a131c](https://github.com/srobroek/agentic-packages/commit/f6a131c56b3afe199f304d2800b47fc6f853440b))
+* **codebase-index:** document MCP dependency and concrete workflow ([#262](https://github.com/srobroek/agentic-packages/issues/262)) ([93099ab](https://github.com/srobroek/agentic-packages/commit/93099abeb94223e52a317529fc253205211202bb))
+* **codebase-memory:** document MCP dependency and explore boundary ([#263](https://github.com/srobroek/agentic-packages/issues/263)) ([de50df6](https://github.com/srobroek/agentic-packages/commit/de50df60429b3969f806de6e91014a582692053e))
+* **eli5:** tighten description, soften word budgets ([#268](https://github.com/srobroek/agentic-packages/issues/268)) ([e29a737](https://github.com/srobroek/agentic-packages/commit/e29a737a3dc6a39a7715f9f1f9fce8336e0ce7bb))
+* **explore:** disambiguate vs codebase-memory ([#269](https://github.com/srobroek/agentic-packages/issues/269)) ([136bf20](https://github.com/srobroek/agentic-packages/commit/136bf204131caec9add520efd7c8eabb76b65903))
+* **handover:** concrete trigger description, dedupe steps ([#271](https://github.com/srobroek/agentic-packages/issues/271)) ([e9c3d09](https://github.com/srobroek/agentic-packages/commit/e9c3d09be65b98fdc5b415af664f57027dcb3887))
+* **optimize-steering:** comply with own description-length rules ([#286](https://github.com/srobroek/agentic-packages/issues/286)) ([bff10ed](https://github.com/srobroek/agentic-packages/commit/bff10ed47653c7d0e157cad5c09e77543960909a))
+* **playwright:** imperative rules, dedupe guidance ([#287](https://github.com/srobroek/agentic-packages/issues/287)) ([19035a2](https://github.com/srobroek/agentic-packages/commit/19035a2fdde6270078687461c7e25d97802c63cf))
+* **prompt-lookup:** trigger phrases and ARGUMENTS semantics ([#288](https://github.com/srobroek/agentic-packages/issues/288)) ([6e5d896](https://github.com/srobroek/agentic-packages/commit/6e5d896e3e0d4098f00469f522813290514c7364))
+* **research:** tighten trigger description ([#291](https://github.com/srobroek/agentic-packages/issues/291)) ([fe00f77](https://github.com/srobroek/agentic-packages/commit/fe00f77a140c7dc447f4040c30077bf4852c4132))
+* **sniff:** concrete trigger description, runtime-neutral sweep ([#293](https://github.com/srobroek/agentic-packages/issues/293)) ([411b7d8](https://github.com/srobroek/agentic-packages/commit/411b7d801c8a1881c9206ef4b9c84fb210b0b81f))
+* validate hook JSON in CI, align speckit pipeline docs ([#304](https://github.com/srobroek/agentic-packages/issues/304)) ([d135baf](https://github.com/srobroek/agentic-packages/commit/d135baf1ea95c55b4fd84817182e3ca943786618))
+
 ## [0.6.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.5.0...srobroek-agentic-v0.6.0) (2026-06-10)
 
 

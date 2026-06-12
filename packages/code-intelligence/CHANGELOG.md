@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.1.1...code-intelligence-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **code-intelligence:** fire discovery-steer advisory once per session ([#260](https://github.com/srobroek/agentic-packages/issues/260)) ([19100b8](https://github.com/srobroek/agentic-packages/commit/19100b809b2a142c5ff690cacbcafe605a7b6e45))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/code-intelligence-v0.1.0...code-intelligence-v0.1.1) (2026-06-03)
 
 

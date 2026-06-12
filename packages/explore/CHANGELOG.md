@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/explore-v0.1.1...explore-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **explore:** disambiguate vs codebase-memory ([#269](https://github.com/srobroek/agentic-packages/issues/269)) ([136bf20](https://github.com/srobroek/agentic-packages/commit/136bf204131caec9add520efd7c8eabb76b65903))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/explore-v0.1.0...explore-v0.1.1) (2026-06-03)
 
 

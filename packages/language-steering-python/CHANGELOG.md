@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-python-v0.1.0...language-steering-python-v0.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **language-steering-python:** dedupe repeated caveats ([#281](https://github.com/srobroek/agentic-packages/issues/281)) ([181256b](https://github.com/srobroek/agentic-packages/commit/181256b3663e90c517a4bda7be516b35e8d71cdb))
+
 ## [0.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-python-v0.0.1...language-steering-python-v0.1.0) (2026-06-02)
 
 

@@ -1,5 +1,5 @@
 name: mcp-package-version
-version: 0.1.0
+version: 0.1.1
 description: >-
   MCP server package for Package Version, providing dependency version discovery
   before adding or upgrading packages.

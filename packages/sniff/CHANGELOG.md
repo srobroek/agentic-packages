@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/sniff-v0.1.1...sniff-v0.1.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **sniff:** concrete trigger description, runtime-neutral sweep ([#293](https://github.com/srobroek/agentic-packages/issues/293)) ([411b7d8](https://github.com/srobroek/agentic-packages/commit/411b7d801c8a1881c9206ef4b9c84fb210b0b81f))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/sniff-v0.1.0...sniff-v0.1.1) (2026-06-03)
 
 
