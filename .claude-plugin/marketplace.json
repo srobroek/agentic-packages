@@ -54,7 +54,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "tags": [
         "bundle",
         "steering"
@@ -97,7 +97,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "tags": [
         "bundle",
         "graph"
@@ -162,7 +162,7 @@
     {
       "name": "core",
       "description": "Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and agentic-maintenance skills/agents installed directly (no sub-bundle layer), plus the Matt Pocock grill/diagnose workflows and Hobson context/orchestration plugins.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "baseline"
@@ -172,7 +172,7 @@
     {
       "name": "core-global",
       "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "tags": [
         "bundle",
         "global",
@@ -204,7 +204,7 @@
     {
       "name": "debugging",
       "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked, plus Matt's diagnose workflow. For production/distributed incident debugging, see the incident-response bundle.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "tags": [
         "bundle",
         "debugging"
@@ -266,7 +266,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "frontend"
@@ -469,7 +469,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "go"
@@ -499,7 +499,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "python"
@@ -509,7 +509,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "rust"
@@ -579,7 +579,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "tags": [
         "bundle",
         "terraform"
@@ -589,7 +589,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "typescript"
@@ -692,7 +692,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and architecture-improvement workflows.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "planning"
@@ -723,7 +723,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "lifecycle"
@@ -787,7 +787,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "tags": [
         "bundle",
         "review"
@@ -839,7 +839,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "tags": [
         "bundle",
         "speckit",
