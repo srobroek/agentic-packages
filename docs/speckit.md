@@ -12,7 +12,7 @@ The pipeline:
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
         -> analyze -> issues -> checkpoint
         -> assign -> validate -> execute (checkpoint per task)
-        -> verify-tasks + verify -> code-review + security-review
+        -> verify-tasks -> verify -> review -> qa -> code-review + security-review
         -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
 ```
 
@@ -87,7 +87,7 @@ The enforcement hooks key off `.specify/feature.json` (or the git branch) to res
 
 **Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, `PostToolUse`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
 
-**Mandatory-step enforcement.** Node `.pre.md` files phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify, verify-tasks, code-review, security-review) mandatory rather than optional.
+**Mandatory-step enforcement.** Node `.pre.md` files phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify-tasks, verify, review, qa, code-review, security-review) mandatory rather than optional.
 
 **The payoff.** Security review and phantom-completion detection can't be silently dropped; specs can't be hand-edited around the Skill tool; and the same gated flow compiles to both Claude and Codex from one definition.
 
