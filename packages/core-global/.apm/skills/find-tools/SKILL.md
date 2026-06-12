@@ -64,12 +64,8 @@ tools globally by default.
 - Registry pages are discovery sources, not sufficient verification.
 - Do not make project setup search raw external repositories. Curate missing
   tools here, then route project installation back through APM.
-- Do not skip the primary `srobroek-agentic` baseline when working from a
-  brownfield migration brief unless the brief explicitly says the repo needs a
-  narrower install.
-- Keep `wshobson-agents` and `voltagent-subagents` as registered external
-  marketplace options for gaps and specialist coverage, not replacements for the
-  primary first-party baseline.
+- For brownfield migration briefs, keep the primary `srobroek-agentic` baseline
+  unless the brief explicitly calls for a narrower install.
 - Keep concrete upstream comparisons in references or adoption notes, not
   scattered across setup and hygiene skills.
 

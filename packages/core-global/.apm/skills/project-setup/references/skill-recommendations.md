@@ -81,12 +81,11 @@ result and render package names compactly. Expected groups for the default
 marketplace:
 
 - `Core`: `core`
-- `External bundles`: `hyperresearch`, `impeccable`, `interface-design`,
-  `stitch-skills`
+- `External bundles`: external-source bundles such as `hyperresearch`
 - `MCP packages`: optional first-party `mcp-*` packages such as
   `mcp-playwright`
 - `First-party skills`: every package backed by `srobroek/agentic-packages/.apm/skills/*`
-- `Matt Pocock`: every `matt-*` package
+- `Matt Pocock`: the `matt-skills` bundle
 
 Expected optional upstream marketplace groups:
 
@@ -149,11 +148,13 @@ Recommended:
 - `accessibility-compliance@wshobson-agents`
 - `application-performance@wshobson-agents`
 
-Pair with first-party/third-party design packages when relevant:
+Pair with the first-party frontend bundle when relevant:
 
-- `impeccable@srobroek-agentic`
-- `interface-design@srobroek-agentic`
-- `stitch-skills@srobroek-agentic`
+- `frontend@srobroek-agentic`
+
+External design bundles (Stitch, Impeccable, Interface Design) are not in the
+first-party marketplace; route them through `find-tools` when a project needs
+them.
 
 ### Language Specialists
 
@@ -300,15 +301,9 @@ projects. Treat a missing baseline MCP after setup as a repair issue, not as a
 reason to add duplicate manual MCP declarations.
 
 For semantic code tools, prefer Serena as the optional MCP package:
-`mcp-serena@srobroek-agentic`. During setup, read
-`references/serena.md` and `../../indexes/serena-language-servers.json`, run
-the listed `mise use ...` commands in the project root for detected
-runtime-supported Serena languages, then initialize the project with
-`serena project create` so `.serena/project.yml` captures project languages,
-ignore paths, workspace folders, mode defaults, and write permissions. Do not
-generate `added_modes` or `--add-mode` for Serena 1.2.0; use project
-`base_modes`/`default_modes` and repeatable CLI `--mode` only. For large
-repositories, follow with `serena project index`.
+`mcp-serena@srobroek-agentic`. During setup, follow `references/serena.md`
+for language-server setup, `.serena/project.yml` creation, mode policy, and
+indexing.
 
 Do not use local skills or `srobroek/agentic-packages` checkouts as a setup
 fallback. Development of the package repository itself is separate from project
@@ -344,68 +339,37 @@ Recommend when the user wants a lightweight PRD -> issues -> TDD workflow,
 stronger issue slicing, or architecture-focused engineering skills without the
 full SpecKit workflow.
 
-Prefer individual marketplace entries. Verified examples:
-
-```bash
-apm install matt-to-prd@srobroek-agentic matt-to-issues@srobroek-agentic matt-tdd@srobroek-agentic
-```
-
-Use these individual package names:
-
-| Need | Dependency |
-|------|------------|
-| PRD synthesis | `matt-to-prd@srobroek-agentic` |
-| Issue slicing | `matt-to-issues@srobroek-agentic` |
-| TDD loop | `matt-tdd@srobroek-agentic` |
-| Bug diagnosis | `matt-diagnose@srobroek-agentic` |
-| Issue triage | `matt-triage@srobroek-agentic` |
-| Architecture deepening | `matt-improve-codebase-architecture@srobroek-agentic` |
-| Domain grilling | `matt-grill-with-docs@srobroek-agentic` |
-| Project setup for these skills | `matt-setup-skills@srobroek-agentic` |
-| Broader orientation | `matt-zoom-out@srobroek-agentic` |
-| Compact response mode | `matt-caveman@srobroek-agentic` |
-| Planning grill without docs | `matt-grill-me@srobroek-agentic` |
-| Skill authoring | `matt-write-a-skill@srobroek-agentic` |
-
-The marketplace exposes these as `matt-*` entries. Full-package dependency is
-valid, but only recommend it when the user wants the whole upstream workflow
-set:
+The marketplace ships these as the single `matt-skills` bundle (diagnose,
+grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, zoom-out,
+improve-codebase-architecture, caveman, setup):
 
 ```bash
 apm install matt-skills@srobroek-agentic
 ```
 
+If marketplace browse later returns individual `matt-*` entries, recommend
+only the names actually returned.
+
 Matt Pocock skills are the leading source for overlapping workflow skills such
-as `diagnose`, `grill-me`, `grill-with-docs`, `triage`, `write-a-skill`, and
-`zoom-out`. Do not recommend local replacements for those names unless a future
-project intentionally maintains a fork.
+as `diagnose`, `grill-me`, `grill-with-docs`, `triage`, and `zoom-out`. Do not
+recommend local replacements for those names unless a project intentionally
+maintains a fork.
 
 ## SpecKit Projects
 
 Recommend the shared package only. It already includes SpecKit steering, agents,
-and skills. Add Matt Pocock skills only if the user explicitly wants both
-workflows and accepts overlap around planning, issues, TDD, and triage.
-
-Ask before adding any of: `to-prd`, `to-issues`, `tdd`, `triage`, or
-`setup-matt-pocock-skills`.
+and skills. Add the `matt-skills` bundle only if the user explicitly wants both
+workflows and accepts overlap around planning, issues, TDD, and triage; ask
+before installing it.
 
 ## UI-Heavy Projects
 
-Recommend the shared package plus the Google Stitch bundle when the project will
-use Stitch MCP or design-to-code workflows:
+Recommend the shared package plus `frontend@srobroek-agentic` for frontend
+steering and skills.
 
-```bash
-apm install stitch-skills@srobroek-agentic
-```
-
-Treat `stitch-skills` as a bundle that covers `stitch-design`, `stitch-loop`,
-`design-md`, `enhance-prompt`, `react:components`, `remotion`, `shadcn-ui`, and
-`taste-design`. Do not list those covered skills as separate choices after the
-bundle is selected.
-
-Also recommend `impeccable@srobroek-agentic` for frontend craft and
-`interface-design@srobroek-agentic` for product-interface systems when relevant.
-These are third-party upstream entries, not local copies.
+External design bundles (Stitch design-to-code, Impeccable, Interface Design)
+are not first-party marketplace packages; when the project wants one, route
+discovery and adoption through `find-tools`.
 
 For browser automation or UI verification, recommend the explicit MCP package:
 

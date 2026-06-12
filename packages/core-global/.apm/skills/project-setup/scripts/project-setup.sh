@@ -63,7 +63,8 @@ PUBLIC=false
 CREATE_REPO=true
 INIT_GIT=true
 LAYOUT="single"
-LANG=""
+# Note: not named LANG to avoid clobbering the exported locale variable.
+OVERLAY_LANG=""
 LANG_ARGS=""
 TARGETS=()
 USE_JUST=false
@@ -171,7 +172,7 @@ while [[ $# -gt 0 ]]; do
         --selected-agent) SELECTED_AGENTS+=("$2"); shift 2 ;;
         --selected-skill) SELECTED_SKILLS+=("$2"); shift 2 ;;
         --selected-mcp) SELECTED_MCP+=("$2"); shift 2 ;;
-        --lang)        LANG="$2"; shift 2 ;;
+        --lang)        OVERLAY_LANG="$2"; shift 2 ;;
         --lang-args)   LANG_ARGS="$2"; shift 2 ;;
         --quality-lang) QUALITY_LANGS+=("$2"); shift 2 ;;
         --help)
@@ -231,17 +232,26 @@ if $CREATE_REPO; then
     VISIBILITY="--private"
     $PUBLIC && VISIBILITY="--public"
 
-    GHAPI="gh-api.py"
-    command -v gh-api.py >/dev/null 2>&1 || GHAPI="$AGENTIC_TOOLS_DIR/github/gh-api.py"
+    # Prefer the gh-api.py wrapper; fall back to plain gh when absent.
+    GH_CMD=()
+    if command -v gh-api.py >/dev/null 2>&1; then
+        GH_CMD=(gh-api.py gh)
+    elif [ -x "$AGENTIC_TOOLS_DIR/github/gh-api.py" ]; then
+        GH_CMD=("$AGENTIC_TOOLS_DIR/github/gh-api.py" gh)
+    elif command -v gh >/dev/null 2>&1; then
+        GH_CMD=(gh)
+    fi
 
-    # Check if repo already exists
-    if "$GHAPI" gh repo view "$ORG/$PROJECT_NAME" >/dev/null 2>&1; then
+    if [ "${#GH_CMD[@]}" -eq 0 ]; then
+        echo "  WARN: neither gh-api.py nor gh found; skipping GitHub repo creation"
+    elif "${GH_CMD[@]}" repo view "$ORG/$PROJECT_NAME" >/dev/null 2>&1; then
         echo "GitHub repo $ORG/$PROJECT_NAME already exists"
     else
         echo "Creating GitHub repo $ORG/$PROJECT_NAME..."
         DESC_FLAG=""
         [ -n "$DESCRIPTION" ] && DESC_FLAG="--description=$DESCRIPTION"
-        "$GHAPI" gh repo create "$ORG/$PROJECT_NAME" $VISIBILITY ${DESC_FLAG:+"$DESC_FLAG"} --source . --push=false || true
+        "${GH_CMD[@]}" repo create "$ORG/$PROJECT_NAME" $VISIBILITY ${DESC_FLAG:+"$DESC_FLAG"} --source . --push=false \
+            || echo "  WARN: GitHub repo creation failed; create $ORG/$PROJECT_NAME manually"
     fi
 
     # Ensure remote is set
@@ -355,7 +365,7 @@ fi
 # Clearing upfront prevents issues when Claude Code uses worktrees later.
 if [ -d .git ] && command -v xattr >/dev/null 2>&1; then
     echo "Clearing macOS provenance xattr on .git/..."
-    sudo xattr -c -r .git/ 2>/dev/null || echo "  WARN: xattr clear failed — run 'sudo xattr -c -r .git/' manually if worktree git operations fail"
+    sudo -n xattr -c -r .git/ 2>/dev/null || echo "  WARN: xattr clear failed — run 'sudo xattr -c -r .git/' manually if worktree git operations fail"
 fi
 
 # --- Step 5: Pre-commit config (universal hooks only) ---
@@ -987,13 +997,13 @@ if $APM_INSTALL; then
 fi
 
 # --- Step 11: Language overlay ---
-if [ -n "$LANG" ]; then
+if [ -n "$OVERLAY_LANG" ]; then
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    LANG_SCRIPT="$SCRIPT_DIR/setup-${LANG}.sh"
+    LANG_SCRIPT="$SCRIPT_DIR/setup-${OVERLAY_LANG}.sh"
 
     if [ -x "$LANG_SCRIPT" ]; then
         echo ""
-        echo "Running language overlay: setup-${LANG}.sh..."
+        echo "Running language overlay: setup-${OVERLAY_LANG}.sh..."
         # shellcheck disable=SC2086
         "$LANG_SCRIPT" $LANG_ARGS
     else
@@ -1001,8 +1011,8 @@ if [ -n "$LANG" ]; then
     fi
 fi
 
-if [ -n "$LANG" ] && [ "${#QUALITY_LANGS[@]}" -eq 0 ]; then
-    QUALITY_LANGS+=("$LANG")
+if [ -n "$OVERLAY_LANG" ] && [ "${#QUALITY_LANGS[@]}" -eq 0 ]; then
+    QUALITY_LANGS+=("$OVERLAY_LANG")
 fi
 
 if [ "${#QUALITY_LANGS[@]}" -gt 0 ]; then
