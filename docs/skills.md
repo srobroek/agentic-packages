@@ -19,7 +19,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `eli5` | Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts. |
 | `explore` | Read-only codebase orientation, file discovery, and path tracing. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
-| `handover` | Save a self-contained recovery prompt to the shared handover store when ending or pausing work, switching context, or preserving unfinished state. |
+| `handover` | Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. |
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency, structural compliance, and cross-model compatibility. |
 | `playwright` | Automate browser interactions through a Playwright MCP server. |

@@ -1,8 +1,9 @@
 name: handover
 version: 0.1.1
 description: >-
-  Save a self-contained recovery prompt to the shared handover store when ending
-  or pausing work, switching context, or preserving unfinished state.
+  Save a self-contained recovery prompt to the shared handover store when
+  pausing work, switching context, preserving unfinished state, or handing off
+  to another session.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
