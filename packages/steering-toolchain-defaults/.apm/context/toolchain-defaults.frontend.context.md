@@ -12,3 +12,6 @@ use PrimeVue or Nuxt UI by project need.
 
 Use store-first app/UI state and TanStack Query for server state unless the
 existing codebase has a stronger local convention.
+
+Detailed component, state, and testing conventions live in the
+`steering-frontend` package (when installed).
