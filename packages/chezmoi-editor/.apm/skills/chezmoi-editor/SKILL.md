@@ -1,7 +1,6 @@
 ---
 name: chezmoi-editor
 description: Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.
-model: sonnet
 ---
 
 # Chezmoi Editor
