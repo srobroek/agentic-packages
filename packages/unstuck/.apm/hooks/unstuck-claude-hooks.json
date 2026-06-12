@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/debug-stuck-detector.sh",
-            "async": true,
+            "command": "python3 ${PLUGIN_ROOT}/scripts/unstuck_monitor.py edit",
             "timeout": 3
           }
         ]
@@ -17,10 +16,30 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/stuck-reset.sh",
-            "if": "Bash(git commit*)",
-            "async": true,
-            "timeout": 2
+            "command": "python3 ${PLUGIN_ROOT}/scripts/unstuck_monitor.py bash",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/unstuck_monitor.py gate",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/unstuck_monitor.py release",
+            "timeout": 3
           }
         ]
       }

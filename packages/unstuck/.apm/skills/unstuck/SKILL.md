@@ -5,7 +5,7 @@ description: Escalate stalled debugging by challenging assumptions after the nor
 
 # Unstuck
 
-Use this skill when debugging is going in circles. In the `core` bundle,
+Challenge assumptions when debugging is going in circles. In the `core` bundle,
 Matt Pocock's `diagnose` skill is installed with `unstuck`; use `diagnose` for
 ordinary bug work and return here when the diagnosis loop stalls.
 
@@ -15,24 +15,25 @@ ordinary bug work and return here when the diagnosis loop stalls.
   loop, or minimized failing case.
 - Use `unstuck` when repeated fixes failed, the same files are being re-edited,
   hypotheses are circular, or evidence contradicts the current framing.
+- A `STUCK DETECTOR` hook alert is a direct trigger. It only fires with
+  failure evidence and reports re-edited files, same-command failure streaks,
+  and content flip-flops (edits reverting earlier versions). Alerts escalate:
+  nudge, then directive, then a gate that pauses source-file edits until
+  `unstuck` or `diagnose` is invoked, a test passes, or a commit lands
+  (override: `UNSTUCK_GATE_OFF=1`).
 - Do not use `unstuck` as a replacement for normal test, build, or traceback
   diagnosis.
 
 ## Workflow
 
-1. Confirm the diagnosis baseline:
-   - failing command and exact error
-   - smallest known reproduction or why none exists
-   - what `diagnose` found or why it was skipped
-2. Gather only observable facts:
-   - Failing command and exact error
-   - Affected files and recent edits
-   - `git diff --stat` and `git log --oneline -10`
-   - Fixes already tried and their observed results
-3. Name the current leading assumption and the evidence for it.
-4. Generate 1-3 alternative hypotheses that would explain all observations.
-5. Run the smallest check that can disprove the leading assumption.
-6. If still stuck, invoke the `adversarial-challenger` agent; LOAD
+1. Gather the observable-facts baseline: LOAD references/checklist.md and
+   answer each question. If a `STUCK DETECTOR` alert fired, seed the answers
+   from its evidence (re-edited files and counts, the failing command and its
+   streak, flip-flopped files) instead of re-deriving them.
+2. Name the current leading assumption and the evidence for it.
+3. Generate 1-3 alternative hypotheses that would explain all observations.
+4. Run the smallest check that can disprove the leading assumption.
+5. If still stuck, invoke the `adversarial-challenger` agent; LOAD
    references/adversarial.md for the brief format.
 
 ## Rules
@@ -45,18 +46,19 @@ ordinary bug work and return here when the diagnosis loop stalls.
 - If no fast feedback loop exists, stop and use `diagnose` to create one before
   continuing.
 
-## Workflow turbo-path (optional, Claude only)
+## Workflow turbo-path (optional, Claude Code only)
 
-The prose Workflow above is the default. IF dynamic workflows are enabled (the "workflow" keyword,
-ultracode, or an explicit ask), the challenger escalation (step 6) can run as a budget-bounded
-Workflow loop instead of manual SendMessage rounds. Steps 1-5 (fact-gathering, leading assumption,
-alternative hypotheses, the disproving check) stay in the main thread -- they need the live repro
-and the user. Workflows are a Claude-only feature; where they are unavailable, follow the prose
-steps.
+Claude Code only -- on other runtimes, skip this section and follow the Workflow above.
+
+The prose Workflow above is the canonical path and is always sufficient. If dynamic workflows are
+enabled (the "workflow" keyword, ultracode, or an explicit ask), the challenger escalation (step 5)
+can run as a budget-bounded Workflow loop instead of manual SendMessage rounds. Steps 1-4
+(fact-gathering, leading assumption, alternative hypotheses, the disproving check) stay in the main
+thread -- they need the live repro and the user.
 
 Shape (author inline):
 
-- One `agent()` per round, `agentType: 'adversarial-challenger'`, `effort: 'xhigh'`, given ONLY the
+- One `agent()` per round, `agentType: 'adversarial-challenger'`, `effort: 'xhigh'`, given only the
   observable-facts brief (`references/adversarial.md` format) -- never your theory.
 - Loop while rounds < 5 AND a budget guard holds (`budget.total && budget.remaining() > 50_000`),
   feeding each round the prior challenger output + any new evidence from a main-thread check.
@@ -66,8 +68,3 @@ Shape (author inline):
 `adversarial-challenger` resolves to the existing agent definition -- do not duplicate it. This is a
 small win (one agent, serial rounds); the prose path remains entirely adequate when workflows are
 off.
-
-## References
-
-- When invoking `adversarial-challenger`, LOAD references/adversarial.md
-- For the structured debugging checklist, LOAD references/checklist.md
