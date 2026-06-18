@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Bootstrap a SpecKit project: scaffold .specify/, register the community
-# extension catalog, install + enable the required extension set, and install
-# the workflow definitions. Idempotent -- safe to re-run.
+# extension catalog, install + enable the required extension set, register their
+# command files for the requested integration, and install the workflow
+# definitions. Idempotent -- safe to re-run.
 #
 # Prereqs: `specify` CLI on PATH (uv tool install specify-cli) and `apm`.
 # The APM speckit orchestration bundle (agents, DAG, hooks) is installed
@@ -46,7 +47,7 @@ WORKFLOWS=(speckit speckit-quality speckit-full)
 need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found on PATH" >&2; exit 1; }; }
 need specify
 
-echo "==> 1/4 specify init (.specify/ scaffold) -- integration=$INTEGRATION script=$SCRIPT_FLAVOR"
+echo "==> 1/5 specify init (.specify/ scaffold) -- integration=$INTEGRATION script=$SCRIPT_FLAVOR"
 if [ -d .specify ] && [ -z "$FORCE" ]; then
   echo "    .specify/ already present -- skipping init (pass --force to re-run)"
 else
@@ -56,7 +57,7 @@ else
   specify init --here --integration "$INTEGRATION" --script "$SCRIPT_FLAVOR" $FORCE </dev/null
 fi
 
-echo "==> 2/4 register community extension catalog"
+echo "==> 2/5 register community extension catalog"
 # Match on URL, not just name: a default catalog (e.g. 'custom' from
 # SPECKIT_CATALOG_URL) may already point at this community URL.
 catalogs="$(specify extension catalog list 2>/dev/null || true)"
@@ -68,7 +69,7 @@ else
   specify extension catalog add --name "$CATALOG_NAME" --install-allowed "$CATALOG_URL" </dev/null
 fi
 
-echo "==> 3/4 install + enable ${#EXTENSIONS[@]} extensions"
+echo "==> 3/5 install + enable ${#EXTENSIONS[@]} extensions"
 installed="$(specify extension list 2>/dev/null || true)"
 for ext in "${EXTENSIONS[@]}"; do
   if printf '%s\n' "$installed" | grep -qw "$ext"; then
@@ -80,7 +81,44 @@ for ext in "${EXTENSIONS[@]}"; do
   specify extension enable "$ext" </dev/null >/dev/null 2>&1 || true
 done
 
-echo "==> 4/4 install workflow definitions: ${WORKFLOWS[*]}"
+echo "==> 4/5 register extension commands for integration=$INTEGRATION"
+# `specify extension add` only renders an extension's command files for the
+# integration that is ACTIVE at add-time, and `specify integration switch`
+# re-registers all installed+enabled extensions ONLY on a genuine switch
+# (switching to the already-active integration is a no-op). So if extensions were
+# added under a different integration than the one now requested (e.g. the
+# default `codex` init, then later using `claude`), their command files are never
+# rendered for the requested agent -- and re-running this script does not fix it,
+# because the extensions are already "installed" and the install loop skips them.
+# Force a (re-)registration of every enabled extension for "$INTEGRATION":
+#   - requested integration is NOT active -> one genuine switch re-registers all.
+#   - requested integration IS active     -> bounce through another built-in
+#     integration and back to force re-registration (switch-to-self is a no-op).
+# Switching built-in integrations (claude/codex) is offline; only the local
+# extension registry is read to re-render command files.
+current_integration="$(
+  grep -o '"default_integration"[[:space:]]*:[[:space:]]*"[^"]*"' .specify/integration.json 2>/dev/null \
+    | sed 's/.*"\([^"]*\)".*/\1/' | head -n1
+)"
+if [ -n "$current_integration" ] && [ "$current_integration" != "$INTEGRATION" ]; then
+  specify integration switch "$INTEGRATION" </dev/null
+  echo "    switched $current_integration -> $INTEGRATION (extensions re-registered)"
+else
+  if [ "$INTEGRATION" = "codex" ]; then BOUNCE="claude"; else BOUNCE="codex"; fi
+  echo "    $INTEGRATION already active -- bouncing via $BOUNCE to force re-registration"
+  # Disable -e around the bounce so a mid-bounce failure cannot leave the project
+  # stranded on the bounce integration; always attempt to land back on "$INTEGRATION".
+  set +e
+  specify integration switch "$BOUNCE" </dev/null && specify integration switch "$INTEGRATION" </dev/null
+  bounce_rc=$?
+  set -e
+  if [ "$bounce_rc" -ne 0 ]; then
+    echo "    WARNING: re-registration bounce failed; ensuring active integration is $INTEGRATION" >&2
+    specify integration switch "$INTEGRATION" </dev/null || true
+  fi
+fi
+
+echo "==> 5/5 install workflow definitions: ${WORKFLOWS[*]}"
 for wf in "${WORKFLOWS[@]}"; do
   if specify extension add "$wf" </dev/null >/dev/null 2>&1; then
     echo "    + $wf"
