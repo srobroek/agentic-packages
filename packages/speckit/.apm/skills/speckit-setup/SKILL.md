@@ -16,7 +16,7 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
 
 ## What it does
 
-`scripts/setup-speckit.sh` performs four steps:
+`scripts/setup-speckit.sh` performs five steps:
 
 1. **`specify init --here`** -- scaffolds `.specify/` (constitution, feature dirs, workflow
    state). Defaults to `--integration codex --script sh`; override with `--integration` /
@@ -29,7 +29,16 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`, `refine`,
    `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`, `verify-tasks`,
    `worktree`.
-4. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full`.
+4. **Register extension commands for the requested integration** -- `specify extension add`
+   only renders an extension's command files for the integration active at add-time, and
+   `specify integration switch` re-registers all extensions only on a *genuine* switch
+   (switch-to-self is a no-op). If extensions were added under a different integration than
+   the one requested (e.g. the default `codex` init, then later `claude`), their commands are
+   never rendered for the requested agent and a naive re-run won't fix it. This step forces a
+   (re-)registration: one switch if the requested integration isn't active, or a
+   bounce-through-another-integration-and-back if it already is. Offline (reads the local
+   registry).
+5. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full`.
 
 ## How to run
 
