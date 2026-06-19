@@ -392,6 +392,18 @@
         }
       ]
     },
+    "packages/headroom": {
+      "release-type": "simple",
+      "component": "headroom",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-bash-safety": {
       "release-type": "simple",
       "component": "hooks-bash-safety",

@@ -20,6 +20,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `explore` | Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
 | `handover` | Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. |
+| `headroom` | Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats. |
 | `hyperresearch` | Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports. |
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7). |
 | `playwright` | Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data. |
