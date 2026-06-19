@@ -172,7 +172,7 @@
     {
       "name": "core-global",
       "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
-      "version": "0.2.3",
+      "version": "0.3.0",
       "tags": [
         "bundle",
         "global",
