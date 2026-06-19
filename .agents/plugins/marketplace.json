@@ -341,6 +341,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "headroom",
+      "source": {
+        "source": "local",
+        "path": "./packages/headroom"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
       "name": "hooks-bash-safety",
       "source": {
         "source": "local",

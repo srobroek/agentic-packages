@@ -306,6 +306,18 @@
       "source": "./packages/handover"
     },
     {
+      "name": "headroom",
+      "description": "Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats.",
+      "version": "0.0.1",
+      "tags": [
+        "skill",
+        "maintenance",
+        "tokens",
+        "compression"
+      ],
+      "source": "./packages/headroom"
+    },
+    {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards: block privilege escalation, curl|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex).",
       "version": "0.2.1",

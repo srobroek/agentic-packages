@@ -28,6 +28,7 @@
   "packages/go-quality": "0.1.2",
   "packages/governance": "0.1.0",
   "packages/handover": "0.1.2",
+  "packages/headroom": "0.0.1",
   "packages/hooks-bash-safety": "0.2.1",
   "packages/hooks-branch-check": "0.2.1",
   "packages/hooks-git-safety": "0.2.1",
