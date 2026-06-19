@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.1...speckit-v0.1.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* **speckit-setup:** register extension commands for the requested integration ([#309](https://github.com/srobroek/agentic-packages/issues/309)) ([c67ee50](https://github.com/srobroek/agentic-packages/commit/c67ee50357cab8a982e28960e63b6738af93368c))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.0...speckit-v0.1.1) (2026-06-12)
 
 
