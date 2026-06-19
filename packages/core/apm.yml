@@ -1,5 +1,5 @@
 name: core
-version: 0.1.2
+version: 0.2.0
 description: >-
   Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and
   agentic-maintenance skills/agents installed directly (no sub-bundle layer),

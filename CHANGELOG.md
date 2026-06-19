@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.7.1...srobroek-agentic-v0.8.0) (2026-06-19)
+
+
+### Features
+
+* **headroom:** add Headroom token-compression skill and wire into core ([#312](https://github.com/srobroek/agentic-packages/issues/312)) ([d216c88](https://github.com/srobroek/agentic-packages/commit/d216c88eb20dee33f6748ceeaaed9a49469eb0e0))
+
 ## [0.7.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.7.0...srobroek-agentic-v0.7.1) (2026-06-12)
 
 
