@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.3...core-global-v0.3.0) (2026-06-19)
+
+
+### Features
+
+* **core-global:** add headroom skill to the global baseline ([#314](https://github.com/srobroek/agentic-packages/issues/314)) ([27c6202](https://github.com/srobroek/agentic-packages/commit/27c62027a826a7bb59f171ed72617985fb84ca16))
+
 ## [0.2.3](https://github.com/srobroek/agentic-packages/compare/core-global-v0.2.2...core-global-v0.2.3) (2026-06-12)
 
 
