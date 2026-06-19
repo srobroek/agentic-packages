@@ -64,6 +64,15 @@ includes `proxy_savings_percent`), `GET /stats?cached=1` (fast dashboard snapsho
 `HEADROOM_ACCURACY_GUARD=strict`, etc. `wrap` applies these by default unless
 `HEADROOM_SAVINGS_PROFILE` is already set.
 
+### `HEADROOM_OUTPUT_SHAPER`
+
+The docs show `export HEADROOM_OUTPUT_SHAPER=1` (off by default) to enable output-token
+shaping. Caveat: in 0.26.0 (== PyPI latest) the shipped code does not reference this variable
+anywhere — verified against the Python package and the native `_core.abi3.so` — so it is a
+**no-op today**; actual reduction comes from the `agent-90` compression profile. It is safe to
+export for forward-compatibility (and the local fish wrappers do), but do not rely on it as the
+sole reduction mechanism on this version.
+
 ## Other commands
 
 `headroom init` (durable integrations), `headroom install` (persistent deployments),

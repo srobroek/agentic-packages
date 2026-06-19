@@ -31,9 +31,12 @@ answers. It installs via mise (`pipx:headroom-ai`) and exposes the `headroom` CL
 
 ## Steering
 
-- There is no separate "output shaper" toggle in this version; the `agent-90` profile that
-  `wrap` enables by default IS the token/output reduction. An existing `$HEADROOM_SAVINGS_PROFILE`
-  is respected, so never blindly hardcode the profile when the user has set one.
+- Output token reduction: the docs document `HEADROOM_OUTPUT_SHAPER=1`, but the released
+  code (0.26.0, == PyPI latest) does not read it yet — it is a no-op today, so the real
+  token/output reduction comes from the `agent-90` profile that `wrap` applies. Set
+  `HEADROOM_OUTPUT_SHAPER=1` anyway for forward-compatibility (harmless now; activates if a
+  future version wires it up). An existing `$HEADROOM_SAVINGS_PROFILE` is respected, so never
+  blindly hardcode the profile when the user has set one.
 - Compression is reversible (originals retrievable on demand), but if an agent misbehaves under
   compression, isolate it: rerun with `HEADROOM_DISABLE=1` / `command <tool>` to confirm whether
   Headroom is the cause before debugging further.
