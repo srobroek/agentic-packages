@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/srobroek/agentic-packages/compare/catchup-v0.1.3...catchup-v0.1.4) (2026-06-20)
+
+
+### Bug Fixes
+
+* **catchup:** narrow trigger to handover recovery, drop bare resume/continue ([#329](https://github.com/srobroek/agentic-packages/issues/329)) ([b35505d](https://github.com/srobroek/agentic-packages/commit/b35505db5eff3eee2383b4bf2f82b86b48871471))
+
 ## [0.1.3](https://github.com/srobroek/agentic-packages/compare/catchup-v0.1.2...catchup-v0.1.3) (2026-06-12)
 
 

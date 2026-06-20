@@ -1,5 +1,5 @@
 name: resume-session
-version: 0.2.0
+version: 0.2.1
 description: >-
   Resume a previous agent session in the current repository from its transcript,
   reading only the latest context incrementally instead of reloading the full
