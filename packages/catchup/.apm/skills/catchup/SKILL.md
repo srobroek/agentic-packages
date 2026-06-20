@@ -1,6 +1,6 @@
 ---
 name: catchup
-description: Resume interrupted project work by locating and following the best handover before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup/continue/resume/handover, or when asked what changed or what is next.
+description: Recover interrupted project work by locating and following the best handover file before doing fresh discovery. Use when starting in an existing repo/worktree, after context loss or /clear, when the user says catchup or asks to continue from a handover, what changed, or what is next.
 ---
 
 # Catchup
