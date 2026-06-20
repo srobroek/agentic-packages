@@ -968,6 +968,18 @@
         }
       ]
     },
+    "packages/resume-session": {
+      "release-type": "simple",
+      "component": "resume-session",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/review": {
       "release-type": "simple",
       "component": "review",

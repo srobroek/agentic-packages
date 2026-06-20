@@ -28,6 +28,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
 | `research` | Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch). |
+| `resume-session` | Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work. |
 | `rust-quality` | Run Rust format, lint, and test checks with the project toolchain. |
 | `sniff` | Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries. |
 | `typescript-quality` | Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain. |
