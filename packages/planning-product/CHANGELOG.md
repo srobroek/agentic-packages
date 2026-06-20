@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/srobroek/agentic-packages/compare/planning-product-v0.1.2...planning-product-v0.1.3) (2026-06-20)
+
+
+### Bug Fixes
+
+* **core:** remove dead mattpocock skill references ([5c02f5d](https://github.com/srobroek/agentic-packages/commit/5c02f5db3934e4160dd4f0035966d8784395af1a))
+* **core:** remove dead mattpocock skill references ([f584488](https://github.com/srobroek/agentic-packages/commit/f5844883cc1671e1a562335610233c8d422f0fc9))
+
 ## [0.1.2](https://github.com/srobroek/agentic-packages/compare/planning-product-v0.1.1...planning-product-v0.1.2) (2026-06-12)
 
 

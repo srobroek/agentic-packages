@@ -19,11 +19,16 @@ Read only the relevant detail:
 
 ## Safety: dev builds only
 
-The bridge that these tools talk to is the `tauri-plugin-mcp-bridge` crate. It
-opens a local control WebSocket inside the app, so it is a **development-only**
-dependency:
+The MCP surface has **two dev-only halves**, both of which must be kept out of
+release builds:
 
-- Gate it behind `#[cfg(debug_assertions)]` or a dedicated dev feature flag.
-- **Never** ship it in a production / release build — a shipped bridge is a
-  remote-control backdoor into the app.
-- Verify it is excluded from release artifacts before publishing.
+- The `tauri-plugin-mcp-bridge` crate — opens a local control WebSocket inside
+  the app (a remote-control backdoor if shipped). Gate it behind
+  `#[cfg(debug_assertions)]` or a dedicated dev feature flag.
+- `withGlobalTauri` — exposes the full Tauri API on `window.__TAURI__` (needed by
+  the bridge to drive the webview). Enable it only through a dev config overlay,
+  never in the base `tauri.conf.json`. See
+  [usage → dev-only config](tauri.tauri-mcp-usage.context.md#dev-only-config-withglobaltauri).
+
+**Never** ship either in a production / release build; verify both are excluded
+from release artifacts before publishing.

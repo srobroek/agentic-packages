@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 0.10.0
+version: 0.10.1
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -186,7 +186,7 @@ marketplace:
         - bundle
         - baseline
       description: 'Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and agentic-maintenance skills/agents installed directly (no sub-bundle layer), plus the Matt Pocock grill workflows and Hobson context/orchestration plugins.'
-      version: 0.2.0
+      version: 0.2.1
     - name: core-global
       source: ./packages/core-global
       category: core
@@ -220,7 +220,7 @@ marketplace:
         - bundle
         - debugging
       description: 'Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.'
-      version: 0.1.3
+      version: 0.1.4
     - name: developer-tools
       source: ./packages/developer-tools
       category: engineering
@@ -559,7 +559,7 @@ marketplace:
         - matt-pocock
         - workflows
       description: 'Bundle of Matt Pocock''s engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.'
-      version: 0.1.0
+      version: 0.1.1
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp
@@ -633,7 +633,7 @@ marketplace:
         - bundle
         - planning
       description: 'Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt''s PRD, issue-writing, TDD, triage, and architecture-improvement workflows.'
-      version: 0.1.2
+      version: 0.1.3
     - name: playwright
       source: ./packages/playwright
       category: frontend
