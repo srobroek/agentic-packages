@@ -13,10 +13,10 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
 | `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
-| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `headroom`, `agent-coder`, `agent-pr-reviewer`, `diagnose`^, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^, `documentation-standards`^, `plugin-eval`^ |
+| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `headroom`, `agent-coder`, `agent-pr-reviewer`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^, `documentation-standards`^, `plugin-eval`^ |
 | `core-global` | Recommended global (user-scope) baseline | `catchup`, `codebase-memory`, `debate`, `eli5`, `handover`, `write-a-skill`, `headroom`, `chezmoi-editor`, `agent-coder`, `agent-pr-reviewer`, `agent-adversarial-challenger`, `agent-external-repo-worker`, `grill-me`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger`, `diagnose`^ |
+| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger` |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `docs-architecture` | Documentation and architecture | `documentation-standards`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
@@ -36,8 +36,8 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `deployment-strategies`^ |
 | `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `javascript-typescript`^ |
 | `language-web-scripting` | PHP and Ruby web scripting toolkit | `web-scripting`^ |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `caveman`^, `diagnose`^, `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^, `zoom-out`^ |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `zoom-out`^, `improve-codebase-architecture`^ |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
+| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^ |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
 | `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`^, `ResumeSkills`^ |
@@ -80,7 +80,7 @@ Bundles also pull in third-party skills and agents (marked `^` in the **Includes
 | [`coleam00/excalidraw-diagram-skill`](https://github.com/coleam00/excalidraw-diagram-skill) | 1 | `excalidraw-diagram-skill` |
 | [`daymade/claude-code-skills`](https://github.com/daymade/claude-code-skills) | 1 | `ppt-creator` |
 | [`google-labs-code/stitch-skills`](https://github.com/google-labs-code/stitch-skills) | 1 | `stitch-design` |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 11 | `caveman`, `diagnose`, `grill-me`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage`, `zoom-out` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 8 | `grill-me`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage` |
 | [`neuro-synapse/network-topology-agent`](https://github.com/neuro-synapse/network-topology-agent) | 1 | `d2-diagram` |
 | [`pbakaus/impeccable`](https://github.com/pbakaus/impeccable) | 1 | `impeccable` |
 | [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit) | 1 | `marp-slide` |

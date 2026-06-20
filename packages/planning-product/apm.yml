@@ -2,7 +2,7 @@ name: planning-product
 version: 0.1.2
 description: >-
   Planning and product toolkit: the debate, eli5, research, and web-fetch skills
-  plus Matt's PRD, issue-writing, TDD, triage, zoom-out, and
+  plus Matt's PRD, issue-writing, TDD, triage, and
   architecture-improvement workflows.
 author: Sjors Robroek
 license: Apache-2.0
@@ -17,6 +17,4 @@ dependencies:
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main
     - mattpocock/skills/skills/engineering/tdd#main
-    - mattpocock/skills/skills/engineering/triage#main
-    - mattpocock/skills/skills/engineering/zoom-out#main
-    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main
+    - mattpocock/skills/skills/engineering/triage#main    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main
