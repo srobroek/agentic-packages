@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.11.0...srobroek-agentic-v0.12.0) (2026-06-20)
+
+
+### Features
+
+* **resume-session:** add agent session-resume skill ([#325](https://github.com/srobroek/agentic-packages/issues/325)) ([1f9aaf9](https://github.com/srobroek/agentic-packages/commit/1f9aaf953ad27941eadc8375256624d1d53c9f46))
+
 ## [0.11.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.10.1...srobroek-agentic-v0.11.0) (2026-06-20)
 
 
