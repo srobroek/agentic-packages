@@ -3,7 +3,7 @@ version: 0.2.0
 description: >-
   Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and
   agentic-maintenance skills/agents installed directly (no sub-bundle layer),
-  plus the Matt Pocock grill/diagnose workflows and Hobson context/orchestration
+  plus the Matt Pocock grill workflows and Hobson context/orchestration
   plugins.
 author: Sjors Robroek
 license: Apache-2.0
@@ -34,7 +34,6 @@ dependencies:
     - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
     - >-
       srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
-    - mattpocock/skills/skills/engineering/diagnose#main
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - wshobson/agents/plugins/context-management#main
