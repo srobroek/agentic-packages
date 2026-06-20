@@ -22,11 +22,31 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 
 CLAUDE_ROOT = os.path.expanduser("~/.claude/projects")
 CODEX_ROOT = os.path.expanduser("~/.codex/sessions")
+
+
+def default_project() -> str:
+    """The repo the user is working in -- the git toplevel, not the skill dir.
+
+    Skill scripts often run with cwd set to the skill folder, so os.getcwd()
+    points at the wrong place; the git root resolves the actual project even
+    when invoked from inside .claude/skills/...
+    """
+    try:
+        r = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return os.getcwd()
 
 TURN_CHARS = 2000      # max chars rendered per user/assistant text body
 TOOL_ARG_CHARS = 220   # max chars of a tool call's brief args
@@ -98,7 +118,7 @@ def resolve_file(args) -> tuple[str, str]:
         sys.exit("error: provide --session ID or --file PATH")
 
     sid = args.session
-    project = os.path.realpath(os.path.expanduser(args.project))
+    project = os.path.realpath(os.path.expanduser(args.project or default_project()))
 
     if args.agent in (None, "claude"):
         proj_dir = os.path.join(CLAUDE_ROOT, encode_project(project))
@@ -304,7 +324,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--session")
     ap.add_argument("--file")
-    ap.add_argument("--project", default=os.getcwd())
+    ap.add_argument("--project", default=None,
+                    help="repo the session belongs to (default: the git repo root)")
     ap.add_argument("--agent", choices=["claude", "codex"])
     ap.add_argument("--turns", type=int, default=8, help="turns per window (default 8)")
     ap.add_argument("--offset", type=int, default=0, help="skip this many newest turns (page older)")
