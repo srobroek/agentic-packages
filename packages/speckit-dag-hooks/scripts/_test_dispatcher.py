@@ -51,12 +51,16 @@ def main():
 
     noproj = tempfile.mkdtemp(prefix="speckit-noproj-")
 
-    # T1: Claude UserPromptExpansion, plan, pre, feat unresolved -> soft inject.
+    # T1: Claude UserPromptExpansion, plan, pre, feat unresolved -> block with
+    # guidance (plan has a <feat>-scoped HARD-MISSING; an unresolvable feature is
+    # blocked rather than silently skipped) while still routing the event and
+    # rendering the node body as additionalContext.
     d = run("pre", {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.plan"}, project_dir=noproj)
-    assert d is not None and "decision" not in d, "T1: must not block when feat empty: %r" % d
+    assert d is not None and d.get("decision") == "block", "T1: must block when feat unresolved: %r" % d
+    assert "No active SpecKit feature" in d["reason"], "T1 reason: %r" % d.get("reason")
     assert d["hookSpecificOutput"]["hookEventName"] == "UserPromptExpansion"
     assert d["hookSpecificOutput"]["additionalContext"].startswith("# /speckit.plan")
-    print("T1 PASS: pre soft-inject plan resolves, event=UserPromptExpansion")
+    print("T1 PASS: pre block-on-unresolved-feat plan, event=UserPromptExpansion")
 
     # T1b: argv order-independence (phase before nodes.json path).
     d = run("pre", {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.plan"}, project_dir=noproj, reversed_args=True)
@@ -143,6 +147,38 @@ def main():
     assert d is not None and d["decision"] == "block", "T8: implement must block: %r" % d
     assert "deprecated" in d["reason"], "T8 reason: %r" % d["reason"]
     print("T8 PASS: HARD-DEPRECATED block on implement, reason=%r" % d["reason"][:60])
+
+    # T8b: payload `cwd` (invoking agent's worktree) wins over CLAUDE_PROJECT_DIR.
+    # Launch checkout (project_dir) has specs/041-stale but no spec.md -> would
+    # block on 041; the agent's actual worktree (payload cwd) resolves 001-demo
+    # via its own .specify/feature.json and passes preconditions. Proves feature
+    # resolution follows the invoking agent's dir, not the original launch dir.
+    launch = tempfile.mkdtemp(prefix="speckit-launch-")
+    os.makedirs(os.path.join(launch, "specs", "041-stale"))
+    os.makedirs(os.path.join(launch, ".specify"))
+    open(os.path.join(launch, ".specify", "feature.json"), "w").write(
+        json.dumps({"feature_directory": "specs/041-stale"})
+    )
+    wt = tempfile.mkdtemp(prefix="speckit-worktree-")
+    os.makedirs(os.path.join(wt, "specs", "001-demo"))
+    os.makedirs(os.path.join(wt, ".specify"))
+    open(os.path.join(wt, ".specify", "feature.json"), "w").write(
+        json.dumps({"feature_directory": "specs/001-demo"})
+    )
+    open(os.path.join(wt, "specs", "001-demo", "spec.md"), "w").write("x")
+    open(os.path.join(wt, "specs", "001-demo", "memory-synthesis.md"), "w").write("x")
+    d = run(
+        "pre",
+        {
+            "hook_event_name": "UserPromptExpansion",
+            "command_name": "speckit.plan",
+            "cwd": wt,
+        },
+        project_dir=launch,
+    )
+    assert d is not None and "decision" not in d, "T8b: must resolve worktree feat, not block on launch dir: %r" % d
+    assert d["hookSpecificOutput"]["additionalContext"].startswith("# /speckit.plan")
+    print("T8b PASS: payload cwd (worktree) overrides CLAUDE_PROJECT_DIR for feat resolution")
 
     # T9: unknown command / unrelated event -> silent no-op.
     d = run("pre", {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.does-not-exist"}, project_dir=noproj)
