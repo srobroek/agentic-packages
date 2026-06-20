@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.2.1...hooks-git-safety-v0.3.0) (2026-06-20)
+
+
+### Features
+
+* **hooks-git-safety:** soften destructive-op guards ([#337](https://github.com/srobroek/agentic-packages/issues/337)) ([f0f494a](https://github.com/srobroek/agentic-packages/commit/f0f494a7402d3ed6c86f8243261d533514302ccb))
+
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.2.0...hooks-git-safety-v0.2.1) (2026-06-12)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.13.1...srobroek-agentic-v0.13.2) (2026-06-20)
+
+
+### Bug Fixes
+
+* **speckit-dag-hooks:** resolve feature from invoking agent's working dir ([2b9e423](https://github.com/srobroek/agentic-packages/commit/2b9e42396636545b04fd6a1a2e1d9d1badf06c63))
+* **speckit-dag-hooks:** resolve feature from invoking agent's working dir ([742c5d3](https://github.com/srobroek/agentic-packages/commit/742c5d36fecbaefd42eabb98f85d61d1cfdff3e9))
+
 ## [0.13.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.13.0...srobroek-agentic-v0.13.1) (2026-06-20)
 
 
