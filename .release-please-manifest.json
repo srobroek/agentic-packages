@@ -1,5 +1,5 @@
 {
-  ".": "0.9.0",
+  ".": "0.10.0",
   "packages/agent-adversarial-challenger": "0.2.0",
   "packages/agent-coder": "0.1.1",
   "packages/agent-external-repo-worker": "0.1.2",
@@ -65,7 +65,7 @@
   "packages/mcp-playwright": "0.1.0",
   "packages/mcp-repomix": "0.1.0",
   "packages/mcp-serena": "0.1.0",
-  "packages/mcp-tauri": "0.1.0",
+  "packages/mcp-tauri": "0.2.0",
   "packages/optimize-steering": "0.1.2",
   "packages/planning-product": "0.1.2",
   "packages/playwright": "0.1.2",

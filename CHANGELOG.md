@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.9.0...srobroek-agentic-v0.10.0) (2026-06-20)
+
+
+### Features
+
+* **mcp-tauri:** add standalone Tauri MCP server package ([6f3b7b8](https://github.com/srobroek/agentic-packages/commit/6f3b7b883fccad1847dbb4d1df0dc7376394538b))
+* **mcp-tauri:** add standalone Tauri MCP server package ([94f0b61](https://github.com/srobroek/agentic-packages/commit/94f0b6150611fe8f8a6d7b4efb8fd760b79afb1a))
+
 ## [0.9.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.8.0...srobroek-agentic-v0.9.0) (2026-06-19)
 
 
