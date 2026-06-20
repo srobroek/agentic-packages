@@ -1,5 +1,5 @@
 {
-  ".": "0.11.0",
+  ".": "0.12.0",
   "packages/agent-adversarial-challenger": "0.2.0",
   "packages/agent-coder": "0.1.1",
   "packages/agent-external-repo-worker": "0.1.2",
@@ -76,7 +76,7 @@
   "packages/quick-commit": "0.1.2",
   "packages/research": "0.1.2",
   "packages/resume": "0.1.0",
-  "packages/resume-session": "0.1.0",
+  "packages/resume-session": "0.2.0",
   "packages/review": "0.1.2",
   "packages/rust-quality": "0.1.2",
   "packages/security": "0.1.0",
