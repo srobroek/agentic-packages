@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.3.0...language-steering-rust-v0.4.0) (2026-06-20)
+
+
+### Features
+
+* **rust-steering:** record cross-OS tauri-plugin-webdriver path ([#336](https://github.com/srobroek/agentic-packages/issues/336)) ([3c9a244](https://github.com/srobroek/agentic-packages/commit/3c9a244112064c041b92937b85df6a70caa1cf47))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.2.0...language-steering-rust-v0.3.0) (2026-06-20)
 
 
