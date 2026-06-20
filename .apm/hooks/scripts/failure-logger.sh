@@ -16,7 +16,9 @@ echo "${TIMESTAMP} | ${TOOL} | ${CWD} | ${ERROR}" >> "$LOG_DIR/tool-failures.log
 
 # Rotate if over 1MB
 LOG_FILE="$LOG_DIR/tool-failures.log"
-if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null)" -gt 1048576 ]; then
+LOG_SIZE=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)
+case "$LOG_SIZE" in ''|*[!0-9]*) LOG_SIZE=0 ;; esac
+if [ -f "$LOG_FILE" ] && [ "$LOG_SIZE" -gt 1048576 ]; then
   mv "$LOG_FILE" "${LOG_FILE}.old"
 fi
 

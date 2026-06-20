@@ -14,7 +14,12 @@ LAST_CHECK="$STATE_DIR/last-outdated-$(echo "$REPO_ROOT" | md5 2>/dev/null || ec
 
 # Check at most once per 4 hours
 if [ -f "$LAST_CHECK" ]; then
-    LAST_MOD=$(stat -f %m "$LAST_CHECK" 2>/dev/null || stat -c %Y "$LAST_CHECK" 2>/dev/null || echo 0)
+    # GNU stat (-c) first, then BSD/macOS stat (-f). The reverse order breaks on
+    # Linux: `stat -f %m` is parsed as --file-system mode and prints a multi-line
+    # filesystem dump (so the `||` fallback never wins), leaving LAST_MOD as
+    # garbage that crashes the arithmetic below.
+    LAST_MOD=$(stat -c %Y "$LAST_CHECK" 2>/dev/null || stat -f %m "$LAST_CHECK" 2>/dev/null || echo 0)
+    case "$LAST_MOD" in ''|*[!0-9]*) LAST_MOD=0 ;; esac
     NOW=$(date +%s)
     AGE=$(( NOW - LAST_MOD ))
     [ "$AGE" -lt 14400 ] && exit 0
