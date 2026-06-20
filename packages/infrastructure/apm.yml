@@ -11,7 +11,7 @@ target: all
 dependencies:
   apm:
     - >-
-      srobroek/agentic-packages/packages/steering-infrastructure#steering-infrastructure-v0.1.0
+      srobroek/agentic-packages/packages/steering-infrastructure#^0.1.0
     - wshobson/agents/plugins/cloud-infrastructure#main
     - wshobson/agents/plugins/kubernetes-operations#main
     - wshobson/agents/plugins/cicd-automation#main

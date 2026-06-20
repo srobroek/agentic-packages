@@ -13,7 +13,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
 | `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
-| `core` | Flat baseline bundle for any repo | `catchup`, `handover`, `resume-session`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `steering-project-structure`, `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^, `documentation-standards`^, `plugin-eval`^ |
+| `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `core-global` | Recommended global (user-scope) baseline | `catchup`, `codebase-memory`, `debate`, `eli5`, `handover`, `write-a-skill`, `chezmoi-editor`, `agent-coder`, `agent-pr-reviewer`, `agent-adversarial-challenger`, `agent-external-repo-worker`, `grill-me`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
 | `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger` |
@@ -49,21 +49,21 @@ In the **Includes** column, each entry is a member package; an entry marked with
 
 ## How bundles work
 
-**Member reference syntax.** Sibling packages in this monorepo are referenced as a **virtual subdirectory of the marketplace repo**, version-pinned to the member's release tag:
+**Member reference syntax.** Sibling packages in this monorepo are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (requires apm >= 0.18, fixed in upstream microsoft/apm#1633):
 
 ```yaml
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/code-review#code-review-v0.1.0   # member, pinned
-    - srobroek/agentic-packages/packages/verify#verify-v0.1.0
-    - wshobson/agents/plugins/comprehensive-review#main                   # external, by source
+    - srobroek/agentic-packages/packages/code-review#^0.1.0   # member, caret range
+    - srobroek/agentic-packages/packages/verify#^0.1.0
+    - wshobson/agents/plugins/comprehensive-review#main        # external, by source
 ```
 
 APM dependencies are repo-locators, not marketplace shortnames -- `code-review@srobroek-agentic` is **not** valid in `dependencies.apm` (that form only works on the `apm install` command line). The `owner/repo/path#ref` form resolves the same way for this repo's own dev checkout and for an external consumer installing from the marketplace.
 
-**Pinning and the bump workflow.** Member deps are pinned to a specific `#<member>-v<version>` tag (created by release-please on release). Pinning is deliberate: a bundle only moves to a newer member when you **edit its pin**, which is a `feat`/`fix` commit on the bundle that release-please then bumps. So updating a member is two explicit steps -- release the member, then re-pin (and thereby bump) each bundle that should adopt it. There is no automatic cascade. (Semver ranges would remove the manual step but do not yet work for monorepo subpath deps -- see [issue #239](https://github.com/srobroek/agentic-packages/issues/239) and upstream [microsoft/apm#1633](https://github.com/microsoft/apm/issues/1633).)
+**Caret ranges and the update workflow.** Member deps use `#^<version>` caret ranges that resolve to the latest matching `<pkg>-v<X.Y.*>` tag via the lockfile. Running `apm update` advances all members to their latest compatible release automatically. When a member bumps its minor or major version you still edit the bundle's range explicitly (making it a `feat`/`fix` commit release-please can track). External deps (wshobson, mattpocock) stay pinned to `#main`.
 
-**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it pins a dependency on them. `core` is flattened to depend on leaf skills/agents directly (no bundle-on-bundle edge), so a member bump needs at most a single re-pin layer.
+**Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it declares a caret-range dep on them. `core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) rather than depending on leaf packages directly, so most member updates cascade through the sub-bundle without touching core at all.
 
 Each package carries its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root [`apm.yml`](../apm.yml) `marketplace:` block and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
 

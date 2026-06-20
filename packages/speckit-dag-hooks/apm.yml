@@ -12,4 +12,4 @@ target: all
 includes: auto
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/speckit#speckit-v0.1.1
+    - srobroek/agentic-packages/packages/speckit#^0.1.1

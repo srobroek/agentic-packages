@@ -72,10 +72,10 @@ uv tool run --from apm-cli apm --version
 Verify:
 
 ```bash
-apm --version    # Agent Package Manager (APM) CLI version 0.16.0+
+apm --version    # Agent Package Manager (APM) CLI version 0.21.0+
 ```
 
-This repository targets **APM 0.16.0 or newer**.
+This repository targets **APM 0.21 or newer**. (Semver caret ranges on first-party deps and local-package metadata inheritance both require >= 0.18; 0.21 is the recommended floor.)
 
 ---
 
@@ -216,9 +216,11 @@ User-scope support varies by runtime: **fully supported for `claude`, `codex`, a
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
 
-Members are referenced as a **virtual subdirectory of the marketplace repo**, version-pinned to a release tag (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`); externals by their own source ref. Each package is versioned independently via release-please.
+Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (wshobson, mattpocock) stay pinned to `#main`. Each package is versioned independently via release-please.
 
-Full detail -- the member-reference syntax, the pin-and-bump workflow, and how hooks ship with their owning package -- is in **[docs/bundles.md](docs/bundles.md#how-bundles-work)**.
+`core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) plus `resume-session` and the Matt Pocock and Hobson plugins explicitly -- so a single `apm install core@srobroek-agentic` brings in all baseline skills transitively.
+
+Full detail -- the member-reference syntax, the caret-range workflow, and how hooks ship with their owning package -- is in **[docs/bundles.md](docs/bundles.md#how-bundles-work)**.
 
 ---
 
@@ -230,8 +232,11 @@ Full detail -- the member-reference syntax, the pin-and-bump workflow, and how h
 apm compile --target codex            # AGENTS.md only
 apm compile --target claude           # CLAUDE.md only
 apm compile --target codex,claude     # both (default for this project)
+apm compile --target kiro             # Kiro (.kiro/steering/)
 apm compile --all                     # every canonical target
 ```
+
+Supported install targets include `claude`, `codex`, and `kiro` (`apm install ... --target kiro`). Note that a Kiro *marketplace* output is not yet supported by apm (only `claude`/`codex` are valid `marketplace.outputs` values), so Kiro is available as an install/compile target but does not produce a generated marketplace artifact.
 
 `compilation.strategy: distributed` (set in `apm.yml`) places scoped instructions next to the code they apply to via `applyTo:` globs; `single-file` collapses everything into one root file.
 
