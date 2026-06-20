@@ -8,9 +8,6 @@ targets:
   - claude
   - codex
 includes: auto
-dependencies:
-  apm:
-    - mattpocock/skills/skills/engineering/diagnose#main
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
   check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
