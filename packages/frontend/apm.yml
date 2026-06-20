@@ -11,9 +11,9 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/playwright#playwright-v0.1.2
+    - srobroek/agentic-packages/packages/playwright#^0.1.2
     - >-
-      srobroek/agentic-packages/packages/steering-frontend#steering-frontend-v0.1.0
+      srobroek/agentic-packages/packages/steering-frontend#^0.1.0
     - pbakaus/impeccable/.agents/skills/impeccable#main
     - Dammyjay93/interface-design/.claude/skills/interface-design#main
     - google-labs-code/stitch-skills/plugins/stitch-design#main

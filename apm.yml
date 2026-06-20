@@ -7,6 +7,7 @@ type: hybrid
 targets:
   - claude
   - codex
+  - kiro
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
@@ -59,8 +60,6 @@ marketplace:
         - critique
         - decision-review
         - debugging
-      description: 'Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil''s-advocate, research and decision review are all applications.'
-      version: 0.2.0
     - name: agent-coder
       source: ./packages/agent-coder
       category: engineering
@@ -68,8 +67,6 @@ marketplace:
         - agent
         - engineering
         - implementation
-      description: Implementation subagent for bounded code changes, tests, and refactors within a defined scope.
-      version: 0.1.1
     - name: agent-external-repo-worker
       source: ./packages/agent-external-repo-worker
       category: engineering
@@ -77,8 +74,6 @@ marketplace:
         - agent
         - engineering
         - repos
-      description: Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.
-      version: 0.1.2
     - name: agent-pr-reviewer
       source: ./packages/agent-pr-reviewer
       category: quality
@@ -86,16 +81,12 @@ marketplace:
         - agent
         - quality
         - review
-      description: Subagent that reviews pull requests for code quality, security, and best practices.
-      version: 0.1.1
     - name: agentic-maintenance
       source: ./packages/agentic-maintenance
       category: agentic-maintenance
       tags:
         - bundle
         - steering
-      description: 'Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.'
-      version: 0.1.3
     - name: audit-steering
       source: ./packages/audit-steering
       category: agentic-maintenance
@@ -103,8 +94,6 @@ marketplace:
         - skill
         - maintenance
         - steering
-      description: Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste.
-      version: 0.1.2
     - name: catchup
       source: ./packages/catchup
       category: project-lifecycle
@@ -112,8 +101,6 @@ marketplace:
         - skill
         - lifecycle
         - resume
-      description: Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request.
-      version: 0.1.4
     - name: chezmoi-editor
       source: ./packages/chezmoi-editor
       category: dotfiles
@@ -121,16 +108,12 @@ marketplace:
         - skill
         - dotfiles
         - chezmoi
-      description: Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.
-      version: 0.2.1
     - name: code-intelligence
       source: ./packages/code-intelligence
       category: code-intelligence
       tags:
         - bundle
         - graph
-      description: 'Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.'
-      version: 0.1.3
     - name: code-review
       source: ./packages/code-review
       category: quality
@@ -138,8 +121,6 @@ marketplace:
         - skill
         - quality
         - review
-      description: Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.
-      version: 0.1.2
     - name: codebase-index
       source: ./packages/codebase-index
       category: code-intelligence
@@ -147,8 +128,6 @@ marketplace:
         - skill
         - code-intelligence
         - graph
-      description: Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration.
-      version: 0.1.2
     - name: codebase-memory
       source: ./packages/codebase-memory
       category: code-intelligence
@@ -156,8 +135,6 @@ marketplace:
         - skill
         - code-intelligence
         - graph
-      description: 'Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.'
-      version: 0.1.2
     - name: commit-push-merge
       source: ./packages/commit-push-merge
       category: project-lifecycle
@@ -165,8 +142,6 @@ marketplace:
         - skill
         - lifecycle
         - git
-      description: Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method.
-      version: 0.1.2
     - name: commit-push-pr
       source: ./packages/commit-push-pr
       category: project-lifecycle
@@ -174,16 +149,12 @@ marketplace:
         - skill
         - lifecycle
         - git
-      description: Commit local changes when needed, push, and open or update a pull request for review.
-      version: 0.1.2
     - name: core
       source: ./packages/core
       category: core
       tags:
         - bundle
         - baseline
-      description: 'Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and agentic-maintenance skills/agents installed directly (no sub-bundle layer), plus the Matt Pocock grill workflows and Hobson context/orchestration plugins.'
-      version: 0.4.1
     - name: core-global
       source: ./packages/core-global
       category: core
@@ -191,16 +162,12 @@ marketplace:
         - bundle
         - global
         - bootstrap
-      description: 'Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with ''apm install core-global@srobroek-agentic --global''.'
-      version: 0.4.0
     - name: data-ai
       source: ./packages/data-ai
       category: data
       tags:
         - bundle
         - data
-      description: 'Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.'
-      version: 0.1.0
     - name: debate
       source: ./packages/debate
       category: planning-product
@@ -208,40 +175,30 @@ marketplace:
         - skill
         - planning
         - analysis
-      description: Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path.
-      version: 0.1.2
     - name: debugging
       source: ./packages/debugging
       category: debugging
       tags:
         - bundle
         - debugging
-      description: 'Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.'
-      version: 0.1.4
     - name: developer-tools
       source: ./packages/developer-tools
       category: engineering
       tags:
         - bundle
         - tooling
-      description: 'Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.'
-      version: 0.1.0
     - name: diagrams
       source: ./packages/diagrams
       category: diagrams
       tags:
         - bundle
         - diagrams
-      description: Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.
-      version: 0.1.0
     - name: docs-architecture
       source: ./packages/docs-architecture
       category: docs
       tags:
         - bundle
         - documentation
-      description: 'Documentation and architecture: Hobson documentation standards, code documentation, doc generation, and C4 architecture workflows.'
-      version: 0.1.0
     - name: eli5
       source: ./packages/eli5
       category: planning-product
@@ -249,8 +206,6 @@ marketplace:
         - skill
         - planning
         - explanation
-      description: Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts.
-      version: 0.1.2
     - name: explore
       source: ./packages/explore
       category: code-intelligence
@@ -258,16 +213,12 @@ marketplace:
         - skill
         - code-intelligence
         - navigation
-      description: 'Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory.'
-      version: 0.1.2
     - name: frontend
       source: ./packages/frontend
       category: frontend
       tags:
         - bundle
         - frontend
-      description: 'Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.'
-      version: 0.1.2
     - name: go-quality
       source: ./packages/go-quality
       category: languages
@@ -275,16 +226,12 @@ marketplace:
         - skill
         - languages
         - go
-      description: Run Go format, lint, and test checks with the project toolchain.
-      version: 0.1.2
     - name: governance
       source: ./packages/governance
       category: governance
       tags:
         - bundle
         - governance
-      description: 'Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows.'
-      version: 0.1.0
     - name: handover
       source: ./packages/handover
       category: project-lifecycle
@@ -292,8 +239,6 @@ marketplace:
         - skill
         - lifecycle
         - handover
-      description: Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.
-      version: 0.1.2
     - name: headroom
       source: ./packages/headroom
       category: agentic-maintenance
@@ -302,8 +247,6 @@ marketplace:
         - maintenance
         - tokens
         - compression
-      description: Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats.
-      version: 0.1.0
     - name: hooks-bash-safety
       source: ./packages/hooks-bash-safety
       category: project-lifecycle
@@ -311,8 +254,6 @@ marketplace:
         - hooks
         - bash
         - safety
-      description: 'Bash safety guards: block privilege escalation, curl|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex).'
-      version: 0.2.1
     - name: hooks-branch-check
       source: ./packages/hooks-branch-check
       category: project-lifecycle
@@ -320,8 +261,6 @@ marketplace:
         - hooks
         - git
         - branch
-      description: 'Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex).'
-      version: 0.2.1
     - name: hooks-git-safety
       source: ./packages/hooks-git-safety
       category: project-lifecycle
@@ -329,8 +268,6 @@ marketplace:
         - hooks
         - git
         - safety
-      description: 'Git safety guards: hard-block `git reset --hard`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push — plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex).'
-      version: 0.3.0
     - name: hooks-git-workflow
       source: ./packages/hooks-git-workflow
       category: project-lifecycle
@@ -338,8 +275,6 @@ marketplace:
         - hooks
         - git
         - commit
-      description: 'Opt-in git workflow hooks: gate commits on passing tests, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).'
-      version: 0.1.1
     - name: hooks-no-ff
       source: ./packages/hooks-no-ff
       category: project-lifecycle
@@ -347,8 +282,6 @@ marketplace:
         - hooks
         - git
         - policy
-      description: 'Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex).'
-      version: 0.2.0
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality
@@ -356,8 +289,6 @@ marketplace:
         - hooks
         - quality
         - lint
-      description: 'Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex).'
-      version: 0.1.1
     - name: hooks-squash-merge
       source: ./packages/hooks-squash-merge
       category: project-lifecycle
@@ -365,8 +296,6 @@ marketplace:
         - hooks
         - git
         - policy
-      description: 'Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex).'
-      version: 0.2.1
     - name: hooks-tool-prefs
       source: ./packages/hooks-tool-prefs
       category: project-lifecycle
@@ -374,8 +303,6 @@ marketplace:
         - hooks
         - tooling
         - advisory
-      description: 'Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).'
-      version: 0.2.1
     - name: hooks-worktree
       source: ./packages/hooks-worktree
       category: project-lifecycle
@@ -383,8 +310,6 @@ marketplace:
         - hooks
         - worktree
         - lifecycle
-      description: 'Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events.'
-      version: 0.2.0
     - name: hyperresearch
       source: ./packages/hyperresearch
       category: research
@@ -392,24 +317,18 @@ marketplace:
         - skill
         - research
         - deep-research
-      description: Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports.
-      version: 0.1.2
     - name: incident-response
       source: ./packages/incident-response
       category: debugging
       tags:
         - bundle
         - incident
-      description: 'Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems.'
-      version: 0.1.0
     - name: infrastructure
       source: ./packages/infrastructure
       category: infrastructure
       tags:
         - bundle
         - infrastructure
-      description: 'Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.'
-      version: 0.1.0
     - name: language-arm-cortex
       source: ./packages/language-arm-cortex
       category: languages
@@ -417,128 +336,96 @@ marketplace:
         - bundle
         - embedded
         - arm
-      description: 'ARM Cortex-M firmware toolkit: Hobson''s embedded arm-cortex-microcontrollers specialists.'
-      version: 0.1.0
     - name: language-dotnet
       source: ./packages/language-dotnet
       category: languages
       tags:
         - bundle
         - dotnet
-      description: '.NET development toolkit: Hobson''s C# and ASP.NET dotnet-contribution specialists.'
-      version: 0.1.0
     - name: language-functional
       source: ./packages/language-functional
       category: languages
       tags:
         - bundle
         - functional
-      description: 'Functional programming toolkit: Hobson''s Elixir and Haskell functional-programming specialists.'
-      version: 0.1.0
     - name: language-go
       source: ./packages/language-go
       category: languages
       tags:
         - bundle
         - go
-      description: 'Go toolkit: the go-quality skill, opinionated Go steering, and Hobson''s systems-programming specialists.'
-      version: 0.1.2
     - name: language-julia
       source: ./packages/language-julia
       category: languages
       tags:
         - bundle
         - julia
-      description: 'Julia development toolkit: Hobson''s scientific-computing julia-development specialists.'
-      version: 0.1.0
     - name: language-jvm
       source: ./packages/language-jvm
       category: languages
       tags:
         - bundle
         - jvm
-      description: 'JVM language toolkit: Hobson''s Java, Scala, and enterprise jvm-languages specialists.'
-      version: 0.1.0
     - name: language-python
       source: ./packages/language-python
       category: languages
       tags:
         - bundle
         - python
-      description: 'Python toolkit: the python-quality skill, opinionated Python steering, and Hobson''s python-development specialists.'
-      version: 0.1.2
     - name: language-rust
       source: ./packages/language-rust
       category: languages
       tags:
         - bundle
         - rust
-      description: 'Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson''s systems-programming specialists.'
-      version: 0.1.2
     - name: language-shell
       source: ./packages/language-shell
       category: languages
       tags:
         - bundle
         - shell
-      description: 'Shell scripting toolkit: Hobson''s Bash and POSIX shell-scripting specialists.'
-      version: 0.1.0
     - name: language-steering-go
       source: ./packages/language-steering-go
       category: languages
       tags:
         - steering
         - go
-      description: 'Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions.'
-      version: 0.1.1
     - name: language-steering-python
       source: ./packages/language-steering-python
       category: languages
       tags:
         - steering
         - python
-      description: 'Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions.'
-      version: 0.1.1
     - name: language-steering-rust
       source: ./packages/language-steering-rust
       category: languages
       tags:
         - steering
         - rust
-      description: 'Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions.'
-      version: 0.4.0
     - name: language-steering-terraform
       source: ./packages/language-steering-terraform
       category: languages
       tags:
         - steering
         - terraform
-      description: 'Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions.'
-      version: 0.1.1
     - name: language-steering-typescript
       source: ./packages/language-steering-typescript
       category: languages
       tags:
         - steering
         - typescript
-      description: 'Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions.'
-      version: 0.1.1
     - name: language-terraform
       source: ./packages/language-terraform
       category: languages
       tags:
         - bundle
         - terraform
-      description: 'Terraform and HCL toolkit: opinionated Terraform steering plus Hobson''s deployment-strategies specialists. No dedicated quality skill yet.'
-      version: 0.1.1
     - name: language-typescript
       source: ./packages/language-typescript
       category: languages
       tags:
         - bundle
         - typescript
-      description: 'TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson''s javascript-typescript specialists.'
-      version: 0.1.2
     - name: language-web-scripting
       source: ./packages/language-web-scripting
       category: languages
@@ -546,8 +433,6 @@ marketplace:
         - bundle
         - php
         - ruby
-      description: 'PHP and Ruby web scripting toolkit: Hobson''s web-scripting specialists.'
-      version: 0.1.0
     - name: matt-skills
       source: ./packages/matt-skills
       category: planning-product
@@ -555,56 +440,42 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
-      description: 'Bundle of Matt Pocock''s engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.'
-      version: 0.1.1
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp
       tags:
         - mcp
         - codebase
-      description: MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).
-      version: 0.1.0
     - name: mcp-context7
       source: ./packages/mcp-context7
       category: mcp
       tags:
         - mcp
         - docs
-      description: MCP server package for Context7, providing current library and framework documentation lookups.
-      version: 0.1.0
     - name: mcp-package-version
       source: ./packages/mcp-package-version
       category: mcp
       tags:
         - mcp
         - versions
-      description: MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages.
-      version: 0.1.1
     - name: mcp-playwright
       source: ./packages/mcp-playwright
       category: mcp
       tags:
         - mcp
         - browser
-      description: MCP server package for Playwright, providing browser automation and in-browser UI verification.
-      version: 0.1.0
     - name: mcp-repomix
       source: ./packages/mcp-repomix
       category: mcp
       tags:
         - mcp
         - repomix
-      description: MCP server package for Repomix, providing bulk repository snapshots for analysis and review.
-      version: 0.1.0
     - name: mcp-serena
       source: ./packages/mcp-serena
       category: mcp
       tags:
         - mcp
         - semantic
-      description: MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.
-      version: 0.1.0
     - name: mcp-tauri
       source: ./packages/mcp-tauri
       category: mcp
@@ -612,8 +483,6 @@ marketplace:
         - mcp
         - tauri
         - testing
-      description: MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.
-      version: 1.0.0
     - name: optimize-steering
       source: ./packages/optimize-steering
       category: agentic-maintenance
@@ -621,16 +490,12 @@ marketplace:
         - skill
         - maintenance
         - steering
-      description: Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).
-      version: 0.1.2
     - name: planning-product
       source: ./packages/planning-product
       category: planning-product
       tags:
         - bundle
         - planning
-      description: 'Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt''s PRD, issue-writing, TDD, triage, and architecture-improvement workflows.'
-      version: 0.1.3
     - name: playwright
       source: ./packages/playwright
       category: frontend
@@ -638,24 +503,18 @@ marketplace:
         - skill
         - frontend
         - browser
-      description: 'Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.'
-      version: 0.1.2
     - name: presentation
       source: ./packages/presentation
       category: presentation
       tags:
         - bundle
         - slides
-      description: Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.
-      version: 0.1.0
     - name: project-lifecycle
       source: ./packages/project-lifecycle
       category: project-lifecycle
       tags:
         - bundle
         - lifecycle
-      description: 'Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.'
-      version: 0.1.2
     - name: prompt-lookup
       source: ./packages/prompt-lookup
       category: code-intelligence
@@ -663,8 +522,6 @@ marketplace:
         - skill
         - code-intelligence
         - prompts
-      description: 'Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts.'
-      version: 0.1.2
     - name: python-quality
       source: ./packages/python-quality
       category: languages
@@ -672,8 +529,6 @@ marketplace:
         - skill
         - languages
         - python
-      description: Run Python format, lint, type-check, and test commands with the project toolchain.
-      version: 0.1.2
     - name: quick-commit
       source: ./packages/quick-commit
       category: project-lifecycle
@@ -681,8 +536,6 @@ marketplace:
         - skill
         - lifecycle
         - git
-      description: Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows.
-      version: 0.1.2
     - name: research
       source: ./packages/research
       category: code-intelligence
@@ -690,16 +543,12 @@ marketplace:
         - skill
         - code-intelligence
         - research
-      description: Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch).
-      version: 0.1.2
     - name: resume
       source: ./packages/resume
       category: resume
       tags:
         - bundle
         - resume
-      description: Resume bundle for focused resume tailoring and broad career-support workflows.
-      version: 0.1.0
     - name: resume-session
       source: ./packages/resume-session
       category: project-lifecycle
@@ -707,16 +556,12 @@ marketplace:
         - skill
         - lifecycle
         - resume
-      description: Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.
-      version: 0.2.1
     - name: review
       source: ./packages/review
       category: quality
       tags:
         - bundle
         - review
-      description: 'Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.'
-      version: 0.1.2
     - name: rust-quality
       source: ./packages/rust-quality
       category: languages
@@ -724,16 +569,12 @@ marketplace:
         - skill
         - languages
         - rust
-      description: Run Rust format, lint, and test checks with the project toolchain.
-      version: 0.1.2
     - name: security
       source: ./packages/security
       category: security
       tags:
         - bundle
         - security
-      description: 'Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening.'
-      version: 0.1.0
     - name: sniff
       source: ./packages/sniff
       category: quality
@@ -741,16 +582,12 @@ marketplace:
         - skill
         - quality
         - hardening
-      description: Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries.
-      version: 0.1.2
     - name: speckit
       source: ./packages/speckit
       category: speckit
       tags:
         - bundle
         - speckit
-      description: 'SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).'
-      version: 0.1.2
     - name: speckit-dag-hooks
       source: ./packages/speckit-dag-hooks
       category: speckit
@@ -758,48 +595,36 @@ marketplace:
         - bundle
         - speckit
         - hooks
-      description: 'Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.'
-      version: 0.3.2
     - name: steering-backend
       source: ./packages/steering-backend
       category: steering
       tags:
         - steering
         - backend
-      description: 'Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering.'
-      version: 0.1.0
     - name: steering-data
       source: ./packages/steering-data
       category: steering
       tags:
         - steering
         - data
-      description: 'Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering.'
-      version: 0.1.0
     - name: steering-docs-specs
       source: ./packages/steering-docs-specs
       category: steering
       tags:
         - steering
         - docs
-      description: 'Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering.'
-      version: 0.1.1
     - name: steering-frontend
       source: ./packages/steering-frontend
       category: steering
       tags:
         - steering
         - frontend
-      description: 'Opinionated frontend conventions: framework choice by surface (React/Vue/Next/Astro), UI library picks, app vs server state, and browser verification expectations. Opt-in steering -- install to adopt these frontend defaults.'
-      version: 0.1.0
     - name: steering-infrastructure
       source: ./packages/steering-infrastructure
       category: steering
       tags:
         - steering
         - infrastructure
-      description: 'Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering.'
-      version: 0.1.0
     - name: steering-pragmatic
       source: ./packages/steering-pragmatic
       category: steering
@@ -807,48 +632,36 @@ marketplace:
         - steering
         - pragmatic
         - personality
-      description: 'Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Always-on steering. Opt-in.'
-      version: 0.2.0
     - name: steering-project-structure
       source: ./packages/steering-project-structure
       category: steering
       tags:
         - steering
         - structure
-      description: 'Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live.'
-      version: 0.1.0
     - name: steering-speckit
       source: ./packages/steering-speckit
       category: steering
       tags:
         - steering
         - speckit
-      description: 'Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.'
-      version: 0.2.1
     - name: steering-subagent-routing
       source: ./packages/steering-subagent-routing
       category: steering
       tags:
         - steering
         - routing
-      description: 'Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.'
-      version: 0.1.0
     - name: steering-toolchain-defaults
       source: ./packages/steering-toolchain-defaults
       category: steering
       tags:
         - steering
         - toolchain
-      description: 'Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project.'
-      version: 0.1.1
     - name: steering-tools-scripts
       source: ./packages/steering-tools-scripts
       category: steering
       tags:
         - steering
         - tooling
-      description: 'Opinionated conventions for repo tooling and automation: where scripts, generators, maintained CLIs, and task runners live and how they are structured. Opt-in steering.'
-      version: 0.1.0
     - name: typescript-quality
       source: ./packages/typescript-quality
       category: languages
@@ -856,8 +669,6 @@ marketplace:
         - skill
         - languages
         - typescript
-      description: Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain.
-      version: 0.1.2
     - name: unstuck
       source: ./packages/unstuck
       category: debugging
@@ -865,8 +676,6 @@ marketplace:
         - skill
         - debugging
         - escalation
-      description: Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. Ships an outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops) with an escalating nudge/directive/edit-gate ladder on both runtimes.
-      version: 0.2.0
     - name: verify
       source: ./packages/verify
       category: quality
@@ -874,8 +683,6 @@ marketplace:
         - skill
         - quality
         - verification
-      description: Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR.
-      version: 0.1.2
     - name: web-fetch
       source: ./packages/web-fetch
       category: code-intelligence
@@ -883,8 +690,6 @@ marketplace:
         - skill
         - code-intelligence
         - web
-      description: Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online.
-      version: 0.1.2
     - name: write-a-skill
       source: ./packages/write-a-skill
       category: agentic-maintenance
@@ -892,5 +697,3 @@ marketplace:
         - skill
         - maintenance
         - authoring
-      description: Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement.
-      version: 0.1.2

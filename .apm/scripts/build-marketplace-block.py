@@ -2,12 +2,10 @@
 """Generate the ``marketplace.packages`` block in apm.yml from packages/*/apm.yml.
 
 Each package's own ``apm.yml`` is the single source of truth for its ``name``,
-``description``, and ``version``. This script discovers every
-``packages/<name>/apm.yml`` and rewrites the root ``apm.yml``
-``marketplace.packages:`` list so those three fields always match the package
-manifests. Without this, ``apm pack`` emits a marketplace.json whose local-package
-entries have no ``description``/``version`` (apm only enriches *remote* packages
-from their apm.yml), so `apm marketplace browse` shows empty columns.
+``category``, and ``tags``. As of apm >= 0.21 (upstream fix microsoft/apm#1725),
+``apm pack`` automatically inherits ``description`` and ``version`` from each local
+subpath package's own ``apm.yml`` into the generated marketplace.json -- so this
+script no longer needs to emit them into the root ``apm.yml`` marketplace block.
 
 ``category`` and ``tags`` are curation, not derived metadata. They are taken from
 the package manifest when the package declares them (``category:`` / ``tags:`` /
@@ -36,7 +34,7 @@ APM_YML = ROOT / "apm.yml"
 PACKAGES_DIR = ROOT / "packages"
 
 # Per-entry key order in the rendered block.
-_ENTRY_ORDER = ("name", "source", "category", "tags", "description", "version")
+_ENTRY_ORDER = ("name", "source", "category", "tags")
 
 
 def _load(path: Path) -> dict:
@@ -90,18 +88,6 @@ def build_entries(marketplace: dict) -> tuple[list[dict], list[str]]:
         tags = _package_tags(pkg) or curation.get(name, {}).get("tags") or []
         if tags:
             entry["tags"] = list(tags)
-
-        description = str(pkg.get("description") or "").strip()
-        if description:
-            entry["description"] = description
-        else:
-            warnings.append(f"{name}: no description in packages/{dirname}/apm.yml")
-
-        version = pkg.get("version")
-        if version is not None:
-            entry["version"] = str(version)
-        else:
-            warnings.append(f"{name}: no version in packages/{dirname}/apm.yml")
 
         if name not in curation and not entry.get("tags"):
             warnings.append(f"{name}: new package with no tags (add tags: to its apm.yml)")

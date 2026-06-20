@@ -161,7 +161,7 @@
     },
     {
       "name": "core",
-      "description": "Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and agentic-maintenance skills/agents installed directly (no sub-bundle layer), plus the Matt Pocock grill workflows and Hobson context/orchestration plugins.",
+      "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
       "version": "0.4.1",
       "tags": [
         "bundle",
