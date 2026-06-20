@@ -17,12 +17,33 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
 
 CLAUDE_ROOT = os.path.expanduser("~/.claude/projects")
 CODEX_ROOT = os.path.expanduser("~/.codex/sessions")
+LAST_SNIPPET_CHARS = 160  # high-level "where it left off" snippet per session
+
+
+def default_project() -> str:
+    """The repo the user is working in -- NOT the skill/script directory.
+
+    A skill's scripts often run with cwd set to the skill folder, so a plain
+    os.getcwd() points at the wrong place. The git toplevel resolves to the
+    actual project root even when invoked from inside .claude/skills/...
+    """
+    try:
+        r = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return os.getcwd()
 
 
 def encode_project(path: str) -> str:
@@ -95,6 +116,7 @@ def scan_claude(path: str) -> dict:
     branch = ""
     last_ts = None
     turns = 0
+    last_assistant = ""
     session_id = os.path.splitext(os.path.basename(path))[0]
     for rec in iter_json_lines(path):
         rtype = rec.get("type")
@@ -116,12 +138,17 @@ def scan_claude(path: str) -> dict:
                     first_prompt = text
         elif rtype == "assistant":
             turns += 1
+            text = _text_from_content(rec.get("message", {}).get("content")).strip()
+            if text:
+                last_assistant = text  # keep the most recent assistant prose
     if last_ts is None:
         last_ts = os.path.getmtime(path)
     return {
         "agent": "claude",
         "session_id": session_id,
         "title": ai_title or first_prompt,
+        "goal": first_prompt,
+        "last": last_assistant,
         "branch": branch,
         "last_ts": last_ts,
         "turns": turns,
@@ -145,6 +172,7 @@ def scan_codex(path: str, project: str) -> dict | None:
     meta_cwd = None
     session_id = ""
     first_prompt = ""
+    last_agent = ""
     last_ts = None
     turns = 0
     for rec in iter_json_lines(path):
@@ -166,6 +194,9 @@ def scan_codex(path: str, project: str) -> dict | None:
                     first_prompt = msg
         elif rtype == "event_msg" and payload.get("type") == "agent_message":
             turns += 1
+            msg = (payload.get("message") or "").strip()
+            if msg:
+                last_agent = msg
     if meta_cwd is None or os.path.realpath(meta_cwd) != os.path.realpath(project):
         return None
     if last_ts is None:
@@ -174,6 +205,8 @@ def scan_codex(path: str, project: str) -> dict | None:
         "agent": "codex",
         "session_id": session_id or os.path.basename(path),
         "title": first_prompt,
+        "goal": first_prompt,
+        "last": last_agent,
         "branch": "",
         "last_ts": last_ts,
         "turns": turns,
@@ -196,13 +229,14 @@ def collect_codex(project: str) -> list[dict]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--project", default=os.getcwd())
+    ap.add_argument("--project", default=None,
+                    help="repo to list sessions for (default: the git repo root)")
     ap.add_argument("--agent", choices=["claude", "codex", "all"], default="all")
     ap.add_argument("--limit", type=int, default=20)
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     args = ap.parse_args()
 
-    project = os.path.realpath(os.path.expanduser(args.project))
+    project = os.path.realpath(os.path.expanduser(args.project or default_project()))
     entries: list[dict] = []
     if args.agent in ("claude", "all"):
         entries += collect_claude(project)
@@ -233,6 +267,11 @@ def main() -> int:
             f"{e['turns']:>3} turns{branch}"
         )
         lines.append(f"      {title}")
+        last = (e.get("last") or "").replace("\n", " ").strip()
+        if last and last != title:
+            if len(last) > LAST_SNIPPET_CHARS:
+                last = last[:LAST_SNIPPET_CHARS - 1] + "…"
+            lines.append(f"      ↳ left off: {last}")
         lines.append(f"      id: {e['session_id']}")
     lines.append(
         "\nSelect one, then: read-session.py --session <id> "
