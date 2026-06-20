@@ -33,6 +33,7 @@ Pre-wired Model Context Protocol servers. Installing one adds the server's tools
 | `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
 | `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
+| `mcp-tauri` | MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup. |
 <!-- END:mcp -->
 
 ---

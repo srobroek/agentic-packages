@@ -836,6 +836,18 @@
         }
       ]
     },
+    "packages/mcp-tauri": {
+      "release-type": "simple",
+      "component": "mcp-tauri",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/optimize-steering": {
       "release-type": "simple",
       "component": "optimize-steering",

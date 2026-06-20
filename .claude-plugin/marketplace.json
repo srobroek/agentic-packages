@@ -691,6 +691,17 @@
       "source": "./packages/mcp-serena"
     },
     {
+      "name": "mcp-tauri",
+      "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
+      "version": "0.1.0",
+      "tags": [
+        "mcp",
+        "tauri",
+        "testing"
+      ],
+      "source": "./packages/mcp-tauri"
+    },
+    {
       "name": "optimize-steering",
       "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
       "version": "0.1.2",

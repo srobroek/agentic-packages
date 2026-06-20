@@ -1,0 +1,25 @@
+name: mcp-tauri
+version: 0.1.0
+description: >-
+  MCP server package for Tauri, enabling AI assistants to build, test, and debug
+  Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device
+  listing, and plugin setup.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto
+category: mcp
+tags:
+  - mcp
+  - tauri
+  - testing
+dependencies:
+  mcp:
+    - name: tauri
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - '-y'
+        - '@hypothesi/tauri-mcp-server'
