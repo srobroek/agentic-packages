@@ -162,7 +162,7 @@
     {
       "name": "core",
       "description": "Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and agentic-maintenance skills/agents installed directly (no sub-bundle layer), plus the Matt Pocock grill workflows and Hobson context/orchestration plugins.",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "bundle",
         "baseline"
@@ -172,7 +172,7 @@
     {
       "name": "core-global",
       "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "bundle",
         "global",
@@ -561,7 +561,7 @@
     {
       "name": "language-steering-rust",
       "description": "Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "steering",
         "rust"
