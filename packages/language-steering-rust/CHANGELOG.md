@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.2.0...language-steering-rust-v0.3.0) (2026-06-20)
+
+
+### Features
+
+* **rust-steering:** adopt thirtyfour + nextest + P3GLEG as E2E convention ([4297c84](https://github.com/srobroek/agentic-packages/commit/4297c8420819e7575d6013a5e428c1cc6c541494))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.1.1...language-steering-rust-v0.2.0) (2026-06-20)
 
 
