@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.13.0...srobroek-agentic-v0.13.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* **core:** bundle latest catchup and resume-session, refresh marketplace versions ([#332](https://github.com/srobroek/agentic-packages/issues/332)) ([d94ce8c](https://github.com/srobroek/agentic-packages/commit/d94ce8ce076c4e87f9130667d40f215478c57d5f))
+
 ## [0.13.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.12.0...srobroek-agentic-v0.13.0) (2026-06-20)
 
 

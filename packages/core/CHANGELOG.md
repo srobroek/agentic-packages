@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/srobroek/agentic-packages/compare/core-v0.4.0...core-v0.4.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* **core:** bundle latest catchup and resume-session, refresh marketplace versions ([#332](https://github.com/srobroek/agentic-packages/issues/332)) ([d94ce8c](https://github.com/srobroek/agentic-packages/commit/d94ce8ce076c4e87f9130667d40f215478c57d5f))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/core-v0.3.0...core-v0.4.0) (2026-06-20)
 
 
