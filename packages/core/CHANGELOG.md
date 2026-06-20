@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/core-v0.4.1...core-v0.5.0) (2026-06-20)
+
+
+### Features
+
+* adopt apm 0.21 semver ranges, sub-bundle core, add kiro target ([#341](https://github.com/srobroek/agentic-packages/issues/341)) ([d033e88](https://github.com/srobroek/agentic-packages/commit/d033e88fee643b036498c1edccc4ba50af742659))
+
 ## [0.4.1](https://github.com/srobroek/agentic-packages/compare/core-v0.4.0...core-v0.4.1) (2026-06-20)
 
 

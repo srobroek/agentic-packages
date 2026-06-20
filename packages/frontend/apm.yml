@@ -1,5 +1,5 @@
 name: frontend
-version: 0.1.2
+version: 0.2.0
 description: >-
   Frontend development and design toolkit: the Playwright browser skill,
   frontend steering, and external design/build skills (Impeccable, Interface
@@ -12,8 +12,7 @@ target: all
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/playwright#^0.1.2
-    - >-
-      srobroek/agentic-packages/packages/steering-frontend#^0.1.0
+    - srobroek/agentic-packages/packages/steering-frontend#^0.1.0
     - pbakaus/impeccable/.agents/skills/impeccable#main
     - Dammyjay93/interface-design/.claude/skills/interface-design#main
     - google-labs-code/stitch-skills/plugins/stitch-design#main

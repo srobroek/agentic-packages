@@ -1,5 +1,5 @@
 name: language-terraform
-version: 0.1.1
+version: 0.2.0
 description: >-
   Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's
   deployment-strategies specialists. No dedicated quality skill yet.
@@ -9,6 +9,5 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - >-
-      srobroek/agentic-packages/packages/language-steering-terraform#^0.1.1
+    - srobroek/agentic-packages/packages/language-steering-terraform#^0.1.1
     - wshobson/agents/plugins/deployment-strategies#main
