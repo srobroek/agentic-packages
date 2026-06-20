@@ -1,9 +1,11 @@
 name: hooks-git-safety
 version: 0.2.1
 description: >-
-  Git safety guards: block destructive git operations (reset --hard, force push,
-  branch/stash/tag deletion, worktree remove) and throttle large gh CLI batches
-  toward a rate-limit-aware helper. Cross-tool (Claude + Codex).
+  Git safety guards: hard-block `git reset --hard`, and soft-guard other
+  destructive git operations — confirm (ask) on checkout --/restore/clean
+  -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push —
+  plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool
+  (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
