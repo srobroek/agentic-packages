@@ -10,6 +10,6 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/unstuck#unstuck-v0.2.0
+    - srobroek/agentic-packages/packages/unstuck#^0.2.0
     - >-
-      srobroek/agentic-packages/packages/agent-adversarial-challenger#agent-adversarial-challenger-v0.2.0
+      srobroek/agentic-packages/packages/agent-adversarial-challenger#^0.2.0

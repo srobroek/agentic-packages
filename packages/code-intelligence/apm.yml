@@ -11,16 +11,16 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/codebase-index#codebase-index-v0.1.2
-    - srobroek/agentic-packages/packages/codebase-memory#codebase-memory-v0.1.2
-    - srobroek/agentic-packages/packages/explore#explore-v0.1.2
-    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.2
-    - srobroek/agentic-packages/packages/research#research-v0.1.2
-    - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.2
+    - srobroek/agentic-packages/packages/codebase-index#^0.1.2
+    - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
+    - srobroek/agentic-packages/packages/explore#^0.1.2
+    - srobroek/agentic-packages/packages/prompt-lookup#^0.1.2
+    - srobroek/agentic-packages/packages/research#^0.1.2
+    - srobroek/agentic-packages/packages/web-fetch#^0.1.2
     - >-
-      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
+      srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
     - >-
-      srobroek/agentic-packages/packages/steering-project-structure#steering-project-structure-v0.1.0
+      srobroek/agentic-packages/packages/steering-project-structure#^0.1.0
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main

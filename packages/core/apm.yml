@@ -1,44 +1,20 @@
 name: core
 version: 0.4.1
 description: >-
-  Flat baseline bundle for any repo: project-lifecycle, code-intelligence, and
-  agentic-maintenance skills/agents installed directly (no sub-bundle layer),
-  plus the Matt Pocock grill workflows and Hobson context/orchestration plugins.
+  Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
+  and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill
+  workflows, and the Hobson context/orchestration plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/catchup#catchup-v0.1.4
-    - srobroek/agentic-packages/packages/handover#handover-v0.1.2
-    - srobroek/agentic-packages/packages/resume-session#resume-session-v0.2.1
-    - >-
-      srobroek/agentic-packages/packages/commit-push-merge#commit-push-merge-v0.1.2
-    - srobroek/agentic-packages/packages/commit-push-pr#commit-push-pr-v0.1.2
-    - srobroek/agentic-packages/packages/quick-commit#quick-commit-v0.1.2
-    - srobroek/agentic-packages/packages/verify#verify-v0.1.2
-    - srobroek/agentic-packages/packages/codebase-index#codebase-index-v0.1.2
-    - srobroek/agentic-packages/packages/codebase-memory#codebase-memory-v0.1.2
-    - srobroek/agentic-packages/packages/explore#explore-v0.1.2
-    - srobroek/agentic-packages/packages/prompt-lookup#prompt-lookup-v0.1.2
-    - srobroek/agentic-packages/packages/research#research-v0.1.2
-    - srobroek/agentic-packages/packages/web-fetch#web-fetch-v0.1.2
-    - >-
-      srobroek/agentic-packages/packages/steering-project-structure#steering-project-structure-v0.1.0
-    - >-
-      srobroek/agentic-packages/packages/optimize-steering#optimize-steering-v0.1.2
-    - srobroek/agentic-packages/packages/audit-steering#audit-steering-v0.1.2
-    - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.2
-    - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
-    - >-
-      srobroek/agentic-packages/packages/agent-pr-reviewer#agent-pr-reviewer-v0.1.1
+    - srobroek/agentic-packages/packages/project-lifecycle#^0.1.2
+    - srobroek/agentic-packages/packages/code-intelligence#^0.1.3
+    - srobroek/agentic-packages/packages/agentic-maintenance#^0.1.3
+    - srobroek/agentic-packages/packages/resume-session#^0.2.1
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - wshobson/agents/plugins/context-management#main
     - wshobson/agents/plugins/agent-orchestration#main
-    - wshobson/agents/plugins/code-documentation#main
-    - wshobson/agents/plugins/documentation-generation#main
-    - wshobson/agents/plugins/c4-architecture#main
-    - wshobson/agents/plugins/documentation-standards#main
-    - wshobson/agents/plugins/plugin-eval#main
