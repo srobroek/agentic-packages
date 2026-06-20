@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/mcp-tauri-v0.2.1...mcp-tauri-v1.0.0) (2026-06-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mcp-tauri:** transport changes from WebSocket:9223 to TCP:9999 and the app must register the tauri-plugin-mcp Rust plugin (dev builds only).
+
+### Features
+
+* **mcp-tauri:** switch to P3GLEG tauri-plugin-mcp over TCP ([bc3f29e](https://github.com/srobroek/agentic-packages/commit/bc3f29e5972245f24b174383bcc67c8853d145ba))
+
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-tauri-v0.2.0...mcp-tauri-v0.2.1) (2026-06-20)
 
 
