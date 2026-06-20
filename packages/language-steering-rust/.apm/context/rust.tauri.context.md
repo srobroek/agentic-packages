@@ -34,6 +34,10 @@ auto-update, or signing. Generic Rust tooling/CI still applies: see
 
 ## E2E testing (real-UI)
 
+- Adopted stack: `tauri-driver` (W3C) + **thirtyfour** (Rust WebDriver client),
+  run via **cargo-nextest**; **`P3GLEG/tauri-plugin-mcp`** (dev-only) for
+  agent-interactive debugging. Do not use native JS WebdriverIO, fantoccini, or
+  Playwright/Selenium MCP for new work (rationale below).
 - Driver: drive the real app through `tauri-driver` (W3C WebDriver proxy on
   `:4444`). It is NOT managed by the client — spawn it (and a frontend server for
   the dev/preview URL) yourself, then tear them down. Linux needs
