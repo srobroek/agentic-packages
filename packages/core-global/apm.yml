@@ -1,5 +1,5 @@
 name: core-global
-version: 0.3.0
+version: 0.4.0
 description: >-
   Recommended global (user-scope) baseline: the bootstrap workflow skills
   shipped directly, plus the reusable global skills and agents pulled in by
@@ -17,8 +17,6 @@ dependencies:
     - srobroek/agentic-packages/packages/eli5#eli5-v0.1.2
     - srobroek/agentic-packages/packages/handover#handover-v0.1.2
     - srobroek/agentic-packages/packages/write-a-skill#write-a-skill-v0.1.2
-    # DISABLED 2026-06-20: headroom skill turned off for now (not removed).
-    # - srobroek/agentic-packages/packages/headroom#headroom-v0.1.0
     - srobroek/agentic-packages/packages/chezmoi-editor#chezmoi-editor-v0.2.1
     - srobroek/agentic-packages/packages/agent-coder#agent-coder-v0.1.1
     - >-
