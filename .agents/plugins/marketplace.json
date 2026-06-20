@@ -917,6 +917,18 @@
       "category": "resume"
     },
     {
+      "name": "resume-session",
+      "source": {
+        "source": "local",
+        "path": "./packages/resume-session"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "review",
       "source": {
         "source": "local",

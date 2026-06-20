@@ -703,6 +703,15 @@ marketplace:
         - resume
       description: Resume bundle for focused resume tailoring and broad career-support workflows.
       version: 0.1.0
+    - name: resume-session
+      source: ./packages/resume-session
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - resume
+      description: Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.
+      version: 0.1.0
     - name: review
       source: ./packages/review
       category: quality

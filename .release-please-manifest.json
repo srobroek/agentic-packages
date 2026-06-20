@@ -76,6 +76,7 @@
   "packages/quick-commit": "0.1.2",
   "packages/research": "0.1.2",
   "packages/resume": "0.1.0",
+  "packages/resume-session": "0.1.0",
   "packages/review": "0.1.2",
   "packages/rust-quality": "0.1.2",
   "packages/security": "0.1.0",
