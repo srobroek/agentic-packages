@@ -3,73 +3,88 @@
 ## Prerequisites & setup
 
 - Node 20+, Rust/Cargo, and the Tauri CLI available.
-- Add the `tauri-plugin-mcp-bridge` crate to the app — **dev builds only** (see
+- Add the `tauri-plugin-mcp` crate (P3GLEG) to the app — **dev builds only** (see
   the safety rule in [the index](tauri.tauri-mcp-index.context.md)); register it
   behind `#[cfg(debug_assertions)]` / a dev feature.
-- Enable `withGlobalTauri` — **dev builds only**, via a config overlay (see
-  [Dev-only config](#dev-only-config-withglobaltauri) below). Do **not** set it
-  in the base `tauri.conf.json`, which applies to release builds too.
-- The app must be **running** for the MCP tools to connect; the bridge listens on
-  WebSocket port 9223 and the MCP server connects to it.
+- The app must be **running** for the MCP tools to connect; the plugin listens on
+  TCP `127.0.0.1:9999` and the `tauri-plugin-mcp-server` MCP server connects to
+  it.
+- No `withGlobalTauri` and no config overlay are required — the plugin drives the
+  webview from the Rust side.
 
-## Dev-only config: `withGlobalTauri`
+## App-side registration (dev only)
 
-`withGlobalTauri` injects the `window.__TAURI__` global into the webview,
-exposing the full Tauri API (`invoke`, `event`, …) on `window` without importing
-`@tauri-apps/api`. The MCP bridge **needs** it — it drives the webview by
-executing JS against `window.__TAURI__`.
+Workspace `Cargo.toml`:
 
-It is a **dev-only** surface, exactly like the bridge plugin:
-- Frontends that reach the backend through generated bindings (e.g. tauri-specta,
-  importing `@tauri-apps/api/*`) do not use the global at runtime, so production
-  does not need it.
-- Enabling it globally widens the attack surface — the whole Tauri API becomes
-  reachable from any script in the webview, which is especially dangerous under a
-  permissive (`"csp": null`) policy.
+```toml
+# Git-only (not published to crates.io). Pulls in tauri with the `unstable`
+# feature, which Cargo unifies across the build.
+tauri-plugin-mcp = { git = "https://github.com/P3GLEG/tauri-plugin-mcp" }
+```
 
-Tauri v2 does not auto-merge debug/release config, but supports an explicit
-overlay via `--config`. Keep the global out of release:
-1. Leave the base `tauri.conf.json` with `withGlobalTauri` off (the default).
-2. Add a dev overlay, e.g. `src-tauri/tauri.dev.conf.json`:
-   ```json
-   { "app": { "withGlobalTauri": true } }
-   ```
-3. Run dev with the overlay: `tauri dev --config src-tauri/tauri.dev.conf.json`
-   (wire it into your dev recipe / script). A plain `tauri build` omits the
-   overlay, so release builds stay clean.
+In `build_app()` / your `tauri::Builder` chain:
+
+```rust
+#[allow(unused_mut)]
+let mut builder = tauri::Builder::default()
+    /* …other plugins… */;
+
+#[cfg(debug_assertions)]
+{
+    builder = builder.plugin(tauri_plugin_mcp::init_with_config(
+        tauri_plugin_mcp::PluginConfig::new("my-app".to_string())
+            .start_socket_server(true)
+            .tcp_localhost(9999),
+    ));
+}
+```
+
+Add `"mcp:default"` to the app's capability permissions
+(`src-tauri/capabilities/default.json`).
+
+> TCP `127.0.0.1:9999` (not a Unix socket) is the recommended transport: it works
+> for native Linux/macOS dev **and** the WSL-agent ↔ Windows-app case (see
+> [WSL ↔ Windows connectivity](tauri.tauri-mcp-wsl.context.md)). Unix sockets do
+> not cross the WSL/Windows boundary.
+
+## MCP server connection (`.mcp.json`)
+
+The `tauri-plugin-mcp-server` reads its target from environment variables:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "tauri-plugin-mcp-server"],
+  "env": {
+    "TAURI_MCP_CONNECTION_TYPE": "tcp",
+    "TAURI_MCP_TCP_HOST": "127.0.0.1",
+    "TAURI_MCP_TCP_PORT": "9999"
+  }
+}
+```
+
+- `TAURI_MCP_CONNECTION_TYPE=tcp` selects TCP (default is IPC / Unix socket via
+  `TAURI_MCP_IPC_PATH`).
+- `TAURI_MCP_TCP_HOST` defaults to `127.0.0.1`, `TAURI_MCP_TCP_PORT` to `9999`.
+- `TAURI_MCP_AUTH_TOKEN` — required only when the app binds a non-loopback
+  address (see the WSL NAT fallback).
+
+This package wires these env vars automatically when installed via APM.
 
 ## When to reach for which tools
 
-- **UI automation / WebView** — take screenshots, capture a DOM snapshot, run
-  JavaScript, use the visual element picker, perform clicks and gestures, and
-  read console logs. Use these to drive the UI and assert on what is rendered.
-- **IPC monitoring** — execute IPC commands directly, watch frontend↔backend
-  traffic, and inspect events. Use these to debug command/event wiring.
-- **Logging** — stream console / app logs while reproducing a bug.
-- **Testing** — compose UI automation + IPC + logs to author and verify
-  end-to-end flows.
-- **Mobile** — list connected devices / simulators before a mobile run.
-
-## Host / port override
-
-The default connection target is `localhost:9223`. The connection can be
-redirected when the app is not on the same loopback as the MCP server:
-
-- Pass a `host` parameter to the `driver_session` tool (e.g. a device IP).
-- Or set environment variables: `MCP_BRIDGE_HOST`, `TAURI_DEV_HOST`,
-  `MCP_BRIDGE_PORT`.
-
-The bridge binds `0.0.0.0` by default, so non-localhost clients (network mobile
-devices, or a WSL-hosted agent reaching a Windows app) can connect. See
-[WSL ↔ Windows connectivity](tauri.tauri-mcp-wsl.context.md) for the WSL case.
+- **See state** — `take_screenshot` for pixels; `query_page` (`app_info`, `map`,
+  `html`, `state`, `find_element`) for structured DOM / app metadata.
+- **Drive the UI** — `click`, `type_text`, `mouse_action`, `navigate`.
+- **Script / assert** — `execute_js` to run arbitrary JS and read back results.
+- **State & window** — `manage_storage` (localStorage / cookies), `manage_window`
+  (focus / size / position / zoom / devtools).
+- **Synchronise** — `wait_for` text / element visibility before the next step.
+- **Testing** — compose screenshot + query_page + execute_js + wait_for to author
+  and verify end-to-end flows.
 
 ## Safety reminder
 
-Both halves of the MCP surface are **dev-only** and must **never** ship in a
-production / release build:
-- the `tauri-plugin-mcp-bridge` plugin — gate behind `#[cfg(debug_assertions)]` /
-  a dev feature, and
-- `withGlobalTauri` — enable only via the dev config overlay, never in the base
-  `tauri.conf.json`.
-
-Confirm both are excluded from release artifacts.
+The `tauri-plugin-mcp` plugin is **dev-only** and must **never** ship in a
+release build. Gate it behind `#[cfg(debug_assertions)]` / a dev feature and
+confirm it is excluded from release artifacts.
