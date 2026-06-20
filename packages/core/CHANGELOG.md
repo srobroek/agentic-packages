@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/core-v0.3.0...core-v0.4.0) (2026-06-20)
+
+
+### Features
+
+* **core:** bundle resume-session skill ([#327](https://github.com/srobroek/agentic-packages/issues/327)) ([e64ed16](https://github.com/srobroek/agentic-packages/commit/e64ed1668e1f89f161a7112e23eeb6a18fe680a5))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/core-v0.2.1...core-v0.3.0) (2026-06-20)
 
 
