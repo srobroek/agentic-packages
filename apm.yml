@@ -608,6 +608,15 @@ marketplace:
         - semantic
       description: MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.
       version: 0.1.0
+    - name: mcp-tauri
+      source: ./packages/mcp-tauri
+      category: mcp
+      tags:
+        - mcp
+        - tauri
+        - testing
+      description: MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.
+      version: 0.1.0
     - name: optimize-steering
       source: ./packages/optimize-steering
       category: agentic-maintenance
