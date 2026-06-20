@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/notify.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/notify.sh"
           }
         ]
       }
@@ -16,12 +16,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/chezmoi-sync.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.sh"
           },
           {
             "type": "command",
             "if": "Edit(*.d2)|Write(*.d2)",
-            "command": "./scripts/validate-d2.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/validate-d2.sh",
             "timeout": 5,
             "statusMessage": "Checking D2 diagram quality..."
           }
@@ -33,7 +33,7 @@
           {
             "type": "command",
             "if": "Bash(git merge*)",
-            "command": "./scripts/post-merge-cleanup.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/post-merge-cleanup.sh",
             "timeout": 5
           }
         ]
@@ -45,11 +45,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/agentic-source-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh"
           },
           {
             "type": "command",
-            "command": "./scripts/chezmoi-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-guard.sh"
           }
         ]
       },
@@ -58,47 +58,47 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/agentic-source-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh"
           },
           {
             "type": "command",
-            "command": "./scripts/bash-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/bash-guard.sh"
           },
           {
             "type": "command",
             "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
-            "command": "./scripts/gh-rate-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.sh"
           },
           {
             "type": "command",
             "if": "Bash(git *)",
-            "command": "./scripts/git-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/git-guard.sh"
           },
           {
             "type": "command",
             "if": "Bash(ls *)|Bash(cat *)|Bash(find *)|Bash(grep *)|Bash(du *)|Bash(df *)|Bash(head *)|Bash(tail *)",
-            "command": "./scripts/enforce-tool-prefs.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/enforce-tool-prefs.sh"
           },
           {
             "type": "command",
             "if": "Bash(*&&*)|Bash(*;*)",
-            "command": "./scripts/approve-compound-bash.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/approve-compound-bash.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "./scripts/safe-commands.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/safe-commands.sh"
           },
           {
             "type": "command",
             "if": "Bash(git merge*)",
-            "command": "./scripts/no-ff-guard.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/no-ff-guard.sh",
             "timeout": 3
           },
           {
             "type": "command",
             "if": "Bash(gh pr merge*)|Bash(*gh pr merge*)",
-            "command": "./scripts/squash-merge-guard.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/squash-merge-guard.sh",
             "timeout": 3
           }
         ]
@@ -108,7 +108,7 @@
           {
             "type": "command",
             "if": "Agent(*)",
-            "command": "./scripts/concurrent-limit.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/concurrent-limit.sh",
             "timeout": 3
           }
         ]
@@ -119,7 +119,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/failure-logger.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/failure-logger.sh",
             "async": true,
             "timeout": 5
           }
@@ -144,13 +144,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/worktree-orphan-cleanup.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-orphan-cleanup.sh",
             "async": true,
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "./scripts/apm-outdated-check.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/apm-outdated-check.sh",
             "asyncRewake": true,
             "timeout": 30
           }
@@ -162,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/worktree-create.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-create.sh"
           }
         ]
       }
@@ -172,7 +172,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/session-end-prune.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/session-end-prune.sh",
             "async": true
           }
         ]
@@ -187,7 +187,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/agent-metrics.sh",
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agent-metrics.sh",
             "async": true
           }
         ]
@@ -203,7 +203,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/worktree-cleanup.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-cleanup.sh"
           }
         ]
       }
@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/branch-check.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/branch-check.sh"
           }
         ]
       }
