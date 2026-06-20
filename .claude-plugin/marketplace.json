@@ -693,7 +693,7 @@
     {
       "name": "mcp-tauri",
       "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "mcp",
         "tauri",
