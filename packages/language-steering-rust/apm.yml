@@ -1,5 +1,5 @@
 name: language-steering-rust
-version: 0.1.1
+version: 0.2.0
 description: >-
   Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for
   libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks;

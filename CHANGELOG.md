@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.10.1...srobroek-agentic-v0.11.0) (2026-06-20)
+
+
+### Features
+
+* **language-steering-rust:** add CI + Tauri steering, expand tooling defaults ([11b1e01](https://github.com/srobroek/agentic-packages/commit/11b1e012f99e2d5d49e41ac30e0afed005b97152))
+
 ## [0.10.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.10.0...srobroek-agentic-v0.10.1) (2026-06-20)
 
 
