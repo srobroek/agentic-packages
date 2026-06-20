@@ -1,10 +1,9 @@
 name: mcp-tauri
-version: 0.3.0
+version: 0.2.1
 description: >-
-  MCP server package for Tauri, enabling AI assistants to drive, test, and debug
-  Tauri v2 apps — screenshots, DOM queries, click/type/scroll automation,
-  navigation, JS execution, storage/window control, and plugin setup. Backed by
-  the P3GLEG tauri-plugin-mcp socket server over TCP 127.0.0.1:9999.
+  MCP server package for Tauri, enabling AI assistants to build, test, and debug
+  Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device
+  listing, and plugin setup.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -23,8 +22,4 @@ dependencies:
       command: npx
       args:
         - '-y'
-        - tauri-plugin-mcp-server
-      env:
-        TAURI_MCP_CONNECTION_TYPE: tcp
-        TAURI_MCP_TCP_HOST: 127.0.0.1
-        TAURI_MCP_TCP_PORT: '9999'
+        - '@hypothesi/tauri-mcp-server'
