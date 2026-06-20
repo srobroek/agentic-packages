@@ -1,5 +1,5 @@
 name: debugging
-version: 0.1.4
+version: 0.2.0
 description: >-
   Local debugging escalation: the unstuck skill and the adversarial-challenger
   agent for when you are blocked. For production/distributed incident debugging,
@@ -11,5 +11,4 @@ target: all
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/unstuck#^0.2.0
-    - >-
-      srobroek/agentic-packages/packages/agent-adversarial-challenger#^0.2.0
+    - srobroek/agentic-packages/packages/agent-adversarial-challenger#^0.2.0

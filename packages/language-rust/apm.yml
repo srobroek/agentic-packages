@@ -1,5 +1,5 @@
 name: language-rust
-version: 0.1.2
+version: 0.2.0
 description: >-
   Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's
   systems-programming specialists.
@@ -10,6 +10,5 @@ target: all
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/rust-quality#^0.1.2
-    - >-
-      srobroek/agentic-packages/packages/language-steering-rust#^0.1.1
+    - srobroek/agentic-packages/packages/language-steering-rust#^0.1.1
     - wshobson/agents/plugins/systems-programming#main

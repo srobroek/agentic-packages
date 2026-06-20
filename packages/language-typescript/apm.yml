@@ -1,5 +1,5 @@
 name: language-typescript
-version: 0.1.2
+version: 0.2.0
 description: >-
   TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated
   TS/JS steering, and Hobson's javascript-typescript specialists.
@@ -9,8 +9,6 @@ type: hybrid
 target: all
 dependencies:
   apm:
-    - >-
-      srobroek/agentic-packages/packages/typescript-quality#^0.1.2
-    - >-
-      srobroek/agentic-packages/packages/language-steering-typescript#^0.1.1
+    - srobroek/agentic-packages/packages/typescript-quality#^0.1.2
+    - srobroek/agentic-packages/packages/language-steering-typescript#^0.1.1
     - wshobson/agents/plugins/javascript-typescript#main

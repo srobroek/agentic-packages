@@ -1,5 +1,5 @@
 name: speckit-dag-hooks
-version: 0.3.2
+version: 0.4.0
 description: >-
   Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or
   precondition-violating /speckit.* commands via the speckit-dag dispatcher.

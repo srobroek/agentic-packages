@@ -1,5 +1,5 @@
 name: project-lifecycle
-version: 0.1.2
+version: 0.2.0
 description: >-
   Day-to-day project lifecycle workflows: resume work after interruption
   (catchup), write handovers, run verification, and commit/push via local merge,
@@ -12,10 +12,8 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/catchup#^0.1.3
     - srobroek/agentic-packages/packages/handover#^0.1.2
-    - >-
-      srobroek/agentic-packages/packages/commit-push-merge#^0.1.2
+    - srobroek/agentic-packages/packages/commit-push-merge#^0.1.2
     - srobroek/agentic-packages/packages/commit-push-pr#^0.1.2
     - srobroek/agentic-packages/packages/quick-commit#^0.1.2
     - srobroek/agentic-packages/packages/verify#^0.1.2
-    - >-
-      srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
