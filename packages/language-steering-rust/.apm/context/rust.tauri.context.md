@@ -44,6 +44,18 @@ auto-update, or signing. Generic Rust tooling/CI still applies: see
   `webkit2gtk-driver` (WebKitWebDriver) run under `xvfb`; Windows uses a
   version-matched `msedgedriver`. The webview cannot run in WSL — verify in CI
   (Linux/xvfb) or on a real desktop; macOS UI driving is best-effort.
+- Cross-OS consistency (alternative to `tauri-driver`): `tauri-driver` covers
+  only Linux+Windows — Apple ships no WebDriver for WKWebView. The Choochmeque
+  **`tauri-plugin-webdriver`** embeds a W3C server IN the app; drive it with the
+  **`tauri-webdriver`** CLI (client `:4444` → plugin `:4445`; the CLI launches the
+  app via `tauri:options.application`). It is now cross-platform, so it is BOTH
+  the macOS path AND a way to standardize across ALL OS for one uniform
+  harness/CI — no `msedgedriver` version-matching, no `webkit2gtk-driver` dep,
+  same caps everywhere. Compile-gate the plugin behind a dev/`e2e` feature so the
+  embedded automation server NEVER ships in release builds. Trade-off:
+  newer/less-proven than `tauri-driver` — keep `tauri-driver` as the
+  Linux/Windows default unless you want the uniform plugin path. Install the CLI
+  with `cargo install tauri-webdriver`/binstall.
 - Install `tauri-driver` via `taiki-e/install-action` (`tool: tauri-driver@<ver>`),
   NOT a hand-rolled `cargo binstall`/`cargo install`. With a warm
   `Swatinem/rust-cache`, bare `cargo binstall` reads stale `.crates2.json`, skips
