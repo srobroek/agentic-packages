@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.4.0...speckit-dag-hooks-v0.4.1) (2026-06-21)
+
+
+### Bug Fixes
+
+* **speckit-dag-hooks:** glob preconditions and anchor hook commands at project root ([93ae6b0](https://github.com/srobroek/agentic-packages/commit/93ae6b006e901d87399126c6c8a9b46c764ea49d))
+* **speckit-dag-hooks:** glob preconditions and anchor hook commands at project root ([2f60f94](https://github.com/srobroek/agentic-packages/commit/2f60f94e35b3070c4ea5ca9794895bb12a92fa4b))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.3.2...speckit-dag-hooks-v0.4.0) (2026-06-20)
 
 
