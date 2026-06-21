@@ -32,6 +32,7 @@ bodies.
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 import re
@@ -261,6 +262,19 @@ def _resolve_path(tmpl, feat, proj_root):
     return path
 
 
+def _path_present(path):
+    """True when `path` exists.
+
+    Precondition templates may carry glob metacharacters (e.g. `bug-*.md`,
+    one per numbered artefact). For those, match as a wildcard instead of
+    looking for a file literally named with the asterisk -- os.path.exists on
+    `bug-*.md` can never match a real `bug-1.md`.
+    """
+    if any(ch in path for ch in "*?["):
+        return bool(glob.glob(path))
+    return os.path.exists(path)
+
+
 def _evaluate_block(node, feat, proj_root):
     """Return a block reason string, or "" if nothing blocks."""
     for reason in node.get("hard_deprecated", []):
@@ -279,13 +293,13 @@ def _evaluate_block(node, feat, proj_root):
                 " switch to the feature branch"
             )
         path = _resolve_path(tmpl, feat, proj_root)
-        if not os.path.exists(path):
+        if not _path_present(path):
             return "Required artefact missing: " + path
     for tmpl in node.get("hard_exists", []):
         if "<feat>" in tmpl and not feat:
             continue  # cannot conflict when no feature exists yet
         path = _resolve_path(tmpl, feat, proj_root)
-        if os.path.exists(path):
+        if _path_present(path):
             return (
                 "Conflicting artefact present: " + path
                 + " -- use /speckit.refine.update to amend instead of"

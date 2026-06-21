@@ -180,6 +180,55 @@ def main():
     assert d["hookSpecificOutput"]["additionalContext"].startswith("# /speckit.plan")
     print("T8b PASS: payload cwd (worktree) overrides CLAUDE_PROJECT_DIR for feat resolution")
 
+    # T_glob: a precondition template with a glob (bug-*.md) must be matched as
+    # a wildcard, not as a file literally named "bug-*.md". Empty dir blocks;
+    # once a real bug-1.md exists the glob matches and the block clears.
+    globproj = tempfile.mkdtemp(prefix="speckit-glob-")
+    os.makedirs(os.path.join(globproj, "specs", "001-demo"))
+    d = run(
+        "pre",
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.bugfix.patch"},
+        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
+        project_dir=globproj,
+        cwd=globproj,
+    )
+    assert d is not None and d["decision"] == "block", "T_glob: must block with no bug-*.md: %r" % d
+    assert "bug-*.md" in d["reason"], "T_glob reason: %r" % d["reason"]
+    open(os.path.join(globproj, "specs", "001-demo", "bug-1.md"), "w").write("x")
+    d = run(
+        "pre",
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.bugfix.patch"},
+        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
+        project_dir=globproj,
+        cwd=globproj,
+    )
+    assert d is not None and "decision" not in d, "T_glob: bug-1.md must satisfy bug-*.md glob: %r" % d
+    print("T_glob PASS: bug-*.md precondition glob-matches a real bug-1.md")
+
+    # T_iter: iterate.apply requires the pending-iteration.md that iterate.define
+    # writes (the canonical artefact name -- see stop-gate + speckit-setup docs).
+    iterproj = tempfile.mkdtemp(prefix="speckit-iter-")
+    os.makedirs(os.path.join(iterproj, "specs", "001-demo"))
+    d = run(
+        "pre",
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.iterate.apply"},
+        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
+        project_dir=iterproj,
+        cwd=iterproj,
+    )
+    assert d is not None and d["decision"] == "block", "T_iter: must block without pending-iteration.md: %r" % d
+    assert "pending-iteration.md" in d["reason"], "T_iter reason: %r" % d["reason"]
+    open(os.path.join(iterproj, "specs", "001-demo", "pending-iteration.md"), "w").write("x")
+    d = run(
+        "pre",
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.iterate.apply"},
+        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
+        project_dir=iterproj,
+        cwd=iterproj,
+    )
+    assert d is not None and "decision" not in d, "T_iter: pending-iteration.md must satisfy precondition: %r" % d
+    print("T_iter PASS: iterate.apply requires pending-iteration.md")
+
     # T9: unknown command / unrelated event -> silent no-op.
     d = run("pre", {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.does-not-exist"}, project_dir=noproj)
     assert d is None, "T9: unknown node must produce no output"

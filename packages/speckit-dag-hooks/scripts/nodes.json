@@ -822,7 +822,7 @@
         "Applies the iteration intent to spec + plan + tasks. After this, re-enter at /speckit.specify (mandatory) and walk forward through every downstream stage."
       ],
       "hard_missing": [
-        "specs/<feat>/iteration-*.md"
+        "specs/<feat>/pending-iteration.md"
       ],
       "soft": [],
       "title": "/speckit.iterate.apply -- before you run this"
@@ -834,7 +834,7 @@
         "/speckit.iterate.apply (default)"
       ],
       "postconditions": [
-        "`specs/<feat>/iteration-<n>.md`"
+        "`specs/<feat>/pending-iteration.md`"
       ],
       "title": "/speckit.iterate.define -- what to do next"
     },
