@@ -7,6 +7,7 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+includes: auto
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/rust-quality#^0.1.2
