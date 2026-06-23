@@ -11,5 +11,5 @@ includes: auto
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/rust-quality#^0.1.2
-    - srobroek/agentic-packages/packages/language-steering-rust#^0.1.1
+    - srobroek/agentic-packages/packages/language-steering-rust#main
     - wshobson/agents/plugins/systems-programming#main
