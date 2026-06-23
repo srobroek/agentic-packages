@@ -873,7 +873,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "tags": [
         "bundle",
         "speckit",
