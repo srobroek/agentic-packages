@@ -5,7 +5,7 @@
         "/speckit.agent-assign.validate (default)"
       ],
       "postconditions": [
-        "`specs/<feat>/agent-assignments.md`"
+        "`specs/<feat>/agent-assignments.yml`"
       ],
       "title": "/speckit.agent-assign.assign -- what to do next"
     },
@@ -50,18 +50,18 @@
         "Replaces the deprecated `/speckit.implement` with per-task sub-agent execution. Each agent runs in its own context.",
         "Claude turbo-execute (dynamic workflows only): you MAY run per-task execution as one Workflow instead of invoking each agent serially; if workflows are unavailable or the user declines, fall back to serial execution (identical result, slower).",
         "Do NOT re-run `assign`/`validate`; consume their output.",
-        "Author the Workflow from `specs/<feat>/tasks.md` + `specs/<feat>/agent-assignments.md`: group tasks by dependency level (respect depends-on); tasks within a level are independent.",
-        "Per level, `parallel()` one `agent()` per task with `agentType` = the agent in `agent-assignments.md` and `isolation: 'worktree'`; pass task IDs, spec/plan excerpts, scope, and verification commands in the prompt.",
+        "Author the Workflow from `specs/<feat>/tasks.md` + `specs/<feat>/agent-assignments.yml`: group tasks by dependency level (respect depends-on); tasks within a level are independent.",
+        "Per level, `parallel()` one `agent()` per task with `agentType` = the agent in `agent-assignments.yml` and `isolation: 'worktree'`; pass task IDs, spec/plan excerpts, scope, and verification commands in the prompt.",
         "Pipeline each task execute -> its own verify in one stage; emit `specs/<feat>/task-<n>.report.md`. Barrier between dependency levels only.",
         "`model`/`effort` default to each agent's definition; override only at the `agent()` call when a task clearly needs it. All `agentType`s must already exist in `.claude/agents/` -- reuse, do not define new agents.",
         "Checkpoint after the workflow completes, then continue to `/speckit.verify-tasks`."
       ],
       "hard_missing": [
         "specs/<feat>/tasks.md",
-        "specs/<feat>/agent-assignments.md"
+        "specs/<feat>/agent-assignments.yml"
       ],
       "soft": [
-        "every agent referenced in agent-assignments.md exists in .claude/agents/ or ~/.claude/agents/"
+        "every agent referenced in agent-assignments.yml exists in .claude/agents/ or ~/.claude/agents/"
       ],
       "title": "/speckit.agent-assign.execute -- before you run this"
     }
@@ -73,7 +73,7 @@
         "/speckit.agent-assign.assign (if validation surfaces gaps)"
       ],
       "postconditions": [
-        "`specs/<feat>/agent-assignments.validated.md`"
+        "(no artefact -- read-only validation; report printed to stdout)"
       ],
       "title": "/speckit.agent-assign.validate -- what to do next"
     },
@@ -85,7 +85,7 @@
         "Validates that referenced agents actually exist, that every task has an assignment, and that phase ordering is consistent. Failures route back to assign."
       ],
       "hard_missing": [
-        "specs/<feat>/agent-assignments.md"
+        "specs/<feat>/agent-assignments.yml"
       ],
       "soft": [],
       "title": "/speckit.agent-assign.validate -- before you run this"
@@ -318,12 +318,9 @@
   },
   "checklist": {
     "post": {
-      "conditional": [
-        "If memory-md is installed but `docs/memory/INDEX.md` is missing, run `/speckit.memory-md.init` first."
-      ],
       "going_to": [
-        "/speckit.memory-md.plan-with-memory (preferred when memory-md is installed)",
-        "/speckit.plan (otherwise)"
+        "/speckit.critique.run + /speckit.security-review (parallel, default -- review plan/tasks before implementation)",
+        "/speckit.diagram.dependencies (only if user explicitly skips critique + security-review)"
       ],
       "postconditions": [
         "`specs/<feat>/checklist.md`"
@@ -332,13 +329,15 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.clarify"
+        "/speckit.tasks"
       ],
       "context": [
-        "Pre-planning checklist surfaces non-functional concerns (security, perf, ops) before they bite during plan."
+        "Requirements-quality gate (matches upstream spec-kit ordering): validates requirements completeness, clarity, and consistency against the full spec + plan + tasks before the critique/security-review pass."
       ],
       "hard_missing": [
-        "specs/<feat>/spec.md"
+        "specs/<feat>/spec.md",
+        "specs/<feat>/plan.md",
+        "specs/<feat>/tasks.md"
       ],
       "soft": [
         "specs/<feat>/clarifications.md"
@@ -381,9 +380,12 @@
   },
   "clarify": {
     "post": {
+      "conditional": [
+        "If memory-md is installed but `docs/memory/INDEX.md` is missing, run `/speckit.memory-md.init` first."
+      ],
       "going_to": [
-        "/speckit.checklist (preferred)",
-        "/speckit.plan (only if user explicitly skips checklist)"
+        "/speckit.memory-md.plan-with-memory (preferred -- memory-md is installed by default)",
+        "/speckit.plan (only if memory-md is not installed)"
       ],
       "postconditions": [
         "`specs/<feat>/clarifications.md`"
@@ -584,7 +586,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.tasks"
+        "/speckit.checklist"
       ],
       "context": [
         "Dual-lens review (product strategy + engineering risk). Findings should be triaged into plan-edits vs. defer-to-tasks before moving on. Runs in parallel with `/speckit.security-review`."
@@ -878,7 +880,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.specify - /speckit.clarify - /speckit.checklist - /speckit.plan - /speckit.critique.run - /speckit.tasks - /speckit.diagram.dependencies - /speckit.analyze - /speckit.taskstoissues",
+        "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.diagram.dependencies - /speckit.analyze - /speckit.taskstoissues",
         "(any phase before /speckit.checkpoint.commit)"
       ],
       "context": [
@@ -1041,11 +1043,10 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.checklist (preferred)",
-        "/speckit.clarify (acceptable)"
+        "/speckit.clarify"
       ],
       "context": [
-        "Selectively indexes durable memory (decisions, bugs, architecture) and synthesises it into a short artefact the planner reads. Skip if memory-md is not installed."
+        "Selectively indexes durable memory (decisions, bugs, architecture) and synthesises it into a short artefact the planner reads. memory-md is installed by default; skip only if it was deliberately removed."
       ],
       "hard_missing": [
         "docs/memory/INDEX.md",
@@ -1371,9 +1372,8 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.checklist (preferred)",
-        "/speckit.memory-md.plan-with-memory (preferred when memory-md installed)",
-        "/speckit.clarify (only if user explicitly skips checklist)"
+        "/speckit.memory-md.plan-with-memory (preferred -- memory-md is installed by default)",
+        "/speckit.clarify (only if memory-md is not installed)"
       ],
       "context": [
         "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
@@ -1545,7 +1545,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.specify - /speckit.clarify - /speckit.checklist - /speckit.plan - /speckit.critique.run - /speckit.tasks - /speckit.diagram.dependencies - /speckit.analyze - /speckit.taskstoissues",
+        "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.diagram.dependencies - /speckit.analyze - /speckit.taskstoissues",
         "/speckit.reconcile.run",
         "(any phase before /speckit.checkpoint.commit)"
       ],
@@ -1762,7 +1762,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.tasks (pre-impl -- review plan/tasks for security concerns)",
+        "/speckit.checklist (pre-impl -- review plan/tasks for security concerns)",
         "/speckit.qa.run (post-impl -- review implementation diff)",
         "/speckit.review.run (only if user explicitly skips qa)"
       ],
@@ -1887,8 +1887,7 @@
   "tasks": {
     "post": {
       "going_to": [
-        "/speckit.critique.run + /speckit.security-review (parallel, default -- review plan/tasks before implementation)",
-        "/speckit.diagram.dependencies (only if user explicitly skips critique + security-review)"
+        "/speckit.checklist (default -- requirements-quality gate over spec + plan + tasks)"
       ],
       "postconditions": [
         "`specs/<feat>/tasks.md`"
