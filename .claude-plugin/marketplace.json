@@ -172,7 +172,7 @@
     {
       "name": "core-global",
       "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "tags": [
         "bundle",
         "global",
@@ -521,7 +521,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "bundle",
         "rust"
@@ -561,7 +561,7 @@
     {
       "name": "language-steering-rust",
       "description": "Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "steering",
         "rust"
@@ -581,7 +581,7 @@
     {
       "name": "language-steering-typescript",
       "description": "Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "steering",
         "typescript"
@@ -601,7 +601,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "bundle",
         "typescript"
@@ -863,7 +863,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "tags": [
         "bundle",
         "speckit"
@@ -873,7 +873,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "tags": [
         "bundle",
         "speckit",
@@ -955,7 +955,7 @@
     {
       "name": "steering-speckit",
       "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "steering",
         "speckit"
