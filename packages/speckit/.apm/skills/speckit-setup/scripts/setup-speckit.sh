@@ -4,10 +4,13 @@
 # command files for the requested integration, and install the workflow
 # definitions. Idempotent -- safe to re-run.
 #
-# Prereqs: `specify` CLI on PATH (uv tool install specify-cli) and `apm`.
-# The APM speckit orchestration bundle (agents, DAG, hooks) is installed
-# separately via `apm install speckit@<marketplace>`; this script wires the
-# upstream spec-kit side that the bundle's DAG keys off.
+# This is the single source of truth for the spec-kit side of SpecKit setup.
+# The global `project-setup` skill delegates here (after `apm install speckit`)
+# rather than carrying its own copy.
+#
+# Prereqs: `specify` CLI on PATH (uv tool install specify-cli).
+# The APM speckit orchestration bundle (agents, DAG, hooks) carries this script;
+# the bundle's DAG keys off the `.specify/` scaffold this produces.
 #
 # Usage: setup-speckit.sh [--integration <name>] [--script <sh|ps>] [--force]
 #   --integration   coding-agent integration for `specify init` (default: codex)
@@ -15,6 +18,9 @@
 #   --force         pass --force to `specify init` (skip dir-not-empty prompt)
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKFLOW_ROOT="$SCRIPT_DIR/workflows"
 
 INTEGRATION="codex"
 SCRIPT_FLAVOR="sh"
@@ -35,13 +41,22 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 
 # The required extension set the DAG depends on. Keep in sync with the README
 # "Setting up a SpecKit project" list and the speckit-dag node coverage.
+# agent-assign is mandatory: steering routes implementation through the
+# agent-assign flow and the DAG hard-blocks the deprecated /speckit.implement.
 EXTENSIONS=(
+  agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
   fix-findings fleet github-issues iterate onboard optimize qa reconcile refine
   retro review security-review status tinyspec verify verify-tasks worktree
 )
 
-# Workflow definitions (multi-step command bundles) shipped by spec-kit.
+# Workflow definitions, installed via the `workflow` primitive (since spec-kit
+# 0.11.x workflows are a first-class primitive, NOT extensions -- they do not
+# resolve through `extension add`). All three ship in this package under
+# workflows/<id>/workflow.yml and are installed from those local dirs:
+#   speckit          -- our gated override of the upstream Full SDD Cycle
+#   speckit-quality  -- post-implementation QA cycle
+#   speckit-full     -- spec -> implement -> QA in one run
 WORKFLOWS=(speckit speckit-quality speckit-full)
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found on PATH" >&2; exit 1; }; }
@@ -118,19 +133,27 @@ else
   fi
 fi
 
-echo "==> 5/5 install workflow definitions: ${WORKFLOWS[*]}"
+echo "==> 5/5 install workflow definitions from local dirs: ${WORKFLOWS[*]}"
 for wf in "${WORKFLOWS[@]}"; do
-  if specify extension add "$wf" </dev/null >/dev/null 2>&1; then
-    echo "    + $wf"
-  else
-    echo "    = $wf (present or bundled)"
+  wf_dir="$WORKFLOW_ROOT/$wf"
+  if [ ! -f "$wf_dir/workflow.yml" ]; then
+    echo "    WARN: workflow asset missing for $wf at $wf_dir -- skipping" >&2
+    continue
   fi
+  # Replace any existing definition so our opinionated overrides win over the
+  # version spec-kit bundles at init (e.g. the upstream `speckit` workflow).
+  if specify workflow list 2>/dev/null | grep -qw "$wf"; then
+    echo "    ~ $wf (replacing existing)"
+    specify workflow remove "$wf" </dev/null >/dev/null 2>&1 || true
+  else
+    echo "    + $wf"
+  fi
+  specify workflow add "$wf_dir" </dev/null
 done
 
 echo ""
 echo "==> SpecKit setup complete."
-echo "    Next: ensure the APM speckit bundle is installed for the orchestration"
-echo "    layer (agents + DAG hooks):"
-echo "      apm install speckit@<marketplace> --target claude,codex,agent-skills"
+echo "    The speckit orchestration layer (agents + DAG hooks) ships in the same"
+echo "    package as this script. If steering is not yet compiled, run:"
 echo "      apm compile --target codex,claude --no-constitution"
 echo "    Then start the workflow with /speckit.specify."

@@ -16,6 +16,12 @@ specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
         -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
 ```
 
+Conditional loop-backs branch off this spine: `iterate` (scope/intent change),
+`bugfix` (defect in built code), `fix-findings` (review/QA findings), and
+`converge` (spec is right but code is incomplete -- assesses the code against
+spec/plan/tasks and appends the unbuilt work as new tasks, append-only, to be
+implemented via the agent-assign flow).
+
 ## The six sub-agents
 
 Read-only analysts except where noted:
@@ -43,7 +49,8 @@ Then invoke the skill (it is self-describing -- ask the agent to "set up SpecKit
 
 1. `specify init --here --integration codex --script sh` -- scaffolds `.specify/` (constitution, feature dirs, workflow state).
 2. Registers the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
-3. Installs and enables the required extension set and the workflow definitions (`speckit`, `speckit-quality`, `speckit-full`).
+3. Installs and enables the required extension set (including `agent-assign`).
+4. Installs the workflow definitions `speckit`, `speckit-quality`, `speckit-full` via `specify workflow add` from the package's own `workflows/` dir. These are this repo's opinionated definitions, not upstream catalog entries -- the `speckit` one overrides the upstream `Full SDD Cycle` that `specify init` bundles. Since spec-kit 0.11.x, workflows are a first-class primitive (`specify workflow`), not extensions.
 
 **Manual setup** -- if you prefer to drive `specify` yourself:
 
@@ -75,7 +82,7 @@ The enforcement hooks key off `.specify/feature.json` (or the git branch) to res
 
 1. **Declarative workflow** -- [`packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md`](../packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md) defines the full Phase 1 (spec, human-gated) -> Phase 2 (implementation) -> Phase 3 (post-implementation QA) DAG and the standing rules: *all steps mandatory, always invoke via the Skill tool, always get approval between phases.*
 
-2. **The DAG node store** -- [`packages/speckit/.apm/skills/speckit-dag/nodes/`](../packages/speckit/.apm/skills/speckit-dag/nodes/) holds a `<step>.pre.md` and `<step>.post.md` pair for each step. `pre.md` declares legitimate predecessors and **preconditions**; `post.md` declares the default next step and **postconditions**. This is the graph -- edges live in these files, not in code. The same edges are compiled into [`packages/speckit-dag-hooks/scripts/nodes.json`](../packages/speckit-dag-hooks/scripts/nodes.json), which the dispatcher reads at runtime.
+2. **The DAG node store** -- [`packages/speckit-dag-hooks/scripts/nodes.json`](../packages/speckit-dag-hooks/scripts/nodes.json) is the single hand-authored source for the graph. Each node id holds a `pre` block (legitimate predecessors via `came_from`, plus `hard_missing` / `hard_exists` / `hard_deprecated` preconditions) and a `post` block (default next step via `going_to`, plus `postconditions` and conditional branching). Edges live in this JSON, not in code; the dispatcher reads it at runtime and renders the injected markdown from these structured fields.
 
 3. **The hook dispatcher** -- [`packages/speckit-dag-hooks/scripts/dispatcher.py`](../packages/speckit-dag-hooks/scripts/dispatcher.py) (a self-contained Python script, no build step) runs on every `/speckit.*` invocation, wired through [`speckit-claude-hooks.json`](../packages/speckit-dag-hooks/.apm/hooks/speckit-claude-hooks.json) and [`speckit-codex-hooks.json`](../packages/speckit-dag-hooks/.apm/hooks/speckit-codex-hooks.json):
    - **Pre phase** evaluates hard-block directives from `nodes.json` and **denies** the call if violated:
@@ -87,7 +94,7 @@ The enforcement hooks key off `.specify/feature.json` (or the git branch) to res
 
 **Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, `PostToolUse`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
 
-**Mandatory-step enforcement.** Node `.pre.md` files phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify-tasks, verify, review, qa, code-review, security-review) mandatory rather than optional.
+**Mandatory-step enforcement.** Node `pre` blocks phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify-tasks, verify, review, qa, code-review, security-review) mandatory rather than optional.
 
 **The payoff.** Security review and phantom-completion detection can't be silently dropped; specs can't be hand-edited around the Skill tool; and the same gated flow compiles to both Claude and Codex from one definition.
 

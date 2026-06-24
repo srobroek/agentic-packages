@@ -14,7 +14,10 @@ scripts for flag discovery during the interview.
 - Monorepo package: `scripts/package-add.sh`
 - APM marketplace discovery: `scripts/apm-discover.sh`
 - Language overlays: `scripts/setup-*.sh`
-- Full SpecKit extension install: `scripts/speckit/speckit-setup-all.sh`
+- SpecKit setup: delegated to the `speckit` APM package. With `--spec-mode full`,
+  `project-setup.sh` installs `speckit@<marketplace>` first, then runs the
+  package's `setup-speckit.sh` (scaffold + extensions + workflows). project-setup
+  carries no speckit logic of its own.
 
 Execution starts only after the user confirms the generated command, selected
 APM packages, selected agents, selected skills, and verification steps.

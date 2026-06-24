@@ -111,8 +111,22 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
-  - id: implement
-    command: speckit.implement
+  # Implementation routes through the agent-assign flow, not the deprecated
+  # /speckit.implement (which the speckit-dag-hooks dispatcher hard-blocks).
+  - id: assign
+    command: speckit.agent-assign.assign
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: validate
+    command: speckit.agent-assign.validate
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
+  - id: execute
+    command: speckit.agent-assign.execute
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.feature_name }}"
