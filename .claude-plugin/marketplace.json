@@ -172,7 +172,7 @@
     {
       "name": "core-global",
       "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "tags": [
         "bundle",
         "global",
@@ -342,7 +342,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards: hard-block `git reset --hard`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push — plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "hooks",
         "git",
@@ -353,7 +353,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "git",
@@ -863,7 +863,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "bundle",
         "speckit"
@@ -873,7 +873,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "tags": [
         "bundle",
         "speckit",
@@ -955,7 +955,7 @@
     {
       "name": "steering-speckit",
       "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "steering",
         "speckit"
