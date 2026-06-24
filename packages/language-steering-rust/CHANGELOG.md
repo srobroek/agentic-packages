@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.4.0...language-steering-rust-v0.5.0) (2026-06-24)
+
+
+### Features
+
+* **language-steering-rust:** add persistence, workspace, and error/audit defaults ([ed70926](https://github.com/srobroek/agentic-packages/commit/ed70926f7577dce470ea5674759814874ff36e78))
+* reusable Rust architecture steering (language-rust + language-steering-rust) ([6295a64](https://github.com/srobroek/agentic-packages/commit/6295a64afe379be3882a7eef2e83642d5c8339b9))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.3.0...language-steering-rust-v0.4.0) (2026-06-20)
 
 

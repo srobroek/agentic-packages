@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/language-rust-v0.2.0...language-rust-v0.3.0) (2026-06-24)
+
+
+### Features
+
+* **language-rust:** add architecture conventions steering ([6225ae7](https://github.com/srobroek/agentic-packages/commit/6225ae74a758a943e01f7f79409d68b78cf4bcf6))
+* reusable Rust architecture steering (language-rust + language-steering-rust) ([6295a64](https://github.com/srobroek/agentic-packages/commit/6295a64afe379be3882a7eef2e83642d5c8339b9))
+* reusable TypeScript/React architecture steering (+ steering dep-range fix) ([025390d](https://github.com/srobroek/agentic-packages/commit/025390d1ce49b60d5400c74a35a06269d4fd3d7a))
+
+
+### Bug Fixes
+
+* **language-rust:** track language-steering-rust#main ([4947fc3](https://github.com/srobroek/agentic-packages/commit/4947fc3876780f28942c3fbbbb4ffa0f4c01f692))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/language-rust-v0.1.2...language-rust-v0.2.0) (2026-06-20)
 
 

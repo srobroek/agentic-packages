@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/core-global-v0.5.0...core-global-v0.6.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** align with spec-kit 0.11.x — setup ownership, DAG node fix, converge ([8b2a51b](https://github.com/srobroek/agentic-packages/commit/8b2a51b3faa914ae86bbb6944ba62e408ca2e040))
+
+
+### Refactors
+
+* **core-global:** delegate spec-kit setup to the speckit package [skip tests] ([1599bc0](https://github.com/srobroek/agentic-packages/commit/1599bc08f96334927bbc1d7cdcf7bd3626e21d11))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/core-global-v0.4.0...core-global-v0.5.0) (2026-06-20)
 
 

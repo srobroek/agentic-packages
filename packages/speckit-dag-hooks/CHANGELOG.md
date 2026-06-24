@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.4.1...speckit-dag-hooks-v0.5.0) (2026-06-24)
+
+
+### Features
+
+* **speckit-dag-hooks:** resolve .run/sub-namespace commands and add converge node [skip tests] ([7eb3f0d](https://github.com/srobroek/agentic-packages/commit/7eb3f0da8108df9d594f239cb6e747dbbc6fc34f))
+* **speckit:** align with spec-kit 0.11.x — setup ownership, DAG node fix, converge ([8b2a51b](https://github.com/srobroek/agentic-packages/commit/8b2a51b3faa914ae86bbb6944ba62e408ca2e040))
+
 ## [0.4.1](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.4.0...speckit-dag-hooks-v0.4.1) (2026-06-21)
 
 
