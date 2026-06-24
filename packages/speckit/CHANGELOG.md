@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.2...speckit-v0.2.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** align with spec-kit 0.11.x — setup ownership, DAG node fix, converge ([8b2a51b](https://github.com/srobroek/agentic-packages/commit/8b2a51b3faa914ae86bbb6944ba62e408ca2e040))
+* **speckit:** own end-to-end spec-kit setup; align with spec-kit 0.11.x [skip tests] ([67e1f35](https://github.com/srobroek/agentic-packages/commit/67e1f3568bb8cebd47aca1a51ebedc4239e4613f))
+
 ## [0.1.2](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.1...speckit-v0.1.2) (2026-06-19)
 
 

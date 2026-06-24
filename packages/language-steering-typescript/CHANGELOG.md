@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v0.1.1...language-steering-typescript-v0.2.0) (2026-06-24)
+
+
+### Features
+
+* **language-steering-typescript:** add styling, testing, and build-tooling defaults ([15334e0](https://github.com/srobroek/agentic-packages/commit/15334e059920df4949076b6f51e02b819cc74a9b))
+* reusable TypeScript/React architecture steering (+ steering dep-range fix) ([025390d](https://github.com/srobroek/agentic-packages/commit/025390d1ce49b60d5400c74a35a06269d4fd3d7a))
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v0.1.0...language-steering-typescript-v0.1.1) (2026-06-12)
 
 

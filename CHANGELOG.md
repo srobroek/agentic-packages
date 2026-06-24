@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.15.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.14.0...srobroek-agentic-v0.15.0) (2026-06-24)
+
+
+### Features
+
+* reusable Rust architecture steering (language-rust + language-steering-rust) ([6295a64](https://github.com/srobroek/agentic-packages/commit/6295a64afe379be3882a7eef2e83642d5c8339b9))
+* **speckit:** align with spec-kit 0.11.x — setup ownership, DAG node fix, converge ([8b2a51b](https://github.com/srobroek/agentic-packages/commit/8b2a51b3faa914ae86bbb6944ba62e408ca2e040))
+
+
+### Documentation
+
+* **speckit:** align orchestration doc with 0.11.x and converge [skip tests] ([d509410](https://github.com/srobroek/agentic-packages/commit/d5094108b5ab82befb7bcb6059f4b169b497b35e))
+
 ## [0.14.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.13.2...srobroek-agentic-v0.14.0) (2026-06-20)
 
 

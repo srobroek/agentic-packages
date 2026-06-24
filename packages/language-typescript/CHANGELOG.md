@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/language-typescript-v0.2.0...language-typescript-v0.3.0) (2026-06-24)
+
+
+### Features
+
+* **language-typescript:** add architecture conventions steering ([78cebcf](https://github.com/srobroek/agentic-packages/commit/78cebcf4b3d56a189d48a4b35b2056207df0b43a))
+* reusable TypeScript/React architecture steering (+ steering dep-range fix) ([025390d](https://github.com/srobroek/agentic-packages/commit/025390d1ce49b60d5400c74a35a06269d4fd3d7a))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/language-typescript-v0.1.2...language-typescript-v0.2.0) (2026-06-20)
 
 

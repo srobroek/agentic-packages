@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.2.1...steering-speckit-v0.3.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** align with spec-kit 0.11.x — setup ownership, DAG node fix, converge ([8b2a51b](https://github.com/srobroek/agentic-packages/commit/8b2a51b3faa914ae86bbb6944ba62e408ca2e040))
+* **steering-speckit:** document converge path and fix dead command names [skip tests] ([8bdef3a](https://github.com/srobroek/agentic-packages/commit/8bdef3abe73d2630b62db9bd358ff4649602adf6))
+
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.2.0...steering-speckit-v0.2.1) (2026-06-12)
 
 
