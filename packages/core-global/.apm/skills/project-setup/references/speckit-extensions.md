@@ -1,36 +1,17 @@
-# Required SpecKit Extensions
+# SpecKit Setup (delegated)
 
-This skill installs the required extension set declared in:
+SpecKit setup is owned by the **`speckit` APM package**, not by this skill.
 
-- `scripts/speckit/speckit-extensions.txt`
+When `--spec-mode full` (or `--speckit`) is selected, `project-setup.sh`:
 
-The installer uses official `specify extension` commands only.
+1. Installs `speckit@<marketplace>` via apm (hard-fails if apm or the package is
+   unavailable -- there is no inline fallback).
+2. Runs the package's `setup-speckit.sh`, which scaffolds `.specify/`, registers
+   the community extension catalog, installs + enables the required extension
+   set (including `agent-assign`), and installs the workflow definitions
+   (`speckit`, `speckit-quality`, `speckit-full`) from the package's local
+   `workflows/` dir.
 
-## Current Set
-
-- `archive`
-- `brownfield`
-- `bugfix`
-- `checkpoint`
-- `cleanup`
-- `conduct`
-- `critique`
-- `diagram`
-- `doctor`
-- `fix-findings`
-- `fleet`
-- `github-issues`
-- `iterate`
-- `onboard`
-- `optimize`
-- `qa`
-- `reconcile`
-- `refine`
-- `retro`
-- `review`
-- `security-review`
-- `status`
-- `tinyspec`
-- `verify`
-- `verify-tasks`
-- `worktree`
+The authoritative extension list and workflow definitions live in the speckit
+package under `.apm/skills/speckit-setup/scripts/`. Update them there; this skill
+does not carry its own copy.

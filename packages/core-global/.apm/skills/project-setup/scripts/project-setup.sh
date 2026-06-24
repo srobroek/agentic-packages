@@ -886,37 +886,36 @@ if [ "$SPEC_MODE" = "lightweight" ]; then
 fi
 
 if [ "$SPEC_MODE" = "full" ]; then
-    if [ ! -d .specify ]; then
-        echo "Initializing speckit..."
-        if ! specify init \
-            --here \
-            --force \
-            --integration "$SPECKIT_INTEGRATION" \
-            --script "$SPECKIT_SCRIPT_TYPE" \
-            --no-git; then
-            echo "  WARN: specify init failed"
-            echo "  Retry manually:"
-            echo "    cd \"$PROJECT_DIR\" && specify init --here --force --integration \"$SPECKIT_INTEGRATION\" --script \"$SPECKIT_SCRIPT_TYPE\" --no-git"
-            exit 1
-        fi
-    else
-        echo "Specify already initialized"
+    # The speckit package owns the entire spec-kit setup flow (scaffold,
+    # catalog, extensions, workflows) and its runtime orchestration. Install it
+    # first, then delegate to its setup-speckit.sh. project-setup carries no
+    # speckit logic of its own -- if the package can't be installed we hard-fail
+    # rather than fall back to a divergent inline copy.
+    if ! run_apm --version >/dev/null 2>&1; then
+        echo "Error: --spec-mode full requires apm to install the speckit package" >&2
+        echo "  Install apm, or rerun without --speckit / --spec-mode full." >&2
+        exit 1
     fi
 
-    # Install extensions via official specify extension workflow
-    SCRIPT_DIR_SELF="$(cd "$(dirname "$0")" && pwd)"
-    SPECKIT_SCRIPT="$SCRIPT_DIR_SELF/speckit/speckit-setup-all.sh"
-    if [ ! -x "$SPECKIT_SCRIPT" ]; then
-        SPECKIT_SCRIPT="$AGENTIC_TOOLS_DIR/speckit/speckit-setup-all.sh"
+    echo "Installing speckit package (required for spec-mode full)..."
+    if ! run_apm install --target claude,codex,agent-skills "speckit@${MARKETPLACE_NAME}"; then
+        echo "Error: failed to install speckit@${MARKETPLACE_NAME}" >&2
+        exit 1
     fi
-    if [ -x "$SPECKIT_SCRIPT" ]; then
-        echo "Installing speckit extensions and workflows..."
-        "$SPECKIT_SCRIPT" "$PROJECT_DIR"
-    else
-        echo "  WARN: $SPECKIT_SCRIPT not found"
-        echo "  Retry manually after Specify init:"
-        echo "    cd \"$PROJECT_DIR\" && \"$AGENTIC_TOOLS_DIR/speckit/speckit-setup-all.sh\" \"$PROJECT_DIR\""
+
+    SETUP_SPECKIT="$(find apm_modules -path '*/speckit-setup/scripts/setup-speckit.sh' -print -quit 2>/dev/null || true)"
+    if [ -z "$SETUP_SPECKIT" ] || [ ! -f "$SETUP_SPECKIT" ]; then
+        echo "Error: speckit package installed but setup-speckit.sh not found under apm_modules" >&2
+        exit 1
     fi
+
+    # No --force: setup-speckit.sh skips re-scaffolding when .specify/ already
+    # exists but still (idempotently) ensures extensions + workflows. This
+    # matches the prior behaviour of only running `specify init` on a fresh dir.
+    echo "Running speckit setup via the speckit package..."
+    bash "$SETUP_SPECKIT" \
+        --integration "$SPECKIT_INTEGRATION" \
+        --script "$SPECKIT_SCRIPT_TYPE"
 fi
 
 # --- Step 10b: APM install / compile ---
