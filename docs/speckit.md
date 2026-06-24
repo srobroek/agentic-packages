@@ -9,7 +9,7 @@ SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. It is del
 The pipeline:
 
 ```
-specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
+specify -> clarify -> plan -> tasks -> checklist -> critique + security-review
         -> analyze -> issues -> checkpoint
         -> assign -> validate -> execute (checkpoint per task)
         -> verify-tasks -> verify -> review -> qa -> code-review + security-review

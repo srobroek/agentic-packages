@@ -46,9 +46,9 @@ the triggering step.
 |------|---------|------|-------|
 | 1 | `/speckit.specify` | auto -> approval | Creates spec.md |
 | 2 | `/speckit.clarify` | interactive | Ask questions, incorporate feedback |
-| 3 | `/speckit.checklist` | interactive | Quality gate on requirements |
-| 4 | `/speckit.plan` | auto -> approval | Architecture and approach |
-| 5 | `/speckit.tasks` | auto -> approval | Task breakdown with dependencies |
+| 3 | `/speckit.plan` | auto -> approval | Architecture and approach |
+| 4 | `/speckit.tasks` | auto -> approval | Task breakdown with dependencies |
+| 5 | `/speckit.checklist` | interactive | Requirements-quality gate over spec + plan + tasks |
 | 5b | `/speckit.critique.run` | parallel with 5c | Plan + task quality gate |
 | 5c | `/speckit.security-review` | parallel with 5b | Security review of plan/tasks |
 | 6 | `/speckit.analyze` | interactive | Risk analysis, resolve before impl |
