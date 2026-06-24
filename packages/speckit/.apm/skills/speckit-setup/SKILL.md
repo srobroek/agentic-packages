@@ -24,11 +24,12 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    the active feature, so this scaffold is a prerequisite.
 2. **Register the community catalog** -- `specify extension catalog add --name community
    --install-allowed <catalog.community.json>`.
-3. **Install + enable the 26 required extensions** -- `archive`, `brownfield`, `bugfix`,
-   `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
+3. **Install + enable the 27 required extensions** -- `agent-assign`, `archive`, `brownfield`,
+   `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
    `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`, `refine`,
    `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`, `verify-tasks`,
-   `worktree`.
+   `worktree`. `agent-assign` is mandatory: steering routes implementation through it and the
+   DAG hard-blocks the deprecated `/speckit.implement`.
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch
@@ -38,7 +39,11 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    (re-)registration: one switch if the requested integration isn't active, or a
    bounce-through-another-integration-and-back if it already is. Offline (reads the local
    registry).
-5. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full`.
+5. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full`, via
+   `specify workflow add` from this package's local `workflows/<id>/` dirs. Since spec-kit
+   0.11.x, workflows are a first-class primitive, not extensions. The local `speckit` definition
+   overrides the upstream `Full SDD Cycle` that `specify init` bundles, and routes implementation
+   through the agent-assign flow instead of the deprecated `/speckit.implement`.
 
 ## How to run
 
@@ -63,8 +68,9 @@ Start the workflow with `/speckit.specify`.
 
 The orchestration layer (shipped by the `speckit-dag` skill) enforces a fixed graph: every
 step is mandatory by default, ordering is fixed, and a hook layer hard-blocks out-of-order or
-precondition-violating moves. Edges and conditions live in `nodes/<step>.pre.md` (predecessors
-+ preconditions) and `nodes/<step>.post.md` (successors + postconditions).
+precondition-violating moves. Edges and conditions live in `speckit-dag-hooks/scripts/nodes.json`
+(each node has a `pre` block with predecessors + preconditions and a `post` block with successors
++ postconditions).
 
 ```mermaid
 flowchart TD
