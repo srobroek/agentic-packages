@@ -43,11 +43,19 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 # "Setting up a SpecKit project" list and the speckit-dag node coverage.
 # agent-assign is mandatory: steering routes implementation through the
 # agent-assign flow and the DAG hard-blocks the deprecated /speckit.implement.
+#
+# Entries are either a bare extension name (resolved from the community catalog)
+# or `name=source-url` for first-party extensions not (yet) in the catalog, which
+# install via `specify extension add --from <url>`. Custom-source installs are
+# best-effort: an unreachable/unpublished source warns and is skipped rather than
+# aborting setup. One list, one source of truth; bash 3.2-safe (no associative arrays).
+#   roadmap -- the spec-roadmap extension, from srobroek/speckit-roadmap.
 EXTENSIONS=(
   agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
   fix-findings fleet github-issues iterate memory-md onboard optimize qa reconcile
   refine retro review security-review status tinyspec verify verify-tasks worktree
+  roadmap=https://github.com/srobroek/speckit-roadmap
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit
@@ -86,9 +94,22 @@ fi
 
 echo "==> 3/5 install + enable ${#EXTENSIONS[@]} extensions"
 installed="$(specify extension list 2>/dev/null || true)"
-for ext in "${EXTENSIONS[@]}"; do
+for entry in "${EXTENSIONS[@]}"; do
+  # Split "name=source" (custom source) from a bare "name" (community catalog).
+  ext="${entry%%=*}"
+  src="${entry#*=}"
+  [ "$src" = "$entry" ] && src=""   # no '=' present -> no custom source
   if printf '%s\n' "$installed" | grep -qw "$ext"; then
     echo "    = $ext (already installed)"
+  elif [ -n "$src" ]; then
+    # Custom-source extension (not in the community catalog). Best-effort:
+    # an unreachable/unpublished source warns and continues, leaving the rest
+    # of the required catalog set intact.
+    echo "    + $ext (from $src)"
+    if ! specify extension add --from "$src" </dev/null; then
+      echo "    WARNING: could not install '$ext' from $src -- skipping (publish it or check access)" >&2
+      continue
+    fi
   else
     echo "    + $ext"
     specify extension add "$ext" </dev/null

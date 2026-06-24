@@ -24,12 +24,16 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    the active feature, so this scaffold is a prerequisite.
 2. **Register the community catalog** -- `specify extension catalog add --name community
    --install-allowed <catalog.community.json>`.
-3. **Install + enable the 28 required extensions** -- `agent-assign`, `archive`, `brownfield`,
+3. **Install + enable the 29 required extensions** -- `agent-assign`, `archive`, `brownfield`,
    `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
    `fleet`, `github-issues`, `iterate`, `memory-md`, `onboard`, `optimize`, `qa`, `reconcile`,
-   `refine`, `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`,
+   `refine`, `retro`, `review`, `roadmap`, `security-review`, `status`, `tinyspec`, `verify`,
    `verify-tasks`, `worktree`. `agent-assign` is mandatory: steering routes implementation
-   through it and the DAG hard-blocks the deprecated `/speckit.implement`.
+   through it and the DAG hard-blocks the deprecated `/speckit.implement`. Most install from
+   the community catalog by name; first-party extensions not yet in that catalog (currently
+   `roadmap`, the spec-roadmap extension) install from a custom source URL via
+   `specify extension add --from <url>` and are best-effort -- an unreachable/unpublished
+   source warns and is skipped rather than aborting setup.
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch
