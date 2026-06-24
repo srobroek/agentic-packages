@@ -209,6 +209,36 @@ def _resolve_proj_root(payload):
     return _find_speckit_root(cwd) or cwd
 
 
+def _resolve_node_id(node_id, nodes):
+    """Map a normalized command id to the best-matching node key.
+
+    Exact match wins, which preserves the intentional per-subcommand nodes
+    (review-run, optimize-tokens, qa-run, ...). Otherwise we strip trailing
+    "-<segment>" groups until a node exists. This absorbs spec-kit's command
+    naming where the invocable id carries a verb suffix or sub-namespace the
+    DAG models at the parent level:
+
+        verify.run            -> verify-run        -> verify
+        verify-tasks.run      -> verify-tasks-run  -> verify-tasks
+        cleanup.run           -> cleanup-run       -> cleanup
+        fix-findings.run      -> fix-findings-run  -> fix-findings
+        security-review.audit -> security-review-audit -> security-review
+
+    Node existence disambiguates the hyphen's double duty (verify-tasks-run
+    resolves to verify-tasks, not verify, because verify-tasks is a real node).
+    Returns the resolved key, or "" when nothing matches (silent no-op).
+    """
+    if node_id in nodes:
+        return node_id
+    parts = node_id.split("-")
+    while len(parts) > 1:
+        parts.pop()
+        candidate = "-".join(parts)
+        if candidate in nodes:
+            return candidate
+    return ""
+
+
 def _resolve_feat(proj_root):
     """SpecKit 3-tier <feat> resolution. Returns "" if none resolve."""
     env_dir = os.environ.get("SPECIFY_FEATURE_DIRECTORY")
@@ -337,6 +367,9 @@ def main():
         return 0
 
     nodes = _load_nodes(nodes_path)
+    node_id = _resolve_node_id(node_id, nodes)
+    if not node_id:
+        return 0
     node_entry = nodes.get(node_id)
     if not isinstance(node_entry, dict):
         return 0

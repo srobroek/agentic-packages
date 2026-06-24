@@ -46,7 +46,7 @@ def main():
     data = json.load(open(NODES, encoding="utf-8"))
     phases = sum(len(v) for v in data.values())
     assert "plan" in data and "pre" in data["plan"], "plan node missing"
-    assert phases == 172, "expected 172 phases, got %d" % phases
+    assert phases == 174, "expected 174 phases, got %d" % phases
     print("T0 PASS: nodes.json loads, %d ids, %d phases" % (len(data), phases))
 
     noproj = tempfile.mkdtemp(prefix="speckit-noproj-")
@@ -235,6 +235,53 @@ def main():
     d = run("pre", {"hook_event_name": "SessionStart"}, project_dir=noproj)
     assert d is None, "T9: unrelated event must produce no output"
     print("T9 PASS: unknown node + unrelated event -> silent no-op")
+
+    # T10: longest-existing-prefix resolution. spec-kit registers QA commands
+    # with a verb suffix or sub-namespace (verify.run, security-review.audit);
+    # the dispatcher must resolve them to the parent DAG node.
+    prefix_cases = {
+        "speckit.verify.run": "# /speckit.verify",
+        "speckit.verify-tasks.run": "# /speckit.verify-tasks",
+        "speckit.cleanup.run": "# /speckit.cleanup",
+        "speckit.fix-findings.run": "# /speckit.fix-findings",
+        "speckit.security-review.audit": "# /speckit.security-review",
+        # renamed-from-doubled nodes are reachable via the .run command
+        "speckit.archive.run": "# /speckit.archive",
+        "speckit.reconcile.run": "# /speckit.reconcile",
+        "speckit.fleet.run": "# /speckit.fleet",
+    }
+    for cmd, prefix in prefix_cases.items():
+        d = run("post", {"hook_event_name": "PostToolUse", "tool_input": {"command_name": cmd}}, project_dir=noproj)
+        assert d is not None, "T10: %s must resolve to a node" % cmd
+        ctx = d["hookSpecificOutput"]["additionalContext"]
+        assert ctx.startswith(prefix), "T10: %s -> %r (want prefix %r)" % (cmd, ctx[:40], prefix)
+    print("T10 PASS: longest-prefix resolution for .run / sub-namespace commands")
+
+    # T11: exact match still wins over prefix stripping (must NOT collapse to a
+    # shorter parent when the full id is itself a node).
+    exact_cases = {
+        "speckit.review.run": "# /speckit.review.run",
+        "speckit.qa.run": "# /speckit.qa.run",
+        "speckit.critique.run": "# /speckit.critique.run",
+        "speckit.optimize.tokens": "# /speckit.optimize.tokens",
+        "speckit.fleet.review": "# /speckit.fleet.review",
+    }
+    for cmd, prefix in exact_cases.items():
+        d = run("post", {"hook_event_name": "PostToolUse", "tool_input": {"command_name": cmd}}, project_dir=noproj)
+        assert d is not None, "T11: %s must resolve" % cmd
+        ctx = d["hookSpecificOutput"]["additionalContext"]
+        assert ctx.startswith(prefix), "T11: %s -> %r (want exact %r)" % (cmd, ctx[:40], prefix)
+    print("T11 PASS: exact node match wins over prefix stripping")
+
+    # T12: converge node resolves and steers toward the agent-assign flow
+    # (the Convergence tasks must be implemented via agent-assign, not the
+    # hard-blocked /speckit.implement).
+    d = run("post", {"hook_event_name": "PostToolUse", "tool_input": {"command_name": "speckit.converge"}}, project_dir=noproj)
+    assert d is not None, "T12: converge must resolve to a node"
+    ctx = d["hookSpecificOutput"]["additionalContext"]
+    assert ctx.startswith("# /speckit.converge"), "T12: %r" % ctx[:40]
+    assert "agent-assign" in ctx, "T12: converge post must route to agent-assign flow"
+    print("T12 PASS: converge node resolves and routes to agent-assign")
 
     print("\nALL TESTS PASSED")
     return 0

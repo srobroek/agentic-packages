@@ -12,7 +12,8 @@
     "pre": {
       "came_from": [
         "/speckit.checkpoint.commit (default -- after the mid-cycle checkpoint)",
-        "/speckit.tasks (only if user explicitly defers checkpoint)"
+        "/speckit.tasks (only if user explicitly defers checkpoint)",
+        "/speckit.converge (implement the appended Convergence tasks)"
       ],
       "context": [
         "Scans `.claude/agents/` and `~/.claude/agents/` and matches tasks to specialised sub-agents. Review the proposed assignments before validate."
@@ -115,7 +116,7 @@
       "title": "/speckit.analyze -- before you run this"
     }
   },
-  "archive-archive": {
+  "archive": {
     "post": {
       "going_to": [
         "(terminal -- feature shipped)"
@@ -123,7 +124,7 @@
       "postconditions": [
         "`specs/<feat>/` moved to `specs/archived/<feat>/`"
       ],
-      "title": "/speckit.archive.archive -- what to do next"
+      "title": "/speckit.archive.run -- what to do next"
     },
     "pre": {
       "came_from": [
@@ -137,7 +138,7 @@
         "specs/<feat>/review-report.md"
       ],
       "soft": [],
-      "title": "/speckit.archive.archive -- before you run this"
+      "title": "/speckit.archive.run -- before you run this"
     }
   },
   "brownfield-bootstrap": {
@@ -348,11 +349,11 @@
   "checkpoint-commit": {
     "post": {
       "conditional": [
-        "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.reconcile`."
+        "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.run`."
       ],
       "going_to": [
         "/speckit.agent-assign.assign (after the mid-cycle checkpoint that follows taskstoissues)",
-        "/speckit.archive.archive (after the final checkpoint that follows retro.run)",
+        "/speckit.archive.run (after the final checkpoint that follows retro.run)",
         "(next phase per workflow)"
       ],
       "postconditions": [
@@ -454,7 +455,7 @@
       "title": "/speckit.code-review -- before you run this"
     }
   },
-  "conduct-conduct": {
+  "conduct": {
     "post": {
       "conditional": [
         "After conduct completes AND the produced artefact passes your review, the regular DAG resumes -- pick the next node based on which artefact you just produced."
@@ -469,7 +470,7 @@
       "postconditions": [
         "(artefact(s) of the phase that was conducted)"
       ],
-      "title": "/speckit.conduct.conduct -- what to do next"
+      "title": "/speckit.conduct.run -- what to do next"
     },
     "pre": {
       "came_from": [
@@ -482,7 +483,7 @@
       "soft": [
         "a spec/plan/tasks artefact appropriate to the phase being conducted"
       ],
-      "title": "/speckit.conduct.conduct -- before you run this"
+      "title": "/speckit.conduct.run -- before you run this"
     }
   },
   "constitution": {
@@ -511,6 +512,43 @@
         "`.specify/memory/constitution.md` (template will exist; you're filling it in)"
       ],
       "title": "/speckit.constitution -- before you run this"
+    }
+  },
+  "converge": {
+    "post": {
+      "conditional": [
+        "If converge reported a clean result (tasks.md byte-for-byte unchanged, no Convergence phase appended), there is no new work -- resume the Phase 3 QA step you came from instead of re-entering implementation."
+      ],
+      "going_to": [
+        "/speckit.agent-assign.assign (default -- implement the appended `## Phase N: Convergence` tasks via the agent-assign flow)",
+        "/speckit.iterate.define (only if the gap is actually a scope/intent change, not unbuilt work)"
+      ],
+      "postconditions": [
+        "`specs/<feat>/tasks.md` with an appended `## Phase N: Convergence` section (only when gaps were found; unchanged otherwise)"
+      ],
+      "title": "/speckit.converge -- what to do next"
+    },
+    "pre": {
+      "came_from": [
+        "/speckit.verify (verify found unmet FR/SC that is unbuilt work, not a bug)",
+        "/speckit.verify-tasks (phantom completions -- tasks marked done with no real code)",
+        "/speckit.sync.analyze (drift: the spec calls for work the code lacks)"
+      ],
+      "context": [
+        "Closes the gap between spec/plan/tasks intent and what the code actually implements. Reads spec.md + plan.md + tasks.md (constitution as governing constraints), assesses the present state of the code, and APPENDS each piece of remaining work as a new traceable task under a `## Phase N: Convergence` heading.",
+        "APPEND-ONLY: never rewrites/renumbers/deletes existing tasks, never edits spec.md/plan.md, never touches application code. If the code already satisfies everything, tasks.md is left byte-for-byte unchanged and the result is reported clean.",
+        "Distinct from iterate (scope/intent CHANGE -- edits spec/plan), bugfix (a defect in built code), and fix-findings (fixes review/qa findings). Use converge only when the spec is right but the implementation is incomplete.",
+        "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here)."
+      ],
+      "hard_missing": [
+        "specs/<feat>/spec.md",
+        "specs/<feat>/plan.md",
+        "specs/<feat>/tasks.md"
+      ],
+      "soft": [
+        "implementation diff present (converge assesses built code)"
+      ],
+      "title": "/speckit.converge -- before you run this"
     }
   },
   "critique-critique-template": {
@@ -678,7 +716,7 @@
       "title": "/speckit.fix-findings -- before you run this"
     }
   },
-  "fleet-fleet": {
+  "fleet": {
     "post": {
       "going_to": [
         "/speckit.fleet.review (default)"
@@ -686,7 +724,7 @@
       "postconditions": [
         "`specs/<feat>/fleet-state.md`"
       ],
-      "title": "/speckit.fleet.fleet -- what to do next"
+      "title": "/speckit.fleet.run -- what to do next"
     },
     "pre": {
       "came_from": [
@@ -698,7 +736,7 @@
       "soft": [
         "(none)"
       ],
-      "title": "/speckit.fleet.fleet -- before you run this"
+      "title": "/speckit.fleet.run -- before you run this"
     }
   },
   "fleet-review": {
@@ -710,7 +748,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.fleet.fleet"
+        "/speckit.fleet.run"
       ],
       "hard_missing": [
         "specs/<feat>/fleet-state.md"
@@ -1394,7 +1432,7 @@
       "title": "/speckit.qa.run -- before you run this"
     }
   },
-  "reconcile-reconcile": {
+  "reconcile": {
     "post": {
       "going_to": [
         "/speckit.refine.update (if the spec needs structured edits to catch up)",
@@ -1403,7 +1441,7 @@
       "postconditions": [
         "`specs/<feat>/reconcile-report.md`"
       ],
-      "title": "/speckit.reconcile.reconcile -- what to do next"
+      "title": "/speckit.reconcile.run -- what to do next"
     },
     "pre": {
       "came_from": [
@@ -1416,7 +1454,7 @@
       "soft": [
         "specs/<feat>/sync-report.md"
       ],
-      "title": "/speckit.reconcile.reconcile -- before you run this"
+      "title": "/speckit.reconcile.run -- before you run this"
     }
   },
   "refine-diff": {
@@ -1508,12 +1546,12 @@
     "pre": {
       "came_from": [
         "/speckit.specify - /speckit.clarify - /speckit.checklist - /speckit.plan - /speckit.critique.run - /speckit.tasks - /speckit.diagram.dependencies - /speckit.analyze - /speckit.taskstoissues",
-        "/speckit.reconcile.reconcile",
+        "/speckit.reconcile.run",
         "(any phase before /speckit.checkpoint.commit)"
       ],
       "context": [
         "Refine is for INCREMENTAL edits to existing artefacts. If the change is actually a scope pivot, exit refine and run `/speckit.iterate.define` or specify a new feature.",
-        "After `/speckit.checkpoint.commit`, drift handling moves to `/speckit.reconcile.reconcile` instead."
+        "After `/speckit.checkpoint.commit`, drift handling moves to `/speckit.reconcile.run` instead."
       ],
       "hard_missing": [
         "specs/<feat>/spec.md"
@@ -1805,7 +1843,10 @@
       "postconditions": [
         "`specs/<feat>/sync-report.md`"
       ],
-      "title": "/speckit.sync.analyze -- what to do next"
+      "title": "/speckit.sync.analyze -- what to do next",
+      "conditional": [
+        "If sync.analyze shows the code lacks work the spec calls for (drift, not a scope change), /speckit.converge appends it as tasks."
+      ]
     },
     "pre": {
       "came_from": [
@@ -1825,7 +1866,7 @@
     "post": {
       "going_to": [
         "/speckit.retro.run (default)",
-        "/speckit.reconcile.reconcile (if conflicts need active resolution)"
+        "/speckit.reconcile.run (if conflicts need active resolution)"
       ],
       "title": "/speckit.sync.conflicts -- what to do next"
     },
@@ -1957,7 +1998,8 @@
   "verify": {
     "post": {
       "conditional": [
-        "If verify surfaces gaps that look like bugs rather than spec violations, exit to /speckit.bugfix.report."
+        "If verify surfaces gaps that look like bugs rather than spec violations, exit to /speckit.bugfix.report.",
+        "If verify finds unmet FR/SC that is unbuilt work (not a bug or scope change), run /speckit.converge to append the missing work as tasks, then implement via agent-assign."
       ],
       "going_to": [
         "/speckit.review.run (default)"
@@ -1992,7 +2034,10 @@
       "postconditions": [
         "`specs/<feat>/verify-tasks-report.md`"
       ],
-      "title": "/speckit.verify-tasks -- what to do next"
+      "title": "/speckit.verify-tasks -- what to do next",
+      "conditional": [
+        "If verify-tasks surfaces phantom completions, /speckit.converge appends the real implementation work as traceable tasks."
+      ]
     },
     "pre": {
       "came_from": [
