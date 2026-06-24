@@ -7,10 +7,6 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/git-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/gh-rate-guard.sh"
           }
         ]
       }
