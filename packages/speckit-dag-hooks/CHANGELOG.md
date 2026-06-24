@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.5.0...speckit-dag-hooks-v0.6.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** checklist-after-tasks reorder, memory-md default, agent-assign + hook fixes ([56ceefc](https://github.com/srobroek/agentic-packages/commit/56ceefc09ae0c8e2e2f46977478f188daeb4fa7a))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.4.1...speckit-dag-hooks-v0.5.0) (2026-06-24)
 
 

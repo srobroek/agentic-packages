@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.3.0...hooks-git-safety-v0.4.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** checklist-after-tasks reorder, memory-md default, agent-assign + hook fixes ([56ceefc](https://github.com/srobroek/agentic-packages/commit/56ceefc09ae0c8e2e2f46977478f188daeb4fa7a))
+
+
+### Bug Fixes
+
+* **hooks-git-safety:** drop obsolete gh-rate-guard hook [skip tests] ([7f36f18](https://github.com/srobroek/agentic-packages/commit/7f36f182ffd23b28c97a54e769cf7dafe580e653))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.2.1...hooks-git-safety-v0.3.0) (2026-06-20)
 
 
