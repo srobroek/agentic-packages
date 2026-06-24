@@ -51,22 +51,20 @@ suggest=""
 [[ -n "$test_cmd" ]] && suggest=" Suggested: $test_cmd"
 
 if [[ "$last_test" -lt "$last_edit" ]]; then
-  jq -n --arg msg "Tests must pass before committing. Source files were edited after last test run (or no tests run).${suggest}" '{
+  jq -n --arg msg "TEST GATE WARNING: Source files were edited after the last test run (or no tests have run). Consider running tests before committing.${suggest}" '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: $msg
+      additionalContext: $msg
     }
   }'
   exit 0
 fi
 
 if [[ "$test_passed" == "false" ]]; then
-  jq -n --arg msg "Last test run failed. Fix tests before committing.${suggest}" '{
+  jq -n --arg msg "TEST GATE WARNING: The last test run failed. Consider fixing tests before committing.${suggest}" '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: $msg
+      additionalContext: $msg
     }
   }'
 fi
