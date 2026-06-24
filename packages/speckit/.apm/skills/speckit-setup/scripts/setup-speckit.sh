@@ -46,8 +46,8 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 EXTENSIONS=(
   agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
-  fix-findings fleet github-issues iterate onboard optimize qa reconcile refine
-  retro review security-review status tinyspec verify verify-tasks worktree
+  fix-findings fleet github-issues iterate memory-md onboard optimize qa reconcile
+  refine retro review security-review status tinyspec verify verify-tasks worktree
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit

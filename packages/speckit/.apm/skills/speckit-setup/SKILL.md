@@ -24,12 +24,12 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    the active feature, so this scaffold is a prerequisite.
 2. **Register the community catalog** -- `specify extension catalog add --name community
    --install-allowed <catalog.community.json>`.
-3. **Install + enable the 27 required extensions** -- `agent-assign`, `archive`, `brownfield`,
+3. **Install + enable the 28 required extensions** -- `agent-assign`, `archive`, `brownfield`,
    `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
-   `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`, `refine`,
-   `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`, `verify-tasks`,
-   `worktree`. `agent-assign` is mandatory: steering routes implementation through it and the
-   DAG hard-blocks the deprecated `/speckit.implement`.
+   `fleet`, `github-issues`, `iterate`, `memory-md`, `onboard`, `optimize`, `qa`, `reconcile`,
+   `refine`, `retro`, `review`, `security-review`, `status`, `tinyspec`, `verify`,
+   `verify-tasks`, `worktree`. `agent-assign` is mandatory: steering routes implementation
+   through it and the DAG hard-blocks the deprecated `/speckit.implement`.
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch
@@ -82,9 +82,9 @@ flowchart TD
     subgraph P1["Phase 1 -- Specification (human-gated)"]
         direction TB
         S1["1 specify"]:::gate --> S2["2 clarify"]:::interactive
-        S2 --> S3["3 checklist"]:::interactive
-        S3 --> S4["4 plan"]:::gate
-        S4 --> S5["5 tasks"]:::gate
+        S2 --> S3["3 plan"]:::gate
+        S3 --> S4["4 tasks"]:::gate
+        S4 --> S5["5 checklist"]:::interactive
         S5 --> S5b["5b critique.run"]:::parallel
         S5 --> S5c["5c security-review"]:::parallel
         S5b --> S6["6 analyze"]:::interactive
@@ -119,7 +119,7 @@ flowchart TD
     ITER["iterate.define -> iterate.apply<br/>(MANDATORY once tasks.md exists)"]:::interactive
     A9c -. "requirements change /<br/>approach won't work" .-> ITER
     P3 -. "scope change" .-> ITER
-    ITER -. "resume at trigger step" .-> S5
+    ITER -. "resume at trigger step" .-> S4
 ```
 
 Legend: yellow = approval gate - blue = interactive (needs user) - green = runs parallel with
@@ -133,17 +133,17 @@ Each row is a `/speckit.<step>` command. "Next (default -> conditions)" reflects
 | Step | What it does | Produces | Next (default -> conditions) |
 |------|-------------|----------|-----------------------------|
 | `specify` | Create spec.md from requirements | `spec.md` | `clarify` - one-paragraph -> `tinyspec.classify`; bug -> `bugfix.report` |
-| `clarify` | Interactive requirements clarification | `clarifications.md` | `checklist` -> `plan` if user skips checklist |
-| `checklist` | Requirements quality gate | (gate result) | `plan` |
+| `clarify` | Interactive requirements clarification | `clarifications.md` | `memory-md.plan-with-memory` -> `plan` if memory-md not installed |
 | `plan` | Architecture & implementation plan | `plan.md` | `tasks` -> `critique.run` if user requests critique first |
-| `tasks` | Task breakdown with dependency graph | `tasks.md` | `critique.run` + `security-review` (parallel) -> `diagram.dependencies` if both skipped |
+| `tasks` | Task breakdown with dependency graph | `tasks.md` | `checklist` |
+| `checklist` | Requirements-quality gate over spec + plan + tasks | `checklist.md` | `critique.run` + `security-review` (parallel) -> `diagram.dependencies` if both skipped |
 | `critique.run` | Plan/task quality critique | critique notes | `analyze` |
 | `security-review` (5c) | Security review of plan/tasks | findings | `analyze` |
 | `analyze` | Risk analysis, resolve gaps | (resolved gaps) | `taskstoissues` |
 | `taskstoissues` | Create GitHub/GitLab issues | issues | `checkpoint.commit` |
 | `checkpoint.commit` (8) | Snapshot before implementation | commit | `agent-assign.assign` |
-| `agent-assign.assign` | Route each task to a specialized subagent | `agent-assignments.md` | `agent-assign.validate` |
-| `agent-assign.validate` | Validate agent assignments | (validated) | `agent-assign.execute` |
+| `agent-assign.assign` | Route each task to a specialized subagent | `agent-assignments.yml` | `agent-assign.validate` |
+| `agent-assign.validate` | Validate agent assignments (read-only) | (no artefact; stdout report) | `agent-assign.execute` |
 | `agent-assign.execute` | Per-task subagent execution, checkpoint each | code + `task-<n>.report.md` | `verify-tasks` -> `verify` if verify-tasks skipped; scope change -> `iterate` |
 | `verify-tasks` | Detect phantom completions (fresh context) | `verify-tasks-report.md` | `verify` |
 | `verify` | Validate code against FR/SC | `verify-report.md` | `review.run` |

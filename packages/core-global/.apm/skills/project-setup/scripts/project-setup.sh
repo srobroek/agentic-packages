@@ -957,13 +957,13 @@ fi
 if $APM_COMPILE; then
     if run_apm --version >/dev/null 2>&1; then
         echo "Compiling Codex steering..."
-        run_apm compile --target codex
+        run_apm compile --target codex --no-constitution
         if $COMPILE_CLAUDE; then
             echo "Compiling Claude steering..."
-            run_apm compile --target claude
+            run_apm compile --target claude --no-constitution
         fi
     else
-        echo "  WARN: apm not found; run 'apm compile --target codex' manually"
+        echo "  WARN: apm not found; run 'apm compile --target codex --no-constitution' manually"
     fi
 fi
 
