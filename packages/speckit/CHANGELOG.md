@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.2.0...speckit-v0.3.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** checklist-after-tasks reorder, memory-md default, agent-assign + hook fixes ([56ceefc](https://github.com/srobroek/agentic-packages/commit/56ceefc09ae0c8e2e2f46977478f188daeb4fa7a))
+* **speckit:** install memory-md by default [skip tests] ([0acdf42](https://github.com/srobroek/agentic-packages/commit/0acdf42bdeb16ba792dd36c2d509882f748fe913))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.1.2...speckit-v0.2.0) (2026-06-24)
 
 

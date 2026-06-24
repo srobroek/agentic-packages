@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.3.0...steering-speckit-v0.4.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** checklist-after-tasks reorder, memory-md default, agent-assign + hook fixes ([56ceefc](https://github.com/srobroek/agentic-packages/commit/56ceefc09ae0c8e2e2f46977478f188daeb4fa7a))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.2.1...steering-speckit-v0.3.0) (2026-06-24)
 
 

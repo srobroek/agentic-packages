@@ -1,5 +1,5 @@
 name: core-global
-version: 0.6.0
+version: 0.7.0
 description: >-
   Recommended global (user-scope) baseline: the bootstrap workflow skills
   shipped directly, plus the reusable global skills and agents pulled in by
