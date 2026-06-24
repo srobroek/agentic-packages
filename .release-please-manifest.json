@@ -81,7 +81,7 @@
   "packages/rust-quality": "0.1.2",
   "packages/security": "0.1.0",
   "packages/sniff": "0.1.2",
-  "packages/speckit": "0.3.0",
+  "packages/speckit": "0.4.0",
   "packages/speckit-dag-hooks": "0.6.0",
   "packages/steering-backend": "0.1.0",
   "packages/steering-data": "0.1.0",

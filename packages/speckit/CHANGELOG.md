@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.3.0...speckit-v0.4.0) (2026-06-24)
+
+
+### Features
+
+* **speckit:** add roadmap extension to the required set ([#353](https://github.com/srobroek/agentic-packages/issues/353)) ([5bb3b73](https://github.com/srobroek/agentic-packages/commit/5bb3b7394564efc878a57ead83e2b11a755dbf52))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/speckit-v0.2.0...speckit-v0.3.0) (2026-06-24)
 
 
