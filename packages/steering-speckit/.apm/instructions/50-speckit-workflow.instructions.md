@@ -94,6 +94,29 @@ the relevant earlier step directly.
 6. `/speckit.checkpoint.commit`
 7. Resume at the step where the change was triggered
 
+## Gap Closing (converge)
+
+Trigger: during Phase 3 QA, a step (verify, verify-tasks, sync.analyze) finds
+that the code does not yet implement everything the spec/plan/tasks call for,
+and the gap is unbuilt work -- not a scope change and not a defect in built
+code. Conditional, not a mandatory step: skip it when verify/verify-tasks pass
+clean. Converge is a no-op when the code already satisfies the spec.
+
+Use the right tool for the gap:
+- Spec is right, code is incomplete -> `converge` (this section).
+- Spec/intent must change -> `iterate` (edits spec/plan/tasks).
+- Built code has a defect -> `bugfix`.
+- Review/QA surfaced findings to fix -> `fix-findings`.
+
+1. `/speckit.converge` -> assesses code vs spec/plan/tasks and appends the
+   remaining work as new tasks under a `## Phase N: Convergence` heading in
+   `tasks.md`. Append-only: it never edits spec/plan or existing tasks, and
+   leaves `tasks.md` byte-for-byte unchanged when nothing is missing.
+2. If it appended tasks, implement them via the agent-assign flow
+   (`assign` -> `validate` -> `execute`), not `/speckit.implement`. Then re-run
+   the Phase 3 QA steps.
+3. If it reported clean, resume the QA step you came from.
+
 ## On Resume
 
 1. Determine the last completed step; `/speckit.status.show` shows current
@@ -122,7 +145,7 @@ Commands outside the numbered workflow above.
 ### Process
 - `qa.run` -- QA cycle (step 11c in the numbered workflow)
 - `fix-findings` -- fix issues from verify/review/qa
-- `reconcile.reconcile` -- reconcile divergent state
+- `reconcile.run` -- reconcile divergent state
 - `doctor.check` -- diagnose speckit health
 
 ### Memory
@@ -146,7 +169,7 @@ Commands outside the numbered workflow above.
 - `worktree.create` -- create isolated worktree
 - `worktree.list` -- list active worktrees
 - `worktree.clean` -- clean up worktrees
-- `archive.archive` -- archive completed spec
+- `archive.run` -- archive completed spec
 
 ### GitHub Issues
 - `github-issues.link` -- link issues to spec
@@ -174,7 +197,7 @@ Commands outside the numbered workflow above.
 - `optimize.learn` -- learn from optimization
 
 ### Fleet
-- `fleet.fleet` -- fleet operations
+- `fleet.run` -- fleet operations
 - `fleet.review` -- fleet review
 
 ### Refine
@@ -184,5 +207,5 @@ Commands outside the numbered workflow above.
 - `refine.status` -- refinement status
 
 ### Governance
-- `conduct.conduct` -- code of conduct check
+- `conduct.run` -- code of conduct check
 - `constitution` -- constitution review
