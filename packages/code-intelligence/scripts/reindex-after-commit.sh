@@ -48,8 +48,11 @@ head_marker="$state_root/last-commit-$repo_hash"
 last_head="$(cat "$head_marker" 2>/dev/null || true)"
 [[ "$last_head" == "$head_sha" ]] && exit 0
 
+index_arg="$(jq -nc --arg p "$repo_root" '{repo_path:$p,mode:"fast"}' 2>/dev/null || true)"
+[[ -n "$index_arg" ]] || exit 0
+
 (
-  if codebase-memory-mcp cli index_repository "{\"repo_path\":\"$repo_root\",\"mode\":\"fast\"}" >/dev/null 2>&1; then
+  if codebase-memory-mcp cli index_repository "$index_arg" >/dev/null 2>&1; then
     printf '%s\n' "$head_sha" >"$head_marker" 2>/dev/null || true
     touch "$state_root/codebase-memory/last-index-$repo_hash" 2>/dev/null || true
     old_state="${XDG_STATE_HOME:-$HOME/.local/state}/codebase-memory"

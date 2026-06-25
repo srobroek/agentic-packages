@@ -13,10 +13,25 @@ import sys
 
 
 def parse_graph(text: str) -> dict[str, list[str]]:
-    """Extract [graph.TXXX] entries from TOML block in tasks.md."""
+    """Extract [graph.TXXX] entries from TOML block in tasks.md.
+
+    The blocked_by array body is captured with ``\\[([^\\]]*)\\]`` rather than
+    ``\\[(.*?)\\]``. The character-class form spans newlines (``.`` does not
+    without re.DOTALL), so a multi-line TOML array such as::
+
+        [graph.T002]
+        blocked_by = [
+            "T001",
+            "T003",
+        ]
+
+    is parsed in full. The previous pattern stopped at the first newline and
+    captured an empty dependency list, silently MISSING real cycles whose
+    blocked_by arrays were formatted across multiple lines.
+    """
     graph: dict[str, list[str]] = {}
     for m in re.finditer(
-        r"\[graph\.(T\d+)\]\s*\nblocked_by\s*=\s*\[(.*?)\]", text
+        r"\[graph\.(T\d+)\]\s*\nblocked_by\s*=\s*\[([^\]]*)\]", text
     ):
         task = m.group(1)
         deps = [d.strip().strip('"') for d in m.group(2).split(",") if d.strip()]

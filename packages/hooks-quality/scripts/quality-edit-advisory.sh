@@ -70,7 +70,10 @@ elif [[ -n "$file_path" && "$file_path" != "null" ]]; then
   printf '%s\n' "$file_path" >> "$tmp_files"
 fi
 
-mapfile -t edited_files < <(
+edited_files=()
+while IFS= read -r l; do
+  [[ -n "$l" ]] && edited_files+=("$l")
+done < <(
   while IFS= read -r file; do
     [[ -n "$file" ]] || continue
     lang="$(lang_for_file "$file")"

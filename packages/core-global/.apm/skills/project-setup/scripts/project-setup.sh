@@ -17,7 +17,9 @@
 #   --license     License type (default: apache-2.0)
 #   --speckit     Initialize speckit + shared workflows/extensions
 #   --spec-mode   Spec mode: none, lightweight, full (default: none)
-#   --speckit-integration Integration to use for speckit init (default: codex)
+#   --speckit-integration Primary integration for speckit init. Default: empty -> the
+#                 downstream setup-speckit.sh auto-detects the running agent (claude/codex).
+#                 Set explicitly to override the detected primary.
 #   --speckit-script Script type to use for speckit init (default: sh)
 #   --public      Make GitHub repo public (default: private)
 #   --no-repo     Skip GitHub repo creation
@@ -57,7 +59,7 @@ DESCRIPTION=""
 LICENSE="apache-2.0"
 INIT_SPECKIT=false
 SPEC_MODE="none"
-SPECKIT_INTEGRATION="codex"
+SPECKIT_INTEGRATION=""   # empty => let setup-speckit.sh auto-detect the running agent
 SPECKIT_SCRIPT_TYPE="sh"
 PUBLIC=false
 CREATE_REPO=true
@@ -139,21 +141,21 @@ fail_if_codex_protected_paths_are_readonly() {
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --name)        PROJECT_NAME="$2"; shift 2 ;;
-        --org)         ORG="$2"; shift 2 ;;
-        --dir)         PROJECT_DIR="$2"; shift 2 ;;
-        --description) DESCRIPTION="$2"; shift 2 ;;
-        --license)     LICENSE="$2"; shift 2 ;;
+        --name)        PROJECT_NAME="${2:?--name needs a value}"; shift 2 ;;
+        --org)         ORG="${2:?--org needs a value}"; shift 2 ;;
+        --dir)         PROJECT_DIR="${2:?--dir needs a value}"; shift 2 ;;
+        --description) DESCRIPTION="${2:?--description needs a value}"; shift 2 ;;
+        --license)     LICENSE="${2:?--license needs a value}"; shift 2 ;;
         --speckit)     INIT_SPECKIT=true; shift ;;
-        --spec-mode)   SPEC_MODE="$2"; shift 2 ;;
-        --speckit-integration) SPECKIT_INTEGRATION="$2"; shift 2 ;;
-        --speckit-script) SPECKIT_SCRIPT_TYPE="$2"; shift 2 ;;
+        --spec-mode)   SPEC_MODE="${2:?--spec-mode needs a value}"; shift 2 ;;
+        --speckit-integration) SPECKIT_INTEGRATION="${2:?--speckit-integration needs a value}"; shift 2 ;;
+        --speckit-script) SPECKIT_SCRIPT_TYPE="${2:?--speckit-script needs a value}"; shift 2 ;;
         --public)      PUBLIC=true; shift ;;
         --no-repo)     CREATE_REPO=false; shift ;;
         --no-git)      INIT_GIT=false; shift ;;
-        --layout)      LAYOUT="$2"; shift 2 ;;
+        --layout)      LAYOUT="${2:?--layout needs a value}"; shift 2 ;;
         --monorepo)    LAYOUT="monorepo"; shift ;;
-        --target)      TARGETS+=("$2"); shift 2 ;;
+        --target)      TARGETS+=("${2:?--target needs a value}"); shift 2 ;;
         --just)        USE_JUST=true; shift ;;
         --mise)        USE_MISE=true; shift ;;
         --moon)        USE_MOON=true; shift ;;
@@ -163,20 +165,20 @@ while [[ $# -gt 0 ]]; do
         --no-apm-compile) APM_COMPILE=false; shift ;;
         --compile-claude) COMPILE_CLAUDE=true; shift ;;
         --no-compile-claude) COMPILE_CLAUDE=false; shift ;;
-        --marketplace-repo) MARKETPLACE_REPO="$2"; shift 2 ;;
-        --marketplace-name) MARKETPLACE_NAME="$2"; shift 2 ;;
+        --marketplace-repo) MARKETPLACE_REPO="${2:?--marketplace-repo needs a value}"; shift 2 ;;
+        --marketplace-name) MARKETPLACE_NAME="${2:?--marketplace-name needs a value}"; shift 2 ;;
         --skip-marketplace-register) REGISTER_MARKETPLACE=false; shift ;;
-        --agentic-packages) AGENTIC_PACKAGES_SOURCE="$2"; shift 2 ;;
-        --apm-dependency) EXTRA_APM_DEPENDENCIES+=("$2"); shift 2 ;;
-        --selected-bundle) SELECTED_BUNDLES+=("$2"); shift 2 ;;
-        --selected-agent) SELECTED_AGENTS+=("$2"); shift 2 ;;
-        --selected-skill) SELECTED_SKILLS+=("$2"); shift 2 ;;
-        --selected-mcp) SELECTED_MCP+=("$2"); shift 2 ;;
-        --lang)        OVERLAY_LANG="$2"; shift 2 ;;
-        --lang-args)   LANG_ARGS="$2"; shift 2 ;;
-        --quality-lang) QUALITY_LANGS+=("$2"); shift 2 ;;
+        --agentic-packages) AGENTIC_PACKAGES_SOURCE="${2:?--agentic-packages needs a value}"; shift 2 ;;
+        --apm-dependency) EXTRA_APM_DEPENDENCIES+=("${2:?--apm-dependency needs a value}"); shift 2 ;;
+        --selected-bundle) SELECTED_BUNDLES+=("${2:?--selected-bundle needs a value}"); shift 2 ;;
+        --selected-agent) SELECTED_AGENTS+=("${2:?--selected-agent needs a value}"); shift 2 ;;
+        --selected-skill) SELECTED_SKILLS+=("${2:?--selected-skill needs a value}"); shift 2 ;;
+        --selected-mcp) SELECTED_MCP+=("${2:?--selected-mcp needs a value}"); shift 2 ;;
+        --lang)        OVERLAY_LANG="${2:?--lang needs a value}"; shift 2 ;;
+        --lang-args)   LANG_ARGS="${2:?--lang-args needs a value}"; shift 2 ;;
+        --quality-lang) QUALITY_LANGS+=("${2:?--quality-lang needs a value}"); shift 2 ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -306,7 +308,7 @@ if [ "$LAYOUT" = "monorepo" ] && [ "${#TARGETS[@]}" -eq 0 ]; then
     )
 fi
 
-for target in "${TARGETS[@]}"; do
+for target in "${TARGETS[@]+"${TARGETS[@]}"}"; do
     DIRS+=("$target")
 done
 
@@ -912,10 +914,23 @@ if [ "$SPEC_MODE" = "full" ]; then
     # No --force: setup-speckit.sh skips re-scaffolding when .specify/ already
     # exists but still (idempotently) ensures extensions + workflows. This
     # matches the prior behaviour of only running `specify init` on a fresh dir.
-    echo "Running speckit setup via the speckit package..."
-    bash "$SETUP_SPECKIT" \
-        --integration "$SPECKIT_INTEGRATION" \
-        --script "$SPECKIT_SCRIPT_TYPE"
+    #
+    # Render extension command files for every integration this run compiles
+    # steering for, so /speckit.* exists in each agent: codex is always compiled
+    # (Step 10b) and claude is compiled unless --no-compile-claude. The PRIMARY
+    # (specify init's default_integration + where setup lands) is left to
+    # setup-speckit.sh's agent auto-detection unless the caller set it explicitly:
+    # passing a hardcoded primary is exactly the bug that scaffolded for codex
+    # from a Claude Code session.
+    SPECKIT_RENDER_FOR="codex"
+    if $COMPILE_CLAUDE; then SPECKIT_RENDER_FOR="claude,codex"; fi
+
+    echo "Running speckit setup via the speckit package (render-for=$SPECKIT_RENDER_FOR)..."
+    SETUP_ARGS=(--script "$SPECKIT_SCRIPT_TYPE" --render-for "$SPECKIT_RENDER_FOR")
+    if [ -n "$SPECKIT_INTEGRATION" ]; then
+        SETUP_ARGS+=(--integration "$SPECKIT_INTEGRATION")
+    fi
+    bash "$SETUP_SPECKIT" "${SETUP_ARGS[@]}"
 fi
 
 # --- Step 10b: APM install / compile ---

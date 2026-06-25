@@ -21,11 +21,11 @@ ADD_SST=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --pkg-manager) PKG_MANAGER="$2"; shift 2 ;;
-        --framework)   FRAMEWORK="$2"; shift 2 ;;
+        --pkg-manager) PKG_MANAGER="${2:?--pkg-manager needs a value}"; shift 2 ;;
+        --framework)   FRAMEWORK="${2:?--framework needs a value}"; shift 2 ;;
         --sst)         ADD_SST=true; shift ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -138,18 +138,13 @@ if $ADD_SST; then
 
     # Add SST to .gitignore if not present
     if ! grep -q '\.sst' .gitignore 2>/dev/null; then
-        echo -e "\n# SST\n.sst" >> .gitignore
+        printf '\n# SST\n.sst\n' >> .gitignore
     fi
 fi
 
 # --- Step 4: Append TS/Node gitignore via gitnr ---
-if ! grep -q 'node_modules' .gitignore 2>/dev/null; then
-    echo "Appending Node gitignore..."
-    if command -v gitnr >/dev/null 2>&1; then
-        echo "" >> .gitignore
-        gitnr create gh:Node >> .gitignore
-    else
-        cat >> .gitignore <<'GITIGNORE'
+write_node_gitignore_fallback() {
+    cat >> .gitignore <<'GITIGNORE'
 
 # Node
 node_modules
@@ -158,7 +153,23 @@ dist
 logs
 *.log
 GITIGNORE
+}
+
+if ! grep -q 'node_modules' .gitignore 2>/dev/null; then
+    echo "Appending Node gitignore..."
+    # gitnr may be installed but still fail (network, template lookup). Capture
+    # its output to a temp file and only append on success; otherwise fall back
+    # to a static block so a present-but-failing gitnr never leaves a broken or
+    # truncated .gitignore.
+    _gi_tmp="$(mktemp "${TMPDIR:-/tmp}/gitignore.XXXXXX")"
+    if command -v gitnr >/dev/null 2>&1 && gitnr create gh:Node > "$_gi_tmp" && [ -s "$_gi_tmp" ]; then
+        printf '\n' >> .gitignore
+        cat "$_gi_tmp" >> .gitignore
+    else
+        echo "  WARN: gitnr unavailable or failed; using static Node .gitignore"
+        write_node_gitignore_fallback
     fi
+    rm -f "$_gi_tmp"
 fi
 
 # Framework-specific extras not covered by gh:Node

@@ -10,5 +10,5 @@ target: all
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/go-quality#^0.1.2
-    - srobroek/agentic-packages/packages/language-steering-go#^0.1.1
+    - srobroek/agentic-packages/packages/language-steering-go#main
     - wshobson/agents/plugins/systems-programming#main

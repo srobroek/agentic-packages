@@ -1,0 +1,105 @@
+name: Tests
+
+# Per-package test runner. On a PR, detects which packages/* changed and runs
+# ONLY those packages' test suites:
+#   - shell:  <package>/tests/*.bats      (bats)
+#   - python: test_*.py next to the script (pytest, via uv)
+# Cross-package generated-artifact validation lives in build-artifacts.yml and
+# stays whole-repo; this job is scoped so the suite stays fast as it grows.
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+
+permissions:
+  contents: read
+
+jobs:
+  changed:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+      any: ${{ steps.detect.outputs.any }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed packages that have tests
+        id: detect
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # Top-level package dirs touched by this PR.
+          changed_pkgs=$(git diff --name-only "$base" "$head" -- 'packages/*/**' \
+            | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
+          # Keep only those that actually ship a test suite (bats or pytest).
+          have_tests=""
+          for p in $changed_pkgs; do
+            if find "$p" -name '*.bats' -o -name 'test_*.py' | grep -q .; then
+              have_tests="$have_tests $p"
+            fi
+          done
+          have_tests=$(echo $have_tests | tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
+          echo "packages=$have_tests" >> "$GITHUB_OUTPUT"
+          if [ "$have_tests" = "[]" ]; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Changed packages with tests: $have_tests"
+
+  test:
+    needs: changed
+    if: needs.changed.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.changed.outputs.packages) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up bats
+        uses: bats-core/bats-action@3.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+
+      - name: Set up uv (for pytest)
+        uses: astral-sh/setup-uv@v5
+
+      - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
+        run: |
+          # Lint the package's own scripts at the same severity the suite targets.
+          sh_files=$(find "${{ matrix.package }}" -name '*.sh' 2>/dev/null || true)
+          if [ -n "$sh_files" ]; then
+            # shellcheck is preinstalled on ubuntu-latest runners
+            echo "$sh_files" | xargs -r shellcheck -S warning
+            echo "shellcheck clean: ${{ matrix.package }}"
+          else
+            echo "no .sh in ${{ matrix.package }}"
+          fi
+
+      - name: Run bats suites
+        run: |
+          bats_files=$(find "${{ matrix.package }}" -name '*.bats' 2>/dev/null || true)
+          if [ -n "$bats_files" ]; then
+            echo "$bats_files" | xargs -r bats
+          else
+            echo "no .bats in ${{ matrix.package }}"
+          fi
+
+      - name: Run pytest suites
+        run: |
+          py_files=$(find "${{ matrix.package }}" -name 'test_*.py' 2>/dev/null || true)
+          if [ -n "$py_files" ]; then
+            echo "$py_files" | xargs -r uv run --with pytest pytest -q
+          else
+            echo "no pytest files in ${{ matrix.package }}"
+          fi

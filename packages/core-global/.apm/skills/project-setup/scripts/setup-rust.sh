@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
         --workspace) WORKSPACE=true; shift ;;
         --esp)       ESP=true; shift ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -92,13 +92,8 @@ TOML
 fi
 
 # --- Step 5: Append Rust gitignore via gitnr ---
-if ! grep -q '/target' .gitignore 2>/dev/null; then
-    echo "Appending Rust gitignore..."
-    if command -v gitnr >/dev/null 2>&1; then
-        echo "" >> .gitignore
-        gitnr create gh:Rust >> .gitignore
-    else
-        cat >> .gitignore <<'GITIGNORE'
+write_rust_gitignore_fallback() {
+    cat >> .gitignore <<'GITIGNORE'
 
 # Rust
 debug
@@ -106,7 +101,23 @@ target
 **/*.rs.bk
 *.pdb
 GITIGNORE
+}
+
+if ! grep -q '/target' .gitignore 2>/dev/null; then
+    echo "Appending Rust gitignore..."
+    # gitnr may be installed but still fail (network, template lookup). Capture
+    # its output to a temp file and only append on success; otherwise fall back
+    # to a static block so a present-but-failing gitnr never leaves a broken or
+    # truncated .gitignore.
+    _gi_tmp="$(mktemp "${TMPDIR:-/tmp}/gitignore.XXXXXX")"
+    if command -v gitnr >/dev/null 2>&1 && gitnr create gh:Rust > "$_gi_tmp" && [ -s "$_gi_tmp" ]; then
+        printf '\n' >> .gitignore
+        cat "$_gi_tmp" >> .gitignore
+    else
+        echo "  WARN: gitnr unavailable or failed; using static Rust .gitignore"
+        write_rust_gitignore_fallback
     fi
+    rm -f "$_gi_tmp"
 fi
 
 echo ""

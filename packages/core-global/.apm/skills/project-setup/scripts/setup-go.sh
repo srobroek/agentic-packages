@@ -17,9 +17,9 @@ MODULE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --module) MODULE="$2"; shift 2 ;;
+        --module) MODULE="${2:?--module needs a value}"; shift 2 ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -95,13 +95,8 @@ YAML
 fi
 
 # --- Step 4: Append Go gitignore via gitnr ---
-if ! grep -q '*.test' .gitignore 2>/dev/null; then
-    echo "Appending Go gitignore..."
-    if command -v gitnr >/dev/null 2>&1; then
-        echo "" >> .gitignore
-        gitnr create gh:Go >> .gitignore
-    else
-        cat >> .gitignore <<'GITIGNORE'
+write_go_gitignore_fallback() {
+    cat >> .gitignore <<'GITIGNORE'
 
 # Go
 *.exe
@@ -113,7 +108,23 @@ if ! grep -q '*.test' .gitignore 2>/dev/null; then
 *.out
 /vendor/
 GITIGNORE
+}
+
+if ! grep -q '\*\.test' .gitignore 2>/dev/null; then
+    echo "Appending Go gitignore..."
+    # gitnr may be installed but still fail (network, template lookup). Capture
+    # its output to a temp file and only append on success; otherwise fall back
+    # to a static block so a present-but-failing gitnr never leaves a broken or
+    # truncated .gitignore.
+    _gi_tmp="$(mktemp "${TMPDIR:-/tmp}/gitignore.XXXXXX")"
+    if command -v gitnr >/dev/null 2>&1 && gitnr create gh:Go > "$_gi_tmp" && [ -s "$_gi_tmp" ]; then
+        printf '\n' >> .gitignore
+        cat "$_gi_tmp" >> .gitignore
+    else
+        echo "  WARN: gitnr unavailable or failed; using static Go .gitignore"
+        write_go_gitignore_fallback
     fi
+    rm -f "$_gi_tmp"
 fi
 
 echo ""

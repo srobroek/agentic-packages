@@ -97,9 +97,13 @@ def iter_json_lines(path: str):
             if not line:
                 continue
             try:
-                yield json.loads(line)
+                obj = json.loads(line)
             except (ValueError, TypeError):
                 continue
+            # Records are scanned with .get(); a bare array/string/number line
+            # would raise AttributeError and abort the whole read. Skip them.
+            if isinstance(obj, dict):
+                yield obj
 
 
 # ---------------------------------------------------------------------------
@@ -333,16 +337,21 @@ def main() -> int:
     ap.add_argument("--include-thinking", action="store_true")
     args = ap.parse_args()
 
+    # Clamp non-positive paging args: a zero/negative window or a negative
+    # offset would otherwise produce a bogus (or whole-tail) slice.
+    turns_per_window = args.turns if args.turns > 0 else 8
+    offset = args.offset if args.offset > 0 else 0
+
     path, agent = resolve_file(args)
     loader = load_codex if agent == "codex" else load_claude
     meta, turns, latest_todos = loader(path, args.include_thinking)
 
     total = len(turns)
-    end = total - args.offset            # exclusive upper bound (chronological)
+    end = total - offset                 # exclusive upper bound (chronological)
     if end <= 0:
-        print(f"No turns at offset {args.offset} (session has {total} turns).")
+        print(f"No turns at offset {offset} (session has {total} turns).")
         return 0
-    start = max(0, end - args.turns)
+    start = max(0, end - turns_per_window)
     window = turns[start:end]            # chronological slice
 
     # Render newest first, stopping early if the char budget is exhausted.
@@ -377,14 +386,14 @@ def main() -> int:
     out.append("## Recent turns (newest first)")
     out += rendered
 
-    older = args.offset + shown
+    older = offset + shown
     out.append("\n---")
     if older < total:
         out.append(
             f"Older context remains ({total - older} earlier turns). If the leftoff "
             f"state is still unclear, page back:\n"
             f"  read-session.py --session {meta['session_id'][:8]} "
-            f"--offset {older} --turns {args.turns}"
+            f"--offset {older} --turns {turns_per_window}"
         )
     else:
         out.append("Start of session reached — no older turns.")

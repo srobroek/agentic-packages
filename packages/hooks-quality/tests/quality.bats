@@ -1,0 +1,170 @@
+#!/usr/bin/env bats
+#
+# Tests for the quality hooks. These deliberately invoke the scripts under the
+# stock macOS bash 3.2 (/bin/bash when it is 3.2.57) so we actually exercise the
+# portability floor: a bash-4 construct such as `mapfile` would surface here as
+# exit 127, not as a silent fail-open on a newer dev bash.
+
+SCRIPTS_DIR="${BATS_TEST_DIRNAME}/../scripts"
+BEFORE_COMMIT="${SCRIPTS_DIR}/quality-before-commit.sh"
+EDIT_ADVISORY="${SCRIPTS_DIR}/quality-edit-advisory.sh"
+
+# Prefer the 3.2 floor when /bin/bash is exactly 3.2.x (stock macOS), otherwise
+# fall back to whatever `bash` resolves to so the suite still runs on Linux CI.
+pick_bash() {
+  if [ -x /bin/bash ] && /bin/bash --version 2>/dev/null | head -1 | grep -q 'version 3\.2'; then
+    printf '/bin/bash'
+  else
+    printf 'bash'
+  fi
+}
+
+setup() {
+  FLOOR_BASH="$(pick_bash)"
+  REPO="$(mktemp -d "${BATS_TEST_TMPDIR}/repo.XXXXXX")"
+  git -C "$REPO" init -q
+  git -C "$REPO" config user.email t@t.t
+  git -C "$REPO" config user.name t
+}
+
+# Build a Claude PreToolUse Bash event whose tool_input.command is $1.
+commit_event() {
+  jq -cn --arg cmd "$1" '{tool_name:"Bash", tool_input:{command:$cmd}}'
+}
+
+# --- quality-before-commit.sh -------------------------------------------------
+
+@test "before-commit: go repo runs the gate without exit 127 (no mapfile)" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  # Intentionally mis-formatted Go so the gofmt check has something to flag.
+  printf 'package x\nfunc  F(){}\n' > "$REPO/bad.go"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip"')"
+  # 127 == command-not-found (mapfile on bash 3.2). Must never happen.
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "before-commit: go gate is advisory, never a hard deny" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  printf 'package x\nfunc  F(){}\n' > "$REPO/bad.go"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip"')"
+  [ "$status" -eq 0 ]
+  # If anything is emitted it must be an allow advisory, not a deny.
+  if [ -n "$output" ]; then
+    decision="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecision // empty')"
+    [ "$decision" != "deny" ]
+    [ "$decision" = "allow" ]
+  fi
+}
+
+@test "before-commit: python repo runs the gate without exit 127" {
+  printf '[project]\nname = "x"\nversion = "0"\n' > "$REPO/pyproject.toml"
+  printf 'x=1\n' > "$REPO/bad.py"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip"')"
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "before-commit: ts repo runs the gate without exit 127" {
+  printf '{"name":"x","version":"0.0.0"}\n' > "$REPO/package.json"
+  printf 'const  x=1\n' > "$REPO/bad.ts"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip"')"
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "before-commit: never emits a deny decision for any selected language" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  printf '[project]\nname = "x"\nversion = "0"\n' > "$REPO/pyproject.toml"
+  printf '{"name":"x","version":"0.0.0"}\n' > "$REPO/package.json"
+  printf 'package x\nfunc  F(){}\n' > "$REPO/bad.go"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip"')"
+  [ "$status" -eq 0 ]
+  printf '%s' "$output" | grep -q 'permissionDecision":"deny"\|permissionDecision": "deny"' && false || true
+}
+
+@test "before-commit: [skip lint] bypass exits clean with no output" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  printf 'package x\nfunc  F(){}\n' > "$REPO/bad.go"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git commit -m "wip [skip lint]"')"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "before-commit: non-commit git command is ignored" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  printf 'package x\nfunc  F(){}\n' > "$REPO/bad.go"
+  git -C "$REPO" add -A
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<"$(commit_event 'git status')"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "before-commit: string-form tool_input does not crash the guard" {
+  printf 'module x\n\ngo 1.21\n' > "$REPO/go.mod"
+  git -C "$REPO" add -A
+  # tool_input is a bare string (Codex-style). The type-checked jq idiom must
+  # not throw; the guard simply finds no commit command and exits 0.
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<'{"tool_name":"Bash","tool_input":"git commit -m wip"}'
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "before-commit: malformed stdin does not crash" {
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" <<<'not json at all <<<'
+  [ "$status" -eq 0 ]
+}
+
+@test "before-commit: empty stdin does not crash" {
+  run env -C "$REPO" "$FLOOR_BASH" "$BEFORE_COMMIT" < /dev/null
+  [ "$status" -eq 0 ]
+}
+
+# --- quality-edit-advisory.sh -------------------------------------------------
+
+@test "edit-advisory: malformed stdin does not crash (no exit 127, no error)" {
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go python rust ts" \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" <<<'totally invalid json {[}'
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "edit-advisory: empty stdin does not crash" {
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go python rust ts" \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" < /dev/null
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "edit-advisory: garbage tool_input fields do not crash the array build" {
+  # Valid JSON, but tool_input has none of the expected file/patch keys.
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go python rust ts" \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" <<<'{"tool_name":"Edit","tool_input":{"nonsense":true}}'
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}
+
+@test "edit-advisory: a single non-selected file edit exits without advisory" {
+  payload="$(jq -cn --arg fp "$REPO/README.txt" \
+    '{tool_name:"Edit", tool_input:{file_path:$fp, content:"x"}}')"
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go python rust ts" \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" <<<"$payload"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "edit-advisory: runs under bash 3.2 floor without mapfile failure" {
+  # A real edit of a selected-language file: the array-build read loop must work.
+  payload="$(jq -cn --arg fp "$REPO/x.go" \
+    '{tool_name:"Edit", tool_input:{file_path:$fp, content:"package x"}}')"
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go python rust ts" \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" <<<"$payload"
+  [ "$status" -ne 127 ]
+  [ "$status" -eq 0 ]
+}

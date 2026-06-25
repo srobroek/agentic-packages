@@ -15,7 +15,9 @@ if printf '%s' "$command" | grep -qE '\-\-amend'; then
 fi
 
 active_spec=""
-current_branch="$(git branch --show-current 2>/dev/null)"
+# `git branch --show-current` exits 128 outside a repo; under `set -e` that
+# aborts the hook. Swallow the failure so non-repo invocations are a no-op.
+current_branch="$(git branch --show-current 2>/dev/null || true)"
 if printf '%s' "$current_branch" | grep -qE '[0-9]{3}-'; then
   active_spec="$(printf '%s' "$current_branch" | grep -oE '[0-9]{3}-[a-z0-9-]+' | head -1)"
 fi
@@ -23,11 +25,14 @@ fi
 unchecked=""
 checked=""
 if [[ -n "$active_spec" && -f "specs/$active_spec/tasks.md" ]]; then
-  unchecked="$(grep -c '^\- \[ \]' "specs/$active_spec/tasks.md" 2>/dev/null || echo "0")"
-  checked="$(grep -c '^\- \[X\]\|^\- \[x\]' "specs/$active_spec/tasks.md" 2>/dev/null || echo "0")"
+  # `grep -c` prints 0 AND exits 1 on no match. The old `|| echo 0` produced a
+  # second 0 ("0\n0"), breaking the later `-gt` test. Use `|| true` so grep's own
+  # 0 stands and `set -e` does not abort on the non-match exit; then default.
+  unchecked="$(grep -c '^\- \[ \]' "specs/$active_spec/tasks.md" 2>/dev/null || true)"; unchecked="${unchecked:-0}"
+  checked="$(grep -c '^\- \[X\]\|^\- \[x\]' "specs/$active_spec/tasks.md" 2>/dev/null || true)"; checked="${checked:-0}"
 fi
 
-last_msg="$(git log -1 --format=%s 2>/dev/null)"
+last_msg="$(git log -1 --format=%s 2>/dev/null || true)"
 has_issue_ref=false
 if printf '%s' "$last_msg" | grep -qE '#[0-9]+'; then
   has_issue_ref=true

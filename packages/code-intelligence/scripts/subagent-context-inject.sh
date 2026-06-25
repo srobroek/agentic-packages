@@ -41,18 +41,18 @@ if [ "$AGENT_TYPE" = "speckit-implement-task" ]; then
     CTX+="Commit with conventional format (feat/fix/docs/refactor/chore). "
     MAIN_BRANCH=$(git -C "$REPO_ROOT" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
     [ -z "$MAIN_BRANCH" ] && MAIN_BRANCH="main"
-    CHANGED=$(git -C "$REPO_ROOT" diff --name-only "$MAIN_BRANCH" 2>/dev/null | head -10 | tr '\n' ', ')
+    # tr cannot expand one byte into two; collapse newlines to single spaces
+    # and rely on jq for JSON-safe encoding below.
+    CHANGED=$(git -C "$REPO_ROOT" diff --name-only "$MAIN_BRANCH" 2>/dev/null | head -10 | tr '\n' ' ')
     [ -n "$CHANGED" ] && CTX+="Files changed on branch: $CHANGED. "
 fi
 
-# Escape for JSON
-CTX_ESCAPED=$(echo "$CTX" | sed 's/"/\\"/g' | tr '\n' ' ')
-
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SubagentStart",
-    "additionalContext": "$CTX_ESCAPED"
+# Build the JSON with jq so backslashes, quotes, and newlines in the repo
+# path or branch name are encoded correctly (hand-rolled sed escaping
+# produced invalid JSON for paths containing a backslash).
+jq -n --arg ctx "$CTX" '{
+  hookSpecificOutput: {
+    hookEventName: "SubagentStart",
+    additionalContext: $ctx
   }
-}
-EOF
+}'

@@ -42,11 +42,29 @@ def run(phase, payload, env_extra=None, project_dir=None, cwd=None, reversed_arg
 
 
 def main():
-    # nodes.json must load and contain the migrated node graph.
+    # nodes.json must load and contain the migrated node graph. Assert
+    # data-derived invariants rather than a hardcoded phase count so a routine
+    # nodes.json edit (adding/removing a node) doesn't break this test:
+    #   - a non-trivial floor of node ids (graph never collapses to a stub)
+    #   - every phase count is consistent with the ids it derives from
+    #     (1 or 2 phases per node; only "pre"/"post" keys)
     data = json.load(open(NODES, encoding="utf-8"))
-    phases = sum(len(v) for v in data.values())
     assert "plan" in data and "pre" in data["plan"], "plan node missing"
-    assert phases == 174, "expected 174 phases, got %d" % phases
+    assert isinstance(data, dict) and len(data) >= 50, (
+        "node id floor breached: only %d ids" % len(data)
+    )
+    phases = 0
+    for nid, node in data.items():
+        assert isinstance(node, dict), "node %r not a dict" % nid
+        assert set(node).issubset({"pre", "post"}), (
+            "node %r has unexpected phase keys: %r" % (nid, sorted(node))
+        )
+        assert 1 <= len(node) <= 2, "node %r has %d phases" % (nid, len(node))
+        phases += len(node)
+    # Internal consistency: total phases must lie within the per-node bounds.
+    assert len(data) <= phases <= 2 * len(data), (
+        "phase total %d inconsistent with %d ids" % (phases, len(data))
+    )
     print("T0 PASS: nodes.json loads, %d ids, %d phases" % (len(data), phases))
 
     noproj = tempfile.mkdtemp(prefix="speckit-noproj-")

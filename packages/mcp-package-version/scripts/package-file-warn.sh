@@ -4,7 +4,9 @@
 # Advisory only (additionalContext), never blocks.
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.old_string // empty' 2>/dev/null)
+# Only the actual file path identifies a package file. The Edit tool's
+# old_string is replacement text, not a path, so it must not be used here.
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
 # If no file path found, try to extract from arguments
 if [ -z "$FILE_PATH" ]; then
@@ -35,5 +37,5 @@ jq -n --arg msg "PACKAGE FILE EDIT: $MSG" '{
     hookEventName: "PreToolUse",
     additionalContext: $msg
   }
-}'
+}' 2>/dev/null
 exit 0

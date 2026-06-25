@@ -91,7 +91,11 @@ RENDER_LIST=()
 _add_render() {
   local want="$1" have
   [ -z "$want" ] && return
-  for have in "${RENDER_LIST[@]}"; do [ "$have" = "$want" ] && return; done
+  # Guard the array expansion: bash 3.2 (macOS default) under `set -u` errors on
+  # "${arr[@]}" when arr is empty, so only iterate when there is something to compare.
+  if [ "${#RENDER_LIST[@]}" -gt 0 ]; then
+    for have in "${RENDER_LIST[@]}"; do [ "$have" = "$want" ] && return; done
+  fi
   RENDER_LIST+=("$want")
 }
 # Split --render-for on commas (bash 3.2-safe), excluding the primary for now.
@@ -215,7 +219,7 @@ for entry in "${EXTENSIONS[@]}"; do
   specify extension enable "$ext" </dev/null >/dev/null 2>&1 || true
 done
 
-echo "==> 4/5 register extension commands for integration=$INTEGRATION"
+echo "==> 4/5 register extension commands for: ${RENDER_LIST[*]} (primary=$INTEGRATION)"
 # `specify extension add` only renders an extension's command files for the
 # integration that is ACTIVE at add-time, and `specify integration switch`
 # re-registers all installed+enabled extensions ONLY on a genuine switch
@@ -224,33 +228,41 @@ echo "==> 4/5 register extension commands for integration=$INTEGRATION"
 # default `codex` init, then later using `claude`), their command files are never
 # rendered for the requested agent -- and re-running this script does not fix it,
 # because the extensions are already "installed" and the install loop skips them.
-# Force a (re-)registration of every enabled extension for "$INTEGRATION":
-#   - requested integration is NOT active -> one genuine switch re-registers all.
-#   - requested integration IS active     -> bounce through another built-in
-#     integration and back to force re-registration (switch-to-self is a no-op).
+#
+# We render for EVERY integration in RENDER_LIST so /speckit.* exists in each agent
+# the project compiles steering for, walking the list in order (primary last so we
+# land on it). For each target:
+#   - target is NOT the active integration -> one genuine switch re-registers all.
+#   - target IS already active             -> bounce through the other built-in and
+#     back to force a re-registration (switch-to-self is a no-op).
 # Switching built-in integrations (claude/codex) is offline; only the local
 # extension registry is read to re-render command files.
-current_integration="$(
+read_active_integration() {
   grep -o '"default_integration"[[:space:]]*:[[:space:]]*"[^"]*"' .specify/integration.json 2>/dev/null \
     | sed 's/.*"\([^"]*\)".*/\1/' | head -n1
-)"
-if [ -n "$current_integration" ] && [ "$current_integration" != "$INTEGRATION" ]; then
-  specify integration switch "$INTEGRATION" </dev/null
-  echo "    switched $current_integration -> $INTEGRATION (extensions re-registered)"
-else
-  if [ "$INTEGRATION" = "codex" ]; then BOUNCE="claude"; else BOUNCE="codex"; fi
-  echo "    $INTEGRATION already active -- bouncing via $BOUNCE to force re-registration"
-  # Disable -e around the bounce so a mid-bounce failure cannot leave the project
-  # stranded on the bounce integration; always attempt to land back on "$INTEGRATION".
-  set +e
-  specify integration switch "$BOUNCE" </dev/null && specify integration switch "$INTEGRATION" </dev/null
-  bounce_rc=$?
-  set -e
-  if [ "$bounce_rc" -ne 0 ]; then
-    echo "    WARNING: re-registration bounce failed; ensuring active integration is $INTEGRATION" >&2
-    specify integration switch "$INTEGRATION" </dev/null || true
+}
+current_integration="$(read_active_integration)"
+for target in "${RENDER_LIST[@]}"; do
+  if [ -n "$current_integration" ] && [ "$current_integration" != "$target" ]; then
+    specify integration switch "$target" </dev/null
+    echo "    switched $current_integration -> $target (extensions re-registered)"
+    current_integration="$target"
+  else
+    bounce="$(other_builtin "$target")"
+    echo "    $target already active -- bouncing via $bounce to force re-registration"
+    # Disable -e around the bounce so a mid-bounce failure cannot leave the project
+    # stranded on the bounce integration; always attempt to land back on "$target".
+    set +e
+    specify integration switch "$bounce" </dev/null && specify integration switch "$target" </dev/null
+    bounce_rc=$?
+    set -e
+    if [ "$bounce_rc" -ne 0 ]; then
+      echo "    WARNING: re-registration bounce failed; ensuring active integration is $target" >&2
+      specify integration switch "$target" </dev/null || true
+    fi
+    current_integration="$target"
   fi
-fi
+done
 
 echo "==> 5/5 install workflow definitions from local dirs: ${WORKFLOWS[*]}"
 for wf in "${WORKFLOWS[@]}"; do

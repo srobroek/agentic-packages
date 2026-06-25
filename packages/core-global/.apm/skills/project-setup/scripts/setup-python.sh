@@ -18,9 +18,9 @@ PYTHON_VERSION="3.13"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --python) PYTHON_VERSION="$2"; shift 2 ;;
+        --python) PYTHON_VERSION="${2:?--python needs a value}"; shift 2 ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -69,13 +69,8 @@ echo "Adding dev dependencies..."
 uv add --dev ruff pytest
 
 # --- Step 5: Append Python gitignore via gitnr ---
-if ! grep -q '__pycache__' .gitignore 2>/dev/null; then
-    echo "Appending Python gitignore..."
-    if command -v gitnr >/dev/null 2>&1; then
-        echo "" >> .gitignore
-        gitnr create gh:Python >> .gitignore
-    else
-        cat >> .gitignore <<'GITIGNORE'
+write_python_gitignore_fallback() {
+    cat >> .gitignore <<'GITIGNORE'
 
 # Python
 __pycache__
@@ -87,7 +82,23 @@ build
 .pytest_cache
 .ruff_cache
 GITIGNORE
+}
+
+if ! grep -q '__pycache__' .gitignore 2>/dev/null; then
+    echo "Appending Python gitignore..."
+    # gitnr may be installed but still fail (network, template lookup). Capture
+    # its output to a temp file and only append on success; otherwise fall back
+    # to a static block so a present-but-failing gitnr never leaves a broken or
+    # truncated .gitignore.
+    _gi_tmp="$(mktemp "${TMPDIR:-/tmp}/gitignore.XXXXXX")"
+    if command -v gitnr >/dev/null 2>&1 && gitnr create gh:Python > "$_gi_tmp" && [ -s "$_gi_tmp" ]; then
+        printf '\n' >> .gitignore
+        cat "$_gi_tmp" >> .gitignore
+    else
+        echo "  WARN: gitnr unavailable or failed; using static Python .gitignore"
+        write_python_gitignore_fallback
     fi
+    rm -f "$_gi_tmp"
 fi
 
 echo ""

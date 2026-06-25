@@ -22,12 +22,12 @@ if echo "$COMMAND" | grep -qE '(gh issue create|glab issue create)'; then
     echo "BLOCKED: Issue creation missing phase: label. Add --label 'phase:{name}'." >&2
     exit 2
   fi
-  # Deferred issues need: deferred label + TWO spec: labels (source + target)
-  if echo "$COMMAND" | grep -qiE 'deferred|defer'; then
-    if ! echo "$COMMAND" | grep -qE "${LABEL_FLAG}deferred"; then
-      echo "BLOCKED: Deferred issues must have 'deferred' label. Add --label 'deferred'." >&2
-      exit 2
-    fi
+  # Deferred issues need: deferred label + TWO spec: labels (source + target).
+  # Detect a deferred issue ONLY by a real `deferred` LABEL VALUE -- not a loose
+  # substring like `defer`/`deferred` anywhere in the command. The old substring
+  # match blocked legitimate titles such as "fix deferred loading". Anchor the
+  # value end so `deferred` is the whole label, not a prefix of e.g. `deferred-x`.
+  if echo "$COMMAND" | grep -qE "${LABEL_FLAG}deferred([\"', ]|$)"; then
     SPEC_COUNT=$(echo "$COMMAND" | grep -oE "${LABEL_FLAG}spec:[^ \"']*" | wc -l | tr -d ' ')
     if [ "$SPEC_COUNT" -lt 2 ]; then
       echo "BLOCKED: Deferred issues must have TWO spec: labels -- spec:{source} (where discovered) and spec:{blocking} (what must complete before this work can proceed). Found $SPEC_COUNT." >&2

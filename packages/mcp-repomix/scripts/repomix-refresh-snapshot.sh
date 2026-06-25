@@ -57,14 +57,19 @@ fi
 head_marker="$state_root/$repo_hash.sha"
 last_head="$(cat "$head_marker" 2>/dev/null || true)"
 [[ "$last_head" == "$head_sha" ]] && exit 0
-printf '%s\n' "$head_sha" >"$head_marker" 2>/dev/null || true
+
+# Dedupe concurrent packs with an atomic lockdir. mkdir succeeds for exactly
+# one racer; the others bail out. Do NOT pre-write the marker here: a premature
+# write makes a later invocation believe the (possibly failed) pack succeeded.
+lock_dir="$state_root/$repo_hash.lock"
+mkdir "$lock_dir" 2>/dev/null || exit 0
 
 (
+  trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
   output="$repo_root/$output_rel"
+  # Write the marker ONLY on a successful pack.
   if timeout 180 repomix --directory "$repo_root" --style xml --output "$output" >/dev/null 2>&1; then
     printf '%s\n' "$head_sha" >"$head_marker" 2>/dev/null || true
-  else
-    rm -f "$head_marker" 2>/dev/null || true
   fi
 ) >/dev/null 2>&1 &
 

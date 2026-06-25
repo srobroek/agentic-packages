@@ -77,9 +77,13 @@ def _render_section(heading, bullets):
     return "\n".join(lines)
 
 
-def render_body(phase, node):
-    """Render a node phase dict to markdown (byte-faithful to the old .md)."""
-    parts = ["# " + node["title"]]
+def render_body(phase, node, node_id=""):
+    """Render a node phase dict to markdown (byte-faithful to the old .md).
+
+    A node phase missing its 'title' falls back to node_id so a malformed /
+    hand-edited nodes.json entry degrades gracefully instead of raising KeyError.
+    """
+    parts = ["# " + node.get("title", node_id)]
 
     if phase == "pre":
         if "came_from" in node:
@@ -127,19 +131,35 @@ def render_body(phase, node):
 # ---------------------------------------------------------------------------
 # Event / command extraction.
 # ---------------------------------------------------------------------------
+def _as_str(value):
+    """Return value if it is a str, else "".
+
+    Adversarial / malformed hook payloads can carry non-string values where a
+    command or prompt string is expected (e.g. command_name as a dict or list).
+    Downstream code calls .startswith / re.search / .replace, which raise on a
+    non-string. Coerce anything that is not a str to "" so the guard degrades to
+    a silent no-op instead of crashing.
+    """
+    return value if isinstance(value, str) else ""
+
+
 def _resolve_command(event, payload):
     """Extract the speckit command string from the event payload."""
     if event == "UserPromptExpansion":
-        return payload.get("command_name") or ""
+        return _as_str(payload.get("command_name"))
     if event in ("PreToolUse", "PostToolUse"):
-        tool_input = payload.get("tool_input") or {}
-        cmd = tool_input.get("skill") or tool_input.get("command_name") or ""
+        tool_input = payload.get("tool_input")
+        if not isinstance(tool_input, dict):
+            tool_input = {}
+        cmd = _as_str(tool_input.get("skill")) or _as_str(
+            tool_input.get("command_name")
+        )
         if cmd:
             return cmd
         # Codex PreToolUse/PostToolUse may not carry a skill; try the prompt.
-        return _parse_speckit_slash(tool_input.get("prompt") or "")
+        return _parse_speckit_slash(_as_str(tool_input.get("prompt")))
     if event == "UserPromptSubmit":
-        return _parse_speckit_slash(payload.get("prompt") or "")
+        return _parse_speckit_slash(_as_str(payload.get("prompt")))
     return ""
 
 
@@ -253,7 +273,7 @@ def _resolve_feat(proj_root):
         try:
             with open(feature_json, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
-            feat = data.get("feature_directory") or "" if isinstance(data, dict) else ""
+            feat = _as_str(data.get("feature_directory")) if isinstance(data, dict) else ""
         except (OSError, ValueError):
             feat = ""
         if feat:
@@ -377,7 +397,7 @@ def main():
     if not isinstance(node, dict):
         return 0
 
-    node_body = render_body(phase, node)
+    node_body = render_body(phase, node, node_id)
 
     proj_root = _resolve_proj_root(payload)
     feat = _resolve_feat(proj_root)

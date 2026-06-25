@@ -102,21 +102,21 @@ PY
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --profile) PROFILES+=("$2"); shift 2 ;;
-        --select-package) SELECTED_PACKAGES+=("$2"); shift 2 ;;
-        --selection-note) SELECTION_NOTE="$2"; shift 2 ;;
-        --preferences-file) PREFERENCES_FILE="$2"; shift 2 ;;
+        --profile) PROFILES+=("${2:?--profile needs a value}"); shift 2 ;;
+        --select-package) SELECTED_PACKAGES+=("${2:?--select-package needs a value}"); shift 2 ;;
+        --selection-note) SELECTION_NOTE="${2:?--selection-note needs a value}"; shift 2 ;;
+        --preferences-file) PREFERENCES_FILE="${2:?--preferences-file needs a value}"; shift 2 ;;
         --no-update-preferences) UPDATE_PREFERENCES=false; shift ;;
         --first-party-only)
             FIRST_PARTY_ONLY=true
             shift
             ;;
         --marketplace-repo)
-            FIRST_MARKETPLACE_REPO="$2"
+            FIRST_MARKETPLACE_REPO="${2:?--marketplace-repo needs a value}"
             shift 2
             ;;
         --marketplace-name)
-            FIRST_MARKETPLACE_NAME="$2"
+            FIRST_MARKETPLACE_NAME="${2:?--marketplace-name needs a value}"
             shift 2
             ;;
         --include-upstream-agents)
@@ -132,12 +132,12 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --extra-marketplace)
-            add_marketplace "$2"
+            add_marketplace "${2:?--extra-marketplace needs a value}"
             shift 2
             ;;
         --skip-marketplace-register) REGISTER_MARKETPLACE=false; shift ;;
         --help)
-            sed -n '2,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '2,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -208,7 +208,7 @@ done
 
 echo ""
 echo "Preferred package choices:"
-python3 - "$PREFERENCES_FILE" "${PROFILES[@]}" <<'PY'
+python3 - "$PREFERENCES_FILE" "${PROFILES[@]+"${PROFILES[@]}"}" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -260,7 +260,7 @@ if [ "${#SELECTED_PACKAGES[@]}" -gt 0 ]; then
     else
         echo ""
         echo "Updating preference index:"
-        python3 - "$PREFERENCES_FILE" "$SELECTION_NOTE" "$(IFS=,; printf '%s' "${PROFILES[*]}")" "${SELECTED_PACKAGES[@]}" <<'PY'
+        python3 - "$PREFERENCES_FILE" "$SELECTION_NOTE" "$(IFS=,; printf '%s' "${PROFILES[*]+"${PROFILES[*]}"}")" "${SELECTED_PACKAGES[@]+"${SELECTED_PACKAGES[@]}"}" <<'PY'
 import json
 import subprocess
 import sys
