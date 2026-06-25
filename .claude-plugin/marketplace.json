@@ -318,6 +318,17 @@
       "source": "./packages/headroom"
     },
     {
+      "name": "hooks-attribution-guard",
+      "description": "Blocks git commits that carry AI authorship attribution (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers), enforcing that the human is the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not blocked. Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "git",
+        "attribution"
+      ],
+      "source": "./packages/hooks-attribution-guard"
+    },
+    {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards: block privilege escalation, curl|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex).",
       "version": "0.2.1",
@@ -338,6 +349,18 @@
         "branch"
       ],
       "source": "./packages/hooks-branch-check"
+    },
+    {
+      "name": "hooks-chezmoi-guard",
+      "description": "PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "chezmoi",
+        "dotfiles",
+        "safety"
+      ],
+      "source": "./packages/hooks-chezmoi-guard"
     },
     {
       "name": "hooks-git-safety",

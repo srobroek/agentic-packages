@@ -37,7 +37,7 @@ dependencies:
     - srobroek/agentic-packages/packages/hooks-branch-check#^0.2.1
     - srobroek/agentic-packages/packages/hooks-git-workflow#^0.2.0
     - srobroek/agentic-packages/packages/hooks-quality#^0.1.1
-    # TODO: add hooks-chezmoi-guard once that package exists (created separately).
+    - srobroek/agentic-packages/packages/hooks-chezmoi-guard#^0.1.0
     # --- bootstrap skills ---
     - srobroek/agentic-packages/packages/catchup#^0.1.4
     - srobroek/agentic-packages/packages/handover#^0.1.2

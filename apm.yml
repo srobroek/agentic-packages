@@ -247,6 +247,13 @@ marketplace:
         - maintenance
         - tokens
         - compression
+    - name: hooks-attribution-guard
+      source: ./packages/hooks-attribution-guard
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - attribution
     - name: hooks-bash-safety
       source: ./packages/hooks-bash-safety
       category: project-lifecycle
@@ -261,6 +268,14 @@ marketplace:
         - hooks
         - git
         - branch
+    - name: hooks-chezmoi-guard
+      source: ./packages/hooks-chezmoi-guard
+      category: project-lifecycle
+      tags:
+        - hooks
+        - chezmoi
+        - dotfiles
+        - safety
     - name: hooks-git-safety
       source: ./packages/hooks-git-safety
       category: project-lifecycle

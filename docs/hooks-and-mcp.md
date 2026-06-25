@@ -9,8 +9,10 @@ A package ships hooks as `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `sc
 <!-- BEGIN:hooks -->
 | Hook Package | Description |
 | --- | --- |
+| `hooks-attribution-guard` | Blocks git commits that carry AI authorship attribution (Co-Authored-By Claude/Anthropic, "Generated with/by AI", "AI-assisted/AI-generated", Claude Code trailers), enforcing that the human is the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not blocked. Cross-tool (Claude + Codex). |
 | `hooks-bash-safety` | Bash safety guards: block privilege escalation, curl\|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex). |
 | `hooks-branch-check` | Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex). |
+| `hooks-chezmoi-guard` | PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex). |
 | `hooks-git-safety` | Git safety guards: hard-block `git reset --hard`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push — plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex). |
 | `hooks-git-workflow` | Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
 | `hooks-no-ff` | Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex). |

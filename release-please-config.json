@@ -404,6 +404,18 @@
         }
       ]
     },
+    "packages/hooks-attribution-guard": {
+      "release-type": "simple",
+      "component": "hooks-attribution-guard",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-bash-safety": {
       "release-type": "simple",
       "component": "hooks-bash-safety",
@@ -419,6 +431,18 @@
     "packages/hooks-branch-check": {
       "release-type": "simple",
       "component": "hooks-branch-check",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-chezmoi-guard": {
+      "release-type": "simple",
+      "component": "hooks-chezmoi-guard",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
