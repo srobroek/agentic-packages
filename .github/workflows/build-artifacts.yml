@@ -7,14 +7,12 @@ name: Check artifacts
 # release. The marketplace manifests, README inventory tables, and
 # release-please config are all generated; everything else is hand-authored.
 
+# Always runs (no path filter) so `check-artifacts` can be a stable REQUIRED
+# status check on main -- a path-filtered required check that never starts
+# blocks every unrelated PR forever. The regen + staleness diff is a fast no-op
+# when nothing artifact-affecting changed.
 on:
   pull_request:
-    paths:
-      - ".apm/**"
-      - "templates/**"
-      - "apm.yml"
-      - "packages/**"
-      - "README.md"
 
 permissions:
   contents: read
