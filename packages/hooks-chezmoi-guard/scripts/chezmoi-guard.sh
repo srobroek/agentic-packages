@@ -50,8 +50,13 @@ CACHE_TTL=60
 ensure_cache() {
   command -v chezmoi >/dev/null 2>&1 || return 1
   if [[ -f "$CACHE_FILE" ]]; then
-    local age
-    age=$(( $(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0) ))
+    local age mtime
+    # mtime via GNU stat (-c %Y) or BSD/macOS stat (-f %m); each emits a bare
+    # number on success. Guard the result so a non-numeric/empty value (either
+    # stat variant rejecting the other's flag) can never feed `set -u` arithmetic.
+    mtime="$(stat -c %Y "$CACHE_FILE" 2>/dev/null || stat -f %m "$CACHE_FILE" 2>/dev/null || true)"
+    [[ "$mtime" =~ ^[0-9]+$ ]] || mtime=0
+    age=$(( $(date +%s) - mtime ))
     (( age <= CACHE_TTL )) && return 0
   fi
   chezmoi managed --path-style=absolute --include=files,symlinks 2>/dev/null > "$CACHE_FILE.new" \
