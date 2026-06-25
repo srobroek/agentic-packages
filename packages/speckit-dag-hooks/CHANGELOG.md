@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.6.0...speckit-dag-hooks-v0.7.0) (2026-06-25)
+
+
+### Features
+
+* **speckit:** adopt memory-md 1.x across speckit, dag-hooks, and steering ([#355](https://github.com/srobroek/agentic-packages/issues/355)) ([450f1f3](https://github.com/srobroek/agentic-packages/commit/450f1f36ae8c9e42562e9270c414da34dd55dbfb))
+
 ## [0.6.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.5.0...speckit-dag-hooks-v0.6.0) (2026-06-24)
 
 
