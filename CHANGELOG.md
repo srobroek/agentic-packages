@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.16.0...srobroek-agentic-v0.17.0) (2026-06-25)
+
+
+### Features
+
+* **speckit:** adopt memory-md 1.x across speckit, dag-hooks, and steering ([#355](https://github.com/srobroek/agentic-packages/issues/355)) ([450f1f3](https://github.com/srobroek/agentic-packages/commit/450f1f36ae8c9e42562e9270c414da34dd55dbfb))
+
 ## [0.16.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.15.0...srobroek-agentic-v0.16.0) (2026-06-24)
 
 
