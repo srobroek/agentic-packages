@@ -310,13 +310,6 @@ marketplace:
         - hooks
         - worktree
         - lifecycle
-    - name: hyperresearch
-      source: ./packages/hyperresearch
-      category: research
-      tags:
-        - skill
-        - research
-        - deep-research
     - name: incident-response
       source: ./packages/incident-response
       category: debugging
@@ -515,13 +508,6 @@ marketplace:
       tags:
         - bundle
         - lifecycle
-    - name: prompt-lookup
-      source: ./packages/prompt-lookup
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - prompts
     - name: python-quality
       source: ./packages/python-quality
       category: languages
@@ -543,8 +529,8 @@ marketplace:
         - skill
         - code-intelligence
         - research
-    - name: resume
-      source: ./packages/resume
+    - name: resume-cv
+      source: ./packages/resume-cv
       category: resume
       tags:
         - bundle

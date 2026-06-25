@@ -53,7 +53,7 @@
     },
     {
       "name": "agentic-maintenance",
-      "description": "Maintain your agentic assets: audit and optimize steering, look up prompts, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
+      "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
       "version": "0.2.0",
       "tags": [
         "bundle",
@@ -96,7 +96,7 @@
     },
     {
       "name": "code-intelligence",
-      "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore, prompt-lookup), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
+      "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
       "version": "0.2.0",
       "tags": [
         "bundle",
@@ -415,17 +415,6 @@
         "lifecycle"
       ],
       "source": "./packages/hooks-worktree"
-    },
-    {
-      "name": "hyperresearch",
-      "description": "Thin APM wrapper that routes to the upstream third-party HyperResearch deep research harness for long-form, source-backed research reports.",
-      "version": "0.1.2",
-      "tags": [
-        "skill",
-        "research",
-        "deep-research"
-      ],
-      "source": "./packages/hyperresearch"
     },
     {
       "name": "incident-response",
@@ -754,17 +743,6 @@
       "source": "./packages/project-lifecycle"
     },
     {
-      "name": "prompt-lookup",
-      "description": "Find, compare, and improve prompt templates and prompt-engineering patterns from prompt libraries: search, retrieve by ID, and enhance prompts.",
-      "version": "0.1.2",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "prompts"
-      ],
-      "source": "./packages/prompt-lookup"
-    },
-    {
       "name": "python-quality",
       "description": "Run Python format, lint, type-check, and test commands with the project toolchain.",
       "version": "0.1.2",
@@ -798,14 +776,14 @@
       "source": "./packages/research"
     },
     {
-      "name": "resume",
-      "description": "Resume bundle for focused resume tailoring and broad career-support workflows.",
+      "name": "resume-cv",
+      "description": "CV / career-resume bundle: focused resume-tailoring and broad career-support workflows. Renamed from `resume` to avoid a namespace collision with `resume-session` (which resumes a prior coding SESSION, not a CV).",
       "version": "0.1.0",
       "tags": [
         "bundle",
         "resume"
       ],
-      "source": "./packages/resume"
+      "source": "./packages/resume-cv"
     },
     {
       "name": "resume-session",

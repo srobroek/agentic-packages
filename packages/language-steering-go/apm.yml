@@ -9,3 +9,7 @@ license: Apache-2.0
 type: instructions
 target: all
 includes: auto
+category: languages
+tags:
+  - steering
+  - go

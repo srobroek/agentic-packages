@@ -1,17 +1,20 @@
 name: agentic-maintenance
 version: 0.2.0
 description: >-
-  Maintain your agentic assets: audit and optimize steering, look up prompts,
-  write new skills, with the coder and PR reviewer agents. Includes Hobson
-  documentation-standards and plugin-eval for evaluating external packages.
+  Maintain your agentic assets: audit and optimize steering, write new skills,
+  with the coder and PR reviewer agents. Includes Hobson documentation-standards
+  and plugin-eval for evaluating external packages.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: agentic-maintenance
+tags:
+  - bundle
+  - steering
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/optimize-steering#^0.1.2
-    - srobroek/agentic-packages/packages/prompt-lookup#^0.1.2
     - srobroek/agentic-packages/packages/audit-steering#^0.1.2
     - srobroek/agentic-packages/packages/write-a-skill#^0.1.2
     - srobroek/agentic-packages/packages/agent-coder#^0.1.1

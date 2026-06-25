@@ -512,18 +512,6 @@
         }
       ]
     },
-    "packages/hyperresearch": {
-      "release-type": "simple",
-      "component": "hyperresearch",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/incident-response": {
       "release-type": "simple",
       "component": "incident-response",
@@ -908,18 +896,6 @@
         }
       ]
     },
-    "packages/prompt-lookup": {
-      "release-type": "simple",
-      "component": "prompt-lookup",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/python-quality": {
       "release-type": "simple",
       "component": "python-quality",
@@ -956,9 +932,9 @@
         }
       ]
     },
-    "packages/resume": {
+    "packages/resume-cv": {
       "release-type": "simple",
-      "component": "resume",
+      "component": "resume-cv",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

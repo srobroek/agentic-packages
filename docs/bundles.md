@@ -11,8 +11,8 @@ In the **Includes** column, each entry is a member package; an entry marked with
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `prompt-lookup`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `prompt-lookup`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `core-global` | Recommended global (user-scope) baseline | `catchup`, `codebase-memory`, `debate`, `eli5`, `handover`, `write-a-skill`, `chezmoi-editor`, `agent-coder`, `agent-pr-reviewer`, `agent-adversarial-challenger`, `agent-external-repo-worker`, `grill-me`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
@@ -40,7 +40,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
-| `resume` | Resume bundle for focused resume tailoring and broad career-support workflows | `resume-tailoring`^, `ResumeSkills`^ |
+| `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
 | `speckit` | SpecKit mechanism | self-contained |

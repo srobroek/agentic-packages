@@ -8,3 +8,8 @@ license: Apache-2.0
 type: skill
 target: all
 includes: auto
+category: agentic-maintenance
+tags:
+  - skill
+  - maintenance
+  - steering

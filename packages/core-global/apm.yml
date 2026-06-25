@@ -9,6 +9,11 @@ license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
+category: core
+tags:
+  - bundle
+  - global
+  - bootstrap
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/catchup#^0.1.3

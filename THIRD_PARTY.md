@@ -172,22 +172,6 @@
   focused resume creation and tailoring; use `resumeskills` when the project
   needs the broader job-search skill set.
 
-## HyperResearch
-
-- Source: https://github.com/jordan-gibbs/hyperresearch
-- License: MIT
-- APM status: exposed as a third-party bundle entry. The upstream repository is
-  primarily a Python package and Claude Code installer, so projects may still
-  need `pip install hyperresearch && hyperresearch install` for the full runtime
-  assets until an APM-native package shape is provided upstream.
-- Version policy: track the latest upstream default branch with `ref: main`.
-- Marketplace exposure: `marketplace.json` includes `hyperresearch` pointing to
-  the upstream repository.
-- Local policy: do not vendor HyperResearch skills, agents, or installer output
-  into this repository. If APM install validation shows no runtime assets are
-  deployed, create a thin wrapper package only after documenting why direct
-  upstream installation is insufficient.
-
 ## Impeccable
 
 - Source: https://github.com/pbakaus/impeccable

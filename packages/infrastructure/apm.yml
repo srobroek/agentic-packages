@@ -8,6 +8,10 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: infrastructure
+tags:
+  - bundle
+  - infrastructure
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/steering-infrastructure#^0.1.0

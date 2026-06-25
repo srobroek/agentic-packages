@@ -7,6 +7,11 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: languages
+tags:
+  - bundle
+  - embedded
+  - arm
 dependencies:
   apm:
     - wshobson/agents/plugins/arm-cortex-microcontrollers#main
