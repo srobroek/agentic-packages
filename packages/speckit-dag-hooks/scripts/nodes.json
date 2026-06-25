@@ -494,7 +494,8 @@
         "If you started here from an existing project, confirm `.specify/memory/architecture_constitution.md` and `.specify/memory/DECISIONS.md` reflect reality before specifying features."
       ],
       "going_to": [
-        "/speckit.specify (default)"
+        "/speckit.memory-md.specify (default -- before_specify hook prepares memory context)",
+        "/speckit.specify (if memory-md is not installed)"
       ],
       "postconditions": [
         "`.specify/memory/constitution.md` (filled in)"
@@ -917,6 +918,36 @@
       "title": "/speckit.memory-md.audit -- before you run this"
     }
   },
+  "memory-md-specify": {
+    "post": {
+      "going_to": [
+        "/speckit.specify (default -- proceed to write the spec with memory context loaded)"
+      ],
+      "postconditions": [
+        "specs/<feat>/memory-synthesis.md (<=900 words, the synthesised memory context for this spec)"
+      ],
+      "title": "/speckit.memory-md.specify -- what to do next"
+    },
+    "pre": {
+      "came_from": [
+        "/speckit.constitution (default -- before_specify hook fires after the charter is set)",
+        "(project bootstrap, before the first /speckit.specify)",
+        "/speckit.refine.status (mandatory re-entry walks back through specify)",
+        "/speckit.iterate.apply (mandatory re-entry walks back through specify)"
+      ],
+      "context": [
+        "Runs on the before_specify hook: prepares and synthesises relevant project memory into specs/<feat>/memory-synthesis.md so the spec is written with prior decisions/lessons in view. Mandatory hook in memory-md (optional: false).",
+        "Reads from the SQLite memory cache; if the index is missing run /speckit.memory-md.init first."
+      ],
+      "hard_missing": [
+        "docs/memory/INDEX.md"
+      ],
+      "soft": [
+        ".specify/memory/constitution.md"
+      ],
+      "title": "/speckit.memory-md.specify -- before you run this"
+    }
+  },
   "memory-md-capture": {
     "post": {
       "going_to": [
@@ -979,6 +1010,7 @@
         "If `constitution.md` already exists, skip `/speckit.constitution` and go directly to `/speckit.specify`."
       ],
       "going_to": [
+        "/speckit.memory-md.init-project (recommended next -- profile the project for shared-memory channels)",
         "/speckit.constitution (preferred for greenfield)",
         "/speckit.specify (acceptable if constitution already exists)",
         "(return to bootstrap workflow)"
@@ -1002,6 +1034,33 @@
         "(none; this is the entry point that creates docs/memory/)"
       ],
       "title": "/speckit.memory-md.init -- before you run this"
+    }
+  },
+  "memory-md-init-project": {
+    "post": {
+      "conditional": [
+        "One-time per project. Re-running refreshes the detected language/framework profile; harmless if unchanged."
+      ],
+      "going_to": [
+        "(return to bootstrap workflow -- then /speckit.constitution or /speckit.specify)",
+        "/speckit.memory-md.sync-shared (optional -- pull matching shared lessons once channels are configured)"
+      ],
+      "postconditions": [
+        "project tech-stack profile recorded (language + optional framework) used to scope cross-project shared-memory sync channels"
+      ],
+      "title": "/speckit.memory-md.init-project -- what to do next"
+    },
+    "pre": {
+      "came_from": [
+        "(project bootstrap, once -- after /speckit.memory-md.init)"
+      ],
+      "context": [
+        "Profiles the project (language/framework) so /speckit.memory-md.share-lesson and /speckit.memory-md.sync-shared route lessons to the right cross-project channels in the global shared memory (~/.spec-kit/shared-memory.sqlite). Optional but required before using the shared-lesson commands."
+      ],
+      "soft": [
+        "docs/memory/INDEX.md"
+      ],
+      "title": "/speckit.memory-md.init-project -- before you run this"
     }
   },
   "memory-md-log-finding": {
@@ -1792,7 +1851,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.constitution",
+        "/speckit.memory-md.specify (before_specify hook; itself entered from /speckit.constitution)",
         "(project bootstrap)",
         "/speckit.github-issues.import",
         "/speckit.brownfield.bootstrap",

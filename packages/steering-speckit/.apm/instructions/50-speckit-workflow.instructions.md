@@ -18,6 +18,15 @@ applyTo: "{.specify/**,specs/**,**/spec.md,**/tasks.md,**/pending-iteration.md}"
   requiring review. Present them to the user and resolve together first.
 - Never silently deviate from spec. Material deviation: stop, explain, get
   approval, route through iterate. Minor deviation: flag in commit.
+- Record every architecture/design decision as an ADR. When a non-trivial,
+  hard-to-reverse decision is made (a technology choice, a constraint, an
+  approach picked over alternatives), capture it with the
+  `/architecture-decision-records` skill as a one-file MADR-format ADR under
+  `docs/adr/NNNN-title.md` (status proposed/accepted/superseded; never delete a
+  superseded ADR, mark it). This is a continuous process, not a workflow stage:
+  do it at the moment the decision lands, in any phase. Reference the ADR from
+  the spec/plan and from the roadmap entry's `governed-by:` field; memory-md
+  indexes `docs/adr/` so prior decisions surface in later memory synthesis.
 - `/speckit.implement` is deprecated; do not invoke it. Use the agent-assign
   flow (`assign` -> `validate` -> `execute`), which routes each task to a
   specialized sub-agent for better quality.
@@ -149,16 +158,20 @@ Commands outside the numbered workflow above.
 - `doctor.check` -- diagnose speckit health
 
 ### Memory
-- `memory-md.init` -- initialize layered memory
-- `memory-md.capture` -- capture findings to memory
-- `memory-md.capture-from-diff` -- capture from git diff
-- `memory-md.prepare-context` -- load relevant memory before work
-- `memory-md.plan-with-memory` -- plan using memory context
+- `memory-md.init` -- initialize layered memory (once per project, at bootstrap)
+- `memory-md.init-project` -- profile language/framework for cross-project shared-memory channels (once, after init; required before share-lesson/sync-shared)
+- `memory-md.specify` -- before_specify hook: synthesise project memory into `specs/<feat>/memory-synthesis.md` before writing the spec
+- `memory-md.plan-with-memory` -- before_plan hook: plan using synthesised memory context
+- `memory-md.capture` -- after_implement hook: capture durable lessons (full ceremony, human-approved)
+- `memory-md.capture-from-diff` -- manual fast-path: capture lessons from a `git diff` (lower ceremony; used after quick bug fixes)
+- `memory-md.prepare-context` -- load relevant memory before ad-hoc work
+- `memory-md.index-docs` -- (re)build the SQLite doc cache for low-token retrieval; run after making doc/spec changes or at session start (incremental). With `optimizer.auto_index_on_doc_change: true` this also runs automatically on doc edits.
+- `memory-md.repair-index` -- recover missing `INDEX.md` routing rows from durable memory files (maintenance)
 - `memory-md.log-finding` -- log a single finding
 - `memory-md.audit` -- audit memory health
-- `memory-md.token-report` -- memory token usage
-- `memory-md.share-lesson` -- share lesson across projects
-- `memory-md.sync-shared` -- sync shared lessons
+- `memory-md.token-report` -- memory token-usage estimate
+- `memory-md.share-lesson` -- promote an approved local lesson into global shared memory
+- `memory-md.sync-shared` -- sync matching shared lessons into a local review buffer
 
 ### Diagrams
 - `diagram.status` -- status diagram
@@ -209,3 +222,6 @@ Commands outside the numbered workflow above.
 ### Governance
 - `conduct.run` -- code of conduct check
 - `constitution` -- constitution review
+- `/architecture-decision-records` (skill, not a speckit command) -- record an ADR
+  for every non-trivial decision, as `docs/adr/NNNN-title.md` (MADR). Continuous
+  process; see the ADR rule under "Rules" above.

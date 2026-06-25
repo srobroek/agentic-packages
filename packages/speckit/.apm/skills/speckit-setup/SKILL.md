@@ -30,10 +30,14 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    `refine`, `retro`, `review`, `roadmap`, `security-review`, `status`, `tinyspec`, `verify`,
    `verify-tasks`, `worktree`. `agent-assign` is mandatory: steering routes implementation
    through it and the DAG hard-blocks the deprecated `/speckit.implement`. Most install from
-   the community catalog by name; first-party extensions not yet in that catalog (currently
-   `roadmap`, the spec-roadmap extension) install from a custom source URL via
-   `specify extension add --from <url>` and are best-effort -- an unreachable/unpublished
-   source warns and is skipped rather than aborting setup.
+   the community catalog by name. The setup list also supports inline custom sources for
+   extensions whose catalog version lags upstream: `name=<archive-url>` (install a specific
+   archive via `specify extension add NAME --from <url>`) or `name=latest-release:<owner>/<repo>`
+   (resolve the newest GitHub release tag at setup time and install its archive — tracks
+   latest without pinning). Custom-source installs are best-effort: an unreachable source
+   warns and is skipped rather than aborting setup. Currently `memory-md` uses
+   `latest-release:DyanGalih/spec-kit-memory-hub` (the catalog still ships the old 0.8.5; the
+   1.x line adds the SQLite/MCP backend and the `before_specify` memory hook).
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch
@@ -48,6 +52,25 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    0.11.x, workflows are a first-class primitive, not extensions. The local `speckit` definition
    overrides the upstream `Full SDD Cycle` that `specify init` bundles, and routes implementation
    through the agent-assign flow instead of the deprecated `/speckit.implement`.
+
+6. **Tune the memory-md config (agent step, not the bash script).** `memory-md` owns its own
+   config file: `/speckit.memory-md.init` creates `.specify/extensions/memory-md/config.yml`
+   from the extension's `config-template.yml` during bootstrap. Do NOT have setup write that
+   file. After `init` has created it, the agent applies these project-specific adjustments
+   (the values that a generic template cannot know):
+   - **`optimizer.auto_index_on_doc_change: true`** -- re-index the doc cache automatically when
+     docs change, so retrieval stays fresh without a manual `/speckit.memory-md.index-docs` after
+     every edit. (Template default is `false`.)
+   - **`indexing.include.memory`** -- ensure ALL of `.specify/memory` is indexed: include
+     `.specify/memory/**/*.md` (not just the handful of named files), so the constitution,
+     roadmap, decisions, bugs, and any other governance artefacts are all retrievable.
+   - **`indexing.include.code`** -- set to match the project's actual language(s) and layout.
+     The template assumes `src/**/*.{ts,tsx,js,jsx}`; replace/extend it for the detected
+     stack (e.g. `**/*.py`, `**/*.go`, `**/*.rs`) and for monorepos point it at each package's
+     source root rather than a single top-level `src/`. This is judgment the agent makes from
+     the repo; never hard-code a single language assumption.
+   Leave the rest of the template (retrieval caps, `require_*` gates, SQLite optimizer, standard
+   excludes) at its defaults unless the project needs otherwise.
 
 ## How to run
 

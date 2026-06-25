@@ -45,17 +45,28 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 # agent-assign flow and the DAG hard-blocks the deprecated /speckit.implement.
 #
 # Entries are either a bare extension name (resolved from the community catalog)
-# or `name=source-url` for first-party extensions not (yet) in the catalog, which
-# install via `specify extension add --from <url>`. Custom-source installs are
+# or `name=source-url` for a first-party extension not yet in the catalog, which
+# installs via `specify extension add --from <url>`. Custom-source installs are
 # best-effort: an unreachable/unpublished source warns and is skipped rather than
 # aborting setup. One list, one source of truth; bash 3.2-safe (no associative arrays).
-#   roadmap -- the spec-roadmap extension, from srobroek/speckit-roadmap.
+#   roadmap -- the spec-roadmap extension (srobroek/speckit-roadmap); accepted into the
+#   community catalog 2026-06, so it resolves by name like the rest.
+#
+# An entry's source value (after `=`) takes one of two forms:
+#   * a direct archive URL              -> installed via `specify extension add NAME --from <url>`
+#   * `latest-release:<owner>/<repo>`   -> the latest published GitHub release tag is resolved
+#                                          at setup time and its .zip archive is installed
+# `specify extension add --from` requires a real archive URL (a bare repo URL is fetched as a
+# zip and fails); `latest-release:` exists so we track newest WITHOUT pinning a version.
+#   memory-md -- installed from upstream's latest RELEASE (DyanGalih/spec-kit-memory-hub), NOT
+#   the community catalog: the catalog still serves the old 0.8.5, and the repo's `main` branch
+#   currently trails its release tags, so we resolve the latest release rather than a branch.
 EXTENSIONS=(
   agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
-  fix-findings fleet github-issues iterate memory-md onboard optimize qa reconcile
-  refine retro review security-review status tinyspec verify verify-tasks worktree
-  roadmap=https://github.com/srobroek/speckit-roadmap
+  fix-findings fleet github-issues iterate onboard optimize qa reconcile
+  refine retro review roadmap security-review status tinyspec verify verify-tasks worktree
+  memory-md=latest-release:DyanGalih/spec-kit-memory-hub
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit
@@ -105,9 +116,28 @@ for entry in "${EXTENSIONS[@]}"; do
     # Custom-source extension (not in the community catalog). Best-effort:
     # an unreachable/unpublished source warns and continues, leaving the rest
     # of the required catalog set intact.
-    echo "    + $ext (from $src)"
-    if ! specify extension add --from "$src" </dev/null; then
-      echo "    WARNING: could not install '$ext' from $src -- skipping (publish it or check access)" >&2
+    case "$src" in
+      latest-release:*)
+        repo="${src#latest-release:}"
+        # Resolve the latest published release tag via the GitHub API (no auth needed
+        # for public repos), then install that tag's source archive. Tracks newest
+        # without pinning a version in this file.
+        tag="$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null \
+                 | grep -m1 '"tag_name"' | sed 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/')"
+        if [ -z "$tag" ]; then
+          echo "    WARNING: could not resolve latest release of '$repo' for '$ext' -- skipping" >&2
+          continue
+        fi
+        url="https://github.com/${repo}/archive/refs/tags/${tag}.zip"
+        echo "    + $ext (latest release $tag of $repo)"
+        ;;
+      *)
+        url="$src"
+        echo "    + $ext (from $url)"
+        ;;
+    esac
+    if ! specify extension add "$ext" --from "$url" </dev/null; then
+      echo "    WARNING: could not install '$ext' from $url -- skipping (publish it or check access)" >&2
       continue
     fi
   else
