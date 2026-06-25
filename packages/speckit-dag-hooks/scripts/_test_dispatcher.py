@@ -281,7 +281,9 @@ def main():
         "speckit.review.run": "# /speckit.review.run",
         "speckit.qa.run": "# /speckit.qa.run",
         "speckit.critique.run": "# /speckit.critique.run",
-        "speckit.optimize.tokens": "# /speckit.optimize.tokens",
+        # memory-md.init-project: its prefix (memory-md-init) is ITSELF a node,
+        # so this proves exact match wins over stripping to a real parent.
+        "speckit.memory-md.init-project": "# /speckit.memory-md.init-project",
         "speckit.fleet.review": "# /speckit.fleet.review",
     }
     for cmd, prefix in exact_cases.items():
