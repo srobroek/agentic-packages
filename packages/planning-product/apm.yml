@@ -17,6 +17,5 @@ dependencies:
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main
     - mattpocock/skills/skills/engineering/tdd#main
-    - >-
-      mattpocock/skills/skills/engineering/triage#main    -
-      mattpocock/skills/skills/engineering/improve-codebase-architecture#main
+    - mattpocock/skills/skills/engineering/triage#main
+    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main

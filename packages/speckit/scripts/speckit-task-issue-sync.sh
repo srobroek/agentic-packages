@@ -28,11 +28,13 @@ if ! printf '%s' "$patch" | grep -qE '(^|\n)\*\*\* (Update|Add) File: .*/?tasks\
   exit 0
 fi
 
-if ! printf '%s' "$patch" | grep -qE '^\+.*- \[[xX]\] T[0-9]{3}\b'; then
+# BSD grep/sed do not support \b. A task id is T followed by exactly 3 digits;
+# match the trailing boundary explicitly as "not another digit" (or end of token).
+if ! printf '%s' "$patch" | grep -qE '^\+.*- \[[xX]\] T[0-9]{3}([^0-9]|$)'; then
   exit 0
 fi
 
-task_ids="$(printf '%s' "$patch" | sed -nE 's/^\+.*- \[[xX]\] (T[0-9]{3})\b.*/\1/p' | sort -u | paste -sd ', ' -)"
+task_ids="$(printf '%s' "$patch" | sed -nE 's/^\+.*- \[[xX]\] (T[0-9]{3})([^0-9].*)?$/\1/p' | sort -u | paste -sd ', ' -)"
 [[ -n "$task_ids" ]] || task_ids="completed task IDs"
 
 context="SPECKIT ISSUE SYNC: This patch marks $task_ids complete in tasks.md. If this repo uses GitHub task issues, immediately find the matching issue(s), close/comment only the tasks that are genuinely complete, and leave blocked or partial tasks open with a blocker note. If no matching issue exists, say that explicitly."

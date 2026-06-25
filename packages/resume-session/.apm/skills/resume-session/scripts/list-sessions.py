@@ -86,9 +86,13 @@ def iter_json_lines(path: str):
             if not line:
                 continue
             try:
-                yield json.loads(line)
+                obj = json.loads(line)
             except (ValueError, TypeError):
                 continue
+            # Records are scanned with .get(); a bare array/string/number line
+            # would raise AttributeError and abort the whole listing. Skip them.
+            if isinstance(obj, dict):
+                yield obj
 
 
 def _text_from_content(content) -> str:
@@ -236,6 +240,8 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     args = ap.parse_args()
 
+    limit = args.limit if args.limit > 0 else 20
+
     project = os.path.realpath(os.path.expanduser(args.project or default_project()))
     entries: list[dict] = []
     if args.agent in ("claude", "all"):
@@ -244,7 +250,7 @@ def main() -> int:
         entries += collect_codex(project)
 
     entries.sort(key=lambda e: e["last_ts"], reverse=True)
-    entries = entries[: args.limit]
+    entries = entries[:limit]
 
     if args.json:
         print(json.dumps(entries, indent=2, default=str))

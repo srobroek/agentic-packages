@@ -72,8 +72,10 @@ if [ -z "$SPEC_ID" ]; then
   exit 0
 fi
 
-# Detect repo from git remote
-REPO=$(git remote get-url origin 2>/dev/null | sed -E 's#.*/([^/]+/[^/]+?)(\.git)?$#\1#')
+# Detect repo from git remote.
+# Handles both SSH (git@host:owner/repo.git) and HTTPS (https://host/owner/repo.git)
+# forms. BSD sed has no '+?'; use a portable greedy slug regex with a [/:] anchor.
+REPO=$(git remote get-url origin 2>/dev/null | sed -E 's#.*[/:]([^/]+/[^/]+)$#\1#; s#\.git$##')
 if [ -z "$REPO" ]; then
   jq -n --arg ctx "$CONTEXT" '{
     hookSpecificOutput: {

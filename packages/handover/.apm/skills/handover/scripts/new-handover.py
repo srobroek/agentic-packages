@@ -11,6 +11,7 @@ the same project/branch-or-task slug.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -69,15 +70,26 @@ def discover(cwd: Path) -> dict[str, str]:
     }
 
 
+def _yaml_scalar(value: str) -> str:
+    """Quote a frontmatter scalar so embedded newlines/quotes can't inject keys.
+
+    json.dumps emits a double-quoted string with \\n, \\", and \\\\ escaped. A
+    JSON string is a valid YAML 1.1/1.2 flow (double-quoted) scalar, so the
+    result parses back as the original single value -- a newline in repo_root or
+    branch stays inside the value instead of starting a new frontmatter key.
+    """
+    return json.dumps(str(value))
+
+
 def build_content(*, project: str, repo_root: str, worktree: str, branch: str, task: str) -> str:
     updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     return f"""---
-project: {project}
-repo_root: {repo_root}
-worktree: {worktree}
-branch: {branch}
-task: {task}
-updated: {updated}
+project: {_yaml_scalar(project)}
+repo_root: {_yaml_scalar(repo_root)}
+worktree: {_yaml_scalar(worktree)}
+branch: {_yaml_scalar(branch)}
+task: {_yaml_scalar(task)}
+updated: {_yaml_scalar(updated)}
 ---
 
 # Handover: {project} / {task or branch}
@@ -128,14 +140,31 @@ TODO: Continue from this handover. First inspect the referenced files and fresh 
 """
 
 
+class HandoverWriteError(Exception):
+    """Raised when the handover file cannot be written (e.g. out-dir is a file)."""
+
+
 def write_private(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        # A path component already exists as a file (FileExistsError /
+        # NotADirectoryError, both OSError subclasses). Surface a clean message
+        # instead of an uncaught traceback.
+        raise HandoverWriteError(
+            f"cannot create handover directory {path.parent}: {exc}"
+        ) from exc
     try:
         path.parent.chmod(0o700)
     except OSError:
         pass
 
-    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    except OSError as exc:
+        raise HandoverWriteError(
+            f"cannot write handover into {path.parent}: {exc}"
+        ) from exc
     tmp_path = Path(tmp_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -186,7 +215,11 @@ def main(argv: list[str]) -> int:
         branch=branch,
         task=task,
     )
-    write_private(path, content)
+    try:
+        write_private(path, content)
+    except HandoverWriteError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
 
     print(path)
     return 0

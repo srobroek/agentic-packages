@@ -4,8 +4,13 @@ set -euo pipefail
 payload="$(cat 2>/dev/null || true)"
 command -v jq >/dev/null 2>&1 || exit 0
 
-command="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
+command="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
 if ! printf '%s' "$command" | grep -Eq '(^|[[:space:]])git([[:space:]][^;&|]*)?[[:space:]]+commit($|[[:space:]])'; then
+  exit 0
+fi
+
+# Bypass: honor an explicit [skip lint] marker in the commit command/message.
+if printf '%s' "$command" | grep -Eiq '\[skip[ -]lint\]'; then
   exit 0
 fi
 
@@ -13,16 +18,17 @@ repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$repo_root" ]] || exit 0
 cd "$repo_root"
 
-deny() {
+# Advisory (non-blocking) lint gate. Findings are accumulated and surfaced as
+# additionalContext so the commit is never hard-blocked; the agent can act on
+# the advice or proceed. Add [skip lint] to the commit message to suppress.
+advisories=""
+advise() {
   local reason="$1"
-  jq -cn --arg reason "$reason" '{
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: $reason
-    }
-  }'
-  exit 0
+  if [[ -n "$advisories" ]]; then
+    advisories="$advisories"$'\n'"- $reason"
+  else
+    advisories="- $reason"
+  fi
 }
 
 selected_file=".agents/hooks/quality-languages"
@@ -58,23 +64,29 @@ changed_files() {
 
 if has_lang go; then
   if command -v gofmt >/dev/null 2>&1; then
-    mapfile -t go_files < <(changed_files | grep -E '\.go$' | sort -u)
+    go_files=()
+    while IFS= read -r l; do
+      [[ -n "$l" ]] && go_files+=("$l")
+    done < <(changed_files | grep -E '\.go$' | sort -u)
     if [[ "${#go_files[@]}" -gt 0 ]]; then
       bad="$(gofmt -l "${go_files[@]}" 2>/dev/null || true)"
-      [[ -z "$bad" ]] || deny "Go formatting is required before commit. Run: gofmt -w ${bad//$'\n'/ }"
+      [[ -z "$bad" ]] || advise "Go formatting is required before commit. Run: gofmt -w ${bad//$'\n'/ }"
     fi
   fi
 fi
 
 if has_lang python; then
-  mapfile -t py_files < <(changed_files | grep -E '\.pyi?$' | sort -u)
+  py_files=()
+  while IFS= read -r l; do
+    [[ -n "$l" ]] && py_files+=("$l")
+  done < <(changed_files | grep -E '\.pyi?$' | sort -u)
   if [[ "${#py_files[@]}" -gt 0 ]]; then
     if command -v uv >/dev/null 2>&1 && [[ -f pyproject.toml ]]; then
-      uv run ruff check "${py_files[@]}" >/tmp/agentic-ruff-check.log 2>&1 || deny "Python Ruff check failed before commit. Run: uv run ruff check --fix"
-      uv run ruff format --check "${py_files[@]}" >/tmp/agentic-ruff-format.log 2>&1 || deny "Python Ruff format failed before commit. Run: uv run ruff format"
+      uv run ruff check "${py_files[@]}" >/tmp/agentic-ruff-check.log 2>&1 || advise "Python Ruff check failed before commit. Run: uv run ruff check --fix"
+      uv run ruff format --check "${py_files[@]}" >/tmp/agentic-ruff-format.log 2>&1 || advise "Python Ruff format failed before commit. Run: uv run ruff format"
     elif command -v ruff >/dev/null 2>&1; then
-      ruff check "${py_files[@]}" >/tmp/agentic-ruff-check.log 2>&1 || deny "Python Ruff check failed before commit. Run: ruff check --fix"
-      ruff format --check "${py_files[@]}" >/tmp/agentic-ruff-format.log 2>&1 || deny "Python Ruff format failed before commit. Run: ruff format"
+      ruff check "${py_files[@]}" >/tmp/agentic-ruff-check.log 2>&1 || advise "Python Ruff check failed before commit. Run: ruff check --fix"
+      ruff format --check "${py_files[@]}" >/tmp/agentic-ruff-format.log 2>&1 || advise "Python Ruff format failed before commit. Run: ruff format"
     fi
   fi
 fi
@@ -82,24 +94,41 @@ fi
 if has_lang rust; then
   if command -v cargo >/dev/null 2>&1 && [[ -f Cargo.toml ]]; then
     if changed_files | grep -qE '\.rs$|Cargo\.toml$'; then
-      cargo fmt --all -- --check >/tmp/agentic-cargo-fmt.log 2>&1 || deny "Rust formatting is required before commit. Run: cargo fmt --all"
+      cargo fmt --all -- --check >/tmp/agentic-cargo-fmt.log 2>&1 || advise "Rust formatting is required before commit. Run: cargo fmt --all"
     fi
   fi
 fi
 
 if has_lang ts || has_lang javascript || has_lang typescript; then
-  mapfile -t js_files < <(changed_files | grep -E '\.(ts|tsx|js|jsx|mjs|cjs|vue|svelte)$' | sort -u)
+  js_files=()
+  while IFS= read -r l; do
+    [[ -n "$l" ]] && js_files+=("$l")
+  done < <(changed_files | grep -E '\.(ts|tsx|js|jsx|mjs|cjs|vue|svelte)$' | sort -u)
   if [[ "${#js_files[@]}" -gt 0 ]]; then
     if [[ -f biome.json || -f biome.jsonc ]] || grep -q '"@biomejs/biome"\|"biome"' package.json 2>/dev/null; then
       if command -v bunx >/dev/null 2>&1; then
-        bunx --bun biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || deny "Biome check failed before commit. Run: bunx --bun biome check --write"
+        bunx --bun biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || advise "Biome check failed before commit. Run: bunx --bun biome check --write"
       elif command -v pnpm >/dev/null 2>&1; then
-        pnpm exec biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || deny "Biome check failed before commit. Run: pnpm exec biome check --write"
+        pnpm exec biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || advise "Biome check failed before commit. Run: pnpm exec biome check --write"
       elif command -v npx >/dev/null 2>&1; then
-        npx biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || deny "Biome check failed before commit. Run: npx biome check --write"
+        npx biome check "${js_files[@]}" >/tmp/agentic-biome.log 2>&1 || advise "Biome check failed before commit. Run: npx biome check --write"
       fi
     fi
   fi
+fi
+
+# Non-blocking: surface accumulated findings as advisory context. The commit
+# proceeds regardless (locked policy: lint gate is advisory, not a hard deny).
+if [[ -n "$advisories" ]]; then
+  ctx="QUALITY ADVISORY: lint/format issues detected before commit (non-blocking). Consider fixing, or add [skip lint] to the commit message to silence:"$'\n'"$advisories"
+  jq -cn --arg ctx "$ctx" '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "allow",
+      permissionDecisionReason: $ctx,
+      additionalContext: $ctx
+    }
+  }'
 fi
 
 exit 0

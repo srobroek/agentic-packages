@@ -61,9 +61,12 @@ if [ -n "$ACTIVE_SPEC" ] && [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
       fi
     fi
   else
-    # Fallback: tasks.md checkmarks for non-project specs
-    UNCHECKED=$(grep -c '^\- \[ \]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || echo "0")
-    CHECKED=$(grep -c '^\- \[X\]\|^\- \[x\]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || echo "0")
+    # Fallback: tasks.md checkmarks for non-project specs.
+    # `grep -c` prints 0 AND exits 1 on no match. The old `|| echo 0` produced a
+    # second 0 ("0\n0"), breaking the `-gt` tests below. Use `|| true` so grep's
+    # own 0 stands; then default.
+    UNCHECKED=$(grep -c '^\- \[ \]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || true); UNCHECKED=${UNCHECKED:-0}
+    CHECKED=$(grep -c '^\- \[X\]\|^\- \[x\]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || true); CHECKED=${CHECKED:-0}
     if [ "$UNCHECKED" -gt 0 ] && [ "$CHECKED" -gt 0 ]; then
       WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $UNCHECKED tasks remaining ($CHECKED completed)"$'\n'
     fi

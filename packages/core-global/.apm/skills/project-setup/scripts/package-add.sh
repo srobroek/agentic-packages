@@ -30,12 +30,12 @@ LANG_ARGS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --name)      PKG_NAME="$2"; shift 2 ;;
-        --lang)      PKG_LANG="$2"; shift 2 ;;
-        --dir)       PKG_DIR="$2"; shift 2 ;;
-        --lang-args) LANG_ARGS="$2"; shift 2 ;;
+        --name)      PKG_NAME="${2:?--name needs a value}"; shift 2 ;;
+        --lang)      PKG_LANG="${2:?--lang needs a value}"; shift 2 ;;
+        --dir)       PKG_DIR="${2:?--dir needs a value}"; shift 2 ;;
+        --lang-args) LANG_ARGS="${2:?--lang-args needs a value}"; shift 2 ;;
         --help)
-            sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+            sed -n '3,/^$/p' "$0" | sed -E 's/^#[[:space:]]?//'
             exit 0
             ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -47,10 +47,42 @@ if [ -z "$PKG_NAME" ]; then
     exit 1
 fi
 
+# Reject path-traversal / absolute names before any mkdir. The package name is
+# later interpolated into "$ROOT/$PKG_DIR/$PKG_NAME"; a name containing a slash,
+# a ".." component, or a leading "/" could escape the packages directory and
+# create or overwrite files anywhere on disk.
+case "$PKG_NAME" in
+    */*|*\\*)
+        echo "Error: --name must not contain a path separator: $PKG_NAME" >&2
+        exit 1
+        ;;
+    ..|.|"")
+        echo "Error: --name must be a plain package name: $PKG_NAME" >&2
+        exit 1
+        ;;
+esac
+case "$PKG_NAME" in
+    *..*)
+        echo "Error: --name must not contain '..': $PKG_NAME" >&2
+        exit 1
+        ;;
+esac
+
 if [ -z "$PKG_LANG" ]; then
     echo "Error: --lang is required (ts, rust, python, go)" >&2
     exit 1
 fi
+
+# Validate the language against the known overlay set before creating the dir,
+# so an unknown --lang fails fast instead of leaving an empty package directory
+# behind when the overlay script is missing.
+case "$PKG_LANG" in
+    ts|rust|python|go) ;;
+    *)
+        echo "Error: --lang must be one of: ts, rust, python, go (got: $PKG_LANG)" >&2
+        exit 1
+        ;;
+esac
 
 # --- Find monorepo root ---
 # Walk up until we find a workspace marker
