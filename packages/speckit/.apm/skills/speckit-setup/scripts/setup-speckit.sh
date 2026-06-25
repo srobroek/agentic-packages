@@ -12,29 +12,97 @@
 # The APM speckit orchestration bundle (agents, DAG, hooks) carries this script;
 # the bundle's DAG keys off the `.specify/` scaffold this produces.
 #
-# Usage: setup-speckit.sh [--integration <name>] [--script <sh|ps>] [--force]
-#   --integration   coding-agent integration for `specify init` (default: codex)
+# Usage: setup-speckit.sh [--integration <name>] [--render-for <csv>] [--script <sh|ps>] [--force]
+#   --integration   PRIMARY coding-agent integration -- the one `specify init` records as
+#                   default_integration and the one this script lands on at the end.
+#                   DEFAULT: auto-detected from the agent running this script (see below);
+#                   falls back to codex with a warning only when undetectable. The agent
+#                   invoking the skill SHOULD pass this explicitly (it knows what it is).
+#   --render-for    Comma-separated integrations to render extension command files for, so
+#                   /speckit.* exists in every agent the project compiles steering for (e.g.
+#                   "claude,codex"). The primary is always included. DEFAULT: just --integration.
 #   --script        script flavor for `specify init` (default: sh)
 #   --force         pass --force to `specify init` (skip dir-not-empty prompt)
+#
+# WHY auto-detect the primary: `specify extension add` renders an extension's command files
+# ONLY for the integration active at add-time. If `specify init` records the wrong primary
+# (historically a hardcoded `codex`), every extension renders for codex even when a Claude Code
+# session is driving setup -- and a naive re-run repeats the mistake. Detecting the running
+# agent makes the default correct; the explicit --integration parameter lets the agent decide.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKFLOW_ROOT="$SCRIPT_DIR/workflows"
 
-INTEGRATION="codex"
+INTEGRATION=""        # empty => auto-detect (resolve_primary_integration below)
+RENDER_FOR=""         # empty => render for the primary only
 SCRIPT_FLAVOR="sh"
 FORCE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --integration) INTEGRATION="${2:?--integration needs a value}"; shift 2 ;;
+    --render-for)  RENDER_FOR="${2:?--render-for needs a value}"; shift 2 ;;
     --script)      SCRIPT_FLAVOR="${2:?--script needs a value}"; shift 2 ;;
     --force)       FORCE="--force"; shift ;;
-    -h|--help)     sed -n '2,16p' "$0"; exit 0 ;;
+    -h|--help)     sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
+
+# Detect which coding agent is running this script from its environment. Returns the
+# spec-kit integration name (claude|codex) or empty if undetectable (plain shell / CI).
+# Ordered most-specific-first; AI_AGENT is the normalized cross-agent marker, then each
+# agent's own native env vars as a fallback.
+detect_agent() {
+  case "${AI_AGENT:-}" in
+    *claude*) echo claude; return ;;
+    *codex*)  echo codex;  return ;;
+  esac
+  if [ -n "${CLAUDECODE:-}" ] || [ -n "${CLAUDE_CODE_ENTRYPOINT:-}" ] || [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then
+    echo claude; return
+  fi
+  if [ -n "${CODEX_SANDBOX:-}" ] || [ -n "${CODEX_HOME:-}" ] || [ -n "${CODEX_SANDBOX_NETWORK_DISABLED:-}" ]; then
+    echo codex; return
+  fi
+  echo ""
+}
+
+# Built-in integration to bounce through when forcing a re-registration switch onto an
+# already-active integration (switch-to-self is a no-op and renders nothing).
+other_builtin() { [ "$1" = "codex" ] && echo claude || echo codex; }
+
+# Resolve the primary integration: explicit flag wins; else detect; else codex + warn.
+if [ -z "$INTEGRATION" ]; then
+  INTEGRATION="$(detect_agent)"
+  if [ -n "$INTEGRATION" ]; then
+    echo "==> auto-detected primary integration: $INTEGRATION (pass --integration to override)"
+  else
+    INTEGRATION="codex"
+    echo "WARNING: could not detect the running agent; defaulting primary integration to '$INTEGRATION'." >&2
+    echo "         Pass --integration <claude|codex> explicitly to be sure." >&2
+  fi
+fi
+
+# Build the ordered, de-duplicated render list: every requested integration with the
+# primary forced LAST, so the script lands on the primary after rendering the others.
+RENDER_LIST=()
+_add_render() {
+  local want="$1" have
+  [ -z "$want" ] && return
+  for have in "${RENDER_LIST[@]}"; do [ "$have" = "$want" ] && return; done
+  RENDER_LIST+=("$want")
+}
+# Split --render-for on commas (bash 3.2-safe), excluding the primary for now.
+_old_ifs="$IFS"; IFS=','
+for _r in $RENDER_FOR; do
+  _r="${_r#"${_r%%[![:space:]]*}"}"; _r="${_r%"${_r##*[![:space:]]}"}"  # trim
+  [ "$_r" = "$INTEGRATION" ] && continue
+  _add_render "$_r"
+done
+IFS="$_old_ifs"
+_add_render "$INTEGRATION"   # primary always last
 
 CATALOG_NAME="community"
 CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json"
