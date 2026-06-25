@@ -8,6 +8,10 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: planning-product
+tags:
+  - bundle
+  - planning
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/debate#^0.1.2

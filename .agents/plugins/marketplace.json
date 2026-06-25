@@ -461,18 +461,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hyperresearch",
-      "source": {
-        "source": "local",
-        "path": "./packages/hyperresearch"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "research"
-    },
-    {
       "name": "incident-response",
       "source": {
         "source": "local",
@@ -857,18 +845,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "prompt-lookup",
-      "source": {
-        "source": "local",
-        "path": "./packages/prompt-lookup"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "code-intelligence"
-    },
-    {
       "name": "python-quality",
       "source": {
         "source": "local",
@@ -905,10 +881,10 @@
       "category": "code-intelligence"
     },
     {
-      "name": "resume",
+      "name": "resume-cv",
       "source": {
         "source": "local",
-        "path": "./packages/resume"
+        "path": "./packages/resume-cv"
       },
       "policy": {
         "installation": "AVAILABLE",

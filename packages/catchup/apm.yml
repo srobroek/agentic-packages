@@ -9,3 +9,8 @@ license: Apache-2.0
 type: skill
 target: all
 includes: auto
+category: project-lifecycle
+tags:
+  - skill
+  - lifecycle
+  - resume

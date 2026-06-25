@@ -2,19 +2,21 @@ name: code-intelligence
 version: 0.2.0
 description: >-
   Codebase understanding toolkit: graph/index/search skills (codebase-index,
-  codebase-memory, explore, prompt-lookup), research and web-fetch, the PR
-  reviewer agent, project-structure steering, and Hobson
-  documentation/architecture plugins.
+  codebase-memory, explore), research and web-fetch, the PR reviewer agent,
+  project-structure steering, and Hobson documentation/architecture plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: code-intelligence
+tags:
+  - bundle
+  - graph
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/codebase-index#^0.1.2
     - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
     - srobroek/agentic-packages/packages/explore#^0.1.2
-    - srobroek/agentic-packages/packages/prompt-lookup#^0.1.2
     - srobroek/agentic-packages/packages/research#^0.1.2
     - srobroek/agentic-packages/packages/web-fetch#^0.1.2
     - srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1

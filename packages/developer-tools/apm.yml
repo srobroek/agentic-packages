@@ -8,6 +8,10 @@ license: MIT
 type: hybrid
 target: all
 includes: auto
+category: engineering
+tags:
+  - bundle
+  - tooling
 dependencies:
   apm:
     - wshobson/agents/plugins/developer-essentials#main

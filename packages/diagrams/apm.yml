@@ -8,6 +8,10 @@ license: MIT
 type: skill
 target: all
 includes: auto
+category: diagrams
+tags:
+  - bundle
+  - diagrams
 dependencies:
   apm:
     - Agents365-ai/drawio-skill#main

@@ -10,6 +10,11 @@ license: Apache-2.0
 type: instructions
 target: all
 includes: auto
+category: speckit
+tags:
+  - bundle
+  - speckit
+  - hooks
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/speckit#^0.5.0

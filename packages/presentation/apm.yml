@@ -8,6 +8,10 @@ license: MIT
 type: skill
 target: all
 includes: auto
+category: presentation
+tags:
+  - bundle
+  - slides
 dependencies:
   apm:
     - daymade/claude-code-skills/daymade-docs/ppt-creator#main

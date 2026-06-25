@@ -1,0 +1,22 @@
+name: resume-cv
+version: 0.1.0
+description: >-
+  CV / career-resume bundle: focused resume-tailoring and broad career-support
+  workflows. Renamed from `resume` to avoid a namespace collision with
+  `resume-session` (which resumes a prior coding SESSION, not a CV).
+author: Sjors Robroek
+license: MIT
+type: skill
+target: all
+includes: auto
+category: resume
+tags:
+  - bundle
+  - resume
+dependencies:
+  apm:
+    # Pinned to immutable commit SHAs: neither upstream publishes tags, so a
+    # branch ref (#master / #main) would be non-reproducible. Bump these SHAs to
+    # adopt upstream changes deliberately.
+    - varunr89/resume-tailoring-skill/skills/resume-tailoring#9a4a0f20f5983d1b533627b8c5191acd1ca0cd89
+    - Paramchoudhary/ResumeSkills#74ae19e7c62b0516d1c298328e5544976c12da5d

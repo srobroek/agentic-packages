@@ -9,6 +9,11 @@ license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
+category: planning-product
+tags:
+  - bundle
+  - matt-pocock
+  - workflows
 dependencies:
   apm:
     - mattpocock/skills/skills/productivity/grill-me#main

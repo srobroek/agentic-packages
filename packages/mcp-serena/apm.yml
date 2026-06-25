@@ -8,6 +8,10 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: mcp
+tags:
+  - mcp
+  - semantic
 dependencies:
   mcp:
     - name: serena

@@ -8,6 +8,10 @@ license: MIT
 type: hybrid
 target: all
 includes: auto
+category: governance
+tags:
+  - bundle
+  - governance
 dependencies:
   apm:
     - wshobson/agents/plugins/protect-mcp#main

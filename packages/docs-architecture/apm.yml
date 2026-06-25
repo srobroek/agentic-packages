@@ -8,6 +8,10 @@ license: MIT
 type: hybrid
 target: all
 includes: auto
+category: docs
+tags:
+  - bundle
+  - documentation
 dependencies:
   apm:
     - wshobson/agents/plugins/documentation-standards#main

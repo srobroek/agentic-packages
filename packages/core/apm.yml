@@ -8,6 +8,10 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
+category: core
+tags:
+  - bundle
+  - baseline
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/project-lifecycle#^0.2.0
