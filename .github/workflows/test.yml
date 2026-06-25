@@ -107,6 +107,39 @@ jobs:
             echo "no pytest files in ${{ matrix.package }}"
           fi
 
+      - name: Run standalone _test_*.py harnesses
+        run: |
+          # Scripts named _test_*.py are __main__-style assertion harnesses, not
+          # pytest modules -- pytest's default discovery (test_*.py) skips the
+          # leading underscore, so run them directly. (e.g. speckit-dag-hooks'
+          # _test_dispatcher.py, which validates the dispatcher against nodes.json.)
+          harnesses=$(find "${{ matrix.package }}" -name '_test_*.py' 2>/dev/null || true)
+          if [ -n "$harnesses" ]; then
+            for h in $harnesses; do
+              echo "harness: $h"
+              ( cd "$(dirname "$h")" && python3 "$(basename "$h")" )
+            done
+          else
+            echo "no _test_*.py harnesses in ${{ matrix.package }}"
+          fi
+
+      - name: Generated-artifact drift gate (build_nodes.py --check)
+        run: |
+          # Any package that ships an authoring builder for a committed compiled
+          # artifact must keep that artifact in sync. build_nodes.py --check
+          # regenerates to a buffer and exits 1 on drift, so a PR that edits the
+          # builder (or hand-edits the committed JSON) without regenerating fails
+          # here. No-op for packages without a builder.
+          builders=$(find "${{ matrix.package }}" -name 'build_nodes.py' 2>/dev/null || true)
+          if [ -n "$builders" ]; then
+            for b in $builders; do
+              echo "drift check: $b"
+              python3 "$b" --check
+            done
+          else
+            echo "no build_nodes.py in ${{ matrix.package }}"
+          fi
+
   # Stable, always-running aggregator -- this is the REQUIRED check on main.
   # Passes when the matrix succeeded OR was legitimately skipped (no changed
   # package ships tests); fails only if a real test leg failed or was cancelled.
