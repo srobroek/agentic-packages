@@ -100,8 +100,12 @@ the relevant earlier step directly.
 3. `/speckit.iterate.apply` -> updates spec/plan/tasks
 4. Update issues for changed/removed/new tasks
 5. If cross-spec impact: `/speckit.sync.conflicts` immediately
-6. `/speckit.checkpoint.commit`
-7. Resume at the step where the change was triggered
+6. `/speckit.roadmap.write` -> re-sync the roadmap entry to the iterated
+   spec/plan/tasks. MANDATORY after every iterate: an iteration changes scope,
+   so the roadmap (and each entry's `governed-by:` field) is stale until
+   rewritten. Do not commit the iteration without it.
+7. `/speckit.checkpoint.commit`
+8. Resume at the step where the change was triggered
 
 ## Gap Closing (converge)
 
