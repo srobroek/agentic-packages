@@ -292,6 +292,14 @@ The README inventory tables are regenerated as part of `build-artifacts`. CI run
 
 ### Adding a new package
 
+Start from a template. [`templates/`](templates/) holds one complete, minimal,
+working example per package type (`templates/<type>-package/` for `skill`,
+`hooks`, `agent`, `instructions`, `bundle`, `hybrid`) plus the manifest starters
+`project-apm.yml` and `global-apm.yml`. Copy the matching `<type>-package/` into
+`packages/<your-name>/`, drop the `-package` suffix, rename the inner files, and
+fill in the content; [`templates/README.md`](templates/README.md) documents the
+canonical layout and the per-type gotchas. Then:
+
 1. Create `packages/<name>/apm.yml` (`type:` one of `skill | agent | instructions | hooks | hybrid`; `target: all`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Use `type: hooks` for a package whose only primitive is hooks (APM derives deployment from the `.apm/hooks/` layout regardless; `type:` is the catalog label).
 2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** — `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** — an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
 3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
