@@ -74,6 +74,13 @@ marketplace:
         - agent
         - engineering
         - repos
+    - name: agent-management
+      source: ./packages/agent-management
+      category: agentic-maintenance
+      tags:
+        - skill
+        - maintenance
+        - apm
     - name: agent-pr-reviewer
       source: ./packages/agent-pr-reviewer
       category: quality
@@ -94,6 +101,13 @@ marketplace:
         - skill
         - maintenance
         - steering
+    - name: brownfield-project
+      source: ./packages/brownfield-project
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - brownfield
     - name: catchup
       source: ./packages/catchup
       category: project-lifecycle
@@ -236,6 +250,13 @@ marketplace:
         - skill
         - code-intelligence
         - navigation
+    - name: find-tools
+      source: ./packages/find-tools
+      category: agentic-maintenance
+      tags:
+        - skill
+        - maintenance
+        - discovery
     - name: frontend
       source: ./packages/frontend
       category: frontend
@@ -576,12 +597,26 @@ marketplace:
       tags:
         - bundle
         - slides
+    - name: project-hygiene
+      source: ./packages/project-hygiene
+      category: agentic-maintenance
+      tags:
+        - skill
+        - maintenance
+        - hygiene
     - name: project-lifecycle
       source: ./packages/project-lifecycle
       category: project-lifecycle
       tags:
         - bundle
         - lifecycle
+    - name: project-setup
+      source: ./packages/project-setup
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - bootstrap
     - name: python-quality
       source: ./packages/python-quality
       category: languages
@@ -642,6 +677,13 @@ marketplace:
       tags:
         - bundle
         - security
+    - name: session-review
+      source: ./packages/session-review
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - review
     - name: sniff
       source: ./packages/sniff
       category: quality

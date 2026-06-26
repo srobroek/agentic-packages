@@ -79,7 +79,14 @@ def _classify(name: str, pkg_dir: Path) -> str:
     rule the README generator used, lifted here verbatim so a single source owns
     classification.
     """
-    if name.startswith("agent-"):
+    skills = list((pkg_dir / ".apm" / "skills").glob("*/SKILL.md"))
+    has_agents = (pkg_dir / ".apm" / "agents").is_dir()
+    # The `agent-` prefix marks a dedicated agent package, but only when it
+    # actually ships an agent under .apm/agents/. A package named `agent-*` that
+    # is really a lone skill (one SKILL.md, no agents dir) -- e.g.
+    # `agent-management`, a skill *about* managing agents -- must classify as a
+    # skill, not an agent, so the prefix rule is guarded by on-disk shape.
+    if name.startswith("agent-") and has_agents:
         return "agent"
     if name.startswith("mcp-"):
         return "mcp"
@@ -90,8 +97,6 @@ def _classify(name: str, pkg_dir: Path) -> str:
     # A skill package ships exactly one skill under .apm/skills/<skill>/ and no
     # agents. A bundle is either a pure dependency aggregator (no own primitives)
     # or a multi-primitive package like speckit (skills + agents + hooks).
-    skills = list((pkg_dir / ".apm" / "skills").glob("*/SKILL.md"))
-    has_agents = (pkg_dir / ".apm" / "agents").is_dir()
     if len(skills) == 1 and not has_agents:
         return "skill"
     return "bundle"

@@ -1,12 +1,13 @@
 name: core-global
 version: 0.7.0
 description: >-
-  Recommended global (user-scope) baseline: the bootstrap workflow skills
-  shipped directly, plus the reusable global skills and agents pulled in by
-  dependency. Install with 'apm install core-global@srobroek-agentic --global'.
+  Recommended global (user-scope) baseline bundle: the bootstrap workflow
+  skills plus the reusable global skills and agents, each now an independently
+  installable package and aggregated here. Install with
+  'apm install core-global@srobroek-agentic --global'.
 author: Sjors Robroek
 license: Apache-2.0
-type: hybrid
+type: bundle
 target: all
 includes: auto
 category: core
@@ -16,6 +17,12 @@ tags:
   - bootstrap
 dependencies:
   apm:
+    - srobroek/agentic-packages/packages/project-setup#^0.1.0
+    - srobroek/agentic-packages/packages/brownfield-project#^0.1.0
+    - srobroek/agentic-packages/packages/project-hygiene#^0.1.0
+    - srobroek/agentic-packages/packages/agent-management#^0.1.0
+    - srobroek/agentic-packages/packages/find-tools#^0.1.0
+    - srobroek/agentic-packages/packages/session-review#^0.1.0
     - srobroek/agentic-packages/packages/catchup#^0.1.3
     - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
     - srobroek/agentic-packages/packages/debate#^0.1.2
