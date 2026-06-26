@@ -176,13 +176,6 @@ marketplace:
       tags:
         - bundle
         - baseline
-    - name: core-global
-      source: ./packages/core-global
-      category: core
-      tags:
-        - bundle
-        - global
-        - bootstrap
     - name: data-ai
       source: ./packages/data-ai
       category: data

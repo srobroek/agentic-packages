@@ -18,7 +18,6 @@
   "packages/commit-push-merge": "0.1.2",
   "packages/commit-push-pr": "0.1.2",
   "packages/core": "0.5.0",
-  "packages/core-global": "0.7.0",
   "packages/data-ai": "0.2.0",
   "packages/debate": "0.1.2",
   "packages/debugging": "0.2.0",

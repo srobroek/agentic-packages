@@ -272,18 +272,6 @@
         }
       ]
     },
-    "packages/core-global": {
-      "release-type": "simple",
-      "component": "core-global",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/data-ai": {
       "release-type": "simple",
       "component": "data-ai",
