@@ -400,7 +400,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "tags": [
         "hooks",
         "git",
@@ -742,7 +742,7 @@
     {
       "name": "mcp-repomix",
       "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "tags": [
         "mcp",
         "repomix"
@@ -932,7 +932,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "tags": [
         "bundle",
         "speckit"

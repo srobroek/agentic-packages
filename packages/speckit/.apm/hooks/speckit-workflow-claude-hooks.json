@@ -15,18 +15,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-close-guard.sh",
-            "if": "Bash(gh issue close*)|Bash(*gh issue close*)|Bash(glab issue close*)"
+            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-close-guard.sh"
           },
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-label-guard.sh",
-            "if": "Bash(gh issue create*)|Bash(*gh issue create*)|Bash(glab issue create*)|Bash(*glab issue create*)"
+            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-label-guard.sh"
           },
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-issue-refs.sh",
-            "if": "Bash(gh pr create*)|Bash(*gh pr create*)|Bash(*gh-api.py*pr create*)|Bash(glab mr create*)|Bash(*glab mr create*)"
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-issue-refs.sh"
           }
         ]
       }
