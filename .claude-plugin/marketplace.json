@@ -1140,6 +1140,20 @@
       "source": "./packages/web-fetch"
     },
     {
+      "name": "whats-new",
+      "description": "Research what changed in a tool, CLI, library, framework, package, or other software dependency between the version in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, source repo, changelog, release notes, and the tag-to-tag commit log via machine endpoints (registry APIs, git, host APIs) instead of reading rendered pages, then summarizes into a fixed template.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "code-intelligence",
+        "dependencies",
+        "changelog",
+        "upgrade",
+        "research"
+      ],
+      "source": "./packages/whats-new"
+    },
+    {
       "name": "write-a-skill",
       "description": "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement.",
       "version": "0.1.2",
