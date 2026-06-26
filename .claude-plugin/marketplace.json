@@ -41,6 +41,17 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
+      "name": "agent-management",
+      "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "maintenance",
+        "apm"
+      ],
+      "source": "./packages/agent-management"
+    },
+    {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
       "version": "0.1.1",
@@ -71,6 +82,17 @@
         "steering"
       ],
       "source": "./packages/audit-steering"
+    },
+    {
+      "name": "brownfield-project",
+      "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "brownfield"
+      ],
+      "source": "./packages/brownfield-project"
     },
     {
       "name": "catchup",
@@ -182,7 +204,7 @@
     },
     {
       "name": "core-global",
-      "description": "Recommended global (user-scope) baseline: the bootstrap workflow skills shipped directly, plus the reusable global skills and agents pulled in by dependency. Install with 'apm install core-global@srobroek-agentic --global'.",
+      "description": "Recommended global (user-scope) baseline bundle: the bootstrap workflow skills plus the reusable global skills and agents, each now an independently installable package and aggregated here. Install with 'apm install core-global@srobroek-agentic --global'.",
       "version": "0.7.0",
       "tags": [
         "bundle",
@@ -297,6 +319,17 @@
         "navigation"
       ],
       "source": "./packages/explore"
+    },
+    {
+      "name": "find-tools",
+      "description": "Discover and vet reusable skills, agents, MCP servers, connectors, and APM packages. Use when the user asks to find a capability, compare tools, fill a marketplace gap, evaluate an external package, or decide whether to adopt, wrap, fork, reject, or build.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "maintenance",
+        "discovery"
+      ],
+      "source": "./packages/find-tools"
     },
     {
       "name": "frontend",
@@ -847,6 +880,17 @@
       "source": "./packages/presentation"
     },
     {
+      "name": "project-hygiene",
+      "description": "Audit project-local APM agents, skills, hooks, MCP config, generated steering, and package fit. Use when asked for project hygiene, cleanup, installed agent or skill review, stale generated assets, duplicate tooling, or agentic package drift.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "maintenance",
+        "hygiene"
+      ],
+      "source": "./packages/project-hygiene"
+    },
+    {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
       "version": "0.2.0",
@@ -855,6 +899,17 @@
         "lifecycle"
       ],
       "source": "./packages/project-lifecycle"
+    },
+    {
+      "name": "project-setup",
+      "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "bootstrap"
+      ],
+      "source": "./packages/project-setup"
     },
     {
       "name": "python-quality",
@@ -951,6 +1006,17 @@
         "security"
       ],
       "source": "./packages/security"
+    },
+    {
+      "name": "session-review",
+      "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-a-skill`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "review"
+      ],
+      "source": "./packages/session-review"
     },
     {
       "name": "sniff",

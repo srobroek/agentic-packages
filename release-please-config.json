@@ -92,6 +92,18 @@
         }
       ]
     },
+    "packages/agent-management": {
+      "release-type": "simple",
+      "component": "agent-management",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-pr-reviewer": {
       "release-type": "simple",
       "component": "agent-pr-reviewer",
@@ -119,6 +131,18 @@
     "packages/audit-steering": {
       "release-type": "simple",
       "component": "audit-steering",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/brownfield-project": {
+      "release-type": "simple",
+      "component": "brownfield-project",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -371,6 +395,18 @@
     "packages/explore": {
       "release-type": "simple",
       "component": "explore",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/find-tools": {
+      "release-type": "simple",
+      "component": "find-tools",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1004,9 +1040,33 @@
         }
       ]
     },
+    "packages/project-hygiene": {
+      "release-type": "simple",
+      "component": "project-hygiene",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/project-lifecycle": {
       "release-type": "simple",
       "component": "project-lifecycle",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/project-setup": {
+      "release-type": "simple",
+      "component": "project-setup",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1115,6 +1175,18 @@
     "packages/security": {
       "release-type": "simple",
       "component": "security",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/session-review": {
+      "release-type": "simple",
+      "component": "session-review",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
