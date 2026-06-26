@@ -512,6 +512,18 @@
         }
       ]
     },
+    "packages/hooks-close-keywords": {
+      "release-type": "simple",
+      "component": "hooks-close-keywords",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-git-safety": {
       "release-type": "simple",
       "component": "hooks-git-safety",
@@ -587,6 +599,18 @@
     "packages/hooks-portability-ci": {
       "release-type": "simple",
       "component": "hooks-portability-ci",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-precommit-gate": {
+      "release-type": "simple",
+      "component": "hooks-precommit-gate",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
