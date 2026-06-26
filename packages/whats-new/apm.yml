@@ -1,0 +1,22 @@
+name: whats-new
+version: 0.1.0
+description: >-
+  Research what changed in a tool, CLI, library, framework, package, or other
+  software dependency between the version in use and the latest: breaking
+  changes, deprecations, new features, and fixes. Resolves versions, source
+  repo, changelog, release notes, and the tag-to-tag commit log via machine
+  endpoints (registry APIs, git, host APIs) instead of reading rendered pages,
+  then summarizes into a fixed template.
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto
+category: code-intelligence
+tags:
+  - skill
+  - code-intelligence
+  - dependencies
+  - changelog
+  - upgrade
+  - research

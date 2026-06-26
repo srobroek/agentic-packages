@@ -35,6 +35,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `unstuck` | Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. Ships an outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops) with an escalating nudge/directive/edit-gate ladder on both runtimes. |
 | `verify` | Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR. |
 | `web-fetch` | Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online. |
+| `whats-new` | Research what changed in a tool, CLI, library, framework, package, or other software dependency between the version in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, source repo, changelog, release notes, and the tag-to-tag commit log via machine endpoints (registry APIs, git, host APIs) instead of reading rendered pages, then summarizes into a fixed template. |
 | `write-a-skill` | Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement. |
 <!-- END:skills -->
 

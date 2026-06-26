@@ -22,6 +22,7 @@ dependencies:
     - srobroek/agentic-packages/packages/eli5#^0.1.2
     - srobroek/agentic-packages/packages/handover#^0.1.2
     - srobroek/agentic-packages/packages/write-a-skill#^0.1.2
+    - srobroek/agentic-packages/packages/whats-new#^0.1.0
     - srobroek/agentic-packages/packages/chezmoi-editor#^0.2.1
     - srobroek/agentic-packages/packages/agent-coder#^0.1.1
     - srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
