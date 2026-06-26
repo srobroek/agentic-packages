@@ -5,8 +5,9 @@ description: >-
   functional-programming specialists.
 author: Sjors Robroek
 license: Apache-2.0
-type: hybrid
+type: bundle
 target: all
+includes: auto
 category: languages
 tags:
   - bundle

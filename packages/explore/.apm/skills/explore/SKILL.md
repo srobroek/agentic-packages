@@ -9,7 +9,6 @@ description: Lightweight read-only codebase orientation -- file discovery, path 
 graph queries against the indexed code graph.
 
 - Answer quick "where/what" questions with `grep`, `glob`, and targeted file reads.
-- For structural questions (callers, callees, architecture, impact), delegate to
-  the `codebase-memory` skill when the codebase-memory-mcp server is available;
-  otherwise stay with `grep` / `glob`.
+- For structural questions (callers, callees, architecture, impact), prefer the
+  graph per `codebase-memory`; fall back to `grep` / `glob` when it can't answer.
 - Do not edit or write any files.

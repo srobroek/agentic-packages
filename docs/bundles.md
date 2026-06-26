@@ -12,7 +12,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `mcp-codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
 | `codex-hook-contract` | Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks | self-contained |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `core-global` | Recommended global (user-scope) baseline | `catchup`, `codebase-memory`, `debate`, `eli5`, `handover`, `write-a-skill`, `chezmoi-editor`, `agent-coder`, `agent-pr-reviewer`, `agent-adversarial-challenger`, `agent-external-repo-worker`, `grill-me`^ |

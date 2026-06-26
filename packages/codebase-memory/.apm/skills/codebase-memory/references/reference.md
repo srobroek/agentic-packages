@@ -7,7 +7,7 @@ Prefer loading this only when the question is about the tool itself.
 - indexing: `index_repository`, `index_status`, `detect_changes`
 - graph search: `search_graph`, `query_graph`, `get_graph_schema`
 - code lookup: `get_code_snippet`, `search_code`
-- architecture and impact: `get_architecture`, `trace_call_path`
+- architecture and impact: `get_architecture`, `trace_path`
 
 ## Common Edge Types
 

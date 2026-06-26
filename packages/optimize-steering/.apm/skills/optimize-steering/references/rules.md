@@ -14,7 +14,7 @@ Every file must have YAML frontmatter with a `description` field.
 - Frame as actions to take, not things to avoid
 - For non-obvious rules, add a brief reason
 
-**Why**: ALL CAPS causes overtriggering on current models. Model names bias toward one vendor's behavior -- cross-model prompts degrade 27-39% when transferred. Negative instructions backfire: attention mechanisms highlight forbidden concepts. A reason outperforms a heavy-handed directive.
+**Why**: Overusing emphatic directives dilutes their signal, so reserve them for safety. Model names bias the prompt toward one vendor's behavior and reduce cross-model portability. Negative instructions can backfire by foregrounding the forbidden concept; framing as an action plus a brief reason is more reliable.
 
 ## R3: Structure
 
@@ -49,4 +49,4 @@ Target under 50 lines. Split files with two distinct topics, routing + detail co
 
 Index files contain routing tables only -- what file covers what topic, when to load it. No rules or procedures inline. Three-tier loading: L0 index (always), L1 phase docs (when active), L2 references (when consulted).
 
-**Why**: Progressive disclosure delivers 60-80% token reduction and 80%+ instruction compliance improvement.
+**Why**: Progressive disclosure keeps eager context small and loads detail only when relevant, reducing wasted tokens and competing instructions.

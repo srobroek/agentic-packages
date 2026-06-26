@@ -16,6 +16,7 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/codebase-index#^0.1.2
     - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
+    - srobroek/agentic-packages/packages/mcp-codebase-memory#^0.1.0
     - srobroek/agentic-packages/packages/explore#^0.1.2
     - srobroek/agentic-packages/packages/research#^0.1.2
     - srobroek/agentic-packages/packages/web-fetch#^0.1.2

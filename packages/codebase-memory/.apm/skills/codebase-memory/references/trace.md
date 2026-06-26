@@ -5,7 +5,7 @@ Use this path for call-chain and impact analysis.
 ## Typical Flow
 
 1. `search_graph` to find the exact symbol
-2. `trace_call_path` with `inbound`, `outbound`, or `both`
+2. `trace_path` with `inbound`, `outbound`, or `both`
 3. `detect_changes` when assessing recent blast radius
 
 ## Use Cases

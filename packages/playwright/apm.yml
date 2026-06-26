@@ -13,3 +13,6 @@ tags:
   - skill
   - frontend
   - browser
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/mcp-playwright#^0.1.0

@@ -27,9 +27,10 @@ Prefer existing project patterns and local helper APIs. Keep changes minimal
 and behavioral. Add or update focused tests when the task changes behavior
 or fixes a bug.
 
-For code discovery: use codebase-memory-mcp (search_graph, trace_path,
-get_code_snippet) and repomix (pack_codebase, grep_repomix_output).
-Use context7 (resolve-library-id then query-docs) for library API documentation.
+For code discovery: prefer the graph per `codebase-memory` (search_graph,
+trace_path, get_code_snippet); fall back to grep when it can't answer. Use
+repomix (pack_codebase, grep_repomix_output) and context7 (resolve-library-id
+then query-docs) for library API documentation.
 
 Final response must include: changed files, verification commands and results,
 risks or blockers, follow-up needed from main thread.
