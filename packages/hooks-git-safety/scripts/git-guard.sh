@@ -22,6 +22,11 @@ if [[ -z "$command" || "$command" == "null" ]]; then
   exit 0
 fi
 
+# Directory the command runs in (for repo-state inspection). Both Claude and
+# Codex put it in `.cwd`; fall back to $PWD when absent or not a directory.
+cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
+[[ -n "$cwd" && "$cwd" != "null" && -d "$cwd" ]] || cwd="$PWD"
+
 lowered="$(printf '%s' "$command" | tr '[:upper:]' '[:lower:]')"
 
 # Hard reject: the operation is refused outright.
@@ -151,9 +156,64 @@ match_sub() {
   return 1
 }
 
+# Would an operation that discards uncommitted TRACKED changes in $cwd actually
+# lose work? Shared by `reset --hard`, `restore` (worktree), and `checkout --`.
+#
+# All three only ever destroy uncommitted changes to tracked files (staged +
+# unstaged) — those are gone for good, not in the reflog. Committed content is
+# always recoverable, untracked files are untouched, and a `reset --hard` ref
+# move stays reflog-recoverable. So the only irreversible loss is a dirty
+# tracked tree.
+#
+# Returns 0 (true, "work would be lost") when the tracked tree is dirty OR when
+# we cannot determine the state — fail CLOSED, because the entire purpose of the
+# guard is to never silently allow an unrecoverable loss. Returns 1 only when we
+# positively confirm a clean tracked tree (untracked-only is clean enough).
+uncommitted_work_at_risk() {
+  local root status
+  # If the command redirects git to a DIFFERENT repo/worktree (-C <path>,
+  # --git-dir=, --work-tree=), $cwd is not the repo being acted on and we cannot
+  # trust its state. Lowercasing already collapsed `-C` into `-c`, so detect on
+  # the original (case-sensitive) command. Undeterminable target → fail closed.
+  case " $command " in
+    *" -C "*) return 0 ;;
+  esac
+  if [[ "$command" =~ (^|[[:space:]])--git-dir([[:space:]=]) ]] \
+    || [[ "$command" =~ (^|[[:space:]])--work-tree([[:space:]=]) ]]; then
+    return 0
+  fi
+
+  # Must be inside a work tree; if not (or git is unavailable), fail closed.
+  root="$(git -C "$cwd" rev-parse --is-inside-work-tree 2>/dev/null || true)"
+  [[ "$root" == "true" ]] || return 0
+
+  # Porcelain v1 with -uno: list only tracked changes (untracked files are
+  # excluded by -uno, so an untracked-only working dir reports clean). Any line
+  # of output means staged and/or unstaged tracked changes exist → would lose.
+  if ! status="$(git -C "$cwd" status --porcelain -uno 2>/dev/null)"; then
+    return 0   # status failed — cannot confirm clean, fail closed
+  fi
+  [[ -n "$status" ]]
+}
+
+# Is this `git restore` STAGED-ONLY — i.e. it only unstages the index and never
+# touches the working tree? `git restore --staged <path>` moves staged→unstaged
+# (reverse of `git add`); the working tree is untouched and it is fully
+# reversible, so it is always safe. The working tree IS affected when --worktree
+# is given, or when --staged is absent (worktree is restore's default). Short
+# flags (-S/-W) collapse ambiguously under lowercasing (-S→-s collides with
+# --source's -s), so we classify on the long forms and let any short-flag form
+# fall through to the destructive branch (errs toward ask — safe).
+restore_is_staged_only() {
+  [[ "$lowered" =~ (^|[[:space:]])--staged([[:space:]]|$) ]] || return 1
+  [[ "$lowered" =~ (^|[[:space:]])--worktree([[:space:]]|$) ]] && return 1
+  return 0
+}
+
 # ---------------------------------------------------------------------------
 # HARD DENY (locked policy): only truly unrecoverable operations.
-#   * git reset --hard  (destroys uncommitted work, no per-file confirmation)
+#   * git reset --hard  (destroys uncommitted work) — but ONLY when the tracked
+#     tree is dirty, since a clean reset --hard loses nothing
 #   * git push --force / --force-with-lease / -f  (rewrites remote history)
 # ---------------------------------------------------------------------------
 
@@ -162,8 +222,14 @@ match_sub() {
 # `git reset --hard HEAD~3`, `git reset --soft --hard`, ... The leading
 # `([[:space:]]+[^[:space:]]+)*` consumes zero-or-more intervening tokens, so
 # both the immediate and the trailing-flag forms are caught.
+#
+# Only block when work would actually be lost: a dirty tracked tree (or an
+# undeterminable state). A clean tracked tree means `reset --hard` discards
+# nothing unrecoverable, so it is allowed through.
 if match_sub 'reset([[:space:]]+[^[:space:]]+)*[[:space:]]+--hard([[:space:]]|$)'; then
-  deny "refusing git reset --hard (hard block: destroys uncommitted work)"
+  if uncommitted_work_at_risk; then
+    deny "refusing git reset --hard: the working tree has uncommitted changes to tracked files that would be permanently lost. Commit or stash them first."
+  fi
 fi
 
 # Force push rewrites remote history and can destroy other people's commits —
@@ -176,12 +242,26 @@ fi
 # ASK (recoverable ops): confirm before running.
 # ---------------------------------------------------------------------------
 
+# `git checkout -- <path>` discards uncommitted worktree changes to those paths
+# (old-style equivalent of `restore --worktree`). Only an uncommitted change is
+# at risk — committed content is recoverable — so ask only when the tree is
+# dirty (or its state is undeterminable); a clean tree loses nothing.
 if match_sub 'checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+--([[:space:]]|$)'; then
-  ask "git checkout -- discards local changes to the named paths — confirm to proceed."
+  if uncommitted_work_at_risk; then
+    ask "git checkout -- discards uncommitted changes to the named paths — confirm to proceed."
+  fi
 fi
 
-if match_sub 'restore([[:space:]].*)?(--staged|--worktree|--source)'; then
-  ask "git restore can discard local changes — confirm to proceed."
+# `git restore` matched at command position (subcommand form only — not a stray
+# `--source`/`--staged` appearing in some other command's args).
+if match_sub 'restore([[:space:]]|$)'; then
+  # --staged WITHOUT --worktree only unstages the index; the working tree is
+  # untouched and it is fully reversible — always allow. Any form that touches
+  # the working tree (default, or explicit --worktree) discards uncommitted
+  # changes, so ask only when those changes actually exist.
+  if ! restore_is_staged_only && uncommitted_work_at_risk; then
+    ask "git restore discards uncommitted changes to the named paths — confirm to proceed."
+  fi
 fi
 
 # Destructive git clean. Force is requested via --force OR a flag cluster that
@@ -191,11 +271,17 @@ if match_sub 'clean([[:space:]]+[^[:space:]]+)*[[:space:]]+(--force|-[a-z]*f[a-z
   ask "destructive git clean removes untracked files — confirm to proceed."
 fi
 
-# Branch deletion: --delete, or a short-flag cluster containing `d`/`D`
-# (lowercased to `d`): -d, -D, -dr, ... `--delete`/`--merged` etc. are excluded
-# because the cluster form is single-dash only.
+# Branch deletion. `git branch -d`/`--delete` is the SAFE, merge-checked delete:
+# git refuses it unless the branch is fully merged, so the commits stay
+# reachable elsewhere — allow silently. Only a FORCE delete (`-D`, or
+# `--delete --force`/`-df`) removes a possibly-unmerged branch, so ask on that.
+# -d and -D differ ONLY by case, which the lowercased view collapses, so detect
+# force on the original case-preserving $command (as the -C check does).
 if match_sub 'branch[[:space:]]+(--delete|-[a-z]*d[a-z]*)([[:space:]]|$)'; then
-  ask "git branch deletion — confirm to proceed."
+  if [[ "$command" =~ (^|[[:space:]])-[a-zA-Z]*[Df][a-zA-Z]*([[:space:]]|$) ]] \
+    || [[ "$command" =~ (^|[[:space:]])--force([[:space:]]|$) ]]; then
+    ask "git branch force-deletion removes a possibly-unmerged branch — confirm to proceed."
+  fi
 fi
 
 if match_sub 'stash[[:space:]]+(drop|clear)'; then
@@ -206,8 +292,13 @@ if match_sub 'tag([[:space:]]+[^[:space:]]+)*[[:space:]]+(-d|--delete)([[:space:
   ask "git tag deletion — confirm to proceed."
 fi
 
+# git worktree remove refuses to delete a worktree with uncommitted or untracked
+# changes UNLESS --force, so the plain form is safe — allow it. Only the force
+# form can discard uncommitted work, so ask on --force/-f.
 if match_sub 'worktree[[:space:]]+remove([[:space:]]|$)'; then
-  ask "git worktree remove deletes the worktree checkout — confirm to proceed."
+  if [[ "$command" =~ (^|[[:space:]])(--force|-[a-zA-Z]*f[a-zA-Z]*)([[:space:]]|$) ]]; then
+    ask "git worktree remove --force discards any uncommitted changes in that worktree — confirm to proceed."
+  fi
 fi
 
 exit 0

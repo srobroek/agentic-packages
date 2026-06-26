@@ -28,7 +28,7 @@ payload="$(cat)"
 # a command), so we feed it to BOTH checks: file_path catches a bare managed path,
 # command catches a managed write verb/redirect. Neither check denies unless an
 # exact managed write target is found, so applying both is safe.
-command="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
+cmd="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
 file_path="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.file_path // .tool_input.path // empty) end' 2>/dev/null || true)"
 
 deny() {
@@ -120,7 +120,7 @@ if [[ -n "$file_path" && "$file_path" != "null" ]]; then
 fi
 
 # --- Shell commands that mutate files ------------------------------------------
-[[ -z "$command" || "$command" == "null" ]] && exit 0
+[[ -z "$cmd" || "$cmd" == "null" ]] && exit 0
 
 # Only deny when a chezmoi-managed file is an actual WRITE TARGET. A managed path
 # that merely appears as a READ argument (cat/diff/ls/grep/readlink ...) must pass,
@@ -160,20 +160,26 @@ while IFS= read -r rt; do
   [[ -z "$rt" ]] && continue
   case "$rt" in /dev/*) continue ;; esac
   targets+=("$rt")
-done < <(printf '%s' "$command" | grep -oE '[0-9]*>>?[[:space:]]*("[^"]*"|'\''[^'\'']*'\''|[^[:space:]|&;<>]+)' || true)
+done < <(printf '%s' "$cmd" | grep -oE '[0-9]*>>?[[:space:]]*("[^"]*"|'\''[^'\'']*'\''|[^[:space:]|&;<>]+)' || true)
 
 # (b) In-place / destructive verbs whose path operands ARE the target
 #     (rm, touch, chmod, chown, tee, ln, sed -i, perl -pi). Scan dotfile operands.
-if printf '%s' "$command" | grep -Eq '(^|[[:space:]])(rm|touch|chmod|chown|tee|ln)([[:space:]]|$)|(^|[[:space:]])sed[[:space:]].*-i|(^|[[:space:]])perl[[:space:]].*-pi'; then
+if printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])(rm|touch|chmod|chown|tee|ln)([[:space:]]|$)|(^|[[:space:]])sed[[:space:]].*-i|(^|[[:space:]])perl[[:space:]].*-pi'; then
   while IFS= read -r tok; do
     [[ -n "$tok" ]] && targets+=("$tok")
-  done < <(printf '%s' "$command" | grep -oE "$dotfile_re" || true)
+  done < <(printf '%s' "$cmd" | grep -oE "$dotfile_re" || true)
 fi
 
 # (c) cp / mv: the destination is the last argument — check only that, so a
 #     managed file used as a read SOURCE (`cp managed /tmp/x`) is not blocked.
-if printf '%s' "$command" | grep -Eq '(^|[[:space:]])(cp|mv)([[:space:]]|$)'; then
-  targets+=("$(unquote "$(printf '%s' "$command" | awk '{print $NF}')")")
+#     Strip any trailing redirections FIRST (`cp src managed >/dev/null` would
+#     otherwise make $NF the redirect token `/dev/null` and miss the real managed
+#     destination). Drop every `[fd]>|>>  target` segment, then take the last arg.
+if printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])(cp|mv)([[:space:]]|$)'; then
+  # Drop fd-dups (`2>&1`) first, then `[fd]>|>> target` redirects, so neither the
+  # dup nor a redirect target can be mistaken for the cp/mv destination.
+  cp_mv="$(printf '%s' "$cmd" | sed -E 's/[[:space:]][0-9]*>&[0-9-]+//g; s/[[:space:]][0-9]*>>?[[:space:]]*("[^"]*"|'\''[^'\'']*'\''|[^[:space:]|&;<>]+)//g')"
+  targets+=("$(unquote "$(printf '%s' "$cp_mv" | awk '{print $NF}')")")
 fi
 
 # Decision is always chezmoi's: deny iff a write-target is an exact managed entry.
