@@ -1,3 +1,4 @@
+# Released at 1.0.0 to align with the catalog-wide 1.0 baseline.
 name: secrets-scan
 version: 0.1.0
 description: >-
