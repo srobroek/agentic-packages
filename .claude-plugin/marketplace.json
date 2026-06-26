@@ -377,7 +377,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Blocks git commits that carry AI authorship attribution (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers), enforcing that the human is the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not blocked. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -388,7 +388,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME, mkfs, dd to a device, sandbox-bypass), ask on curl|sh pipes, warn on sudo + destructive verbs. rm -rf allows project-local/temp cleanup silently and asks only on absolute/parent/variable targets. Matching is anchored to command position to avoid quoted-string false positives. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "bash",
@@ -410,7 +410,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "chezmoi",
@@ -422,7 +422,7 @@
     {
       "name": "hooks-close-keywords",
       "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that blocks with the corrected --body to re-issue. Cross-tool (Claude + Codex).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "git",
@@ -434,7 +434,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards: hard-block `git reset --hard` only when the tracked tree is dirty (work would be lost) and `git push --force`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -512,7 +512,7 @@
     {
       "name": "hooks-precommit-gate",
       "description": "Ensures the pre-commit framework actually runs. PreToolUse on git commit/push: when the repo HAS a .pre-commit-config.yaml but the matching git hook is not installed (.git/hooks/pre-commit / pre-push missing), it blocks with \"run pre-commit install\"; it also blocks --no-verify, which would skip the framework. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (whose enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "git",
@@ -522,7 +522,7 @@
     },
     {
       "name": "hooks-quality",
-      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex).",
+      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK — it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
       "version": "1.0.1",
       "tags": [
         "hooks",
@@ -545,7 +545,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Enforce an explicit worktree-isolation decision on every subagent spawn. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to re-issue with `isolation:\"worktree\"` (the child writes to THIS repo) or with an `[iso:skip]` sentinel appended to the description (read-only, a different repo, or must edit the parent tree directly). The sentinel is stripped from the description before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "hooks",
         "worktree",
@@ -833,7 +833,7 @@
     {
       "name": "mcp-serena",
       "description": "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "mcp",
         "semantic"
@@ -928,7 +928,7 @@
     {
       "name": "project-setup",
       "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -1014,7 +1014,7 @@
     {
       "name": "secrets-scan",
       "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "security",
         "secrets",
