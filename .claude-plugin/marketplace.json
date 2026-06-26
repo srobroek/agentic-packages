@@ -1141,7 +1141,7 @@
     },
     {
       "name": "whats-new",
-      "description": "Research what changed in a tool, CLI, library, framework, package, or other software dependency between the version in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, source repo, changelog, release notes, and the tag-to-tag commit log via machine endpoints (registry APIs, git, host APIs) instead of reading rendered pages, then summarizes into a fixed template.",
+      "description": "Research what changed in a tool, CLI, library, framework, package, or dependency — or a technology, cloud service, hosted API, platform, or model family (AWS Bedrock, Anthropic/Claude, OpenAI, GCP, Azure, …) — between what is in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, repos, changelogs, release notes, commit logs, and service announcement feeds/APIs via machine endpoints instead of reading rendered pages, then summarizes into a fixed template.",
       "version": "0.1.0",
       "tags": [
         "skill",
@@ -1149,7 +1149,9 @@
         "dependencies",
         "changelog",
         "upgrade",
-        "research"
+        "research",
+        "services",
+        "release-notes"
       ],
       "source": "./packages/whats-new"
     },

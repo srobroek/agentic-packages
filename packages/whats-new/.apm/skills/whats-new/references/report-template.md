@@ -1,18 +1,22 @@
-# Upgrade Research Report Template
+# What's New Report Template
 
 Fill **every** section. If a section has no findings, write "None found" plus
 the sources you checked — never leave it blank (a blank reads as "not
 researched", which is different from "nothing to report"). Cite a source for
-each material claim: release tag, commit SHA (short), CHANGELOG heading, or doc
-URL.
+each material claim: release tag, commit SHA (short), CHANGELOG heading, feed
+entry date, or doc URL.
+
+The header line adapts to the target kind: a **version span** for software, a
+**date window** for a service/stream.
 
 ```md
-# What's New: <name> <current> → <latest>
+# What's New: <name>  <current → latest>  |  <since <date> → now>
 
 ## Summary
-- One-line verdict (e.g. "Safe minor bump" / "Major — breaking, plan a migration").
-- Span researched: <current> → <latest> (<N> intermediate releases).
-- Sources used: <releases | commits | changelog | docs>; missing: <...>.
+- One-line verdict — software: "Safe minor bump" / "Major — breaking, plan a
+  migration"; service: "N notable launches since <date>, M relevant to us".
+- Scope researched: <current> → <latest> (<N> releases), or window <date> → now.
+- Sources used: <releases | commits | changelog | feed | API | docs>; missing: <...>.
 
 ## Breaking changes
 - <change> — impact on this codebase if known. (source: <tag/SHA/url>)
