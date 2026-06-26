@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# PreToolUse hook: warn when editing package files directly
-# Suggests using native package commands instead.
+# Hook: PreToolUse:Edit|Write|MultiEdit — warn when editing a dependency
+# manifest directly, steering toward the package manager's add command.
 # Advisory only (additionalContext), never blocks.
 
 INPUT=$(cat)
-# Only the actual file path identifies a package file. The Edit tool's
-# old_string is replacement text, not a path, so it must not be used here.
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
-# If no file path found, try to extract from arguments
-if [ -z "$FILE_PATH" ]; then
-  exit 0
-fi
+# Only the actual file path identifies a manifest. The Edit tool's old_string is
+# replacement text, not a path, so it is NOT consulted here. tool_input may be an
+# object (Edit/Write carry .file_path; NotebookEdit carries .notebook_path) — the
+# type-checked idiom keeps a string-form payload from throwing and bypassing the
+# hook. 2>/dev/null suppresses jq parse errors on malformed stdin.
+FILE_PATH=$(printf '%s' "$INPUT" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.file_path // .tool_input.notebook_path // empty) end' 2>/dev/null)
+
+[ -z "$FILE_PATH" ] && exit 0
 
 BASENAME=$(basename "$FILE_PATH" 2>/dev/null)
 
@@ -38,4 +39,5 @@ jq -n --arg msg "PACKAGE FILE EDIT: $MSG" '{
     additionalContext: $msg
   }
 }' 2>/dev/null
+
 exit 0

@@ -5,7 +5,7 @@ description: >-
   and a quality check before commits. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
-type: instructions
+type: hooks
 target: all
 includes: auto
 category: quality

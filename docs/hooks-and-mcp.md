@@ -16,6 +16,9 @@ A package ships hooks as `.apm/hooks/<pkg>-{claude,codex}-hooks.json` plus a `sc
 | `hooks-git-safety` | Git safety guards: hard-block `git reset --hard`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push — plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex). |
 | `hooks-git-workflow` | Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex). |
 | `hooks-no-ff` | Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex). |
+| `hooks-package-file-guard` | Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing a dependency manifest directly (go.mod, package.json, Cargo.toml, pyproject.toml, Gemfile, composer.json), steering toward the package manager's add command. Advisory only, never blocks. Cross-tool (Claude + Codex). |
+| `hooks-package-investigate` | Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex). |
+| `hooks-pkg-version-warn` | Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo "pip install ..."` does not trip it. Cross-tool (Claude + Codex). |
 | `hooks-quality` | Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex). |
 | `hooks-squash-merge` | Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex). |
 | `hooks-tool-prefs` | Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex). |
@@ -31,7 +34,7 @@ Pre-wired Model Context Protocol servers. Installing one adds the server's tools
 | --- | --- |
 | `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
 | `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
-| `mcp-package-version` | MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages. |
+| `mcp-package-version` | MCP server for package version discovery |
 | `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
 | `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |

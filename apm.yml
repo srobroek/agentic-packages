@@ -181,6 +181,22 @@ marketplace:
       tags:
         - bundle
         - debugging
+    - name: dep-audit
+      source: ./packages/dep-audit
+      category: security
+      tags:
+        - skill
+        - security
+        - dependencies
+        - audit
+        - cve
+    - name: dependency-quality
+      source: ./packages/dependency-quality
+      category: project-lifecycle
+      tags:
+        - bundle
+        - dependencies
+        - supply-chain
     - name: developer-tools
       source: ./packages/developer-tools
       category: engineering
@@ -297,6 +313,27 @@ marketplace:
         - hooks
         - git
         - policy
+    - name: hooks-package-file-guard
+      source: ./packages/hooks-package-file-guard
+      category: project-lifecycle
+      tags:
+        - hooks
+        - dependencies
+        - manifest
+    - name: hooks-package-investigate
+      source: ./packages/hooks-package-investigate
+      category: project-lifecycle
+      tags:
+        - hooks
+        - dependencies
+        - supply-chain
+    - name: hooks-pkg-version-warn
+      source: ./packages/hooks-pkg-version-warn
+      category: project-lifecycle
+      tags:
+        - hooks
+        - dependencies
+        - versions
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality

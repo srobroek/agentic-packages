@@ -233,6 +233,30 @@
       "category": "debugging"
     },
     {
+      "name": "dep-audit",
+      "source": {
+        "source": "local",
+        "path": "./packages/dep-audit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "security"
+    },
+    {
+      "name": "dependency-quality",
+      "source": {
+        "source": "local",
+        "path": "./packages/dependency-quality"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "developer-tools",
       "source": {
         "source": "local",
@@ -429,6 +453,42 @@
       "source": {
         "source": "local",
         "path": "./packages/hooks-no-ff"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "hooks-package-file-guard",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-package-file-guard"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "hooks-package-investigate",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-package-investigate"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "hooks-pkg-version-warn",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-pkg-version-warn"
       },
       "policy": {
         "installation": "AVAILABLE",

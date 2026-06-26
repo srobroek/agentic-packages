@@ -1,0 +1,17 @@
+name: hooks-package-file-guard
+version: 0.1.0
+description: >-
+  Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing
+  a dependency manifest directly (go.mod, package.json, Cargo.toml,
+  pyproject.toml, Gemfile, composer.json), steering toward the package manager's
+  add command. Advisory only, never blocks. Cross-tool (Claude + Codex).
+author: Sjors Robroek
+license: Apache-2.0
+type: hooks
+target: all
+includes: auto
+category: project-lifecycle
+tags:
+  - hooks
+  - dependencies
+  - manifest

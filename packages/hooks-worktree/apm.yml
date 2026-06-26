@@ -6,7 +6,7 @@ description: >-
   Claude WorktreeCreate/WorktreeRemove events.
 author: Sjors Robroek
 license: Apache-2.0
-type: instructions
+type: hooks
 target: all
 includes: auto
 category: project-lifecycle

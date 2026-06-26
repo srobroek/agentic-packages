@@ -16,6 +16,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `commit-push-merge` | Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method. |
 | `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
 | `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
+| `dep-audit` | Scan the project's lockfiles and manifests for known-vulnerable dependencies using the ecosystem's native scanners (npm/pnpm audit, pip-audit, cargo audit, govulncheck, osv-scanner) and report CVEs grouped by severity. Never auto-fixes. |
 | `eli5` | Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts. |
 | `explore` | Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |

@@ -284,6 +284,30 @@
         }
       ]
     },
+    "packages/dep-audit": {
+      "release-type": "simple",
+      "component": "dep-audit",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/dependency-quality": {
+      "release-type": "simple",
+      "component": "dependency-quality",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/developer-tools": {
       "release-type": "simple",
       "component": "developer-tools",
@@ -479,6 +503,42 @@
     "packages/hooks-no-ff": {
       "release-type": "simple",
       "component": "hooks-no-ff",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-package-file-guard": {
+      "release-type": "simple",
+      "component": "hooks-package-file-guard",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-package-investigate": {
+      "release-type": "simple",
+      "component": "hooks-package-investigate",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-pkg-version-warn": {
+      "release-type": "simple",
+      "component": "hooks-pkg-version-warn",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

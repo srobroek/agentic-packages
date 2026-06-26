@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# package-investigate.sh — PreToolUse hook on Bash.
+#
+# When the agent is about to ADD/INSTALL a dependency, nudge it (non-blocking,
+# additionalContext) to investigate the package BEFORE committing to it:
+# trustworthiness, maintenance, quality, popularity — and weigh alternatives.
+# For update/upgrade/remove, a lighter nudge (review the change; no discovery).
+#
+# WHY a command hook (not a prompt/agent hook): agent/prompt hooks BLOCK the turn
+# and cannot run async (only `command` hooks support async). A command hook is
+# near-instant and lets the MAIN agent — which has web/context7/full context — do
+# the actual investigation, instead of a blind 50-turn subagent. Self-gates, so it
+# needs no `if` filter and is registered ONCE (also sidesteps the `if`-alternation
+# bug: per-hook `if` takes a single rule, `|` silently matches nothing).
+set -euo pipefail
+
+payload="$(cat)"
+[[ -z "$payload" ]] && exit 0
+
+command="$(
+  printf '%s' "$payload" | jq -r '
+    if (.tool_input | type) == "string" then .tool_input
+    else (.tool_input.command // empty)
+    end
+  ' 2>/dev/null || true
+)"
+[[ -z "$command" || "$command" == "null" ]] && exit 0
+
+emit() {
+  jq -cn --arg ctx "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}'
+  exit 0
+}
+
+# Lowercased view for matching (package names are extracted from the original).
+lc="$(printf '%s' "$command" | tr '[:upper:]' '[:lower:]')"
+
+# Command-position boundary: start of string, OR after a real shell separator
+# (; & | newline, incl. && / ||) plus optional spaces. Deliberately NOT plain
+# whitespace — that misfires on `echo 'run pnpm add later'`, where the package
+# command sits inside a quoted argument rather than at a command position.
+b='(^|[;&|]&?&?[[:space:]]*|[[:space:]]*[;&|]+[[:space:]]*)'
+
+# ADD / INSTALL a NEW dependency -> full investigation nudge.
+add_re="${b}(pnpm[[:space:]]+(add|install)|npm[[:space:]]+(install|i|add)|yarn[[:space:]]+add|bun[[:space:]]+add|uv[[:space:]]+(add|pip[[:space:]]+install)|pip3?[[:space:]]+install|poetry[[:space:]]+add|cargo[[:space:]]+add|go[[:space:]]+get|go[[:space:]]+install|gem[[:space:]]+install|bundle[[:space:]]+add|composer[[:space:]]+require)([[:space:]]|$)"
+
+# UPDATE / UPGRADE / REMOVE existing deps -> lighter review nudge.
+chg_re="${b}(pnpm[[:space:]]+(update|up|remove)|npm[[:space:]]+(update|upgrade|uninstall|remove|rm)|yarn[[:space:]]+(up|upgrade|remove)|bun[[:space:]]+(update|remove)|uv[[:space:]]+(remove|lock|sync)|pip3?[[:space:]]+uninstall|poetry[[:space:]]+(update|remove)|cargo[[:space:]]+(update|upgrade|remove)|go[[:space:]]+mod[[:space:]]+tidy|bundle[[:space:]]+(update|remove)|composer[[:space:]]+(update|remove))([[:space:]]|$)"
+
+if [[ "$lc" =~ $add_re ]]; then
+  emit "Before adding this dependency, investigate it and report briefly: \
+1) Trustworthiness — reputable author/org, no typosquat, sane permissions; \
+2) Maintenance — recent releases, open-issue health, not abandoned/deprecated; \
+3) Quality & popularity — downloads/stars, used by credible projects, docs/tests; \
+4) Alternatives — is there a better-maintained or stdlib/already-present option, or is a dependency even warranted? \
+Use the package registry / web / context7 to check current facts (don't rely on memory). If it's clearly fine, say so in one line and proceed; if there's a concern or a better alternative, raise it before installing."
+fi
+
+if [[ "$lc" =~ $chg_re ]]; then
+  emit "Dependency change (update/upgrade/remove): confirm it's intended and check for breaking changes / changelog notes for the new version, and that nothing still depends on anything being removed. Prefer the latest compatible version. No need to re-vet a package already in use unless the major version changes."
+fi
+
+exit 0

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-package-version-v0.1.1...mcp-package-version-v0.2.0) (2026-06-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mcp-package-version:** split advisory hooks out into standalone hook packages. This package now ships only the package-version MCP server registration. The `package-file-warn.sh` and `pkg-version-warn.sh` PreToolUse hooks (and the `.apm/hooks` JSON wiring) have been removed and are now provided by their own independent hook packages. Installations relying on this package for the file/version advisory hooks must add the new hook packages.
+
 ## [0.1.1](https://github.com/srobroek/agentic-packages/compare/mcp-package-version-v0.1.0...mcp-package-version-v0.1.1) (2026-06-12)
 
 

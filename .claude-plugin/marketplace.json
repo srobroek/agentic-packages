@@ -212,6 +212,30 @@
       "source": "./packages/debugging"
     },
     {
+      "name": "dep-audit",
+      "description": "Scan the project's lockfiles and manifests for known-vulnerable dependencies using the ecosystem's native scanners (npm/pnpm audit, pip-audit, cargo audit, govulncheck, osv-scanner) and report CVEs grouped by severity. Never auto-fixes.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "security",
+        "dependencies",
+        "audit",
+        "cve"
+      ],
+      "source": "./packages/dep-audit"
+    },
+    {
+      "name": "dependency-quality",
+      "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
+      "version": "0.1.0",
+      "tags": [
+        "bundle",
+        "dependencies",
+        "supply-chain"
+      ],
+      "source": "./packages/dependency-quality"
+    },
+    {
       "name": "developer-tools",
       "description": "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.",
       "version": "0.1.0",
@@ -394,6 +418,39 @@
         "policy"
       ],
       "source": "./packages/hooks-no-ff"
+    },
+    {
+      "name": "hooks-package-file-guard",
+      "description": "Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing a dependency manifest directly (go.mod, package.json, Cargo.toml, pyproject.toml, Gemfile, composer.json), steering toward the package manager's add command. Advisory only, never blocks. Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "dependencies",
+        "manifest"
+      ],
+      "source": "./packages/hooks-package-file-guard"
+    },
+    {
+      "name": "hooks-package-investigate",
+      "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "dependencies",
+        "supply-chain"
+      ],
+      "source": "./packages/hooks-package-investigate"
+    },
+    {
+      "name": "hooks-pkg-version-warn",
+      "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "dependencies",
+        "versions"
+      ],
+      "source": "./packages/hooks-pkg-version-warn"
     },
     {
       "name": "hooks-quality",
@@ -664,8 +721,8 @@
     },
     {
       "name": "mcp-package-version",
-      "description": "MCP server package for Package Version, providing dependency version discovery before adding or upgrading packages.",
-      "version": "0.1.1",
+      "description": "MCP server for package version discovery",
+      "version": "0.2.0",
       "tags": [
         "mcp",
         "versions"
