@@ -1,5 +1,5 @@
 name: hooks-precommit-gate
-version: 0.2.0
+version: 0.2.1
 description: >-
   Ensures the pre-commit framework actually runs. PreToolUse on git commit/push:
   when the repo HAS a .pre-commit-config.yaml but the matching git hook is not
