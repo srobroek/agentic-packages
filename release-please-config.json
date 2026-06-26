@@ -632,6 +632,18 @@
         }
       ]
     },
+    "packages/hooks-subagent-worktree": {
+      "release-type": "simple",
+      "component": "hooks-subagent-worktree",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-tool-prefs": {
       "release-type": "simple",
       "component": "hooks-tool-prefs",

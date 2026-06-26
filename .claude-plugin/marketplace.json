@@ -531,6 +531,19 @@
       "source": "./packages/hooks-squash-merge"
     },
     {
+      "name": "hooks-subagent-worktree",
+      "description": "Enforce an explicit worktree-isolation decision on every subagent spawn. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to re-issue with `isolation:\"worktree\"` (the child writes to THIS repo) or with an `[iso:skip]` sentinel appended to the description (read-only, a different repo, or must edit the parent tree directly). The sentinel is stripped from the description before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
+      "version": "0.1.0",
+      "tags": [
+        "hooks",
+        "worktree",
+        "subagent",
+        "isolation",
+        "policy"
+      ],
+      "source": "./packages/hooks-subagent-worktree"
+    },
+    {
       "name": "hooks-tool-prefs",
       "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
       "version": "0.2.1",

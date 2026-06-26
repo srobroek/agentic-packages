@@ -48,6 +48,7 @@
   "packages/hooks-portability-ci": "0.1.0",
   "packages/hooks-quality": "0.1.1",
   "packages/hooks-squash-merge": "0.2.1",
+  "packages/hooks-subagent-worktree": "0.1.0",
   "packages/hooks-tool-prefs": "0.2.1",
   "packages/hooks-worktree": "0.2.0",
   "packages/incident-response": "0.1.0",

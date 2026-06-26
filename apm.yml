@@ -384,6 +384,15 @@ marketplace:
         - hooks
         - git
         - policy
+    - name: hooks-subagent-worktree
+      source: ./packages/hooks-subagent-worktree
+      category: project-lifecycle
+      tags:
+        - hooks
+        - worktree
+        - subagent
+        - isolation
+        - policy
     - name: hooks-tool-prefs
       source: ./packages/hooks-tool-prefs
       category: project-lifecycle
