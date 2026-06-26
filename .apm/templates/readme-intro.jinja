@@ -1,0 +1,12 @@
+{#-
+  README intro count bullets. Rendered between <!-- BEGIN:intro-counts --> /
+  <!-- END:intro-counts --> in README.md. ONLY the leading "<n> <noun>" counts
+  are dynamic (driven by inventory counts); the descriptive prose is static.
+  No trailing newline (the injector adds the surrounding marker lines).
+-#}
+- **{{ counts.bundle }} bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **{{ counts.skill }} skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **{{ counts.agent }} agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
+- **{{ counts.steering }} steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **{{ counts.mcp }} MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **{{ counts.hooks }} hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
