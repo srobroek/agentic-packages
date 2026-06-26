@@ -5,8 +5,7 @@ Reference configs for this repo. Two kinds live here:
 - **Package templates** (`<type>-package/`) -- one complete, minimal, working
   example per APM package type. Copy a directory into `packages/<your-name>/`,
   drop the `-package` suffix, rename the inner files, and fill in the content.
-- **Manifest templates** -- `project-apm.yml` (a per-project `apm.yml` starter)
-  and `global-apm.yml` (the user-scope `~/.apm/apm.yml` global layer).
+- **Manifest template** -- `project-apm.yml`, a per-project `apm.yml` starter.
 
 The package templates are **templates, not catalog entries**. They live under
 `templates/`, which is outside the `packages/**` glob and is not listed in the

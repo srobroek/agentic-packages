@@ -294,8 +294,8 @@ The README inventory tables are regenerated as part of `build-artifacts`. CI run
 
 Start from a template. [`templates/`](templates/) holds one complete, minimal,
 working example per package type (`templates/<type>-package/` for `skill`,
-`hooks`, `agent`, `instructions`, `bundle`, `hybrid`) plus the manifest starters
-`project-apm.yml` and `global-apm.yml`. Copy the matching `<type>-package/` into
+`hooks`, `agent`, `instructions`, `bundle`, `hybrid`) plus the `project-apm.yml`
+manifest starter. Copy the matching `<type>-package/` into
 `packages/<your-name>/`, drop the `-package` suffix, rename the inner files, and
 fill in the content; [`templates/README.md`](templates/README.md) documents the
 canonical layout and the per-type gotchas. Then:
