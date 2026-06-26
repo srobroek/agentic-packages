@@ -1,5 +1,5 @@
 name: write-a-skill
-version: 0.1.2
+version: 1.0.0
 description: >-
   Create or rewrite agent skills with precise triggers, progressive disclosure,
   references, scripts, and source-of-truth placement.

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/whats-new-v0.1.0...whats-new-v1.0.0) (2026-06-26)
+
+
+### Features
+
+* add whats-new upgrade-research skill ([#378](https://github.com/srobroek/agentic-packages/issues/378)) ([b330834](https://github.com/srobroek/agentic-packages/commit/b330834182d1dc42e511da1901fd04bc9f333797))
+* extend whats-new to services, platforms, and model families ([#379](https://github.com/srobroek/agentic-packages/issues/379)) ([a72e2d8](https://github.com/srobroek/agentic-packages/commit/a72e2d824d55fe8afb0dc31b8ce4789e35bfbaee))
+
+
+### Chores
+
+* release whats-new and secrets-scan at 1.0.0 ([#382](https://github.com/srobroek/agentic-packages/issues/382)) ([1a153fb](https://github.com/srobroek/agentic-packages/commit/1a153fbbbe8271cfb6856b5638452c95c4c49e34))
+
 ## 0.1.0
 
 ### Features
