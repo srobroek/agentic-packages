@@ -377,7 +377,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Blocks git commits that carry AI authorship attribution (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers), enforcing that the human is the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not blocked. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -388,7 +388,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards: block privilege escalation, curl|sh pipes, and obviously destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard- block it on system-critical paths. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "bash",
@@ -399,7 +399,7 @@
     {
       "name": "hooks-branch-check",
       "description": "Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -410,7 +410,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "chezmoi",
@@ -422,7 +422,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards: hard-block `git reset --hard`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove, warn-and-proceed on force push — plus throttle large gh CLI batches toward a rate-limit-aware helper. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -433,7 +433,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -444,7 +444,7 @@
     {
       "name": "hooks-no-ff",
       "description": "Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -455,7 +455,7 @@
     {
       "name": "hooks-package-file-guard",
       "description": "Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing a dependency manifest directly (go.mod, package.json, Cargo.toml, pyproject.toml, Gemfile, composer.json), steering toward the package manager's add command. Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "dependencies",
@@ -466,7 +466,7 @@
     {
       "name": "hooks-package-investigate",
       "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "dependencies",
@@ -477,7 +477,7 @@
     {
       "name": "hooks-pkg-version-warn",
       "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "dependencies",
@@ -500,7 +500,7 @@
     {
       "name": "hooks-quality",
       "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "quality",
@@ -511,7 +511,7 @@
     {
       "name": "hooks-squash-merge",
       "description": "Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "git",
@@ -522,7 +522,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Enforce an explicit worktree-isolation decision on every subagent spawn. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to re-issue with `isolation:\"worktree\"` (the child writes to THIS repo) or with an `[iso:skip]` sentinel appended to the description (read-only, a different repo, or must edit the parent tree directly). The sentinel is stripped from the description before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "tags": [
         "hooks",
         "worktree",
@@ -535,7 +535,7 @@
     {
       "name": "hooks-tool-prefs",
       "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "tooling",
@@ -546,7 +546,7 @@
     {
       "name": "hooks-worktree",
       "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "hooks",
         "worktree",
@@ -1034,7 +1034,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "bundle",
         "speckit"
