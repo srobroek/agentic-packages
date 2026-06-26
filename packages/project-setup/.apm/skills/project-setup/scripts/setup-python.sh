@@ -101,5 +101,19 @@ if ! grep -q '__pycache__' .gitignore 2>/dev/null; then
     rm -f "$_gi_tmp"
 fi
 
+# --- Step 6: Append ruff pre-commit hooks ---
+if [ -f .pre-commit-config.yaml ] && ! grep -q 'astral-sh/ruff-pre-commit' .pre-commit-config.yaml; then
+    echo "Adding ruff pre-commit hooks..."
+    cat >> .pre-commit-config.yaml <<'PCYAML'
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+PCYAML
+fi
+
 echo ""
 echo "=== Python setup complete ==="

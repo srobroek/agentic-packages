@@ -120,5 +120,19 @@ if ! grep -q '/target' .gitignore 2>/dev/null; then
     rm -f "$_gi_tmp"
 fi
 
+# --- Step 6: Append Rust pre-commit hooks (fmt at commit, clippy at push) ---
+if [ -f .pre-commit-config.yaml ] && ! grep -q 'doublify/pre-commit-rust' .pre-commit-config.yaml; then
+    echo "Adding Rust pre-commit hooks..."
+    cat >> .pre-commit-config.yaml <<'PCYAML'
+
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: clippy
+        stages: [pre-push]
+PCYAML
+fi
+
 echo ""
 echo "=== Rust setup complete ==="

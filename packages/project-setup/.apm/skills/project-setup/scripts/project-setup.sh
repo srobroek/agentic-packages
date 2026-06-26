@@ -367,9 +367,13 @@ if [ -d .git ] && command -v xattr >/dev/null 2>&1; then
     sudo -n xattr -c -r .git/ 2>/dev/null || echo "  WARN: xattr clear failed — run 'sudo xattr -c -r .git/' manually if worktree git operations fail"
 fi
 
-# --- Step 5: Pre-commit config (universal hooks only) ---
+# --- Step 5: Pre-commit config ---
+# Fast, mostly auto-fixing checks at COMMIT stage; the heavier secret scan runs
+# at PRE-PUSH (agents commit often, push rarely — so the heavy scan happens once
+# per push, not every commit, while still catching a secret before it leaves the
+# machine). Language formatters are added by the per-language overlays (Step 11).
 if [ ! -f .pre-commit-config.yaml ]; then
-    echo "Creating .pre-commit-config.yaml (universal hooks)..."
+    echo "Creating .pre-commit-config.yaml (commit-stage hygiene + pre-push secret scan)..."
     cat > .pre-commit-config.yaml <<'PRECOMMIT'
 exclude: '^(\.specify/|specs/)'
 
@@ -381,14 +385,28 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-executable-has-shebang
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+
+  # Secret scan runs at PRE-PUSH (not every commit) over the commits being
+  # pushed. Tool-agnostic: fires on any tool's `git push` once the framework is
+  # installed (Step 5b). gitleaks is the de-facto pre-commit secrets scanner.
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.3
     hooks:
       - id: gitleaks
+        name: gitleaks (secret scan, pre-push)
+        stages: [pre-push]
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.32.0
@@ -401,9 +419,56 @@ repos:
     hooks:
       - id: cocogitto-verify
         stages: [commit-msg]
+
+  # Distribute GitHub close keywords across a comma-list so every issue closes
+  # (GitHub only binds the keyword to the FIRST issue in a list). Vendored from
+  # the hooks-close-keywords package into .pre-commit-hooks/ (Step 5b).
+  - repo: local
+    hooks:
+      - id: normalize-close-keywords
+        name: normalize GitHub close keywords (commit-msg)
+        language: script
+        entry: .pre-commit-hooks/commit-msg-rewrite.sh
+        stages: [commit-msg]
+        always_run: true
 PRECOMMIT
 else
     echo ".pre-commit-config.yaml already exists"
+fi
+
+# --- Step 5b: Vendor close-keywords scripts + install the framework hooks ---
+# The close-keywords commit-msg hook (Step 5) references a vendored script so the
+# committed config is self-contained and travels with the repo. Copy it from the
+# installed hooks-close-keywords package when available.
+mkdir -p .pre-commit-hooks
+CK_SRC=""
+for cand in \
+    "$(find apm_modules -path '*/hooks-close-keywords/scripts' -type d -print -quit 2>/dev/null || true)" \
+    "${AGENTIC_TOOLS_DIR:-}/hooks-close-keywords/scripts"; do
+    if [ -n "$cand" ] && [ -d "$cand" ]; then CK_SRC="$cand"; break; fi
+done
+if [ -n "$CK_SRC" ]; then
+    for f in commit-msg-rewrite.sh normalize-closes.sh; do
+        if [ -f "$CK_SRC/$f" ]; then
+            cp "$CK_SRC/$f" ".pre-commit-hooks/$f"
+            chmod +x ".pre-commit-hooks/$f"
+        fi
+    done
+    echo "Vendored close-keywords scripts into .pre-commit-hooks/"
+else
+    echo "  WARN: hooks-close-keywords scripts not found; the normalize-close-keywords"
+    echo "        commit-msg hook will fail until .pre-commit-hooks/commit-msg-rewrite.sh exists."
+fi
+
+# Install pre-commit and wire the git hooks for all three stages we use.
+if command -v pre-commit >/dev/null 2>&1; then
+    echo "Installing pre-commit git hooks (pre-commit, pre-push, commit-msg)..."
+    pre-commit install -t pre-commit -t pre-push -t commit-msg || \
+        echo "  WARN: 'pre-commit install' failed; run it manually"
+else
+    echo "  WARN: pre-commit not installed. Install it, then run:"
+    echo "        pre-commit install -t pre-commit -t pre-push -t commit-msg"
+    echo "        (try: uv tool install pre-commit  /  pipx install pre-commit  /  brew install pre-commit)"
 fi
 
 # --- Step 6: Skeleton AGENTS.md files ---
