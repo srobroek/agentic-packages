@@ -186,6 +186,31 @@ GITIGNORE
         ;;
 esac
 
+# --- Step 5: Append biome + prettier pre-commit hooks ---
+if [ -f .pre-commit-config.yaml ] && ! grep -q 'biomejs/pre-commit' .pre-commit-config.yaml; then
+    echo "Adding biome pre-commit hook..."
+    cat >> .pre-commit-config.yaml <<'PCYAML'
+
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v0.6.1
+    hooks:
+      - id: biome-check
+        args: [--write]
+PCYAML
+fi
+
+if [ -f .pre-commit-config.yaml ] && ! grep -q 'rbubley/mirrors-prettier' .pre-commit-config.yaml; then
+    echo "Adding prettier pre-commit hook (markdown + yaml)..."
+    cat >> .pre-commit-config.yaml <<'PCYAML'
+
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.3.3
+    hooks:
+      - id: prettier
+        types_or: [markdown, yaml]
+PCYAML
+fi
+
 echo ""
 echo "=== TypeScript setup complete ==="
 echo ""

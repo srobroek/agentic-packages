@@ -127,5 +127,19 @@ if ! grep -q '\*\.test' .gitignore 2>/dev/null; then
     rm -f "$_gi_tmp"
 fi
 
+# --- Step 5: Append Go pre-commit hooks (gofumpt at commit, golangci-lint at push) ---
+if [ -f .pre-commit-config.yaml ] && ! grep -q 'tekwizely/pre-commit-golang' .pre-commit-config.yaml; then
+    echo "Adding Go pre-commit hooks..."
+    cat >> .pre-commit-config.yaml <<'PCYAML'
+
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      - id: go-fmt
+      - id: golangci-lint
+        stages: [pre-push]
+PCYAML
+fi
+
 echo ""
 echo "=== Go setup complete ==="
