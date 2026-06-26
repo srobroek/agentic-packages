@@ -1,16 +1,23 @@
-# Package Type Templates
+# Templates
 
-Reference configs -- one complete, minimal, working example per APM package
-type. Copy a directory into `packages/<your-name>/`, rename the inner files, and
-fill in the content.
+Reference configs for this repo. Two kinds live here:
 
-These are **templates, not catalog entries**. They live under `templates/`,
-which is outside the `packages/**` glob and is not listed in the marketplace
-`packages:` block in the root `apm.yml`. `apm pack` and the marketplace
-enumerate `./packages/*` explicitly, so nothing here is ever installed or
-published. The names all start with `example-` so they are obviously not real.
+- **Package templates** (`<type>-package/`) -- one complete, minimal, working
+  example per APM package type. Copy a directory into `packages/<your-name>/`,
+  drop the `-package` suffix, rename the inner files, and fill in the content.
+- **Manifest templates** -- `project-apm.yml` (a per-project `apm.yml` starter)
+  and `global-apm.yml` (the user-scope `~/.apm/apm.yml` global layer).
 
-## The six types
+The package templates are **templates, not catalog entries**. They live under
+`templates/`, which is outside the `packages/**` glob and is not listed in the
+marketplace `packages:` block in the root `apm.yml`. `apm pack` and the
+marketplace enumerate `./packages/*` explicitly, so nothing here is ever
+installed or published. The names all start with `example-` so they are
+obviously not real.
+
+## The six package types
+
+Each lives in `templates/<type>-package/`:
 
 | Type | Use when | Canonical layout (under the package dir) | #1 gotcha |
 |------|----------|------------------------------------------|-----------|
@@ -33,8 +40,8 @@ This is the script-location bug these templates exist to prevent:
 - **Hook** scripts are referenced from hook JSON as
   `${PLUGIN_ROOT}/scripts/guard.sh` -- resolved from the plugin root -- so they
   must live at the package-root `scripts/`.
-- A **hybrid** has both at once. See `hybrid/`: `run.sh` is nested under the
-  skill, `notify.sh` sits at the package root.
+- A **hybrid** has both at once. See `hybrid-package/`: `run.sh` is nested under
+  the skill, `notify.sh` sits at the package root.
 
 ### 2. Self-gate hooks; do not rely on the `"if"` matcher
 
@@ -42,7 +49,7 @@ The `"if": "Bash(git push*)"` filter on a hook entry has been observed to
 SILENTLY no-match -- the hook simply never fires, with no error -- which can let
 the thing it was guarding through. Use a broad `matcher` (e.g. `"Bash"`) and
 have the script read the payload from stdin, decide whether the command is in
-scope, and exit 0 early when it is not. See `hooks/scripts/guard.sh`.
+scope, and exit 0 early when it is not. See `hooks-package/scripts/guard.sh`.
 
 When parsing the payload, branch on `tool_input` type: it may be an object
 (`{command: "..."}`) or a bare string, and `.tool_input.command // .tool_input`
