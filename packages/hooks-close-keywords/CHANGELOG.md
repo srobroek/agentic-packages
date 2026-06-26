@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords-v0.2.0...hooks-close-keywords-v0.2.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **hooks:** correct invalid package type hooks-&gt;instructions ([#397](https://github.com/srobroek/agentic-packages/issues/397)) ([ad12eaf](https://github.com/srobroek/agentic-packages/commit/ad12eaff7ba5691304f43388d5ca6ee0aac81946))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords-v0.1.0...hooks-close-keywords-v0.2.0) (2026-06-26)
 
 
