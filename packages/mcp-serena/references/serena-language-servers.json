@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "source": "Serena language support and configuration docs",
+  "usage": "Project setup and brownfield setup should read this index when Serena is selected, detect matching languages, run the listed mise_use commands in the project root, then create or update .serena/project.yml with serena project create. Only write language keys supported by the installed Serena runtime; docs-only keys are noted below.",
+  "runtime_validation": {
+    "verified_serena_version": "1.2.0",
+    "verified_command": "solidlsp.ls_config.Language enum from the installed serena-agent Python 3.13 tool environment",
+    "docs_language_keys_not_in_installed_runtime": ["angular", "html", "scss"],
+    "setup_rule": "Do not add docs-only language keys to .serena/project.yml until the installed Serena runtime exposes them. Use the broader companion language instead when possible, such as typescript for Angular/HTML-adjacent projects."
+  },
+  "languages": [
+    {
+      "language": "al",
+      "server": "Microsoft AL language server from the Business Central VS Code extension",
+      "serena_install": "managed",
+      "mise_use": [],
+      "notes": "Serena downloads the VS Code extension by default."
+    },
+    {
+      "language": "angular",
+      "server": "@angular/language-server with TypeScript and HTML companions",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest"],
+      "notes": "Current docs list Angular, but installed Serena 1.2.0 does not expose the angular language key. Do not add this to project.yml until runtime support is present; use typescript for now."
+    },
+    {
+      "language": "ansible",
+      "server": "@ansible/ansible-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "pipx:ansible-core@latest"],
+      "notes": "Experimental and must be explicitly listed in project.yml. ansible in PATH is required for full functionality."
+    },
+    {
+      "language": "bash",
+      "server": "bash-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "npm:bash-language-server@latest"],
+      "notes": "Setting ls_specific_settings.bash.ls_path can point Serena at the mise executable."
+    },
+    {
+      "language": "cpp",
+      "server": "clangd",
+      "serena_install": "managed-or-path",
+      "mise_use": ["github:clangd/clangd@latest"],
+      "notes": "Provide compile_commands.json at the repository root for best results."
+    },
+    {
+      "language": "cpp_ccls",
+      "server": "ccls",
+      "serena_install": "managed-or-path",
+      "mise_use": [],
+      "notes": "Experimental alternative to clangd; prefer cpp/clangd unless a project explicitly needs ccls."
+    },
+    {
+      "language": "clojure",
+      "server": "clojure-lsp",
+      "serena_install": "managed-or-path",
+      "mise_use": ["java@latest", "ubi:clojure-lsp/clojure-lsp@latest"],
+      "notes": "Requires a JVM runtime."
+    },
+    {
+      "language": "crystal",
+      "server": "Crystalline",
+      "serena_install": "path-required",
+      "mise_use": ["crystal@latest"],
+      "notes": "Crystalline must be available on PATH; go-to-definition support is limited upstream."
+    },
+    {
+      "language": "csharp",
+      "server": "Microsoft Roslyn Language Server",
+      "serena_install": "managed-download",
+      "mise_use": ["dotnet@latest"],
+      "notes": ".NET 10 or higher is required. Serena downloads the Roslyn language server from NuGet by default."
+    },
+    {
+      "language": "csharp_omnisharp",
+      "server": "OmniSharp",
+      "serena_install": "managed-download",
+      "mise_use": ["dotnet@latest"],
+      "notes": "Optional fallback for C#; prefer csharp/Roslyn."
+    },
+    {
+      "language": "dart",
+      "server": "Dart SDK built-in language server",
+      "serena_install": "managed-sdk",
+      "mise_use": ["dart@latest"],
+      "notes": "Serena can download a Dart SDK version, but project setup should use mise when Dart is a project language."
+    },
+    {
+      "language": "elixir",
+      "server": "Expert",
+      "serena_install": "managed-download",
+      "mise_use": ["erlang@latest", "elixir@latest"],
+      "notes": "Elixir installation is required; Expert is downloaded automatically."
+    },
+    {
+      "language": "elm",
+      "server": "@elm-tooling/elm-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "elm@latest"],
+      "notes": "Elm compiler is required."
+    },
+    {
+      "language": "erlang",
+      "server": "erlang_ls",
+      "serena_install": "path-required",
+      "mise_use": ["erlang@latest"],
+      "notes": "Docs mark this experimental and require beam plus erlang_ls; install erlang_ls manually if mise has no suitable backend."
+    },
+    {
+      "language": "fortran",
+      "server": "fortls",
+      "serena_install": "python-package",
+      "mise_use": ["pipx:fortls@latest"],
+      "notes": "Docs require fortls. The Serena tool environment may already include it, but project setup should make the dependency explicit when Fortran is detected."
+    },
+    {
+      "language": "fsharp",
+      "server": "FsAutoComplete / Ionide LSP",
+      "serena_install": "managed-dotnet-tool",
+      "mise_use": ["dotnet@latest"],
+      "notes": ".NET 8 or higher is required."
+    },
+    {
+      "language": "go",
+      "server": "gopls",
+      "serena_install": "path-required",
+      "mise_use": ["go@latest", "go:golang.org/x/tools/gopls@latest"],
+      "notes": "gopls must be installed."
+    },
+    {
+      "language": "groovy",
+      "server": "Groovy Language Server JAR",
+      "serena_install": "manual-jar",
+      "mise_use": ["java@latest"],
+      "notes": "Requires a user-provided groovy-language-server.jar configured through project or environment settings."
+    },
+    {
+      "language": "haskell",
+      "server": "Haskell Language Server",
+      "serena_install": "path-or-toolchain",
+      "mise_use": ["ghcup@latest"],
+      "notes": "Serena locates HLS via ghcup, stack, or system PATH. Project may also need stack or cabal."
+    },
+    {
+      "language": "haxe",
+      "server": "vshaxe / haxe-language-server",
+      "serena_install": "managed-or-extension",
+      "mise_use": ["haxe@latest", "node@latest"],
+      "notes": "Requires Haxe compiler 3.4.0 or higher and Node.js."
+    },
+    {
+      "language": "hlsl",
+      "server": "shader-language-server",
+      "serena_install": "managed-download",
+      "mise_use": ["rust@latest"],
+      "notes": "On macOS the server may need Rust to build from source. Used for HLSL, GLSL, and WGSL."
+    },
+    {
+      "language": "html",
+      "server": "vscode-html-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest"],
+      "notes": "Current docs list HTML, but installed Serena 1.2.0 does not expose the html language key. Do not add this to project.yml until runtime support is present."
+    },
+    {
+      "language": "java",
+      "server": "eclipse.jdt.ls",
+      "serena_install": "managed-download",
+      "mise_use": ["java@latest"],
+      "notes": "Requires a JDK."
+    },
+    {
+      "language": "julia",
+      "server": "Julia Language Server",
+      "serena_install": "managed-through-julia",
+      "mise_use": ["julia@latest"],
+      "notes": "Requires Julia."
+    },
+    {
+      "language": "json",
+      "server": "vscode-json-languageserver",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "npm:vscode-langservers-extracted@latest"],
+      "notes": "Experimental and must be explicitly listed in project.yml."
+    },
+    {
+      "language": "kotlin",
+      "server": "JetBrains Kotlin Language Server",
+      "serena_install": "managed-download",
+      "mise_use": ["java@latest"],
+      "notes": "Docs describe the server as pre-alpha."
+    },
+    {
+      "language": "lean4",
+      "server": "lean --server",
+      "serena_install": "path-required",
+      "mise_use": [],
+      "notes": "Requires lean and lake via elan; run lake build before use."
+    },
+    {
+      "language": "lua",
+      "server": "lua-language-server",
+      "serena_install": "managed-or-path",
+      "mise_use": ["lua@latest"],
+      "notes": "Serena downloads lua-language-server when it cannot use an existing installation."
+    },
+    {
+      "language": "luau",
+      "server": "luau-lsp",
+      "serena_install": "managed-or-path",
+      "mise_use": [],
+      "notes": "Serena downloads luau-lsp if it is not available on PATH."
+    },
+    {
+      "language": "markdown",
+      "server": "Marksman",
+      "serena_install": "managed-download",
+      "mise_use": ["ubi:artempyanykh/marksman@latest"],
+      "notes": "Experimental and must be explicitly listed in project.yml."
+    },
+    {
+      "language": "matlab",
+      "server": "MathWorks MATLAB language server from VS Code extension",
+      "serena_install": "managed-extension",
+      "mise_use": [],
+      "notes": "Requires MATLAB R2021b or later; set matlab_path or MATLAB_PATH if auto-detection is insufficient."
+    },
+    {
+      "language": "msl",
+      "server": "Serena bundled pygls mSL server",
+      "serena_install": "bundled",
+      "mise_use": [],
+      "notes": "No external dependency required."
+    },
+    {
+      "language": "nix",
+      "server": "nixd",
+      "serena_install": "path-required",
+      "mise_use": [],
+      "notes": "Requires nixd. Use the project platform's Nix tooling if mise cannot install it cleanly."
+    },
+    {
+      "language": "ocaml",
+      "server": "ocaml-lsp-server",
+      "serena_install": "path-required",
+      "mise_use": ["opam@latest"],
+      "notes": "Requires opam and ocaml-lsp-server; see Serena OCaml setup guide."
+    },
+    {
+      "language": "pascal",
+      "server": "pasls",
+      "serena_install": "managed-or-path",
+      "mise_use": [],
+      "notes": "Set PP/FPCDIR or project settings for source navigation."
+    },
+    {
+      "language": "perl",
+      "server": "Perl::LanguageServer",
+      "serena_install": "path-required",
+      "mise_use": ["perl@latest"],
+      "notes": "Requires Perl::LanguageServer installation."
+    },
+    {
+      "language": "php",
+      "server": "Intelephense",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "php@latest", "npm:intelephense@latest"],
+      "notes": "Set INTELEPHENSE_LICENSE_KEY for premium features if needed."
+    },
+    {
+      "language": "php_phpactor",
+      "server": "Phpactor",
+      "serena_install": "managed-phar",
+      "mise_use": ["php@latest"],
+      "notes": "Alternative to Intelephense; requires PHP 8.1 or higher."
+    },
+    {
+      "language": "powershell",
+      "server": "PowerShell Editor Services",
+      "serena_install": "managed-download",
+      "mise_use": [],
+      "notes": "Requires pwsh available locally."
+    },
+    {
+      "language": "python",
+      "server": "Pyright via python -m pyright.langserver",
+      "serena_install": "bundled-python-package",
+      "mise_use": ["python@latest", "npm:pyright@latest"],
+      "notes": "Serena defaults to the Python executable running Serena. Use ls_path for a project interpreter override if needed."
+    },
+    {
+      "language": "python_jedi",
+      "server": "Jedi language server",
+      "serena_install": "python-package",
+      "mise_use": ["python@latest"],
+      "notes": "Alternative Python backend exposed by installed Serena. Prefer python/Pyright unless a project explicitly needs Jedi behavior."
+    },
+    {
+      "language": "python_ty",
+      "server": "ty language server",
+      "serena_install": "python-package",
+      "mise_use": ["python@latest"],
+      "notes": "Alternative Python backend exposed by installed Serena. Treat as experimental unless a project explicitly chooses ty."
+    },
+    {
+      "language": "r",
+      "server": "R languageserver package",
+      "serena_install": "path-required",
+      "mise_use": ["github:r-lib/rig@latest"],
+      "notes": "mise has no r tool registry entry. Install rig with mise, use rig to install R, then install the R languageserver package."
+    },
+    {
+      "language": "rego",
+      "server": "Rego language server",
+      "serena_install": "path-required",
+      "mise_use": [],
+      "notes": "Installed Serena exposes the rego language key, but no verified mise install command was found here. Use project platform tooling to install the Rego language server when needed."
+    },
+    {
+      "language": "ruby",
+      "server": "Shopify ruby-lsp",
+      "serena_install": "managed-gem-or-path",
+      "mise_use": ["ruby@latest"],
+      "notes": "Serena installs ruby-lsp when no project-local or global ruby-lsp is available."
+    },
+    {
+      "language": "ruby_solargraph",
+      "server": "Solargraph",
+      "serena_install": "managed-gem-or-path",
+      "mise_use": ["ruby@latest"],
+      "notes": "Legacy alternative; prefer ruby/ruby-lsp."
+    },
+    {
+      "language": "rust",
+      "server": "rust-analyzer",
+      "serena_install": "rustup-or-path",
+      "mise_use": ["rust@latest", "rust-analyzer@latest"],
+      "notes": "Serena prefers rustup which rust-analyzer, then rustup component add rust-analyzer, then PATH."
+    },
+    {
+      "language": "scala",
+      "server": "Metals",
+      "serena_install": "managed-bootstrap",
+      "mise_use": ["java@latest", "scala@latest", "sbt@latest"],
+      "notes": "Requires Scala project setup; see Serena Scala guide."
+    },
+    {
+      "language": "scss",
+      "server": "some-sass-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest"],
+      "notes": "Current docs list SCSS/Sass/CSS, but installed Serena 1.2.0 does not expose the scss language key. Do not add this to project.yml until runtime support is present."
+    },
+    {
+      "language": "solidity",
+      "server": "@nomicfoundation/solidity-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest"],
+      "notes": "Experimental; works best with foundry.toml or hardhat.config.js."
+    },
+    {
+      "language": "swift",
+      "server": "sourcekit-lsp",
+      "serena_install": "toolchain",
+      "mise_use": ["swift@latest"],
+      "notes": "Requires Swift toolchain with sourcekit-lsp."
+    },
+    {
+      "language": "systemverilog",
+      "server": "verible-verilog-ls",
+      "serena_install": "managed-or-path",
+      "mise_use": [],
+      "notes": "Serena downloads Verible if it cannot use a system installation."
+    },
+    {
+      "language": "terraform",
+      "server": "terraform-ls",
+      "serena_install": "managed-download",
+      "mise_use": ["terraform@latest", "terraform-ls@latest"],
+      "notes": "Terraform itself must be installed and available in PATH."
+    },
+    {
+      "language": "toml",
+      "server": "Taplo",
+      "serena_install": "managed-download",
+      "mise_use": ["taplo@latest"],
+      "notes": "Experimental in Serena; can be explicitly listed in project.yml."
+    },
+    {
+      "language": "typescript",
+      "server": "typescript-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "npm:typescript@latest", "npm:typescript-language-server@latest"],
+      "notes": "Use for JavaScript and TypeScript. Configure additional_workspace_folders in project.yml for cross-package reference discovery."
+    },
+    {
+      "language": "typescript_vts",
+      "server": "@vtsls/language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest"],
+      "notes": "Experimental alternative; actual language key is typescript_vts."
+    },
+    {
+      "language": "vue",
+      "server": "@vue/language-server with TypeScript companion",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "npm:typescript@latest", "npm:typescript-language-server@latest"],
+      "notes": "Requires Node.js 18 or higher and npm; supports Vue 3.x."
+    },
+    {
+      "language": "yaml",
+      "server": "yaml-language-server",
+      "serena_install": "managed-npm",
+      "mise_use": ["node@latest", "npm:yaml-language-server@latest"],
+      "notes": "Experimental and must be explicitly listed in project.yml."
+    },
+    {
+      "language": "zig",
+      "server": "ZLS",
+      "serena_install": "path-required",
+      "mise_use": ["zig@latest", "ubi:zigtools/zls@latest"],
+      "notes": "Requires ZLS."
+    }
+  ]
+}

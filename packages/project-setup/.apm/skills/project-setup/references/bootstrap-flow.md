@@ -48,8 +48,10 @@ the protected directories from inside the sandbox.
   `srobroek-agentic`, `wshobson-agents`, and `voltagent-subagents`. Add
   `--extra-marketplace <name=owner/repo>` for more catalogues. Keep package
   names scoped as `<package>@<marketplace>`.
-- Recommendation priority comes from the canonical preference index at
-  `agentic-packages/indexes/apm-package-preferences.json` when available. The index is
+- Recommendation priority comes from the canonical preference index
+  `apm-package-preferences.json`, which ships with this skill under `indexes/`
+  (override with `APM_PACKAGE_PREFERENCES_FILE`, or a project-local
+  `indexes/apm-package-preferences.json` in the cwd). The index is
   not the full selectable package set; every package shown by remote marketplace
   browse is selectable. When the user selects any package, including one not
   already in the preference index, rerun discovery with matching `--profile`

@@ -91,7 +91,6 @@ SELECTED_AGENTS=()
 SELECTED_SKILLS=()
 SELECTED_MCP=()
 QUALITY_LANGS=()
-AGENTIC_TOOLS_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/agentic-tools"
 
 run_apm() {
     if [ -z "${GITHUB_APM_PAT:-}" ] && command -v gh >/dev/null 2>&1; then
@@ -234,12 +233,10 @@ if $CREATE_REPO; then
     VISIBILITY="--private"
     $PUBLIC && VISIBILITY="--public"
 
-    # Prefer the gh-api.py wrapper; fall back to plain gh when absent.
+    # Prefer the gh-api.py wrapper (if on PATH); fall back to plain gh.
     GH_CMD=()
     if command -v gh-api.py >/dev/null 2>&1; then
         GH_CMD=(gh-api.py gh)
-    elif [ -x "$AGENTIC_TOOLS_DIR/github/gh-api.py" ]; then
-        GH_CMD=("$AGENTIC_TOOLS_DIR/github/gh-api.py" gh)
     elif command -v gh >/dev/null 2>&1; then
         GH_CMD=(gh)
     fi

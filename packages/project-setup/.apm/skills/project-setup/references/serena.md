@@ -26,11 +26,11 @@ Serena itself is installed globally through the chezmoi-managed mise config as
 
 1. Detect project languages from source files, package manifests, and existing
    toolchain config.
-2. Read the global Serena language-server index at
-   `../../indexes/serena-language-servers.json` (provisioned by the global
-   bootstrap install, not by this repository).
+2. Read the Serena language-server index `serena-language-servers.json`. It
+   ships with the `mcp-serena` package (under its `references/`); locate it in
+   that installed package, or skip if `mcp-serena` is not installed.
 3. For each detected Serena-supported language, run the listed `mise use ...`
-   commands from the project root. If the index file is missing, skip the
+   commands from the project root. If the index cannot be found, skip the
    `mise` pre-install and let `serena project create` detect languages.
 4. Do not write docs-only language keys listed under
    `runtime_validation.docs_language_keys_not_in_installed_runtime` to
