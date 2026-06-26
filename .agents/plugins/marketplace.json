@@ -221,18 +221,6 @@
       "category": "core"
     },
     {
-      "name": "core-global",
-      "source": {
-        "source": "local",
-        "path": "./packages/core-global"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "core"
-    },
-    {
       "name": "data-ai",
       "source": {
         "source": "local",
