@@ -138,6 +138,17 @@
       "source": "./packages/codebase-memory"
     },
     {
+      "name": "codex-hook-contract",
+      "description": "Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event names, the stdin payload shape (object vs string .tool_input), and how Codex honors a hook decision (permissionDecision vs decision.behavior vs exit codes), with exact tests to verify each open claim. Documentation only -- no scripts.",
+      "version": "0.0.1",
+      "tags": [
+        "codex",
+        "hooks",
+        "reference"
+      ],
+      "source": "./packages/codex-hook-contract"
+    },
+    {
       "name": "commit-push-merge",
       "description": "Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method.",
       "version": "0.1.2",
@@ -451,6 +462,18 @@
         "versions"
       ],
       "source": "./packages/hooks-pkg-version-warn"
+    },
+    {
+      "name": "hooks-portability-ci",
+      "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
+      "version": "0.1.0",
+      "tags": [
+        "ci",
+        "hooks",
+        "portability",
+        "testing"
+      ],
+      "source": "./packages/hooks-portability-ci"
     },
     {
       "name": "hooks-quality",
@@ -907,6 +930,17 @@
         "rust"
       ],
       "source": "./packages/rust-quality"
+    },
+    {
+      "name": "secrets-scan",
+      "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
+      "version": "0.1.0",
+      "tags": [
+        "security",
+        "secrets",
+        "pre-commit"
+      ],
+      "source": "./packages/secrets-scan"
     },
     {
       "name": "security",

@@ -135,6 +135,13 @@ marketplace:
         - skill
         - code-intelligence
         - graph
+    - name: codex-hook-contract
+      source: ./packages/codex-hook-contract
+      category: project-lifecycle
+      tags:
+        - codex
+        - hooks
+        - reference
     - name: commit-push-merge
       source: ./packages/commit-push-merge
       category: project-lifecycle
@@ -334,6 +341,14 @@ marketplace:
         - hooks
         - dependencies
         - versions
+    - name: hooks-portability-ci
+      source: ./packages/hooks-portability-ci
+      category: project-lifecycle
+      tags:
+        - ci
+        - hooks
+        - portability
+        - testing
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality
@@ -614,6 +629,13 @@ marketplace:
         - skill
         - languages
         - rust
+    - name: secrets-scan
+      source: ./packages/secrets-scan
+      category: security
+      tags:
+        - security
+        - secrets
+        - pre-commit
     - name: security
       source: ./packages/security
       category: security
