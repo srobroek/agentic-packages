@@ -100,3 +100,49 @@ Full test suites, slow type-checks, network-bound checks → CI only.
 `hooks-quality` currently runs formatters as a PostToolUse advisory. Once
 pre-commit owns auto-formatting, hooks-quality should stop duplicating that role
 (resolve when hook #16 is reviewed) — one formatter system, one config.
+
+---
+
+# Close-keyword normalizer — locked spec
+
+Status: **approved, in build**. Captured from the same grill.
+
+## Problem
+
+GitHub binds a closing keyword to ONLY the FIRST issue in a comma list:
+`Closes #37, #38, #39` closes only #37; #38/#39 are bare references and stay
+open. The fix is to distribute the keyword across every issue:
+`Closes #37, closes #38, closes #39`.
+
+Affected keywords (case-insensitive, all share the first-only behavior):
+`close, closes, closed, fix, fixes, fixed, resolve, resolves, resolved`.
+
+Backfill: checked the live repo (2026-06-26) — #37–#72 are all already CLOSED
+(they are release-please PRs); only #5 (Renovate dashboard) is open. So there
+were NO orphaned-open issues to sweep. Prevention-only.
+
+## Shared engine: normalize-closes.sh
+
+Reads text on stdin, writes normalized text on stdout. Idempotent.
+- Distributes a close keyword across a CONTIGUOUS comma / `and` list of issue
+  refs directly following it. "Contiguous list" only — a later unrelated `#N`
+  mention on the line is left alone (lowest false-rewrite risk).
+- Issue ref forms handled: `#N`, `owner/repo#N`, `GH-N`.
+- Already-correct lists (each ref has its own keyword) are unchanged.
+- Preserves the original keyword's case/word for the distributed copies
+  (`Fixes #1, #2` -> `Fixes #1, fixes #2`).
+
+## Delivery layers (share the one engine)
+
+1. **commit-msg** — pre-commit-framework hook (`stages: [commit-msg]`) that
+   rewrites the commit message file IN PLACE. Tool-agnostic, true auto-rewrite.
+   Ships as a pre-commit config fragment + the engine script.
+2. **PR body** — PreToolUse:Bash hook on `gh pr create` / `gh pr edit`. A
+   PreToolUse hook CANNOT mutate the command, so it BLOCKS with the corrected
+   `--body` text in the deny message; the agent re-issues. (Client-side, our
+   agent only — humans/UI are not covered by this layer; acceptable since the
+   commit-msg layer is the tool-agnostic one.)
+
+Package: `hooks-close-keywords` (type: hooks; engine in scripts/, commit-msg
+fragment in templates/, PR-body PreToolUse JSONs). project-setup merges the
+commit-msg fragment into `.pre-commit-config.yaml`.
