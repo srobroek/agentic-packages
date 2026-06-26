@@ -1,5 +1,5 @@
 name: optimize-steering
-version: 0.1.2
+version: 1.0.0
 description: >-
   Audit and optimize agent-facing markdown (steering docs, skills, agent
   definitions) for token efficiency and cross-model compliance (rules R1-R7).

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/secrets-scan-v0.1.0...secrets-scan-v1.0.0) (2026-06-26)
+
+
+### Features
+
+* add secrets-scan, dep-audit CI, and codex-hook-contract packages ([#374](https://github.com/srobroek/agentic-packages/issues/374)) ([036efaa](https://github.com/srobroek/agentic-packages/commit/036efaa29b7133a73fad0b3aa652d8d952c7981d))
+
+
+### Bug Fixes
+
+* co-locate skill scripts so they resolve after install ([#376](https://github.com/srobroek/agentic-packages/issues/376)) ([1bb71cc](https://github.com/srobroek/agentic-packages/commit/1bb71ccac2ac14992506bddf11f0ae0ff5db5d0d))
+
+
+### Chores
+
+* release whats-new and secrets-scan at 1.0.0 ([#382](https://github.com/srobroek/agentic-packages/issues/382)) ([1a153fb](https://github.com/srobroek/agentic-packages/commit/1a153fbbbe8271cfb6856b5638452c95c4c49e34))
+
 ## 0.1.0
 
 ### Features

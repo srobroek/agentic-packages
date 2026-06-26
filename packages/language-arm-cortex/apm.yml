@@ -1,5 +1,5 @@
 name: language-arm-cortex
-version: 0.1.0
+version: 1.0.0
 description: >-
   ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers
   specialists.

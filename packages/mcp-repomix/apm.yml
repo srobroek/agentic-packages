@@ -1,5 +1,5 @@
 name: mcp-repomix
-version: 0.1.1
+version: 1.0.0
 description: >-
   MCP server package for Repomix, providing bulk repository snapshots for
   analysis and review.

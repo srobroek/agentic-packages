@@ -1,5 +1,5 @@
 name: speckit
-version: 0.5.1
+version: 1.0.0
 description: >-
   SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt
   into the opinionated layers separately: steering-speckit (the mandatory-gated
@@ -15,7 +15,4 @@ tags:
   - speckit
 dependencies:
   apm:
-    # The memory-md MCP server. setup-speckit.sh installs + builds the
-    # memory-md extension; this registers its stdio MCP server with the harness
-    # so /speckit.memory-md.* prompts use the native tools instead of npx.
     - srobroek/agentic-packages/packages/mcp-speckit-memory#^0.1.0

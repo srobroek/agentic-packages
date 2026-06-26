@@ -1,5 +1,5 @@
 name: mcp-package-version
-version: 0.2.0
+version: 1.0.0
 description: MCP server for package version discovery
 author: Sjors Robroek
 license: Apache-2.0

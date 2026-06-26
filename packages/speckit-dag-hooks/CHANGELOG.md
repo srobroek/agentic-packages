@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.7.0...speckit-dag-hooks-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire unused packages (resume->resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368))
+
+### Features
+
+* retire unused packages (resume-&gt;resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368)) ([883945f](https://github.com/srobroek/agentic-packages/commit/883945feb3ee8f651f83b82f5f8d2ed520edf98f))
+
+
+### Bug Fixes
+
+* **phase-1:** guard bypasses, bash-3.2/BSD portability, crashes, bundle pins + tests ([#360](https://github.com/srobroek/agentic-packages/issues/360)) ([b0c9106](https://github.com/srobroek/agentic-packages/commit/b0c91064313282a4265b9b0b8fb779f00afecd90))
+
+
+### Refactors
+
+* **speckit-dag:** generate nodes.json from a stdlib dataclass builder ([#365](https://github.com/srobroek/agentic-packages/issues/365)) ([757755f](https://github.com/srobroek/agentic-packages/commit/757755f94968d1dfe2edd8f00493991c8f3b4065))
+* **speckit-dag:** generate nodes.json from a stdlib dataclass builder ([#367](https://github.com/srobroek/agentic-packages/issues/367)) ([ae598a9](https://github.com/srobroek/agentic-packages/commit/ae598a949b3d09485bb352686073de524607e595))
+
 ## [0.7.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks-v0.6.0...speckit-dag-hooks-v0.7.0) (2026-06-25)
 
 

@@ -1,5 +1,5 @@
 name: language-steering-python
-version: 0.1.1
+version: 1.0.0
 description: >-
   Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and
   libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the
