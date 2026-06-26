@@ -11,16 +11,19 @@ read-only orientation with grep/glob.
 ## Dependency
 
 This skill requires the `codebase-memory-mcp` MCP server (installed via the
-`mcp-codebase-memory` package). If its tools are not available, skip the graph
-flow entirely and degrade to plain `grep` / `glob` exploration (the `explore`
-skill).
+`mcp-codebase-memory` package).
+
+Canonical rule: prefer graph-aware lookup to narrow the search surface, then
+verify against real code; fall back to plain `grep` / `glob` (the `explore`
+skill) only when the graph tooling is unavailable or cannot answer the question.
 
 ## Preferred Flow
 
 1. Choose the intent first: explore, trace, reference, or quality.
 2. Start with the lightest graph-aware query that can answer the question.
 3. Read only the specific code snippets or graph results needed to confirm the answer.
-4. Fall back to plain file search only when the graph tooling cannot answer the question.
+
+Fallback follows the canonical rule above.
 
 ## Intent Routing
 
@@ -31,8 +34,7 @@ skill).
 
 ## Steering
 
-- Prefer graph-aware lookup before broad grep when the tool can answer the question.
-- Use the code graph to narrow the search surface, then verify against real code.
+- Apply the canonical rule above for graph-vs-grep selection.
 - Keep the answer grounded in observed results, not assumed graph completeness.
 
 ## Scripts

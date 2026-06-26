@@ -21,12 +21,12 @@ Audit and rewrite agent-facing markdown files for token efficiency and structura
 | Rule | What | Why |
 |------|------|-----|
 | R1 -- Frontmatter | `description` in YAML frontmatter on every file | Primary mechanism for agent routing decisions |
-| R2 -- Language | Imperative tone, no ALL CAPS, no model names, no vendor paths | ALL CAPS causes overtriggering; cross-model files avoid vendor bias |
+| R2 -- Language | Imperative tone, no ALL CAPS, no model names, no vendor paths | Reserve emphatic directives for safety; avoid vendor bias for cross-model use |
 | R3 -- Structure | Tables for mappings, bullets for rules, no prose | Tables reduce comprehension time vs prose |
 | R4 -- Template | Consistent section structure per file type | Format beats content -- agents respond to structure |
 | R5 -- Cross-refs | Relative paths for files, backticks for skill/agent names | Unambiguous routing between files |
 | R6 -- File size | Under 50 lines; split oversized files | Progressive disclosure -- load only what's needed |
-| R7 -- Progressive disclosure | Index files as routing tables, detail in referenced files | 60-80% token reduction, 80%+ instruction compliance |
+| R7 -- Progressive disclosure | Index files as routing tables, detail in referenced files | Keeps eager context small; loads detail only when relevant |
 
 ## References
 
