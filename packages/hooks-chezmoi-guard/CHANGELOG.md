@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard-v0.1.0...hooks-chezmoi-guard-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-package-version no longer ships the package-file-warn or pkg-version-warn hooks. Installers that relied on those hooks should install hooks-package-file-guard / hooks-pkg-version-warn (or the dependency-quality bundle) instead.
+
+### Features
+
+* add hooks-chezmoi-guard and hooks-attribution-guard guard-hook packages ([#369](https://github.com/srobroek/agentic-packages/issues/369)) ([92814f2](https://github.com/srobroek/agentic-packages/commit/92814f2cb43a8afb417f9c2e6518b822cb8adbab))
+* split dependency tooling into independent packages + dependency-quality bundle ([#370](https://github.com/srobroek/agentic-packages/issues/370)) ([03d50a5](https://github.com/srobroek/agentic-packages/commit/03d50a5db3a1572fbe36a4ac1bc1e6877cd96ade))
+
 ## 0.1.0
 
 ### Features

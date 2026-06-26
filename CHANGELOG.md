@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.17.0...srobroek-agentic-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-package-version no longer ships the package-file-warn or pkg-version-warn hooks. Installers that relied on those hooks should install hooks-package-file-guard / hooks-pkg-version-warn (or the dependency-quality bundle) instead.
+* retire unused packages (resume->resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368))
+
+### Features
+
+* add hooks-chezmoi-guard and hooks-attribution-guard guard-hook packages ([#369](https://github.com/srobroek/agentic-packages/issues/369)) ([92814f2](https://github.com/srobroek/agentic-packages/commit/92814f2cb43a8afb417f9c2e6518b822cb8adbab))
+* add hooks-subagent-worktree enforcement package ([#384](https://github.com/srobroek/agentic-packages/issues/384)) ([608d757](https://github.com/srobroek/agentic-packages/commit/608d7572168e06ae15788f7ed8f367f300ae0b74))
+* add secrets-scan, dep-audit CI, and codex-hook-contract packages ([#374](https://github.com/srobroek/agentic-packages/issues/374)) ([036efaa](https://github.com/srobroek/agentic-packages/commit/036efaa29b7133a73fad0b3aa652d8d952c7981d))
+* add whats-new upgrade-research skill ([#378](https://github.com/srobroek/agentic-packages/issues/378)) ([b330834](https://github.com/srobroek/agentic-packages/commit/b330834182d1dc42e511da1901fd04bc9f333797))
+* direct/no-flattery steering + drop redundant global-apm.yml template ([#381](https://github.com/srobroek/agentic-packages/issues/381)) ([0a2a67a](https://github.com/srobroek/agentic-packages/commit/0a2a67ae8c960305d4a7f43d61d283a86801ad05))
+* extend whats-new to services, platforms, and model families ([#379](https://github.com/srobroek/agentic-packages/issues/379)) ([a72e2d8](https://github.com/srobroek/agentic-packages/commit/a72e2d824d55fe8afb0dc31b8ce4789e35bfbaee))
+* register the memory-md MCP server (mcp-speckit-memory) for SpecKit ([#371](https://github.com/srobroek/agentic-packages/issues/371)) ([adb8223](https://github.com/srobroek/agentic-packages/commit/adb8223c723bc8fc95a8152047b33b285847c1a4))
+* retire unused packages (resume-&gt;resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368)) ([883945f](https://github.com/srobroek/agentic-packages/commit/883945feb3ee8f651f83b82f5f8d2ed520edf98f))
+* split dependency tooling into independent packages + dependency-quality bundle ([#370](https://github.com/srobroek/agentic-packages/issues/370)) ([03d50a5](https://github.com/srobroek/agentic-packages/commit/03d50a5db3a1572fbe36a4ac1bc1e6877cd96ade))
+
+
+### Bug Fixes
+
+* **hooks:** repair silently-dead hook filters (if-alternation bug) ([#372](https://github.com/srobroek/agentic-packages/issues/372)) ([659d5fe](https://github.com/srobroek/agentic-packages/commit/659d5fe6bb24a27b1876f46c6a750379eb66ec87))
+* **phase-1:** guard bypasses, bash-3.2/BSD portability, crashes, bundle pins + tests ([#360](https://github.com/srobroek/agentic-packages/issues/360)) ([b0c9106](https://github.com/srobroek/agentic-packages/commit/b0c91064313282a4265b9b0b8fb779f00afecd90))
+* **speckit:** roadmap.write after iterate + regenerate stale bundles table ([#363](https://github.com/srobroek/agentic-packages/issues/363)) ([be1aa2c](https://github.com/srobroek/agentic-packages/commit/be1aa2c8ec14d36b7fb8dccbb3ad62396442193c))
+
+
+### Refactors
+
+* generate docs from one inventory + Jinja templates; fix stale README counts ([#373](https://github.com/srobroek/agentic-packages/issues/373)) ([33ccd45](https://github.com/srobroek/agentic-packages/commit/33ccd45826a87caf2e95c2a15f9d01e5ad4c69ed))
+* **speckit-dag:** generate nodes.json from a stdlib dataclass builder ([#365](https://github.com/srobroek/agentic-packages/issues/365)) ([757755f](https://github.com/srobroek/agentic-packages/commit/757755f94968d1dfe2edd8f00493991c8f3b4065))
+* **speckit-dag:** generate nodes.json from a stdlib dataclass builder ([#367](https://github.com/srobroek/agentic-packages/issues/367)) ([ae598a9](https://github.com/srobroek/agentic-packages/commit/ae598a949b3d09485bb352686073de524607e595))
+* split core-global into independently installable packages ([#380](https://github.com/srobroek/agentic-packages/issues/380)) ([36f9470](https://github.com/srobroek/agentic-packages/commit/36f9470fc50a7ff5af2c7dd943a817a1d9808247))
+* tidy catalog metadata, dedup steering, fix dead tool references ([#375](https://github.com/srobroek/agentic-packages/issues/375)) ([2ed492c](https://github.com/srobroek/agentic-packages/commit/2ed492c632cf40a8c6cf269216e85021333d4db5))
+
+
+### Documentation
+
+* add per-type package templates + dev-guide pointer ([#377](https://github.com/srobroek/agentic-packages/issues/377)) ([23ab3b5](https://github.com/srobroek/agentic-packages/commit/23ab3b5c4a8daa939bedc1ad6357701e15eae59b))
+
 ## [0.17.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.16.0...srobroek-agentic-v0.17.0) (2026-06-25)
 
 

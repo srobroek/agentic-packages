@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/srobroek/agentic-packages/compare/codex-hook-contract-v0.0.1...codex-hook-contract-v0.1.0) (2026-06-26)
+
+
+### Features
+
+* add secrets-scan, dep-audit CI, and codex-hook-contract packages ([#374](https://github.com/srobroek/agentic-packages/issues/374)) ([036efaa](https://github.com/srobroek/agentic-packages/commit/036efaa29b7133a73fad0b3aa652d8d952c7981d))
+
 ## 0.0.1
 
 ### Features

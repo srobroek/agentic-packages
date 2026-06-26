@@ -1,5 +1,5 @@
 name: hooks-pkg-version-warn
-version: 0.1.0
+version: 1.0.0
 description: >-
   Advisory PreToolUse:Bash hook that nudges you to install the latest compatible
   version when running a package install command (pnpm add, npm install, uv add,

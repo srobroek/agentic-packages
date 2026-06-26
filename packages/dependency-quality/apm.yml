@@ -1,5 +1,5 @@
 name: dependency-quality
-version: 0.1.0
+version: 1.0.0
 description: >-
   Dependency hygiene bundle: warns on direct manifest edits, nudges to
   investigate a dependency before adding it, suggests installing the latest

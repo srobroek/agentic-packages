@@ -1,5 +1,5 @@
 name: commit-push-merge
-version: 0.1.2
+version: 1.0.0
 description: >-
   Commit local changes when needed, push, and merge a branch after inferring or
   confirming the target and merge method.

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.4.0...hooks-git-safety-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-package-version no longer ships the package-file-warn or pkg-version-warn hooks. Installers that relied on those hooks should install hooks-package-file-guard / hooks-pkg-version-warn (or the dependency-quality bundle) instead.
+* retire unused packages (resume->resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368))
+
+### Features
+
+* retire unused packages (resume-&gt;resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368)) ([883945f](https://github.com/srobroek/agentic-packages/commit/883945feb3ee8f651f83b82f5f8d2ed520edf98f))
+* split dependency tooling into independent packages + dependency-quality bundle ([#370](https://github.com/srobroek/agentic-packages/issues/370)) ([03d50a5](https://github.com/srobroek/agentic-packages/commit/03d50a5db3a1572fbe36a4ac1bc1e6877cd96ade))
+
+
+### Bug Fixes
+
+* **phase-1:** guard bypasses, bash-3.2/BSD portability, crashes, bundle pins + tests ([#360](https://github.com/srobroek/agentic-packages/issues/360)) ([b0c9106](https://github.com/srobroek/agentic-packages/commit/b0c91064313282a4265b9b0b8fb779f00afecd90))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety-v0.3.0...hooks-git-safety-v0.4.0) (2026-06-24)
 
 
