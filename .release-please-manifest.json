@@ -107,5 +107,6 @@
   "packages/unstuck": "0.2.0",
   "packages/verify": "0.1.2",
   "packages/web-fetch": "0.1.2",
+  "packages/whats-new": "0.1.0",
   "packages/write-a-skill": "0.1.2"
 }

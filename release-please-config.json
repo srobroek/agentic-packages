@@ -1340,6 +1340,18 @@
         }
       ]
     },
+    "packages/whats-new": {
+      "release-type": "simple",
+      "component": "whats-new",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/write-a-skill": {
       "release-type": "simple",
       "component": "write-a-skill",

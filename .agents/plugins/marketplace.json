@@ -1289,6 +1289,18 @@
       "category": "code-intelligence"
     },
     {
+      "name": "whats-new",
+      "source": {
+        "source": "local",
+        "path": "./packages/whats-new"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
       "name": "write-a-skill",
       "source": {
         "source": "local",

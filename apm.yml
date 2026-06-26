@@ -757,6 +757,18 @@ marketplace:
         - skill
         - code-intelligence
         - web
+    - name: whats-new
+      source: ./packages/whats-new
+      category: code-intelligence
+      tags:
+        - skill
+        - code-intelligence
+        - dependencies
+        - changelog
+        - upgrade
+        - research
+        - services
+        - release-notes
     - name: write-a-skill
       source: ./packages/write-a-skill
       category: agentic-maintenance
