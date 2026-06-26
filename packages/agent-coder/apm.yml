@@ -1,5 +1,5 @@
 name: agent-coder
-version: 0.1.1
+version: 1.0.0
 description: >-
   Implementation subagent for bounded code changes, tests, and refactors within
   a defined scope.

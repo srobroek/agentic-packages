@@ -1,5 +1,5 @@
 name: code-intelligence
-version: 0.2.0
+version: 1.0.0
 description: >-
   Codebase understanding toolkit: graph/index/search skills (codebase-index,
   codebase-memory, explore), research and web-fetch, the PR reviewer agent,

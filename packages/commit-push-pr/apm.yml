@@ -1,5 +1,5 @@
 name: commit-push-pr
-version: 0.1.2
+version: 1.0.0
 description: >-
   Commit local changes when needed, push, and open or update a pull request for
   review.

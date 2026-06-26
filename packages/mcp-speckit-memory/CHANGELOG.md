@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-speckit-memory-v0.1.0...mcp-speckit-memory-v0.2.0) (2026-06-26)
+
+
+### Features
+
+* register the memory-md MCP server (mcp-speckit-memory) for SpecKit ([#371](https://github.com/srobroek/agentic-packages/issues/371)) ([adb8223](https://github.com/srobroek/agentic-packages/commit/adb8223c723bc8fc95a8152047b33b285847c1a4))
+
 ## 0.1.0
 
 ### Features

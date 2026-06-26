@@ -1,12 +1,11 @@
-# Released at 1.0.0 to align with the catalog-wide 1.0 baseline.
 name: secrets-scan
-version: 0.1.0
+version: 1.0.0
 description: >-
   Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks
   or trufflehog (whichever is on PATH) over staged changes and blocks the commit
   when a secret is found, with an actionable message and a documented bypass.
-  Warns and allows when no scanner is installed, so missing tooling never blocks.
-  Cross-tool (Claude + Codex).
+  Warns and allows when no scanner is installed, so missing tooling never
+  blocks. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

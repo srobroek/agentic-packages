@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/language-python-v0.2.0...language-python-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire unused packages (resume->resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368))
+
+### Features
+
+* retire unused packages (resume-&gt;resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368)) ([883945f](https://github.com/srobroek/agentic-packages/commit/883945feb3ee8f651f83b82f5f8d2ed520edf98f))
+
+
+### Bug Fixes
+
+* **phase-1:** guard bypasses, bash-3.2/BSD portability, crashes, bundle pins + tests ([#360](https://github.com/srobroek/agentic-packages/issues/360)) ([b0c9106](https://github.com/srobroek/agentic-packages/commit/b0c91064313282a4265b9b0b8fb779f00afecd90))
+
+
+### Refactors
+
+* tidy catalog metadata, dedup steering, fix dead tool references ([#375](https://github.com/srobroek/agentic-packages/issues/375)) ([2ed492c](https://github.com/srobroek/agentic-packages/commit/2ed492c632cf40a8c6cf269216e85021333d4db5))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/language-python-v0.1.2...language-python-v0.2.0) (2026-06-20)
 
 

@@ -1,5 +1,5 @@
 name: steering-tools-scripts
-version: 0.1.0
+version: 1.0.0
 description: >-
   Opinionated conventions for repo tooling and automation: where scripts,
   generators, maintained CLIs, and task runners live and how they are

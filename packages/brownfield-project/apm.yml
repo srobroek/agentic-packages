@@ -1,10 +1,10 @@
 name: brownfield-project
-version: 0.1.0
+version: 0.1.1
 description: >-
-  Retrofit an existing repository into APM-managed agentic tooling without
-  broad scaffolding. Use when onboarding, ingesting, or repairing a
-  brownfield repo, especially when the agent must first discover project
-  purpose, requirements, and workflow needs interactively.
+  Retrofit an existing repository into APM-managed agentic tooling without broad
+  scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo,
+  especially when the agent must first discover project purpose, requirements,
+  and workflow needs interactively.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

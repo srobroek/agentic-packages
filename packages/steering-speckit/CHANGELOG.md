@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.5.0...steering-speckit-v1.0.0) (2026-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire unused packages (resume->resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368))
+
+### Features
+
+* retire unused packages (resume-&gt;resume-cv, drop prompt-lookup/hyperresearch), self-describe catalog categories ([#368](https://github.com/srobroek/agentic-packages/issues/368)) ([883945f](https://github.com/srobroek/agentic-packages/commit/883945feb3ee8f651f83b82f5f8d2ed520edf98f))
+
+
+### Bug Fixes
+
+* **speckit:** roadmap.write after iterate + regenerate stale bundles table ([#363](https://github.com/srobroek/agentic-packages/issues/363)) ([be1aa2c](https://github.com/srobroek/agentic-packages/commit/be1aa2c8ec14d36b7fb8dccbb3ad62396442193c))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit-v0.4.0...steering-speckit-v0.5.0) (2026-06-25)
 
 

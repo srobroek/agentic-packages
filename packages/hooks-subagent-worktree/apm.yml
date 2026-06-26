@@ -1,5 +1,5 @@
 name: hooks-subagent-worktree
-version: 0.1.0
+version: 0.2.0
 description: >-
   Enforce an explicit worktree-isolation decision on every subagent spawn. A
   PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to

@@ -1,5 +1,5 @@
 name: go-quality
-version: 0.1.2
+version: 1.0.0
 description: Run Go format, lint, and test checks with the project toolchain.
 author: Sjors Robroek
 license: Apache-2.0

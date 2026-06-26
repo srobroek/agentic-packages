@@ -1,5 +1,5 @@
 name: playwright
-version: 0.1.2
+version: 1.0.0
 description: >-
   Automate browser tasks through a Playwright MCP server: navigate, click, fill
   forms, and extract page data.

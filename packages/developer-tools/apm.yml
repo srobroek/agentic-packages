@@ -1,5 +1,5 @@
 name: developer-tools
-version: 0.1.0
+version: 1.0.0
 description: >-
   Everyday developer tooling: Hobson developer-essentials, debugging,
   comprehensive review, git/PR, and documentation-generation workflows.
