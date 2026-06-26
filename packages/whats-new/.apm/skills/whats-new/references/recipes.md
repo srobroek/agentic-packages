@@ -192,10 +192,104 @@ Prefer the project's own guide over third-party blogs; flag blogs as derivative.
 
 ---
 
+## Step E — services, technologies, platforms, model families
+
+Services rarely have semver or a single git repo. "What's new" is a **dated
+announcement stream**. The mistake to avoid is asking a model to browse a
+vendor's marketing pages — most vendors publish a machine-readable feed or API.
+Pull it, filter to the user's window, group, and cite by date.
+
+Order of preference: vendor change **feed/API** (RSS/Atom/JSON) > vendor
+release-notes **repo** (use step C on it) > a single release-notes **page**
+(step D, prose). Note many vendor docs release-notes pages are **client-rendered
+(JS)** and return placeholder HTML to `curl` — when that happens, switch to the
+feed/API or to web-fetch, don't try to scrape the empty shell.
+
+### AWS — service announcements (incl. Bedrock, EC2, S3, …)
+
+The "What's New" feed carries every service; filter by keyword in the title.
+
+```sh
+UA='whats-new-skill (+https://github.com/srobroek/agentic-packages)'
+# All recent announcements (RSS). Filter to a service, e.g. Bedrock:
+curl -fsSL -A "$UA" "https://aws.amazon.com/about-aws/whats-new/recent/feed/" \
+  | tr '>' '>\n' \
+  | grep -iE '<title>|<pubDate>' | grep -iE 'bedrock|<pubDate>'
+# Structured (needs xmllint or a quick python parse) — title + date + link:
+curl -fsSL -A "$UA" "https://aws.amazon.com/about-aws/whats-new/recent/feed/" \
+  | python3 -c 'import sys,xml.etree.ElementTree as ET; \
+r=ET.fromstring(sys.stdin.read()); \
+[print(i.findtext("pubDate"),"|",i.findtext("title")) for i in r.iter("item") \
+ if "bedrock" in (i.findtext("title") or "").lower()]'
+```
+
+AWS service docs also have a per-service "document history" RSS (linked from each
+service's docs). For the SDKs, treat them as versioned software (step B/C): e.g.
+`aws/aws-sdk-js-v3`, `boto3`, `aws-sdk-go-v2` on GitHub.
+
+### Anthropic / Claude
+
+Prefer the repo's **`claude-api`** skill for model IDs, pricing, and migration —
+it's the curated source. For the live model list:
+
+```sh
+# Models the API currently serves (needs a key). 401 without one confirms shape.
+curl -fsSL https://api.anthropic.com/v1/models \
+  -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" \
+  | jq -r '.data[] | "\(.created_at)  \(.id)  \(.display_name)"' | sort
+```
+
+The docs release-notes page (`docs.anthropic.com/en/release-notes/api`) is
+JS-rendered — fetch it with a browser/web-fetch capability, not `curl`, or rely
+on the models API + `claude-api` skill.
+
+### OpenAI
+
+```sh
+# Models served (needs key):
+curl -fsSL https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY" \
+  | jq -r '.data[] | "\(.created)  \(.id)"' | sort
+# Changelog/release notes pages are prose — step D.
+```
+
+### Google Cloud — per-service release-notes feeds
+
+GCP publishes a release-notes XML feed per service:
+
+```sh
+# e.g. BigQuery; swap the slug for other services (compute, run, etc.):
+curl -fsSL "https://cloud.google.com/feeds/bigquery-release-notes.xml" \
+  | python3 -c 'import sys,xml.etree.ElementTree as ET; \
+r=ET.fromstring(sys.stdin.read()); ns={"a":"http://www.w3.org/2005/Atom"}; \
+[print(e.findtext("a:updated",namespaces=ns),"|",e.findtext("a:title",namespaces=ns)) \
+ for e in r.findall(".//a:entry",ns)][:40]'
+```
+
+### Microsoft Azure — updates feed
+
+```sh
+curl -fsSL "https://www.microsoft.com/releasecommunications/api/v2/azure/rss" \
+  | python3 -c 'import sys,xml.etree.ElementTree as ET; \
+r=ET.fromstring(sys.stdin.read()); \
+[print(i.findtext("pubDate"),"|",i.findtext("title")) for i in r.iter("item")][:40]'
+```
+
+### Other services
+
+Most SaaS/platforms expose one of: an RSS/Atom feed (look for
+`/changelog.rss`, `/feed`, `/releases.atom`), a changelog repo on GitHub (step
+C), or a developer-changelog API. GitHub Actions runner images, Stripe, Datadog,
+etc. follow this. Find the feed once (`curl -fsI <guess>` to confirm a feed
+content-type) and cache the URL in the report's Sources.
+
+---
+
 ## Coverage discipline
 
-Always end knowing — and reporting — which of these ran and which didn't:
-current version (lockfile vs. range vs. user-supplied), latest (registry),
-release notes (present per-tag? or only some?), CHANGELOG (found? at which tag?),
-commit log (tags resolved?), migration guide (exists?). A clean-looking summary
-built from one source out of five is not the same as a researched upgrade.
+Always end knowing — and reporting — which of these ran and which didn't.
+*Software:* current version (lockfile vs. range vs. user-supplied), latest
+(registry), release notes (present per-tag? or only some?), CHANGELOG (found? at
+which tag?), commit log (tags resolved?), migration guide (exists?).
+*Service:* which feed/API was used, the exact window covered, and whether
+"announced" vs. "GA in your region/account" was distinguished. A clean-looking
+summary built from one source out of five is not the same as researched change.

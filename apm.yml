@@ -767,6 +767,8 @@ marketplace:
         - changelog
         - upgrade
         - research
+        - services
+        - release-notes
     - name: write-a-skill
       source: ./packages/write-a-skill
       category: agentic-maintenance
