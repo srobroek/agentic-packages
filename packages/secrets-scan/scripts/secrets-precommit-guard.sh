@@ -16,9 +16,25 @@ set -euo pipefail
 #
 # Portability floor: bash 3.2.57 + BSD grep. No PCRE, no \b.
 
-# Locate the shared scanner relative to this script (works under ${PLUGIN_ROOT}).
+# Locate the shared scanner. The canonical scan.sh lives with the skill at
+# .apm/skills/secrets-scan/scripts/scan.sh (so the skill's relative `scripts/scan.sh`
+# ref resolves on install). This hook ships separately under ${PLUGIN_ROOT}/scripts/,
+# so we resolve scan.sh across the layouts it can appear in:
+#   1. a sibling in this script's dir (${PLUGIN_ROOT}/scripts/scan.sh) -- the
+#      flattened-hook layout, used if a copy is ever materialized next to the hook;
+#   2. the canonical skill path relative to this hook (in-repo / co-installed tree).
+# First match wins; if none resolve we treat the scanner as absent and skip cleanly.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCAN="${SCRIPT_DIR}/scan.sh"
+SCAN=""
+for candidate in \
+  "${SCRIPT_DIR}/scan.sh" \
+  "${SCRIPT_DIR}/../.apm/skills/secrets-scan/scripts/scan.sh"
+do
+  if [ -x "$candidate" ]; then
+    SCAN="$candidate"
+    break
+  fi
+done
 
 payload="$(cat 2>/dev/null || true)"
 

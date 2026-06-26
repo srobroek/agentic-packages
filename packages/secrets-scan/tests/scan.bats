@@ -18,7 +18,7 @@
 # Run: bats packages/secrets-scan/tests/scan.bats
 
 setup() {
-  SCAN="${BATS_TEST_DIRNAME}/../scripts/scan.sh"
+  SCAN="${BATS_TEST_DIRNAME}/../.apm/skills/secrets-scan/scripts/scan.sh"
   GUARD="${BATS_TEST_DIRNAME}/../scripts/secrets-precommit-guard.sh"
 
   # Marker the stub treats as a secret. Split so this test file itself does not

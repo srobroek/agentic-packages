@@ -12,7 +12,7 @@
 # the results.
 
 setup() {
-  SCRIPT="${BATS_TEST_DIRNAME}/../scripts/audit.sh"
+  SCRIPT="${BATS_TEST_DIRNAME}/../.apm/skills/dep-audit/scripts/audit.sh"
 
   PROJ="$(mktemp -d "${BATS_TMPDIR:-/tmp}/dep-audit-proj.XXXXXX")"
   STUB="$(mktemp -d "${BATS_TMPDIR:-/tmp}/dep-audit-stub.XXXXXX")"
