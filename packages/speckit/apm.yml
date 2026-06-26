@@ -15,4 +15,4 @@ tags:
   - speckit
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/mcp-speckit-memory#^0.1.0
+    - srobroek/agentic-packages/packages/mcp-speckit-memory#main
