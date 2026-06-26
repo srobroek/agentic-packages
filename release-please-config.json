@@ -200,6 +200,18 @@
         }
       ]
     },
+    "packages/codex-hook-contract": {
+      "release-type": "simple",
+      "component": "codex-hook-contract",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/commit-push-merge": {
       "release-type": "simple",
       "component": "commit-push-merge",
@@ -539,6 +551,18 @@
     "packages/hooks-pkg-version-warn": {
       "release-type": "simple",
       "component": "hooks-pkg-version-warn",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/hooks-portability-ci": {
+      "release-type": "simple",
+      "component": "hooks-portability-ci",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1067,6 +1091,18 @@
     "packages/rust-quality": {
       "release-type": "simple",
       "component": "rust-quality",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/secrets-scan": {
+      "release-type": "simple",
+      "component": "secrets-scan",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
