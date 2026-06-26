@@ -14,6 +14,10 @@
 # Run: bats packages/hooks-precommit-gate/tests/precommit-gate.bats
 
 setup() {
+  # Hermetic git: ignore host system/global config (e.g. a corporate
+  # core.hooksPath) so fixture commits are fast and deterministic. NOTE: tests
+  # that assert on core.hooksPath set it explicitly per-fixture, which still wins.
+  export GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null
   GUARD="${BATS_TEST_DIRNAME}/../scripts/precommit-gate.sh"
   command -v jq  >/dev/null 2>&1 || skip "jq not available"
   command -v git >/dev/null 2>&1 || skip "git not available"

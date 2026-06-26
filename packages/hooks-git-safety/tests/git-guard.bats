@@ -11,6 +11,10 @@
 # guard fires it emits nothing and exits 0 ("allow" by omission).
 
 setup() {
+  # Hermetic git: ignore the host's system/global config so fixtures do not
+  # inherit a system core.hooksPath (e.g. a corporate git wrapper), which would
+  # run on every fixture commit and make this suite minutes-slow.
+  export GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null
   GUARD="${BATS_TEST_DIRNAME}/../scripts/git-guard.sh"
   [ -f "$GUARD" ] || {
     echo "guard script not found at $GUARD" >&2
