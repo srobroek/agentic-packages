@@ -3,8 +3,14 @@ name: Release Please
 # Maintains a release PR from Conventional Commits (feat/fix/...), updates
 # CHANGELOG.md and the version in apm.yml, and tags a release on merge.
 #
-# When a release is published, regenerates the marketplace manifests and README
-# inventory tables and commits them onto main so the released state is fresh.
+# Artifact freshness is NOT handled here. release-please updates the authoritative
+# version state (apm.yml $.version + .release-please-manifest.json) directly. The
+# only release-derived artifact that goes stale is the `version` field inside the
+# generated marketplace.json (a catalog display value for the native-plugin path),
+# and the PR check (build-artifacts.yml `check-artifacts`) regenerates + gates that
+# on every subsequent PR. A post-release auto-commit can't push to main anyway --
+# branch protection requires status checks that don't run on a bot's direct push --
+# so it is intentionally omitted.
 
 on:
   push:
@@ -17,8 +23,6 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - name: Run release-please
         id: release
@@ -26,40 +30,3 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-  regenerate-artifacts:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Set up APM
-        # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
-        # PyYAML comes transitively from apm-cli.
-        run: pip install apm-cli jinja2
-
-      - name: Regenerate marketplace + README tables
-        run: |
-          python3 .apm/scripts/render-docs.py all
-          apm pack
-
-      - name: Commit regenerated artifacts
-        run: |
-          if git diff --quiet; then
-            echo "No artifact drift to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add apm.yml .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
-          git commit -m "chore: regenerate agentic artifacts for release [skip ci]"
-          git push
