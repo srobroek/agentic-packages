@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.0.0...srobroek-agentic-v1.0.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* install jinja2 in the release artifact-regen job ([#385](https://github.com/srobroek/agentic-packages/issues/385)) ([b89df31](https://github.com/srobroek/agentic-packages/commit/b89df316711e0f1f47dfcd1a7d13fd95b802476d))
+* use installable package types so hooks + speckit resolve globally ([#387](https://github.com/srobroek/agentic-packages/issues/387)) ([ff2b7a2](https://github.com/srobroek/agentic-packages/commit/ff2b7a2200fc88bcf39abafe9f73ed6f5d31e942))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v0.17.0...srobroek-agentic-v1.0.0) (2026-06-26)
 
 

@@ -1,5 +1,5 @@
 name: hooks-chezmoi-guard
-version: 1.0.0
+version: 1.0.1
 description: >-
   PreToolUse guard that denies direct edits and shell writes to files chezmoi
   ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering
