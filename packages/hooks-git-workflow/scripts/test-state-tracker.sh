@@ -27,17 +27,19 @@ if [[ "$tool" != "Bash" ]]; then
 fi
 
 command="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
+# ONLY real test runners count. The pre-push gate blocks on test_passed, so a
+# build/lint/format command must NOT mark tests as having passed (a green build
+# does not mean the suite ran). Previously cargo build / ruff check / cargo
+# clippy / pre-commit run were treated as "tests" — dropped.
 is_test=false
 case "$command" in
   *"cargo test"*|*"cargo nextest"*) is_test=true ;;
   *"pnpm test"*|*"pnpm run test"*|*"npm test"*) is_test=true ;;
-  *"pytest"*|*"python -m pytest"*|*"uv run pytest"*) is_test=true ;;
+  *"pytest"*) is_test=true ;;   # covers python -m pytest / uv run pytest
   *"go test"*) is_test=true ;;
   *"just test"*|*"task test"*) is_test=true ;;
   *"vitest"*|*"jest"*|*"mocha"*) is_test=true ;;
-  *"pre-commit run"*) is_test=true ;;
   *"make test"*) is_test=true ;;
-  *"cargo clippy"*|*"ruff check"*|*"cargo build"*|*"just build"*|*"pnpm run build"*) is_test=true ;;
 esac
 
 if [[ "$is_test" == true ]]; then
