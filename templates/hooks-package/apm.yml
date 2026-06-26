@@ -8,7 +8,7 @@ version: 0.0.0
 description: One-line summary of what these hooks guard or automate.
 author: Your Name
 license: Apache-2.0
-type: hooks
+type: instructions
 target: all              # emit both Claude and Codex hook configs
 includes: auto
 category: project-lifecycle

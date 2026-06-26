@@ -6,7 +6,7 @@ description: >-
   block it on system-critical paths. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
-type: hooks
+type: instructions
 target: all
 includes: auto
 category: project-lifecycle
