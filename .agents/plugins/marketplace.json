@@ -857,6 +857,18 @@
       "category": "mcp"
     },
     {
+      "name": "mcp-speckit-memory",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-speckit-memory"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
       "name": "mcp-tauri",
       "source": {
         "source": "local",

@@ -38,6 +38,21 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    warns and is skipped rather than aborting setup. Currently `memory-md` uses
    `latest-release:DyanGalih/spec-kit-memory-hub` (the catalog still ships the old 0.8.5; the
    1.x line adds the SQLite/MCP backend and the `before_specify` memory hook).
+
+3.5. **Build the memory-md MCP server.** The 1.x `memory-md` extension ships a native MCP
+   server, but the release archive carries only TypeScript source -- no built `dist/`, no
+   `node_modules` (both gitignored) -- and the `speckit-memory` binary is NOT published to npm,
+   so the upstream `npx -y speckit-memory mcp-start` does not work. The setup script builds the
+   server in-place (`cd .specify/extensions/memory-md && npm install && npm run build`) right
+   after the extension install loop, so the first MCP launch doesn't pay a cold `better-sqlite3`
+   native compile during the client's stdio-init handshake. The build is best-effort: a missing
+   Node toolchain warns and is skipped (the MCP launcher rebuilds on demand as a fallback). The
+   server itself is registered with the harness by the `mcp-speckit-memory` APM package (a
+   dependency of the `speckit` bundle), whose launcher resolves the project-local extension dir,
+   builds it if needed, then runs `node dist/bin/speckit-memory.js mcp-start` over stdio. With it
+   registered, the `/speckit.memory-md.*` prompts call the native MCP tools
+   (`speckit_memory_search`, `speckit_memory_synthesize`, `speckit_memory_refresh_cache`, ...)
+   instead of shelling out to `npx`.
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch

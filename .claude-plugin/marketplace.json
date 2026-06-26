@@ -760,6 +760,17 @@
       "source": "./packages/mcp-serena"
     },
     {
+      "name": "mcp-speckit-memory",
+      "description": "MCP server package for the Spec Kit Memory Hub (memory-md) extension: durable, repository-native project memory (decisions, bugs, lessons) with a SQLite cache exposed as MCP tools. The launcher resolves the project-local memory-md extension and builds its server in-place on first use, since the upstream binary is not published to npm.",
+      "version": "0.1.0",
+      "tags": [
+        "mcp",
+        "speckit",
+        "memory"
+      ],
+      "source": "./packages/mcp-speckit-memory"
+    },
+    {
       "name": "mcp-tauri",
       "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
       "version": "1.0.0",
