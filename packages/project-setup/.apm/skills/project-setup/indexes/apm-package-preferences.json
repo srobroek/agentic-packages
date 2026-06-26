@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "marketplaces": {
+    "srobroek-agentic": {
+      "repo": "srobroek/agentic-packages",
+      "default": true,
+      "purpose": "first-party bundles, bootstrap skills, steering, hooks, MCP packages"
+    },
+    "wshobson-agents": {
+      "repo": "wshobson/agents",
+      "default": true,
+      "purpose": "upstream specialist agents, commands, and workflow packages"
+    },
+    "voltagent-subagents": {
+      "repo": "VoltAgent/awesome-claude-code-subagents",
+      "default": true,
+      "purpose": "broad upstream specialist agent bundles"
+    }
+  },
+  "preferred_packages": {
+    "core@srobroek-agentic": {
+      "priority": 100,
+      "profiles": [
+        "baseline",
+        "all"
+      ],
+      "reason": "Shared project baseline with core agents, code intelligence, lifecycle, and maintenance.",
+      "selection_count": 0
+    },
+    "infrastructure@srobroek-agentic": {
+      "priority": 90,
+      "profiles": [
+        "infrastructure",
+        "terraform",
+        "cloud",
+        "all"
+      ],
+      "reason": "First-party infrastructure bundle with cloud, deployment, Terraform, and operations workflows.",
+      "selection_count": 0
+    },
+    "language-typescript@srobroek-agentic": {
+      "priority": 85,
+      "profiles": [
+        "typescript",
+        "frontend",
+        "all"
+      ],
+      "reason": "TypeScript and JavaScript quality steering plus matching specialist agents.",
+      "selection_count": 0
+    },
+    "language-terraform@srobroek-agentic": {
+      "priority": 85,
+      "profiles": [
+        "terraform",
+        "infrastructure",
+        "cloud",
+        "all"
+      ],
+      "reason": "Terraform steering and infrastructure specialist support.",
+      "selection_count": 0
+    },
+    "speckit@srobroek-agentic": {
+      "priority": 85,
+      "profiles": [
+        "speckit",
+        "planning",
+        "all"
+      ],
+      "reason": "SpecKit workflow bundle with agents, bugfix skill, and docs/spec steering.",
+      "selection_count": 0
+    },
+    "quality@srobroek-agentic": {
+      "priority": 75,
+      "profiles": [
+        "quality",
+        "testing",
+        "all"
+      ],
+      "reason": "Cross-language review, verification, and language check workflows.",
+      "selection_count": 0
+    },
+    "security@srobroek-agentic": {
+      "priority": 70,
+      "profiles": [
+        "security",
+        "quality",
+        "all"
+      ],
+      "reason": "Security scanning, compliance, API security, and frontend security workflows.",
+      "selection_count": 0
+    },
+    "frontend-mobile-development@wshobson-agents": {
+      "priority": 70,
+      "profiles": [
+        "frontend",
+        "typescript",
+        "all"
+      ],
+      "reason": "Upstream frontend and mobile implementation specialists.",
+      "selection_count": 0
+    },
+    "ui-design@wshobson-agents": {
+      "priority": 70,
+      "profiles": [
+        "frontend",
+        "design",
+        "product",
+        "all"
+      ],
+      "reason": "Upstream UI/UX design and accessibility-oriented design systems package.",
+      "selection_count": 0
+    },
+    "cloud-infrastructure@wshobson-agents": {
+      "priority": 70,
+      "profiles": [
+        "infrastructure",
+        "cloud",
+        "terraform",
+        "all"
+      ],
+      "reason": "Upstream cloud infrastructure specialist package.",
+      "selection_count": 0
+    },
+    "deployment-validation@wshobson-agents": {
+      "priority": 65,
+      "profiles": [
+        "deployment",
+        "infrastructure",
+        "cloud",
+        "all"
+      ],
+      "reason": "Deployment validation specialists for release readiness.",
+      "selection_count": 0
+    },
+    "voltagent-infra@voltagent-subagents": {
+      "priority": 55,
+      "profiles": [
+        "infrastructure",
+        "cloud",
+        "terraform",
+        "all"
+      ],
+      "reason": "Broad infrastructure, Terraform, and SRE specialist agent bundle.",
+      "selection_count": 0
+    },
+    "voltagent-core-dev@voltagent-subagents": {
+      "priority": 50,
+      "profiles": [
+        "baseline",
+        "frontend",
+        "backend",
+        "all"
+      ],
+      "reason": "Broad everyday coding specialist bundle.",
+      "selection_count": 0
+    },
+    "frontend@srobroek-agentic": {
+      "priority": 90,
+      "profiles": [
+        "frontend",
+        "product",
+        "typescript",
+        "all"
+      ],
+      "reason": "First-party frontend/product bundle with UI, design, frontend specialists, and Playwright skill. Pair with mcp-playwright when browser automation is needed.",
+      "selection_count": 0
+    },
+    "mcp-playwright@srobroek-agentic": {
+      "priority": 70,
+      "profiles": [
+        "frontend",
+        "design",
+        "product",
+        "typescript",
+        "all"
+      ],
+      "reason": "Optional Playwright MCP server package for browser automation and UI verification; install separately from frontend bundles to avoid hidden MCP duplication.",
+      "selection_count": 0
+    }
+  }
+}

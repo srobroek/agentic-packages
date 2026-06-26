@@ -11,21 +11,23 @@
 #                   [--extra-marketplace name=owner/repo]
 #                   [--skip-marketplace-register] [--first-party-only]
 #
-# Marketplace registry comes from agentic-packages/indexes/apm-package-preferences.json
-# .marketplaces when available, ordered by priority. Add future marketplaces there.
+# Marketplace registry comes from the bundled indexes/apm-package-preferences.json
+# (ships with this skill) .marketplaces, ordered by priority. Add future
+# marketplaces there, or override via APM_PACKAGE_PREFERENCES_FILE.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AGENTIC_TOOLS_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# The preferences registry ships inside this skill at ../indexes/. Resolution
+# order: explicit env override > a project-local indexes/ in the cwd (lets a repo
+# pin its own preferences) > the packaged default that ships with the skill.
+BUNDLED_PREFERENCES="$SCRIPT_DIR/../indexes/apm-package-preferences.json"
 PREFERENCES_FILE="${APM_PACKAGE_PREFERENCES_FILE:-}"
 if [ -z "$PREFERENCES_FILE" ]; then
     if [ -f "indexes/apm-package-preferences.json" ]; then
         PREFERENCES_FILE="indexes/apm-package-preferences.json"
-    elif [ -f "$AGENTIC_TOOLS_DIR/indexes/apm-package-preferences.json" ]; then
-        PREFERENCES_FILE="$AGENTIC_TOOLS_DIR/indexes/apm-package-preferences.json"
     else
-        PREFERENCES_FILE="indexes/apm-package-preferences.json"
+        PREFERENCES_FILE="$BUNDLED_PREFERENCES"
     fi
 fi
 REGISTER_MARKETPLACE=true
