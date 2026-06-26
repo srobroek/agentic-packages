@@ -37,8 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh",
-            "if": "Bash(cargo test*)|Bash(just test*)|Bash(pnpm test*)|Bash(pnpm run test*)|Bash(pytest*)|Bash(python -m pytest*)|Bash(go test*)|Bash(dotnet test*)|Bash(vitest*)|Bash(jest*)|Bash(cargo clippy*)|Bash(ruff check*)|Bash(cargo build*)|Bash(just build*)|Bash(pnpm run build*)"
+            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh"
           }
         ]
       }
