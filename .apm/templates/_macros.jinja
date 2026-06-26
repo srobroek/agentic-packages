@@ -1,0 +1,15 @@
+{#-
+  Shared table macro. Reproduces the old render_table() output byte-for-byte:
+    "| h1 | h2 |\n| --- | --- |\n| c | c |\n| c | c |"
+  with NO trailing newline. Each cell is escaped by the `cell` filter (registered
+  by render-docs.py) which mirrors the old escape_cell(): "|" -> "\|", newlines
+  flattened to spaces, then stripped.
+  `rows` is a list of lists of raw (un-escaped) cell strings.
+-#}
+{%- macro table(headers, rows) -%}
+| {{ headers | join(" | ") }} |
+| {{ (["---"] * (headers | length)) | join(" | ") }} |
+{%- for row in rows %}
+| {{ row | map("cell") | join(" | ") }} |
+{%- endfor -%}
+{%- endmacro -%}

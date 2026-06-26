@@ -30,7 +30,9 @@ jobs:
           python-version: "3.14"
 
       - name: Set up APM
-        run: pip install apm-cli
+        # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
+        # PyYAML comes transitively from apm-cli.
+        run: pip install apm-cli jinja2
 
       - name: Validate hook JSON
         run: |
@@ -40,10 +42,11 @@ jobs:
 
       - name: Regenerate non-destructive artifacts
         run: |
-          python3 .apm/scripts/build-marketplace-block.py
+          # One canonical render pass (marketplace block, release-please config,
+          # README/docs tables) from the shared inventory, then apm pack reads the
+          # regenerated marketplace block into the native plugin manifests.
+          python3 .apm/scripts/render-docs.py all
           apm pack
-          python3 .apm/scripts/build-release-please.py
-          python3 .apm/scripts/build-readme-tables.py
           # speckit-dag-hooks: nodes.json is a COMPILED ARTEFACT generated from
           # scripts/build_nodes.py (the authoring source of truth). Regenerate it
           # here so the staleness diff below fails any PR that edits the builder
