@@ -1,5 +1,5 @@
 name: hooks-branch-check
-version: 1.0.0
+version: 1.0.1
 description: >-
   Branch awareness hook: on prompt submit, warn when work starts on a protected
   branch (main/master/develop) and surface relevant feature branches/worktrees.

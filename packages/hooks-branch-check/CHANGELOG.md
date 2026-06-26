@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-branch-check-v1.0.0...hooks-branch-check-v1.0.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* use installable package types so hooks + speckit resolve globally ([#387](https://github.com/srobroek/agentic-packages/issues/387)) ([ff2b7a2](https://github.com/srobroek/agentic-packages/commit/ff2b7a2200fc88bcf39abafe9f73ed6f5d31e942))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-branch-check-v0.2.1...hooks-branch-check-v1.0.0) (2026-06-26)
 
 

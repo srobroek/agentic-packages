@@ -1,5 +1,5 @@
 name: hooks-bash-safety
-version: 1.0.0
+version: 1.0.1
 description: >-
   Bash safety guards: block privilege escalation, curl|sh pipes, and obviously
   destructive filesystem ops; soft-confirm rm -rf on non-system paths and hard-
