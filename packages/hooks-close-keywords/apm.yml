@@ -1,10 +1,10 @@
 name: hooks-close-keywords
-version: 0.1.0
+version: 0.2.0
 description: >-
   Fixes the GitHub "comma-list close" quirk, where a closing keyword binds to
   only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared
-  normalizer distributes the keyword across every issue in a contiguous list
-  (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed,
+  normalizer distributes the keyword across every issue in a contiguous list (->
+  Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed,
   resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook
   that rewrites the message in place (tool-agnostic), and a PreToolUse guard on
   `gh pr create`/`gh pr edit` that blocks with the corrected --body to re-issue.

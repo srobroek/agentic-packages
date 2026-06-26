@@ -1,5 +1,5 @@
 name: hooks-git-safety
-version: 1.0.1
+version: 1.1.0
 description: >-
   Git safety guards: hard-block `git reset --hard` only when the tracked tree is
   dirty (work would be lost) and `git push --force`, and soft-guard other

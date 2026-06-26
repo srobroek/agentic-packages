@@ -1,5 +1,5 @@
 name: project-setup
-version: 0.1.1
+version: 0.2.0
 description: >-
   Bootstrap a new repo or add a package with explicit setup choices, APM package
   selection, tooling, and verification. Use when creating a project, adding a
