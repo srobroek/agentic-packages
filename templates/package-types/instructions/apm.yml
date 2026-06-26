@@ -1,0 +1,18 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up.
+#
+# INSTRUCTIONS package (a.k.a. steering): ships always-/path-scoped guidance
+# (.apm/instructions/*.instructions.md) plus on-demand context loaded on
+# reference (.apm/context/*.context.md). Mirrors packages/steering-backend.
+name: example-instructions
+version: 0.0.0
+description: One-line summary of the conventions this steering enforces. Opt-in.
+author: Your Name
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto
+category: steering
+tags:
+  - steering
+  - example

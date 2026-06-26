@@ -1,0 +1,26 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up.
+#
+# BUNDLE package: aggregates OTHER packages and ships NO primitives of its own.
+# There is intentionally no .apm/ directory here -- a bundle is just an apm.yml
+# with a dependencies list. Mirrors the real packages/language-python.
+name: example-bundle
+version: 0.0.0
+description: One-line summary of the curated set this bundle installs together.
+author: Your Name
+license: Apache-2.0
+type: bundle
+target: all
+includes: auto
+category: languages
+tags:
+  - bundle
+  - example
+# dependencies.apm uses REPO-LOCATORS (owner/repo/path#ref), NOT
+# name@marketplace. Semver ranges (#^0.1.2) work as nested manifest deps;
+# branch refs (#main) pin to a moving branch. Cycles are rejected.
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/python-quality#^0.1.2
+    - srobroek/agentic-packages/packages/language-steering-python#main
+    - wshobson/agents/plugins/python-development#main

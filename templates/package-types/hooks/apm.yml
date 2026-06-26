@@ -1,0 +1,17 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up.
+#
+# HOOKS package: ships cross-tool hook JSON (Claude + Codex) plus the guard
+# scripts they invoke. Mirrors the real packages/hooks-bash-safety layout.
+name: example-hooks
+version: 0.0.0
+description: One-line summary of what these hooks guard or automate.
+author: Your Name
+license: Apache-2.0
+type: hooks
+target: all              # emit both Claude and Codex hook configs
+includes: auto
+category: project-lifecycle
+tags:
+  - hooks
+  - example
