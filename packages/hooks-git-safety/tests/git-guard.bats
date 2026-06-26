@@ -11,6 +11,10 @@
 # guard fires it emits nothing and exits 0 ("allow" by omission).
 
 setup() {
+  # Hermetic git: ignore the host's system/global config so fixtures do not
+  # inherit a system core.hooksPath (e.g. a corporate git wrapper), which would
+  # run on every fixture commit and make this suite minutes-slow.
+  export GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null
   GUARD="${BATS_TEST_DIRNAME}/../scripts/git-guard.sh"
   [ -f "$GUARD" ] || {
     echo "guard script not found at $GUARD" >&2
@@ -19,6 +23,39 @@ setup() {
   if ! command -v jq >/dev/null 2>&1; then
     skip "jq not available"
   fi
+  if ! command -v git >/dev/null 2>&1; then
+    skip "git not available"
+  fi
+}
+
+# new_repo <state>  → prints the path to a fresh fixture git repo in $state.
+#   clean      committed, working tree clean
+#   dirty      committed, then a tracked file modified but not committed
+#   untracked  committed clean, plus an extra untracked file (tracked tree clean)
+# Repos live under BATS_TEST_TMPDIR (per-test, auto-cleaned). Git identity is set
+# locally so commits work without relying on the caller's global config.
+new_repo() {
+  local state="$1" dir
+  dir="$(mktemp -d "${BATS_TEST_TMPDIR}/repo.XXXXXX")"
+  git -C "$dir" init -q
+  git -C "$dir" config user.email guard@test.local
+  git -C "$dir" config user.name "Guard Test"
+  printf 'v1\n' >"$dir/tracked.txt"
+  git -C "$dir" add tracked.txt
+  git -C "$dir" commit -q -m init
+  case "$state" in
+    clean) ;;
+    dirty) printf 'v2\n' >"$dir/tracked.txt" ;;
+    untracked) printf 'scratch\n' >"$dir/untracked.txt" ;;
+    *) echo "unknown repo state: $state" >&2; return 1 ;;
+  esac
+  printf '%s' "$dir"
+}
+
+# payload_in <cwd> <command>  → JSON event with .cwd and a string command.
+payload_in() {
+  jq -cn --arg cwd "$1" --arg cmd "$2" \
+    '{cwd:$cwd, tool_input:{command:$cmd}}'
 }
 
 # decision_of <json-payload>
@@ -48,42 +85,68 @@ assert_decision() {
 # HARD DENY — reset --hard (incl. bypass orderings) and force push.
 # ---------------------------------------------------------------------------
 
-@test "deny: plain reset --hard (object tool_input)" {
-  assert_decision deny '{"tool_input":{"command":"git reset --hard"}}'
+# reset --hard is conditional: it only denies when the tracked working tree is
+# dirty (work would be lost). All plain-form deny tests therefore run in a DIRTY
+# fixture repo passed via .cwd. Allow-when-clean cases live in the ALLOW section.
+
+@test "deny: plain reset --hard in a DIRTY tree (object tool_input)" {
+  local r; r="$(new_repo dirty)"
+  assert_decision deny "$(payload_in "$r" 'git reset --hard')"
 }
 
-@test "deny: reset --hard via STRING tool_input (old idiom bypass)" {
+@test "deny: reset --hard via STRING tool_input (old idiom bypass), dirty tree" {
   # The naive `.tool_input.command // .tool_input` jq threw on a string and
-  # silently allowed this. Type-checked idiom must still deny.
-  assert_decision deny '{"tool_input":"git reset --hard"}'
+  # silently allowed this. Type-checked idiom must still deny. With a string
+  # tool_input there is no .cwd, so this exercises the $PWD fallback path: run
+  # the guard from inside the dirty fixture repo.
+  local r; r="$(new_repo dirty)"
+  run bash -c "cd '$r' && printf '%s' '{\"tool_input\":\"git reset --hard\"}' | /usr/bin/env bash '$GUARD'"
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "deny"' >/dev/null
 }
 
-@test "deny: reset HEAD --hard (--hard is NOT the immediate next token)" {
-  assert_decision deny '{"tool_input":{"command":"git reset HEAD --hard"}}'
+@test "deny: reset HEAD --hard (--hard is NOT the immediate next token), dirty" {
+  local r; r="$(new_repo dirty)"
+  assert_decision deny "$(payload_in "$r" 'git reset HEAD --hard')"
 }
 
-@test "deny: reset --hard HEAD~3 (trailing ref)" {
-  assert_decision deny '{"tool_input":{"command":"git reset --hard HEAD~3"}}'
+@test "deny: reset --hard HEAD~3 (trailing ref), dirty" {
+  local r; r="$(new_repo dirty)"
+  assert_decision deny "$(payload_in "$r" 'git reset --hard HEAD~3')"
 }
 
-@test "deny: -C with single-quoted spaced path then reset --hard" {
-  assert_decision deny "{\"tool_input\":{\"command\":\"git -C '/path with space' reset --hard\"}}"
+# -C / --git-dir / --work-tree redirect git to a DIFFERENT repo than .cwd, whose
+# state we can't trust → fail closed (deny) regardless of .cwd cleanliness. A
+# CLEAN .cwd is passed to prove the deny comes from the redirect, not the tree.
+
+@test "deny: -C with single-quoted spaced path then reset --hard (fail closed)" {
+  local r; r="$(new_repo clean)"
+  assert_decision deny "$(payload_in "$r" "git -C '/path with space' reset --hard")"
 }
 
-@test "deny: -C with double-quoted spaced path then reset --hard" {
-  assert_decision deny '{"tool_input":{"command":"git -C \"/path with space\" reset --hard"}}'
+@test "deny: -C with double-quoted spaced path then reset --hard (fail closed)" {
+  local r; r="$(new_repo clean)"
+  assert_decision deny "$(payload_in "$r" 'git -C "/path with space" reset --hard')"
 }
 
-@test "deny: -c config kv with spaced value then reset --hard" {
-  assert_decision deny "{\"tool_input\":{\"command\":\"git -c user.name='A B' reset --hard\"}}"
+@test "deny: -c config kv with spaced value then reset --hard (dirty tree)" {
+  # -c (config) does NOT redirect the repo, so this denies on tree state.
+  local r; r="$(new_repo dirty)"
+  assert_decision deny "$(payload_in "$r" "git -c user.name='A B' reset --hard")"
 }
 
-@test "deny: --git-dir spaced inline value then reset --hard" {
-  assert_decision deny "{\"tool_input\":{\"command\":\"git --git-dir='/a b/.git' reset --hard\"}}"
+@test "deny: --git-dir spaced inline value then reset --hard (fail closed)" {
+  local r; r="$(new_repo clean)"
+  assert_decision deny "$(payload_in "$r" "git --git-dir='/a b/.git' reset --hard")"
 }
 
-@test "deny: multiple stacked global opts then reset --hard" {
-  assert_decision deny "{\"tool_input\":{\"command\":\"git -C '/a b' -c x=y --no-pager reset --hard\"}}"
+@test "deny: multiple stacked global opts then reset --hard (fail closed via -C)" {
+  local r; r="$(new_repo clean)"
+  assert_decision deny "$(payload_in "$r" "git -C '/a b' -c x=y --no-pager reset --hard")"
+}
+
+@test "deny: reset --hard when .cwd is not a git repo (fail closed)" {
+  local d; d="$(mktemp -d "${BATS_TEST_TMPDIR}/notrepo.XXXXXX")"
+  assert_decision deny "$(payload_in "$d" 'git reset --hard')"
 }
 
 @test "deny: push --force" {
@@ -138,16 +201,24 @@ assert_decision() {
   assert_decision ask "{\"tool_input\":{\"command\":\"git -C '/path with space' clean -df\"}}"
 }
 
-@test "ask: branch -d (was deny, downgraded to ask)" {
-  assert_decision ask '{"tool_input":{"command":"git branch -d feature"}}'
-}
-
-@test "ask: branch -D force delete" {
+@test "ask: branch -D force delete (possibly-unmerged)" {
   assert_decision ask '{"tool_input":{"command":"git branch -D feature"}}'
 }
 
-@test "ask: branch --delete" {
-  assert_decision ask '{"tool_input":{"command":"git branch --delete x"}}'
+@test "ask: branch --delete --force" {
+  assert_decision ask '{"tool_input":{"command":"git branch --delete --force x"}}'
+}
+
+@test "ask: branch -df (force cluster)" {
+  assert_decision ask '{"tool_input":{"command":"git branch -df feature"}}'
+}
+
+@test "allow: branch -d (safe merge-checked delete)" {
+  assert_decision allow '{"tool_input":{"command":"git branch -d feature"}}'
+}
+
+@test "allow: branch --delete (safe merge-checked delete)" {
+  assert_decision allow '{"tool_input":{"command":"git branch --delete x"}}'
 }
 
 @test "ask: stash drop" {
@@ -158,20 +229,37 @@ assert_decision() {
   assert_decision ask '{"tool_input":{"command":"git stash clear"}}'
 }
 
-@test "ask: restore --staged" {
-  assert_decision ask '{"tool_input":{"command":"git restore --staged file.txt"}}'
+# restore (worktree) and checkout -- discard ONLY uncommitted changes, so they
+# mirror reset --hard: ask only when the tracked tree is dirty, allow when clean.
+@test "ask: restore <file> (default=worktree) in a DIRTY tree" {
+  local r; r="$(new_repo dirty)"
+  assert_decision ask "$(payload_in "$r" 'git restore file.txt')"
+}
+
+@test "ask: restore --worktree in a DIRTY tree" {
+  local r; r="$(new_repo dirty)"
+  assert_decision ask "$(payload_in "$r" 'git restore --worktree file.txt')"
 }
 
 @test "ask: tag -d" {
   assert_decision ask '{"tool_input":{"command":"git tag -d v1.0"}}'
 }
 
-@test "ask: checkout -- path" {
-  assert_decision ask '{"tool_input":{"command":"git checkout -- file.txt"}}'
+@test "ask: checkout -- path in a DIRTY tree" {
+  local r; r="$(new_repo dirty)"
+  assert_decision ask "$(payload_in "$r" 'git checkout -- file.txt')"
 }
 
-@test "ask: worktree remove (stays ask)" {
-  assert_decision ask '{"tool_input":{"command":"git worktree remove wt"}}'
+@test "allow: worktree remove (plain — git refuses if dirty)" {
+  assert_decision allow '{"tool_input":{"command":"git worktree remove wt"}}'
+}
+
+@test "ask: worktree remove --force (can discard uncommitted work)" {
+  assert_decision ask '{"tool_input":{"command":"git worktree remove --force wt"}}'
+}
+
+@test "ask: worktree remove -f (short force flag)" {
+  assert_decision ask '{"tool_input":{"command":"git worktree remove -f wt"}}'
 }
 
 # ---------------------------------------------------------------------------
@@ -192,6 +280,38 @@ assert_decision() {
 
 @test "allow: reset --soft (not --hard)" {
   assert_decision allow '{"tool_input":{"command":"git reset --soft HEAD~1"}}'
+}
+
+@test "allow: reset --hard in a CLEAN tree (nothing would be lost)" {
+  local r; r="$(new_repo clean)"
+  assert_decision allow "$(payload_in "$r" 'git reset --hard')"
+}
+
+@test "allow: reset --hard HEAD~3 in a CLEAN tree (ref move is reflog-recoverable)" {
+  local r; r="$(new_repo clean)"
+  assert_decision allow "$(payload_in "$r" 'git reset --hard HEAD~3')"
+}
+
+@test "allow: reset --hard with ONLY untracked files (tracked tree is clean)" {
+  local r; r="$(new_repo untracked)"
+  assert_decision allow "$(payload_in "$r" 'git reset --hard')"
+}
+
+# restore --staged only UNSTAGES (working tree untouched, fully reversible) — it
+# must NEVER prompt, even with a dirty tree. This was the false positive.
+@test "allow: restore --staged (unstage only) in a DIRTY tree" {
+  local r; r="$(new_repo dirty)"
+  assert_decision allow "$(payload_in "$r" 'git restore --staged file.txt')"
+}
+
+@test "allow: restore <file> (worktree) in a CLEAN tree (nothing uncommitted to lose)" {
+  local r; r="$(new_repo clean)"
+  assert_decision allow "$(payload_in "$r" 'git restore file.txt')"
+}
+
+@test "allow: checkout -- path in a CLEAN tree (nothing uncommitted to lose)" {
+  local r; r="$(new_repo clean)"
+  assert_decision allow "$(payload_in "$r" 'git checkout -- file.txt')"
 }
 
 @test "allow: branch -a (list, no delete)" {
@@ -247,7 +367,9 @@ assert_decision() {
 }
 
 @test "guard exits 0 even when it denies (Claude reads decision from stdout)" {
-  run bash -c "printf '%s' '{\"tool_input\":{\"command\":\"git reset --hard\"}}' | /usr/bin/env bash '$GUARD'"
+  local r payload; r="$(new_repo dirty)"
+  payload="$(payload_in "$r" 'git reset --hard')"
+  run bash -c "printf '%s' '$payload' | /usr/bin/env bash '$GUARD'"
   [ "$status" -eq 0 ]
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "deny"' >/dev/null
 }

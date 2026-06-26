@@ -146,6 +146,20 @@ run_guard() {
   [ -z "$decision" ]
 }
 
+@test "cp dest managed WITH trailing redirect -> deny (redirect stripped, not taken as dest)" {
+  # Regression: $NF naively took the redirect token (/dev/null) as the
+  # destination, so the real managed write slipped through. Strip redirects first.
+  with_chezmoi
+  run_guard "$(mk_cmd "cp /tmp/src $MANAGED_FILE >/dev/null 2>&1")"
+  [ "$decision" = "deny" ]
+}
+
+@test "mv dest managed WITH trailing redirect -> deny" {
+  with_chezmoi
+  run_guard "$(mk_cmd "mv /tmp/src $MANAGED_FILE 2>/dev/null")"
+  [ "$decision" = "deny" ]
+}
+
 @test "../-traversal redirect write to managed file -> deny" {
   with_chezmoi
   traversal="$HOME/.config/agentic-tools/steering/../steering/index.md"

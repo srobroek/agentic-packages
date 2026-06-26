@@ -461,6 +461,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "hooks-close-keywords",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-close-keywords"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "hooks-git-safety",
       "source": {
         "source": "local",
@@ -537,6 +549,18 @@
       "source": {
         "source": "local",
         "path": "./packages/hooks-portability-ci"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "hooks-precommit-gate",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-precommit-gate"
       },
       "policy": {
         "installation": "AVAILABLE",

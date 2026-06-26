@@ -84,10 +84,16 @@ trailer_pat='co-authored-by[[:space:]]*:.*(claude|anthropic|noreply@anthropic)'
 #    "generated (with|by)" which is already attribution context.
 generated_pat='generat(ed|ing)[[:space:]]+(with|by)[[:space:]]+(claude|anthropic|ai($|[^a-z])|a model|an? (llm|language model))'
 
-# 3. Authorship-qualifier phrases: "AI-assisted", "AI-generated",
-#    "AI-authored", "AI-written" and their space-separated forms when paired
-#    with an authorship verb. Hyphenated form is itself an authorship claim.
-ai_attr_pat='ai[-[:space:]](assisted|generated|authored|written|coded|created)'
+# 3. Authorship-qualifier phrases: the HYPHENATED forms "AI-assisted",
+#    "AI-generated", "AI-authored", "AI-written" — these are authorship claims.
+#    Deliberately NARROW:
+#      - hyphen ONLY (no space form): "AI generated thumbnails" / "AI assisted
+#        diagnosis" are FEATURE descriptions, not commit attribution, so the
+#        space-separated form is allowed.
+#      - excludes "coded"/"created": "AI-coded"/"AI-created" appear far more as
+#        product/feature names than as authorship trailers. The high-signal
+#        authorship verbs (assisted|generated|authored|written) are kept.
+ai_attr_pat='ai-(assisted|generated|authored|written)'
 
 # 4. Claude Code's default trailer URL (appears even when the agent omits the
 #    Co-Authored-By line).

@@ -312,6 +312,14 @@ marketplace:
         - chezmoi
         - dotfiles
         - safety
+    - name: hooks-close-keywords
+      source: ./packages/hooks-close-keywords
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - github
+        - issues
     - name: hooks-git-safety
       source: ./packages/hooks-git-safety
       category: project-lifecycle
@@ -362,6 +370,13 @@ marketplace:
         - hooks
         - portability
         - testing
+    - name: hooks-precommit-gate
+      source: ./packages/hooks-precommit-gate
+      category: project-lifecycle
+      tags:
+        - hooks
+        - git
+        - pre-commit
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality
