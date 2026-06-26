@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.0.1...srobroek-agentic-v1.1.0) (2026-06-26)
+
+
+### Features
+
+* tighten autonomous-agent hook guards; add precommit-gate and close-keywords packages ([#391](https://github.com/srobroek/agentic-packages/issues/391)) ([34f155a](https://github.com/srobroek/agentic-packages/commit/34f155aab3ae1586b2ce16e2418a30a9d47b5137))
+
+
+### Bug Fixes
+
+* stop the release workflow pushing artifacts to protected main ([#388](https://github.com/srobroek/agentic-packages/issues/388)) ([47ea423](https://github.com/srobroek/agentic-packages/commit/47ea423ad202506a7060523638c21ead0ae3b34b))
+
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.0.0...srobroek-agentic-v1.0.1) (2026-06-26)
 
 

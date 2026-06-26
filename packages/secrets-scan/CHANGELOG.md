@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/secrets-scan-v1.0.0...secrets-scan-v1.1.0) (2026-06-26)
+
+
+### Features
+
+* tighten autonomous-agent hook guards; add precommit-gate and close-keywords packages ([#391](https://github.com/srobroek/agentic-packages/issues/391)) ([34f155a](https://github.com/srobroek/agentic-packages/commit/34f155aab3ae1586b2ce16e2418a30a9d47b5137))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/secrets-scan-v0.1.0...secrets-scan-v1.0.0) (2026-06-26)
 
 

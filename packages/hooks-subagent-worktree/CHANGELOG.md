@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree-v0.2.1...hooks-subagent-worktree-v0.3.0) (2026-06-26)
+
+
+### Features
+
+* **hooks-subagent-worktree:** ship spawn-tagging instruction; fix type to hybrid ([#390](https://github.com/srobroek/agentic-packages/issues/390)) ([da05500](https://github.com/srobroek/agentic-packages/commit/da055000f7469ae7e96809c3c1181485bb7db9e9))
+
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree-v0.2.0...hooks-subagent-worktree-v0.2.1) (2026-06-26)
 
 
