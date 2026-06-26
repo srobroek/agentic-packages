@@ -1,0 +1,24 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up.
+#
+# HYBRID package: ships its OWN primitives (here a skill AND hooks) AND pulls in
+# dependencies. Use when a single coherent capability needs more than one
+# primitive type plus some upstream packages. Mirrors packages/code-intelligence
+# (which ships hooks + scripts and aggregates deps); this template adds a skill
+# too to show the full mixed layout.
+name: example-hybrid
+version: 0.0.0
+description: One-line summary of the capability this hybrid delivers end to end.
+author: Your Name
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto
+category: code-intelligence
+tags:
+  - hybrid
+  - example
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
+    - wshobson/agents/plugins/code-documentation#main

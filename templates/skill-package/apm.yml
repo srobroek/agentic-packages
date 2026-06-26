@@ -1,0 +1,18 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up
+# (the marketplace enumerates ./packages/* explicitly; templates/ is excluded).
+#
+# SKILL package: ships a single skill (SKILL.md + its supporting files).
+# Mirrors the real packages/go-quality layout.
+name: example-skill
+version: 0.0.0
+description: One-line summary of what this skill does and when to use it.
+author: Your Name
+license: Apache-2.0
+type: skill
+target: all          # all | claude | codex -- which runtimes receive the asset
+includes: auto       # auto = APM discovers primitives under .apm/ automatically
+category: languages  # marketplace grouping; pick the closest existing category
+tags:
+  - skill
+  - example

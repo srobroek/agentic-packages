@@ -1,0 +1,22 @@
+# TEMPLATE -- reference config, not an installable catalog entry.
+# Lives under templates/ so `apm pack` / the marketplace never picks it up.
+#
+# AGENT package: ships one subagent definition (.apm/agents/<name>.agent.md).
+# Mirrors the real packages/agent-pr-reviewer layout.
+#
+# NOTE ON TYPE: there is no `type: agent` in this repo. Every agent-* package
+# uses `type: hybrid` because the APM "agent" primitive is delivered through the
+# hybrid type (a hybrid that happens to ship only an agent is still valid). Keep
+# `type: hybrid` even when the package ships nothing but the .agent.md file.
+name: example-agent
+version: 0.0.0
+description: One-line summary of what this subagent does and when to delegate to it.
+author: Your Name
+license: Apache-2.0
+type: hybrid
+target: all
+includes: auto
+category: engineering
+tags:
+  - agent
+  - example
