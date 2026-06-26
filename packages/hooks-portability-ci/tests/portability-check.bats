@@ -12,7 +12,7 @@
 # Run: bats packages/hooks-portability-ci/tests/portability-check.bats
 
 setup() {
-  CHECK="${BATS_TEST_DIRNAME}/../scripts/portability-check.sh"
+  CHECK="${BATS_TEST_DIRNAME}/../.apm/skills/hooks-portability-ci/scripts/portability-check.sh"
   FLOOR_BASH="$(pick_bash)"
   # A fresh fake package tree per test: pkg/scripts/<hook>.sh
   TREE="$(mktemp -d "${BATS_TEST_TMPDIR}/tree.XXXXXX")"

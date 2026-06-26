@@ -33,10 +33,10 @@ check.
 
 ```sh
 # Default: scan packages/
-bash packages/hooks-portability-ci/scripts/portability-check.sh
+bash packages/hooks-portability-ci/.apm/skills/hooks-portability-ci/scripts/portability-check.sh
 
 # Or scan a specific directory
-bash packages/hooks-portability-ci/scripts/portability-check.sh path/to/dir
+bash packages/hooks-portability-ci/.apm/skills/hooks-portability-ci/scripts/portability-check.sh path/to/dir
 ```
 
 Exit codes: `0` all clear, `1` a script failed a check, `2` usage/environment
@@ -55,7 +55,7 @@ Add a job step that runs the gate over the package tree. Example GitHub Actions:
 
 ```yaml
 - name: Hook portability gate
-  run: bash packages/hooks-portability-ci/scripts/portability-check.sh packages
+  run: bash packages/hooks-portability-ci/.apm/skills/hooks-portability-ci/scripts/portability-check.sh packages
 ```
 
 The non-zero exit on failure blocks the merge. Run it on macOS runners (or any
@@ -65,8 +65,8 @@ still catches the GNU-ism and string-payload regressions.
 ## Validate The Gate Itself
 
 ```sh
-/bin/bash -n packages/hooks-portability-ci/scripts/portability-check.sh
+/bin/bash -n packages/hooks-portability-ci/.apm/skills/hooks-portability-ci/scripts/portability-check.sh
 mise exec shellcheck@0.11.0 -- shellcheck -S warning \
-  packages/hooks-portability-ci/scripts/portability-check.sh
+  packages/hooks-portability-ci/.apm/skills/hooks-portability-ci/scripts/portability-check.sh
 bats packages/hooks-portability-ci/tests/portability-check.bats
 ```
