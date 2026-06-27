@@ -1,0 +1,49 @@
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/srobroek/agentic-packages"
+author = "Sjors Robroek"
+
+[module]
+id = "lang-ts"
+name = "TypeScript language overlay"
+version = "1.0.0"
+description = "Add TypeScript tooling (bun/pnpm, tsconfig, biome, prettier) to a scaffolded project. Appends Node .gitignore entries and biome/prettier pre-commit hooks."
+default_enabled = false
+reconcile = true
+
+[order]
+after = ["gitignore-generate", "precommit-setup"]
+
+[[inputs]]
+key = "target"
+type = "string"
+prompt = "Project target / description (used for context, e.g. 'API server', 'web app')?"
+default = ""
+required = false
+
+[[inputs]]
+key = "package_manager"
+type = "choice"
+prompt = "Package manager?"
+choices = ["bun", "pnpm"]
+default = "bun"
+required = false
+
+[[inputs]]
+key = "framework"
+type = "string"
+prompt = "Framework (nuxt, vite, plain — leave empty for plain)?"
+default = "plain"
+required = false
+
+[[inputs]]
+key = "ui_kit"
+type = "string"
+prompt = "UI kit (optional, e.g. shadcn, naive-ui — leave empty for none)?"
+default = ""
+required = false
+
+[[steps]]
+id = "write"
+kind = "python"

@@ -1,0 +1,34 @@
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/srobroek/agentic-packages"
+author = "Sjors Robroek"
+
+[module]
+id = "lang-python"
+name = "Python language overlay"
+version = "1.0.0"
+description = "Add Python tooling (uv, ruff, pytest) to a scaffolded project. Appends Python .gitignore entries and ruff pre-commit hooks."
+default_enabled = false
+reconcile = true
+
+[order]
+after = ["gitignore-generate", "precommit-setup"]
+
+[[inputs]]
+key = "python_version"
+type = "string"
+prompt = "Python version to target?"
+default = "3.13"
+required = false
+
+[[inputs]]
+key = "framework"
+type = "string"
+prompt = "Framework (optional, e.g. fastapi, django, flask — leave empty for none)?"
+default = ""
+required = false
+
+[[steps]]
+id = "write"
+kind = "python"
