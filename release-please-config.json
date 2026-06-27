@@ -296,18 +296,6 @@
         }
       ]
     },
-    "packages/debugging": {
-      "release-type": "simple",
-      "component": "debugging",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/dep-audit": {
       "release-type": "simple",
       "component": "dep-audit",
@@ -1391,18 +1379,6 @@
     "packages/typescript-quality": {
       "release-type": "simple",
       "component": "typescript-quality",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/unstuck": {
-      "release-type": "simple",
-      "component": "unstuck",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

@@ -13,8 +13,7 @@
         "agent",
         "adversarial",
         "critique",
-        "decision-review",
-        "debugging"
+        "decision-review"
       ],
       "source": "./packages/agent-adversarial-challenger"
     },
@@ -222,16 +221,6 @@
         "analysis"
       ],
       "source": "./packages/debate"
-    },
-    {
-      "name": "debugging",
-      "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.",
-      "version": "1.0.0",
-      "tags": [
-        "bundle",
-        "debugging"
-      ],
-      "source": "./packages/debugging"
     },
     {
       "name": "dep-audit",
@@ -1196,17 +1185,6 @@
         "typescript"
       ],
       "source": "./packages/typescript-quality"
-    },
-    {
-      "name": "unstuck",
-      "description": "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. Ships an outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops) with an escalating nudge/directive/edit-gate ladder on both runtimes.",
-      "version": "1.0.0",
-      "tags": [
-        "skill",
-        "debugging",
-        "escalation"
-      ],
-      "source": "./packages/unstuck"
     },
     {
       "name": "verify",

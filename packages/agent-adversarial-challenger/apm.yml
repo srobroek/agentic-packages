@@ -12,10 +12,9 @@ license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
-category: debugging
+category: quality
 tags:
   - agent
   - adversarial
   - critique
   - decision-review
-  - debugging
