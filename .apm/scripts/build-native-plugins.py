@@ -80,7 +80,9 @@ def _author_license(root_manifest: dict) -> tuple[dict | None, str | None]:
 # plugin.json
 # --------------------------------------------------------------------------- #
 
-def _plugin_manifest(pkg: dict, manifest: dict, defaults: tuple, deps: list[dict] | None) -> dict:
+def _plugin_manifest(
+    pkg: dict, manifest: dict, defaults: tuple, deps: list[dict] | None, has_skills: bool = False
+) -> dict:
     author_default, license_default = defaults
     out: dict = {"name": pkg["name"]}
     if pkg.get("version"):
@@ -94,6 +96,10 @@ def _plugin_manifest(pkg: dict, manifest: dict, defaults: tuple, deps: list[dict
     lic = manifest.get("license") or license_default
     if lic:
         out["license"] = str(lic)
+    # Reference skills in place rather than copying them (avoids duplicating
+    # any test_*.py the skill ships, which breaks pytest collection).
+    if has_skills:
+        out["skills"] = "./.apm/skills"
     if deps:
         out["dependencies"] = deps
     return out
@@ -193,13 +199,18 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
     plan: dict[str, object] = {}
 
-    # Skills and agents are materialised whenever a package SHIPS them, regardless
-    # of its headline classification -- a multi-primitive bundle like speckit
-    # carries both skills and agents and must surface both natively.
+    # Skills are REFERENCED in place via a plugin.json `skills` override pointing
+    # at .apm/skills -- NOT copied. All three native loaders (Claude /plugin,
+    # Codex plugin add, apm install) honor the override. Copying would duplicate
+    # any test_*.py the skill ships, and pytest's collector aborts on two modules
+    # with the same basename. Multi-primitive bundles (e.g. speckit) surface their
+    # skills the same way.
     skills_src = pkg_dir / ".apm" / "skills"
-    if skills_src.is_dir() and any(skills_src.rglob("SKILL.md")):
-        plan["skills"] = ("DIRCOPY", skills_src)
+    has_skills = skills_src.is_dir() and any(skills_src.rglob("SKILL.md"))
 
+    # Agents MUST be materialised at native agents/*.md: a plugin.json `agents`
+    # override into .apm/ does not load (verified). Agents are .md only (no test
+    # files), so copying carries no pytest-collision risk.
     agents_src = pkg_dir / ".apm" / "agents"
     if agents_src.is_dir():
         for f in sorted(agents_src.glob("*.agent.md")):
@@ -226,7 +237,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # `apm pack` writes plugin.json/marketplace.json -- otherwise the CI staleness
     # gate sees drift when apm pack rewrites a manifest this generator also wrote.
     plan[".claude-plugin/plugin.json"] = (
-        json.dumps(_plugin_manifest(pkg, manifest, defaults, deps), indent=2, ensure_ascii=False) + "\n"
+        json.dumps(_plugin_manifest(pkg, manifest, defaults, deps, has_skills), indent=2, ensure_ascii=False) + "\n"
     )
     return plan
 
