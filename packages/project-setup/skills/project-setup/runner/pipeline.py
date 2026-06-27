@@ -291,8 +291,13 @@ def run_pipeline(
             io.notify(f"[WARN] fetch {locator_str} failed: {exc} (proceeding offline)")
 
     # ── Stage 3: discover modules ─────────────────────────────────────────── #
-    roots = build_discovery_roots(fetched_roots, project_dir=project_dir)
-    bundled = _paths_mod.bundled_modules_dir()
+    # Derive the bundled modules root from the INJECTED plugin_root_path (not the
+    # global __file__ resolver) so an explicitly-passed plugin root is honored
+    # for discovery, not just execution.
+    bundled = plugin_root_path / "modules"
+    roots = build_discovery_roots(
+        fetched_roots, project_dir=project_dir, bundled_dir=bundled
+    )
     discovered, disc_report = discover_modules(roots, bundled_root=bundled)
 
     if disc_report.hard_errors:
@@ -310,17 +315,18 @@ def run_pipeline(
         result.warnings.append(msg)
         io.notify(f"[WARN] {msg}")
 
-    # Parse manifests for discovered modules
+    # Parse manifests for discovered modules. parse_manifest returns a single
+    # ModuleManifest and accumulates problems in manifest.errors (it never
+    # raises and never returns a tuple).
     manifests: list[Any] = []
     for mod_id, disc_mod in discovered.items():
-        manifest, errors = parse_manifest(disc_mod.manifest_path)
-        if errors:
-            for e in errors:
+        manifest = parse_manifest(disc_mod.manifest_path)
+        if manifest.errors:
+            for e in manifest.errors:
                 io.notify(f"[WARN] manifest parse error for {mod_id}: {e.how_to_fix}")
             continue
-        if manifest is not None:
-            manifest._toml_path = str(disc_mod.manifest_path)
-            manifests.append(manifest)
+        manifest._toml_path = str(disc_mod.manifest_path)
+        manifests.append(manifest)
 
     # ── Stage 4: interview ───────────────────────────────────────────────────── #
     committed_answers = _read_committed_answers(project_dir) if mode == "reproduce" else {}

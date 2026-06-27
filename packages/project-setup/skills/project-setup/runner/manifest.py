@@ -104,7 +104,12 @@ class ModuleManifest:
 # --------------------------------------------------------------------------- #
 # Known top-level sections + field-level constants                             #
 # --------------------------------------------------------------------------- #
-_KNOWN_TOP_LEVEL = frozenset({"meta", "module", "order", "tools", "inputs", "steps"})
+# ``schema_version`` is an optional top-level manifest-format version (mirrors
+# speckit extension.yml and the shared-contracts.md example). Allowed but not
+# required; reserved for future manifest-format evolution.
+_KNOWN_TOP_LEVEL = frozenset(
+    {"schema_version", "meta", "module", "order", "tools", "inputs", "steps"}
+)
 
 _KNOWN_META_KEYS = frozenset({"repository", "author"})
 _REQUIRED_META_KEYS = frozenset({"repository", "author"})

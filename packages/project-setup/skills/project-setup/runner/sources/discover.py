@@ -180,6 +180,7 @@ class _RootEntry:
 def build_discovery_roots(
     fetched_roots: list[Path],
     project_dir: Path | None = None,
+    bundled_dir: Path | None = None,
 ) -> list[_RootEntry]:
     """Build the precedence-ordered list of discovery roots.
 
@@ -189,6 +190,11 @@ def build_discovery_roots(
     3. Home: ``~/.config/project-setup/modules/``
     4. Each fetched source root (in the order supplied by the caller)
     5. Bundled: ``${PLUGIN_ROOT}/.../modules/``
+
+    *bundled_dir* lets a caller (e.g. the pipeline with an injected
+    ``plugin_root_path``) override the bundled root rather than resolving the
+    global ``__file__``-relative one — essential for tests and for honoring an
+    explicitly-passed plugin root. Defaults to ``paths.bundled_modules_dir()``.
 
     Entries whose path does not exist on disk are silently omitted (they
     simply contribute no modules).
@@ -213,8 +219,8 @@ def build_discovery_roots(
     for p in fetched_roots:
         entries.append(_RootEntry(path=p, kind=RootKind.FETCHED))
 
-    # 5. Bundled
-    bundled = _paths.bundled_modules_dir()
+    # 5. Bundled (caller-injected override, else the global resolver)
+    bundled = bundled_dir if bundled_dir is not None else _paths.bundled_modules_dir()
     entries.append(_RootEntry(path=bundled, kind=RootKind.BUNDLED))
 
     return entries
