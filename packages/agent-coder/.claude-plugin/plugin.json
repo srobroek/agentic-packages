@@ -1,0 +1,9 @@
+{
+  "name": "agent-coder",
+  "version": "1.0.0",
+  "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

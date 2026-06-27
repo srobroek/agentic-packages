@@ -1,0 +1,9 @@
+{
+  "name": "playwright",
+  "version": "1.0.0",
+  "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

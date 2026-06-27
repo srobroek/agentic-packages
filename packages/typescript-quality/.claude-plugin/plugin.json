@@ -1,0 +1,9 @@
+{
+  "name": "typescript-quality",
+  "version": "1.0.0",
+  "description": "Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

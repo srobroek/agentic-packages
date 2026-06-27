@@ -1,0 +1,102 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git switch -c*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git switch --create*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git checkout -b*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git checkout -B*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git worktree add*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git merge*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git pull*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-refresh-snapshot.sh",
+            "async": true,
+            "timeout": 30,
+            "if": "Bash(git rebase*)"
+          }
+        ]
+      }
+    ]
+  }
+}

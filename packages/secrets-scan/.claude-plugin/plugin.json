@@ -1,0 +1,9 @@
+{
+  "name": "secrets-scan",
+  "version": "1.1.0",
+  "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

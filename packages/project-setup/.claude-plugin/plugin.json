@@ -1,0 +1,9 @@
+{
+  "name": "project-setup",
+  "version": "0.2.0",
+  "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

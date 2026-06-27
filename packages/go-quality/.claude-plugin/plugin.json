@@ -1,0 +1,9 @@
+{
+  "name": "go-quality",
+  "version": "1.0.0",
+  "description": "Run Go format, lint, and test checks with the project toolchain.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

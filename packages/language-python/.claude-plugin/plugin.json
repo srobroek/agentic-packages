@@ -1,0 +1,17 @@
+{
+  "name": "language-python",
+  "version": "1.0.0",
+  "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "name": "python-quality"
+    },
+    {
+      "name": "language-steering-python"
+    }
+  ]
+}
