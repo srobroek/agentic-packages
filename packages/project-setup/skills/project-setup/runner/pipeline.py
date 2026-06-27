@@ -171,12 +171,6 @@ def _interview_module(
         key = inp.key
         default = current_answers.get(key, inp.default)
 
-        if non_interactive:
-            # Use the default without prompting
-            if default is not None:
-                collected[key] = default
-            continue
-
         # Map InputSpec to a dict for io.ask
         input_spec = {
             "key": key,
@@ -186,7 +180,21 @@ def _interview_module(
             "required": inp.required,
         }
 
-        value = io.ask(input_spec, default)
+        if non_interactive:
+            # Non-interactive still consults the IO so PROVIDED answers (e.g. a
+            # ScriptedIO map, or flags) are honored — it just must not BLOCK on
+            # stdin. ScriptedIO returns scripted answers (falling back to the
+            # supplied default); a non-interactive TerminalIO returns the
+            # default without prompting. Only fall back to a bare default when
+            # the IO does not implement a non-blocking ask.
+            ask_ni = getattr(io, "ask_non_interactive", None)
+            if callable(ask_ni):
+                value = ask_ni(input_spec, default)
+            else:
+                value = io.ask(input_spec, default)
+        else:
+            value = io.ask(input_spec, default)
+
         if value is not None:
             collected[key] = value
 

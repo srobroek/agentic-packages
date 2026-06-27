@@ -133,6 +133,16 @@ class TerminalIO:
 
         return raw if raw else default
 
+    def ask_non_interactive(self, input_spec: dict[str, Any], default: Any) -> Any:
+        """Non-interactive resolution: return the provided default WITHOUT
+        prompting (never blocks on stdin). The pipeline calls this when run with
+        --non-interactive so a CLI/CI invocation uses flag/home/project/default
+        values rather than hanging. A required input with no resolvable default
+        will be caught by the validate-closed gate (MISSING_ANSWER), which is the
+        correct, actionable failure.
+        """
+        return default
+
     def confirm(self, item: dict[str, Any]) -> bool:
         path = item.get("path", "?")
         kind = item.get("kind", "?")
