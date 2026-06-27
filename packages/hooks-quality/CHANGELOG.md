@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-quality-v1.0.1...hooks-quality-v1.1.0) (2026-06-26)
+
+
+### Features
+
+* **hooks-quality:** defer before-commit gate to pre-commit when installed ([#392](https://github.com/srobroek/agentic-packages/issues/392)) ([525f6cc](https://github.com/srobroek/agentic-packages/commit/525f6cca7783c961b66eb47c00233d1d51a4eadc))
+
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-quality-v1.0.0...hooks-quality-v1.0.1) (2026-06-26)
 
 
