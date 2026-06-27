@@ -17,9 +17,11 @@ scripts:
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
   build-marketplace: apm pack
+  build-native-plugins: python3 .apm/scripts/build-native-plugins.py
+  check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
   render-docs: python3 .apm/scripts/render-docs.py all
   check-docs: python3 .apm/scripts/render-docs.py all --check
-  build-artifacts: python3 .apm/scripts/render-docs.py all && apm pack
+  build-artifacts: python3 .apm/scripts/build-native-plugins.py && python3 .apm/scripts/render-docs.py all && apm pack
   install: apm install --target claude,codex
   patch-agents: python3 .apm/scripts/patch-runtime-agents.py --all
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
