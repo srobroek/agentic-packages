@@ -1,6 +1,6 @@
 {
   "name": "hooks-chezmoi-guard",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

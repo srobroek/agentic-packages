@@ -1,6 +1,6 @@
 {
   "name": "hooks-bash-safety",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME, mkfs, dd to a device, sandbox-bypass), ask on curl|sh pipes, warn on sudo + destructive verbs. rm -rf allows project-local/temp cleanup silently and asks only on absolute/parent/variable targets. Matching is anchored to command position to avoid quoted-string false positives. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

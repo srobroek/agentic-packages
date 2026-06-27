@@ -1,5 +1,5 @@
 name: sniff
-version: 1.0.0
+version: 1.1.0
 description: >-
   Audit a codebase for stability, hardening, and cleanup opportunities, finding
   latent issues across error handling, structure, concurrency, and input

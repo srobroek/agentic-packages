@@ -8,7 +8,7 @@
     {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "adversarial",
@@ -21,7 +21,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "engineering",
@@ -32,7 +32,7 @@
     {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "engineering",
@@ -43,7 +43,7 @@
     {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "maintenance",
@@ -54,7 +54,7 @@
     {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "quality",
@@ -65,7 +65,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "steering"
@@ -75,7 +75,7 @@
     {
       "name": "audit-steering",
       "description": "Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "maintenance",
@@ -86,7 +86,7 @@
     {
       "name": "brownfield-project",
       "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -97,7 +97,7 @@
     {
       "name": "catchup",
       "description": "Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -108,7 +108,7 @@
     {
       "name": "chezmoi-editor",
       "description": "Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "dotfiles",
@@ -119,7 +119,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "graph"
@@ -129,7 +129,7 @@
     {
       "name": "code-review",
       "description": "Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "quality",
@@ -140,7 +140,7 @@
     {
       "name": "codebase-index",
       "description": "Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -151,7 +151,7 @@
     {
       "name": "codebase-memory",
       "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -162,7 +162,7 @@
     {
       "name": "codex-hook-contract",
       "description": "Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event names, the stdin payload shape (object vs string .tool_input), and how Codex honors a hook decision (permissionDecision vs decision.behavior vs exit codes), with exact tests to verify each open claim. Documentation only -- no scripts.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "codex",
         "hooks",
@@ -173,7 +173,7 @@
     {
       "name": "commit-push-merge",
       "description": "Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -184,7 +184,7 @@
     {
       "name": "commit-push-pr",
       "description": "Commit local changes when needed, push, and open or update a pull request for review.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -195,7 +195,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "baseline"
@@ -205,7 +205,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "data"
@@ -215,7 +215,7 @@
     {
       "name": "debate",
       "description": "Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "planning",
@@ -226,7 +226,7 @@
     {
       "name": "debugging",
       "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "debugging"
@@ -236,7 +236,7 @@
     {
       "name": "dep-audit",
       "description": "Scan the project's lockfiles and manifests for known-vulnerable dependencies using the ecosystem's native scanners (npm/pnpm audit, pip-audit, cargo audit, govulncheck, osv-scanner) and report CVEs grouped by severity. Never auto-fixes.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "security",
@@ -249,7 +249,7 @@
     {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "dependencies",
@@ -260,7 +260,7 @@
     {
       "name": "developer-tools",
       "description": "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "tooling"
@@ -270,7 +270,7 @@
     {
       "name": "diagrams",
       "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "diagrams"
@@ -280,7 +280,7 @@
     {
       "name": "docs-architecture",
       "description": "Documentation and architecture: Hobson documentation standards, code documentation, doc generation, and C4 architecture workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "documentation"
@@ -290,7 +290,7 @@
     {
       "name": "eli5",
       "description": "Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "planning",
@@ -301,7 +301,7 @@
     {
       "name": "explore",
       "description": "Lightweight read-only codebase orientation: file discovery, path tracing, and \"where is X\" lookups. For structured graph queries, use codebase-memory.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -312,7 +312,7 @@
     {
       "name": "find-tools",
       "description": "Discover and vet reusable skills, agents, MCP servers, connectors, and APM packages. Use when the user asks to find a capability, compare tools, fill a marketplace gap, evaluate an external package, or decide whether to adopt, wrap, fork, reject, or build.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "maintenance",
@@ -323,7 +323,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "frontend"
@@ -333,7 +333,7 @@
     {
       "name": "go-quality",
       "description": "Run Go format, lint, and test checks with the project toolchain.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "languages",
@@ -344,7 +344,7 @@
     {
       "name": "governance",
       "description": "Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "governance"
@@ -354,7 +354,7 @@
     {
       "name": "handover",
       "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -365,7 +365,7 @@
     {
       "name": "headroom",
       "description": "Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "maintenance",
@@ -377,7 +377,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Blocks git commits that carry AI authorship attribution (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers), enforcing that the human is the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not blocked. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "git",
@@ -388,7 +388,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME, mkfs, dd to a device, sandbox-bypass), ask on curl|sh pipes, warn on sudo + destructive verbs. rm -rf allows project-local/temp cleanup silently and asks only on absolute/parent/variable targets. Matching is anchored to command position to avoid quoted-string false positives. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "bash",
@@ -399,7 +399,7 @@
     {
       "name": "hooks-branch-check",
       "description": "Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -410,7 +410,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse guard that denies direct edits and shell writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache), steering changes to the chezmoi source. Read-only references and unmanaged paths pass. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "chezmoi",
@@ -422,7 +422,7 @@
     {
       "name": "hooks-close-keywords",
       "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that blocks with the corrected --body to re-issue. Cross-tool (Claude + Codex).",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "hooks",
         "git",
@@ -434,7 +434,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards: hard-block `git reset --hard` only when the tracked tree is dirty (work would be lost) and `git push --force`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "git",
@@ -445,7 +445,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -456,7 +456,7 @@
     {
       "name": "hooks-no-ff",
       "description": "Opinionated git policy hook: require --no-ff on git merge so feature-branch history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -467,7 +467,7 @@
     {
       "name": "hooks-package-file-guard",
       "description": "Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing a dependency manifest directly (go.mod, package.json, Cargo.toml, pyproject.toml, Gemfile, composer.json), steering toward the package manager's add command. Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "dependencies",
@@ -478,7 +478,7 @@
     {
       "name": "hooks-package-investigate",
       "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "dependencies",
@@ -489,7 +489,7 @@
     {
       "name": "hooks-pkg-version-warn",
       "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "dependencies",
@@ -500,7 +500,7 @@
     {
       "name": "hooks-portability-ci",
       "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "ci",
         "hooks",
@@ -512,7 +512,7 @@
     {
       "name": "hooks-precommit-gate",
       "description": "Ensures the pre-commit framework actually runs. PreToolUse on git commit/push: when the repo HAS a .pre-commit-config.yaml but the matching git hook is not installed (.git/hooks/pre-commit / pre-push missing), it blocks with \"run pre-commit install\"; it also blocks --no-verify, which would skip the framework. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (whose enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "hooks",
         "git",
@@ -523,7 +523,7 @@
     {
       "name": "hooks-quality",
       "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK — it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "quality",
@@ -534,7 +534,7 @@
     {
       "name": "hooks-squash-merge",
       "description": "Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "git",
@@ -545,7 +545,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Enforce an explicit worktree-isolation decision on every subagent spawn. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to re-issue with `isolation:\"worktree\"` (the child writes to THIS repo) or with an `[iso:skip]` sentinel appended to the description (read-only, a different repo, or must edit the parent tree directly). The sentinel is stripped from the description before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "hooks",
         "worktree",
@@ -558,7 +558,7 @@
     {
       "name": "hooks-tool-prefs",
       "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "tooling",
@@ -569,7 +569,7 @@
     {
       "name": "hooks-worktree",
       "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "hooks",
         "worktree",
@@ -580,7 +580,7 @@
     {
       "name": "incident-response",
       "description": "Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "incident"
@@ -590,7 +590,7 @@
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "infrastructure"
@@ -600,7 +600,7 @@
     {
       "name": "language-arm-cortex",
       "description": "ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "embedded",
@@ -611,7 +611,7 @@
     {
       "name": "language-dotnet",
       "description": ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "dotnet"
@@ -621,7 +621,7 @@
     {
       "name": "language-functional",
       "description": "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "functional"
@@ -631,7 +631,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "go"
@@ -641,7 +641,7 @@
     {
       "name": "language-julia",
       "description": "Julia development toolkit: Hobson's scientific-computing julia-development specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "julia"
@@ -651,7 +651,7 @@
     {
       "name": "language-jvm",
       "description": "JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "jvm"
@@ -661,7 +661,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "python"
@@ -671,7 +671,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "rust"
@@ -681,7 +681,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "shell"
@@ -741,7 +741,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "terraform"
@@ -751,7 +751,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "typescript"
@@ -761,7 +761,7 @@
     {
       "name": "language-web-scripting",
       "description": "PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "php",
@@ -772,7 +772,7 @@
     {
       "name": "matt-skills",
       "description": "Bundle of Matt Pocock's engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "matt-pocock",
@@ -783,7 +783,7 @@
     {
       "name": "mcp-codebase-memory",
       "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "codebase"
@@ -793,7 +793,7 @@
     {
       "name": "mcp-context7",
       "description": "MCP server package for Context7, providing current library and framework documentation lookups.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "docs"
@@ -803,7 +803,7 @@
     {
       "name": "mcp-package-version",
       "description": "MCP server for package version discovery",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "versions"
@@ -813,7 +813,7 @@
     {
       "name": "mcp-playwright",
       "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "browser"
@@ -823,7 +823,7 @@
     {
       "name": "mcp-repomix",
       "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "repomix"
@@ -833,7 +833,7 @@
     {
       "name": "mcp-serena",
       "description": "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "semantic"
@@ -843,7 +843,7 @@
     {
       "name": "mcp-speckit-memory",
       "description": "MCP server package for the Spec Kit Memory Hub (memory-md) extension: durable, repository-native project memory (decisions, bugs, lessons) with a SQLite cache exposed as MCP tools. The launcher resolves the project-local memory-md extension and builds its server in-place on first use, since the upstream binary is not published to npm.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "mcp",
         "speckit",
@@ -854,7 +854,7 @@
     {
       "name": "mcp-tauri",
       "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "tauri",
@@ -865,7 +865,7 @@
     {
       "name": "optimize-steering",
       "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "maintenance",
@@ -876,7 +876,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "planning"
@@ -886,7 +886,7 @@
     {
       "name": "playwright",
       "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "frontend",
@@ -897,7 +897,7 @@
     {
       "name": "presentation",
       "description": "Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "slides"
@@ -907,7 +907,7 @@
     {
       "name": "project-hygiene",
       "description": "Audit project-local APM agents, skills, hooks, MCP config, generated steering, and package fit. Use when asked for project hygiene, cleanup, installed agent or skill review, stale generated assets, duplicate tooling, or agentic package drift.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "maintenance",
@@ -918,7 +918,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -928,7 +928,7 @@
     {
       "name": "project-setup",
       "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -939,7 +939,7 @@
     {
       "name": "python-quality",
       "description": "Run Python format, lint, type-check, and test commands with the project toolchain.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "languages",
@@ -950,7 +950,7 @@
     {
       "name": "quick-commit",
       "description": "Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -961,7 +961,7 @@
     {
       "name": "research",
       "description": "Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -972,7 +972,7 @@
     {
       "name": "resume-cv",
       "description": "CV / career-resume bundle: focused resume-tailoring and broad career-support workflows. Renamed from `resume` to avoid a namespace collision with `resume-session` (which resumes a prior coding SESSION, not a CV).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "resume"
@@ -982,7 +982,7 @@
     {
       "name": "resume-session",
       "description": "Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -993,7 +993,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "review"
@@ -1003,7 +1003,7 @@
     {
       "name": "rust-quality",
       "description": "Run Rust format, lint, and test checks with the project toolchain.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "languages",
@@ -1014,7 +1014,7 @@
     {
       "name": "secrets-scan",
       "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "security",
         "secrets",
@@ -1025,7 +1025,7 @@
     {
       "name": "security",
       "description": "Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "security"
@@ -1035,7 +1035,7 @@
     {
       "name": "session-review",
       "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-a-skill`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -1046,7 +1046,7 @@
     {
       "name": "sniff",
       "description": "Audit a codebase for stability, hardening, and cleanup opportunities, finding latent issues across error handling, structure, concurrency, and input boundaries.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "quality",
@@ -1057,7 +1057,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1067,7 +1067,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "bundle",
         "speckit",
@@ -1189,7 +1189,7 @@
     {
       "name": "typescript-quality",
       "description": "Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "languages",
@@ -1200,7 +1200,7 @@
     {
       "name": "unstuck",
       "description": "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. Ships an outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops) with an escalating nudge/directive/edit-gate ladder on both runtimes.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "debugging",
@@ -1211,7 +1211,7 @@
     {
       "name": "verify",
       "description": "Run and report a final local verification pass (tests, types, build, lint) before handoff, commit, push, merge, or PR.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "quality",
@@ -1222,7 +1222,7 @@
     {
       "name": "web-fetch",
       "description": "Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -1233,7 +1233,7 @@
     {
       "name": "whats-new",
       "description": "Research what changed in a tool, CLI, library, framework, package, or dependency — or a technology, cloud service, hosted API, platform, or model family (AWS Bedrock, Anthropic/Claude, OpenAI, GCP, Azure, …) — between what is in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, repos, changelogs, release notes, commit logs, and service announcement feeds/APIs via machine endpoints instead of reading rendered pages, then summarizes into a fixed template.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "code-intelligence",
@@ -1249,7 +1249,7 @@
     {
       "name": "write-a-skill",
       "description": "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "skill",
         "maintenance",

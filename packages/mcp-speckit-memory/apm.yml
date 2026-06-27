@@ -1,5 +1,5 @@
 name: mcp-speckit-memory
-version: 0.2.0
+version: 0.3.0
 description: >-
   MCP server package for the Spec Kit Memory Hub (memory-md) extension: durable,
   repository-native project memory (decisions, bugs, lessons) with a SQLite

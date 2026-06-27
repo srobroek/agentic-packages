@@ -1,6 +1,6 @@
 {
   "name": "optimize-steering",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
   "author": {
     "name": "Sjors Robroek"

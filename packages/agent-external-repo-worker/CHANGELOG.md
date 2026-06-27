@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker-v1.0.0...agent-external-repo-worker--v1.1.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
+
+### Bug Fixes
+
+* **agents:** drop abstract tools: so Claude grants a working toolset ([#402](https://github.com/srobroek/agentic-packages/issues/402)) ([564de79](https://github.com/srobroek/agentic-packages/commit/564de793da6858b7b697778da4560dda5084ef54))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker-v0.1.2...agent-external-repo-worker-v1.0.0) (2026-06-26)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/mcp-speckit-memory-v0.2.0...mcp-speckit-memory--v0.3.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-speckit-memory-v0.1.0...mcp-speckit-memory-v0.2.0) (2026-06-26)
 
 

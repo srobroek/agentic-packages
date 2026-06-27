@@ -1,5 +1,5 @@
 name: brownfield-project
-version: 0.1.1
+version: 0.2.0
 description: >-
   Retrofit an existing repository into APM-managed agentic tooling without broad
   scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo,
