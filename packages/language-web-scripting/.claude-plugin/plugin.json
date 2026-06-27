@@ -1,0 +1,9 @@
+{
+  "name": "language-web-scripting",
+  "version": "1.0.0",
+  "description": "PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

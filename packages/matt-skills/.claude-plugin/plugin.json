@@ -1,0 +1,9 @@
+{
+  "name": "matt-skills",
+  "version": "1.0.0",
+  "description": "Bundle of Matt Pocock's engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

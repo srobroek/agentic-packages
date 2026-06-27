@@ -1,0 +1,9 @@
+{
+  "name": "hooks-git-safety",
+  "version": "1.1.0",
+  "description": "Git safety guards: hard-block `git reset --hard` only when the tracked tree is dirty (work would be lost) and `git push --force`, and soft-guard other destructive git operations — confirm (ask) on checkout --/restore/clean -f/branch/stash/tag deletion/worktree remove. Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

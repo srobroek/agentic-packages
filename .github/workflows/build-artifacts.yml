@@ -42,9 +42,13 @@ jobs:
 
       - name: Regenerate non-destructive artifacts
         run: |
-          # One canonical render pass (marketplace block, release-please config,
-          # README/docs tables) from the shared inventory, then apm pack reads the
-          # regenerated marketplace block into the native plugin manifests.
+          # Native plugin layout FIRST: each package's committed .claude-plugin/
+          # plugin.json + skills/agents/.mcp.json/hooks (the per-package sources the
+          # marketplace points at, loadable by Claude /plugin, Codex plugin add, and
+          # apm install). Then the canonical render pass (marketplace block,
+          # release-please config, README/docs tables) from the shared inventory,
+          # then apm pack reads the regenerated marketplace block.
+          python3 .apm/scripts/build-native-plugins.py
           python3 .apm/scripts/render-docs.py all
           apm pack
           # speckit-dag-hooks: nodes.json is a COMPILED ARTEFACT generated from

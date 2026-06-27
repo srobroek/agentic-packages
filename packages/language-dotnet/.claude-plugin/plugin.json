@@ -1,0 +1,9 @@
+{
+  "name": "language-dotnet",
+  "version": "1.0.0",
+  "description": ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

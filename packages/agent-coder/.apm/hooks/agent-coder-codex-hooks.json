@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/coder-delegation-reminder.sh"
+            "command": "${PLUGIN_ROOT}/scripts/coder-delegation-reminder.sh",
+            "timeout": 3
           }
         ]
       }

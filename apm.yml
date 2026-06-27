@@ -7,7 +7,6 @@ type: hybrid
 targets:
   - claude
   - codex
-  - kiro
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
@@ -17,9 +16,11 @@ scripts:
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
   build-marketplace: apm pack
+  build-native-plugins: python3 .apm/scripts/build-native-plugins.py
+  check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
   render-docs: python3 .apm/scripts/render-docs.py all
   check-docs: python3 .apm/scripts/render-docs.py all --check
-  build-artifacts: python3 .apm/scripts/render-docs.py all && apm pack
+  build-artifacts: python3 .apm/scripts/build-native-plugins.py && python3 .apm/scripts/render-docs.py all && apm pack
   install: apm install --target claude,codex
   patch-agents: python3 .apm/scripts/patch-runtime-agents.py --all
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
@@ -48,7 +49,7 @@ marketplace:
   versioning:
     strategy: tag_pattern
   build:
-    tagPattern: '{name}-v{version}'
+    tagPattern: '{name}--v{version}'
   packages:
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger

@@ -1,0 +1,17 @@
+{
+  "name": "language-typescript",
+  "version": "1.0.0",
+  "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "name": "typescript-quality"
+    },
+    {
+      "name": "language-steering-typescript"
+    }
+  ]
+}
