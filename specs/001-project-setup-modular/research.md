@@ -72,3 +72,24 @@ contract. Resolutions (full text in `contracts/`):
   CI stays hermetic; nested `uv run` in tests needs cache pre-warm / `--offline`.
 - Whether `--inspect` is a manifest-declared capability or a universal executor
   contract (lean: universal — every Tier-1 python step must support it).
+
+## Phase 5 cutover sequencing (VERIFIED blocker — do not delete old tree yet)
+
+Checked during Phase 5: the parallel native-root tooling migration has NOT
+landed. As of this point, `.apm/scripts/build_inventory.py` still discovers
+skills ONLY via `.apm/skills/<skill>/SKILL.md` (line ~97), NO package has a
+`.claude-plugin/plugin.json`, and `release-please-config.json` still has
+`tag-separator: "-"`. Therefore:
+
+- The new runner+modules live at `skills/project-setup/` and COEXIST with the
+  legacy `.apm/skills/project-setup/` tree. Both present = nothing breaks; the
+  build/inventory gate still sees the legacy skill.
+- **T050 (delete `.apm/skills/` tree) MUST NOT run until T051 lands** (inventory
+  taught to discover `skills/*/SKILL.md` + read `.claude-plugin/plugin.json`, and
+  the `<name>--v<version>` tag-separator override). Deleting now → inventory
+  classifies project-setup as skill-less → whole-repo check-artifacts gate goes
+  red. This is the atomically-coupled pair the plan called out.
+- Decision: finish the additive runner/modules/SKILL.md/tests now; hold the
+  cutover (T050+T051) to do atomically once the parallel native-root effort
+  lands, and verify together. project-setup is the first native-root package, so
+  it is the forcing function for that tooling fix.

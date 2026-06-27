@@ -2,18 +2,31 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""license-write — write a LICENSE file.
+"""license-write — write a LICENSE file from a vendored SPDX template.
 
-Preserves the verbatim Apache 2.0 and MIT license texts from project-setup.sh
-Step 9 (lines 646–877). Templates live in templates/apache-2.0.txt and
-templates/mit.txt with {YEAR} and {AUTHOR} as Python str.format placeholders.
+Templates for all 13 GitHub Licenses API keys are vendored verbatim in
+templates/licenses/<key>.txt. The raw bodies are from GitHub's Licenses API
+(GET /licenses/<key> .body field) and preserved character-for-character so
+offline runs are deterministic.
+
+Placeholder substitution handles all bracket-style tokens used across the 13
+licenses:
+  - [year] / [yyyy]  → current year (datetime.now().year)
+  - [fullname] / [name of copyright owner]  → author
+
+Where a license has no placeholders (e.g. agpl-3.0, gpl-2.0, unlicense) the
+body is written as-is.
 
 SC-001 carve-out: year and author lines vary at runtime (current year via
 datetime, author from git config user.name or the input). Tests MUST exclude
-these lines from byte-identical assertions.
+those lines from byte-identical assertions.
 
-reconcile=false: LICENSE is never overwritten on re-run (the legacy script
-behaviour: `if [ ! -f LICENSE ]`).
+reconcile=false: LICENSE is never overwritten on re-run (write-if-absent,
+matching the legacy `if [ ! -f LICENSE ]` behaviour).
+
+dynamic_fetch=true: fetches the latest body from GET /licenses/<key>
+on demand. On failure (network error, timeout, bad JSON) warns and falls back
+to the vendored copy. Tests MUST monkeypatch the fetch — no real network.
 
 Invoked by the runner as:
     uv run module.py --plan <frozen_plan.json> --step write [--inspect]
@@ -23,13 +36,35 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import os
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-_TEMPLATES = Path(__file__).resolve().parent / "templates"
+_LICENSES_DIR = Path(__file__).resolve().parent / "templates" / "licenses"
+
+# All 13 GitHub Licenses API keys — authoritative list for the choice input.
+_ALL_KEYS: list[str] = [
+    "agpl-3.0",
+    "apache-2.0",
+    "bsd-2-clause",
+    "bsd-3-clause",
+    "bsl-1.0",
+    "cc0-1.0",
+    "epl-2.0",
+    "gpl-2.0",
+    "gpl-3.0",
+    "lgpl-2.1",
+    "mit",
+    "mpl-2.0",
+    "unlicense",
+]
+
+_GITHUB_API_BASE = "https://api.github.com/licenses"
 
 
 def _load_sdk():
@@ -63,18 +98,83 @@ def _git_user_name() -> str:
         return "AUTHOR"
 
 
-def _render(license_type: str, year: str, author: str) -> str:
-    template_map = {
-        "apache-2.0": "apache-2.0.txt",
-        "apache": "apache-2.0.txt",
-        "mit": "mit.txt",
-    }
-    fname = template_map.get(license_type.lower())
-    if fname is None:
-        raise ValueError(f"Unknown license type: {license_type!r}")
-    template_file = _TEMPLATES / fname
-    body = template_file.read_text(encoding="utf-8")
-    return body.replace("{YEAR}", year).replace("{AUTHOR}", author)
+def _fetch_license_body(key: str) -> str | None:
+    """Fetch the license body from the GitHub Licenses API.
+
+    Returns the body string on success, None on any failure.
+    Callers must treat None as "warn + use vendored fallback".
+    """
+    url = f"{_GITHUB_API_BASE}/{key}"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "license-write-module/2.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            data = json.loads(resp.read().decode("utf-8"))
+        body = data.get("body", "")
+        return body if body else None
+    except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError, KeyError):
+        return None
+
+
+def _substitute_placeholders(body: str, year: str, author: str) -> str:
+    """Replace all known bracket-style placeholders with runtime values.
+
+    Handles all patterns found across the 13 GitHub-API license bodies:
+      - apache-2.0:   [yyyy], [name of copyright owner]
+      - bsd-2-clause, bsd-3-clause, mit: [year], [fullname]
+    Licenses with no placeholders (e.g. agpl-3.0, gpl-2.0) are returned as-is.
+    """
+    body = body.replace("[yyyy]", year)
+    body = body.replace("[year]", year)
+    body = body.replace("[fullname]", author)
+    body = body.replace("[name of copyright owner]", author)
+    return body
+
+
+def _render(
+    key: str,
+    year: str,
+    author: str,
+    dynamic_fetch: bool,
+    warnings: list[str],
+) -> str:
+    """Compose the LICENSE body for *key*.
+
+    1. If dynamic_fetch=True: attempt a live fetch from the GitHub Licenses API.
+       On failure: warn + fall back to vendored copy.
+    2. Always apply placeholder substitution ([year], [yyyy], [fullname], etc.).
+    """
+    if key not in _ALL_KEYS:
+        raise ValueError(
+            f"Unknown license key: {key!r}. "
+            f"Valid keys: {', '.join(_ALL_KEYS)}"
+        )
+
+    body: str | None = None
+
+    if dynamic_fetch:
+        body = _fetch_license_body(key)
+        if body is None:
+            warnings.append(
+                f"dynamic_fetch: could not fetch license '{key}' from "
+                f"{_GITHUB_API_BASE}/{key}; using vendored copy."
+            )
+
+    if body is None:
+        vendored = _LICENSES_DIR / f"{key}.txt"
+        if not vendored.is_file():
+            raise FileNotFoundError(
+                f"Vendored license template missing: {vendored}. "
+                f"Re-vendor by running the fetch script."
+            )
+        body = vendored.read_text(encoding="utf-8")
+
+    return _substitute_placeholders(body, year, author)
 
 
 def main() -> int:
@@ -87,13 +187,15 @@ def main() -> int:
     sdk = _load_sdk()
     inputs = sdk.load_frozen_inputs(args.plan, module_id="license-write")
 
-    license_type = inputs.get_choice("license", default="apache-2.0")
+    key = inputs.get_choice("license", default="apache-2.0")
     # SC-001 carve-out: author and year are runtime values, not frozen answers.
     author_input = inputs.get_str("author", default="")
     author = author_input if author_input else _git_user_name()
     year = str(datetime.now().year)
+    dynamic_fetch = inputs.get_bool("dynamic_fetch", default=False)
 
-    body = _render(license_type, year, author)
+    warnings: list[str] = []
+    body = _render(key, year, author, dynamic_fetch, warnings)
 
     diff = sdk.idempotent_write(
         "LICENSE",
@@ -109,6 +211,7 @@ def main() -> int:
         status="ok",
         files_written=files_written,
         diffs=[diff],
+        warnings=warnings,
     )
     sdk.emit_result(result)
     return 0
