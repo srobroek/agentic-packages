@@ -69,6 +69,29 @@ Net-new capability phase, AFTER the 0–5 migration (spec 001) ships.
   `id = "modules"` would collide with the `[modules]` answers table. No bundled
   module uses it; add a reserved-id check when dynamic sources are common.
 
+## CORRECTED research-backend decision for 003 (recommend, don't depend)
+
+Initial framing ("require mcp-context7 + mcp-package-version") was WRONG — the
+user caught it. A distributable scaffolder module cannot HARD-depend on
+third-party MCP servers (heavy runtime/config/trust; won't connect in
+CI/headless; over-coupling like the uv mistake would've been). Settled design:
+
+- **Recommend, don't depend** (the "install uv" pattern, applied to MCP). The
+  stack-resolver steering doc instructs the agent to: (1) check if the
+  context7 / package-version MCP tools are available THIS session; (2) if
+  present, use them for richer current-version research; (3) if absent, RECOMMEND
+  the user install `mcp-context7` + `mcp-package-version` (point to their docs),
+  **restart Claude Code** (MCP servers load at session start — can't be added
+  mid-session), and **resume** (safe: runner state is committed to
+  `.project-setup/`, so resuming reproduces) — OR proceed now with
+  agent-knowledge proposals.
+- **Pin VERIFICATION is mandatory + MCP-free**: every proposed pin is
+  hard-verified against the live registry (PyPI/npm JSON via stdlib urllib);
+  reject anything that doesn't resolve (kills hallucination / yanked /
+  typosquat). Correctness NEVER depends on the MCP server being present.
+- **Do NOT add mcp-context7 / mcp-package-version to project-setup's
+  dependencies.apm.** They exist at 1.0.0 (tagged) if ever wanted optionally.
+
 ## Open inputs before authoring the spec
 
 - Gates survey (wddbxhqia) — the gate calibration table + non-interactive policy.
