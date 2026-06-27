@@ -2,7 +2,6 @@
 name: external-repo-worker
 description: Works in an external repository outside the caller project. Use when the parent names a repo URL or org/name and needs isolated clone/reuse, repo-local convention discovery, bounded edits, local verification, or explicitly delegated publish/PR work without nesting another git repo inside the current project.
 model: sonnet
-tools: ["terminal", "file-manager", "fetcher"]
 x-agentic:
   codex:
     model: "gpt-5.5"

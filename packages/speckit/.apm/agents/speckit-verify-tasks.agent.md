@@ -3,7 +3,6 @@ name: speckit-verify-tasks
 description: Detects phantom SpecKit completions by checking completed tasks or closed spec issues against real implementation evidence in fresh context. Use after task completion claims when confirmation bias must be avoided.
 model: opus
 effort: xhigh
-tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix"]
 x-agentic:
   codex:
     model: "gpt-5.5"

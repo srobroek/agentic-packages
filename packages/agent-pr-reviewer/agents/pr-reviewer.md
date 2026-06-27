@@ -2,7 +2,6 @@
 name: pr-reviewer
 description: Reviews pull requests for code quality, security, and best practices
 model: opus
-tools: ["terminal", "file-manager", "codebase-memory-mcp"]
 x-agentic:
   codex:
     model: "gpt-5.5"
