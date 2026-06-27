@@ -310,10 +310,21 @@ class TestSuccessfulGitFetchLocalBareRepo:
             return None  # caller skips
         work = tmp_path / "work"
         work.mkdir()
+        # Hermetic git: isolate from the developer's global/system config so a
+        # commit-signing hook (e.g. 1Password gpg.program) can't fail the
+        # non-interactive `git commit` with exit 128 ("failed to fill whole
+        # buffer"). GIT_CONFIG_GLOBAL/SYSTEM=/dev/null drops global config;
+        # commit.gpgsign=false belts-and-braces in case a repo default signs.
+        env = {
+            **os.environ,
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_SYSTEM": os.devnull,
+        }
 
         def git(*args, cwd=work):
-            subprocess.run(["git", *args], cwd=str(cwd), check=True,
-                           capture_output=True, text=True)
+            subprocess.run(["git", "-c", "commit.gpgsign=false", *args],
+                           cwd=str(cwd), check=True, capture_output=True,
+                           text=True, env=env)
 
         git("init", "-q")
         git("config", "user.email", "t@example.com")
@@ -323,7 +334,7 @@ class TestSuccessfulGitFetchLocalBareRepo:
         git("commit", "-q", "-m", "initial")
         bare = tmp_path / "remote.git"
         subprocess.run(["git", "clone", "-q", "--bare", str(work), str(bare)],
-                       check=True, capture_output=True, text=True)
+                       check=True, capture_output=True, text=True, env=env)
         return bare
 
     def test_successful_clone_and_checkout(self, tmp_path, monkeypatch):
@@ -361,10 +372,18 @@ class TestSuccessfulGitFetchLocalBareRepo:
             pytest.skip("git not available")
         work = tmp_path / "work"
         (work / "pkg").mkdir(parents=True)
+        # Hermetic git (see _make_bare_remote): isolate from global/system
+        # config so commit signing can't fail the non-interactive commit.
+        env = {
+            **os.environ,
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_SYSTEM": os.devnull,
+        }
 
         def git(*args):
-            subprocess.run(["git", *args], cwd=str(work), check=True,
-                           capture_output=True, text=True)
+            subprocess.run(["git", "-c", "commit.gpgsign=false", *args],
+                           cwd=str(work), check=True, capture_output=True,
+                           text=True, env=env)
 
         git("init", "-q")
         git("config", "user.email", "t@example.com")
@@ -374,7 +393,7 @@ class TestSuccessfulGitFetchLocalBareRepo:
         git("commit", "-q", "-m", "init")
         bare = tmp_path / "remote.git"
         subprocess.run(["git", "clone", "-q", "--bare", str(work), str(bare)],
-                       check=True, capture_output=True, text=True)
+                       check=True, capture_output=True, text=True, env=env)
         monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
         Locator = locator_mod.Locator
         loc = Locator(kind="git", origin=str(bare), subdir="pkg", ref="HEAD")

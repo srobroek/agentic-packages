@@ -1,0 +1,34 @@
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/srobroek/agentic-packages"
+author = "Sjors Robroek"
+
+[module]
+id = "license-write"
+name = "LICENSE file"
+version = "1.0.0"
+description = "Write a LICENSE file from the apache-2.0 or mit template. Year and author are filled at runtime (SC-001 carve-out: these lines vary)."
+default_enabled = true
+reconcile = false
+
+[order]
+requires = ["core-identity"]
+
+[[inputs]]
+key = "license"
+type = "choice"
+prompt = "License"
+choices = ["apache-2.0", "mit"]
+default = "apache-2.0"
+required = false
+
+[[inputs]]
+key = "author"
+type = "string"
+prompt = "Copyright author (defaults to git config user.name)"
+required = false
+
+[[steps]]
+id = "write"
+kind = "python"
