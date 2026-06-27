@@ -211,7 +211,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # MCP servers declared in the apm.yml dependencies.mcp block -> .mcp.json.
     mcp = _mcp_json(manifest)
     if mcp is not None:
-        plan[".mcp.json"] = json.dumps(mcp, indent=2) + "\n"
+        plan[".mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
 
     # Bundles carry their members as native plugin dependencies.
     deps = _bundle_dependencies(pkg["deps"]) or None if cls == "bundle" else None
@@ -221,9 +221,12 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     if unified is not None:
         plan["hooks/hooks.json"] = unified.read_text(encoding="utf-8")
 
-    # Every native-capable package gets a manifest.
+    # Every native-capable package gets a manifest. ensure_ascii=False so non-ASCII
+    # (e.g. em-dashes in descriptions) is written as raw UTF-8, matching how
+    # `apm pack` writes plugin.json/marketplace.json -- otherwise the CI staleness
+    # gate sees drift when apm pack rewrites a manifest this generator also wrote.
     plan[".claude-plugin/plugin.json"] = (
-        json.dumps(_plugin_manifest(pkg, manifest, defaults, deps), indent=2) + "\n"
+        json.dumps(_plugin_manifest(pkg, manifest, defaults, deps), indent=2, ensure_ascii=False) + "\n"
     )
     return plan
 
