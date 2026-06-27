@@ -146,6 +146,14 @@ but NOTHING written (pre-write preview; Tier-1 guarantees inspect == real write)
   location — NOT by package import, NOT a PyPI dep. The plugin root is found via
   the `${PLUGIN_ROOT}` env token (the real APM token) with a `__file__`-relative
   fallback for channels where it is unset at runtime.
+  - **MANDATORY for every import-by-path site** (runner tests AND `module.py`):
+    register the loaded module in `sys.modules[name]` **before** calling
+    `spec.loader.exec_module(mod)`. A file-path-loaded module is otherwise absent
+    from `sys.modules`, and `@dataclass` on any class that subclasses `Exception`
+    (e.g. `SetupError`) raises `AttributeError: 'NoneType' object has no
+    attribute '__dict__'` because dataclasses resolves `cls.__module__` via
+    `sys.modules[...].__dict__`. Verified failure + fix in
+    `tests/test_contracts.py::_load`.
 - Deps: PEP 723 inline metadata on `module.py`; `uv run` provisions per-module.
 
 ## 7. Discovery + collision rule (FR-011 vs FR-036)
