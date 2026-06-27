@@ -1,5 +1,5 @@
 name: hooks-no-ff
-version: 1.0.1
+version: 1.1.0
 description: >-
   Opinionated git policy hook: require --no-ff on git merge so feature-branch
   history is preserved. Blocks fast-forward merges. Cross-tool (Claude + Codex).

@@ -1,5 +1,5 @@
 name: governance
-version: 1.0.0
+version: 1.1.0
 description: >-
   Agent governance: Hobson MCP protection, signed audit trails, review policy,
   and no-verify blocking workflows.

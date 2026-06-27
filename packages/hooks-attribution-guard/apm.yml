@@ -1,5 +1,5 @@
 name: hooks-attribution-guard
-version: 1.1.0
+version: 1.2.0
 description: >-
   Blocks git commits that carry AI authorship attribution (Co-Authored-By
   Claude/Anthropic, "Generated with/by AI", "AI-assisted/AI-generated", Claude

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/debugging-v1.0.0...debugging--v1.1.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/debugging-v0.2.0...debugging-v1.0.0) (2026-06-26)
 
 

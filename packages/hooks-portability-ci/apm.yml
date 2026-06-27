@@ -1,5 +1,5 @@
 name: hooks-portability-ci
-version: 0.2.0
+version: 0.3.0
 description: >-
   CI gate that runs shipped hook scripts through the real portability failure
   modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile),
