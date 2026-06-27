@@ -38,3 +38,6 @@ __pycache__/
 # like apm_modules). Ignore the vendored extension trees; keep .specify/ config,
 # templates, workflows, and integration state committed.
 .specify/extensions/
+
+# uv lockfiles (runner is dependency-free; no committed lock)
+uv.lock
