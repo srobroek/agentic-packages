@@ -3,7 +3,6 @@ name: adversarial-challenger
 description: Read-only adversarial challenger. Use to stress-test any claim, plan, design, hypothesis, decision, or conclusion before committing to it -- technical or not. Give it the claim plus the observable facts behind it; it investigates independently, attacks the assumptions, and returns evidence-backed counter-arguments and alternatives without changing anything. The critic half of a generate/critique loop; escalating stalled debugging is one application among many (architecture decisions, research conclusions, strategy calls, data analysis, risk reviews).
 model: opus
 maxTurns: 25
-tools: ["terminal", "file-manager", "context7", "openaiDeveloperDocs", "codebase-memory-mcp", "fetcher", "playwright", "repomix", "terraform", "tool_search"]
 x-agentic:
   codex:
     model: "gpt-5.5"
