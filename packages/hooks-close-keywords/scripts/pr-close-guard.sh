@@ -23,6 +23,14 @@ payload="$(cat 2>/dev/null || true)"
 command -v jq >/dev/null 2>&1 || exit 0
 [ -x "$NORMALIZE" ] || exit 0
 
+# Cheap pre-jq bail: this guard only acts on `gh pr create`/`gh pr edit`. The
+# pattern matches the RAW payload string (a superset of real triggers), so the
+# vast majority of Bash calls skip the jq + awk pipeline below entirely.
+case "$payload" in
+  *"gh pr"*) ;;
+  *) exit 0 ;;
+esac
+
 # tool_input may be an object {command:"..."} OR a bare string. Type-check so a
 # string-form input is read, not dropped (the naive jq idiom throws on a string).
 cmd="$(

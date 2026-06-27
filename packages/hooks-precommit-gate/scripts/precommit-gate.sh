@@ -28,19 +28,37 @@ payload="$(cat 2>/dev/null || true)"
 # No jq -> cannot parse safely -> fail open.
 command -v jq >/dev/null 2>&1 || exit 0
 
-# tool_input may be an object {command:"..."} OR a bare string. The naive
-# '.tool_input.command // .tool_input' THROWS on a string and bypasses the hook;
-# type-check first so both shapes are read.
-cmd="$(
-  printf '%s' "$payload" | jq -r '
-    if (.tool_input|type)=="string" then .tool_input
-    else (.tool_input.command // empty) end
-  ' 2>/dev/null || true
-)"
+# Cheap pre-jq bail: this guard acts ONLY on `git commit` / `git push` commands,
+# so if the raw payload contains neither token there is nothing to inspect. Skips
+# the jq spawn (the dominant per-call cost) for the common case on the hot path.
+# Pure SUPERSET filter on literal bytes — the command still has to survive the
+# structured checks below — so it can never mask a command jq would have flagged.
+case "$payload" in
+  *commit*|*push*) ;;
+  *) exit 0 ;;
+esac
+
+# Parse the payload in a SINGLE jq pass (was two: command, then cwd). tool_input
+# may be an object {command:"..."} OR a bare string; the naive
+# '.tool_input.command // .tool_input' THROWS on a string and bypasses the hook,
+# so type-check first. We emit cwd on line 1 (a path never contains a newline)
+# then the command as the remainder, so a multi-line command cannot bleed into
+# cwd. No eval; bash-3.2 safe.
+cwd=""
+cmd=""
+{
+  IFS= read -r cwd || true
+  cmd="$(cat)"
+} < <(
+  printf '%s' "$payload" | jq -j '
+    (.cwd // "") + "\n" +
+    (if (.tool_input|type)=="string" then .tool_input
+     else (.tool_input.command // "") end)
+  ' 2>/dev/null
+)
 [ -z "$cmd" ] || [ "$cmd" = "null" ] && exit 0
 
 # Working dir the command runs in (Claude + Codex send .cwd); fall back to $PWD.
-cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
 [ -n "$cwd" ] && [ "$cwd" != "null" ] && [ -d "$cwd" ] || cwd="$PWD"
 
 # Which git operation is this? Anchored to command position (start, or after a
