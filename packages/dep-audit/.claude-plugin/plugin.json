@@ -1,6 +1,6 @@
 {
   "name": "dep-audit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scan the project's lockfiles and manifests for known-vulnerable dependencies using the ecosystem's native scanners (npm/pnpm audit, pip-audit, cargo audit, govulncheck, osv-scanner) and report CVEs grouped by severity. Never auto-fixes.",
   "author": {
     "name": "Sjors Robroek"

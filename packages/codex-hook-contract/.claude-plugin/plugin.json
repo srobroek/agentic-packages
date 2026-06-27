@@ -1,6 +1,6 @@
 {
   "name": "codex-hook-contract",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event names, the stdin payload shape (object vs string .tool_input), and how Codex honors a hook decision (permissionDecision vs decision.behavior vs exit codes), with exact tests to verify each open claim. Documentation only -- no scripts.",
   "author": {
     "name": "Sjors Robroek"

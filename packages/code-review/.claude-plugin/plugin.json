@@ -1,6 +1,6 @@
 {
   "name": "code-review",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.",
   "author": {
     "name": "Sjors Robroek"

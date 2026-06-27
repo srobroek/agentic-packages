@@ -1,6 +1,6 @@
 {
   "name": "mcp-package-version",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for package version discovery",
   "author": {
     "name": "Sjors Robroek"

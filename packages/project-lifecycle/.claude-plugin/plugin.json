@@ -1,6 +1,6 @@
 {
   "name": "project-lifecycle",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
   "author": {
     "name": "Sjors Robroek"

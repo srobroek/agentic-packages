@@ -1,6 +1,6 @@
 {
   "name": "language-terraform",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
   "author": {
     "name": "Sjors Robroek"
