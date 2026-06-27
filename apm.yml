@@ -7,7 +7,6 @@ type: hybrid
 targets:
   - claude
   - codex
-  - kiro
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py

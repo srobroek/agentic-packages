@@ -78,12 +78,13 @@ description:
 Filter = "ships at least one of skills/agents/hooks/mcp, OR is a bundle with
 first-party native member deps".
 
-## Known pre-existing issue (out of scope here)
+## Resolved: kiro target dropped
 
-`apm pack` exits 1 on `Unknown target 'kiro'` (root `apm.yml` declares
-`targets: [claude, codex, kiro]`; this APM build rejects kiro for pack). It does
-NOT block marketplace.json generation (written before the target check). Flagged
-for a separate fix.
+`apm pack` previously exited 1 on `Unknown target 'kiro'` (apm 0.21.0 rejects
+kiro). Fixed by dropping `kiro` from the root `apm.yml` `targets:` — we ship
+`claude` + `codex` only, which is what the marketplace outputs support anyway.
+(NB: ensure `apm` resolves to /usr/local/bin 0.21.0, not a stale mise-shimmed
+0.17.0 — the older CLI silently strips description/version from marketplace.json.)
 
 ## Separate native catalog — CONSIDERED AND DROPPED
 
@@ -101,4 +102,3 @@ APM marketplace; external-aggregator + steering content stays `apm install`-only
 
 - (Optional) filter steering-only packages out of the in-repo marketplace block
   if the benign native no-op is ever undesirable. Not done — no-op is harmless.
-- (Separate, pre-existing) fix `apm pack` `Unknown target 'kiro'`.
