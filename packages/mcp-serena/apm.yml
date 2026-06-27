@@ -1,5 +1,5 @@
 name: mcp-serena
-version: 1.0.1
+version: 1.1.0
 description: >-
   MCP server package for Serena semantic code tools. The launcher selects the
   Codex or Claude Code context from the parent harness and can be overridden
