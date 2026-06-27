@@ -1,0 +1,383 @@
+"""Tests for sources/fetch.py — fetch_source, fetch_all.
+
+Key guarantees tested:
+  * Offline / git-missing → FetchResult(ok=False) — NEVER raises.
+  * Cache-key stability: same repo via different locator forms maps to the
+    same cache directory.
+  * Local paths: existing dir → ok=True; missing dir → ok=False.
+  * No network access: git is stubbed via PATH manipulation.
+
+Run via:
+    uv run --with pytest pytest -q packages/project-setup/tests/test_fetch.py
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import os
+import sys
+import textwrap
+from pathlib import Path
+
+_RUNNER = Path(__file__).resolve().parents[1] / "skills" / "project-setup" / "runner"
+_SOURCES = _RUNNER / "sources"
+
+
+def _load_runner(name: str):
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_source(name: str):
+    qualified = f"sources.{name}"
+    if qualified in sys.modules:
+        return sys.modules[qualified]
+    spec = importlib.util.spec_from_file_location(qualified, _SOURCES / f"{name}.py")
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[qualified] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# Pre-load runner deps
+_load_runner("contracts")
+_load_runner("paths")
+
+locator_mod = _load_source("locator")
+fetch_mod = _load_source("fetch")
+
+parse_locator = locator_mod.parse_locator
+fetch_source = fetch_mod.fetch_source
+fetch_all = fetch_mod.fetch_all
+FetchResult = fetch_mod.FetchResult
+SourceReport = fetch_mod.SourceReport
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _write_fake_git(bin_dir: Path, exit_code: int = 1, message: str = "fake git") -> None:
+    """Write a fake ``git`` script into *bin_dir* that exits with *exit_code*."""
+    fake = bin_dir / "git"
+    fake.write_text(
+        textwrap.dedent(f"""\
+            #!/bin/sh
+            echo '{message}' >&2
+            exit {exit_code}
+        """)
+    )
+    fake.chmod(0o755)
+
+
+def _remove_git_from_path(monkeypatch) -> None:
+    """Remove all directories containing a real ``git`` binary from PATH."""
+    import shutil
+    original = os.environ.get("PATH", "")
+    parts = [p for p in original.split(os.pathsep)
+             if not (Path(p) / "git").exists() and not shutil.which("git", path=p)]
+    monkeypatch.setenv("PATH", os.pathsep.join(parts))
+
+
+# ---------------------------------------------------------------------------
+# Local locator tests (no git involved)
+# ---------------------------------------------------------------------------
+
+class TestFetchSourceLocal:
+    def test_existing_dir_returns_ok(self, tmp_path):
+        loc = parse_locator(str(tmp_path))
+        result = fetch_source(loc)
+        assert result.ok is True
+        assert result.root_path == tmp_path
+        assert result.skipped_reason == ""
+
+    def test_missing_dir_returns_not_ok(self, tmp_path):
+        missing = tmp_path / "does_not_exist"
+        loc = parse_locator(str(missing))
+        result = fetch_source(loc)
+        assert result.ok is False
+        assert result.root_path is None
+        assert "does not exist" in result.skipped_reason
+
+    def test_does_not_raise_on_missing_dir(self, tmp_path):
+        missing = tmp_path / "gone"
+        loc = parse_locator(str(missing))
+        # Must not raise under any circumstances
+        result = fetch_source(loc)
+        assert isinstance(result, FetchResult)
+
+
+# ---------------------------------------------------------------------------
+# Git locator tests: git binary absent → graceful skip
+# ---------------------------------------------------------------------------
+
+class TestFetchSourceGitAbsent:
+    def test_returns_not_ok_when_git_missing(self, tmp_path, monkeypatch):
+        # Point PATH to an empty directory so git is not found.
+        empty_bin = tmp_path / "empty_bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        loc = parse_locator("some-org/some-repo")
+        result = fetch_source(loc)
+
+        assert result.ok is False
+        assert result.root_path is None
+        assert result.skipped_reason  # non-empty explanation
+
+    def test_does_not_raise_when_git_missing(self, tmp_path, monkeypatch):
+        empty_bin = tmp_path / "empty_bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        loc = parse_locator("some-org/some-repo")
+        # The critical invariant: this must never raise
+        result = fetch_source(loc)
+        assert isinstance(result, FetchResult)
+
+    def test_skipped_reason_mentions_git(self, tmp_path, monkeypatch):
+        empty_bin = tmp_path / "empty_bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        loc = parse_locator("org/repo")
+        result = fetch_source(loc)
+        # Should mention git in the reason
+        assert "git" in result.skipped_reason.lower()
+
+
+# ---------------------------------------------------------------------------
+# Git locator tests: git binary present but clone fails
+# ---------------------------------------------------------------------------
+
+class TestFetchSourceGitFails:
+    def test_clone_failure_returns_not_ok(self, tmp_path, monkeypatch):
+        fake_bin = tmp_path / "bin"
+        fake_bin.mkdir()
+        _write_fake_git(fake_bin, exit_code=128, message="repository not found")
+        monkeypatch.setenv("PATH", str(fake_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        loc = parse_locator("org/nonexistent-repo")
+        result = fetch_source(loc)
+
+        assert result.ok is False
+        assert result.root_path is None
+        assert result.skipped_reason  # must be non-empty
+
+    def test_clone_failure_does_not_raise(self, tmp_path, monkeypatch):
+        fake_bin = tmp_path / "bin"
+        fake_bin.mkdir()
+        _write_fake_git(fake_bin, exit_code=1, message="error")
+        monkeypatch.setenv("PATH", str(fake_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        loc = parse_locator("org/repo")
+        result = fetch_source(loc)
+        assert isinstance(result, FetchResult)
+
+
+# ---------------------------------------------------------------------------
+# Cache-key stability: same repo, different URL forms → same cache dir
+# ---------------------------------------------------------------------------
+
+class TestCacheKeyStability:
+    def test_ssh_https_shorthand_use_same_cache_dir(self, tmp_path, monkeypatch):
+        """Different URL forms for the same repo must hash to the same dir."""
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        from sources.locator import cache_key  # noqa: PLC0415
+        ssh = parse_locator("git@github.com:myorg/myrepo.git")
+        https = parse_locator("https://github.com/myorg/myrepo")
+        shorthand = parse_locator("myorg/myrepo")
+
+        assert cache_key(ssh) == cache_key(https) == cache_key(shorthand)
+
+    def test_different_repos_use_different_dirs(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        from sources.locator import cache_key  # noqa: PLC0415
+        a = parse_locator("myorg/repo-a")
+        b = parse_locator("myorg/repo-b")
+        assert cache_key(a) != cache_key(b)
+
+
+# ---------------------------------------------------------------------------
+# fetch_all: aggregation + non-raising contract
+# ---------------------------------------------------------------------------
+
+class TestFetchAll:
+    def test_all_local_ok(self, tmp_path):
+        d1 = tmp_path / "m1"
+        d1.mkdir()
+        d2 = tmp_path / "m2"
+        d2.mkdir()
+
+        locs = [parse_locator(str(d1)), parse_locator(str(d2))]
+        roots, report = fetch_all(locs)
+
+        assert len(roots) == 2
+        assert tmp_path / "m1" in roots
+        assert tmp_path / "m2" in roots
+        assert len(report.skipped) == 0
+
+    def test_mixed_ok_and_skip(self, tmp_path):
+        existing = tmp_path / "real"
+        existing.mkdir()
+        missing = tmp_path / "gone"
+
+        locs = [parse_locator(str(existing)), parse_locator(str(missing))]
+        roots, report = fetch_all(locs)
+
+        assert len(roots) == 1
+        assert len(report.skipped) == 1
+        assert report.skipped[0].ok is False
+
+    def test_all_git_absent_skipped(self, tmp_path, monkeypatch):
+        empty_bin = tmp_path / "empty_bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        locs = [parse_locator("org/a"), parse_locator("org/b")]
+        roots, report = fetch_all(locs)
+
+        assert roots == []
+        assert len(report.skipped) == 2
+        for r in report.skipped:
+            assert r.ok is False
+
+    def test_does_not_raise(self, tmp_path, monkeypatch):
+        empty_bin = tmp_path / "empty_bin"
+        empty_bin.mkdir()
+        monkeypatch.setenv("PATH", str(empty_bin))
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        locs = [parse_locator("org/r1"), parse_locator("org/r2"), parse_locator(str(tmp_path))]
+        roots, report = fetch_all(locs)
+        # Must not raise
+        assert isinstance(roots, list)
+        assert isinstance(report, SourceReport)
+
+    def test_empty_locators_list(self):
+        roots, report = fetch_all([])
+        assert roots == []
+        assert report.fetched == []
+        assert report.cached == []
+        assert report.skipped == []
+
+    def test_successful_roots_in_order(self, tmp_path):
+        dirs = [tmp_path / f"m{i}" for i in range(3)]
+        for d in dirs:
+            d.mkdir()
+
+        locs = [parse_locator(str(d)) for d in dirs]
+        roots, report = fetch_all(locs)
+
+        assert roots == dirs
+
+    def test_source_report_successful_roots(self, tmp_path):
+        existing = tmp_path / "ok"
+        existing.mkdir()
+        locs = [parse_locator(str(existing))]
+        roots, report = fetch_all(locs)
+        assert report.successful_roots() == [existing]
+
+
+class TestSuccessfulGitFetchLocalBareRepo:
+    """Exercise the REAL clone+checkout path with a local bare repo (no network).
+
+    Closes the gap where only the offline-skip branch was covered. Builds a real
+    git repo, bare-clones it as the 'remote', and points a git-kind Locator at
+    that bare repo path.
+    """
+
+    def _make_bare_remote(self, tmp_path):
+        import shutil
+        import subprocess
+
+        if shutil.which("git") is None:
+            return None  # caller skips
+        work = tmp_path / "work"
+        work.mkdir()
+
+        def git(*args, cwd=work):
+            subprocess.run(["git", *args], cwd=str(cwd), check=True,
+                           capture_output=True, text=True)
+
+        git("init", "-q")
+        git("config", "user.email", "t@example.com")
+        git("config", "user.name", "Test")
+        (work / "MARKER.txt").write_text("hello from remote\n")
+        git("add", "MARKER.txt")
+        git("commit", "-q", "-m", "initial")
+        bare = tmp_path / "remote.git"
+        subprocess.run(["git", "clone", "-q", "--bare", str(work), str(bare)],
+                       check=True, capture_output=True, text=True)
+        return bare
+
+    def test_successful_clone_and_checkout(self, tmp_path, monkeypatch):
+        import pytest
+        bare = self._make_bare_remote(tmp_path)
+        if bare is None:
+            pytest.skip("git not available")
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+        Locator = locator_mod.Locator
+        loc = Locator(kind="git", origin=str(bare), subdir="", ref="HEAD")
+        result = fetch_source(loc)
+        assert result.ok, result.skipped_reason
+        assert result.root_path is not None
+        assert (result.root_path / "MARKER.txt").read_text() == "hello from remote\n"
+
+    def test_second_fetch_uses_cache(self, tmp_path, monkeypatch):
+        import pytest
+        bare = self._make_bare_remote(tmp_path)
+        if bare is None:
+            pytest.skip("git not available")
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+        Locator = locator_mod.Locator
+        loc = Locator(kind="git", origin=str(bare), subdir="", ref="HEAD")
+        first = fetch_source(loc)
+        assert first.ok, first.skipped_reason
+        second = fetch_source(loc)
+        assert second.ok, second.skipped_reason
+        assert (second.root_path / "MARKER.txt").exists()
+
+    def test_subdir_resolution(self, tmp_path, monkeypatch):
+        import pytest
+        import shutil
+        import subprocess
+        if shutil.which("git") is None:
+            pytest.skip("git not available")
+        work = tmp_path / "work"
+        (work / "pkg").mkdir(parents=True)
+
+        def git(*args):
+            subprocess.run(["git", *args], cwd=str(work), check=True,
+                           capture_output=True, text=True)
+
+        git("init", "-q")
+        git("config", "user.email", "t@example.com")
+        git("config", "user.name", "Test")
+        (work / "pkg" / "M.txt").write_text("sub\n")
+        git("add", "-A")
+        git("commit", "-q", "-m", "init")
+        bare = tmp_path / "remote.git"
+        subprocess.run(["git", "clone", "-q", "--bare", str(work), str(bare)],
+                       check=True, capture_output=True, text=True)
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+        Locator = locator_mod.Locator
+        loc = Locator(kind="git", origin=str(bare), subdir="pkg", ref="HEAD")
+        result = fetch_source(loc)
+        assert result.ok, result.skipped_reason
+        assert (result.root_path / "M.txt").read_text() == "sub\n"
