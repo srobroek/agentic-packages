@@ -9,7 +9,7 @@ id = "apm-install"
 name = "APM install and compile"
 version = "1.0.0"
 description = "Install APM package primitives and compile Codex/Claude steering."
-default_enabled = true
+default_enabled = false
 reconcile = false
 
 [order]

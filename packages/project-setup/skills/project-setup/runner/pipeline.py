@@ -69,6 +69,7 @@ _mode_mod = _load_sibling("mode")
 _executor_mod = _load_sibling("executor")
 _reproduce_mod = _load_sibling("reproduce")
 _persist_mod = _load_sibling("persist")
+_enablement_mod = _load_sibling("enablement")
 _discover_mod = _load_sources("discover")
 _fetch_mod = _load_sources("fetch")
 _locator_mod = _load_sources("locator")
@@ -92,9 +93,12 @@ apply_reproduce = _reproduce_mod.apply
 
 write_sources_toml = _persist_mod.write_sources_toml
 write_answers_toml = _persist_mod.write_answers_toml
+write_modules_enabled = _persist_mod.write_modules_enabled
 merge_module_answers_to_persist = _persist_mod.merge_module_answers_to_persist
 ensure_gitignore_pytest_entry = _persist_mod.ensure_gitignore_pytest_entry
 check_sources_drift = _persist_mod.check_sources_drift
+
+resolve_enabled_modules = _enablement_mod.resolve_enabled_modules
 
 build_discovery_roots = _discover_mod.build_discovery_roots
 discover_modules = _discover_mod.discover_modules
@@ -114,6 +118,7 @@ class PipelineResult:
     errors: list[SetupError] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     modules_executed: list[str] = field(default_factory=list)
+    enabled_modules: list[str] = field(default_factory=list)
     files_written: list[str] = field(default_factory=list)
     plan_path: Path | None = None
     sources_toml_path: Path | None = None
@@ -154,6 +159,27 @@ def _read_committed_answers(project_dir: Path) -> dict[str, dict[str, Any]]:
         if isinstance(val, dict) and "." not in key:
             answers[key] = val
     return answers
+
+
+def _read_committed_enabled(project_dir: Path) -> list[str] | None:
+    """Read [modules].enabled from .project-setup/answers.toml.
+
+    Returns the list of explicitly-enabled module ids, or None if the key is
+    absent (meaning: rely on defaults only).
+    """
+    ans_toml = project_setup_dir(project_dir) / "answers.toml"
+    if not ans_toml.is_file():
+        return None
+    try:
+        with open(ans_toml, "rb") as fh:
+            data = tomllib.load(fh)
+    except Exception:
+        return None
+    modules_section = data.get("modules", {})
+    enabled = modules_section.get("enabled")
+    if isinstance(enabled, list):
+        return [str(x) for x in enabled]
+    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -336,6 +362,70 @@ def run_pipeline(
         manifest._toml_path = str(disc_mod.manifest_path)
         manifests.append(manifest)
 
+    # ── Stage 3b: enablement resolution ─────────────────────────────────────── #
+    # Determine which modules are enabled (base defaults ∪ selection ∪ requires
+    # closure). The selection source depends on mode:
+    #   - reproduce: committed [modules].enabled from answers.toml (authoritative)
+    #   - init: proposed_enabled from io answers under key "enabled" in a virtual
+    #           "modules" answer namespace (agent-proposed; None = base-only)
+    committed_enabled: list[str] | None = None
+    if mode == "reproduce":
+        committed_enabled = _read_committed_enabled(project_dir)
+
+    # In init mode, accept a proposed list via ScriptedIO / agent answers.
+    # The io may carry a "modules" answer dict with key "enabled" (a list of ids).
+    # This is a lightweight channel: ScriptedIO callers supply it as
+    #   answers={"enabled": ["lang-python", ...]}  under module id "modules".
+    proposed_enabled: list[str] | None = None
+    if mode == "init":
+        # Ask for optional module selection via io — key is "enabled", type list.
+        # Non-interactive callers that don't supply it get base-only (FR-007).
+        _mod_sel_spec = {
+            "key": "enabled",
+            "type": "list",
+            "prompt": "Optional modules to enable (space/comma-separated ids, or leave blank for base only):",
+            "choices": None,
+            "required": False,
+        }
+        _default_enabled: list[str] = []
+        _ask_ni = getattr(io, "ask_non_interactive", None)
+        if non_interactive and callable(_ask_ni):
+            _raw = _ask_ni(_mod_sel_spec, _default_enabled)
+        else:
+            _raw = io.ask(_mod_sel_spec, _default_enabled)
+        if isinstance(_raw, list) and _raw:
+            proposed_enabled = [str(x) for x in _raw]
+        elif isinstance(_raw, str) and _raw.strip():
+            # Tolerate a comma/space-separated string from ScriptedIO
+            import re as _re
+            proposed_enabled = [x.strip() for x in _re.split(r"[,\s]+", _raw.strip()) if x.strip()]
+
+    enabled_ids, en_errors = resolve_enabled_modules(
+        manifests,
+        committed_enabled=committed_enabled,
+        proposed_enabled=proposed_enabled,
+        mode=mode,
+    )
+    if en_errors:
+        result.errors.extend(en_errors)
+        result.success = False
+        for err in en_errors:
+            io.notify(f"[ERROR] {err.how_to_fix}")
+        return result
+
+    # Filter manifests to enabled set only — the remainder of the pipeline
+    # (interview, validate, plan, execute) sees ONLY the enabled modules.
+    manifests = [m for m in manifests if m.id in enabled_ids]
+    result.enabled_modules = sorted(enabled_ids)
+
+    # Determine enablement provenance for persistence
+    if mode == "reproduce":
+        _en_provenance = "project"
+    elif proposed_enabled:
+        _en_provenance = "agent-steered"
+    else:
+        _en_provenance = "default"
+
     # ── Stage 4: interview ───────────────────────────────────────────────────── #
     committed_answers = _read_committed_answers(project_dir) if mode == "reproduce" else {}
 
@@ -483,6 +573,13 @@ def run_pipeline(
         project_dir,
         answers=final_answers,
         provenance_map=provenance_map,
+    )
+    # Persist the resolved enabled set (FR-004): write [modules].enabled so
+    # reproduce can replay the exact module set without re-grilling.
+    write_modules_enabled(
+        project_dir,
+        enabled_ids=sorted(enabled_ids),
+        provenance=_en_provenance,
     )
     ensure_gitignore_pytest_entry(project_dir)
 

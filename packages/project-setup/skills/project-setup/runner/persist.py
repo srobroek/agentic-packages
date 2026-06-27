@@ -303,6 +303,74 @@ def write_answers_toml(
 
 
 # --------------------------------------------------------------------------- #
+# write_modules_enabled                                                        #
+# --------------------------------------------------------------------------- #
+def write_modules_enabled(
+    project_dir: Path,
+    enabled_ids: list[str],
+    provenance: str = "default",
+) -> Path:
+    """Append / overwrite the ``[modules]`` table in ``.project-setup/answers.toml``.
+
+    The ``[modules] enabled = [...]`` record is the canonical persistence of the
+    resolved enablement set (FR-004).  It is written as a top-level ``[modules]``
+    table alongside ``[module.*]`` answer tables.  The provenance string is stored
+    under ``[modules.source] enabled = <provenance>`` so reproduce can see how the
+    set was determined.
+
+    This helper reads the existing answers.toml (if any), injects/replaces the
+    ``[modules]`` section, and rewrites the file — preserving all ``[module.*]``
+    content unchanged.
+
+    Parameters
+    ----------
+    project_dir:
+        The project root directory.
+    enabled_ids:
+        Sorted list of enabled module ids to persist.
+    provenance:
+        How the enabled set was determined: ``"default"`` (base only) or
+        ``"agent-steered"`` (agent proposed + user confirmed).
+
+    Returns
+    -------
+    Path
+        The path written.
+    """
+    import tomllib as _tomllib
+
+    psd = project_setup_dir(project_dir)
+    dest = psd / "answers.toml"
+
+    # Read existing answers.toml (if any) to preserve module answers
+    existing_module_data: dict[str, Any] = {}
+    if dest.is_file():
+        try:
+            with open(dest, "rb") as fh:
+                existing = _tomllib.load(fh)
+            existing_module_data = existing.get("module", {})
+        except Exception:
+            pass  # If unreadable, write fresh
+
+    # Build output: modules section first (enablement metadata), then module answers
+    data: dict[str, Any] = {}
+
+    # [modules] table with enablement record
+    modules_section: dict[str, Any] = {
+        "enabled": sorted(enabled_ids),
+        "source": {"enabled": provenance},
+    }
+    data["modules"] = modules_section
+
+    # Preserve existing [module.*] answer tables
+    if existing_module_data:
+        data["module"] = existing_module_data
+
+    _write_toml(dest, data)
+    return dest
+
+
+# --------------------------------------------------------------------------- #
 # merge_module_answers_to_persist                                              #
 # --------------------------------------------------------------------------- #
 def merge_module_answers_to_persist(

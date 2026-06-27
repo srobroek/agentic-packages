@@ -59,6 +59,16 @@ Net-new capability phase, AFTER the 0–5 migration (spec 001) ships.
   same run (reject hallucinated/yanked/typosquat versions); index-url allowlist;
   research only at init, never on plain reproduce (only `--refresh` re-researches).
 
+## Implementation notes (002 built)
+
+- `proposed_enabled` flows via a "modules" answer namespace, key "enabled" (a
+  list) — pragmatic, works; ScriptedIO/agent supply it. Flagged for 003: a
+  dedicated `proposed_enabled` param on run_pipeline would be cleaner than the
+  virtual-module-id channel.
+- LATENT reserved-id concern for a future guard: a third-party module declaring
+  `id = "modules"` would collide with the `[modules]` answers table. No bundled
+  module uses it; add a reserved-id check when dynamic sources are common.
+
 ## Open inputs before authoring the spec
 
 - Gates survey (wddbxhqia) — the gate calibration table + non-interactive policy.

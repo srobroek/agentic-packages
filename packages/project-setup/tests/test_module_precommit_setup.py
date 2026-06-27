@@ -73,7 +73,7 @@ def test_manifest_parses_and_is_valid():
     mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
     assert not mani.errors, mani.errors
     assert mani.id == "precommit-setup"
-    assert mani.default_enabled is True
+    assert mani.default_enabled is False
     assert mani.reconcile is True
     assert any(s.id == "write" and s.kind == "python" for s in mani.steps)
     assert mani.order.get("after") == ["dirs-scaffold"]

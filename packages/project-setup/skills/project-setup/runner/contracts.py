@@ -52,6 +52,8 @@ class ErrorCode(str, Enum):
     # Plan / result gates
     PLAN_MALFORMED = "PLAN_MALFORMED"
     RESULT_SHAPE = "RESULT_SHAPE"
+    # Enablement
+    UNKNOWN_MODULE = "UNKNOWN_MODULE"
     # Safety / sources
     PATH_ESCAPE = "PATH_ESCAPE"
     FETCH_FAILED = "FETCH_FAILED"

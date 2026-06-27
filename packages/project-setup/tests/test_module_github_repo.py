@@ -130,7 +130,7 @@ def test_manifest_parses_and_is_valid():
     mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
     assert not mani.errors, mani.errors
     assert mani.id == "github-repo"
-    assert mani.default_enabled is True
+    assert mani.default_enabled is False
     assert mani.reconcile is False
     after = mani.order.get("after") if mani.order else []
     assert "git-init" in (after or []), f"Expected after=[git-init], got: {after}"

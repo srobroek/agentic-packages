@@ -9,7 +9,7 @@ id = "justfile-write"
 name = "Skeleton justfile"
 version = "1.0.0"
 description = "Write a skeleton justfile with default/test/lint/build/dev/clean targets. Skipped when use_just=false."
-default_enabled = true
+default_enabled = false
 reconcile = false
 
 [order]

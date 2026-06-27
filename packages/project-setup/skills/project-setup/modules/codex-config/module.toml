@@ -9,7 +9,7 @@ id = "codex-config"
 name = "Codex project config"
 version = "1.0.0"
 description = "Scaffold a project-scoped .codex/config.toml with override guidance."
-default_enabled = true
+default_enabled = false
 reconcile = false
 
 [order]

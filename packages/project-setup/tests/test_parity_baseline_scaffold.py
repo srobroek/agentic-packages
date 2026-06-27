@@ -1,15 +1,25 @@
-"""T04A — baseline-scaffold parity audit (SC-005).
+"""T04A — minimal-core-scaffold parity audit (SC-001 / SC-005).
 
-Drives the REAL runner pipeline end-to-end with the bundled default_enabled
-module set (ScriptedIO, non-interactive) into a temp project, then asserts the
-observable scaffold matches what the legacy monolith produced: AGENTS.md,
-.gitignore, .pre-commit-config.yaml, docs/, specs/, .codex/config.toml, and NO
-monorepo target dirs in single layout. This is the integration gate that proves
-the whole runner + modules system composes.
+Drives the REAL runner pipeline end-to-end with the minimal-core default_enabled
+module set (ScriptedIO, non-interactive, no explicit module selection) into a
+temp project, then asserts the observable scaffold matches the minimal core:
+AGENTS.md, .gitignore, docs/, specs/, LICENSE — and that optional-module outputs
+(.pre-commit-config.yaml, .codex/config.toml, Justfile) are NOT present.
 
-Tools that the base modules shell out to (git, gh, apm, pre-commit) are stubbed
-on PATH as no-op successes so the run is hermetic and offline. The run uses the
-REAL bundled modules under skills/project-setup/modules/ via the injected
+This is the SC-001 gate: a fresh run with no selection produces ONLY the
+minimal-core scaffold; no optional modules run.
+
+The bundled minimal core (default_enabled=true) is:
+  core-identity, dirs-scaffold, gitignore-generate, license-write,
+  agents-md, git-init
+
+Optional modules (default_enabled=false) require explicit enablement:
+  apm-install, codex-config, github-repo, justfile-write, precommit-setup,
+  quality-hooks, lang-*, speckit-bridge, package-add
+
+Tools that the base modules shell out to (git, gh) are stubbed on PATH as
+no-op successes so the run is hermetic and offline. The run uses the REAL
+bundled modules under skills/project-setup/modules/ via the injected
 plugin_root.
 
 Run: uv run --with pytest pytest -q packages/project-setup/tests/test_parity_baseline_scaffold.py
@@ -53,25 +63,25 @@ def _stub_tools(bin_dir: Path, names: list[str]) -> None:
 
 
 def test_baseline_scaffold_parity(tmp_path, monkeypatch):
+    """SC-001: minimal-core run (no selection) produces ONLY the base scaffold.
+
+    Verifies that the 6 core modules execute and their outputs are present,
+    and that optional-module outputs are absent.
+    """
     pipeline = _load("pipeline")
     io_adapter = _load("io_adapter")
 
     project = tmp_path / "demo"
     project.mkdir()
 
-    # Hermetic tool stubs (git/gh/apm/pre-commit/sudo/xattr/gitnr) on PATH front.
+    # Hermetic tool stubs on PATH front. Only git/gh needed for base modules.
     bin_dir = tmp_path / "bin"
     _stub_tools(bin_dir, ["gh", "apm", "pre-commit", "sudo", "xattr", "gitnr", "specify"])
-    # Keep a REAL git (modules call it) but neutralize side effects by running
-    # inside the temp project; git init there is harmless.
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
-    # Cache + frozen plan isolated to tmp.
     monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
-    # No external/home/project module roots — bundled only.
     monkeypatch.delenv("PROJECT_SETUP_MODULES_DIR", raising=False)
 
-    # Scripted answers for a single-layout project; non_interactive falls back to
-    # declared defaults for anything not provided.
+    # Scripted answers for a single-layout project; no "enabled" key → base-only.
     io = io_adapter.ScriptedIO(
         answers={
             "project_name": "demo",
@@ -80,8 +90,9 @@ def test_baseline_scaffold_parity(tmp_path, monkeypatch):
             "layout": "single",
             "license": "apache-2.0",
             "public": False,
-            "create_repo": False,  # don't attempt gh repo create
+            "create_repo": False,
             "init_git": True,
+            # No "enabled" key → base-only (FR-007 safe default)
         },
         default_confirm=True,
     )
@@ -95,38 +106,51 @@ def test_baseline_scaffold_parity(tmp_path, monkeypatch):
 
     # The run completed without a hard gate failure.
     assert result is not None
-    # Surface any recorded errors for diagnosis.
     errs = getattr(result, "errors", [])
     assert not errs, [getattr(e, "how_to_fix", str(e)) for e in errs]
 
-    # ── SC-005 observable-output parity ──────────────────────────────────── #
-    assert (project / "AGENTS.md").is_file(), "AGENTS.md missing"
-    assert (project / ".gitignore").is_file(), ".gitignore missing"
-    assert (project / ".pre-commit-config.yaml").is_file(), "pre-commit config missing"
-    assert (project / ".codex" / "config.toml").is_file(), ".codex/config.toml missing"
-    assert (project / "docs").is_dir(), "docs/ missing"
-    assert (project / "specs").is_dir(), "specs/ missing"
-    assert (project / "LICENSE").is_file(), "LICENSE missing"
+    # ── SC-001: minimal-core outputs PRESENT ─────────────────────────────── #
+    assert (project / "AGENTS.md").is_file(), "AGENTS.md missing (agents-md module)"
+    assert (project / ".gitignore").is_file(), ".gitignore missing (gitignore-generate module)"
+    assert (project / "docs").is_dir(), "docs/ missing (dirs-scaffold module)"
+    assert (project / "specs").is_dir(), "specs/ missing (dirs-scaffold module)"
+    assert (project / "LICENSE").is_file(), "LICENSE missing (license-write module)"
 
-    # Single layout: NO monorepo target dirs (the bats-pinned invariant).
-    assert not (project / "apps").exists(), "apps/ should not exist in single layout"
-    assert not (project / "services").exists(), "services/ should not exist in single layout"
+    # ── SC-001: optional-module outputs ABSENT ────────────────────────────── #
+    # Note: dirs-scaffold (core) creates placeholder dirs including .codex/ —
+    # that is intentional. What must be absent is .codex/config.toml, which is
+    # only written by the opt-in codex-config module.
+    assert not (project / ".pre-commit-config.yaml").exists(), \
+        ".pre-commit-config.yaml must NOT be present in base run (precommit-setup is opt-in)"
+    assert not (project / ".codex" / "config.toml").exists(), \
+        ".codex/config.toml must NOT be present in base run (codex-config is opt-in)"
+    assert not (project / "Justfile").exists(), \
+        "Justfile must NOT be present in base run (justfile-write is opt-in)"
+    assert not (project / "apps").exists(), "apps/ must not exist in single layout"
+    assert not (project / "services").exists(), "services/ must not exist in single layout"
 
-    # Content spot-checks against the legacy scaffold.
+    # Content spot-checks on core outputs.
     gi = (project / ".gitignore").read_text()
     assert "repomix.xml" in gi and ".env" in gi
-    pc = (project / ".pre-commit-config.yaml").read_text()
-    assert "gitleaks" in pc and "cocogitto" in pc
     agents = (project / "AGENTS.md").read_text()
     assert "demo" in agents  # PROJECT_NAME substituted
 
-    # Committed project state was written.
+    # Committed project state written, including [modules].enabled.
     assert (project / ".project-setup" / "answers.toml").is_file()
+
+    # Enabled modules should be the 6-core set only.
+    enabled = getattr(result, "enabled_modules", [])
+    assert set(enabled) == {
+        "core-identity", "dirs-scaffold", "gitignore-generate",
+        "license-write", "agents-md", "git-init",
+    }, f"Expected only 6-core enabled, got: {sorted(enabled)}"
 
 
 def test_baseline_scaffold_is_deterministic(tmp_path, monkeypatch):
     """Two runs with identical answers produce identical Tier-1 scaffold files
     (excluding intrinsically variable values: LICENSE year/author).
+
+    Checks only minimal-core outputs — optional modules are not enabled.
     """
     pipeline = _load("pipeline")
     io_adapter = _load("io_adapter")
@@ -145,6 +169,7 @@ def test_baseline_scaffold_is_deterministic(tmp_path, monkeypatch):
             "license": "apache-2.0",
             "create_repo": False,
             "init_git": False,
+            # No "enabled" key → base-only
         }
 
     outs = {}
@@ -157,7 +182,8 @@ def test_baseline_scaffold_is_deterministic(tmp_path, monkeypatch):
         )
         outs[i] = proj
 
-    for fname in (".gitignore", ".pre-commit-config.yaml", ".codex/config.toml", "AGENTS.md"):
+    # Core outputs are byte-identical across runs.
+    for fname in (".gitignore", "AGENTS.md"):
         a = (outs[1] / fname).read_text()
         b = (outs[2] / fname).read_text()
         assert a == b, f"{fname} not byte-identical across runs"

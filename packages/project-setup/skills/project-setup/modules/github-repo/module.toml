@@ -9,7 +9,7 @@ id = "github-repo"
 name = "GitHub repository"
 version = "1.0.0"
 description = "Create a GitHub repository and wire the origin remote via gh or gh-api.py."
-default_enabled = true
+default_enabled = false
 reconcile = false
 
 [order]

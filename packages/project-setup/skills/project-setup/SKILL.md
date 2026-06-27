@@ -86,12 +86,41 @@ version, description, reconcile), `[order]` (requires/after/before — no priori
 
 ## The bundled module set
 
-- **Base (enabled by default):** core-identity, git-init, github-repo,
-  dirs-scaffold, agents-md, codex-config, justfile-write, license-write,
-  gitignore-generate, precommit-setup, apm-install, quality-hooks.
-- **Optional (opt in):** lang-ts, lang-python, lang-go, lang-rust (language
-  overlays), speckit-bridge (SpecKit, delegates to the speckit package),
-  package-add (monorepo add-a-package).
+- **Base (always enabled):** core-identity, dirs-scaffold, gitignore-generate,
+  license-write, agents-md, git-init.  These run on every project; they cannot
+  be deselected.
+- **Optional (opt in):** apm-install, codex-config, github-repo, justfile-write,
+  precommit-setup, quality-hooks, lang-ts, lang-python, lang-go, lang-rust,
+  speckit-bridge, package-add.
+
+## Module selection (FR-005)
+
+Before running the pipeline for a new project, you MUST conduct module selection:
+
+1. **Grill the user on intent** — ask what the project does, its language/stack,
+   whether it needs CI tooling, APM/SpecKit, GitHub repo creation, etc.  Do not
+   accept vague answers; ask follow-up questions until you have enough signal to
+   propose a concrete set.
+
+2. **Propose an enablement set with rationale** — list the optional modules you
+   recommend enabling, each with a one-line reason (e.g. "lang-python: Python
+   project; precommit-setup: you mentioned wanting linting; github-repo: you
+   want the repo auto-created").  Start from the base set and add only what
+   fits the intent.
+
+3. **Confirm with the user** — show the final proposed set (base + optional) and
+   ask for explicit approval.  The user may add or remove modules.
+
+4. **Pass the selection to the runner** — supply the confirmed list as the
+   ``enabled`` answer in the ScriptedIO / CLI invocation so the pipeline records
+   it.  The runner persists it as ``[modules].enabled`` in
+   `.project-setup/answers.toml` so clones reproduce the exact set.
+
+**In reproduce mode** the committed enablement set is authoritative — do not
+re-propose modules; replay exactly what is recorded.
+
+**In non-interactive/CI mode** with no committed selection, the runner runs the
+base set only (safe default — no optional modules auto-run).
 
 ## Secrets guardrail (non-negotiable)
 
