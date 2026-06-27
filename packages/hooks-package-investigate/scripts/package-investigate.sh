@@ -17,6 +17,16 @@ set -euo pipefail
 payload="$(cat)"
 [[ -z "$payload" ]] && exit 0
 
+# Cheap pre-jq bail: this guard acts only on package-manager commands, so a
+# payload containing none of these tokens has nothing to inspect. Skips the jq
+# spawn on the hot path. SUPERSET filter on raw bytes — the command still has to
+# survive the structured matchers below — so it can never mask a real match.
+# shellcheck disable=SC2221,SC2222  # tokens deliberately overlap (e.g. npm⊃pnpm); every manager name is listed verbatim so the superset stays auditable.
+case "$payload" in
+  *pnpm*|*npm*|*yarn*|*bun*|*uv*|*pip*|*poetry*|*cargo*|*go*|*gem*|*bundle*|*composer*) ;;
+  *) exit 0 ;;
+esac
+
 command="$(
   printf '%s' "$payload" | jq -r '
     if (.tool_input | type) == "string" then .tool_input

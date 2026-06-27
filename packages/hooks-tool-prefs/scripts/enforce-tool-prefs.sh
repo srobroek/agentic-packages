@@ -3,6 +3,16 @@
 # Advisory only (additionalContext), does NOT block.
 
 INPUT=$(cat)
+
+# Cheap pre-jq bail: this guard acts only on package-manager commands, so a
+# payload containing none of these tokens has nothing to inspect. Skips the jq
+# spawn on the hot path. SUPERSET filter on raw bytes — the command still has to
+# survive the structured matchers below — so it can never mask a real match.
+case "$INPUT" in
+  *grep*|*find*|*ls*|*cat*|*npm*|*yarn*|*pip*|*poetry*|*conda*|*make*|*nvm*|*pyenv*|*rbenv*|*asdf*) ;;
+  *) exit 0 ;;
+esac
+
 # tool_input may be an object ({command: "..."}) or a bare string. Use the
 # type-checked idiom so a string-form payload does not throw and bypass the
 # hook. 2>/dev/null suppresses jq parse errors on malformed stdin.

@@ -22,6 +22,16 @@ payload="$(cat 2>/dev/null || true)"
 # is an authorship-hygiene guard, not a security control).
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Cheap pre-jq bail: this guard acts ONLY on `git commit` commands, so if the raw
+# payload contains no `commit` token there is nothing to inspect. Skips the jq
+# spawn (the dominant per-call cost) for the common case on the hot path. Pure
+# SUPERSET filter on literal bytes — the command still has to survive the
+# structured checks below — so it can never mask a command jq would have flagged.
+case "$payload" in
+  *commit*) ;;
+  *) exit 0 ;;
+esac
+
 # String-form tool_input idiom: tool_input may be an object {command: "..."} or
 # a bare string. The naive '.tool_input.command // .tool_input' THROWS when
 # tool_input is a string, which silently bypasses the guard. Type-check first.

@@ -20,6 +20,10 @@ set -euo pipefail
 payload="$(cat)"
 [[ -z "$payload" ]] && exit 0
 
+# Cheap bail: when chezmoi is NOT installed the guard is a guaranteed no-op
+# (membership is undecidable -> clean ALLOW), so skip both jq spawns up front.
+command -v chezmoi >/dev/null 2>&1 || exit 0
+
 # tool_input may be an object ({command|file_path: "..."}) OR a bare string. The
 # naive `.tool_input.command // .tool_input` form THROWS on a string input (jq
 # cannot index a string), which silently bypasses the guard. Branch on type.
@@ -28,8 +32,20 @@ payload="$(cat)"
 # a command), so we feed it to BOTH checks: file_path catches a bare managed path,
 # command catches a managed write verb/redirect. Neither check denies unless an
 # exact managed write target is found, so applying both is safe.
-cmd="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
-file_path="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.file_path // .tool_input.path // empty) end' 2>/dev/null || true)"
+# ONE jq spawn yields both fields via a merged parse. file_path goes FIRST (a
+# path has no newline, so the line-based split is safe) and cmd LAST via $(cat),
+# because a multi-line command WOULD otherwise bleed into the file_path field.
+file_path=""
+cmd=""
+{
+  IFS= read -r file_path || true
+  cmd="$(cat)"
+} < <(
+  printf '%s' "$payload" | jq -j '
+    (if (.tool_input|type)=="string" then .tool_input else (.tool_input.file_path // .tool_input.path // "") end) + "\n" +
+    (if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // "") end)
+  ' 2>/dev/null
+)
 
 deny() {
   jq -cn --arg reason "$1" '{

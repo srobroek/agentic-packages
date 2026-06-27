@@ -18,10 +18,35 @@ set -euo pipefail
 #   ALLOW — resolves strictly inside the project working tree, or a temp root.
 
 input="$(cat)"
+
+# Cheap pre-jq bail: this guard only ever fires on `rm`. The pattern matches the
+# RAW payload string (a superset of real triggers — JSON-escaping never hides the
+# literal `rm`), so we skip the jq spawn entirely on the overwhelming majority of
+# Bash calls that contain no `rm` at all.
+case "$input" in
+  *rm*) ;;
+  *) exit 0 ;;
+esac
+
 # tool_input may be an object ({command:"..."}) OR a bare string. The naive
 # `.tool_input.command // .tool_input` form THROWS on a string input (jq cannot
 # index a string), which would silently bypass this guard. Branch on type.
-command="$(printf '%s' "$input" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
+#
+# ONE jq spawn yields both fields via a merged parse: .cwd on line 1 (a path has
+# no newline) and the command as the remainder, so a multi-line command cannot
+# bleed into the cwd field.
+cwd=""
+command=""
+{
+  IFS= read -r cwd || true
+  command="$(cat)"
+} < <(
+  printf '%s' "$input" | jq -j '
+    (.cwd // "") + "\n" +
+    (if (.tool_input|type)=="string" then .tool_input
+     else (.tool_input.command // "") end)
+  ' 2>/dev/null
+)
 
 [[ -z "$command" || "$command" == "null" ]] && exit 0
 
@@ -30,7 +55,6 @@ command="$(printf '%s' "$input" | jq -r 'if (.tool_input|type)=="string" then .t
 # with git's --show-toplevel, which is always canonical — otherwise on macOS the
 # raw /tmp/x cwd vs canonical /private/tmp/x root would never share a prefix and
 # every relative target would read as "outside the tree".
-cwd="$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null || true)"
 [[ -n "$cwd" && "$cwd" != "null" && -d "$cwd" ]] || cwd="$PWD"
 cwd="$(cd "$cwd" 2>/dev/null && pwd -P 2>/dev/null || printf '%s' "$cwd")"
 cwd="${cwd%/}"; [[ -z "$cwd" ]] && cwd="/"

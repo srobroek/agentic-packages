@@ -6,17 +6,36 @@ if [[ -z "$payload" ]]; then
   exit 0
 fi
 
-# tool_input can be an object ({command:"..."}) OR a bare string. The naive
-# `.tool_input.command // .tool_input` form THROWS on a string ("Cannot index
-# string with command") and, with stderr swallowed, leaves $command empty —
-# silently bypassing every guard. Type-check first so both shapes are read.
-command="$(
-  printf '%s' "$payload" | jq -r '
-    if (.tool_input | type) == "string" then .tool_input
-    else (.tool_input.command // empty)
-    end
-  ' 2>/dev/null || true
-)"
+# Cheap pre-jq bail: every guard below acts ONLY on a `git` subcommand, so if the
+# raw payload mentions no `git` at all there is nothing to inspect. This skips the
+# jq spawn (the dominant per-call cost) for the common case — non-git Bash calls —
+# on the PreToolUse hot path. It is a pure SUPERSET filter on the literal bytes
+# (the token still has to survive the structured checks below), so it can never
+# mask a command that jq + the matchers would have flagged.
+case "$payload" in
+  *git*) ;;
+  *) exit 0 ;;
+esac
+
+# Parse the payload in a SINGLE jq pass (was two: command, then cwd). tool_input
+# can be an object ({command:"..."}) OR a bare string; the naive
+# `.tool_input.command // .tool_input` THROWS on a string ("Cannot index string
+# with command") and, with stderr swallowed, leaves $command empty — silently
+# bypassing every guard — so type-check first. We emit cwd on line 1 (a path
+# never contains a newline) then the command as the remainder, so a multi-line
+# command cannot bleed into cwd. No eval; bash-3.2 safe.
+cwd=""
+command=""
+{
+  IFS= read -r cwd || true
+  command="$(cat)"
+} < <(
+  printf '%s' "$payload" | jq -j '
+    (.cwd // "") + "\n" +
+    (if (.tool_input | type) == "string" then .tool_input
+     else (.tool_input.command // "") end)
+  ' 2>/dev/null
+)
 
 if [[ -z "$command" || "$command" == "null" ]]; then
   exit 0
@@ -24,7 +43,6 @@ fi
 
 # Directory the command runs in (for repo-state inspection). Both Claude and
 # Codex put it in `.cwd`; fall back to $PWD when absent or not a directory.
-cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
 [[ -n "$cwd" && "$cwd" != "null" && -d "$cwd" ]] || cwd="$PWD"
 
 lowered="$(printf '%s' "$command" | tr '[:upper:]' '[:lower:]')"
