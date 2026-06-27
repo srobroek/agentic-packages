@@ -26,3 +26,15 @@ build/
 dist/
 __pycache__/
 *.pyc
+
+# SpecKit: ignore fetched/built extension artifacts (refetched/rebuilt locally),
+# keep the lean .specify/ config (manifests, templates, workflows, integration).
+.specify/extensions/*/node_modules/
+.specify/extensions/*/dist/
+.specify/**/__pycache__/
+.specify/**/.pytest_cache/
+.specify/extensions/.cache/
+# SpecKit extensions are fetched/installed by setup-speckit.sh (refetchable,
+# like apm_modules). Ignore the vendored extension trees; keep .specify/ config,
+# templates, workflows, and integration state committed.
+.specify/extensions/
