@@ -48,7 +48,7 @@ marketplace:
   versioning:
     strategy: tag_pattern
   build:
-    tagPattern: '{name}-v{version}'
+    tagPattern: '{name}--v{version}'
   packages:
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger
