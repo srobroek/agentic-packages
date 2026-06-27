@@ -12,7 +12,7 @@ name: Release Please
 # branch protection requires status checks that don't run on a bot's direct push --
 # so it is intentionally omitted.
 #
-# TOKEN: the release PR is authored with RELEASE_PLEASE_PAT (a fine-grained PAT),
+# TOKEN: the release PR is authored with RELEASE_PLEASE_PAT_AGENTIC_PACKAGES (a fine-grained PAT),
 # NOT the default GITHUB_TOKEN. GitHub deliberately does not trigger workflows from
 # commits made by GITHUB_TOKEN, so the required PR checks (check-artifacts,
 # tests-gate) would complete as `action_required` 0s no-ops and the release PR would
@@ -40,6 +40,6 @@ jobs:
           # Fine-grained PAT so the release PR's commits trigger the required PR
           # checks (a GITHUB_TOKEN-authored commit does not). Falls back to
           # GITHUB_TOKEN if the secret is unset -- see the header note.
-          token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_PAT_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
