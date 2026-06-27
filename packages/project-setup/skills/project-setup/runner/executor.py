@@ -397,6 +397,8 @@ def run_gate_step(
     step: dict[str, Any],
     module_id: str,
     io: Any,
+    *,
+    non_interactive: bool = False,
 ) -> bool:
     """Render a ``kind=gate`` step message and capture confirmation.
 
@@ -408,15 +410,30 @@ def run_gate_step(
         The owning module id (for logging).
     io:
         An ``InterviewIO`` implementation.
+    non_interactive:
+        When True (CI / --non-interactive), DO NOT call ``io.confirm`` (which
+        would block on ``input()`` and deadlock CI). Resolve to the SAFE action
+        = NOT confirmed (``False``), so the consequential gated step is skipped
+        rather than auto-approved. The skip is announced so it is visible in
+        logs. CI that genuinely wants the gated action must opt in explicitly
+        (a per-action flag), never via silent auto-approval.
 
     Returns
     -------
     bool
-        ``True`` if the user confirmed; ``False`` if they skipped.
+        ``True`` if confirmed; ``False`` if skipped (always ``False`` in
+        non-interactive mode).
     """
     message = step.get("message", "(no message)")
     step_id = step.get("id", "gate")
     io.notify(f"\n[GATE] {module_id}/{step_id}: {message}")
+    if non_interactive:
+        io.notify(
+            f"[GATE] {module_id}/{step_id}: non-interactive — SAFE-skipping the "
+            f"gated step (not auto-approved). Re-run interactively or pass an "
+            f"explicit opt-in flag to perform it."
+        )
+        return False
     return io.confirm({"path": f"{module_id}/{step_id}", "kind": "gate", "preview": message})
 
 

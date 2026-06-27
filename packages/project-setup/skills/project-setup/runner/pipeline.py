@@ -87,7 +87,6 @@ validate_closed = _validate_mod.validate_closed
 build_plan = _plan_mod.build_plan
 freeze = _plan_mod.freeze
 detect_mode = _mode_mod.detect_mode
-run_python_step = _executor_mod.run_python_step
 build_drift_report = _reproduce_mod.build_drift_report
 apply_reproduce = _reproduce_mod.apply
 
@@ -493,63 +492,27 @@ def run_pipeline(
         return result
 
     # ── Stage 7: execute ────────────────────────────────────────────────────── #
-    if mode == "reproduce":
-        # Pre-write diff/confirm pass, then apply
-        confirmations = build_drift_report(
-            plan=plan,
-            plugin_root_path=plugin_root_path,
-            project_dir=project_dir,
-            io=io,
-            frozen_plan_path=plan_path,
-            env=env,
-        )
-        step_outcomes = apply_reproduce(
-            plan=plan,
-            confirmations=confirmations,
-            plugin_root_path=plugin_root_path,
-            project_dir=project_dir,
-            io=io,
-            frozen_plan_path=plan_path,
-            env=env,
-        )
-    else:
-        # Init mode: run all steps directly (no pre-write confirm pass)
-        step_outcomes = []
-        for mod_id in plan.order:
-            mod_entry = plan.modules.get(mod_id)
-            if mod_entry is None:
-                continue
-            for step in mod_entry.steps:
-                kind = step.get("kind") if isinstance(step, dict) else getattr(step, "kind", None)
-                step_id = step.get("id") if isinstance(step, dict) else getattr(step, "id", None)
-
-                if kind == "python":
-                    outcome = run_python_step(
-                        plugin_root_path=plugin_root_path,
-                        module_rel_root=mod_entry.module_rel_root,
-                        step_id=step_id,
-                        frozen_plan_path=plan_path,
-                        project_dir=project_dir,
-                        inspect=False,
-                        env=env,
-                    )
-                    step_outcomes.append(outcome)
-                    if not outcome.ok:
-                        io.notify(
-                            f"[ERROR] {mod_id}/{step_id}: "
-                            f"{outcome.error and outcome.error.how_to_fix}"
-                        )
-                    else:
-                        result.files_written.extend(outcome.files_written())
-                        result.modules_executed.append(mod_id)
-
-                elif kind == "gate":
-                    step_dict = step if isinstance(step, dict) else {"id": step_id, "kind": kind, "message": getattr(step, "message", "")}
-                    _executor_mod.run_gate_step(step_dict, mod_id, io)
-
-                elif kind == "agent":
-                    step_dict = step if isinstance(step, dict) else {"id": step_id, "kind": kind, "steering": getattr(step, "steering", "")}
-                    _executor_mod.run_agent_step(step_dict, mod_id, io)
+    # Both init and reproduce use the inspect→confirm→write flow so that
+    # consequential steps are never executed without a confirm pass, and gate
+    # steps carry non_interactive so CI safe-skips instead of deadlocking.
+    confirmations = build_drift_report(
+        plan=plan,
+        plugin_root_path=plugin_root_path,
+        project_dir=project_dir,
+        io=io,
+        frozen_plan_path=plan_path,
+        env=env,
+    )
+    step_outcomes = apply_reproduce(
+        plan=plan,
+        confirmations=confirmations,
+        plugin_root_path=plugin_root_path,
+        project_dir=project_dir,
+        io=io,
+        frozen_plan_path=plan_path,
+        env=env,
+        non_interactive=non_interactive,
+    )
 
     # Collect file writes from outcomes
     for out in step_outcomes:

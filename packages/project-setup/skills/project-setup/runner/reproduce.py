@@ -218,6 +218,7 @@ def apply(
     frozen_plan_path: Path,
     *,
     env: dict[str, str] | None = None,
+    non_interactive: bool = False,
 ) -> list[StepOutcome]:
     """Execute confirmed steps for-real after the inspect pass.
 
@@ -247,6 +248,9 @@ def apply(
         Path to the frozen ``plan.json`` on disk.
     env:
         Optional environment variable overrides.
+    non_interactive:
+        When True, gate steps resolve to the SAFE action (skip) without
+        calling ``io.confirm`` — prevents CI deadlock.
 
     Returns
     -------
@@ -307,7 +311,7 @@ def apply(
 
             elif kind == "gate":
                 step_dict = step if isinstance(step, dict) else {"id": step_id, "kind": kind, "message": getattr(step, "message", "")}
-                confirmed = run_gate(step_dict, mod_id, io)
+                confirmed = run_gate(step_dict, mod_id, io, non_interactive=non_interactive)
                 # For gate steps we synthesize a simple outcome
                 gate_result = {
                     "schema_version": _contracts.SCHEMA_VERSION,
