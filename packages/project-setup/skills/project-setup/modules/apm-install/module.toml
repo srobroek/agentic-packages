@@ -1,0 +1,34 @@
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/srobroek/agentic-packages"
+author = "Sjors Robroek"
+
+[module]
+id = "apm-install"
+name = "APM install and compile"
+version = "1.0.0"
+description = "Install APM package primitives and compile Codex/Claude steering."
+default_enabled = true
+reconcile = false
+
+[order]
+after = ["dirs-scaffold", "precommit-setup"]
+
+[[inputs]]
+key = "agentic_packages"
+type = "string"
+prompt = "APM agentic-packages source locator (e.g. core@srobroek-agentic)"
+default = "core@srobroek-agentic"
+required = false
+
+[[inputs]]
+key = "compile_claude"
+type = "bool"
+prompt = "Also compile Claude steering (in addition to Codex)?"
+default = true
+required = false
+
+[[steps]]
+id = "install"
+kind = "python"

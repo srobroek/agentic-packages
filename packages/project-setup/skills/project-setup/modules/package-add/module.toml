@@ -1,0 +1,41 @@
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/srobroek/agentic-packages"
+author = "Sjors Robroek"
+
+[module]
+id = "package-add"
+name = "Add monorepo package"
+version = "1.0.0"
+description = "Create a new package directory inside a monorepo with path-traversal guards."
+default_enabled = false
+reconcile = false
+
+[order]
+
+[[inputs]]
+key = "name"
+type = "string"
+prompt = "Package name (plain name, no path separators or '..')"
+default = ""
+required = true
+
+[[inputs]]
+key = "lang"
+type = "choice"
+prompt = "Package language"
+choices = ["ts", "python", "go", "rust"]
+default = "ts"
+required = true
+
+[[inputs]]
+key = "dir"
+type = "string"
+prompt = "Parent packages directory (relative to project root)"
+default = "packages"
+required = false
+
+[[steps]]
+id = "add"
+kind = "python"
