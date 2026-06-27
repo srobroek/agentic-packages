@@ -2,7 +2,6 @@
 name: speckit-sync
 description: Detects drift between active SpecKit artifacts and implementation, including stale specs, missing code, and unspecced covered-scope behavior. Use for SpecKit sync/drift audits, not final FR/SC acceptance verification.
 model: opus
-tools: ["terminal", "file-manager", "speckit", "codebase-memory-mcp", "repomix"]
 x-agentic:
   codex:
     model: "gpt-5.5"
