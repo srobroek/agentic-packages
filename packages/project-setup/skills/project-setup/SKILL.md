@@ -62,11 +62,42 @@ Each module step has a `kind`:
 - **`agent`** (Tier 2): the step carries a `steering/` doc; you (the agent) follow
   it and record a decision. Consistent, not byte-identical. Its decisions are
   persisted with `agent-steered` provenance.
-- **`gate`**: a confirm checkpoint — show the message, capture yes/no.
+- **`gate`**: a confirm checkpoint — show the message, capture yes/no. Each gate
+  carries a `hardness` (default `hard`) that drives its non-interactive behavior
+  (see "Gates & hardness" below).
 
 Your judgment belongs in `agent` steps and in choosing answers. Never hand-write
 what a `python` step produces; never pass answers as arguments to a module — the
 module reads frozen inputs from disk.
+
+## Gates & hardness (the review checkpoints)
+
+A `gate` step is calibrated by `hardness` so non-interactive/CI runs never deadlock
+and never silently take a consequential action:
+
+| hardness | TTY | `--non-interactive` / CI |
+|---|---|---|
+| `hard` (default) | prompt `[y/N]`, default No | **SAFE-skip** the gated step, unless its `allow_flag` is passed → perform |
+| `soft` | prompt `[Y/n]`, default Yes | proceed, unless its `skip_flag` is passed → SAFE-skip |
+| `informational` | print, no prompt | print, proceed |
+
+A declined/safe-skipped gate **blocks the consequential step it guards** (the
+later `python` writes in that module). CI opts into a specific hard action with a
+**per-action flag** — there is deliberately **no** global "yes-to-all":
+
+- `--allow-public-repo` — create a PUBLIC GitHub repo (G3; private is ungated).
+- `--allow-install` — run the batched `apm install` (G2 supply-chain gate).
+- `--allow-stack-write` — write agent-researched dependency pins (G6).
+- `--no-external-generators` — skip external scaffolders like `nuxi init` (G4 soft).
+
+Other built-in checkpoints: the **whole-plan preview** (init shows the full plan +
+one aggregate confirm before any write — decline = abort, nothing written; CI
+prints + proceeds); a **destructive-overwrite** gate on re-run (a write that would
+clobber locally-edited files is hard-gated; CI safe-skips and preserves them); and
+an **informational cross-module conflict** warning when two modules write the same
+shared file. An `init_only` gate (the pin-review) does not re-prompt on plain
+reproduce — the frozen decision is already consented and replays byte-identically;
+`--refresh` re-arms it.
 
 ## Module sources and bolting on modules
 
@@ -122,12 +153,18 @@ re-propose modules; replay exactly what is recorded.
 **In non-interactive/CI mode** with no committed selection, the runner runs the
 base set only (safe default — no optional modules auto-run).
 
-## Secrets guardrail (non-negotiable)
+## Secrets guardrail (non-negotiable, enforced)
 
 NEVER accept a secret (API key, token, password, private key) as an input value.
-If a user supplies one, tell them it is now **compromised and must be rotated**,
-and do not persist it anywhere. Secrets belong in the runtime environment or a
-secret manager, never in `.project-setup/answers.toml`.
+This is **enforced in code** (G8): an answer matching a known credential shape
+(`ghp_`, `sk-`, `AKIA`/`ASIA`, `glpat-`, `xox[baprs]-`, PEM private keys) is
+refused at the interview boundary — dropped, never written to
+`.project-setup/answers.toml`, and a required input then fails as
+`MISSING_ANSWER`. If a user supplies a secret, tell them it is now **compromised
+and must be rotated**; secrets belong in the runtime environment or a secret
+manager. The matcher is shape-scoped (no entropy heuristic) to avoid false
+positives; an input may declare `allow_secret = true` to opt out for a
+legitimately secret-shaped non-secret value.
 
 ## Safe execution & failure handling
 

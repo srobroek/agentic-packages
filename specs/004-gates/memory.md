@@ -250,11 +250,62 @@ were under-read — re-read for the flag surface).
   step is absent from the frozen plan), not a runtime skip — a runtime skip would
   leave the gate in the plan and risk divergent behavior.
 
-## AS-BUILT (TBD) — how it was actually implemented
+## AS-BUILT (2026-06-28) — how it was actually implemented
 
-*(To be filled in during/after implementation, mirroring the 003 memory AS-BUILT
-section: the refinements vs. this plan sketch, the resolved OQs, and any subtleties
-that emerged when reading the runner. Empty until Phase 1 starts.)*
+Built across the 9 plan phases, each gated on the full suite. Final: **613 passed,
+4 deselected** (+81 gate tests; zero pre-004 regressions). Refinements vs. the plan
+sketch and the resolved OQs:
+
+1. **`init_only` is its own field, not folded into `when`** (FR-006a). The corrected
+   reproduce behavior needed a runtime auto-PROCEED (not a build-time drop like
+   `when`), so it is a distinct `StepSpec.init_only` bool resolved in
+   `run_gate_step` via an `init_only_bypass` arg computed in `reproduce.apply` from
+   `plan.mode == "reproduce"` + `_module_refreshed(mod_id, refresh)`. The gate stays
+   in the frozen plan (so gate-blocking is intact); only the prompt is bypassed.
+2. **G1 REPLACES the per-file init confirm; it does not just precede it** (Phase 2).
+   Reading the code showed f1e7269 routed init through `build_drift_report`'s
+   per-file `io.confirm` loop — which IS anti-pattern #1. So `build_drift_report`
+   gained `interactive_per_diff` (init passes False → gather inspect data without
+   prompting), and `whole_plan_gate` is the one aggregate confirm. Reproduce keeps
+   the per-file loop. The existing init-confirm tests assert end-state only, so they
+   stayed green.
+3. **OQ-3 resolved: side-effect classes are data-driven from `(kind, hardness,
+   allow_flag/skip_flag)`** (no per-module table, no new module API). `allow-install`
+   ⟹ `[installs N pkgs]`, `allow-public-repo` ⟹ `[creates remote]`,
+   `no-external-generators` ⟹ `[runs external generator]`, python+diffs ⟹
+   `[writes file]`, agent ⟹ `[agent decision]`. The inspect outcome's `would …`
+   strings supply the per-line detail.
+4. **OQ-4 resolved: G5 reuses the `kind="modify"` diff signal — NO sidecar hash.**
+   `idempotent_write` already returns `modify` exactly when on-disk ≠ the
+   deterministic re-render (existing bytes differ, reconcile=True). So a `modify`
+   diff in reproduce IS the destructive-overwrite signal; `create`/`skip`/append are
+   not. `build_drift_report` gained `non_interactive` to SAFE-skip a `modify` (CI)
+   and escalate it to a `kind="overwrite"` confirm (TTY).
+5. **OQ-6 / Subtlety 1 resolved with a CLOBBER fix the sketch missed.** Reading
+   `lang-ts/module.py` revealed the scaffolder (`nuxi init --force`) overwrites
+   `package.json`, so "write before scaffold" alone would lose the pins. The split
+   is `write` (deterministic: tsconfig + pinned package.json) → `run-generator`
+   (G4 soft gate) → `scaffold` (generator + **re-merge the frozen pins** via the
+   extracted `_patch_pins_into_package_json`). A declined G4 (gate_blocked) skips
+   only `scaffold`; the pinned package.json already landed.
+6. **OQ-5 resolved: the G8 override is a per-input `allow_secret` manifest flag**,
+   not a CLI flag — self-contained and declarative (consistent with `hardness`/
+   `when`), no new CLI threading. The matcher `sdk.looks_like_secret` is shape-scoped
+   (GitHub/OpenAI/AWS/GitLab/Slack/PEM), enforced in `pipeline._interview_module`.
+7. **OQ-1/OQ-2 resolved: `when` is the three minimal string forms** (`key`,
+   `key == v`, `key != v`) via a hand-rolled splitter (`_when_key`/`eval_when` in
+   manifest.py); bool/literal coercion renders `True`→`"true"`. A `when` key not
+   declared as a module input is a parse-time `MANIFEST_MALFORMED` (typo guard); a
+   declared-but-unset key ⟹ false (gate dropped).
+8. **OQ-7 resolved: `active_flags: frozenset[str]`** threaded `cli.py` →
+   `run_pipeline` → `apply` → `run_gate_step` (the same path `non_interactive`
+   travels); `_active_flags(args)` maps argparse dests → kebab flag names.
+
+**One bug the full-suite gate caught:** the Phase-4 `test_g6_pin_gate_enrichment`
+asserted lang-ts had exactly 1 gate; Phase 5 (G4) added a second (`run-generator`),
+so the test went stale and failed only in the combined run — fixed to select the
+`pins` gate by id. (Vindicates the "don't trust a green isolated run; gate on the
+full suite" discipline.)
 
 ## ASSUMPTIONS made (flagged so they can be corrected)
 

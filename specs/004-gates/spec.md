@@ -5,14 +5,16 @@ dedicated `feat/gates` branch
 
 **Created**: 2026-06-28
 
-**Status**: **Draft (2026-06-28)** — authored after 003 shipped, folding
-`specs/002-agentic-features/gates-analysis.md` (the eight-gate calibration) into a
-buildable spec. Scope confirmed by the user: **all eight gates G1–G8**, nothing
-deferred. The gate primitive, the two-phase plan, the gate-blocking `apply`, and
-the init inspect→confirm→write path that 004 builds on are all **already shipped
-and green** (003 + the f1e7269 init-confirm fix); 004 is **enrichment + four new
-subsystems**, not a rewrite. Open questions (OQ-1 … OQ-7, all design-detail) are in
-`memory.md`; none block authoring `plan.md`.
+**Status**: **Implemented (2026-06-28)** — all 21 FRs built across the 9 plan phases
+and green (full suite: 613 passed, 4 deselected; +81 gate tests, zero pre-004
+regressions). Folded `specs/002-agentic-features/gates-analysis.md` (the eight-gate
+calibration). Scope: **all eight gates G1–G8**, nothing deferred. 004 was
+**enrichment + three new subsystems** (G5/G7/G8) on top of the shipped 003 gate
+primitive + two-phase plan + gate-blocking `apply` + init inspect→confirm→write
+(f1e7269). AS-BUILT refinements (the `init_only` correction, G1 replacing the
+per-file init confirm, the lang-ts scaffold split + pin re-merge, G5 reusing the
+`modify`-diff signal) are recorded in `memory.md` → "AS-BUILT". OQ-1 … OQ-7 were
+resolved during implementation (see `memory.md`).
 
 **Input**: `specs/002-agentic-features/gates-analysis.md` — the grounding survey
 that enumerated eight gates ranked by blast radius, the blast-radius→hardness
