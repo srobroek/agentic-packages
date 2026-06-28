@@ -49,10 +49,16 @@ id = "resolve"
 kind = "agent"
 steering = "steering/resolve.md"
 
+# G6 — agent-decision review (spec 004). HARD + init_only — see lang-python for the
+# rationale (consent the agent's researched pins once at init; replay byte-identical
+# on reproduce; --refresh re-arms; CI opts in via --allow-stack-write).
 [[steps]]
 id = "pins"
 kind = "gate"
-message = "TypeScript stack decision:\n{decision}\nWrite package.json with these EXACT pins?"
+hardness = "hard"
+allow_flag = "allow-stack-write"
+init_only = true
+message = "TypeScript stack decision (agent-resolved, registry-verified):\n{decision}\nWrite package.json with these EXACT pins?"
 
 [[steps]]
 id = "write"

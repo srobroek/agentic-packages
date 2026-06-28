@@ -34,10 +34,19 @@ id = "resolve"
 kind = "agent"
 steering = "steering/resolve.md"
 
+# G6 — agent-decision review (spec 004). HARD gate: the agent researched + picked
+# these pins (model judgment, not determinism), so a human consents before the
+# deterministic write turns them into a frozen, replayed supply-chain artifact.
+# init_only: on plain reproduce the frozen decision is already consented, so the
+# gate auto-proceeds (no prompt, write replays byte-identical); only --refresh
+# re-arms it. CI must pass --allow-stack-write to perform the write at init.
 [[steps]]
 id = "pins"
 kind = "gate"
-message = "Python stack decision:\n{decision}\nWrite pyproject.toml + dev tooling with these EXACT pins?"
+hardness = "hard"
+allow_flag = "allow-stack-write"
+init_only = true
+message = "Python stack decision (agent-resolved, registry-verified):\n{decision}\nWrite pyproject.toml + dev tooling with these EXACT pins?"
 
 [[steps]]
 id = "write"
