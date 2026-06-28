@@ -63,6 +63,10 @@ class InputSpec:
     choices: list[Any] | None = None
     default: Any | None = None
     required: bool = False
+    # G8 escape hatch (spec 004 FR-019): when true, a value matching a secret shape
+    # is NOT refused for this input (rare — only for inputs that legitimately carry a
+    # secret-shaped non-secret). Default false: secret-shaped values are refused.
+    allow_secret: bool = False
 
 
 @dataclass
@@ -348,6 +352,7 @@ def _parse_inputs(
         choices = inp.get("choices")
         default = inp.get("default")
         required = bool(inp.get("required", False))
+        allow_secret = bool(inp.get("allow_secret", False))
 
         if type_str not in _VALID_INPUT_TYPES:
             errors.append(SetupError(
@@ -421,6 +426,7 @@ def _parse_inputs(
             choices=choices,
             default=default,
             required=required,
+            allow_secret=allow_secret,
         ))
     return result
 

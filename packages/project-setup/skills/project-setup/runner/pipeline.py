@@ -70,6 +70,7 @@ _executor_mod = _load_sibling("executor")
 _reproduce_mod = _load_sibling("reproduce")
 _persist_mod = _load_sibling("persist")
 _enablement_mod = _load_sibling("enablement")
+_sdk_mod = _load_sibling("sdk")
 _discover_mod = _load_sources("discover")
 _fetch_mod = _load_sources("fetch")
 _locator_mod = _load_sources("locator")
@@ -87,6 +88,7 @@ validate_closed = _validate_mod.validate_closed
 build_plan = _plan_mod.build_plan
 freeze = _plan_mod.freeze
 detect_mode = _mode_mod.detect_mode
+looks_like_secret = _sdk_mod.looks_like_secret  # G8 secret-shape detection (spec 004)
 build_drift_report = _reproduce_mod.build_drift_report
 apply_reproduce = _reproduce_mod.apply
 run_agent_phase = _reproduce_mod.run_agent_phase
@@ -221,6 +223,23 @@ def _interview_module(
                 value = io.ask(input_spec, default)
         else:
             value = io.ask(input_spec, default)
+
+        # G8 — secret-detected abort (spec 004 FR-018/019). A value matching a known
+        # credential shape is REFUSED: it is dropped (never added to `collected`, so
+        # it never reaches answers.toml), and the user is told to rotate it. A
+        # required input then surfaces as MISSING_ANSWER at the validate-closed gate
+        # — the correct, actionable failure. An input declaring allow_secret=true
+        # opts out (the rare legitimately-secret-shaped non-secret).
+        if value is not None and not getattr(inp, "allow_secret", False):
+            label = looks_like_secret(value)
+            if label is not None:
+                io.notify(
+                    f"[SECRET] input '{key}' looks like a secret ({label}). It will "
+                    f"NOT be persisted — treat it as compromised and rotate it. "
+                    f"Secrets belong in the environment or a secret manager, never "
+                    f"in .project-setup/answers.toml."
+                )
+                continue  # drop the value entirely
 
         if value is not None:
             collected[key] = value

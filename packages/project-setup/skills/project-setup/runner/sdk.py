@@ -25,6 +25,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -413,6 +414,38 @@ def _version_present(data: Any, version: str, ecosystem: str) -> bool:
     if isinstance(times, dict):
         return version in times
     return False
+
+
+# --------------------------------------------------------------------------- #
+# G8 — secret-shape detection (spec 004 FR-018/019)                            #
+# --------------------------------------------------------------------------- #
+# Known credential SHAPES only — deliberately NOT a generic entropy heuristic
+# (which false-positives on UUIDs, hashes, and legitimate high-entropy config,
+# gates-analysis G8). Each entry is (label, compiled-pattern). Add shapes here as
+# new credential formats appear; keep them anchored and specific.
+_SECRET_PATTERNS: list[tuple[str, "re.Pattern[str]"]] = [
+    ("GitHub token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}")),
+    ("OpenAI/Anthropic-style key", re.compile(r"\bsk-[A-Za-z0-9._-]{16,}")),
+    ("AWS access key id", re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
+    ("GitLab PAT", re.compile(r"\bglpat-[A-Za-z0-9_-]{16,}")),
+    ("Slack token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}")),
+    ("PEM private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+]
+
+
+def looks_like_secret(value: Any) -> str | None:
+    """Return a human label if *value* matches a known credential shape, else None.
+
+    Used by the interview/persist boundary (G8) to refuse persisting a secret to
+    ``answers.toml``. Scoped to known key shapes so a non-secret high-entropy string
+    is not falsely blocked; an explicit per-input override is the escape hatch.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    for label, pat in _SECRET_PATTERNS:
+        if pat.search(value):
+            return label
+    return None
 
 
 # --------------------------------------------------------------------------- #
