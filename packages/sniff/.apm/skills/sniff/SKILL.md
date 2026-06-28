@@ -75,19 +75,30 @@ Run these in order. The full procedure, with stop/report points, is in
    adequate.** Install only approved bundles; never auto-install. (Non-interactive
    runs skip the menu: use what's present, record gaps.) See
    `references/installer.md`.
+   - **2.5. Inventory project lint config FIRST (mandatory).** Before running any
+     tool, find and read every config that governs it (`[lints.clippy]`/
+     `clippy.toml`, `[tool.ruff]`/`[tool.mypy]`, `eslint.config.*`/`biome.json`/
+     `tsconfig.json`, `.golangci.yml`, `.shellcheckrc`, `.editorconfig`, …).
+     **Honor it** — it dictates each invocation. Forcing rules a repo disabled
+     (e.g. clippy `-W pedantic` on a repo that pins clippy config) floods the run
+     with deliberately-allowed warnings — the skill's worst failure mode. A rule
+     the project disabled is **advisory at most, never a regression**. See
+     `references/workflow.md` Step 2.5.
 3. **Tool-driven detection.** For each detected language, run the installed
    tools per `references/tooling.md` (exact invocation + machine-readable
-   output flag), respecting project config. Skip + warn + record an install
-   hint for any absent tool. Collect findings; do not guess where a tool could
-   have answered.
+   output flag), **honoring the Step 2.5 config inventory** (the docs'
+   invocations are the no-config fallback, not an override). Skip + warn + record
+   an install hint for any absent tool. Collect findings; do not guess where a
+   tool could have answered.
 4. **Detection reading.** For smells tools cannot see (naming, design, idiom,
    abstraction level), read the code guided by the relevant
    `references/languages/<lang>.md`. LOAD only the docs for languages actually
-   present. On a multi-language or large codebase, fan out the `bloodhound`
-   agent — **one per detected language, in parallel** — building each Brief from
-   `references/scout-brief.md`. bloodhound runs that language's tools, reads its
-   code, and returns structured findings only. On a small single-language repo,
-   read inline instead.
+   present. Small target → read inline. Otherwise **propose a `bloodhound`
+   fan-out plan and let the user adjust it** — one hound per language as the
+   floor, splitting any oversized language across several hounds by subtree/crate
+   (don't fix it at one-per-language). Build each Brief from
+   `references/scout-brief.md`, **handing each hound its Step-3 tool findings** so
+   it verifies + adds the reading layer rather than re-running the tools.
 5. **Map to refactoring.guru.** For each finding, attach the smell name, the
    recommended refactoring pattern(s) and technique(s), and the canonical URL
    from `references/refactoring-catalog.md`. Fetch the full technique page only
@@ -176,5 +187,5 @@ verdicts with reasons, spawn decisions). It changes what's *shown*, never what's
 
 | Agent | Role | Spawned |
 |-------|------|---------|
-| `bloodhound` | Read-only per-language smell detector | Step 4, one per language, parallel |
+| `bloodhound` | Read-only per-language smell detector | Step 4, per-language (large languages split across several), parallel; user-adjustable plan |
 | `refactor-challenger` | Read-only adversarial pragmatism critic | Step 6, once over the finding set |

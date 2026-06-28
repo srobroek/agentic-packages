@@ -30,11 +30,14 @@ reference doc (`references/languages/<lang>.md`). Work only from that.
 1. **Read your language doc first.** It lists this language's specific smells,
    idioms, the exact tools and their invocations, and the refactoring.guru
    mappings. Use it as your checklist — do not improvise the smell catalog.
-2. **Run the installed tools** named in the Brief, using the exact invocation
-   and machine-readable output flag from the language doc. Respect project
-   config (the repo's own linter/analyzer config files). For any tool listed in
-   the doc but NOT in the Brief's installed set, record it as a coverage gap —
-   do not fail.
+2. **Use the static-analysis findings the Brief HANDS you — do not re-run those
+   tools.** The main thread already ran the linters/analyzers config-correctly;
+   the Brief gives you their findings. Verify and contextualize them (confirm
+   each against the code, drop tool false positives), but do NOT re-invoke
+   clippy/ruff/eslint yourself — that wastes a compile and risks a config-blind
+   invocation. Only run a tool yourself if the Brief explicitly lists it under
+   "Tools to run YOURSELF" (i.e. Step 3 didn't cover it here). A tool neither
+   handed nor listed is a coverage gap — record it, don't fail.
 3. **Read the code for what tools cannot see:** naming, cohesion, abstraction
    level, design smells, non-idiomatic constructs, duplication tools missed.
    Confirm each by reading the actual code — never report a smell you have not
