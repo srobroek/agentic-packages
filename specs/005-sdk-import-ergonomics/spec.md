@@ -8,10 +8,12 @@
 (commit `7779c27`): the executor injects `runner/` on `PYTHONPATH` (`executor.py:323`)
 and **18** `module.py` files replaced `_load_sdk()` with the 3-line `import sdk` shim
 (OQ-1 → shim, resolved). shared-contracts §6 amended (FR-004). **OQ-2 (the
-runner-internal `_load_sibling` dedup, decision C) re-examined 2026-06-28 — see Open
-Questions.** A clean seam was found to EXIST (contradicting the original "no clean
-seam" lean), but it is held as a separate, optional refactor (rationale below), not
-folded into this spec. So the spec as scoped (modules only) is complete.
+runner-internal `_load_sibling` dedup, decision C) was ALSO implemented 2026-06-28
+(commit `5eccab9`)** — the 12 runner files now use plain imports via a `sys.path`
+seam (cli.py + tests/conftest.py) + an `sdk.py` self-bootstrap for the
+module-subprocess path. Full suite green (613) on both the modules cut and the
+runner cut. See Open Questions → OQ-2 for the resolution + the two findings the
+original deferral missed.
 
 **Input**: The leanness audit's top deferred theme — the import-by-path SDK
 bootstrap (`_load_sdk` in modules, `_load_sibling` in the runner) is duplicated
@@ -111,9 +113,11 @@ the import path.
 
 ## Out of Scope
 
-- The runner-internal `_load_sibling` dedup (decision C — separate, thinner, stretch).
+- ~~The runner-internal `_load_sibling` dedup (decision C)~~ — was out of scope at
+  authoring, but **implemented after all** (OQ-2 resolved, commit `5eccab9`).
 - Introducing a `pyproject`/editable install (explicitly rejected by 001; the whole
-  point is to stay install-free).
+  point is to stay install-free). Still out of scope — the `sys.path` seam keeps the
+  runner install-free.
 - Any change to the SDK's public API or module result shape.
 
 ## Open Questions
@@ -129,27 +133,30 @@ the import path.
   footgun on the happy path. The executor STILL adds `runner/` to `PYTHONPATH`
   (FR-001) so the `try` arm is taken in production; the `except` arm covers
   direct-invocation tests + any non-executor caller.
-- **OQ-2 (scope) — RE-EXAMINED 2026-06-28: a clean seam EXISTS, but DEFER as a
-  separate optional refactor.** The original lean ("defer; no clean seam") was based
-  on the wrong mechanism (a shared `_bootstrap.py` that still needs its own
-  bootstrap). A cleaner seam was found and **empirically verified** in an isolated
-  3-file layout: a single `sys.path.insert(0, <runner>)` (+ `<runner>/sources`) at
-  EACH entry point — `cli.py` and a test `conftest.py` — lets all 12 runner files use
-  plain `import contracts` / `import executor`, and the `@dataclass(Exception)`
-  footgun disappears (a real import registers in `sys.modules` before its body runs).
-  Scale: 12 files, ~41 `_load_sibling` + 4 `_load_sources` call sites; ~49 test files
-  use the parallel `_load(name)` importlib pattern and would each rely on the
-  conftest `sys.path` insert.
+- **OQ-2 (scope) — RESOLVED + IMPLEMENTED 2026-06-28 (commit `5eccab9`).** The 12
+  runner files now use plain `import <name>` (`_load_sibling`/`_load_sources` removed).
+  Seam: `cli.py` + a new `tests/conftest.py` insert `runner/` + `runner/sources/` on
+  `sys.path`; the `uv run module.py` subprocess path is covered by the executor
+  PYTHONPATH (FR-001). Full suite **613 passed** — pure load-mechanism refactor, zero
+  behavior change.
 
-  **Why still DEFER (the decision):** (1) it is a pure-leanness refactor with NO
-  behavior change — high blast-radius across the whole runner + 49 test files for a
-  cosmetic win; (2) some `_load_sibling` calls are LAZY, inside functions,
-  explicitly "to avoid circular at module level" (e.g. `reproduce.py:466` loading
-  `executor`) — converting those to top-level `import` risks reintroducing
-  circular-import breakage that the lazy path-load currently sidesteps, so it is NOT
-  a blind find/replace; (3) the modules side (the bulk — 18 files) is already done
-  here. Net: the seam is real and documented, but the win does not justify the
-  risk/churn now. Tracked as a standalone optional cleanup, not part of 005.
+  **Two things the original deferral got wrong / missed (recorded so they aren't
+  re-derived):**
+  1. **No real circular-import risk existed** — the stated reason to defer. The two
+     `reproduce.py` lazy `_load_sibling("executor")` calls were commented "avoid
+     circular at module level" but `executor` does NOT import `reproduce` (verified);
+     they were cargo-cult and `reproduce` already bound `executor` at module level.
+     Replaced with the module-level binding.
+  2. **The ACTUAL risk was unflagged:** a `module.py` subprocess loads `sdk.py` BY
+     PATH (the `import sdk` shim's fallback arm) in a context where `runner/` is NOT
+     on `sys.path` (module tests invoke `uv run module.py` directly, bypassing the
+     executor's PYTHONPATH — the OQ-1 finding). `sdk.py`'s new `import contracts`
+     then raised `ModuleNotFoundError`. **Fix:** `sdk.py` self-bootstraps its own dir
+     onto `sys.path` before importing siblings, so the whole sdk closure (contracts,
+     plan → paths/manifest) resolves however sdk is loaded. Caught by the full-suite
+     gate (module-subprocess tests), then fixed. This is the seam the "no clean seam"
+     lean and the later "circular risk" lean both missed — the real subtlety was the
+     by-path subprocess load, not cycles.
 - **OQ-3 (examples)**: the `examples/` modules live two levels deeper; confirm the
   executor's runner-dir resolution covers the example path layout too.
 
