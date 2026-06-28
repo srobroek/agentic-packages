@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.1.0...sniff--v2.2.0) (2026-06-28)
+
+
+### Features
+
+* **sniff:** complete tool catalog + propose-full-set selection model [skip tests] ([#411](https://github.com/srobroek/agentic-packages/issues/411)) ([99c8ea6](https://github.com/srobroek/agentic-packages/commit/99c8ea63ba7b273e5bccf0e4b5d4533d7d7f449c))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.1...sniff--v2.1.0) (2026-06-28)
 
 
