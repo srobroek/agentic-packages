@@ -5,7 +5,13 @@ dedicated `feat/agents-md-architecture` branch
 
 **Created**: 2026-06-28
 
-**Status**: **Draft (2026-06-28)**
+**Status**: **Implemented (2026-06-28)** — all FRs (FR-001…FR-012) built and green
+(commit `8c7e40c`); SDK primitives `scan_top_level_dirs`/`splice_between_sentinels`
+(`sdk.py:276`/`:300`) + the agents-md `resolve-arch`→`arch-gate`→`splice` steps on
+the proven 003/004 machinery (zero runner change). 28 spec tests pass (13
+`test_sdk_splice.py` + 15 `test_module_agents_md.py`); full suite green (648 passed,
+4 deselected). SC-001/005/006/008 are runner-level and honestly DEFERRED
+(covered-by-construction via `test_two_phase_resolver.py`); see `memory.md` → AS-BUILT.
 
 **Input**: Roadmap rank #4 `agents-md-architecture-section` from
 `reviews/tier2-agentic-features-roadmap.md:53-57` — "stack-aware conventions in

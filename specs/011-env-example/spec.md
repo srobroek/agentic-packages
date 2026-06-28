@@ -4,7 +4,17 @@
 
 **Created**: 2026-06-28
 
-**Status**: **Draft (2026-06-28)**
+**Status**: **Implemented (2026-06-28)** — the new opt-in `env-example` module shipped
+and green (commit `fd10832`): `module.toml` declares the `resolve`(agent)→`preview`(soft,
+`init_only`, `{decision}` gate)→`write`(python) seam with `after=["lang-python","lang-ts"]`
+(soft, no `requires`) and inputs `framework_python`/`framework_ts`/`extra_env_hints`;
+`module.py` hard-codes `_OUTPUT_PATH=".env.example"` (FR-012), hard-refuses any placeholder
+that `looks_like_secret` flags and any empty secret-class placeholder (FR-008/009),
+skips+warns invalid names (FR-010), and writes a sorted preamble + `KEY=placeholder  # comment`
+body via `idempotent_write` (FR-011). Zero runner change — reuses 003+004. 10 module tests
+green; full suite green (648 passed, 4 deselected). SC-005/006/009 are runner-level and
+honestly DEFERRED (covered-by-construction via `test_two_phase_resolver.py`); see
+`memory.md` → AS-BUILT.
 
 **Input**: Roadmap rank #9 (`reviews/tier2-agentic-features-roadmap.md:83-87`) —
 "env-example-from-stack (.env.example derived from stack)". Medium value / small

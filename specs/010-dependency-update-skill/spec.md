@@ -5,7 +5,10 @@ dedicated `feat/dep-update-skill` branch
 
 **Created**: 2026-06-28
 
-**Status**: Draft (2026-06-28)
+**Status**: **Implemented (2026-06-28)** — standalone APM skill shipped and green
+(commit `0aed56a`): all FR-001…FR-021 and SC-001…SC-010 built; 36 bats tests pass
+(`packages/dep-update/tests/dep-update.bats`). BATS-only by design (no pipeline
+module), so it is not part of the project-setup pytest suite. See `memory.md` → AS-BUILT.
 
 **Input**: Roadmap rank #8 (`reviews/tier2-agentic-features-roadmap.md:78-81`) —
 "dependency-update / upgrade-advisory as a STANDALONE skill". The roadmap is
