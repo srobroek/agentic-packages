@@ -13,12 +13,25 @@ Confirm with the user (or infer from the request) which scope mode applies:
 - **full** (default) — every step below.
 - **plan-only** — steps 1–6; never apply in step 7, even on approval.
 
-Also establish the **target** (resolved in step 0.5): whole repo, a
-subtree/module, a diff, a commit/range/branch, a PR, or named files. **There is
-no default target** — if the user did not name one, ask. Do not assume whole repo
-on a bare "sniff": a whole-repo sweep is the most expensive option and rarely the
-intent. Offer the common choices (uncommitted changes / a dir / a PR / whole repo)
-and wait for an answer before Step 0.5.
+Also establish the **target** (resolved in step 0.5). **There is no default
+target** — if the user did not name one, ask in **two steps**, and wait:
+
+1. **Target KIND** — present the full taxonomy every time: `whole repo` ·
+   `language/area filter` (just Rust, just the frontend, …) · `directory/module`
+   · `file(s)` · `uncommitted changes` · `commit` · `commit range / branch
+   compare` · `PR`. A `language/area filter` is a distinct kind, NOT a
+   `directory/module`: "just Rust" = every `.rs` wherever it lives, "the
+   frontend" may span dirs — resolve by detected-language / area glob, not one
+   path. Don't drop the ref kinds (commit/range/branch/PR) when the tree is clean.
+2. **Specifics** — once they pick a kind that takes an argument, ask for it
+   (which language(s)/area, which dir/file, which commit SHA, which base/head or
+   branch, which PR#). `whole repo` and `uncommitted changes` need no follow-up.
+3. **Kinds compose.** A language/area filter layers on any other kind — "the Rust
+   in this PR" is the PR file set intersected with `.rs`. Offer it as a
+   refinement, and accept it combined with another kind.
+
+Do not assume whole repo on a bare "sniff" — it is the most expensive option and
+rarely the intent. Resolve the chosen target in Step 0.5.
 
 ### Debug mode (orthogonal toggle — combine with any scope mode)
 
