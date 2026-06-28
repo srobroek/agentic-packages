@@ -16,9 +16,21 @@ answered. These are blocking gates, not preferences — skipping them is the mos
 common failure of this skill. If you have already started scanning without
 asking, stop and ask now.
 
-1. **Which target?** If the user did not explicitly name one, ask — and wait:
-   > "What should I sniff — your uncommitted changes, a specific dir/file, a
-   > commit/PR, or the whole repo?"
+1. **Which target?** If the user did not explicitly name one, ask in **two
+   steps** — do not improvise a single mixed menu, and do not drop options:
+   - **Step 1a — pick the target KIND.** Offer the full taxonomy, every time:
+     `whole repo` · `language/area filter` (e.g. just Rust, just the frontend) ·
+     `directory/module` · `file(s)` · `uncommitted changes` · `commit` ·
+     `commit range / branch compare` · `PR`. A `language/area filter` is its own
+     kind — NOT a `directory/module`: in a polyglot repo "just Rust" means all
+     `.rs` wherever they live and "the frontend" may span several dirs, so it
+     resolves by detected-language / area glob, not one path. Don't omit the ref
+     kinds (commit/range/branch/PR) just because the tree is clean.
+   - **Step 1b — pin the specifics.** Once they pick a kind that needs an
+     argument, ask for it: which language(s)/area, which dir/file, which commit
+     SHA, which base/head or branch, which PR number. (whole repo / uncommitted
+     need no follow-up.) Kinds **compose** — "the Rust in this PR" = PR target
+     filtered to `.rs`; offer/accept a language filter on top of any other kind.
    Do **not** assume whole repo. A whole-repo sweep is the most expensive option
    and almost never what a bare "sniff" means.
 2. **Which tool depth?** After resolving the target, run

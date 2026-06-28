@@ -18,14 +18,20 @@ shares one file list and (when relevant) one checkout.
 
 | Target | User phrasing | Resolve file set | Base ref | Materialize |
 |--------|---------------|------------------|----------|-------------|
-| **Whole repo** (default) | "sniff the codebase" | repo root (respect `.gitignore`) | — | in place |
-| **Working tree** | "my changes", "uncommitted" | `git diff --name-only` + `--staged` + untracked (`git ls-files --others --exclude-standard`) | `HEAD` | in place |
+| **Whole repo** | "sniff the codebase" | repo root (respect `.gitignore`) | — | in place |
+| **Language / area filter** | "just Rust", "the frontend", "only the Python" | filter the file set to that language's extensions (`.rs`, `.py`, …) or that area's globs (`frontend/**`, `apps/web/**`) — resolve by language/area, NOT one path; the files may be scattered across dirs/crates | — | in place (or layered, below) |
 | **Module / dir** | "the auth module", "src/parser/" | glob the subtree | — | in place |
 | **File(s)** | "sniff foo.py" | explicit paths | — | in place |
+| **Working tree** | "my changes", "uncommitted" | `git diff --name-only` + `--staged` + untracked (`git ls-files --others --exclude-standard`) | `HEAD` | in place |
 | **Commit** | "commit abc123", "last commit" | `git show --name-only --pretty=format: <sha>` | `<sha>^` | worktree (recommended) |
 | **Commit range / branch compare** | "since main", "last 3 commits" | `git diff --name-only <base>...<head>` | `<base>` | worktree at head (recommended) |
 | **Branch** | "sniff branch feature-x" | `git diff --name-only <base>...<branch>` | merge-base with default branch | worktree |
 | **PR** | "PR #42", a PR URL | `gh pr diff <n> --name-only` | PR base ref | worktree |
+
+**A language/area filter composes with any other kind** — apply it as an
+intersection on that kind's file set. "the Rust in this PR" = the PR file set
+kept to `.rs`; "just the frontend, uncommitted" = the working-tree diff kept to
+`frontend/**`. Resolve the base kind first, then filter.
 
 Reduce every target to an explicit, deduplicated **file list** before step 1.
 Drop deleted files (a diff lists them; nothing to sniff), then apply the
