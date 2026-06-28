@@ -29,6 +29,29 @@ prompt = "Also compile Claude steering (in addition to Codex)?"
 default = true
 required = false
 
+# G2 — consolidated dependency-install approval (spec 004). HARD gate, the
+# supply-chain checkpoint: it lists every package to be installed (each runs
+# arbitrary code/hooks/MCP) so a human can eyeball for typosquats before one
+# batched confirm. CI must pass --allow-install; otherwise it SAFE-skips the
+# install and the python step prints the manual `apm install …` command.
+# The baseline list below MUST stay in sync with _BASELINE_MCP in module.py;
+# the user-selected locator is rendered from the frozen answers via {decision}.
+[[steps]]
+id = "confirm-install"
+kind = "gate"
+hardness = "hard"
+allow_flag = "allow-install"
+message = """Install APM packages — each runs arbitrary code, hooks, and MCP servers. Review for typosquats before approving.
+
+baseline (always):
+  - mcp-codebase-memory@srobroek-agentic
+  - mcp-context7@srobroek-agentic
+  - mcp-package-version@srobroek-agentic
+  - mcp-repomix@srobroek-agentic
+
+you/agent selected:
+{decision}"""
+
 [[steps]]
 id = "install"
 kind = "python"
