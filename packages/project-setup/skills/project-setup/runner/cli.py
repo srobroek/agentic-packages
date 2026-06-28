@@ -117,6 +117,19 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="VERSION",
         help="Advisory version string written to sources.toml [meta] section.",
     )
+    p.add_argument(
+        "--refresh",
+        action="append",
+        default=None,
+        metavar="MODULE[.KEY]",
+        help=(
+            "Reproduce mode only: re-research the named Tier-2 agent decision(s). "
+            "Pass a module id (e.g. 'lang-python') or a module.key. Repeatable. "
+            "Each refreshed decision is shown as an old-vs-new diff and applied "
+            "only on confirm; all other agent steps replay their committed "
+            "decision with zero network. Ignored in init mode."
+        ),
+    )
     return p
 
 
@@ -145,6 +158,7 @@ def main(argv: list[str] | None = None) -> int:
             skill_version=args.skill_version,
             non_interactive=args.non_interactive,
             dry_run=args.dry_run,
+            refresh=args.refresh,
         )
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)

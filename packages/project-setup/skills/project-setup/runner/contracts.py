@@ -222,3 +222,30 @@ def canonical_json(data: Any) -> str:
     """
 
     return json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+
+
+# --------------------------------------------------------------------------- #
+# Decision rendering (shared by gate-message composition + --refresh diff)     #
+# --------------------------------------------------------------------------- #
+def render_answer_block(answers: dict[str, Any]) -> str:
+    """Render an answer map as a compact, key-sorted human-readable block.
+
+    Used by two-phase execution (Settled Decision H of spec 003): a ``kind=gate``
+    step whose ``message`` contains the ``{decision}`` token has it replaced with
+    this rendering of the module's resolved answers (so a Tier-2 pin-table gate
+    can show the agent's frozen decision through the bare gate primitive), and the
+    ``--refresh`` flow uses it for the old-vs-new diff. Generic: it renders
+    whatever keys a module's answers carry, with no resolver-specific knowledge.
+    Empty / None / empty-list values are omitted so the block stays signal-only.
+    """
+    lines: list[str] = []
+    for key in sorted(answers):
+        val = answers[key]
+        if val is None or val == "" or val == []:
+            continue
+        if isinstance(val, (list, tuple)):
+            rendered = ", ".join(str(x) for x in val)
+        else:
+            rendered = str(val)
+        lines.append(f"  - {key}: {rendered}")
+    return "\n".join(lines) if lines else "  (no decision values)"

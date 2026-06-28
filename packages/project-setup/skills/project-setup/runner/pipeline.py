@@ -89,6 +89,7 @@ freeze = _plan_mod.freeze
 detect_mode = _mode_mod.detect_mode
 build_drift_report = _reproduce_mod.build_drift_report
 apply_reproduce = _reproduce_mod.apply
+run_agent_phase = _reproduce_mod.run_agent_phase
 
 write_sources_toml = _persist_mod.write_sources_toml
 write_answers_toml = _persist_mod.write_answers_toml
@@ -240,6 +241,7 @@ def run_pipeline(
     plugin_root_path: Path | None = None,
     plan_path: Path | None = None,
     env: dict[str, str] | None = None,
+    refresh: list[str] | None = None,
 ) -> PipelineResult:
     """Run the 8-stage project-setup pipeline.
 
@@ -263,6 +265,12 @@ def run_pipeline(
         Override frozen plan path (tests inject a tmp path).
     env:
         Optional environment overrides for subprocess calls.
+    refresh:
+        Optional list of ``<module>`` or ``<module>.<key>`` tokens. In reproduce
+        mode these are the ONLY agent steps re-invoked (re-researched); every
+        other agent step replays its committed decision with zero network. Each
+        refreshed module is gated by an old-vs-new diff confirm. Ignored in init
+        mode (init always invokes agents). See spec 003 FR-010.
 
     Returns
     -------
@@ -468,7 +476,27 @@ def run_pipeline(
             io.notify(f"[GATE ERROR] {err.how_to_fix}")
         return result
 
-    # ── Stage 6: build + freeze plan ────────────────────────────────────────── #
+    # ── Stage 5b: Phase A — agent research/decision pass (two-phase plan) ────── #
+    # Spec 003 Settled Decision H (option B): run every kind=agent step BEFORE the
+    # plan is frozen, fold each agent-steered decision into the resolved answers,
+    # then freeze ONCE so a Tier-1 python step reads the agent's pins through the
+    # frozen plan. In plain reproduce this is a no-op for agent steps (committed
+    # agent-steered answers are already in final_answers — zero-network replay,
+    # FR-009); --refresh re-invokes only the named keys behind a diff gate (FR-010).
+    # When NO module has an agent step, run_agent_phase returns the maps unchanged,
+    # so non-Tier-2 runs are byte-identical to the prior single-freeze behavior.
+    if not dry_run:
+        final_answers, provenance_map = run_agent_phase(
+            manifests,
+            ordered_ids=ordered_ids,
+            resolved_answers=final_answers,
+            provenance_map=provenance_map,
+            io=io,
+            mode=mode,
+            refresh=refresh,
+        )
+
+    # ── Stage 6: build + freeze plan (the single authoritative freeze) ───────── #
     plan = build_plan(
         manifests,
         resolved_answers=final_answers,

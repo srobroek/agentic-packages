@@ -73,11 +73,22 @@ class FrozenInputs:
         self._answers: dict[str, Any] = dict(module_entry.answers)
         self._reconcile: bool = bool(module_entry.reconcile)
         self._module_id: str = module_entry.id
+        self._mode: str = getattr(plan, "mode", "init")
 
     @property
     def reconcile(self) -> bool:
         """Whether the module runs in reconcile mode (overwrite-to-match)."""
         return self._reconcile
+
+    @property
+    def mode(self) -> str:
+        """The run mode of the frozen plan: ``"init"`` or ``"reproduce"``.
+
+        A Tier-2 resolver uses this to gate network work: registry pin
+        verification runs in ``init`` (the pins were freshly decided this run);
+        on ``reproduce`` the pins are already frozen + were verified at init, so
+        verification is skipped to keep reproduce zero-network (spec 003)."""
+        return self._mode
 
     def _get(self, key: str, default: Any = None) -> Any:
         return self._answers.get(key, default)
@@ -301,6 +312,147 @@ def tool_or_fallback(name: str, run: Any, fallback: Any) -> Any:
     """
     import shutil
     return run if shutil.which(name) is not None else fallback
+
+
+# --------------------------------------------------------------------------- #
+# verify_pins — MCP-free registry verification (spec 003 FR-005/006/007)       #
+# --------------------------------------------------------------------------- #
+# Per-pin verification status.
+PIN_VERIFIED = "verified"          # the exact version exists on the registry
+PIN_DISCONFIRMED = "disconfirmed"  # registry answered, version absent/yanked/bad name
+PIN_UNREACHABLE = "unreachable"    # registry could not be reached (offline/timeout)
+
+_PYPI_JSON = "https://pypi.org/pypi/{name}/json"
+_NPM_JSON = "https://registry.npmjs.org/{name}"
+
+
+def _split_pin(pin: str) -> tuple[str, str]:
+    """Split a ``name@version`` pin. npm scoped names (``@scope/pkg@1.2.3``)
+    keep their leading ``@``; the version is the part after the LAST ``@``."""
+    s = str(pin).strip()
+    at = s.rfind("@")
+    if at <= 0:  # no '@', or only the leading scope '@' → no explicit version
+        return s, ""
+    return s[:at], s[at + 1:]
+
+
+def _registry_get(url: str, timeout: float) -> Any:
+    """GET *url* and parse JSON. Returns the parsed object, or ``None`` for a
+    404/missing package (a definitive "does not exist"), or raises on a transport
+    error (caller maps that to UNREACHABLE). Stdlib urllib only — no MCP, no
+    third-party HTTP client (FR-006)."""
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310 (https only)
+            return _json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None  # package does not exist — definitive disconfirm
+        raise  # other HTTP errors are transport-ish → unreachable
+    # URLError / socket timeout / OSError propagate → caller marks UNREACHABLE.
+
+
+def verify_pins(
+    pins: list[str],
+    ecosystem: str,
+    *,
+    timeout: float = 10.0,
+    _opener: Any = None,
+) -> dict[str, str]:
+    """Verify each ``name@version`` pin against its package registry, MCP-free.
+
+    The mandatory, MCP-free pin verification of spec 003 (FR-005/006/007): every
+    pin a Tier-2 resolver proposes is checked to actually exist on the live
+    registry BEFORE it is gated or written, so hallucinated / typosquatted /
+    yanked versions are rejected. Correctness never depends on any MCP server.
+
+    Parameters
+    ----------
+    pins:
+        A list of ``name@exact-version`` strings (npm scoped names supported).
+    ecosystem:
+        ``"pypi"`` (Python) or ``"npm"`` (TypeScript/JS).
+    timeout:
+        Per-request timeout in seconds.
+    _opener:
+        Test seam: a callable ``(url, timeout) -> parsed-json | None`` used in
+        place of the real network fetch (so unit tests need no network). When
+        ``None`` the stdlib ``_registry_get`` is used.
+
+    Returns
+    -------
+    dict[str, str]
+        Maps each input pin to one of ``PIN_VERIFIED`` / ``PIN_DISCONFIRMED`` /
+        ``PIN_UNREACHABLE``. A pin with no explicit version is ``DISCONFIRMED``
+        (the resolver contract forbids ranges/"latest"). The CALLER decides
+        policy: a disconfirmed pin is rejected (INPUT_VALUE_INVALID, fail-closed);
+        an unreachable pin is reported + SAFE-skipped, never silently written
+        (spec FR-012; resolves OQ-4).
+    """
+    eco = str(ecosystem).lower()
+    if eco not in ("pypi", "npm"):
+        raise SetupError(
+            error_code=ErrorCode.INPUT_VALUE_INVALID,
+            expected="ecosystem in {'pypi', 'npm'}",
+            received=f"ecosystem={ecosystem!r}",
+            how_to_fix="verify_pins() supports 'pypi' and 'npm' registries only.",
+        )
+
+    get = _opener or _registry_get
+    url_tmpl = _PYPI_JSON if eco == "pypi" else _NPM_JSON
+    out: dict[str, str] = {}
+
+    for pin in pins:
+        name, version = _split_pin(pin)
+        if not name or not version:
+            out[pin] = PIN_DISCONFIRMED  # ranges / "latest" / bare name → reject
+            continue
+        try:
+            data = get(url_tmpl.format(name=name), timeout)
+        except Exception:  # noqa: BLE001 — any transport error → unreachable
+            out[pin] = PIN_UNREACHABLE
+            continue
+        if data is None:
+            out[pin] = PIN_DISCONFIRMED  # 404 — package does not exist
+            continue
+        out[pin] = PIN_VERIFIED if _version_present(data, version, eco) else PIN_DISCONFIRMED
+
+    return out
+
+
+def _version_present(data: Any, version: str, ecosystem: str) -> bool:
+    """Return True iff *version* exists (and is not yanked) in the registry JSON.
+
+    PyPI: ``releases`` is a map of version → list of file dicts; a version whose
+    files are ALL ``yanked`` is treated as absent. npm: ``versions`` is a map of
+    version → manifest; ``time[version]`` also implies existence.
+    """
+    if not isinstance(data, dict):
+        return False
+    if ecosystem == "pypi":
+        releases = data.get("releases")
+        if isinstance(releases, dict):
+            files = releases.get(version)
+            if files is None:
+                return False
+            if isinstance(files, list) and files and all(
+                isinstance(f, dict) and f.get("yanked", False) for f in files
+            ):
+                return False  # every distribution for this version is yanked
+            return True
+        # Fallback: the top-level info.version (latest) — exact-match only.
+        return data.get("info", {}).get("version") == version
+    # npm
+    versions = data.get("versions")
+    if isinstance(versions, dict):
+        return version in versions
+    times = data.get("time")
+    if isinstance(times, dict):
+        return version in times
+    return False
 
 
 # --------------------------------------------------------------------------- #

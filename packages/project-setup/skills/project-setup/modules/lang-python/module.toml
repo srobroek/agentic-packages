@@ -30,5 +30,15 @@ default = ""
 required = false
 
 [[steps]]
+id = "resolve"
+kind = "agent"
+steering = "steering/resolve.md"
+
+[[steps]]
+id = "pins"
+kind = "gate"
+message = "Python stack decision:\n{decision}\nWrite pyproject.toml + dev tooling with these EXACT pins?"
+
+[[steps]]
 id = "write"
 kind = "python"

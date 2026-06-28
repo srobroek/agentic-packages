@@ -311,3 +311,331 @@ def test_inspect_writes_nothing(tmp_path):
 
     # tsconfig.json must not be written in inspect mode
     assert not (project / "tsconfig.json").exists()
+
+
+# ── SC-001 / SC-006: pin verification behaviour ───────────────────────────────
+
+def _frozen_plan_with_pins(
+    tmp: Path,
+    *,
+    mode: str = "init",
+    framework: str = "plain",
+    package_manager: str = "bun",
+    pinned_deps: list[str] | None = None,
+    dev_deps: list[str] | None = None,
+    package_manager_pin: str = "bun@1.1.38",
+) -> Path:
+    """Build a frozen plan.json that carries resolved agent pins."""
+    plan = {
+        "schema_version": 1,
+        "mode": mode,
+        "order": ["lang-ts"],
+        "modules": {
+            "lang-ts": {
+                "id": "lang-ts",
+                "version": "1.0.0",
+                "reconcile": True,
+                "module_rel_root": _MODULE_REL,
+                "answers": {
+                    "package_manager": package_manager,
+                    "framework": framework,
+                    "target": "",
+                    "ui_kit": "",
+                    "pinned_deps": pinned_deps if pinned_deps is not None else ["vue@3.5.13"],
+                    "dev_deps": dev_deps if dev_deps is not None else ["typescript@5.7.2", "@biomejs/biome@1.9.4"],
+                    "package_manager_pin": package_manager_pin,
+                },
+                "steps": [{"id": "write", "kind": "python"}],
+            }
+        },
+    }
+    p = tmp / "plan.json"
+    p.write_text(json.dumps(plan))
+    return p
+
+
+def _load_module_inprocess():
+    """Load module.py in-process with SDK pre-wired.
+
+    Returns the loaded module object.  Idempotent: re-uses cached modules.
+    """
+    runner_dir = _PLUGIN_ROOT / "runner"
+    # Pre-load SDK dependencies
+    for dep in ("contracts", "plan", "sdk"):
+        mod_key = dep if dep != "sdk" else "ps_sdk"
+        if mod_key not in sys.modules:
+            dspec = importlib.util.spec_from_file_location(
+                mod_key, runner_dir / f"{dep}.py"
+            )
+            assert dspec and dspec.loader
+            dmod = importlib.util.module_from_spec(dspec)
+            sys.modules[mod_key] = dmod
+            dspec.loader.exec_module(dmod)
+
+    module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
+    if "lang_ts_mod" in sys.modules:
+        return sys.modules["lang_ts_mod"]
+    mspec = importlib.util.spec_from_file_location("lang_ts_mod", module_py)
+    assert mspec and mspec.loader
+    mmod = importlib.util.module_from_spec(mspec)
+    sys.modules["lang_ts_mod"] = mmod
+    mspec.loader.exec_module(mmod)
+    return mmod
+
+
+def test_sc001_reproduce_mode_skips_verification(tmp_path):
+    """SC-001 (reproduce path): mode='reproduce' → no verify_pins call, files written.
+
+    In reproduce mode the module must write the manifest without calling the
+    network at all — the pins were already verified at init.  We prove this by
+    making the module's sdk.verify_pins raise if called (any call = test failure),
+    then asserting the write still succeeds.
+    """
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="reproduce",
+        framework="plain",
+        pinned_deps=["vue@3.5.13"],
+        dev_deps=["typescript@5.7.2"],
+        package_manager_pin="bun@1.1.38",
+    )
+
+    import unittest.mock
+    import types
+
+    def _verify_should_not_be_called(*args, **kwargs):
+        raise AssertionError("verify_pins must NOT be called in reproduce mode")
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_verify_should_not_be_called):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            import io, contextlib
+            captured = io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 0, f"write step failed in reproduce mode: {captured.getvalue()}"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "ok", result
+
+
+def test_sc001_disconfirmed_pin_rejected_and_nothing_written(tmp_path):
+    """SC-001 (bad pin rejection): a disconfirmed pin → status=error, no files written.
+
+    Uses monkeypatching to simulate a registry that returns disconfirmed for a
+    hallucinated pin.  The module must return status=error and write nothing.
+    """
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    # Plan with a hallucinated pin (vvue is a typosquat)
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="init",
+        framework="plain",
+        pinned_deps=["vvue@3.5.13"],   # hallucinated — disconfirmed
+        dev_deps=["typescript@5.7.2"],
+        package_manager_pin="bun@1.1.38",
+    )
+
+    import unittest.mock, types
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    def _stub_verify(pins, ecosystem, **kwargs):
+        result = {}
+        for pin in pins:
+            if "vvue" in pin:
+                result[pin] = sdk.PIN_DISCONFIRMED
+            else:
+                result[pin] = sdk.PIN_VERIFIED
+        return result
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_stub_verify):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            import io, contextlib
+            captured = io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 1, "Expected non-zero exit for disconfirmed pin"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "error", result
+    assert result["error"] is not None
+    assert "vvue@3.5.13" in result["error"].get("received", ""), result["error"]
+
+    # Critical: package.json must not have been written
+    assert not (project / "package.json").exists(), \
+        "Module wrote package.json despite a disconfirmed pin — violates FR-005"
+
+
+def test_sc001_unreachable_registry_safe_skips(tmp_path):
+    """SC-001 (offline safe-skip): unreachable registry → status=ok, manifest write skipped."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="init",
+        framework="plain",
+        pinned_deps=["vue@3.5.13"],
+        dev_deps=["typescript@5.7.2"],
+        package_manager_pin="bun@1.1.38",
+    )
+
+    import unittest.mock, types, io, contextlib
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    def _all_unreachable(pins, ecosystem, **kwargs):
+        return {pin: sdk.PIN_UNREACHABLE for pin in pins}
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_all_unreachable):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 0, "Unreachable registry should be a safe-skip (ok), not an error"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "ok", result
+    assert any("unreachable" in w.lower() or "registry" in w.lower() for w in result["warnings"]), \
+        f"Expected registry-unreachable warning; got: {result['warnings']}"
+    # Manifest write must be skipped — package.json should not exist
+    assert not (project / "package.json").exists(), \
+        "Module wrote package.json despite unreachable registry — violates FR-012"
+
+
+def test_sc001_verified_pins_written_in_package_json(tmp_path):
+    """SC-001 (happy path): all pins verified → package.json contains exact deps + devDeps + packageManager.
+
+    Uses reproduce mode so no network is needed — pins are treated as pre-verified.
+    """
+    project = tmp_path / "myapp"
+    project.mkdir()
+    stub_dir = _stub_pkg_managers(tmp_path)
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="reproduce",
+        framework="plain",
+        pinned_deps=["vue@3.5.13", "nuxt@3.14.0"],
+        dev_deps=["typescript@5.7.2", "@biomejs/biome@1.9.4"],
+        package_manager_pin="bun@1.1.38",
+    )
+
+    proc = _run(project, plan_path, stub_dir)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    pkg_json = project / "package.json"
+    assert pkg_json.exists(), "package.json not written"
+    data = json.loads(pkg_json.read_text())
+
+    assert data.get("dependencies", {}).get("vue") == "3.5.13", \
+        f"Expected vue=3.5.13 in dependencies; got: {data.get('dependencies')}"
+    assert data.get("dependencies", {}).get("nuxt") == "3.14.0", \
+        f"Expected nuxt=3.14.0 in dependencies; got: {data.get('dependencies')}"
+    assert data.get("devDependencies", {}).get("typescript") == "5.7.2", \
+        f"Expected typescript=5.7.2 in devDependencies; got: {data.get('devDependencies')}"
+    assert data.get("devDependencies", {}).get("@biomejs/biome") == "1.9.4", \
+        f"Expected @biomejs/biome=1.9.4 in devDependencies; got: {data.get('devDependencies')}"
+    assert data.get("packageManager") == "bun@1.1.38", \
+        f"Expected packageManager=bun@1.1.38; got: {data.get('packageManager')}"
+
+
+# ── SC-006: deterministic package.json write (no scaffolder dependency) ──────
+
+def test_sc006_pinned_package_json_is_deterministic(tmp_path):
+    """SC-006: two runs with the same answers produce byte-identical package.json."""
+    project = tmp_path / "myapp"
+    project.mkdir()
+    stub_dir = _stub_pkg_managers(tmp_path)
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="reproduce",
+        framework="plain",
+        pinned_deps=["vue@3.5.13"],
+        dev_deps=["typescript@5.7.2", "@biomejs/biome@1.9.4"],
+        package_manager_pin="pnpm@9.14.2",
+    )
+
+    # First run
+    proc1 = _run(project, plan_path, stub_dir)
+    assert proc1.returncode == 0, proc1.stderr
+    content1 = (project / "package.json").read_bytes()
+
+    # Remove package.json to force a fresh write on the second run
+    (project / "package.json").unlink()
+
+    # Second run
+    proc2 = _run(project, plan_path, stub_dir)
+    assert proc2.returncode == 0, proc2.stderr
+    content2 = (project / "package.json").read_bytes()
+
+    assert content1 == content2, (
+        "package.json is not byte-identical across two runs — Tier-1 determinism violated.\n"
+        f"Run 1:\n{content1.decode()}\nRun 2:\n{content2.decode()}"
+    )
+
+
+def test_sc006_scaffolder_absence_does_not_block_pinned_write(tmp_path):
+    """SC-006: when scaffolder (bun/pnpm) is absent, package.json is still written with pins.
+
+    The pinned package.json write is deterministic and independent of whether
+    the scaffolder ran.  Scaffolder absence is warn+continue; the pin write proceeds.
+    """
+    project = tmp_path / "myapp"
+    project.mkdir()
+    # Empty PATH: no bun, no pnpm — scaffolders will warn+skip
+    empty_stub = tmp_path / "empty_stubs"
+    empty_stub.mkdir()
+
+    plan_path = _frozen_plan_with_pins(
+        tmp_path,
+        mode="reproduce",
+        framework="plain",
+        pinned_deps=["vue@3.5.13"],
+        dev_deps=["typescript@5.7.2"],
+        package_manager_pin="bun@1.1.38",
+    )
+    (project / ".gitignore").write_text("# base\n")
+
+    proc = _run(project, plan_path, empty_stub)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    # Warnings about scaffolder being absent are expected (warn+continue)
+    # but the package.json with pinned deps must exist
+    pkg_json = project / "package.json"
+    assert pkg_json.exists(), (
+        "package.json not written despite valid pins — scaffolder absence blocked the write.\n"
+        f"warnings: {result.get('warnings')}"
+    )
+    data = json.loads(pkg_json.read_text())
+    assert data.get("dependencies", {}).get("vue") == "3.5.13"
+    assert data.get("packageManager") == "bun@1.1.38"

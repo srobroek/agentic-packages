@@ -45,6 +45,7 @@ SCHEMA_VERSION = _contracts.SCHEMA_VERSION
 ErrorCode = _contracts.ErrorCode
 SetupError = _contracts.SetupError
 GateFailure = _contracts.GateFailure
+render_answer_block = _contracts.render_answer_block
 frozen_plan_path = _paths_mod.frozen_plan_path
 plugin_root = _paths_mod.plugin_root
 
@@ -148,13 +149,23 @@ def build_plan(
             module_rel_root = f"modules/{mod_id}"
 
         # Steps as plain dicts (keep only id/kind/steering/message)
+        mod_answers = resolved_answers.get(mod_id, {})
         steps = []
         for s in m.steps:
             step_dict: dict[str, Any] = {"id": s.id, "kind": s.kind}
             if s.steering:
                 step_dict["steering"] = s.steering
             if s.message:
-                step_dict["message"] = s.message
+                # Two-phase plan (spec 003 Decision H, SUBTLETY 1): a kind=gate
+                # message may contain the literal token ``{decision}``; replace it
+                # with the module's resolved answers (the agent's frozen decision,
+                # already folded in by the Phase-A pass) so the bare gate primitive
+                # can render a Tier-2 pin table without a richer gate shape. Plain
+                # messages with no token are passed through unchanged.
+                msg = s.message
+                if "{decision}" in msg:
+                    msg = msg.replace("{decision}", render_answer_block(mod_answers))
+                step_dict["message"] = msg
             steps.append(step_dict)
 
         modules[mod_id] = PlanModule(

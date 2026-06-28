@@ -2,17 +2,25 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""lang-python — Python language overlay.
+"""lang-python — Python language overlay (Tier-2 stack resolver).
 
-Ports setup-python.sh (119 lines) to a native-root Python module.
+Ports setup-python.sh (119 lines) to a native-root Python module, upgraded with
+a Tier-2 agent resolver step that decides the fully-pinned stack.
 
-Steps (all under step id "write"):
-  1. uv init --python <ver>  (skip if pyproject.toml already exists)
-  2. Create src/<project_name>/__init__.py  (write-if-absent)
-  3. Append ruff config block to pyproject.toml  (grep-guarded by 'ruff')
-  4. uv add --dev ruff pytest  (external tool — warn+continue on failure)
-  5. Append Python .gitignore block  (grep-guarded by '__pycache__')
-  6. Append ruff pre-commit hooks  (grep-guarded by 'astral-sh/ruff-pre-commit')
+Steps:
+  resolve  (agent)  — Tier-2 agent maps prose intent → framework + pinned deps
+  pins     (gate)   — shows the frozen pin table; user confirms before any write
+  write    (python) — reads frozen pins from plan, verifies against PyPI,
+                      writes pyproject.toml + dev tooling, appends .gitignore +
+                      pre-commit hooks using the frozen ruff version
+
+Pin verification (init mode only, FR-005/FR-012):
+  - PIN_DISCONFIRMED → hard error, write nothing
+  - PIN_UNREACHABLE  → safe-skip the manifest write, emit warning (not error)
+  - PIN_VERIFIED     → proceed
+
+Reproduce mode: zero network — verification is skipped entirely (FR-009); the
+pins were verified at init and the decision is replayed from answers.toml.
 
 External tool absence/failure is NON-FATAL: a warning is emitted and the
 module continues.  This mirrors the legacy WARN pattern in setup-python.sh.
@@ -29,6 +37,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 _TEMPLATES = Path(__file__).resolve().parent / "templates"
@@ -95,20 +104,225 @@ def _append_if_absent(path: Path, marker: str, block: str, warnings: list[str], 
         return False
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description="lang-python module")
-    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
-    ap.add_argument("--step", required=True, help="step id to run")
-    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
-    args = ap.parse_args()
+# --------------------------------------------------------------------------- #
+# pyproject.toml dep-merging helpers (stdlib tomllib + hand-rolled render)    #
+# --------------------------------------------------------------------------- #
 
-    sdk = _load_sdk()
-    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-python")
+def _parse_pyproject_deps(pyproject_path: Path) -> tuple[list[str], list[str]]:
+    """Read existing [project].dependencies and [dependency-groups].dev lists.
 
+    Returns (runtime_deps, dev_deps) as lists of strings, or empty lists if
+    absent/unparseable.  Never raises.
+    """
+    if not pyproject_path.exists():
+        return [], []
+    try:
+        with pyproject_path.open("rb") as fh:
+            data = tomllib.load(fh)
+        runtime = list(data.get("project", {}).get("dependencies", []))
+        dev = list(data.get("dependency-groups", {}).get("dev", []))
+        return runtime, dev
+    except Exception:  # noqa: BLE001
+        return [], []
+
+
+def _merge_deps(existing: list[str], new_pins: list[str]) -> list[str]:
+    """Merge *new_pins* into *existing*, replacing any entry that shares a package
+    name with a pin from *new_pins*.  Returns a sorted, deduplicated list.
+
+    Package name is the part before '@' (lowercased, with '-' normalized to '_').
+    """
+    def _name(pin: str) -> str:
+        return pin.split("@")[0].lower().replace("-", "_")
+
+    new_by_name = {_name(p): p for p in new_pins}
+    merged = {}
+    for dep in existing:
+        n = _name(dep)
+        if n not in new_by_name:
+            merged[n] = dep
+    for n, pin in new_by_name.items():
+        merged[n] = pin
+    return sorted(merged.values())
+
+
+def _render_toml_string_list(items: list[str]) -> str:
+    """Render a list of strings as a TOML array value (multi-line if >0 items)."""
+    if not items:
+        return "[]"
+    inner = ",\n".join(f'  "{item}"' for item in items)
+    return f"[\n{inner},\n]"
+
+
+def _patch_pyproject_deps(
+    pyproject_path: Path,
+    runtime_pins: list[str],
+    dev_pins: list[str],
+    warnings: list[str],
+) -> bool:
+    """Write merged runtime + dev deps into pyproject.toml.
+
+    Strategy: read existing deps → merge with new pins → rewrite the
+    [project].dependencies and [dependency-groups].dev blocks in-place using
+    line-level text replacement.  Falls back to appending the blocks if they
+    are absent.  Returns True if the file was modified.  Never raises.
+    """
+    if not pyproject_path.exists():
+        warnings.append("WARN: pyproject.toml absent — cannot patch deps (run uv init first)")
+        return False
+    try:
+        existing_rt, existing_dev = _parse_pyproject_deps(pyproject_path)
+        merged_rt = _merge_deps(existing_rt, runtime_pins)
+        merged_dev = _merge_deps(existing_dev, dev_pins)
+
+        content = pyproject_path.read_text(encoding="utf-8")
+
+        # ── patch [project].dependencies ─────────────────────────────────── #
+        content = _replace_or_append_toml_list(
+            content,
+            section="project",
+            key="dependencies",
+            new_values=merged_rt,
+        )
+
+        # ── patch [dependency-groups].dev ────────────────────────────────── #
+        content = _replace_or_append_toml_section_key(
+            content,
+            section_header="[dependency-groups]",
+            key="dev",
+            new_values=merged_dev,
+        )
+
+        pyproject_path.write_text(content, encoding="utf-8")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"WARN: could not patch pyproject.toml deps: {exc}")
+        return False
+
+
+def _replace_or_append_toml_list(
+    content: str,
+    section: str,
+    key: str,
+    new_values: list[str],
+) -> str:
+    """Replace `key = [...]` inside `[section]` in *content*, or append it.
+
+    Handles both single-line and multi-line arrays.  If the section does not
+    exist, appends `[section]\\nkey = [...]`.  If the key does not exist inside
+    the section, appends it after the section header.
+    """
+    import re
+    rendered = _render_toml_string_list(new_values)
+    new_line = f"{key} = {rendered}"
+
+    # Match single-line: key = [...]
+    single = re.compile(
+        rf'^({re.escape(key)}\s*=\s*)\[([^\]]*)\]',
+        re.MULTILINE,
+    )
+    # Match multi-line: key = [\n...\n]
+    multi = re.compile(
+        rf'^({re.escape(key)}\s*=\s*)\[([^\]]*)\]',
+        re.MULTILINE | re.DOTALL,
+    )
+
+    # Try to find and replace within the right section
+    section_pat = re.compile(rf'^\[{re.escape(section)}\]', re.MULTILINE)
+    m_sec = section_pat.search(content)
+    if m_sec:
+        # Find the next section header after this one
+        next_sec = re.compile(r'^\[', re.MULTILINE)
+        m_next = next_sec.search(content, m_sec.end())
+        end = m_next.start() if m_next else len(content)
+        section_text = content[m_sec.start():end]
+
+        key_pat = re.compile(
+            rf'^{re.escape(key)}\s*=\s*\[.*?\]',
+            re.MULTILINE | re.DOTALL,
+        )
+        m_key = key_pat.search(section_text)
+        if m_key:
+            # Replace the key block
+            new_section = (
+                section_text[:m_key.start()]
+                + new_line
+                + section_text[m_key.end():]
+            )
+            return content[:m_sec.start()] + new_section + content[end:]
+        else:
+            # Append key after the section header line
+            header_end = section_text.index("\n") + 1 if "\n" in section_text else len(section_text)
+            new_section = (
+                section_text[:header_end]
+                + new_line + "\n"
+                + section_text[header_end:]
+            )
+            return content[:m_sec.start()] + new_section + content[end:]
+    else:
+        # Append entire section
+        sep = "\n" if content.endswith("\n") else "\n\n"
+        return content + sep + f"[{section}]\n{new_line}\n"
+
+
+def _replace_or_append_toml_section_key(
+    content: str,
+    section_header: str,
+    key: str,
+    new_values: list[str],
+) -> str:
+    """Replace `key = [...]` inside a section identified by its full header string.
+
+    If the section or key does not exist, append them.
+    """
+    import re
+    rendered = _render_toml_string_list(new_values)
+    new_line = f"{key} = {rendered}"
+
+    sec_pat = re.compile(r'^' + re.escape(section_header), re.MULTILINE)
+    m_sec = sec_pat.search(content)
+    if m_sec:
+        next_sec = re.compile(r'^\[', re.MULTILINE)
+        m_next = next_sec.search(content, m_sec.end())
+        end = m_next.start() if m_next else len(content)
+        section_text = content[m_sec.start():end]
+
+        key_pat = re.compile(
+            rf'^{re.escape(key)}\s*=\s*\[.*?\]',
+            re.MULTILINE | re.DOTALL,
+        )
+        m_key = key_pat.search(section_text)
+        if m_key:
+            new_section = (
+                section_text[:m_key.start()]
+                + new_line
+                + section_text[m_key.end():]
+            )
+            return content[:m_sec.start()] + new_section + content[end:]
+        else:
+            header_end = section_text.index("\n") + 1 if "\n" in section_text else len(section_text)
+            new_section = (
+                section_text[:header_end]
+                + new_line + "\n"
+                + section_text[header_end:]
+            )
+            return content[:m_sec.start()] + new_section + content[end:]
+    else:
+        sep = "\n" if content.endswith("\n") else "\n\n"
+        return content + sep + f"{section_header}\n{new_line}\n"
+
+
+# --------------------------------------------------------------------------- #
+# Step handlers                                                                #
+# --------------------------------------------------------------------------- #
+
+def _do_write(sdk, inputs, args) -> int:
+    """write step: verify pins (init only), then write pyproject.toml + tooling."""
     python_version: str = inputs.get_str("python_version", default="3.13")
-    # framework is accepted but not structurally acted on in this port
-    # (legacy setup-python.sh has no framework-specific branches — it is a
-    # free-form string placeholder for future use)
+    framework: str = inputs.get_str("framework", default="none")
+    pinned_deps: list[str] = inputs.get_list("pinned_deps", default=[])
+    dev_deps: list[str] = inputs.get_list("dev_deps", default=[])
+    ruff_version: str = inputs.get_str("ruff_version", default="")
 
     project_dir_env = os.environ.get("PROJECT_DIR")
     project_dir = Path(project_dir_env).resolve() if project_dir_env else Path.cwd().resolve()
@@ -116,6 +330,59 @@ def main() -> int:
     warnings: list[str] = []
     diffs = []
     files_written: list[str] = []
+
+    # ── Pin verification (init mode only, FR-005/FR-012) ───────────────────── #
+    all_pins = list(pinned_deps) + list(dev_deps)
+    if all_pins and inputs.mode == "init":
+        verify_result = sdk.verify_pins(all_pins, "pypi")
+
+        bad_pins = [p for p, s in verify_result.items() if s == sdk.PIN_DISCONFIRMED]
+        if bad_pins:
+            error = sdk.SetupError(
+                error_code=sdk.ErrorCode.INPUT_VALUE_INVALID,
+                module_id="lang-python",
+                expected="all pins to exist on PyPI",
+                received=f"disconfirmed pins: {bad_pins}",
+                how_to_fix=(
+                    "The agent proposed pins that do not exist on PyPI: "
+                    + ", ".join(bad_pins)
+                    + ". Re-run with --refresh lang-python to let the agent correct them."
+                ),
+            )
+            result = sdk.ModuleResult(
+                module_id="lang-python",
+                step_id=args.step,
+                status="error",
+                files_written=[],
+                diffs=[],
+                warnings=warnings,
+                error=error.to_dict(),
+            )
+            sdk.emit_result(result)
+            return 1
+
+        unreachable_pins = [p for p, s in verify_result.items() if s == sdk.PIN_UNREACHABLE]
+        if unreachable_pins:
+            warnings.append(
+                "WARN: registry unreachable for pins: "
+                + ", ".join(unreachable_pins)
+                + " — manifest write SKIPPED (safe-skip, FR-012). "
+                "Restore network connectivity and re-run to write the manifest."
+            )
+            result = sdk.ModuleResult(
+                module_id="lang-python",
+                step_id=args.step,
+                status="ok",
+                files_written=[],
+                diffs=[sdk.Diff(
+                    path="pyproject.toml",
+                    kind="skip",
+                    preview="(safe-skip: registry unreachable for some pins)",
+                )],
+                warnings=warnings,
+            )
+            sdk.emit_result(result)
+            return 0
 
     # ── 1. uv init ─────────────────────────────────────────────────────────── #
     pyproject = project_dir / "pyproject.toml"
@@ -128,7 +395,6 @@ def main() -> int:
                 label="uv init",
             )
         else:
-            # Inspect: report what would happen
             warnings.append(f"inspect: would run uv init --python {python_version}")
 
     # ── 2. src layout ──────────────────────────────────────────────────────── #
@@ -167,16 +433,53 @@ def main() -> int:
         else:
             diffs.append(sdk.Diff(path="pyproject.toml", kind="skip", preview="(ruff already present)"))
 
-    # ── 4. uv add dev deps ─────────────────────────────────────────────────── #
-    if not args.inspect:
+    # ── 4. Write pinned deps into pyproject.toml ───────────────────────────── #
+    if all_pins and not args.inspect:
+        patched = _patch_pyproject_deps(
+            pyproject,
+            runtime_pins=list(pinned_deps),
+            dev_pins=list(dev_deps),
+            warnings=warnings,
+        )
+        if patched:
+            if "pyproject.toml" not in files_written:
+                files_written.append("pyproject.toml")
+            diffs.append(sdk.Diff(
+                path="pyproject.toml",
+                kind="modify",
+                preview=f"(pinned deps written: {len(pinned_deps)} runtime, {len(dev_deps)} dev)",
+            ))
+        # else: warning already appended by _patch_pyproject_deps
+    elif all_pins and args.inspect:
+        diffs.append(sdk.Diff(
+            path="pyproject.toml",
+            kind="modify",
+            preview=(
+                f"(would write {len(pinned_deps)} runtime pins + {len(dev_deps)} dev pins)"
+            ),
+        ))
+
+    # ── 5. uv add pinned dev deps (replaces unpinned uv add --dev ruff pytest) #
+    if dev_deps and not args.inspect:
+        # Build the uv add command with exact pinned versions
+        # uv add --dev accepts name==version or name@version; use == form for pip compat
+        uv_dev_args = ["uv", "add", "--dev"] + [
+            p.replace("@", "==", 1) for p in dev_deps
+        ]
         _run_tool(
-            ["uv", "add", "--dev", "ruff", "pytest"],
+            uv_dev_args,
             cwd=project_dir,
             warnings=warnings,
-            label="uv add --dev ruff pytest",
+            label="uv add --dev (pinned)",
+        )
+    elif not dev_deps and not args.inspect:
+        # No agent-resolved dev deps — fall back: warn but do NOT install unpinned
+        warnings.append(
+            "WARN: no pinned dev_deps in frozen plan — skipping uv add --dev. "
+            "Re-run with the resolve step to get pinned dev tools."
         )
 
-    # ── 5. Append Python .gitignore block ──────────────────────────────────── #
+    # ── 6. Append Python .gitignore block ──────────────────────────────────── #
     gitignore = project_dir / ".gitignore"
     gi_block = (_TEMPLATES / "gitignore-block.txt").read_text(encoding="utf-8")
     if not args.inspect:
@@ -195,9 +498,18 @@ def main() -> int:
         else:
             diffs.append(sdk.Diff(path=".gitignore", kind="skip", preview="(__pycache__ already present)"))
 
-    # ── 6. Append ruff pre-commit hooks ────────────────────────────────────── #
+    # ── 7. Append ruff pre-commit hooks (with frozen ruff_version) ─────────── #
     precommit = project_dir / ".pre-commit-config.yaml"
-    pc_block = (_TEMPLATES / "precommit-block.yaml").read_text(encoding="utf-8")
+    # Derive the pre-commit block, substituting ruff_version if available (FR-014)
+    pc_block_raw = (_TEMPLATES / "precommit-block.yaml").read_text(encoding="utf-8")
+    if ruff_version:
+        # Replace hardcoded rev with the frozen ruff pin version
+        pc_block = pc_block_raw.replace("rev: v0.6.9", f"rev: v{ruff_version}")
+        # Guard: if the template rev was already something else, do a broader replace
+        import re as _re
+        pc_block = _re.sub(r'(rev:\s*)v[\d.]+', rf'\1v{ruff_version}', pc_block)
+    else:
+        pc_block = pc_block_raw
     if precommit.exists():
         if not args.inspect:
             appended = _append_if_absent(
@@ -221,6 +533,20 @@ def main() -> int:
             preview="(.pre-commit-config.yaml absent — run precommit-setup first)",
         ))
 
+    # ── Cross-field re-validation (FR-003, best-effort) ────────────────────── #
+    # Warn if the frozen python_version looks inconsistent with the chosen framework.
+    # (Full constraint resolution is out of scope for 003; we warn, don't hard-error.)
+    if framework and python_version:
+        try:
+            major, minor = (int(x) for x in python_version.split(".")[:2])
+            if framework in ("django",) and (major, minor) < (3, 10):
+                warnings.append(
+                    f"WARN: Django typically requires Python >=3.10; "
+                    f"frozen python_version={python_version!r} may be too old."
+                )
+        except (ValueError, TypeError):
+            pass  # non-parseable version string — skip
+
     result = sdk.ModuleResult(
         module_id="lang-python",
         step_id=args.step,
@@ -231,6 +557,35 @@ def main() -> int:
     )
     sdk.emit_result(result)
     return 0
+
+
+STEP_HANDLERS = {
+    "write": _do_write,
+    # "resolve" is kind=agent — handled by the runner's Tier-2 agent subsystem.
+    # "pins" is kind=gate — handled by the runner's gate subsystem.
+}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="lang-python module")
+    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
+    ap.add_argument("--step", required=True, help="step id to run")
+    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
+    args = ap.parse_args()
+
+    handler = STEP_HANDLERS.get(args.step)
+    if handler is None:
+        print(
+            f"Unknown step: {args.step!r}. "
+            f"Python-handled steps: {list(STEP_HANDLERS)}. "
+            f"Agent/gate steps are dispatched by the runner, not by module.py.",
+            file=sys.stderr,
+        )
+        return 1
+
+    sdk = _load_sdk()
+    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-python")
+    return handler(sdk, inputs, args)
 
 
 if __name__ == "__main__":

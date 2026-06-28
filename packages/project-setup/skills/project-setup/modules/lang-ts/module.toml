@@ -45,5 +45,15 @@ default = ""
 required = false
 
 [[steps]]
+id = "resolve"
+kind = "agent"
+steering = "steering/resolve.md"
+
+[[steps]]
+id = "pins"
+kind = "gate"
+message = "TypeScript stack decision:\n{decision}\nWrite package.json with these EXACT pins?"
+
+[[steps]]
 id = "write"
 kind = "python"
