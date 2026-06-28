@@ -69,6 +69,10 @@ class StepSpec:
     init_only: bool = False       # gate prompts at init only; on plain reproduce it
                                   # auto-PROCEEDS (no prompt, no block) so the consented
                                   # frozen decision replays byte-identically
+    reproduce_only: bool = False  # agent step: skip at init, INVOKE on reproduce
+                                  # (spec 012 FR-009; inverse of init_only).
+                                  # --refresh overrides: a named module/key re-invokes
+                                  # even at init (OQ-1 / Q2 resolution).
 
 
 @dataclass
@@ -544,6 +548,7 @@ def _parse_steps(
             skip_flag=step.get("skip_flag"),
             when=when,
             init_only=bool(step.get("init_only", False)),
+            reproduce_only=bool(step.get("reproduce_only", False)),  # spec 012 FR-009
         ))
     return result
 

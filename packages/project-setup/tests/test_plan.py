@@ -278,3 +278,114 @@ def test_execution_plan_to_dict_shape():
     assert d["order"] == ["a", "b"]
     assert d["modules"]["a"]["id"] == "a"
     assert d["modules"]["a"]["answers"] == {"k": "v"}
+
+
+# --------------------------------------------------------------------------- #
+# spec 012 FR-014 / SC-010: ExecutionPlan.written_at                          #
+# --------------------------------------------------------------------------- #
+def test_written_at_present_in_to_dict():
+    """written_at is included in to_dict() output (spec 012 FR-014)."""
+    plan = ExecutionPlan(
+        schema_version=SCHEMA_VERSION,
+        mode="init",
+        order=[],
+        modules={},
+        written_at="2026-06-28",
+    )
+    d = plan.to_dict()
+    assert "written_at" in d, "written_at must appear in to_dict() (FR-014)"
+    assert d["written_at"] == "2026-06-28"
+
+
+def test_written_at_default_is_empty_string():
+    """ExecutionPlan.written_at defaults to '' (backward-compat for pre-012 plans)."""
+    plan = ExecutionPlan(
+        schema_version=SCHEMA_VERSION,
+        mode="init",
+        order=[],
+        modules={},
+    )
+    assert plan.written_at == ""
+
+
+def test_written_at_round_trips_through_freeze_and_load(tmp_path):
+    """written_at survives freeze() -> load_plan() round-trip (spec 012 FR-014)."""
+    m = make_manifest("mod")
+    plan = build_plan([m], resolved_answers={}, ordered_ids=["mod"])
+    path = tmp_path / "plan.json"
+    freeze(plan, path=path)
+
+    loaded = load_plan(path)
+    # freeze() sets written_at to today's isoformat; it must be a non-empty ISO date string
+    assert loaded.written_at != "", "written_at must be set by freeze() and survive load_plan()"
+    import re
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", loaded.written_at), (
+        f"written_at must be an ISO 8601 date string, got: {loaded.written_at!r}"
+    )
+
+
+def test_written_at_absent_in_pre012_plan_loads_as_empty(tmp_path):
+    """A pre-012 plan.json without written_at loads without error, yields '' (SC-010)."""
+    path = tmp_path / "plan.json"
+    # Simulate a pre-012 plan: no written_at key
+    old_plan = {
+        "schema_version": SCHEMA_VERSION,
+        "mode": "init",
+        "order": [],
+        "modules": {},
+    }
+    path.write_text(canonical_json(old_plan), encoding="utf-8")
+
+    loaded = load_plan(path)
+    assert loaded.written_at == "", (
+        "Pre-012 plan (no written_at) must load without error and yield written_at='' (SC-010)"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# spec 012 FR-009: reproduce_only serialization into step dict                #
+# --------------------------------------------------------------------------- #
+def test_reproduce_only_serialized_into_step_dict_when_true():
+    """reproduce_only=True on a step appears in the frozen plan step dict (spec 012 FR-009)."""
+    step = SimpleNamespace(
+        id="staleness", kind="agent", steering="steering/staleness.md",
+        message=None, hardness="hard", allow_flag=None, skip_flag=None,
+        when=None, init_only=False, reproduce_only=True,
+    )
+    m = make_manifest("stack-adr", steps=[step])
+    plan = build_plan([m], resolved_answers={}, ordered_ids=["stack-adr"])
+    step_dicts = plan.modules["stack-adr"].steps
+    assert len(step_dicts) == 1
+    assert step_dicts[0].get("reproduce_only") is True, (
+        "reproduce_only=True must be serialized into the frozen step dict"
+    )
+
+
+def test_reproduce_only_absent_from_step_dict_when_false():
+    """reproduce_only=False (default) must NOT appear in the frozen step dict (keeps
+    pre-012 plan dicts minimal; backward-compat SC-009)."""
+    step = SimpleNamespace(
+        id="run", kind="python", steering=None,
+        message=None, hardness="hard", allow_flag=None, skip_flag=None,
+        when=None, init_only=False, reproduce_only=False,
+    )
+    m = make_manifest("mod", steps=[step])
+    plan = build_plan([m], resolved_answers={}, ordered_ids=["mod"])
+    step_dicts = plan.modules["mod"].steps
+    assert len(step_dicts) == 1
+    assert "reproduce_only" not in step_dicts[0], (
+        "reproduce_only=False must NOT appear in the frozen step dict (SC-009 minimal plan)"
+    )
+
+
+def test_reproduce_only_absent_when_field_missing_on_step():
+    """Steps without reproduce_only attribute (older SimpleNamespace) are treated as False
+    via getattr default — backward-compat guard (SC-009)."""
+    # make_step() does NOT set reproduce_only — simulates a pre-012 StepSpec
+    step = make_step("run", "python")
+    m = make_manifest("mod", steps=[step])
+    plan = build_plan([m], resolved_answers={}, ordered_ids=["mod"])
+    step_dicts = plan.modules["mod"].steps
+    assert "reproduce_only" not in step_dicts[0], (
+        "Step without reproduce_only attr must not inject 'reproduce_only' into step dict"
+    )

@@ -626,9 +626,18 @@ def run_agent_phase(
             steering = getattr(step, "steering", "") or ""
 
             # Decide whether to invoke the agent this run.
+            # spec 012 FR-009: reproduce_only steps invert the normal rule —
+            # they fire on plain reproduce and are skipped at init unless
+            # --refresh names them (Q2 override takes precedence over both flags).
+            repro_only = getattr(step, "reproduce_only", False)
             module_named = mod_id in refresh_set
             key_named = any(t.startswith(f"{mod_id}.") for t in refresh_set)
-            do_invoke = (mode != "reproduce") or module_named or key_named
+            if repro_only:
+                # reproduce_only: INVOKE on plain reproduce; SKIP at init unless
+                # --refresh named it explicitly (Q2 override).
+                do_invoke = (mode == "reproduce") or module_named or key_named
+            else:
+                do_invoke = (mode != "reproduce") or module_named or key_named
             if not do_invoke:
                 # Plain reproduce: committed decision already in `answers`. No
                 # agent call, no network. (FR-009 replay.)

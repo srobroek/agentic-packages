@@ -15,6 +15,7 @@ Standard library only.
 
 from __future__ import annotations
 
+import datetime
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -68,6 +69,9 @@ class ExecutionPlan:
     mode: str                           # "init" | "reproduce"
     order: list[str]
     modules: dict[str, PlanModule] = field(default_factory=dict)
+    written_at: str = ""                # ISO 8601 date set at freeze() time (spec 012
+                                        # FR-014); advisory ADR "decided-on" date, not
+                                        # an audit timestamp. Empty for pre-012 plans.
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -75,6 +79,7 @@ class ExecutionPlan:
             "mode": self.mode,
             "order": self.order,
             "modules": {k: v.to_dict() for k, v in self.modules.items()},
+            "written_at": self.written_at,
         }
 
 
@@ -175,6 +180,10 @@ def build_plan(
                     step_dict["skip_flag"] = s.skip_flag
                 if s.init_only:
                     step_dict["init_only"] = True
+            # reproduce_only (spec 012 FR-009): carried into the frozen plan for all
+            # step kinds, serialized only when True to keep pre-012 plan dicts minimal.
+            if getattr(s, "reproduce_only", False):
+                step_dict["reproduce_only"] = True
             steps.append(step_dict)
 
         modules[mod_id] = PlanModule(
@@ -215,6 +224,11 @@ def freeze(plan: ExecutionPlan, path: Path | None = None) -> Path:
     if path is None:
         path = frozen_plan_path()
     path.parent.mkdir(parents=True, exist_ok=True)
+    # LOCAL date (spec 012 Q5): advisory ADR "decided-on" date, not an audit timestamp.
+    # Set every freeze so the field reflects THIS run. The STACK.md date comes from the
+    # frozen derived answer (written_at answer persisted at init), not this field — see
+    # plan.md "written_at determinism subtlety". Do NOT add conditional logic here.
+    plan.written_at = datetime.date.today().isoformat()
     data = plan.to_dict()
     _check_no_absolute_paths(data)
     path.write_text(canonical_json(data), encoding="utf-8")
@@ -296,6 +310,7 @@ def load_plan(path: Path) -> ExecutionPlan:
         mode=data["mode"],
         order=data["order"],
         modules=modules,
+        written_at=data.get("written_at", ""),  # spec 012 FR-014/SC-010: default "" for pre-012 plans
     )
 
 
