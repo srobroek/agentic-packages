@@ -15,13 +15,21 @@ How sniff knows this language/format is present: key files, extensions, config.
 
 ## Tools
 
-The analyzers to run, primary first. Exact invocation + machine-readable flag.
-Pull canonical detail from `../tooling.md`; this section is the runnable subset.
+The analyzers to run, primary first. This table is the **authoritative** tool
+list for this target. Each row needs all five columns; the universal run-rules
+(cwd=repo root, project-config-wins, exit-codes, absolutize shipped assets) live
+in `../tooling.md` — don't restate them, add only tool-specific detail.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| <primary> | `...--json...` | <dimensions> | `install-tools.sh --install <bundle>` |
-| <secondary> | `...` | <dimensions> | ... |
+| Tool | Run recipe | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| <primary> | **exact command** + machine-readable flag + how the file set is passed; **config:** auto-uses project config / needs `--config` / no-config fallback; **exit:** 0 clean · N findings (parse) · usage/crash = INVALID (fix+re-run, never "clean"); any gotcha | <dimensions> | default-on | `install-tools.sh --install <bundle>` |
+| <secondary> | … | <dimensions> | opt-in (reason) | … |
+
+- **Tier** is `default-on` (pre-selected in the Step-2 proposal) or `opt-in`
+  (shown off, with the reason: nightly / redundant-with-X / heavy / security-only
+  / needs-baseline). Default-on = run it for a thorough audit unless redundant.
+- **Run recipe** must be complete enough to run without guessing — a terse
+  invocation is what causes bad-flag / wrong-cwd / unhandled-crash bugs.
 
 Notes: which tool is the meta-linter, what overlaps, what to skip if another is
 present. Note when the standard toolchain already covers a dimension.
