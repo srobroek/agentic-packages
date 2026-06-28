@@ -24,28 +24,13 @@ Standard library only.
 
 from __future__ import annotations
 
-import importlib.util
-import sys
 from pathlib import Path
 from typing import Any
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
-_RUNNER = Path(__file__).resolve().parent
-
-
-def _load_sibling(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
-_executor_mod = _load_sibling("executor")
+# Sibling runner modules import by plain name; the runner dir is on sys.path via
+# the entry point (cli.py / conftest.py / executor PYTHONPATH — spec 005 OQ-2).
+import contracts as _contracts
+import executor as _executor_mod
 
 SetupError = _contracts.SetupError
 ErrorCode = _contracts.ErrorCode
@@ -463,8 +448,7 @@ def apply(
     list[StepOutcome]
         One entry per executed step (in execution order).
     """
-    # Lazy import to avoid circular at module level
-    _executor = _load_sibling("executor")
+    _executor = _executor_mod
     run_gate = _executor.run_gate_step
 
     outcomes: list[StepOutcome] = []
@@ -620,7 +604,7 @@ def run_agent_phase(
 
     Returns the updated ``(resolved_answers, provenance_map)``.
     """
-    _executor = _load_sibling("executor")
+    _executor = _executor_mod
     run_agent = _executor.run_agent_step
 
     refresh_set = set(refresh or [])

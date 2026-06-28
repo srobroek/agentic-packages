@@ -15,31 +15,16 @@ Standard library only.
 
 from __future__ import annotations
 
-import importlib.util
 import json
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
-_RUNNER = Path(__file__).resolve().parent
-
-
-def _load_sibling(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
-_paths_mod = _load_sibling("paths")
-_manifest_mod = _load_sibling("manifest")
+# Sibling runner modules import by plain name; the runner dir is on sys.path via
+# the entry point (cli.py / conftest.py / executor PYTHONPATH — spec 005 OQ-2).
+import contracts as _contracts
+import paths as _paths_mod
+import manifest as _manifest_mod
 
 canonical_json = _contracts.canonical_json
 SCHEMA_VERSION = _contracts.SCHEMA_VERSION

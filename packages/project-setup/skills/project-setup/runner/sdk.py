@@ -22,7 +22,6 @@ Standard library only (no third-party deps).
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import re
@@ -32,23 +31,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
+# sdk.py is the ONE runner module a `module.py` subprocess loads BY FILE PATH (via
+# the module's `import sdk` shim fallback). In that context the runner dir is NOT
+# guaranteed on sys.path — the executor injects PYTHONPATH (spec 005 FR-001), but a
+# test or tool that runs `uv run module.py` directly does not. So sdk self-bootstraps
+# its own dir onto sys.path here, BEFORE importing siblings, so the whole sdk import
+# closure (contracts, plan → paths/manifest) resolves regardless of how sdk was
+# loaded. (The CLI/pytest entry points also set the path; this is idempotent.)
 _RUNNER = Path(__file__).resolve().parent
+if str(_RUNNER) not in sys.path:
+    sys.path.insert(0, str(_RUNNER))
 
-
-def _load_sibling(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
-_plan_mod = _load_sibling("plan")
+# Sibling runner modules import by plain name (spec 005 OQ-2).
+import contracts as _contracts  # noqa: E402
+import plan as _plan_mod  # noqa: E402
 
 canonical_json = _contracts.canonical_json
 SetupError = _contracts.SetupError

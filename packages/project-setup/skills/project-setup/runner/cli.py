@@ -55,27 +55,26 @@ def _check_uv() -> None:
 _check_uv()  # Hard-fail before any other code runs
 
 # --------------------------------------------------------------------------- #
-# Runner library bootstrap (import-by-path)                                   #
+# Runner library bootstrap (sys.path seam — spec 005 OQ-2)                     #
 # --------------------------------------------------------------------------- #
+# Put the runner dir (and its sources/ sub-package dir) on sys.path so every
+# runner module resolves its siblings with a plain ``import <name>`` instead of
+# the old per-file ``_load_sibling`` importlib bootstrap. This is the one place
+# the path is established for the CLI entry; pytest does the same via conftest.py,
+# and the ``uv run module.py`` subprocess path is covered by the executor's
+# PYTHONPATH injection (spec 005 FR-001). A real import also registers the module
+# in ``sys.modules`` before its body runs, so the ``@dataclass(Exception)`` footgun
+# the old pattern guarded against cannot occur.
 _RUNNER = Path(__file__).resolve().parent
+for _p in (str(_RUNNER), str(_RUNNER / "sources")):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
+import pipeline  # noqa: E402
+import io_adapter  # noqa: E402
 
-def _load(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_pipeline_mod = _load("pipeline")
-_io_mod = _load("io_adapter")
-
-run_pipeline = _pipeline_mod.run_pipeline
-TerminalIO = _io_mod.TerminalIO
+run_pipeline = pipeline.run_pipeline
+TerminalIO = io_adapter.TerminalIO
 
 
 # --------------------------------------------------------------------------- #

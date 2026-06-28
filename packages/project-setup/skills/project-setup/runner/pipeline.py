@@ -24,56 +24,29 @@ itself is required at runtime).
 
 from __future__ import annotations
 
-import importlib.util
-import sys
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
-_RUNNER = Path(__file__).resolve().parent
-
-
-def _load_sibling(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-def _load_sources(name: str):
-    """Load a module from the sources/ sub-package."""
-    if name in sys.modules:
-        return sys.modules[name]
-    path = _RUNNER / "sources" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
-_paths_mod = _load_sibling("paths")
-_manifest_mod = _load_sibling("manifest")
-_answers_mod = _load_sibling("answers")
-_validate_mod = _load_sibling("validate")
-_plan_mod = _load_sibling("plan")
-_mode_mod = _load_sibling("mode")
-_executor_mod = _load_sibling("executor")
-_reproduce_mod = _load_sibling("reproduce")
-_persist_mod = _load_sibling("persist")
-_enablement_mod = _load_sibling("enablement")
-_sdk_mod = _load_sibling("sdk")
-_discover_mod = _load_sources("discover")
-_fetch_mod = _load_sources("fetch")
-_locator_mod = _load_sources("locator")
+# Sibling runner modules import by plain name; the runner dir is on sys.path via
+# the entry point (cli.py / conftest.py / executor PYTHONPATH — spec 005 OQ-2).
+# The sources/ dir is also on sys.path, so sources sub-modules import by bare name.
+import contracts as _contracts
+import paths as _paths_mod
+import manifest as _manifest_mod
+import answers as _answers_mod
+import validate as _validate_mod
+import plan as _plan_mod
+import mode as _mode_mod
+import executor as _executor_mod
+import reproduce as _reproduce_mod
+import persist as _persist_mod
+import enablement as _enablement_mod
+import sdk as _sdk_mod
+import discover as _discover_mod
+import fetch as _fetch_mod
+import locator as _locator_mod
 
 GateFailure = _contracts.GateFailure
 SetupError = _contracts.SetupError

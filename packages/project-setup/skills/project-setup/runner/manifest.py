@@ -10,32 +10,16 @@ Standard library only.
 
 from __future__ import annotations
 
-import importlib.util
-import sys
 import tomllib
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
-# contracts.py must be registered in sys.modules before exec_module (see §6).
-_RUNNER = Path(__file__).resolve().parent
+# Sibling runner modules import by plain name; the runner dir is on sys.path via
+# the entry point (cli.py / conftest.py / executor PYTHONPATH — spec 005 OQ-2).
+import contracts as _contracts
 
-
-def _load_sibling(name: str):
-    """Load a runner sibling module by file path, registering in sys.modules."""
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader, f"Cannot find runner module: {name}"
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
 SetupError = _contracts.SetupError
 ErrorCode = _contracts.ErrorCode
 FORBIDDEN_MANIFEST_FIELDS = _contracts.FORBIDDEN_MANIFEST_FIELDS

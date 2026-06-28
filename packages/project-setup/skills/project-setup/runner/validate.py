@@ -16,28 +16,12 @@ Standard library only.
 
 from __future__ import annotations
 
-import importlib.util
 import shutil
-import sys
-from pathlib import Path
 
-# ── import-by-path bootstrap ──────────────────────────────────────────────── #
-_RUNNER = Path(__file__).resolve().parent
-
-
-def _load_sibling(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_contracts = _load_sibling("contracts")
-_order_mod = _load_sibling("order")
+# Sibling runner modules import by plain name; the runner dir is on sys.path via
+# the entry point (cli.py / conftest.py / executor PYTHONPATH — spec 005 OQ-2).
+import contracts as _contracts
+import order as _order_mod
 
 SetupError = _contracts.SetupError
 ErrorCode = _contracts.ErrorCode

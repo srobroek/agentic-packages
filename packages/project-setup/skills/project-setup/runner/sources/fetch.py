@@ -16,10 +16,8 @@ call is inside ``subprocess.run``.
 
 from __future__ import annotations
 
-import importlib.util
 import shutil
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -27,40 +25,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .locator import Locator
 
-# ---------------------------------------------------------------------------
-# Import sibling runner modules by file path (contract §6)
-# ---------------------------------------------------------------------------
+# Runner and sources dirs are both on sys.path via cli.py / conftest.py /
+# executor PYTHONPATH (spec 005 OQ-2); plain imports resolve for both.
+import paths as _paths
+import locator as _locator_mod
 
-_SOURCES_DIR = Path(__file__).resolve().parent
-_RUNNER_DIR = _SOURCES_DIR.parent
-
-
-def _load_runner(name: str):
-    if name in sys.modules:
-        return sys.modules[name]
-    spec = importlib.util.spec_from_file_location(name, _RUNNER_DIR / f"{name}.py")
-    assert spec and spec.loader, f"Cannot find runner module: {name}"
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-def _load_sibling(name: str):
-    qualified = f"sources.{name}"
-    if qualified in sys.modules:
-        return sys.modules[qualified]
-    path = _SOURCES_DIR / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(qualified, path)
-    assert spec and spec.loader, f"Cannot find sources module: {name}"
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[qualified] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_paths = _load_runner("paths")
-_locator_mod = _load_sibling("locator")
 Locator = _locator_mod.Locator
 
 
