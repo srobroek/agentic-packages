@@ -90,6 +90,7 @@ detect_mode = _mode_mod.detect_mode
 build_drift_report = _reproduce_mod.build_drift_report
 apply_reproduce = _reproduce_mod.apply
 run_agent_phase = _reproduce_mod.run_agent_phase
+whole_plan_gate = _reproduce_mod.whole_plan_gate  # G1 whole-plan preview (spec 004)
 
 write_sources_toml = _persist_mod.write_sources_toml
 write_answers_toml = _persist_mod.write_answers_toml
@@ -519,6 +520,15 @@ def run_pipeline(
     # Both init and reproduce use the inspect→confirm→write flow so that
     # consequential steps are never executed without a confirm pass, and gate
     # steps carry non_interactive so CI safe-skips instead of deadlocking.
+    #
+    # Init vs reproduce differ in the WRITE-confirm shape (spec 004 G1, FR-009):
+    #   - init: ONE whole-plan preview + aggregate confirm (G1); per-file prompts
+    #     here would be the gates-analysis anti-pattern #1. The inspect pass runs
+    #     non-interactively (interactive_per_diff=False) to gather the preview data,
+    #     then G1 captures the single decision. Decline ⟹ abort, nothing written.
+    #   - reproduce: the per-file write-confirm loop (the 001 behavior; G5 enriches
+    #     the destructive-overwrite case in Phase 8).
+    is_init = mode == "init"
     confirmations = build_drift_report(
         plan=plan,
         plugin_root_path=plugin_root_path,
@@ -526,7 +536,17 @@ def run_pipeline(
         io=io,
         frozen_plan_path=plan_path,
         env=env,
+        interactive_per_diff=not is_init,
     )
+    if is_init:
+        proceed = whole_plan_gate(
+            plan, confirmations, io, non_interactive=non_interactive
+        )
+        if not proceed:
+            io.notify("[PLAN] declined at the whole-plan preview — nothing written.")
+            result.success = True
+            result.mode = mode
+            return result
     step_outcomes = apply_reproduce(
         plan=plan,
         confirmations=confirmations,

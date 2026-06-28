@@ -99,6 +99,7 @@ def build_drift_report(
     frozen_plan_path: Path,
     *,
     env: dict[str, str] | None = None,
+    interactive_per_diff: bool = True,
 ) -> dict[str, ConfirmEntry]:
     """Run an ``--inspect`` pass for every Tier-1 step and gather confirmations.
 
@@ -187,11 +188,20 @@ def build_drift_report(
                     # Already identical / already exists; no prompt
                     continue
 
-                confirmed = io.confirm({
-                    "path": diff_path,
-                    "kind": diff_kind,
-                    "preview": diff.get("preview", ""),
-                })
+                if interactive_per_diff:
+                    # Reproduce mode: per-file write-confirm loop (the 001 behavior;
+                    # G5 will enrich the destructive-overwrite case in spec 004 Phase 8).
+                    confirmed = io.confirm({
+                        "path": diff_path,
+                        "kind": diff_kind,
+                        "preview": diff.get("preview", ""),
+                    })
+                else:
+                    # Init mode: the single whole-plan preview (G1) is the one
+                    # aggregate confirm; per-file prompts here would be the
+                    # gates-analysis anti-pattern #1 (per-file init confirm). Auto-
+                    # confirm every proposed write — G1 already governed the batch.
+                    confirmed = True
                 if confirmed:
                     entry.confirmed_paths.add(diff_path)
 
@@ -200,6 +210,104 @@ def build_drift_report(
             confirmations[key] = entry
 
     return confirmations
+
+
+# --------------------------------------------------------------------------- #
+# G1 — whole-plan preview (spec 004 FR-007/008/009)                            #
+# --------------------------------------------------------------------------- #
+def _side_effect_classes(step: dict[str, Any], inspect_entry: "ConfirmEntry | None") -> list[str]:
+    """Classify a step's side effects for the G1 preview line (FR-008).
+
+    Derived from the step kind + its gate enrichment + the inspect outcome — NEVER
+    a hand-maintained per-module table (the gates-analysis G1 failure mode, OQ-3):
+
+      - allow-install gate         → ``[installs N pkgs]`` / ``[network]``
+      - allow-public-repo gate     → ``[creates remote]`` / ``[network]``
+      - external-generator gate    → ``[runs external generator]`` / ``[network]``
+      - kind=python with diffs     → ``[writes file]``
+      - kind=agent                 → ``[agent decision]``
+    """
+    kind = step.get("kind")
+    classes: list[str] = []
+    if kind == "gate":
+        allow = step.get("allow_flag") or ""
+        skip = step.get("skip_flag") or ""
+        if allow == "allow-install":
+            classes += ["[installs N pkgs]", "[network]"]
+        elif allow == "allow-public-repo":
+            classes += ["[creates remote]", "[network]"]
+        elif skip == "no-external-generators":
+            classes += ["[runs external generator]", "[network]"]
+        elif allow == "allow-stack-write":
+            classes += ["[writes pinned manifest]"]
+    elif kind == "agent":
+        classes.append("[agent decision]")
+    elif kind == "python":
+        if inspect_entry is not None and not inspect_entry.skipped:
+            real = [d for d in inspect_entry.inspect_outcome.diffs()
+                    if d.get("kind") != "skip"]
+            if real:
+                classes.append("[writes file]")
+    return classes
+
+
+def render_plan_preview(plan: Any, confirmations: dict[str, ConfirmEntry]) -> str:
+    """Render the frozen *plan* as an ordered, per-module checklist (G1, FR-007/008).
+
+    Reuses the inspect outcomes already gathered in *confirmations* (the modules'
+    own ``would …`` preview strings) — it does NOT generate a parallel literal.
+    """
+    lines: list[str] = ["", "── Plan preview — the following will run ──"]
+    for mod_id in plan.order:
+        mod_entry = plan.modules.get(mod_id)
+        if mod_entry is None:
+            continue
+        lines.append(f"\n▸ {mod_id}")
+        for step in mod_entry.steps:
+            kind = step.get("kind") if isinstance(step, dict) else getattr(step, "kind", None)
+            step_id = step.get("id") if isinstance(step, dict) else getattr(step, "id", None)
+            entry = confirmations.get(f"{mod_id}/{step_id}")
+            classes = " ".join(_side_effect_classes(step, entry))
+            # Reuse the module's own would-… preview for python steps; gates show
+            # their message head; agents are named.
+            detail = ""
+            if kind == "python" and entry is not None and not entry.skipped:
+                previews = [d.get("preview", "") for d in entry.inspect_outcome.diffs()
+                            if d.get("kind") != "skip" and d.get("preview")]
+                detail = previews[0] if previews else ""
+            elif kind == "gate":
+                detail = str(step.get("message", "")).splitlines()[0] if step.get("message") else ""
+            tail = f" — {detail}" if detail else ""
+            suffix = f"  {classes}" if classes else ""
+            lines.append(f"    • {step_id} ({kind}){tail}{suffix}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def whole_plan_gate(
+    plan: Any,
+    confirmations: dict[str, ConfirmEntry],
+    io: Any,
+    *,
+    non_interactive: bool = False,
+) -> bool:
+    """Show the G1 whole-plan preview and capture ONE aggregate confirm (FR-009).
+
+    G1 is soft/informational: in a TTY it asks a single "proceed?" (decline = abort,
+    nothing written); in ``--non-interactive`` it prints the plan and proceeds (it
+    never blocks CI — the consequential sub-actions G2/G3/G4/G6 carry their own hard
+    gate policy). It does NOT auto-confirm those hard sub-gates (Subtlety 2).
+    """
+    io.notify(render_plan_preview(plan, confirmations))
+    if non_interactive:
+        io.notify("[PLAN] non-interactive — proceeding (per-action gates still apply).")
+        return True
+    return io.confirm({
+        "path": "<whole-plan>",
+        "kind": "gate",
+        "preview": "Proceed with the plan above?",
+        "default_yes": True,
+    })
 
 
 def _module_refreshed(module_id: str, refresh: list[str] | None) -> bool:
