@@ -4,9 +4,14 @@
 
 **Created**: 2026-06-28
 
-**Status**: Draft — followup spec spun out of the spec-003 leanness audit. Captures
-an **empirically verified** finding; not yet scheduled. Lower priority than the
-003 resolver itself.
+**Status**: **Implemented (2026-06-28)** — the core (FR-001…FR-005) shipped and green
+(commit `7779c27`): the executor injects `runner/` on `PYTHONPATH` (`executor.py:323`)
+and **18** `module.py` files replaced `_load_sdk()` with the 3-line `import sdk` shim
+(OQ-1 → shim, resolved). shared-contracts §6 amended (FR-004). **OQ-2 (the
+runner-internal `_load_sibling` dedup, decision C) re-examined 2026-06-28 — see Open
+Questions.** A clean seam was found to EXIST (contradicting the original "no clean
+seam" lean), but it is held as a separate, optional refactor (rationale below), not
+folded into this spec. So the spec as scoped (modules only) is complete.
 
 **Input**: The leanness audit's top deferred theme — the import-by-path SDK
 bootstrap (`_load_sdk` in modules, `_load_sibling` in the runner) is duplicated
@@ -124,9 +129,27 @@ the import path.
   footgun on the happy path. The executor STILL adds `runner/` to `PYTHONPATH`
   (FR-001) so the `try` arm is taken in production; the `except` arm covers
   direct-invocation tests + any non-executor caller.
-- **OQ-2 (scope)**: include the runner-side `_load_sibling` (decision C) or defer it?
-  Lean: defer; the win is thinner (the runner is imported by cli/tests, not via
-  `uv run`, so PYTHONPATH injection doesn't help) and the mechanism is different.
+- **OQ-2 (scope) — RE-EXAMINED 2026-06-28: a clean seam EXISTS, but DEFER as a
+  separate optional refactor.** The original lean ("defer; no clean seam") was based
+  on the wrong mechanism (a shared `_bootstrap.py` that still needs its own
+  bootstrap). A cleaner seam was found and **empirically verified** in an isolated
+  3-file layout: a single `sys.path.insert(0, <runner>)` (+ `<runner>/sources`) at
+  EACH entry point — `cli.py` and a test `conftest.py` — lets all 12 runner files use
+  plain `import contracts` / `import executor`, and the `@dataclass(Exception)`
+  footgun disappears (a real import registers in `sys.modules` before its body runs).
+  Scale: 12 files, ~41 `_load_sibling` + 4 `_load_sources` call sites; ~49 test files
+  use the parallel `_load(name)` importlib pattern and would each rely on the
+  conftest `sys.path` insert.
+
+  **Why still DEFER (the decision):** (1) it is a pure-leanness refactor with NO
+  behavior change — high blast-radius across the whole runner + 49 test files for a
+  cosmetic win; (2) some `_load_sibling` calls are LAZY, inside functions,
+  explicitly "to avoid circular at module level" (e.g. `reproduce.py:466` loading
+  `executor`) — converting those to top-level `import` risks reintroducing
+  circular-import breakage that the lazy path-load currently sidesteps, so it is NOT
+  a blind find/replace; (3) the modules side (the bulk — 18 files) is already done
+  here. Net: the seam is real and documented, but the win does not justify the
+  risk/churn now. Tracked as a standalone optional cleanup, not part of 005.
 - **OQ-3 (examples)**: the `examples/` modules live two levels deeper; confirm the
   executor's runner-dir resolution covers the example path layout too.
 

@@ -4,7 +4,11 @@
 
 **Created**: 2026-06-27
 
-**Status**: Draft
+**Status**: **Implemented (2026-06-28)** — the enablement layer (FR-001…FR-009)
+shipped and green (`tests/test_enablement.py` + `test_enablement_pipeline.py` pass in
+the full suite); as-built notes in `memory.md` → "Implementation notes (002 built)".
+The `gates-analysis.md` deliverable became specs 004 (gates). The two verified code
+findings 002 recorded were repaired by spec 003.
 
 **Input**: Net-new capability after the 001 migration. "Determine which modules to enable — minimal deterministic core, agent grills the user and suggests modules; selection recorded for reproducibility."
 

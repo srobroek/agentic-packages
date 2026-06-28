@@ -4,7 +4,15 @@
 
 **Created**: 2026-06-27
 
-**Status**: Draft (clarified — design decisions settled via a `grill-me` session)
+**Status**: **Implemented (2026-06-28)** — the generic runner + modules shipped and
+green (full suite passes); Tier-1 parity proven. The native-root Claude-plugin
+layout (H3 / FR-027a) is DONE: the skill lives at
+`packages/project-setup/skills/project-setup/SKILL.md` with a package `apm.yml`, and
+**no `.apm/skills/` is tracked** — the migration off `.apm/skills/` completed. The
+repo-wide tooling 001 deferred to "separate parallel work" (the marketplace-block /
+docs / native-plugin generation) is shipped on `main`
+(`.github/workflows/build-artifacts.yml` runs `render-docs.py all` + `apm pack` into
+`build/`). No open blockers. (Design decisions were settled via a `grill-me` session.)
 
 **Input**: User description: "Modular, config-driven redesign of the project-setup bootstrap skill — make the skill generic, push all specific configuration out into auto-discovered modules + layered config, configurable via a home config file and env var, with install-time enable/disable, user-added modules, config overlay/merge, dynamic module sources, persisted answers, and deterministic repeatable results."
 
