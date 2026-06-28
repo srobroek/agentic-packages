@@ -28,31 +28,28 @@ from pathlib import Path
 
 
 def _load_sdk():
-    """Load the runner SDK by file path (the no-pip module contract).
-
-    Checks ${PLUGIN_ROOT}/runner/sdk.py first; falls back to the
-    __file__-relative path (parents[2] = skills/project-setup from
-    examples/multi-step-python/).
-    """
+    """Load the runner SDK. Fast path: `import sdk` (the executor puts the runner
+    dir on PYTHONPATH — spec 005). Fallback: load by file path for direct
+    invocation outside the executor (e.g. functional tests)."""
+    try:
+        import sdk  # noqa: PLC0415
+        return sdk
+    except ModuleNotFoundError:
+        pass
+    # Fallback: locate sdk.py by path (PLUGIN_ROOT, or __file__-relative).
     plugin_root = os.environ.get("PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
         if not sdk_path.is_file():
             sdk_path = Path(plugin_root) / "skills" / "project-setup" / "runner" / "sdk.py"
     else:
-        # examples/multi-step-python/ → parents[0]=multi-step-python,
-        # parents[1]=examples, parents[2]=project-setup (skill root)
         sdk_path = Path(__file__).resolve().parents[2] / "runner" / "sdk.py"
-    spec = importlib.util.spec_from_file_location("ps_sdk", sdk_path)
+    spec = importlib.util.spec_from_file_location("sdk", sdk_path)
     assert spec and spec.loader, f"cannot locate runner SDK at {sdk_path}"
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["ps_sdk"] = mod  # mandatory: register before exec_module
+    sys.modules["sdk"] = mod          # register BEFORE exec_module (the @dataclass(Exception) footgun)
     spec.loader.exec_module(mod)
     return mod
-
-
-# ── step handlers ─────────────────────────────────────────────────────────── #
-
 def _do_scaffold(sdk, inputs, args) -> int:
     """scaffold step: write a bare-bones README.md (create-if-absent)."""
     project_name = inputs.get_str("project_name", default="my-project")

@@ -320,6 +320,19 @@ def run_python_step(
     run_env.setdefault("PROJECT_DIR", str(project_dir))
     # Ensure PLUGIN_ROOT is set so modules can load the SDK
     run_env.setdefault("PLUGIN_ROOT", str(plugin_root_path))
+    # Put the runner dir on PYTHONPATH so module.py can `import sdk` directly
+    # (spec 005). `uv run` propagates PYTHONPATH into the PEP-723 script's
+    # sys.path (verified, uv 0.11.8). Modules keep a path-load fallback for
+    # direct invocation outside the executor (e.g. functional tests), so this
+    # is the fast path, not a hard requirement. Handle both layouts the module
+    # fallback knows about: <root>/runner and <root>/skills/project-setup/runner.
+    _runner_dir = plugin_root_path / "runner"
+    if not (_runner_dir / "sdk.py").is_file():
+        _runner_dir = plugin_root_path / "skills" / "project-setup" / "runner"
+    _existing_pp = run_env.get("PYTHONPATH", "")
+    run_env["PYTHONPATH"] = (
+        f"{_runner_dir}{os.pathsep}{_existing_pp}" if _existing_pp else str(_runner_dir)
+    )
 
     try:
         proc = subprocess.run(

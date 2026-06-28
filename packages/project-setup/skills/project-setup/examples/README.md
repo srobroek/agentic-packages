@@ -96,15 +96,24 @@ import argparse, importlib.util, os, sys
 from pathlib import Path
 
 def _load_sdk():
+    # Fast path: the executor puts the runner dir on PYTHONPATH (spec 005), so a
+    # plain import works in production with zero boilerplate.
+    try:
+        import sdk
+        return sdk
+    except ModuleNotFoundError:
+        pass
+    # Fallback: load by file path for direct invocation outside the executor
+    # (e.g. functional tests that run `uv run module.py` without PYTHONPATH).
     plugin_root = os.environ.get("PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
     else:
         sdk_path = Path(__file__).resolve().parents[2] / "runner" / "sdk.py"
-    spec = importlib.util.spec_from_file_location("ps_sdk", sdk_path)
+    spec = importlib.util.spec_from_file_location("sdk", sdk_path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["ps_sdk"] = mod   # mandatory: register before exec_module
+    sys.modules["sdk"] = mod   # register before exec_module (the fallback footgun)
     spec.loader.exec_module(mod)
     return mod
 
@@ -134,11 +143,15 @@ if __name__ == "__main__":
 ```
 
 Key rules:
-- **SDK by path, never by package import.** The `_load_sdk()` pattern above is
-  mandatory. Use `${PLUGIN_ROOT}/runner/sdk.py` (env var) with a
-  `__file__`-relative fallback (`parents[2]/runner/sdk.py`).
-- **Register before exec.** `sys.modules["ps_sdk"] = mod` must come before
-  `spec.loader.exec_module(mod)` — the `@dataclass` on `SetupError` requires it.
+- **`import sdk` first, path-load fallback.** The `_load_sdk()` pattern above is
+  the contract (spec 005): the executor puts the runner dir on `PYTHONPATH` so
+  `import sdk` works in production; the `except` arm path-loads from
+  `${PLUGIN_ROOT}/runner/sdk.py` (env var) or a `__file__`-relative fallback
+  (`parents[2]/runner/sdk.py`) for direct invocation outside the executor.
+- **Register before exec — in the fallback arm only.** `sys.modules["sdk"] = mod`
+  must come before `spec.loader.exec_module(mod)` (the `@dataclass` on `SetupError`
+  requires it). The fast `import sdk` arm is immune (normal import populates
+  `sys.modules`).
 - **stdout = one JSON object.** `sdk.emit_result(...)` prints exactly one
   canonical JSON object; do not print anything else to stdout.
 - **Stdin/env are not input channels.** Read all inputs via `sdk.load_frozen_inputs`.

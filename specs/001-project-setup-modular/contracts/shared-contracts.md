@@ -141,19 +141,26 @@ but NOTHING written (pre-write preview; Tier-1 guarantees inspect == real write)
 - Invocation: `uv run <module_rel_root>/module.py --plan <frozen> --step <id>`
   (+ `--inspect` for the dry pass). Module reads frozen inputs from disk; agent
   args are NEVER an input channel.
-- SDK access: `module.py` loads the runner's `sdk.py` by file path
-  (`importlib.util.spec_from_file_location`) from the plugin-root-relative
-  location — NOT by package import, NOT a PyPI dep. The plugin root is found via
-  the `${PLUGIN_ROOT}` env token (the real APM token) with a `__file__`-relative
-  fallback for channels where it is unset at runtime.
-  - **MANDATORY for every import-by-path site** (runner tests AND `module.py`):
-    register the loaded module in `sys.modules[name]` **before** calling
-    `spec.loader.exec_module(mod)`. A file-path-loaded module is otherwise absent
-    from `sys.modules`, and `@dataclass` on any class that subclasses `Exception`
-    (e.g. `SetupError`) raises `AttributeError: 'NoneType' object has no
-    attribute '__dict__'` because dataclasses resolves `cls.__module__` via
-    `sys.modules[...].__dict__`. Verified failure + fix in
-    `tests/test_contracts.py::_load`.
+- SDK access (amended by spec 005): `module.py` resolves `sdk.py` via a two-arm
+  `_load_sdk()`:
+  1. **Fast path — `import sdk`.** The executor puts the runner dir on `PYTHONPATH`
+     when it spawns the module, and `uv run` propagates `PYTHONPATH` into the PEP-723
+     script's `sys.path` (verified, uv 0.11.8). So the production path is a plain
+     package-import — zero importlib boilerplate, and `sys.modules` is populated by
+     normal import machinery (the footgun below cannot occur on this arm).
+  2. **Fallback — file-path load.** For invocation OUTSIDE the executor (functional
+     tests run `uv run module.py` directly without setting PYTHONPATH), the `except
+     ModuleNotFoundError` arm loads `sdk.py` by path from the `${PLUGIN_ROOT}` token
+     (with a `__file__`-relative fallback). Still NOT a PyPI dep, NOT an editable
+     install.
+  - **The `sys.modules`-before-`exec_module` footgun applies ONLY to remaining
+    file-path-load sites** (the fallback arm above AND the runner-internal
+    `_load_sibling` in runner/*.py). At those sites you MUST register the loaded
+    module in `sys.modules[name]` **before** `spec.loader.exec_module(mod)`, else
+    `@dataclass` on any `Exception` subclass (e.g. `SetupError`) raises
+    `AttributeError: 'NoneType' object has no attribute '__dict__'` (dataclasses
+    resolves `cls.__module__` via `sys.modules[...].__dict__`). Verified in
+    `tests/test_contracts.py::_load`. The fast `import sdk` arm is immune.
 - Deps: PEP 723 inline metadata on `module.py`; `uv run` provisions per-module.
 
 ## 7. Discovery + collision rule (FR-011 vs FR-036)
