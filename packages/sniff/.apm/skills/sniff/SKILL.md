@@ -33,11 +33,20 @@ asking, stop and ask now.
      filtered to `.rs`; offer/accept a language filter on top of any other kind.
    Do **not** assume whole repo. A whole-repo sweep is the most expensive option
    and almost never what a bare "sniff" means.
-2. **Which tool depth?** After resolving the target, run
+2. **Which tools?** After resolving the target, run
    `<skill-dir>/scripts/install-tools.sh --probe` (the skill dir = the directory
-   holding this `SKILL.md`; see `$SNIFF_SKILL_DIR` below), show the coverage, and
-   ask the user to pick **lean / full / custom** — and wait. Do **not** silently
-   proceed on whatever tools happen to be installed, even if coverage looks fine.
+   holding this `SKILL.md`; see `$SNIFF_SKILL_DIR` below). Then **propose the full
+   thorough tool set** — every viable tool for **each detected target**: every
+   language AND every config/format/contract/infra target (Terraform, Dockerfile,
+   k8s, CI, OpenAPI, SQL, YAML/JSON/TOML, CSS, Markdown…), each from its doc under
+   `references/languages/` (that dir holds ALL target docs, not just languages) +
+   the cross-language default-on set — as a tiered table (default-on pre-selected
+   ON, opt-in shown OFF with reason), and **wait**. "go" = install every missing
+   default-on tool and run all; the user may deselect. Do **not** pick a "depth",
+   do **not** stop at programming languages, and do **not** silently skip a target
+   or tool because it's uninstalled or "just infra/config" (that's how a full run
+   missed CSS/knip/madge) — a missing default-on tool is an install, or a recorded
+   coverage gap if the user declines.
 
 Only exception: a **non-interactive** run (CI / you are yourself a sub-agent with
 no user to ask). Then skip the prompts, use the named target or whole-repo,
@@ -67,14 +76,15 @@ Run these in order. The full procedure, with stop/report points, is in
    an explicit file list + base ref, decide in-place vs. worktree checkout, and
    confirm scope. Then detect every language/format present **in the target** and
    map each to its doc in `references/languages/index.md`.
-2. **Probe & offer tools — mandatory blocking checkpoint (interactive runs).**
-   Run `scripts/install-tools.sh --probe`, then **always** show the coverage
-   (installed / missing / gaps) and **ask the user to choose** depth — lean /
-   full / custom — using the overlap-and-gap guidance in `references/tooling.md`.
-   **Stop and wait for their answer before Step 3, even if installed tools look
-   adequate.** Install only approved bundles; never auto-install. (Non-interactive
-   runs skip the menu: use what's present, record gaps.) See
-   `references/installer.md`.
+2. **Probe & propose the full tool set — mandatory blocking checkpoint
+   (interactive runs).** Run `scripts/install-tools.sh --probe`, then enumerate
+   **every viable tool for each detected language** (its `languages/<lang>.md`
+   table + the cross-language default-on set) as a tiered table — default-on
+   pre-selected ON, opt-in shown OFF with its reason. **Stop and wait**; "go"
+   installs all missing default-on tools and runs them, the user may deselect.
+   Never auto-install without confirmation; never silently drop a default-on tool
+   because it's uninstalled. (Non-interactive runs skip the prompt: use what's
+   present, record gaps.) See `references/tooling.md` + `references/installer.md`.
    - **2.5. Inventory project lint config FIRST (mandatory).** Before running any
      tool, find and read every config that governs it (`[lints.clippy]`/
      `clippy.toml`, `[tool.ruff]`/`[tool.mypy]`, `eslint.config.*`/`biome.json`/

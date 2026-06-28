@@ -9,6 +9,48 @@ become reported coverage gaps, not silent guesses.
 Install via `scripts/install-tools.sh` (see `installer.md`). Probe first:
 `install-tools.sh --probe`.
 
+## Where the tiers live (source of truth)
+
+**Per-target default-on / opt-in lists are authoritative in each target's doc**
+(`references/languages/<target>.md`, its `## Tools` table with the **Tier**
+column). This file is the **cross-cutting index + overlap map** — the
+cross-language tools, the precedence rules, the analysis classes, and what
+subsumes what. When you build the Step-2 tool proposal: pull each detected
+target's table from its doc, then add the cross-language default-on set below.
+
+## Cross-language default-on set (offer on every run, any stack)
+
+These cover dimensions per-language linters structurally miss; pre-select ON:
+
+| Tool | Dimension | Class | Why it's not redundant |
+|------|-----------|-------|------------------------|
+| lizard | complexity (uniform, all langs) | local | one comparable CCN/length/param metric across every language, incl. those whose linter has none |
+| scc | LOC + complexity triage | local | instant repo-shape map to aim the deep passes; COCOMO estimate |
+| jscpd | cross-file / cross-language duplication | relational | the only clone detector spanning files AND formats (CSS, templates, configs); native linters never see cross-file dup |
+| cspell | spelling across code + docs | local | offline, bundled dicts; identifier/comment/doc typos no linter catches |
+
+Opt-in cross-language: **ast-grep** (structural search/rewrite — needs custom
+rules; also powers apply), **semgrep** (security-first; our shipped
+`semgrep-rules/hardcoded-values.yml` is the one default use), **SonarQube CE**
+(heavy server — only for a standing quality gate), **tokei** (redundant w/ scc).
+
+## Overlap map (don't double-count)
+
+A meta-linter that already covers a dimension makes the point tool redundant —
+drop the point tool to LOW/skip when its owner ran:
+
+- **Complexity:** clippy / golangci(gocyclo,gocognit) / ruff(C901) / eslint+sonarjs
+  each own their language → **lizard** only fills languages without a native one.
+- **Duplication:** golangci(`dupl`) for Go, eslint-plugin-sonarjs for JS/TS →
+  **jscpd** fills everything else (Python, SQL, CSS, templates, cross-file).
+- **Dead code (within-file):** rustc / golangci(unused) / ruff(F401,F841) →
+  native. **Whole-program** dead code needs a separate tool: **deadcode**(Go),
+  **vulture**(Python), **knip**(JS/TS). These do NOT overlap the meta-linters.
+- **Cycles / architecture:** **dependency-cruiser**(JS/TS) — no meta-linter sees
+  the module graph; madge is the lighter cycles-only fallback.
+- **`any`-leakage:** typescript-eslint `no-unsafe-*` (per-site) + **type-coverage**
+  (one % metric) — complementary, keep both.
+
 ## How to read this catalog
 
 Each tool lists: **mechanism** (predicts precision: dataflow > AST > token >

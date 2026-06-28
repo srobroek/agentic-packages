@@ -23,17 +23,20 @@ How sniff knows YAML is present: key files, extensions, config.
 
 ## Tools
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| yamllint | `yamllint -f parsable .` | Norway/truthy coercion, tabs, indent consistency, duplicate keys, line length, trailing space | `install-tools.sh --install data` |
-| yq | `yq eval '<expr>' <file>` | ad-hoc structural queries only — **NOT a linter** | (usually present) |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| yamllint | `yamllint -f parsable .` | Norway/truthy coercion, tabs, indent consistency, duplicate keys, line length, trailing space (relaxed/tuned to project config) | default-on | `install-tools.sh --install data` |
+| check-jsonschema | `check-jsonschema --schemafile <schema> <file>` | schema conformance for schema-backed YAML configs | opt-in (only when a schema-backed config is present) | `install-tools.sh --install data` |
 
 Notes: yamllint is the primary and essentially only format analyzer here; the
 `truthy` rule catches the Norway problem and the `key-duplicates` rule catches
-duplicate keys. Use `-f parsable` for machine-readable line:col output. yq is for
-exploration in the analysis itself, not a source of findings. For k8s/CI files,
-do not stop at yamllint — also run the functional tools named in `kubernetes.md`
-/ `ci-cd.md`. No grep fallback; if yamllint is absent, record a coverage gap.
+duplicate keys. Use `-f parsable` for machine-readable line:col output, and run
+it relaxed/tuned to the project's `.yamllint`. check-jsonschema is the conformance
+gate when a schema-backed config exists. yq is **NOT a linter** — it is for
+ad-hoc exploration in the analysis itself (`yq eval '<expr>' <file>`), not a
+source of findings, and is excluded from the tool tiers. For k8s/CI files, do not
+stop at yamllint — also run the functional tools named in `kubernetes.md` /
+`ci-cd.md`. No grep fallback; if yamllint is absent, record a coverage gap.
 
 ## Smell checklist
 

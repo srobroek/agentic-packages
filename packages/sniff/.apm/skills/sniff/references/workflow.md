@@ -126,33 +126,49 @@ tools that are already usable, and record every missing tool as a coverage gap.
 The install menu below is interactive-only. (A tool reported `SHIM`/unrunnable by
 the probe counts as missing — do not try to use it.)
 
-The interactive flow — **this is a mandatory, blocking checkpoint. Do NOT begin
-detection (Step 3) until the user has chosen.** Surfacing coverage and offering
-installs is required *even when the already-installed tools look adequate* — "I
-judged coverage sufficient and proceeded" is not allowed; the depth decision is
-the user's, not yours.
+The interactive flow — **mandatory, blocking checkpoint. Do NOT begin detection
+(Step 3) until the user has confirmed the tool set.** The model is **propose the
+full thorough set, user deselects** — NOT "pick a depth". A thorough refactor
+audit wants broad coverage, so every viable tool for the detected stack is
+pre-selected ON by default; the user trims, they don't opt in. ("I judged the
+installed tools adequate and proceeded" is the exact failure that skipped CSS /
+knip / madge on a full run — not allowed.)
 
 1. Run `scripts/install-tools.sh --probe`.
-2. Present the result as a **menu**, not a fait accompli. Show, per the
-   overlap/gap guidance in `references/tooling.md`, for the detected stack only:
-   - what is installed and what each covers,
-   - what is missing and what dimension that leaves blind,
-   - **overlap** (e.g. "jscpd is redundant with golangci-lint's `dupl` for Go;
-     it adds duplication coverage for TS where ESLint has none"),
-   so the user can pick informed.
-3. Offer three depths and **ask the user to pick one**:
-   - **lean** — the meta-tools + each language's one primary linter,
-   - **full** — add the secondary/security tools,
-   - **custom** — user picks bundles.
-   (You may state a recommendation, but you must wait for their answer.)
-4. **STOP and wait for the user's choice.** Then install only what they approve:
-   `install-tools.sh --install <bundle>...`. **Never auto-install.** If they
-   choose to proceed with what's present (or decline installs), that's fine —
-   proceed and record the gaps — but only *after* they've told you so.
+2. **Enumerate EVERY viable tool for each detected TARGET** — this means every
+   programming language AND every config/format/contract/infra target present:
+   Terraform, Dockerfile, Kubernetes manifests, CI workflows, OpenAPI, GraphQL,
+   Protobuf, SQL, shell, YAML/JSON/TOML, Markdown, CSS — each has its own doc
+   under `references/languages/` (the dir name is historical; it holds ALL target
+   docs, not just languages — see `references/languages/index.md`). Pull each
+   detected target's tool table from its doc, plus the cross-language default-on
+   set from `references/tooling.md`. Do not stop at programming languages and do
+   not silently omit a target because it's "just config/infra" — a Dockerfile or
+   a `.tf` dir is a detected target with default-on tools (hadolint, tflint, …).
+   A missing default-on tool is an *install*, not an omission.
+3. Present a **tiered table per detected language**:
 
-**Report:** chosen depth and the resulting tool set. Do not silently skip this
-checkpoint; if you find yourself in Step 3 without having shown the probe and
-gotten a depth answer, you skipped a required step.
+   ```
+   <LANGUAGE>            installed?   dimension                 tier      action
+     <tool>              ✓ / ✗ / SHIM <what it catches>         ON        (use / → install via <mgr>)
+     <opt-in tool>       ✗            <dimension>               opt-in    off unless you want it
+   ```
+   - **default-on** tools are pre-checked ON (install the missing ones).
+   - **opt-in** tools are shown but OFF, each with the one-line reason it's
+     opt-in (nightly / redundant-with-X / heavy / security-only / needs-baseline),
+     from the language doc.
+   - Note **overlap** so a deselect is informed (e.g. "sonarjs already covers
+     JS/TS complexity+dup, so lizard/jscpd add nothing here").
+4. **STOP and wait.** Default action if the user just says "go" = install every
+   missing **default-on** tool and run the full set. The user may deselect any
+   ("skip type-coverage") or enable an opt-in ("add cargo-udeps"). Install with
+   `install-tools.sh --install <bundle>...`. **Never auto-install without the
+   confirmation; never silently drop a default-on tool.** If the user declines an
+   install, proceed without it and record the **coverage gap** in the report.
+
+**Report:** the resolved tool set per language (on / opt-in-skipped / gap), so the
+coverage section is honest about what ran. If you reach Step 3 without having
+enumerated and confirmed the full per-language set, you skipped a required step.
 
 ## Step 2.5 — Inventory the project's existing lint config (MANDATORY, before any tool runs)
 
@@ -280,12 +296,18 @@ Every finding must cite a specific `file:line`. No guessing.
 
 ## Step 5 — Map to refactoring.guru
 
-For each finding, attach from `references/refactoring-catalog.md`:
+For **every** finding that maps to a catalog smell, attach from
+`references/refactoring-catalog.md` — and these go in the report's structured
+columns, NOT just prose:
 
-- the **smell** name,
-- the recommended **refactoring pattern(s)**,
-- the applicable **technique(s)**,
-- the canonical refactoring.guru **URL**.
+- the **smell** name + its canonical refactoring.guru **URL**,
+- the recommended **refactoring pattern/technique** + its **URL**.
+
+This is required per row: the report plan table's "Smell → refactoring (guru
+URL)" cell must be filled for each finding that has a catalog mapping — a finding
+where the field is blank or the URL only appears in surrounding prose is
+incomplete. Findings with no catalog analogue (e.g. a pure runtime bug, a
+tool-specific lint) say "—" explicitly rather than being left ambiguous.
 
 Use the baked catalog as the index. Fetch the full technique page (via the
 web-fetch/fetcher tool) **only** when a finding needs step-by-step mechanics the

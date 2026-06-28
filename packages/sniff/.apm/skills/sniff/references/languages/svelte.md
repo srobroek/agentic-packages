@@ -19,10 +19,10 @@ How sniff knows Svelte is present.
 Run `eslint-plugin-svelte` first, then `svelte-check` for compiler-level
 template + type diagnostics ESLint does not produce.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| ESLint + `eslint-plugin-svelte` | `npx eslint --format json .` | component smells: `svelte/require-each-key`, `svelte/no-reactive-reassign`, `svelte/no-dom-manipulating`, reactivity rules | `install-tools.sh --install js-ts` |
-| `svelte-check` | `svelte-check --output machine` | compiler diagnostics + TS across markup, missing keys, unused props, a11y warnings | `install-tools.sh --install js-ts` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| ESLint + `eslint-plugin-svelte` | `npx eslint --format json .` | component smells: `svelte/require-each-key`, `svelte/no-reactive-reassign`, `svelte/no-dom-manipulating`, reactivity rules | default-on | `install-tools.sh --install js-ts` |
+| `svelte-check` | `svelte-check --output machine` | compiler diagnostics + TS across markup, missing keys, unused props, a11y warnings | default-on | `install-tools.sh --install js-ts` |
 
 Notes: `eslint-plugin-svelte` is the Svelte meta-linter (parses `.svelte`).
 `svelte-check` is the compiler's own diagnostic pass — it surfaces template/type

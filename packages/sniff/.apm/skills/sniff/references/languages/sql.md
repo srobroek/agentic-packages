@@ -16,18 +16,19 @@ How sniff knows SQL is present: key files, extensions, config.
 
 ## Tools
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| sqlfluff | `sqlfluff lint --format json --dialect <d> <path>` | dialect-aware style + anti-patterns (`SELECT *`, implicit joins, ambiguous refs, layout) | `install-tools.sh --install sql` |
-| squawk | `squawk <migration.sql>` | dangerous Postgres migrations (locking ALTER, table rewrite, NOT NULL without default) — deep runs | `install-tools.sh --install sql` |
-| jscpd | `jscpd --reporters json --silent --min-tokens 50 <path>` | cross-file query duplication (no native SQL dup detector) | `install-tools.sh --install dup` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| sqlfluff | `sqlfluff lint --format json --dialect <d> <path>` | dialect-aware style + anti-patterns (`SELECT *`, implicit joins, ambiguous refs, layout) | default-on | `install-tools.sh --install sql` |
+| squawk | `squawk <migration.sql>` | dangerous Postgres migrations (locking ALTER, table rewrite, NOT NULL without default) | opt-in (only when Postgres migration files are present) | `install-tools.sh --install sql` |
+| jscpd | `jscpd --reporters json --silent --min-tokens 50 <path>` | cross-file query duplication (no native SQL dup detector) | default-on | `install-tools.sh --install dup` |
 
 Notes: sqlfluff is primary and is dialect-aware (`postgres`, `bigquery`,
 `snowflake`, `mysql`, `tsql`, `ansi`, …) — always pass the project's real dialect.
 squawk is Postgres-only and targets migration safety, not query style; run it on
 migration files on deep passes. jscpd is the dup floor since SQL has no native
 copy-paste detector. None of these understand the live schema, so missing-index
-and N+1 judgments come from the smell checklist, not a tool.
+and N+1 judgments come from the smell checklist, not a tool. **sqlint is
+redundant with sqlfluff — do not add it.**
 
 ## Smell checklist
 

@@ -14,17 +14,20 @@ How sniff knows Markdown is present: file extensions and lint config.
 
 The analyzers to run, primary first. Exact invocation + machine-readable flag.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| markdownlint-cli2 | `markdownlint-cli2 "**/*.md"` | heading levels, list markers, fence language hints, trailing whitespace, hard tabs, line length, bare URLs, duplicate headings, missing alt text | `install-tools.sh --install docs` |
-| lychee | `lychee --format json .` | dead/broken links, dead anchors, hardcoded/absolute link targets | `install-tools.sh --install docs` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| markdownlint-cli2 | `markdownlint-cli2 "**/*.md"` | heading levels, list markers, fence language hints, trailing whitespace, hard tabs, line length, bare URLs, duplicate headings, missing alt text | default-on | `install-tools.sh --install docs` |
+| lychee | `lychee --format json .` | dead/broken links, dead anchors, hardcoded/absolute link targets | opt-in (network access; CI) | `install-tools.sh --install docs` |
+| cspell | `cspell "**/*.md"` | offline spell-check with bundled dictionaries | opt-in (run on demand) | `install-tools.sh --install docs` |
 
 Notes: markdownlint-cli2 is the meta-linter for structural/style smells — it
 respects `.markdownlint*` config so honor project rule customizations (e.g. a
 relaxed `MD013` line-length). lychee owns link liveness (network + intra-repo
-anchors); markdownlint does not verify link targets. **vale (prose linting) is
-intentionally out of scope** for sniff — it audits grammar/word-choice/register,
-which is linguistics, not code smell.
+anchors); markdownlint does not verify link targets. cspell is offline
+spell-checking against bundled dictionaries — opt-in, not a structural finding.
+**vale (prose linting) is intentionally EXCLUDED** from sniff — it audits
+grammar/word-choice/register, which is prose style / linguistics, not code smell,
+and is out of scope.
 
 ## Smell checklist
 

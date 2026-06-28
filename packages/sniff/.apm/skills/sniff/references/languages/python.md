@@ -16,13 +16,16 @@ How sniff knows this language/format is present: key files, extensions, config.
 
 The analyzers to run, primary first. Exact invocation + machine-readable flag.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| ruff | `ruff check --extend-select C901,B,SIM,PL,RUF,UP --output-format json .` — **use `--extend-select`, NOT `--select`**: `--select` discards the repo's pinned `[tool.ruff] select` *and* its line-length, flooding a well-configured repo with noise it already triaged (Hard Rule: respect project config). `--extend-select` keeps project config and adds the design/complexity rules ruff's E/F defaults omit. | flake8 + isort + pyupgrade + mccabe (C901) + bugbear + pylint subset | `install-tools.sh --install python` (`pip/uv install ruff`) |
-| pylint | `pylint --output-format json <pkg>` | unique refactoring smells R09xx (too-many-branches/args/locals, duplicate-code) | `pip install pylint` |
-| vulture | `vulture <path> --min-confidence 80` | dead code (unused functions, vars, imports, unreachable) | `pip install vulture` |
-| mypy | `mypy --no-error-summary <pkg>` | type smells (untyped defs, `Any` leakage, missing returns) | `pip install mypy` |
-| pyright | `pyright --outputjson` | type smells (faster, stricter inference) | `npm i -g pyright` / `pip install pyright` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| ruff | `ruff check --extend-select C901,PL,B,SIM,PERF,FURB,ERA,C4,TRY,RUF --output-format json .` — **use `--extend-select`, NOT `--select`**: `--select` discards the repo's pinned `[tool.ruff] select` *and* its line-length, flooding a well-configured repo with noise it already triaged (Hard Rule: respect project config). `--extend-select` keeps project config and adds the design/complexity/perf/modernization rules ruff's E/F defaults omit. | flake8 + isort + pyupgrade + mccabe (C901) + bugbear + perf + refurb + commented-out-code + comprehensions + tryceratops + pylint subset | default-on | `install-tools.sh --install python` (`pip/uv install ruff`) |
+| pylint (design-scoped) | `pylint --disable=all --enable=R --output-format json <pkg>` — scope to refactoring messages only: `R09xx` (too-many-*), `R0801` (duplicate-code), `R0401` (cyclic-import). These design smells (Large Class / Long Param List / Data Clump / dup / cyclic import) are **NOT** in ruff. | unique design smells: too-many-branches/args/locals/instance-attrs, duplicate-code, cyclic-import | default-on | `pip install pylint` |
+| vulture | `vulture <path> --min-confidence 80` | cross-project dead code (unused functions, classes, methods, vars) ruff can't see | default-on | `pip install vulture` |
+| pyright | `pyright --outputjson` | type smells (untyped defs, `Any` leakage, missing returns; fast, strict inference) | default-on when code is typed (preferred type checker) | `npm i -g pyright` / `pip install pyright` |
+| mypy | `mypy --no-error-summary <pkg>` | type smells (untyped defs, `Any` leakage, missing returns) | opt-in (don't run both checkers — use mypy only if the project standardizes on it) | `pip install mypy` |
+| radon / xenon | `radon mi -j <path>` / `xenon --max-average B <path>` | maintainability index (MI) | opt-in (CC redundant w/ ruff C901; MI is the only unique signal) | `pip install radon xenon` |
+| deptry | `deptry .` | unused / missing / transitive declared dependencies | opt-in (dependency hygiene, deep runs only) | `pip install deptry` |
+| bandit | `bandit -r <path> -f json` | security issues (injection, weak crypto, unsafe deserialization) | opt-in (security, not smell) | `pip install bandit` |
 
 Notes: **ruff is the meta-linter** — it reimplements the flake8 family plus
 `mccabe` (C901 complexity) and a `pylint` subset in one fast AST pass; run it
@@ -33,13 +36,21 @@ about. `--extend-select` ADDS those on top of whatever the repo configures, so a
 repo that pins `[tool.ruff] select` and a custom `line-length` keeps both; bare
 `--select` would replace them and dump hundreds of false findings (e.g. E501 on a
 repo whose configured line-length you just discarded) — a direct violation of the
-Hard Rule. Add `pylint` only on deep runs for the design smells ruff lacks
-(R09xx: `too-many-branches`, `too-many-arguments`, `too-many-locals`,
-`duplicate-code`).
-`vulture` covers dead code ruff does not fully detect. Pick **one** type
-checker (mypy or pyright) per project — match whatever the repo already configures.
-`jscpd` is only worth installing if cross-file duplication matters and neither
-ruff nor pylint's `duplicate-code` is catching it.
+Hard Rule. **`flake8`/`pyflakes`/`isort`/`pyupgrade` are REDUNDANT** — ruff
+reimplements all of them, so don't run them as separate tools.
+Run `pylint` **scoped to design messages** (`--disable=all --enable=R`) — its
+R09xx (`too-many-branches`/`-arguments`/`-locals`/`-instance-attributes`), R0801
+(`duplicate-code`), and R0401 (`cyclic-import`) are design smells (Large Class,
+Long Parameter List, Data Clump, duplication, cyclic import) that ruff does not
+implement; the `--disable=all` scope keeps it from re-flooding ruff's lane.
+`vulture` covers cross-project dead code (functions, classes, methods) ruff
+cannot see. Pick **one** type checker — **pyright preferred**, default-on when the
+code is typed; run `mypy` instead only if the project standardizes on it, and
+**never run both**. `radon`/`xenon` are opt-in: their cyclomatic complexity is
+redundant with ruff's `C901`, so the maintainability index (MI) is the only
+unique signal they add. `deptry` (dependency hygiene) and `bandit` (security) are
+opt-in deep-run additions. `jscpd` is only worth installing if cross-file
+duplication matters and neither ruff nor pylint's `duplicate-code` is catching it.
 
 ## Smell checklist
 

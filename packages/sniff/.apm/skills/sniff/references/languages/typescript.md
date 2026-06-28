@@ -18,24 +18,32 @@ How sniff knows this language/format is present: key files, extensions, config.
 
 The analyzers to run, primary first. Exact invocation + machine-readable flag.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| ESLint + typescript-eslint | `npx eslint --format json .` | idioms, complexity, bugs, dup (with plugins) | project-local (`package.json`); `install-tools.sh --install js-ts` provisions globally if absent |
-| eslint-plugin-sonarjs | (ESLint plugin) `npx eslint --format json .` | cognitive complexity, duplicated branches, identical conditions | `npm i -D eslint-plugin-sonarjs` |
-| eslint-plugin-unicorn | (ESLint plugin) `npx eslint --format json .` | modernization (prefer `node:` protocol, top-level await, `Array#flatMap`) | `npm i -D eslint-plugin-unicorn` |
-| tsc | `npx tsc --noEmit --strict` | type smells (`any` leakage, missing null checks) | project-local TypeScript |
-| knip | `npx knip --reporter json` | dead files, unused exports, unused deps | `npm i -D knip` |
-| madge | `npx madge --circular --json src` | circular dependencies, barrel cycles | `npm i -D madge` |
-| type-coverage | `npx type-coverage --detail --strict` | percent of code that is implicitly/explicitly `any` | `npm i -D type-coverage` |
-| biome | `npx biome lint --reporter=json .` | fast linter+formatter alternative (also JSON) | `npm i -D @biomejs/biome` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| ESLint + typescript-eslint | `npx eslint --format json .` (enable the **type-checked tier**: `recommendedTypeChecked` / `strictTypeChecked`) | idioms, complexity, bugs, dup; type-aware rules `no-floating-promises`, `no-unsafe-*` (any-leakage at rule level) | default-on | project-local (`package.json`); `install-tools.sh --install js-ts` provisions globally if absent |
+| eslint-plugin-sonarjs | (ESLint plugin) `npx eslint --format json .` | cognitive complexity, duplicated branches, identical conditions | default-on | `npm i -D eslint-plugin-sonarjs` |
+| eslint-plugin-unicorn | (ESLint plugin) `npx eslint --format json .` | modernization (prefer `node:` protocol, top-level await, `Array#flatMap`) | default-on | `npm i -D eslint-plugin-unicorn` |
+| tsc | `npx tsc --noEmit --strict` | type smells (`any` leakage, missing null checks) | default-on | project-local TypeScript |
+| knip | `npx knip --reporter json` | dead files, unused exports, unused deps | default-on | `npm i -D knip` |
+| dependency-cruiser | `npx depcruise --no-config --output-type err src` (or with a `.dependency-cruiser.js` config) | circular dependencies, barrel cycles, architecture/boundary violations | default-on | `npm i -D dependency-cruiser` |
+| type-coverage | `npx type-coverage --detail --strict` | percent of code that is implicitly/explicitly `any` | default-on | `npm i -D type-coverage` |
+| madge | `npx madge --circular --json src` | circular dependencies, barrel cycles | opt-in (redundant w/ dependency-cruiser; lighter cycles-only fallback) | `npm i -D madge` |
+| biome | `npx biome lint --reporter=json .` | fast linter+formatter alternative (also JSON) | opt-in (alternative to ESLint, not an addition; no type-aware rules) | `npm i -D @biomejs/biome` |
 
 Notes: ESLint with `typescript-eslint` is the meta-linter — it parses once and
-runs all rules. **eslint-plugin-sonarjs makes `lizard` and `jscpd` redundant for
+runs all rules. Enable the **type-checked tier** (`recommendedTypeChecked` or
+`strictTypeChecked`), not just `recommended`: that is what turns on
+`no-floating-promises` and the `no-unsafe-*` family (any-leakage caught at the
+rule level). **eslint-plugin-sonarjs makes `lizard` and `jscpd` redundant for
 TS/JS** (it covers cognitive complexity and duplicated branches in-tree). Run
 `tsc --noEmit` only against a real `tsconfig.json`; without one, type smells are
-out of scope. `biome` is an *alternative* to ESLint, not an addition — if the
-project already uses ESLint, prefer it (richer type-aware rules). Use `madge`
-and `knip` for structural smells ESLint cannot see (cycles, dead files).
+out of scope. `dependency-cruiser` is the default-on structural tool — it covers
+both cycles and architecture/boundary rules, **superseding `madge`** (orphans +
+boundaries); keep `madge` only as a lighter cycles-only fallback. `biome` is an
+*alternative* to ESLint, not an addition — if the project already uses ESLint,
+prefer it (richer type-aware rules). `ts-prune` is **DEPRECATED → use `knip`**
+(do not add it). Use `dependency-cruiser` and `knip` for structural smells
+ESLint cannot see (cycles, boundaries, dead files).
 
 ## Smell checklist
 

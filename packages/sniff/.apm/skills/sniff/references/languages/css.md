@@ -14,22 +14,27 @@ How sniff knows CSS/SCSS is present.
 
 ## Tools
 
-stylelint is the meta-linter. Add `stylelint-declaration-strict-value` to catch
-magic numbers (raw colors/spacing that should be tokens) and `stylelint-order`
-for declaration ordering.
+stylelint is the meta-linter. The standard config is default-on; the
+`-strict-value` and `-order` plugins are opt-in (they need per-project config or
+are organizational preference), and `@projectwallace/css-analyzer` is opt-in for
+a deep CSS metrics audit.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| stylelint + `stylelint-config-standard` | `npx stylelint --formatter json "**/*.{css,scss}"` | specificity, `!important`, nesting depth, overqualified/ID selectors, duplicates, invalid/legacy properties | `install-tools.sh --install css` |
-| `stylelint-declaration-strict-value` (plugin) | same invocation, rule `scale-unlimited/declaration-strict-value` enabled | magic numbers — raw colors/sizes that should be custom properties/tokens | bundled with `css` |
-| `stylelint-order` (plugin) | same invocation | declaration-order consistency | bundled with `css` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| stylelint + `stylelint-config-standard` (+ `stylelint-config-recommended-scss` when SCSS) | `npx stylelint --formatter json "**/*.{css,scss}"` | specificity, `!important`, nesting depth, overqualified/ID selectors, duplicates, invalid/legacy properties | default-on | `install-tools.sh --install css` |
+| `stylelint-declaration-strict-value` (plugin) | same invocation, rule `scale-unlimited/declaration-strict-value` enabled | magic numbers — raw colors/sizes that should be custom properties/tokens | opt-in (needs per-property config; noisy without it) | bundled with `css` |
+| `stylelint-order` (plugin) | same invocation | declaration-order consistency | opt-in (organizational preference) | bundled with `css` |
+| `@projectwallace/css-analyzer` | `npx @projectwallace/css-analyzer "**/*.css"` | specificity/complexity metrics — deep CSS audit | opt-in (deep CSS audit) | `npm i -D @projectwallace/css-analyzer` |
 
 Notes: stylelint is the single CSS/SCSS entry point — one AST parse covers most
-dimensions; don't stack regex scanners. `stylelint-config-standard` already
-flags `!important` overuse, ID selectors for styling, and overqualification via
-its rule set. Magic-number detection requires the strict-value plugin (configure
-it for `color`/`fill`/spacing properties). Autoprefixer (PostCSS) — not
-stylelint — is what removes hand-written vendor prefixes; the smell is doing
+dimensions; don't stack regex scanners. **stylelint v15+ is quality-only**
+(formatting rules removed); `jscpd` covers CSS duplication if you need a
+dedicated dup pass. `stylelint-config-standard` already flags `!important`
+overuse, ID selectors for styling, and overqualification via its rule set; add
+`stylelint-config-recommended-scss` for SCSS sources. Magic-number detection
+requires the strict-value plugin (configure it for `color`/`fill`/spacing
+properties — noisy without that config, hence opt-in). Autoprefixer (PostCSS) —
+not stylelint — is what removes hand-written vendor prefixes; the smell is doing
 prefixes by hand when the build pipeline can.
 
 ## Smell checklist

@@ -1,8 +1,12 @@
 # Language & Format Index
 
-Route each detected language/format to its self-contained reference doc. In
-step 1, map the stack to these docs; load (or hand to a `bloodhound` agent) only
-the docs for languages actually present.
+Route each detected **target** to its self-contained reference doc. "Target"
+means any sniffable surface — a programming language, a config/data format, an
+API contract, OR an infra target (Terraform, Dockerfile, Kubernetes, CI). The
+directory is named `languages/` for history, but it holds docs for ALL of these;
+treat infra/config/contract docs as first-class, not afterthoughts. In step 1,
+map the detected stack to these docs; load (or hand to a `bloodhound`) only the
+docs for targets actually present.
 
 Each doc is independent and follows `_template.md`. To add a language, copy the
 template, fill it, and add a row here — nothing else in the package needs to

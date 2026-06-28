@@ -17,16 +17,19 @@ How sniff knows Vue is present.
 Run `eslint-plugin-vue` first (the SFC meta-linter), then `vue-tsc` for
 template-aware type checking that `tsc` alone cannot do.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| ESLint + `eslint-plugin-vue` | `npx eslint --format json .` | template & SFC smells: `vue/require-v-for-key`, `vue/no-mutating-props`, `vue/no-use-v-if-with-v-for`, style-guide rules | `install-tools.sh --install js-ts` |
-| `vue-tsc` | `vue-tsc --noEmit` | type checking across `<template>` + `<script>` (props, emits, refs) | `install-tools.sh --install js-ts` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| ESLint + `eslint-plugin-vue` | `npx eslint --format json .` | template & SFC smells: `vue/require-v-for-key`, `vue/no-mutating-props`, `vue/no-use-v-if-with-v-for`, style-guide rules | default-on | `install-tools.sh --install js-ts` |
+| `vue-tsc` | `vue-tsc --noEmit` | type checking across `<template>` + `<script>` (props, emits, refs) — replaces plain `tsc` for SFCs | default-on | `install-tools.sh --install js-ts` |
+| stylelint + `stylelint-config-recommended-vue` | `npx stylelint --formatter json "**/*.vue"` | SFC `<style>` block smells (specificity, `!important`, magic values) — see `./css.md` | default-on when CSS-in-SFC | `npm i -D stylelint stylelint-config-recommended-vue` |
 
 Notes: `eslint-plugin-vue` is the Vue meta-linter — it parses the SFC and owns
 template smells `tsc` cannot see. Use `vue-tsc` instead of plain `tsc` for Vue
-projects: it understands `.vue` files and type-checks template expressions. Base
-JS/TS complexity, dup, and dead-code dimensions belong to `./typescript.md`; run
-those once per repo.
+projects: it understands `.vue` files and type-checks template expressions. When
+SFCs carry `<style>` blocks, add `stylelint-config-recommended-vue` so stylelint
+can lint the embedded CSS (default-on only when CSS-in-SFC is present; see
+`./css.md` for the full CSS toolset). Base JS/TS complexity, dup, and dead-code
+dimensions belong to `./typescript.md`; run those once per repo.
 
 ## Smell checklist
 
