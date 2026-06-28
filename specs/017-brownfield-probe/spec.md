@@ -5,11 +5,19 @@ dedicated `feat/brownfield-probe` branch
 
 **Created**: 2026-06-28
 
-**Status**: **Draft (2026-06-28)** — net-new foundation spec, carved out of 008 at the
-user's direction. 008 (brownfield-detect) is RESCOPED to consume this; the
-`brownfield_skip` per-module input it originally prescribed is DROPPED entirely (see
-"Why this spec exists"). Design decisions resolved with the user 2026-06-28 — see the
-matching `memory.md` and `[[project-setup-008-brownfield-redesign]]`.
+**Status**: **Deferred — stage 2 (2026-06-28)** — brownfield (this spec + 008) was
+PARKED by the user to prioritize the greenfield roadmap (012 → 013 → 007 → 014/015/016).
+This spec stays on disk as the stage-2 design of record. Net-new foundation spec, carved
+out of 008; 008 (brownfield-detect) is RESCOPED to consume this; the `brownfield_skip`
+per-module input it originally prescribed is DROPPED entirely (see "Why this spec
+exists"). **Two refinements to apply when resuming** (decided at defer time): (1) DROP
+the `[brownfield]` manifest section (FR-003) — verified redundant with each module's
+`reconcile` setting and the inspect-pass Diffs the pipeline already emits
+(`reproduce.build_drift_report`); keep only `brownfield_probe` + the `merge` policy; (2)
+protect ALL blunt clobberers with append/preserve, not just `.gitignore` — also
+`.pre-commit-config.yaml`, the quality-hooks generated list, and `.env.example`. P1 of
+this spec was built then reverted EXCEPT the widened G8 secret patterns (kept,
+greenfield-relevant). See `memory.md` and `[[project-setup-008-brownfield-redesign]]`.
 
 **Input**: While planning 008 (brownfield detect-and-adopt), two user decisions
 reshaped the work: (1) the `brownfield_skip` `[[input]]` the spec prescribed for three
