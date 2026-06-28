@@ -1,16 +1,25 @@
 name: sniff
 version: 1.1.0
 description: >-
-  Audit a codebase for stability, hardening, and cleanup opportunities, finding
-  latent issues across error handling, structure, concurrency, and input
-  boundaries.
+  Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code
+  across 21 languages and formats, maps each finding to refactoring.guru smells,
+  patterns, and techniques, stress-tests every recommendation with a built-in
+  adversarial pragmatism critic, and produces a prioritized refactoring plan
+  (impact, value, cost, severity, backwards-compatibility). Drives each language
+  toolchain's own linters and analyzers (opportunistic, never required) with a
+  guided first-run installer. Advisory by default; applies low-risk refactors
+  only on explicit approval behind a verification re-run. Standalone: no APM
+  dependencies.
 author: Sjors Robroek
 license: Apache-2.0
-type: skill
+type: hybrid
 target: all
 includes: auto
 category: quality
 tags:
   - skill
+  - agent
   - quality
-  - hardening
+  - refactoring
+  - code-smells
+  - tech-debt
