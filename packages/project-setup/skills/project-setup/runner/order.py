@@ -19,10 +19,6 @@ import importlib.util
 import sys
 from graphlib import CycleError, TopologicalSorter
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Any
 
 # ── import-by-path bootstrap ──────────────────────────────────────────────── #
 _RUNNER = Path(__file__).resolve().parent

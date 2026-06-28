@@ -111,7 +111,6 @@ _KNOWN_TOP_LEVEL = frozenset(
     {"schema_version", "meta", "module", "order", "tools", "inputs", "steps"}
 )
 
-_KNOWN_META_KEYS = frozenset({"repository", "author"})
 _REQUIRED_META_KEYS = frozenset({"repository", "author"})
 
 _KNOWN_MODULE_KEYS = frozenset({

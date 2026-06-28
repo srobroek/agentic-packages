@@ -179,7 +179,6 @@ def build_drift_report(
                 continue
 
             # Present each proposed diff to the user
-            all_skipped = True
             for diff in diffs:
                 diff_kind = diff.get("kind", "create")
                 diff_path = diff.get("path", "")
@@ -195,11 +194,8 @@ def build_drift_report(
                 })
                 if confirmed:
                     entry.confirmed_paths.add(diff_path)
-                    all_skipped = False
-                else:
-                    all_skipped = True  # track per-diff; update final below
 
-            # Recalculate: skipped only if NO path was confirmed
+            # Skipped only if NO path was confirmed
             entry.skipped = len(entry.confirmed_paths) == 0
             confirmations[key] = entry
 
@@ -260,7 +256,6 @@ def apply(
     # Lazy import to avoid circular at module level
     _executor = _load_sibling("executor")
     run_gate = _executor.run_gate_step
-    run_agent = _executor.run_agent_step
 
     outcomes: list[StepOutcome] = []
 

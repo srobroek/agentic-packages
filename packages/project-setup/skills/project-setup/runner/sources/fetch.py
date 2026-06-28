@@ -6,10 +6,8 @@ subdirectoried) checkout root.  All failure modes are non-fatal: a missing
 ``git`` binary, an unreachable remote, an unknown ref, etc., return a
 ``FetchResult`` with ``ok=False`` and a human-readable ``skipped_reason``
 rather than raising.  Callers proceed with whatever other roots are available
-(FR-013 / SC-008).
-
-``fetch_all`` drives a list of locators and aggregates the outcomes into a
-``SourceReport``.
+(FR-013 / SC-008).  The pipeline drives the locator list itself (one
+``fetch_source`` call per source), so there is no aggregation layer here.
 
 Standard library only (``subprocess`` for git, ``pathlib``, ``shutil``).
 No third-party imports.  No network access in the module itself — the network
@@ -22,7 +20,7 @@ import importlib.util
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -80,22 +78,6 @@ class FetchResult:
     skipped_reason: str = ""     # non-empty when ok=False
 
 
-@dataclass
-class SourceReport:
-    """Aggregated summary of a ``fetch_all`` call."""
-
-    fetched: list[FetchResult] = field(default_factory=list)    # newly cloned
-    cached: list[FetchResult] = field(default_factory=list)     # already present
-    skipped: list[FetchResult] = field(default_factory=list)    # failed / offline
-
-    def successful_roots(self) -> list[Path]:
-        """Ordered list of all root paths that resolved (fetched + cached)."""
-        results: list[Path] = []
-        for r in self.fetched + self.cached:
-            if r.ok and r.root_path is not None:
-                results.append(r.root_path)
-        return results
-
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -146,16 +128,13 @@ def _clone_or_update(locator: "Locator", cache_dir: Path) -> FetchResult:
         if not ok:
             return FetchResult(ok=False, root_path=None, locator=locator,
                                skipped_reason=f"git clone failed: {msg}")
-        was_cached = False
     else:
         # Already present — fetch latest from origin to pick up floating refs.
         ok, msg = _run_git("fetch", "--prune", "origin", cwd=repo_dir)
         if not ok:
             # Treat as a soft failure: we have a previous checkout, use it.
             # Log but don't abort — the caller gets the stale tree.
-            was_cached = True
-        else:
-            was_cached = True
+            pass
 
     # Checkout the requested ref into a detached HEAD.
     ref = locator.ref if locator.ref and locator.ref != "HEAD" else "origin/HEAD"
@@ -228,45 +207,3 @@ def fetch_source(locator: "Locator") -> FetchResult:
                            skipped_reason=f"unexpected error: {exc}")
 
 
-def fetch_all(locators: list["Locator"]) -> tuple[list[Path], SourceReport]:
-    """Fetch all *locators* and return ``(successful_roots, report)``.
-
-    The returned roots list contains only the paths for which fetching
-    succeeded (ok=True), in the order they were supplied.  Skipped locators
-    appear in ``report.skipped`` only.
-
-    This function does NOT raise.  Each individual failure is recorded in the
-    report; processing always continues to the next locator.
-    """
-    report = SourceReport()
-    roots: list[Path] = []
-
-    for locator in locators:
-        result = fetch_source(locator)
-        if result.ok:
-            assert result.root_path is not None
-            roots.append(result.root_path)
-            # Determine fetched vs cached: if the cache dir/key already existed
-            # before we called _clone_or_update, classify as cached.  We use a
-            # heuristic: the repo_dir existed before this fetch_all call iff
-            # skipped_reason is empty AND we didn't just create it.  Since
-            # fetch_source doesn't distinguish, we classify by whether the
-            # cache entry existed at call time.
-            if locator.kind == "git":
-                from .locator import cache_key
-                key = cache_key(locator)
-                repo_dir = _paths.sources_cache_dir() / key
-                # After a successful fetch, we can't tell if we just created
-                # the dir.  We mark as 'fetched' for git origins and 'cached'
-                # only if fetch_source explicitly told us so.  Since
-                # _clone_or_update always runs a fresh fetch/checkout, we
-                # classify everything ok as 'fetched' for report purposes
-                # (the distinction is advisory only).
-                report.fetched.append(result)
-            else:
-                # Local paths are always "cached" (they live on disk already).
-                report.cached.append(result)
-        else:
-            report.skipped.append(result)
-
-    return roots, report

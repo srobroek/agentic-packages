@@ -185,14 +185,14 @@ def test_happy_path_appends_precommit_hooks(tmp_path):
 # ── tool-missing → warn+continue ─────────────────────────────────────────────
 
 def test_tool_missing_warns_and_continues(tmp_path):
-    """When uv (init/add) fails, module warns and returns ok (no raise).
+    """When a tool is absent, sdk.run_tool warns and returns False (no raise).
 
-    We test this in-process: load module.py, monkeypatch shutil.which so that
-    'uv' appears absent, then call _run_tool directly to assert warn+continue.
-    This avoids the impossible task of hiding 'uv' from PATH while still using
-    'uv run module.py' as the launcher.
+    We test this in-process: load the SDK, monkeypatch sdk_mod.shutil.which so
+    that 'uv' appears absent, then call sdk.run_tool directly to assert
+    warn+continue.  After the _run_tool/_append_if_absent dedup (Part B), the
+    implementation lives in sdk.py, so we patch shutil there.
     """
-    # Load sdk deps into sys.modules first
+    # Load sdk and its deps into sys.modules
     runner_dir = _PLUGIN_ROOT / "runner"
     sdk_path = runner_dir / "sdk.py"
     sdk_spec = importlib.util.spec_from_file_location("ps_sdk", sdk_path)
@@ -208,32 +208,22 @@ def test_tool_missing_warns_and_continues(tmp_path):
             sys.modules[dep] = dmod
             dspec.loader.exec_module(dmod)
 
-    # Load the module in-process
-    module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
-    mspec = importlib.util.spec_from_file_location("lang_python_mod", module_py)
-    assert mspec and mspec.loader
-    mmod = importlib.util.module_from_spec(mspec)
-    sys.modules["lang_python_mod"] = mmod
-    mspec.loader.exec_module(mmod)
-
     project = tmp_path / "myapp"
     project.mkdir()
-    (project / "pyproject.toml").write_text("[project]\nname = \"myapp\"\n")
-    (project / ".gitignore").write_text("# base\n")
 
     warnings_out: list[str] = []
 
-    # Monkeypatch shutil.which inside the loaded module so 'uv' is not found
+    # Monkeypatch shutil.which inside the SDK so 'uv' is not found
     import unittest.mock
-    with unittest.mock.patch.object(mmod.shutil, "which", return_value=None):
-        ok = mmod._run_tool(
+    with unittest.mock.patch.object(sdk_mod.shutil, "which", return_value=None):
+        ok = sdk_mod.run_tool(
             ["uv", "init", "--python", "3.13"],
             cwd=project,
             warnings=warnings_out,
             label="uv init",
         )
 
-    assert ok is False, "Expected _run_tool to return False when tool is absent"
+    assert ok is False, "Expected run_tool to return False when tool is absent"
     assert any("uv" in w for w in warnings_out), (
         f"Expected warning about uv missing; got: {warnings_out}"
     )

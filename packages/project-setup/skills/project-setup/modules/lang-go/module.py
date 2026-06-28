@@ -52,31 +52,6 @@ def _load_sdk():
     return mod
 
 
-def _run_tool(args: list[str], cwd: Path, warnings: list[str], label: str) -> bool:
-    """Run an external tool. Returns True on success, warns+returns False otherwise."""
-    tool = args[0]
-    if not shutil.which(tool):
-        warnings.append(
-            f"WARN: '{tool}' not found on PATH — {label} skipped. "
-            f"Install {tool} and re-run to complete this step."
-        )
-        return False
-    try:
-        result = subprocess.run(
-            args, cwd=str(cwd), capture_output=True, text=True, timeout=120
-        )
-        if result.returncode != 0:
-            warnings.append(
-                f"WARN: '{' '.join(args)}' exited {result.returncode} — {label} skipped. "
-                f"stderr: {result.stderr.strip()[:200]}"
-            )
-            return False
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: '{tool}' failed with exception — {label} skipped: {exc}")
-        return False
-
-
 def _derive_module_path(project_dir: Path, warnings: list[str]) -> str:
     """Derive a Go module path from git remote, mirroring legacy setup-go.sh lines 30-38."""
     git = shutil.which("git")
@@ -105,18 +80,6 @@ def _derive_module_path(project_dir: Path, warnings: list[str]) -> str:
     return fallback
 
 
-def _append_if_absent(path: Path, marker: str, block: str, warnings: list[str], label: str) -> bool:
-    """Append *block* to *path* if *marker* is not already present. Returns True if appended."""
-    try:
-        existing = path.read_text(encoding="utf-8") if path.exists() else ""
-        if marker in existing:
-            return False
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(block)
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: could not append {label} to {path.name}: {exc}")
-        return False
 
 
 def main() -> int:
@@ -147,7 +110,7 @@ def main() -> int:
     go_mod = project_dir / "go.mod"
     if not go_mod.exists():
         if not args.inspect:
-            _run_tool(
+            sdk.run_tool(
                 ["go", "mod", "init", module_path],
                 cwd=project_dir,
                 warnings=warnings,
@@ -191,7 +154,7 @@ def main() -> int:
     gitignore = project_dir / ".gitignore"
     gi_block = (_TEMPLATES / "gitignore-block.txt").read_text(encoding="utf-8")
     if not args.inspect:
-        appended = _append_if_absent(
+        appended = sdk.append_if_absent(
             gitignore, "*.test", gi_block, warnings, "Go .gitignore"
         )
         if appended:
@@ -211,7 +174,7 @@ def main() -> int:
     pc_block = (_TEMPLATES / "precommit-block.yaml").read_text(encoding="utf-8")
     if precommit.exists():
         if not args.inspect:
-            appended = _append_if_absent(
+            appended = sdk.append_if_absent(
                 precommit, "tekwizely/pre-commit-golang", pc_block, warnings, "Go pre-commit hooks"
             )
             if appended:

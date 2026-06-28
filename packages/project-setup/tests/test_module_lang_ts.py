@@ -198,10 +198,10 @@ def test_nuxt_framework_appends_nitro_gitignore(tmp_path):
 # ── tool-missing → warn+continue ─────────────────────────────────────────────
 
 def test_tool_missing_warns_and_continues(tmp_path):
-    """When bun is absent, _run_tool warns and returns False (no raise).
+    """When bun is absent, sdk.run_tool warns and returns False (no raise).
 
-    Tested in-process via monkeypatching shutil.which so that 'bun' is not
-    found, without needing to shadow it in PATH (which would also hide uv).
+    After the _run_tool dedup (Part B), the implementation lives in sdk.py.
+    Patch sdk_mod.shutil.which and call sdk_mod.run_tool directly.
     """
     runner_dir = _PLUGIN_ROOT / "runner"
     sdk_path = runner_dir / "sdk.py"
@@ -218,20 +218,13 @@ def test_tool_missing_warns_and_continues(tmp_path):
             sys.modules[dep] = dmod
             dspec.loader.exec_module(dmod)
 
-    module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
-    mspec = importlib.util.spec_from_file_location("lang_ts_mod", module_py)
-    assert mspec and mspec.loader
-    mmod = importlib.util.module_from_spec(mspec)
-    sys.modules["lang_ts_mod"] = mmod
-    mspec.loader.exec_module(mmod)
-
     project = tmp_path / "myapp"
     project.mkdir()
     warnings_out: list[str] = []
 
     import unittest.mock
-    with unittest.mock.patch.object(mmod.shutil, "which", return_value=None):
-        ok = mmod._run_tool(
+    with unittest.mock.patch.object(sdk_mod.shutil, "which", return_value=None):
+        ok = sdk_mod.run_tool(
             ["bun", "init", "-y"],
             cwd=project,
             warnings=warnings_out,

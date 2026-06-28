@@ -44,7 +44,6 @@ load_frozen_inputs = sdk_mod.load_frozen_inputs
 idempotent_write = sdk_mod.idempotent_write
 is_safe_relative_path = sdk_mod.is_safe_relative_path
 emit_result = sdk_mod.emit_result
-tool_or_fallback = sdk_mod.tool_or_fallback
 
 GateFailure = contracts.GateFailure
 SetupError = contracts.SetupError
@@ -103,23 +102,6 @@ def test_get_str():
     assert fi.get_str("missing", default="default") == "default"
 
 
-def test_get_text():
-    fi = make_frozen_inputs({"k": "line1\nline2"})
-    assert fi.get_text("k") == "line1\nline2"
-    assert fi.get_text("missing") == ""
-
-
-def test_get_int():
-    fi = make_frozen_inputs({"n": 42})
-    assert fi.get_int("n") == 42
-    assert fi.get_int("missing", default=0) == 0
-
-
-def test_get_int_from_string():
-    fi = make_frozen_inputs({"n": "7"})
-    assert fi.get_int("n") == 7
-
-
 def test_get_bool_true():
     fi = make_frozen_inputs({"flag": True})
     assert fi.get_bool("flag") is True
@@ -141,12 +123,6 @@ def test_get_bool_default():
     fi = make_frozen_inputs({})
     assert fi.get_bool("missing") is False
     assert fi.get_bool("missing", default=True) is True
-
-
-def test_get_path():
-    fi = make_frozen_inputs({"p": "src/main.py"})
-    assert fi.get_path("p") == "src/main.py"
-    assert fi.get_path("missing") == ""
 
 
 def test_get_list():
@@ -408,16 +384,3 @@ def test_emit_result_output_is_canonical_json(capsys):
     assert "files_written" in data
 
 
-# --------------------------------------------------------------------------- #
-# tool_or_fallback                                                             #
-# --------------------------------------------------------------------------- #
-def test_tool_or_fallback_found():
-    import shutil
-    tool = "python3" if shutil.which("python3") else "python"
-    result = tool_or_fallback(tool, "USE_TOOL", "USE_FALLBACK")
-    assert result == "USE_TOOL"
-
-
-def test_tool_or_fallback_missing():
-    result = tool_or_fallback("__nonexistent_tool_xyz__", "USE_TOOL", "USE_FALLBACK")
-    assert result == "USE_FALLBACK"

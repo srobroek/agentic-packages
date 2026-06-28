@@ -1,29 +1,9 @@
-"""Answer layering, deep-merge, and coercion.
+"""Answer layering and coercion.
 
 Implements the config-layering model from shared-contracts.md §8 and FR-020/FR-026.
 
 Layering precedence (lowest → highest):
   module manifest default < home config < project committed answers < user choice
-
-Deep-merge rules (tables union/recurse, scalars replace, lists replace by
-default with explicit ``append``/``remove`` ops):
-
-  Sentinel sub-table form for list operations
-  -------------------------------------------
-  To avoid a literal key named "append" or "remove" colliding with the list-op
-  sentinel, list operations use a *sub-table sentinel*:
-
-    [module.foo]
-    my_list = ["a"]
-
-    [module.foo.__list_ops__.my_list]
-    append = ["b"]
-    remove = ["x"]
-
-  This form cannot collide with a plain scalar key named "append"/"remove"
-  because TOML does not allow a key to be both a scalar and a sub-table in the
-  same section. The sentinel key ``__list_ops__`` is reserved and stripped from
-  the merged result.
 
 Standard library only (tomllib for reading TOML).
 """
@@ -54,52 +34,6 @@ _contracts = _load_sibling("contracts")
 SetupError = _contracts.SetupError
 ErrorCode = _contracts.ErrorCode
 Provenance = _contracts.Provenance
-
-# Sentinel key for list ops sub-table
-_LIST_OPS_KEY = "__list_ops__"
-
-
-# --------------------------------------------------------------------------- #
-# Deep-merge                                                                   #
-# --------------------------------------------------------------------------- #
-def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
-    """Deep-merge *override* into a copy of *base*.
-
-    Merge rules:
-    - Tables (dicts): recurse — keys union, existing scalar overridden.
-    - Scalars: override value replaces base value.
-    - Lists: override replaces base list by default.
-    - List ops: if ``override`` contains ``__list_ops__.<key>`` with
-      ``append`` and/or ``remove`` sub-keys, apply them to the base list
-      for that key instead of replacing outright.
-
-    The ``__list_ops__`` sentinel key is stripped from the result.
-    """
-    result = dict(base)
-    list_ops: dict[str, dict[str, list]] = override.get(_LIST_OPS_KEY, {})
-
-    for key, val in override.items():
-        if key == _LIST_OPS_KEY:
-            continue  # handled below
-        if key in result and isinstance(result[key], dict) and isinstance(val, dict):
-            result[key] = deep_merge(result[key], val)
-        else:
-            result[key] = val
-
-    # Apply list ops
-    for key, ops in list_ops.items():
-        base_list: list = list(result.get(key, []))
-        if not isinstance(base_list, list):
-            base_list = [base_list]
-        if "append" in ops:
-            for item in ops["append"]:
-                if item not in base_list:
-                    base_list.append(item)
-        if "remove" in ops:
-            base_list = [item for item in base_list if item not in ops["remove"]]
-        result[key] = base_list
-
-    return result
 
 
 # --------------------------------------------------------------------------- #

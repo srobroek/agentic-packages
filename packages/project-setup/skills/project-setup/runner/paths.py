@@ -45,12 +45,6 @@ def plugin_root() -> Path:
     return _RUNNER_DIR.parent
 
 
-def runner_dir() -> Path:
-    """Directory of the runner library itself (where sdk.py lives)."""
-
-    return _RUNNER_DIR
-
-
 def sdk_path() -> Path:
     """Absolute path to sdk.py, loaded by each module.py via importlib."""
 

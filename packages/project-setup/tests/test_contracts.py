@@ -106,7 +106,8 @@ def test_plugin_root_contains_runner_and_modules_layout():
     root = paths.plugin_root()
     assert root.name == "project-setup"
     assert (root / "runner").is_dir()
-    assert paths.sdk_path() == paths.runner_dir() / "sdk.py"
+    assert paths.sdk_path().name == "sdk.py"
+    assert paths.sdk_path().parent.name == "runner"
 
 
 def test_cache_and_frozen_plan_live_outside_project(tmp_path, monkeypatch):

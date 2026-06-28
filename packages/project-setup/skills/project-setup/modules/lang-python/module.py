@@ -34,8 +34,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
-import shutil
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -59,49 +57,6 @@ def _load_sdk():
     spec.loader.exec_module(mod)
     return mod
 
-
-def _run_tool(args: list[str], cwd: Path, warnings: list[str], label: str) -> bool:
-    """Run an external tool. Returns True on success, appends a warning and returns
-    False if the tool is absent or exits non-zero. Never raises."""
-    tool = args[0]
-    if not shutil.which(tool):
-        warnings.append(
-            f"WARN: '{tool}' not found on PATH — {label} skipped. "
-            f"Install {tool} and re-run to complete this step."
-        )
-        return False
-    try:
-        result = subprocess.run(
-            args, cwd=str(cwd), capture_output=True, text=True, timeout=120
-        )
-        if result.returncode != 0:
-            warnings.append(
-                f"WARN: '{' '.join(args)}' exited {result.returncode} — {label} skipped. "
-                f"stderr: {result.stderr.strip()[:200]}"
-            )
-            return False
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: '{tool}' failed with exception — {label} skipped: {exc}")
-        return False
-
-
-def _append_if_absent(path: Path, marker: str, block: str, warnings: list[str], label: str) -> bool:
-    """Append *block* to *path* if *marker* is not already present.
-
-    Returns True if appended, False if already present (idempotent).
-    The file is created if absent.  Never raises.
-    """
-    try:
-        existing = path.read_text(encoding="utf-8") if path.exists() else ""
-        if marker in existing:
-            return False
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(block)
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: could not append {label} to {path.name}: {exc}")
-        return False
 
 
 # --------------------------------------------------------------------------- #
@@ -388,7 +343,7 @@ def _do_write(sdk, inputs, args) -> int:
     pyproject = project_dir / "pyproject.toml"
     if not pyproject.exists():
         if not args.inspect:
-            _run_tool(
+            sdk.run_tool(
                 ["uv", "init", "--python", python_version],
                 cwd=project_dir,
                 warnings=warnings,
@@ -418,7 +373,7 @@ def _do_write(sdk, inputs, args) -> int:
     # ── 3. Ruff config in pyproject.toml ───────────────────────────────────── #
     ruff_block = (_TEMPLATES / "ruff-config.toml").read_text(encoding="utf-8")
     if not args.inspect:
-        appended = _append_if_absent(
+        appended = sdk.append_if_absent(
             pyproject, "ruff", ruff_block, warnings, "ruff config"
         )
         if appended:
@@ -466,7 +421,7 @@ def _do_write(sdk, inputs, args) -> int:
         uv_dev_args = ["uv", "add", "--dev"] + [
             p.replace("@", "==", 1) for p in dev_deps
         ]
-        _run_tool(
+        sdk.run_tool(
             uv_dev_args,
             cwd=project_dir,
             warnings=warnings,
@@ -483,7 +438,7 @@ def _do_write(sdk, inputs, args) -> int:
     gitignore = project_dir / ".gitignore"
     gi_block = (_TEMPLATES / "gitignore-block.txt").read_text(encoding="utf-8")
     if not args.inspect:
-        appended = _append_if_absent(
+        appended = sdk.append_if_absent(
             gitignore, "__pycache__", gi_block, warnings, "Python .gitignore"
         )
         if appended:
@@ -512,7 +467,7 @@ def _do_write(sdk, inputs, args) -> int:
         pc_block = pc_block_raw
     if precommit.exists():
         if not args.inspect:
-            appended = _append_if_absent(
+            appended = sdk.append_if_absent(
                 precommit, "astral-sh/ruff-pre-commit", pc_block, warnings, "ruff pre-commit hooks"
             )
             if appended:

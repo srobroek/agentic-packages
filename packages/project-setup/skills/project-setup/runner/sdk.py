@@ -10,9 +10,10 @@ See shared-contracts.md §6 for the mandatory sys.modules registration pattern.
 
 Provides:
   - ``load_frozen_inputs(plan_path, module_id)`` → ``FrozenInputs``
-  - ``FrozenInputs`` — typed accessors for all 8 input types
+  - ``FrozenInputs`` — typed accessors for all input types
   - ``idempotent_write(rel_path, body, *, reconcile, inspect)``
-  - ``tool_or_fallback(name, run, fallback)``
+  - ``run_tool(args, cwd, warnings, label, *, timeout)``
+  - ``append_if_absent(path, marker, block, warnings, label)``
   - ``is_safe_relative_path(p)``
   - ``emit_result(result)``
 
@@ -24,6 +25,8 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -65,8 +68,8 @@ load_plan = _plan_mod.load_plan
 class FrozenInputs:
     """Typed read-only view of a module's frozen answers.
 
-    Exposes one accessor per input type (get_str, get_text, get_int, get_bool,
-    get_path, get_list, get_choice, get_multichoice) plus ``.reconcile``.
+    Exposes one accessor per input type (get_str, get_bool,
+    get_list, get_choice, get_multichoice) plus ``.reconcile``.
     """
 
     def __init__(self, module_entry: Any, plan: Any) -> None:
@@ -100,20 +103,6 @@ class FrozenInputs:
             return default
         return str(v)
 
-    def get_text(self, key: str, default: str = "") -> str:
-        """Return the value for *key* as a multi-line ``str`` (text type)."""
-        v = self._get(key)
-        if v is None:
-            return default
-        return str(v)
-
-    def get_int(self, key: str, default: int = 0) -> int:
-        """Return the value for *key* as an ``int``."""
-        v = self._get(key)
-        if v is None:
-            return default
-        return int(v)
-
     def get_bool(self, key: str, default: bool = False) -> bool:
         """Return the value for *key* as a ``bool``."""
         v = self._get(key)
@@ -124,13 +113,6 @@ class FrozenInputs:
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes")
         return bool(v)
-
-    def get_path(self, key: str, default: str = "") -> str:
-        """Return the value for *key* as a path string."""
-        v = self._get(key)
-        if v is None:
-            return default
-        return str(v)
 
     def get_list(self, key: str, default: list | None = None) -> list:
         """Return the value for *key* as a ``list``."""
@@ -291,28 +273,6 @@ def _preview(body_bytes: bytes, max_chars: int = 200) -> str:
     return head
 
 
-# --------------------------------------------------------------------------- #
-# tool_or_fallback                                                             #
-# --------------------------------------------------------------------------- #
-def tool_or_fallback(name: str, run: Any, fallback: Any) -> Any:
-    """Return *run* if *name* is on PATH, else *fallback*.
-
-    Useful for modules that want to use a tool when available but have a
-    bundled fallback (e.g. ``git`` vs a pure-Python implementation).
-
-    Parameters
-    ----------
-    name:
-        Tool name (e.g. ``"git"``).
-    run:
-        Value to return when the tool is found (typically a callable or
-        command string).
-    fallback:
-        Value to return when the tool is absent.
-    """
-    import shutil
-    return run if shutil.which(name) is not None else fallback
-
 
 # --------------------------------------------------------------------------- #
 # verify_pins — MCP-free registry verification (spec 003 FR-005/006/007)       #
@@ -456,6 +416,94 @@ def _version_present(data: Any, version: str, ecosystem: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
+# run_tool / append_if_absent — shared lang-module helpers                    #
+# --------------------------------------------------------------------------- #
+def run_tool(
+    args: list[str],
+    cwd: "Path",
+    warnings: list[str],
+    label: str,
+    *,
+    timeout: int = 120,
+) -> bool:
+    """Run an external tool. Returns True on success, appends a warning and
+    returns False if the tool is absent or exits non-zero. Never raises.
+
+    Parameters
+    ----------
+    args:
+        Command and arguments (e.g. ``["uv", "init", "--python", "3.13"]``).
+    cwd:
+        Working directory for the subprocess.
+    warnings:
+        List to append warning strings to on failure.
+    label:
+        Human-readable label used in warning messages.
+    timeout:
+        Subprocess timeout in seconds (default 120). Pass ``timeout=180``
+        for slower tools (e.g. TypeScript scaffolders).
+    """
+    tool = args[0]
+    if not shutil.which(tool):
+        warnings.append(
+            f"WARN: '{tool}' not found on PATH — {label} skipped. "
+            f"Install {tool} and re-run to complete this step."
+        )
+        return False
+    try:
+        result = subprocess.run(
+            args, cwd=str(cwd), capture_output=True, text=True, timeout=timeout
+        )
+        if result.returncode != 0:
+            warnings.append(
+                f"WARN: '{' '.join(args)}' exited {result.returncode} — {label} skipped. "
+                f"stderr: {result.stderr.strip()[:200]}"
+            )
+            return False
+        return True
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"WARN: '{tool}' failed with exception — {label} skipped: {exc}")
+        return False
+
+
+def append_if_absent(
+    path: "Path",
+    marker: str,
+    block: str,
+    warnings: list[str],
+    label: str,
+) -> bool:
+    """Append *block* to *path* if *marker* is not already present.
+
+    Returns True if appended, False if already present (idempotent).
+    The file is created if absent. Never raises.
+
+    Parameters
+    ----------
+    path:
+        Absolute path to the file to append to.
+    marker:
+        String whose presence in the file indicates the block is already there.
+    block:
+        Content to append when the marker is absent.
+    warnings:
+        List to append warning strings to on I/O failure.
+    label:
+        Human-readable label used in warning messages.
+    """
+    try:
+        existing = path.read_text(encoding="utf-8") if path.exists() else ""
+        if marker in existing:
+            return False
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(block)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"WARN: could not append {label} to {path.name}: {exc}")
+        return False
+
+
+# --------------------------------------------------------------------------- #
 # is_safe_relative_path                                                        #
 # --------------------------------------------------------------------------- #
 def is_safe_relative_path(p: str | Path) -> bool:
@@ -511,28 +559,6 @@ def is_safe_relative_path(p: str | Path) -> bool:
 
     return True
 
-
-def is_safe_relative_path_within(p: str | Path, base: str | Path) -> bool:
-    """Return True iff *p* stays within *base* after symlink resolution.
-
-    This is the full-safety version when a project_dir anchor is available.
-    """
-    p = Path(p)
-    base = Path(base).resolve()
-
-    if not is_safe_relative_path(p):
-        return False
-
-    # For paths that exist, resolve and check containment
-    candidate = (base / p)
-    if candidate.exists():
-        try:
-            resolved = candidate.resolve()
-            return str(resolved).startswith(str(base))
-        except (OSError, ValueError):
-            return False
-
-    return True
 
 
 # --------------------------------------------------------------------------- #

@@ -55,9 +55,7 @@ fetch_mod = _load_source("fetch")
 
 parse_locator = locator_mod.parse_locator
 fetch_source = fetch_mod.fetch_source
-fetch_all = fetch_mod.fetch_all
 FetchResult = fetch_mod.FetchResult
-SourceReport = fetch_mod.SourceReport
 
 
 # ---------------------------------------------------------------------------
@@ -211,87 +209,6 @@ class TestCacheKeyStability:
         b = parse_locator("myorg/repo-b")
         assert cache_key(a) != cache_key(b)
 
-
-# ---------------------------------------------------------------------------
-# fetch_all: aggregation + non-raising contract
-# ---------------------------------------------------------------------------
-
-class TestFetchAll:
-    def test_all_local_ok(self, tmp_path):
-        d1 = tmp_path / "m1"
-        d1.mkdir()
-        d2 = tmp_path / "m2"
-        d2.mkdir()
-
-        locs = [parse_locator(str(d1)), parse_locator(str(d2))]
-        roots, report = fetch_all(locs)
-
-        assert len(roots) == 2
-        assert tmp_path / "m1" in roots
-        assert tmp_path / "m2" in roots
-        assert len(report.skipped) == 0
-
-    def test_mixed_ok_and_skip(self, tmp_path):
-        existing = tmp_path / "real"
-        existing.mkdir()
-        missing = tmp_path / "gone"
-
-        locs = [parse_locator(str(existing)), parse_locator(str(missing))]
-        roots, report = fetch_all(locs)
-
-        assert len(roots) == 1
-        assert len(report.skipped) == 1
-        assert report.skipped[0].ok is False
-
-    def test_all_git_absent_skipped(self, tmp_path, monkeypatch):
-        empty_bin = tmp_path / "empty_bin"
-        empty_bin.mkdir()
-        monkeypatch.setenv("PATH", str(empty_bin))
-        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
-
-        locs = [parse_locator("org/a"), parse_locator("org/b")]
-        roots, report = fetch_all(locs)
-
-        assert roots == []
-        assert len(report.skipped) == 2
-        for r in report.skipped:
-            assert r.ok is False
-
-    def test_does_not_raise(self, tmp_path, monkeypatch):
-        empty_bin = tmp_path / "empty_bin"
-        empty_bin.mkdir()
-        monkeypatch.setenv("PATH", str(empty_bin))
-        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
-
-        locs = [parse_locator("org/r1"), parse_locator("org/r2"), parse_locator(str(tmp_path))]
-        roots, report = fetch_all(locs)
-        # Must not raise
-        assert isinstance(roots, list)
-        assert isinstance(report, SourceReport)
-
-    def test_empty_locators_list(self):
-        roots, report = fetch_all([])
-        assert roots == []
-        assert report.fetched == []
-        assert report.cached == []
-        assert report.skipped == []
-
-    def test_successful_roots_in_order(self, tmp_path):
-        dirs = [tmp_path / f"m{i}" for i in range(3)]
-        for d in dirs:
-            d.mkdir()
-
-        locs = [parse_locator(str(d)) for d in dirs]
-        roots, report = fetch_all(locs)
-
-        assert roots == dirs
-
-    def test_source_report_successful_roots(self, tmp_path):
-        existing = tmp_path / "ok"
-        existing.mkdir()
-        locs = [parse_locator(str(existing))]
-        roots, report = fetch_all(locs)
-        assert report.successful_roots() == [existing]
 
 
 class TestSuccessfulGitFetchLocalBareRepo:

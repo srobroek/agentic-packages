@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-import warnings
 from pathlib import Path
 from typing import Any
 
@@ -112,11 +111,9 @@ def _toml_scalar(v: Any) -> str:
         return "true" if v else "false"
     if isinstance(v, int):
         return str(v)
-    if isinstance(v, float):
-        return repr(v)
     if isinstance(v, str):
         return _toml_str(v)
-    if isinstance(v, (list, tuple)):
+    if isinstance(v, list):
         return "[" + ", ".join(_toml_scalar(item) for item in v) + "]"
     raise TypeError(f"unsupported TOML value type: {type(v).__name__}")
 

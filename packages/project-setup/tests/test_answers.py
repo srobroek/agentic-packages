@@ -30,11 +30,9 @@ def _load(name: str):
 contracts = _load("contracts")
 answers_mod = _load("answers")
 
-deep_merge = answers_mod.deep_merge
 resolve_final_answers = answers_mod.resolve_final_answers
 Provenance = contracts.Provenance
 ErrorCode = contracts.ErrorCode
-_LIST_OPS_KEY = answers_mod._LIST_OPS_KEY
 
 
 # --------------------------------------------------------------------------- #
@@ -53,105 +51,6 @@ def make_input(key, type_str, default=None, required=False):
 def make_manifest(id: str, inputs=()):
     return SimpleNamespace(id=id, inputs=list(inputs))
 
-
-# --------------------------------------------------------------------------- #
-# deep_merge — tables union/recurse                                            #
-# --------------------------------------------------------------------------- #
-def test_deep_merge_tables_union():
-    """Tables are unioned, not replaced."""
-    base = {"a": {"x": 1}, "b": 2}
-    override = {"a": {"y": 3}, "c": 4}
-    result = deep_merge(base, override)
-    assert result == {"a": {"x": 1, "y": 3}, "b": 2, "c": 4}
-
-
-def test_deep_merge_scalar_replaces():
-    """Scalar override replaces base scalar."""
-    base = {"k": "old"}
-    override = {"k": "new"}
-    result = deep_merge(base, override)
-    assert result["k"] == "new"
-
-
-def test_deep_merge_scalar_overrides_table():
-    """Scalar override replaces base table (scalar wins)."""
-    base = {"k": {"nested": 1}}
-    override = {"k": "flat"}
-    result = deep_merge(base, override)
-    assert result["k"] == "flat"
-
-
-def test_deep_merge_list_replace_by_default():
-    """Lists are replaced by default (not merged)."""
-    base = {"items": ["a", "b"]}
-    override = {"items": ["c"]}
-    result = deep_merge(base, override)
-    assert result["items"] == ["c"]
-
-
-def test_deep_merge_nested_tables_recurse():
-    """Deeply nested tables recurse correctly."""
-    base = {"a": {"b": {"c": 1, "d": 2}}}
-    override = {"a": {"b": {"c": 99}}}
-    result = deep_merge(base, override)
-    assert result == {"a": {"b": {"c": 99, "d": 2}}}
-
-
-def test_deep_merge_base_unchanged():
-    """deep_merge does not mutate the base dict."""
-    base = {"k": "original"}
-    override = {"k": "changed"}
-    deep_merge(base, override)
-    assert base["k"] == "original"
-
-
-# --------------------------------------------------------------------------- #
-# deep_merge — list ops via sentinel                                           #
-# --------------------------------------------------------------------------- #
-def test_list_ops_append():
-    """__list_ops__.<key>.append extends the base list (no duplicates)."""
-    base = {"items": ["a", "b"]}
-    override = {
-        _LIST_OPS_KEY: {"items": {"append": ["c", "d"]}},
-    }
-    result = deep_merge(base, override)
-    assert result["items"] == ["a", "b", "c", "d"]
-
-
-def test_list_ops_append_no_duplicates():
-    """append does not add items already present."""
-    base = {"items": ["a", "b"]}
-    override = {_LIST_OPS_KEY: {"items": {"append": ["a", "c"]}}}
-    result = deep_merge(base, override)
-    assert result["items"] == ["a", "b", "c"]
-
-
-def test_list_ops_remove():
-    """__list_ops__.<key>.remove removes items from the base list."""
-    base = {"items": ["a", "b", "c"]}
-    override = {_LIST_OPS_KEY: {"items": {"remove": ["b"]}}}
-    result = deep_merge(base, override)
-    assert result["items"] == ["a", "c"]
-
-
-def test_list_ops_append_and_remove():
-    """Combined append + remove ops work together."""
-    base = {"items": ["a", "b"]}
-    override = {
-        _LIST_OPS_KEY: {
-            "items": {"append": ["c"], "remove": ["a"]},
-        },
-    }
-    result = deep_merge(base, override)
-    assert set(result["items"]) == {"b", "c"}
-
-
-def test_list_ops_sentinel_stripped_from_result():
-    """The __list_ops__ key itself is not in the merged output."""
-    base = {"items": ["a"]}
-    override = {_LIST_OPS_KEY: {"items": {"append": ["b"]}}}
-    result = deep_merge(base, override)
-    assert _LIST_OPS_KEY not in result
 
 
 # --------------------------------------------------------------------------- #

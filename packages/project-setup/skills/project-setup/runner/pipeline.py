@@ -505,13 +505,8 @@ def run_pipeline(
         plugin_root_path=plugin_root_path,
     )
 
-    if not dry_run:
-        freeze(plan, path=plan_path)
-        result.plan_path = plan_path
-    else:
-        # Dry run: freeze to the path but record it
-        freeze(plan, path=plan_path)
-        result.plan_path = plan_path
+    freeze(plan, path=plan_path)
+    result.plan_path = plan_path
 
     # ── Dry run stops here ────────────────────────────────────────────────── #
     if dry_run:

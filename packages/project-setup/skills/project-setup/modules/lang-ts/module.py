@@ -35,8 +35,6 @@ import argparse
 import importlib.util
 import json
 import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -59,49 +57,6 @@ def _load_sdk():
     spec.loader.exec_module(mod)
     return mod
 
-
-def _run_tool(args: list[str], cwd: Path, warnings: list[str], label: str) -> bool:
-    """Run an external tool. Returns True on success, appends a warning and returns
-    False if the tool is absent or exits non-zero. Never raises."""
-    tool = args[0]
-    if not shutil.which(tool):
-        warnings.append(
-            f"WARN: '{tool}' not found on PATH — {label} skipped. "
-            f"Install {tool} and re-run to complete this step."
-        )
-        return False
-    try:
-        result = subprocess.run(
-            args, cwd=str(cwd), capture_output=True, text=True, timeout=180
-        )
-        if result.returncode != 0:
-            warnings.append(
-                f"WARN: '{' '.join(args)}' exited {result.returncode} — {label} skipped. "
-                f"stderr: {result.stderr.strip()[:200]}"
-            )
-            return False
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: '{tool}' failed with exception — {label} skipped: {exc}")
-        return False
-
-
-def _append_if_absent(path: Path, marker: str, block: str, warnings: list[str], label: str) -> bool:
-    """Append *block* to *path* if *marker* is not already present.
-
-    Returns True if appended, False if already present (idempotent).
-    The file is created if absent.  Never raises.
-    """
-    try:
-        existing = path.read_text(encoding="utf-8") if path.exists() else ""
-        if marker in existing:
-            return False
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(block)
-        return True
-    except Exception as exc:  # noqa: BLE001
-        warnings.append(f"WARN: could not append {label} to {path.name}: {exc}")
-        return False
 
 
 def _pkg_cmd(pkg_manager: str, *sub: str) -> list[str]:
@@ -275,12 +230,13 @@ def _do_write(sdk, inputs, args) -> int:
     if framework == "nuxt":
         if not (project_dir / "nuxt.config.ts").exists():
             if not args.inspect:
-                _run_tool(
+                sdk.run_tool(
                     _pkgx_cmd(pkg_manager, "nuxi@latest", "init", ".", "--force",
                               "--packageManager", pkg_manager),
                     cwd=project_dir,
                     warnings=warnings,
                     label="nuxi init",
+                    timeout=180,
                 )
             else:
                 warnings.append(f"inspect: would run nuxi@latest init . --force --packageManager {pkg_manager}")
@@ -290,11 +246,12 @@ def _do_write(sdk, inputs, args) -> int:
     elif framework == "vite":
         if not (project_dir / "vite.config.ts").exists():
             if not args.inspect:
-                _run_tool(
+                sdk.run_tool(
                     _pkgx_cmd(pkg_manager, "create-vite", ".", "--template", "vue-ts"),
                     cwd=project_dir,
                     warnings=warnings,
                     label="create-vite vue-ts",
+                    timeout=180,
                 )
             else:
                 warnings.append("inspect: would run create-vite . --template vue-ts")
@@ -306,9 +263,9 @@ def _do_write(sdk, inputs, args) -> int:
         if not package_json.exists():
             if not args.inspect:
                 if pkg_manager == "bun":
-                    _run_tool(["bun", "init", "-y"], cwd=project_dir, warnings=warnings, label="bun init")
+                    sdk.run_tool(["bun", "init", "-y"], cwd=project_dir, warnings=warnings, label="bun init", timeout=180)
                 else:
-                    _run_tool(["pnpm", "init"], cwd=project_dir, warnings=warnings, label="pnpm init")
+                    sdk.run_tool(["pnpm", "init"], cwd=project_dir, warnings=warnings, label="pnpm init", timeout=180)
             else:
                 warnings.append(f"inspect: would run {pkg_manager} init")
         else:
@@ -367,18 +324,19 @@ def _do_write(sdk, inputs, args) -> int:
 
     # ── 3. pkg install (non-fatal, skipped under inspect) ─────────────────── #
     if not args.inspect:
-        _run_tool(
+        sdk.run_tool(
             _pkg_cmd(pkg_manager, "install"),
             cwd=project_dir,
             warnings=warnings,
             label=f"{pkg_manager} install",
+            timeout=180,
         )
 
     # ── 4. Append Node .gitignore block ────────────────────────────────────── #
     gitignore = project_dir / ".gitignore"
     gi_block = (_TEMPLATES / "gitignore-block.txt").read_text(encoding="utf-8")
     if not args.inspect:
-        appended = _append_if_absent(
+        appended = sdk.append_if_absent(
             gitignore, "node_modules", gi_block, warnings, "Node .gitignore"
         )
         if appended:
@@ -397,7 +355,7 @@ def _do_write(sdk, inputs, args) -> int:
     if framework == "nuxt":
         nuxt_gi_block = (_TEMPLATES / "gitignore-nuxt.txt").read_text(encoding="utf-8")
         if not args.inspect:
-            appended = _append_if_absent(
+            appended = sdk.append_if_absent(
                 gitignore, ".nitro", nuxt_gi_block, warnings, "Nuxt .gitignore extras"
             )
             if appended:
@@ -419,7 +377,7 @@ def _do_write(sdk, inputs, args) -> int:
     prettier_block = (_TEMPLATES / "precommit-prettier.yaml").read_text(encoding="utf-8")
     if precommit.exists():
         if not args.inspect:
-            appended = _append_if_absent(
+            appended = sdk.append_if_absent(
                 precommit, "biomejs/pre-commit", biome_block, warnings, "biome pre-commit hook"
             )
             if appended:
@@ -429,7 +387,7 @@ def _do_write(sdk, inputs, args) -> int:
                 diffs.append(sdk.Diff(path=".pre-commit-config.yaml", kind="skip", preview="(biome hook already present)"))
 
             # ── 7. Append prettier pre-commit hook ──────────────────────────── #
-            appended2 = _append_if_absent(
+            appended2 = sdk.append_if_absent(
                 precommit, "rbubley/mirrors-prettier", prettier_block, warnings, "prettier pre-commit hook"
             )
             if appended2:
