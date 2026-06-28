@@ -5,12 +5,14 @@ dedicated `feat/stack-resolver` branch
 
 **Created**: 2026-06-27
 
-**Status**: Draft — scope settled. Authored independently from the 002 roadmap +
-gates-analysis + the corrected research-backend decision; **two verified code
-findings below reshape scope** (see "Current state"). The two HIGH open questions
-are now **resolved by the user**: OQ-1 → keep the runner-contract fixes inside 003
-(option A); OQ-2 → same-run agent→python visibility via the **two-phase plan**
-(option B). Both are folded into "Settled decisions" + `plan.md`.
+**Status**: **Implemented (2026-06-28)** — all FRs built and green (full suite below).
+Authored independently from the 002 roadmap + gates-analysis + the corrected
+research-backend decision; **two verified code findings reshaped scope** (see
+"Current state"). The two HIGH open questions were resolved by the user: OQ-1 →
+keep the runner-contract fixes inside 003 (option A); OQ-2 → same-run agent→python
+visibility via the **two-phase plan** (option B). The AS-BUILT refinements (one
+freeze instead of two; `{decision}` gate token; gate-blocking in `apply`) are
+recorded in `memory.md` → "AS-BUILT".
 
 **Input**: The headline Tier-2 feature the user named — "which framework + which
 current versions + which companion libs", instantiated for Python and TypeScript.

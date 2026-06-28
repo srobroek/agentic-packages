@@ -114,6 +114,39 @@ B becomes: freeze v1 → **Phase A** (agent steps; fold answers) → **re-freeze
   but it becomes an INVARIANT: a `kind=agent` step MUST NOT depend on a Phase-B file
   write. Encode as an invariant (consistent with the Tier-2 principle), not a bug.
 
+### AS-BUILT (2026-06-28) — how it was actually implemented (refinements vs. the sketch above)
+
+Implemented and green (552-baseline + new tests). Three refinements emerged when
+reading the runner, all SIMPLER than the plan sketch:
+
+1. **ONE freeze, not "v1 → re-freeze v2".** The agent step receives the module's
+   resolved answers as an in-process `context` dict (via `io.agent_step`), NOT the
+   frozen plan — only `module.py` subprocesses read the plan. And in reproduce mode
+   the committed `agent-steered` answers are ALREADY in `final_answers` (001 loads
+   answers.toml as the project layer). So `run_agent_phase` runs the agent steps
+   in-memory, folds decisions into `final_answers`, and THEN the existing single
+   `build_plan`/`freeze` bakes them in. No v1 freeze, no double-write of plan.json.
+   Faithful to option B ("agents → freeze → deterministic writes"); just no redundant
+   freeze. Wired at `pipeline.py` Stage 5b (run_agent_phase) before Stage 6 (freeze),
+   gated on `not dry_run`. New fn: `reproduce.run_agent_phase`.
+2. **SUBTLETY 1 realized as a `{decision}` token.** A gate step's `message` may contain
+   the literal `{decision}`; `plan.build_plan` replaces it with
+   `contracts.render_answer_block(module_answers)` at freeze time (the answers carry
+   the agent's pins by then). Shared renderer in `contracts.py` (one source, also used
+   by the --refresh diff). No re-freeze needed (see #1).
+3. **NEW: gate-blocking added to `reproduce.apply`** (was a real gap — a declined gate
+   recorded an outcome but did NOT block the following write). Now a non-confirmed
+   `kind=gate` sets a module-scoped `gate_blocked` flag that skips subsequent
+   `kind=python` writes IN THAT MODULE. This is what makes the pin-table gate actually
+   gate the manifest write (FR-012). `apply`'s old `kind=agent` branch now `continue`s
+   (agent steps ran in Phase A) — the `run_agent` binding there is now dead (flagged in
+   the leanness re-review as `dead-run-agent-binding-apply`, cut in the leanness pass).
+
+Verify policy (in each lang module's python write step, NOT the runner — keeps the
+runner generic): `verify_pins` runs ONLY when `inputs.mode == "init"`; DISCONFIRMED →
+status=error, write nothing; UNREACHABLE → warning + safe-skip the write; reproduce →
+no verify call (zero network). New SDK: `FrozenInputs.mode` property + `verify_pins`.
+
 ### OQ-3 — `--refresh` granularity and CLI surface (MED)
 
 FR-010 says `--refresh <module|key>`. Open: exact CLI grammar. `--refresh lang-python`
