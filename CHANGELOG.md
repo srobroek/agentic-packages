@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v1.3.0...srobroek-agentic--v2.0.0) (2026-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405))
+
+### Features
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405)) ([61e03ab](https://github.com/srobroek/agentic-packages/commit/61e03abb39d495575bc84a765227814c5c3d7111))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.2.0...srobroek-agentic--v1.3.0) (2026-06-27)
 
 
