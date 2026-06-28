@@ -9,6 +9,37 @@ become reported coverage gaps, not silent guesses.
 Install via `scripts/install-tools.sh` (see `installer.md`). Probe first:
 `install-tools.sh --probe`.
 
+## Run-rules (apply to EVERY tool — the per-target tables assume these)
+
+Each tool in a target doc carries a **Run recipe** (exact command, config
+handling, exit-code meaning, known-failure handling). These universal rules apply
+to all of them so the recipes don't repeat them — but a tool must still be
+runnable from its recipe alone, not improvised:
+
+1. **cwd + paths.** Tools run with cwd = the **target repo root** (or the
+   worktree root for a ref target), NEVER a subdirectory. Pass the resolved file
+   set as **explicit paths**; if a tool keeps state or resolves config by cwd
+   (sqlfluff, eslint, stylelint), `cd` to the repo root once and pass absolute or
+   repo-relative paths — do not let a previous step's cwd leak in. Shipped assets
+   (semgrep rules, configs) are referenced by absolute path under
+   `$SNIFF_SKILL_DIR` (see SKILL.md), never skill-relative.
+2. **Project config wins (Step 2.5).** If the repo configures the tool, run it so
+   that config governs; the recipe's flags are the *no-project-config* form. A
+   rule the project disabled is advisory at most.
+3. **Exit codes are a contract, not failure.** For most linters, non-zero =
+   "findings present", not "tool errored". Distinguish: 0 = clean · N = findings
+   (parse the output) · a *crash/usage* error (bad flag, missing config, panic) =
+   INVALID run → fix the invocation and re-run; never report a crash as "0
+   findings / clean". A sub-second run that emitted nothing on a tool that should
+   have compiled (clippy) is also INVALID.
+4. **Don't emit default-noise the project never opted into.** When a tool's
+   defaults are stricter than the repo's actual rules and there's no project
+   config, suppress the defaults inline (e.g. yamllint with no `.yamllint`/
+   `.editorconfig`: `yamllint -d "{extends: relaxed, rules: {line-length: disable, document-start: disable}}" -f parsable <paths>` — GitHub workflows routinely exceed 80 cols; 80-col + document-start are NOT project rules). The per-tool recipe states its specific default-noise suppression.
+5. **Flag exactly as written.** Tool flag styles differ (Go tools use single-dash
+   `-format`, not `--format`; many use `--`). Copy the recipe's flags verbatim;
+   do not normalize or guess a flag.
+
 ## Where the tiers live (source of truth)
 
 **Per-target default-on / opt-in lists are authoritative in each target's doc**
