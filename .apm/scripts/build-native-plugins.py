@@ -224,8 +224,14 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     if mcp is not None:
         plan[".mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
 
-    # Bundles carry their members as native plugin dependencies.
-    deps = _bundle_dependencies(pkg["deps"]) or None if cls == "bundle" else None
+    # Native plugin dependencies = this package's first-party apm members. Emit
+    # them whenever they exist, independent of doc-classification: a skill-led
+    # package (e.g. speckit) may still aggregate a first-party member, and it must
+    # keep that wiring in its native plugin.json. Pure aggregators ("bundle") are
+    # the common case but not the only one. _bundle_dependencies returns [] (->
+    # None) when there are no first-party deps, so this is a no-op for standalone
+    # packages like sniff.
+    deps = _bundle_dependencies(pkg["deps"]) or None
 
     # Hooks (for hooks-* packages AND mixed packages that ship .apm/hooks).
     unified = _unified_hook(pkg_dir)

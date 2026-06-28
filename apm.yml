@@ -708,8 +708,11 @@ marketplace:
       category: quality
       tags:
         - skill
+        - agent
         - quality
-        - hardening
+        - refactoring
+        - code-smells
+        - tech-debt
     - name: speckit
       source: ./packages/speckit
       category: speckit
