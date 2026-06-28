@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.0...sniff--v2.0.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **sniff:** ask target kind then specifics, with the full kind list incl. language/area filter [skip tests] ([#407](https://github.com/srobroek/agentic-packages/issues/407)) ([38688ef](https://github.com/srobroek/agentic-packages/commit/38688ef601072b477b7b0cd979eda640ec843195))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/sniff--v1.1.0...sniff--v2.0.0) (2026-06-28)
 
 
