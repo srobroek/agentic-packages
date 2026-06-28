@@ -100,6 +100,7 @@ def build_drift_report(
     *,
     env: dict[str, str] | None = None,
     interactive_per_diff: bool = True,
+    non_interactive: bool = False,
 ) -> dict[str, ConfirmEntry]:
     """Run an ``--inspect`` pass for every Tier-1 step and gather confirmations.
 
@@ -189,13 +190,37 @@ def build_drift_report(
                     continue
 
                 if interactive_per_diff:
-                    # Reproduce mode: per-file write-confirm loop (the 001 behavior;
-                    # G5 will enrich the destructive-overwrite case in spec 004 Phase 8).
-                    confirmed = io.confirm({
-                        "path": diff_path,
-                        "kind": diff_kind,
-                        "preview": diff.get("preview", ""),
-                    })
+                    # Reproduce mode: per-file write-confirm loop (the 001 behavior).
+                    # G5 (spec 004 FR-015/016): a kind="modify" diff means the on-disk
+                    # content DIVERGES from the deterministic re-render — i.e. the file
+                    # has local edits this write would clobber (destructive overwrite).
+                    # create / append-if-absent are NOT destructive (kind="create").
+                    is_destructive = diff_kind == "modify"
+                    if is_destructive and non_interactive:
+                        # CI never silently destroys local work: SAFE-skip this file,
+                        # preserve the local edits, record it skipped, continue (FR-016).
+                        io.notify(
+                            f"[OVERWRITE] {diff_path} has local changes that would be "
+                            f"lost — non-interactive SAFE-skip (file preserved). Re-run "
+                            f"interactively to overwrite."
+                        )
+                        confirmed = False
+                    elif is_destructive:
+                        # Escalated hard overwrite gate (TTY): name the data-loss hazard.
+                        confirmed = io.confirm({
+                            "path": diff_path,
+                            "kind": "overwrite",
+                            "preview": (
+                                f"OVERWRITE — {diff_path} has local changes that will be "
+                                f"lost.\n{diff.get('preview', '')}"
+                            ),
+                        })
+                    else:
+                        confirmed = io.confirm({
+                            "path": diff_path,
+                            "kind": diff_kind,
+                            "preview": diff.get("preview", ""),
+                        })
                 else:
                     # Init mode: the single whole-plan preview (G1) is the one
                     # aggregate confirm; per-file prompts here would be the
@@ -282,6 +307,68 @@ def render_plan_preview(plan: Any, confirmations: dict[str, ConfirmEntry]) -> st
             lines.append(f"    • {step_id} ({kind}){tail}{suffix}")
     lines.append("")
     return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+# G7 — cross-module conflict review (spec 004 FR-017)                          #
+# --------------------------------------------------------------------------- #
+# Paths where a marker-guarded append-if-absent collision is benign (every writer
+# only appends behind a marker, so last-writer-wins is harmless) — excluded to
+# avoid the gates-analysis G7 false-positive ("both append to gitignore"). Other
+# shared files (package.json, .pre-commit-config.yaml) ARE surfaced: gates-analysis
+# explicitly wants those collisions flagged. The Diff shape does not carry an
+# idempotency hint (OQ-3), so this exclusion is by-path, not by-write-kind.
+_G7_BENIGN_APPEND_PATHS = frozenset({".gitignore"})
+
+
+def detect_conflicts(plan: Any, confirmations: dict[str, ConfirmEntry]) -> list[dict[str, Any]]:
+    """Find shared-file write collisions across enabled modules (G7, informational).
+
+    Returns one record per contended path: ``{path, modules: [ids in topo order]}``
+    for paths that ≥2 DISTINCT modules write (create/modify, not skip) in the inspect
+    pass, excluding benign marker-append targets. Detection only — the caller warns
+    and proceeds (deterministic topo order); it never blocks. A destructive overwrite
+    is G5's concern, not G7's.
+    """
+    # path → ordered list of module ids that write it (topo order preserved via plan.order)
+    writers: dict[str, list[str]] = {}
+    for mod_id in plan.order:
+        mod_entry = plan.modules.get(mod_id)
+        if mod_entry is None:
+            continue
+        seen_here: set[str] = set()  # one vote per module per path
+        for step in mod_entry.steps:
+            step_id = step.get("id") if isinstance(step, dict) else getattr(step, "id", None)
+            entry = confirmations.get(f"{mod_id}/{step_id}")
+            if entry is None or entry.skipped:
+                continue
+            for diff in entry.inspect_outcome.diffs():
+                if diff.get("kind") == "skip":
+                    continue
+                path = diff.get("path", "")
+                if not path or path in _G7_BENIGN_APPEND_PATHS:
+                    continue
+                if path not in seen_here:
+                    seen_here.add(path)
+                    writers.setdefault(path, []).append(mod_id)
+    return [
+        {"path": path, "modules": mods}
+        for path, mods in writers.items()
+        if len(mods) >= 2
+    ]
+
+
+def warn_conflicts(plan: Any, confirmations: dict[str, ConfirmEntry], io: Any) -> list[dict[str, Any]]:
+    """Surface G7 collisions informationally (warn + proceed; never blocks)."""
+    conflicts = detect_conflicts(plan, confirmations)
+    for c in conflicts:
+        order = " → ".join(c["modules"])
+        io.notify(
+            f"[CONFLICT] {c['path']} is written by multiple modules ({order}). "
+            f"Resolved in deterministic topo order (last writer wins). Review if the "
+            f"merge is not what you intend; reorder or disable a module to change it."
+        )
+    return conflicts
 
 
 def whole_plan_gate(

@@ -93,6 +93,7 @@ build_drift_report = _reproduce_mod.build_drift_report
 apply_reproduce = _reproduce_mod.apply
 run_agent_phase = _reproduce_mod.run_agent_phase
 whole_plan_gate = _reproduce_mod.whole_plan_gate  # G1 whole-plan preview (spec 004)
+warn_conflicts = _reproduce_mod.warn_conflicts    # G7 cross-module conflict review (spec 004)
 
 write_sources_toml = _persist_mod.write_sources_toml
 write_answers_toml = _persist_mod.write_answers_toml
@@ -556,7 +557,12 @@ def run_pipeline(
         frozen_plan_path=plan_path,
         env=env,
         interactive_per_diff=not is_init,
+        non_interactive=non_interactive,
     )
+    # G7 — surface cross-module shared-file collisions (informational; never blocks,
+    # both modes). Runs over the inspect data just gathered, before the G1 preview so
+    # a user sees the collision in the same review.
+    warn_conflicts(plan, confirmations, io)
     if is_init:
         proceed = whole_plan_gate(
             plan, confirmations, io, non_interactive=non_interactive

@@ -43,9 +43,10 @@ plan_mod = _load("plan")
 def test_g6_pin_gate_enrichment(module_id):
     m = manifest.parse_manifest(_MODULES / module_id / "module.toml")
     assert not m.errors, [e.to_dict() for e in m.errors]
-    gates = [s for s in m.steps if s.kind == "gate"]
-    assert len(gates) == 1, [s.id for s in m.steps]
-    g = gates[0]
+    # lang-ts also has the G4 `run-generator` gate (Phase 5); select the pins gate.
+    pins = [s for s in m.steps if s.kind == "gate" and s.id == "pins"]
+    assert len(pins) == 1, [s.id for s in m.steps]
+    g = pins[0]
     assert g.id == "pins"
     assert g.hardness == "hard"
     assert g.allow_flag == "allow-stack-write"
@@ -66,7 +67,8 @@ def test_g6_init_only_serialized_into_frozen_plan(module_id):
         mode="init",
         plugin_root_path=_RUNNER.parent,
     )
-    gate = [s for s in plan.modules[module_id].steps if s.get("kind") == "gate"][0]
+    gate = [s for s in plan.modules[module_id].steps
+            if s.get("kind") == "gate" and s.get("id") == "pins"][0]
     assert gate["init_only"] is True
     assert gate["allow_flag"] == "allow-stack-write"
     # {decision} was composed from the frozen answers (token replaced)
