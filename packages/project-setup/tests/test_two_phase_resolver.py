@@ -60,13 +60,18 @@ run_pipeline = pipeline_mod.run_pipeline
 # --------------------------------------------------------------------------- #
 # Build a synthetic Tier-2 resolver module                                     #
 # --------------------------------------------------------------------------- #
-def _make_resolver_plugin(tmp_path: Path) -> Path:
-    """Plugin root with a 'stack-mod' module: agent -> gate -> python(write)."""
+def _make_resolver_plugin(tmp_path: Path, *, init_only: bool = False) -> Path:
+    """Plugin root with a 'stack-mod' module: agent -> gate -> python(write).
+
+    When *init_only* is True the pin gate carries ``init_only = true`` (spec 004
+    FR-006a) so a plain reproduce auto-proceeds instead of (safe-)skipping the write.
+    """
     plugin_root = tmp_path / "plugin"
     mod_dir = plugin_root / "modules" / "stack-mod"
     (mod_dir / "steering").mkdir(parents=True)
     (mod_dir / "steering" / "resolve.md").write_text("# resolve\nDecide a framework pin.\n")
 
+    init_only_line = "\n        init_only = true" if init_only else ""
     (mod_dir / "module.toml").write_text(textwrap.dedent("""\
         [meta]
         repository = "github.com/test/test"
@@ -103,12 +108,12 @@ def _make_resolver_plugin(tmp_path: Path) -> Path:
         [[steps]]
         id = "pins"
         kind = "gate"
-        message = "Stack decision:\\n{decision}\\nWrite the manifest?"
+        message = "Stack decision:\\n{decision}\\nWrite the manifest?"INIT_ONLY_LINE
 
         [[steps]]
         id = "write"
         kind = "python"
-    """))
+    """).replace("INIT_ONLY_LINE", init_only_line))
 
     sdk_path = _RUNNER / "sdk.py"
     # The python write step reads 'framework' from the frozen plan and writes it.
@@ -334,3 +339,37 @@ def test_non_interactive_reproduce_replays(tmp_path):
     )
     assert r.success
     assert [e for e in io_ci.log if e["op"] == "agent_step"] == []
+
+
+# --------------------------------------------------------------------------- #
+# Spec 004 FR-006a: init_only gate auto-proceeds on reproduce (no block)       #
+# --------------------------------------------------------------------------- #
+def test_init_only_gate_non_interactive_reproduce_replays_and_writes(tmp_path):
+    """A non-interactive reproduce of an init_only pin gate must AUTO-PROCEED and
+    write the committed value — NOT safe-skip + block (which a plain hard gate would
+    do, leaving the manifest unwritten). This is the FR-006a distinction.
+    """
+    plugin_root = _make_resolver_plugin(tmp_path, init_only=True)
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+
+    # init (interactive) → freezes fastapi@0.115.0 + writes the manifest
+    io_init = ScriptedIO(default_confirm=True, agent_responses=_agent_resp("fastapi@0.115.0"))
+    r1 = run_pipeline(
+        project_dir=project_dir, io=io_init, non_interactive=False,
+        plugin_root_path=plugin_root, plan_path=_plan_path(tmp_path),
+    )
+    assert r1.success and r1.mode == "init"
+    assert (project_dir / "MANIFEST.txt").read_text().strip() == "fastapi@0.115.0"
+
+    # CI reproduce: the init_only gate must auto-proceed (no prompt, no block) so the
+    # committed value replays. A plain hard gate here would SAFE-skip → block → leave
+    # the manifest unchanged; init_only is what lets the consented decision replay.
+    io_ci = ScriptedIO(default_confirm=True, agent_responses=_agent_resp("WRONG@9.9.9"))
+    r2 = run_pipeline(
+        project_dir=project_dir, io=io_ci, non_interactive=True,
+        plugin_root_path=plugin_root, plan_path=_plan_path(tmp_path),
+    )
+    assert r2.success and r2.mode == "reproduce"
+    assert [e for e in io_ci.log if e["op"] == "agent_step"] == []  # zero-network (003 FR-009)
+    assert (project_dir / "MANIFEST.txt").read_text().strip() == "fastapi@0.115.0"

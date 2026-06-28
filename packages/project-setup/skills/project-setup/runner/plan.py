@@ -39,6 +39,7 @@ def _load_sibling(name: str):
 
 _contracts = _load_sibling("contracts")
 _paths_mod = _load_sibling("paths")
+_manifest_mod = _load_sibling("manifest")
 
 canonical_json = _contracts.canonical_json
 SCHEMA_VERSION = _contracts.SCHEMA_VERSION
@@ -47,6 +48,7 @@ SetupError = _contracts.SetupError
 GateFailure = _contracts.GateFailure
 render_answer_block = _contracts.render_answer_block
 frozen_plan_path = _paths_mod.frozen_plan_path
+eval_when = _manifest_mod.eval_when  # gate `when` predicate (spec 004 FR-006)
 plugin_root = _paths_mod.plugin_root
 
 
@@ -148,10 +150,19 @@ def build_plan(
             # Fallback: bundled modules convention
             module_rel_root = f"modules/{mod_id}"
 
-        # Steps as plain dicts (keep only id/kind/steering/message)
+        # Steps as plain dicts (keep id/kind/steering/message + the spec-004 gate
+        # enrichment: hardness/allow_flag/skip_flag/init_only).
         mod_answers = resolved_answers.get(mod_id, {})
         steps = []
         for s in m.steps:
+            # Conditional gate (spec 004 FR-006, Decision D): a kind=gate step with a
+            # `when` predicate that is FALSE against the frozen answers is DROPPED
+            # from the plan here, at build time. Because answers are frozen, init and
+            # reproduce drop/keep the identical set (Subtlety 3 — deterministic). This
+            # is how G3 is "hard for public, none for private" without a 4th hardness.
+            if s.kind == "gate" and not eval_when(s.when, mod_answers):
+                continue
+
             step_dict: dict[str, Any] = {"id": s.id, "kind": s.kind}
             if s.steering:
                 step_dict["steering"] = s.steering
@@ -166,6 +177,19 @@ def build_plan(
                 if "{decision}" in msg:
                     msg = msg.replace("{decision}", render_answer_block(mod_answers))
                 step_dict["message"] = msg
+            # Gate enrichment fields — carried into the frozen plan so the
+            # data-driven non-interactive resolver (executor.run_gate_step) reads
+            # them. Only emitted for gate steps and only when non-default, to keep
+            # the frozen plan minimal and pre-004 plans byte-identical.
+            if s.kind == "gate":
+                if s.hardness != "hard":
+                    step_dict["hardness"] = s.hardness
+                if s.allow_flag:
+                    step_dict["allow_flag"] = s.allow_flag
+                if s.skip_flag:
+                    step_dict["skip_flag"] = s.skip_flag
+                if s.init_only:
+                    step_dict["init_only"] = True
             steps.append(step_dict)
 
         modules[mod_id] = PlanModule(

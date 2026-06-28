@@ -71,6 +71,16 @@ class StepSpec:
     kind: str           # "python" | "agent" | "gate"
     steering: str | None = None   # required when kind=agent
     message: str | None = None    # required when kind=gate
+    # Gate enrichment (spec 004). Only meaningful when kind=gate; ignored otherwise.
+    hardness: str = "hard"        # "hard" | "soft" | "informational" (default hard
+                                  # = backward-compatible with every pre-004 gate)
+    allow_flag: str | None = None # hard gates: the CLI flag that opts INTO the action in CI
+    skip_flag: str | None = None  # soft gates: the --no-… flag that opts OUT in CI
+    when: str | None = None       # predicate ("key" | "key == v" | "key != v");
+                                  # false at build ⟹ the gate step is dropped from the plan
+    init_only: bool = False       # gate prompts at init only; on plain reproduce it
+                                  # auto-PROCEEDS (no prompt, no block) so the consented
+                                  # frozen decision replays byte-identically
 
 
 @dataclass
@@ -119,6 +129,7 @@ _KNOWN_MODULE_KEYS = frozenset({
 _REQUIRED_MODULE_KEYS = frozenset({"id", "name", "version", "description", "reconcile"})
 
 _VALID_STEP_KINDS = frozenset({"python", "agent", "gate"})
+_VALID_GATE_HARDNESS = frozenset({"hard", "soft", "informational"})
 _VALID_INPUT_TYPES = frozenset(i.value for i in InputType)
 
 # Fields that, at any level, trigger FORBIDDEN_FIELD when present.
@@ -295,7 +306,10 @@ def parse_manifest(toml_path: Path) -> ModuleManifest:
     steps_raw = data.get("steps", [])
     if not isinstance(steps_raw, list):
         steps_raw = []
-    steps = _parse_steps(steps_raw, module_id, errors)
+    # Pass the declared input keys so a gate `when` predicate referencing an
+    # undeclared key is caught as an authoring error (spec 004 OQ-2).
+    input_keys = frozenset(s.key for s in inputs)
+    steps = _parse_steps(steps_raw, module_id, errors, input_keys)
 
     return ModuleManifest(
         meta=dict(meta_raw),
@@ -415,6 +429,7 @@ def _parse_steps(
     raw: list[Any],
     module_id: str | None,
     errors: list[SetupError],
+    input_keys: frozenset[str] | None = None,
 ) -> list[StepSpec]:
     result = []
     for i, step in enumerate(raw):
@@ -465,10 +480,139 @@ def _parse_steps(
                 how_to_fix=f"Add a 'message' to [[steps]] entry '{step_id}'",
             ))
 
+        # ── Gate enrichment (spec 004): hardness / allow_flag / skip_flag / when /
+        #    init_only. These are gate-only; validate the value space here so the
+        #    data-driven resolver in executor.run_gate_step never sees a bad value.
+        hardness = step.get("hardness", "hard")
+        if hardness not in _VALID_GATE_HARDNESS:
+            errors.append(SetupError(
+                error_code=ErrorCode.MANIFEST_MALFORMED,
+                module_id=module_id,
+                expected=f"gate hardness in {sorted(_VALID_GATE_HARDNESS)}",
+                received=f"'{hardness}' for step '{step_id}'",
+                how_to_fix=(
+                    f"Set [[steps]].hardness for '{step_id}' to one of: "
+                    + ", ".join(sorted(_VALID_GATE_HARDNESS))
+                ),
+            ))
+            hardness = "hard"  # fall back so downstream resolution is well-defined
+
+        when = step.get("when")
+        if when is not None:
+            # OQ-2: validate the predicate key against the module's declared inputs
+            # at parse time so a typo'd key is an authoring error, not a silently
+            # always-false (gate-dropped) gate. A declared-but-unset optional input
+            # is fine — it resolves to false (gate dropped) at build, by design.
+            pred_key = _when_key(when)
+            if not pred_key:
+                errors.append(SetupError(
+                    error_code=ErrorCode.MANIFEST_MALFORMED,
+                    module_id=module_id,
+                    expected="when = \"<key>\" | \"<key> == <v>\" | \"<key> != <v>\"",
+                    received=f"'{when}' for step '{step_id}'",
+                    how_to_fix=(
+                        f"Fix [[steps]].when for '{step_id}' — use one of: "
+                        f"\"key\", \"key == value\", \"key != value\""
+                    ),
+                ))
+            elif input_keys is not None and pred_key not in input_keys:
+                errors.append(SetupError(
+                    error_code=ErrorCode.MANIFEST_MALFORMED,
+                    module_id=module_id,
+                    expected=f"when key referencing a declared input {sorted(input_keys)}",
+                    received=f"'{pred_key}' for step '{step_id}'",
+                    how_to_fix=(
+                        f"[[steps]].when for '{step_id}' references undeclared input "
+                        f"'{pred_key}' — add it to [[inputs]] or fix the key"
+                    ),
+                ))
+
         result.append(StepSpec(
             id=step_id,
             kind=kind,
             steering=steering,
             message=message,
+            hardness=hardness,
+            allow_flag=step.get("allow_flag"),
+            skip_flag=step.get("skip_flag"),
+            when=when,
+            init_only=bool(step.get("init_only", False)),
         ))
     return result
+
+
+# --------------------------------------------------------------------------- #
+# Gate `when` predicate (spec 004 FR-006, Settled Decision D)                  #
+# --------------------------------------------------------------------------- #
+# A minimal, dependency-free predicate over a module's resolved answers, used to
+# conditionally include a gate step. Three forms only (no expression language):
+#   "key"            → truthy(answers[key])
+#   "key == value"   → str(answers[key]) == "value"
+#   "key != value"   → str(answers[key]) != "value"
+# Evaluated at build_plan against frozen answers, so init and reproduce drop or
+# keep the IDENTICAL set of gates (deterministic — Subtlety 3). A missing key is
+# falsey (the gate is dropped); parse-time validation (above) catches typo'd keys.
+def _when_key(when: str) -> str | None:
+    """Return the answer key a ``when`` predicate references, or None if malformed."""
+    if not isinstance(when, str):
+        return None
+    text = when.strip()
+    if not text:
+        return None
+    for op in ("==", "!="):
+        if op in text:
+            key = text.split(op, 1)[0].strip()
+            return key or None
+    # bare-key form: must be a single token (no operators, no spaces)
+    return text if text and " " not in text else None
+
+
+def _truthy_answer(value: Any) -> bool:
+    """Truthiness for a bare-key ``when`` predicate, matching answer coercion.
+
+    A TOML bool is used directly; a string is truthy unless it is empty or a
+    recognized false token ("false"/"no"/"0"); other types use Python truthiness.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "false", "no", "0")
+    return bool(value)
+
+
+def eval_when(when: str | None, answers: dict[str, Any]) -> bool:
+    """Evaluate a gate ``when`` predicate against a module's resolved *answers*.
+
+    Returns True when the predicate holds (gate is KEPT). A None predicate is
+    always True (unconditional gate). A missing referenced key is False (gate
+    dropped) — a gate must never fire on an unknown condition.
+    """
+    if when is None:
+        return True
+    text = when.strip()
+    for op in ("==", "!="):
+        if op in text:
+            raw_key, raw_val = (s.strip() for s in text.split(op, 1))
+            if raw_key not in answers:
+                return False
+            # Compare as rendered strings (answers may be bool/str/int); strip
+            # surrounding quotes on the literal so when = 'fmt == "json"' works.
+            actual = _render_value(answers[raw_key])
+            expected = raw_val.strip().strip("'\"")
+            return (actual == expected) if op == "==" else (actual != expected)
+    # bare-key form
+    if text not in answers:
+        return False
+    return _truthy_answer(answers[text])
+
+
+def _render_value(value: Any) -> str:
+    """Render an answer value to the canonical string a ``when`` literal compares to.
+
+    A Python bool renders lowercase (``true``/``false``) to match the TOML-style
+    literal a manifest author writes (``when = "public == true"``); everything else
+    uses ``str()``.
+    """
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)

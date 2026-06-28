@@ -130,7 +130,50 @@ def _build_parser() -> argparse.ArgumentParser:
             "decision with zero network. Ignored in init mode."
         ),
     )
+
+    # ── Per-action gate flags (spec 004 §3) ─────────────────────────────────── #
+    # Hard gates SAFE-skip in --non-interactive unless opted in by a SPECIFIC flag;
+    # soft gates proceed unless opted out. There is deliberately NO global
+    # "--yes"/"--confirm-all" (spec 004 FR-005 / anti-pattern 5): a blanket toggle
+    # would auto-approve the public repo, the install, and the stack write together.
+    gate = p.add_argument_group(
+        "gate opt-in/opt-out flags",
+        "Per-action consent for hard gates in --non-interactive runs (no global yes-to-all).",
+    )
+    gate.add_argument(
+        "--allow-public-repo", action="store_true", default=False,
+        help="CI opt-in: create a PUBLIC GitHub repo (G3 hard gate). Off = safe-skip.",
+    )
+    gate.add_argument(
+        "--allow-install", action="store_true", default=False,
+        help="CI opt-in: run the batched 'apm install' (G2 supply-chain gate). Off = safe-skip.",
+    )
+    gate.add_argument(
+        "--allow-stack-write", action="store_true", default=False,
+        help="CI opt-in: write agent-researched dependency pins (G6 gate). Off = safe-skip.",
+    )
+    gate.add_argument(
+        "--no-external-generators", action="store_true", default=False,
+        help="CI opt-out: skip external scaffolders like 'nuxi init' (G4 soft gate).",
+    )
     return p
+
+
+# Map argparse dest → the gate flag name carried in active_flags. The flag NAME
+# (kebab) is what gate steps reference via [[steps]].allow_flag / .skip_flag.
+_GATE_FLAGS = {
+    "allow_public_repo": "allow-public-repo",
+    "allow_install": "allow-install",
+    "allow_stack_write": "allow-stack-write",
+    "no_external_generators": "no-external-generators",
+}
+
+
+def _active_flags(args: argparse.Namespace) -> frozenset[str]:
+    """Collect the gate flag names the user activated into the set the resolver reads."""
+    return frozenset(
+        flag for dest, flag in _GATE_FLAGS.items() if getattr(args, dest, False)
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -159,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
             non_interactive=args.non_interactive,
             dry_run=args.dry_run,
             refresh=args.refresh,
+            active_flags=_active_flags(args),
         )
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)

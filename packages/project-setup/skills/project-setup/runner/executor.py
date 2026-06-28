@@ -412,42 +412,108 @@ def run_gate_step(
     io: Any,
     *,
     non_interactive: bool = False,
+    active_flags: frozenset[str] | None = None,
+    init_only_bypass: bool = False,
 ) -> bool:
-    """Render a ``kind=gate`` step message and capture confirmation.
+    """Render a ``kind=gate`` step message and resolve confirmation by hardness.
+
+    The resolution is **data-driven** (spec 004 FR-003/004): it reads the step's
+    ``hardness`` (``hard`` | ``soft`` | ``informational``, default ``hard``) and the
+    active per-action flag set, instead of the pre-004 "always SAFE-skip in CI" rule.
 
     Parameters
     ----------
     step:
-        The step dict from the frozen plan (keys: ``id``, ``kind``, ``message``).
+        The step dict from the frozen plan (keys: ``id``, ``kind``, ``message``,
+        and the spec-004 enrichment ``hardness``/``allow_flag``/``skip_flag``).
     module_id:
         The owning module id (for logging).
     io:
         An ``InterviewIO`` implementation.
     non_interactive:
-        When True (CI / --non-interactive), DO NOT call ``io.confirm`` (which
-        would block on ``input()`` and deadlock CI). Resolve to the SAFE action
-        = NOT confirmed (``False``), so the consequential gated step is skipped
-        rather than auto-approved. The skip is announced so it is visible in
-        logs. CI that genuinely wants the gated action must opt in explicitly
-        (a per-action flag), never via silent auto-approval.
+        When True (CI / --non-interactive), DO NOT call ``io.confirm`` (which would
+        block on ``input()`` and deadlock CI). The outcome is resolved from hardness
+        + flags (see below) WITHOUT prompting.
+    active_flags:
+        The set of opt-in/opt-out flag names active this run (e.g.
+        ``{"allow-public-repo"}`` from ``--allow-public-repo``). Drives the
+        non-interactive resolution; a standing flag also pre-resolves a TTY gate.
+    init_only_bypass:
+        True when this gate is ``init_only`` AND the run is a plain reproduce (mode
+        ``reproduce``, module not named by ``--refresh``). The gate then AUTO-PROCEEDS
+        (returns ``True``) without prompting — the frozen decision is already
+        consented, so its byte-identical write must replay, NOT be skipped (spec 004
+        FR-006a). This is distinct from a hard gate's CI SAFE-skip.
 
     Returns
     -------
     bool
-        ``True`` if confirmed; ``False`` if skipped (always ``False`` in
-        non-interactive mode).
+        ``True`` = confirmed/proceed; ``False`` = skipped (the SAFE action).
+
+    The resolution table (spec 004 §3 CI policy):
+
+    ======================  =====================  =============================
+    hardness                TTY                    non-interactive / CI
+    ======================  =====================  =============================
+    hard                    prompt ``[y/N]``       SAFE-skip, unless ``allow_flag``
+                            (default No)           is active → proceed
+    soft                    prompt ``[Y/n]``       proceed, unless ``skip_flag``
+                            (default Yes)          is active → SAFE-skip
+    informational           print, no prompt       print, proceed
+    ======================  =====================  =============================
     """
+    flags = active_flags or frozenset()
     message = step.get("message", "(no message)")
     step_id = step.get("id", "gate")
-    io.notify(f"\n[GATE] {module_id}/{step_id}: {message}")
-    if non_interactive:
+    hardness = step.get("hardness", "hard")
+    allow_flag = step.get("allow_flag")
+    skip_flag = step.get("skip_flag")
+    tag = f"{module_id}/{step_id}"
+
+    io.notify(f"\n[GATE] {tag}: {message}")
+
+    # init_only on plain reproduce: auto-proceed (consented frozen decision replays).
+    if init_only_bypass:
         io.notify(
-            f"[GATE] {module_id}/{step_id}: non-interactive — SAFE-skipping the "
-            f"gated step (not auto-approved). Re-run interactively or pass an "
-            f"explicit opt-in flag to perform it."
+            f"[GATE] {tag}: init-only — frozen decision already consented; "
+            f"auto-proceeding on reproduce (pass --refresh to re-review)."
+        )
+        return True
+
+    # informational: never prompts, always proceeds (TTY and CI alike).
+    if hardness == "informational":
+        return True
+
+    # A standing flag pre-resolves the gate regardless of interactivity:
+    #   hard + allow_flag active  → proceed
+    #   soft + skip_flag active    → SAFE-skip
+    if hardness == "hard" and allow_flag and allow_flag in flags:
+        io.notify(f"[GATE] {tag}: --{allow_flag} active — proceeding with the gated action.")
+        return True
+    if hardness == "soft" and skip_flag and skip_flag in flags:
+        io.notify(f"[GATE] {tag}: --{skip_flag} active — SAFE-skipping the gated action.")
+        return False
+
+    if non_interactive:
+        if hardness == "soft":
+            io.notify(f"[GATE] {tag}: non-interactive soft gate — proceeding (pass --{skip_flag} to skip).")
+            return True
+        # hard (default): SAFE-skip, never auto-approve.
+        opt_in = f" Pass --{allow_flag} to perform it." if allow_flag else ""
+        io.notify(
+            f"[GATE] {tag}: non-interactive — SAFE-skipping the gated step "
+            f"(not auto-approved).{opt_in}"
         )
         return False
-    return io.confirm({"path": f"{module_id}/{step_id}", "kind": "gate", "preview": message})
+
+    # Interactive TTY: hard → [y/N] default No; soft → [Y/n] default Yes.
+    default_yes = hardness == "soft"
+    return io.confirm({
+        "path": tag,
+        "kind": "gate",
+        "preview": message,
+        "default_yes": default_yes,
+    })
 
 
 # --------------------------------------------------------------------------- #

@@ -202,6 +202,19 @@ def build_drift_report(
     return confirmations
 
 
+def _module_refreshed(module_id: str, refresh: list[str] | None) -> bool:
+    """True if *module_id* is named by a ``--refresh`` token (whole-module or a key).
+
+    Mirrors the matching in ``run_agent_phase`` (``mod_id`` or ``mod_id.<key>``) so a
+    refreshed module re-arms its ``init_only`` gate (spec 004 FR-006a) — the decision
+    is being re-researched, so the user must re-review it.
+    """
+    if not refresh:
+        return False
+    refresh_set = set(refresh)
+    return module_id in refresh_set or any(t.startswith(f"{module_id}.") for t in refresh_set)
+
+
 # --------------------------------------------------------------------------- #
 # apply                                                                        #
 # --------------------------------------------------------------------------- #
@@ -215,6 +228,8 @@ def apply(
     *,
     env: dict[str, str] | None = None,
     non_interactive: bool = False,
+    active_flags: frozenset[str] | None = None,
+    refresh: list[str] | None = None,
 ) -> list[StepOutcome]:
     """Execute confirmed steps for-real after the inspect pass.
 
@@ -318,7 +333,21 @@ def apply(
 
             elif kind == "gate":
                 step_dict = step if isinstance(step, dict) else {"id": step_id, "kind": kind, "message": getattr(step, "message", "")}
-                confirmed = run_gate(step_dict, mod_id, io, non_interactive=non_interactive)
+                # init_only gate on a plain reproduce (spec 004 FR-006a): the frozen
+                # decision is already consented, so the gate auto-proceeds (it does
+                # NOT prompt and does NOT block the byte-identical replay). --refresh
+                # on this module re-arms the gate (the decision is being re-researched).
+                init_only_bypass = (
+                    bool(step_dict.get("init_only"))
+                    and plan.mode == "reproduce"
+                    and not _module_refreshed(mod_id, refresh)
+                )
+                confirmed = run_gate(
+                    step_dict, mod_id, io,
+                    non_interactive=non_interactive,
+                    active_flags=active_flags,
+                    init_only_bypass=init_only_bypass,
+                )
                 if not confirmed:
                     # Block subsequent python writes in this module (FR-012).
                     gate_blocked = True

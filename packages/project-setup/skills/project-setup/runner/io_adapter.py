@@ -147,12 +147,19 @@ class TerminalIO:
         path = item.get("path", "?")
         kind = item.get("kind", "?")
         preview = item.get("preview", "")
+        # Soft gates (spec 004 FR-004) default to Yes and prompt [Y/n]; everything
+        # else (file writes, hard gates) keeps the safe [y/N] default-No.
+        default_yes = bool(item.get("default_yes", False))
         print(f"\n  [{kind.upper()}] {path}")
         if preview:
             # indent preview lines
             for line in str(preview).splitlines()[:3]:
                 print(f"    {line}")
-        raw = input("  Write this file? [y/N]: ").strip().lower()
+        if default_yes:
+            raw = input("  Proceed? [Y/n]: ").strip().lower()
+            return raw in ("", "y", "yes")
+        prompt = "  Proceed? [y/N]: " if kind == "gate" else "  Write this file? [y/N]: "
+        raw = input(prompt).strip().lower()
         return raw in ("y", "yes")
 
     def agent_step(

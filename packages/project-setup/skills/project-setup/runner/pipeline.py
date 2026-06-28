@@ -242,6 +242,7 @@ def run_pipeline(
     plan_path: Path | None = None,
     env: dict[str, str] | None = None,
     refresh: list[str] | None = None,
+    active_flags: frozenset[str] | None = None,
 ) -> PipelineResult:
     """Run the 8-stage project-setup pipeline.
 
@@ -535,6 +536,8 @@ def run_pipeline(
         frozen_plan_path=plan_path,
         env=env,
         non_interactive=non_interactive,
+        active_flags=active_flags,
+        refresh=refresh,
     )
 
     # Collect file writes from outcomes
