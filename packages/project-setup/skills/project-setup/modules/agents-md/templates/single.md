@@ -21,7 +21,8 @@
 
 ## Architecture
 
-<!-- ARCHITECTURE: to be filled by agent based on project setup -->
+<!-- BEGIN ps:architecture -->
+<!-- END ps:architecture -->
 
 ## Path Mapping
 

@@ -36,6 +36,40 @@ type = "string"
 prompt = "GitHub owner / organisation"
 required = false
 
+[[inputs]]
+key = "architecture_md"
+type = "string"
+required = false
+default = ""
+
+[[inputs]]
+key = "agent_editable_globs"
+type = "list"
+required = false
+default = []
+
 [[steps]]
 id = "write"
+kind = "python"
+
+[[steps]]
+id = "resolve-arch"
+kind = "agent"
+steering = "steering/resolve-arch.md"
+
+# G — hard gate: the agent authored this section (model judgment); a human
+# consents before the splice writes it into AGENTS.md (which steers every
+# future agent in the repo). init_only: on plain reproduce the frozen decision
+# is already consented, so the gate auto-proceeds; only --refresh re-arms it.
+# CI must pass --allow-arch-write to perform the splice at init.
+[[steps]]
+id = "arch-gate"
+kind = "gate"
+hardness = "hard"
+allow_flag = "allow-arch-write"
+init_only = true
+message = "Architecture section for AGENTS.md (agent-authored):\n{decision}\nWrite this section to AGENTS.md?"
+
+[[steps]]
+id = "splice"
 kind = "python"

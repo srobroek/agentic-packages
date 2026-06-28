@@ -270,6 +270,132 @@ def _preview(body_bytes: bytes, max_chars: int = 200) -> str:
     return head
 
 
+# --------------------------------------------------------------------------- #
+# scan_top_level_dirs — shallow read-only dir scan (spec 006 FR-004)           #
+# --------------------------------------------------------------------------- #
+def scan_top_level_dirs(project_dir: "str | Path | None" = None) -> "frozenset[str]":
+    """Return the set of top-level DIRECTORY names directly under *project_dir*.
+
+    No recursion, directories only (files excluded), hidden dirs (``.``-prefixed)
+    INCLUDED. A missing or empty project dir yields an empty frozenset — never
+    raises. Used by the AGENTS.md architecture splice to validate that paths the
+    agent references actually exist (phantom-path guard, spec 006 FR-007). Pure
+    stdlib, no network.
+    """
+    if project_dir is None:
+        env_pd = os.environ.get("PROJECT_DIR")
+        project_dir = Path(env_pd) if env_pd else Path.cwd()
+    base = Path(project_dir)
+    if not base.is_dir():
+        return frozenset()
+    try:
+        return frozenset(e.name for e in os.scandir(base) if e.is_dir())
+    except OSError:
+        return frozenset()
+
+
+# --------------------------------------------------------------------------- #
+# splice_between_sentinels — replace a marked span inside a file (spec 006)     #
+# --------------------------------------------------------------------------- #
+def splice_between_sentinels(
+    rel_path: "str | Path",
+    begin: str,
+    end: str,
+    body: str,
+    *,
+    project_dir: "str | Path | None" = None,
+    inspect: bool = False,
+    missing: str = "append",
+    warnings: "list[str] | None" = None,
+) -> "Diff":
+    """Replace the content between *begin* and *end* markers in a file with *body*.
+
+    Unlike ``idempotent_write`` (which replaces the WHOLE file), this replaces only
+    the span BETWEEN the marker lines, preserving everything outside byte-for-byte.
+    The marker lines themselves are preserved/written; *body* is the inner text (no
+    markers). Returns a ``Diff`` (``create`` | ``modify`` | ``skip``). ``inspect=True``
+    yields the identical diff kind without writing (Tier-1 guarantee, spec 006 FR-001).
+
+    Cases (spec 006 FR-001/002/003):
+      - file absent → write ``begin\\n{body}\\n{end}\\n`` (kind="create").
+      - both markers present → replace the inner span; identical inner → "skip";
+        else "modify". Content outside the markers is untouched.
+      - ``begin`` present but ``end`` absent (malformed) → ALWAYS skip + warn
+        ``malformed sentinel span (begin without end)``, regardless of *missing*.
+      - markers absent + ``missing="append"`` (default) → append the marked block
+        after the first case-insensitive ``## Architecture`` heading (or EOF), warn
+        ``sentinel markers absent — appending architecture section`` ("modify"/"create").
+      - markers absent + ``missing="error"`` → skip + warn, no write.
+
+    Pure stdlib, no network.
+    """
+    warns = warnings if warnings is not None else []
+
+    if project_dir is None:
+        env_pd = os.environ.get("PROJECT_DIR")
+        project_dir = Path(env_pd) if env_pd else Path.cwd()
+    project_dir = Path(project_dir).resolve()
+
+    rel_path = Path(rel_path)
+    if not is_safe_relative_path(rel_path):
+        raise SetupError(
+            error_code=ErrorCode.PATH_ESCAPE,
+            expected="safe relative path (no .., no absolute, no symlink escape)",
+            received=str(rel_path),
+            how_to_fix=f"Use a path within the project directory: {rel_path}",
+        )
+    abs_path = project_dir / rel_path
+    rel_str = str(rel_path)
+    block = f"{begin}\n{body}\n{end}\n"
+
+    # --- file absent → create with the marked block ---
+    if not abs_path.exists():
+        if not inspect:
+            abs_path.parent.mkdir(parents=True, exist_ok=True)
+            abs_path.write_text(block, encoding="utf-8")
+        return Diff(path=rel_str, kind="create", preview=_preview(block.encode("utf-8")))
+
+    existing = abs_path.read_text(encoding="utf-8")
+    bi = existing.find(begin)
+    ei = existing.find(end)
+
+    # --- malformed: begin without end → always skip+warn ---
+    if bi != -1 and ei == -1:
+        warns.append(f"malformed sentinel span (begin without end) in {rel_str}; skipping")
+        return Diff(path=rel_str, kind="skip", preview="(malformed sentinel span — skipped)")
+
+    # --- both markers present → replace the inner span ---
+    if bi != -1 and ei != -1 and ei >= bi:
+        inner_start = bi + len(begin)
+        prefix = existing[:inner_start]
+        suffix = existing[ei:]
+        new_content = f"{prefix}\n{body}\n{suffix}"
+        if new_content == existing:
+            return Diff(path=rel_str, kind="skip", preview="(identical span, no change)")
+        if not inspect:
+            abs_path.write_text(new_content, encoding="utf-8")
+        return Diff(path=rel_str, kind="modify", preview=_preview(body.encode("utf-8")))
+
+    # --- markers absent ---
+    if missing == "error":
+        warns.append(f"sentinel markers absent in {rel_str} — skipping (missing=error)")
+        return Diff(path=rel_str, kind="skip", preview="(sentinel markers absent — skipped)")
+
+    # missing == "append": insert the marked block after the first "## Architecture"
+    # heading (case-insensitive), else at EOF.
+    warns.append("sentinel markers absent — appending architecture section")
+    lines = existing.splitlines(keepends=True)
+    insert_at = len(lines)
+    for i, ln in enumerate(lines):
+        if ln.strip().lower().startswith("## architecture"):
+            insert_at = i + 1
+            break
+    sep = "" if (insert_at == 0 or lines[insert_at - 1].endswith("\n")) else "\n"
+    new_content = "".join(lines[:insert_at]) + sep + block + "".join(lines[insert_at:])
+    if not inspect:
+        abs_path.write_text(new_content, encoding="utf-8")
+    return Diff(path=rel_str, kind="modify", preview=_preview(block.encode("utf-8")))
+
 
 # --------------------------------------------------------------------------- #
 # verify_pins — MCP-free registry verification (spec 003 FR-005/006/007)       #

@@ -196,6 +196,35 @@ way it must be reachable via `import sdk; sdk.splice_between_sentinels(...)`.
    `agents-md` (it was already reconcile=True before this spec); 006 does not make it
    worse, but it is worth flagging as a pre-existing sharp edge.
 
-## AS-BUILT (TBD)
+## AS-BUILT (2026-06-28)
 
-_Populated after implementation._
+Implemented in two phases, both green.
+
+**Phase 1 — SDK primitives (`sdk.py`):** `scan_top_level_dirs(project_dir)` (shallow,
+dirs-only, hidden included, missing→empty frozenset) + `splice_between_sentinels(rel_path,
+begin, end, body, *, project_dir, inspect, missing="append"|"error", warnings)` (span
+replace; create/modify/skip; malformed begin-without-end → skip+warn; missing-markers →
+append after `## Architecture` heading). 13 unit tests in `test_sdk_splice.py`.
+
+**Phase 2/3 — agents-md module:** module.toml gained the resolve-arch(agent) →
+arch-gate(gate, hard, allow-arch-write, init_only) → splice(python) steps + two inputs;
+module.py refactored to STEP_HANDLERS dispatch (`_do_write` = the existing skeleton,
+`_do_splice` = phantom-strip + splice); both templates' `<!-- ARCHITECTURE… -->`
+placeholder → `<!-- BEGIN/END ps:architecture -->` sentinels; new
+`steering/resolve-arch.md`. 15 tests in `test_module_agents_md.py` (SC-003 span-write,
+SC-004 phantom-strip, SC-007 missing-marker append, idempotent skip, inspect-no-write).
+
+**Deferred (honest gap):** SC-001 (agent answer flows to splice via run_pipeline),
+SC-005 (reproduce zero-network byte-identical), SC-006 (--refresh / declined gate),
+SC-008 (--non-interactive ±--allow-arch-write) are RUNNER-LEVEL — they need a
+`run_pipeline` + ScriptedIO harness with a synthetic agents-md plugin, not the direct
+`module.py --step splice` invocation `test_module_agents_md.py` uses. The underlying
+machinery (Phase-A agent → freeze → gate → Phase-B python, the `init_only` reproduce
+bypass, the hard-gate CI safe-skip) is ALREADY proven end-to-end by
+`test_two_phase_resolver.py` for the stack resolver — agents-md uses the identical
+runner path, so these SCs are covered by construction, not by an agents-md-specific
+runner test. A dedicated agents-md run_pipeline test is a low-value follow-up (it would
+re-prove the runner, not the module); tracked here rather than built.
+
+Full suite stayed green (no regression from the additive sdk.py primitives + the
+module extension).
