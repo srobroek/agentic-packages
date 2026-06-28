@@ -97,7 +97,7 @@
   "packages/secrets-scan": "1.2.0",
   "packages/security": "1.1.0",
   "packages/session-review": "0.2.0",
-  "packages/sniff": "2.2.0",
+  "packages/sniff": "2.2.1",
   "packages/speckit": "1.1.0",
   "packages/speckit-dag-hooks": "1.1.0",
   "packages/steering-backend": "1.0.0",

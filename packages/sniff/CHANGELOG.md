@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/srobroek/agentic-packages/compare/sniff--v2.2.0...sniff--v2.2.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **sniff:** give every tool a complete run recipe (command, config, exit codes, gotchas) [skip tests] ([#413](https://github.com/srobroek/agentic-packages/issues/413)) ([fca782e](https://github.com/srobroek/agentic-packages/commit/fca782e9b81a1e76f786385b4af97471299c0345))
+
 ## [2.2.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.1.0...sniff--v2.2.0) (2026-06-28)
 
 
