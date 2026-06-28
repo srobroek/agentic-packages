@@ -81,10 +81,6 @@ _HTTPS_RE = re.compile(
 )
 
 
-def _strip_trailing_slash(s: str) -> str:
-    return s.rstrip("/")
-
-
 def _clean_subdir(raw: str | None) -> str:
     """Normalise a captured rest-path into a clean subdir string."""
     if not raw:
