@@ -113,13 +113,27 @@ the import path.
 
 ## Open Questions
 
-- **OQ-1 (design)**: bare `import sdk` (executor/test sets PYTHONPATH) vs a 3-line
-  try/except path-fallback shim (keeps `uv run module.py` working standalone). Lean:
-  the shim — it is still a ~80% line cut and removes the direct-invocation footcut.
+- **OQ-1 (design) — RESOLVED 2026-06-28: the 3-line try/except shim, NOT bare import.**
+  Evidence settled it: the per-module functional tests invoke `uv run module.py`
+  DIRECTLY with their own `env={PLUGIN_ROOT, PROJECT_DIR}` (e.g.
+  `tests/test_module_lang_python.py:101-105`), NOT through the executor's `run_env`.
+  A bare `import sdk` would break ~10 module test files unless each sets `PYTHONPATH`.
+  The shim — `try: import sdk` / `except ModuleNotFoundError:` <path-load fallback> —
+  keeps direct invocation working with zero test churn, still cuts ~80% of each
+  `_load_sdk` block (15 lines → ~3), and removes the manual `sys.modules`-register
+  footgun on the happy path. The executor STILL adds `runner/` to `PYTHONPATH`
+  (FR-001) so the `try` arm is taken in production; the `except` arm covers
+  direct-invocation tests + any non-executor caller.
 - **OQ-2 (scope)**: include the runner-side `_load_sibling` (decision C) or defer it?
-  Lean: defer; the win is thinner and the mechanism is different.
+  Lean: defer; the win is thinner (the runner is imported by cli/tests, not via
+  `uv run`, so PYTHONPATH injection doesn't help) and the mechanism is different.
 - **OQ-3 (examples)**: the `examples/` modules live two levels deeper; confirm the
   executor's runner-dir resolution covers the example path layout too.
+
+## Scale (re-counted post-leanness-cut, 2026-06-28)
+
+`_load_sdk` in 21 module/example `module.py` files (~15 lines each → ~3 with the shim
+= ~250 lines net). `_load_sibling` in 12 runner files (OQ-2, deferred).
 
 ## Assumptions
 
