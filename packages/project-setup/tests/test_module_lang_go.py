@@ -1,9 +1,12 @@
 """End-to-end tests for the lang-go module.
 
 Verifies:
-  - manifest parses and is valid (id, default_enabled=False, reconcile=True, order)
+  - manifest parses and is valid (id, default_enabled=False, reconcile=True, order,
+    write+run-generator+scaffold steps present)
   - happy path: config files written + gitignore/pre-commit appends present with
-    correct markers (toolchain stubbed offline — no real go, no network)
+    correct markers (toolchain stubbed offline — no real go, no network) — all
+    under --step write
+  - scaffold step: go mod init runs under --step scaffold
   - module_path derived from a stubbed git remote
   - tool-missing → warn+continue (no raise, returncode==0)
   - idempotent re-run does NOT double-append (grep-guard works — run twice,
@@ -56,7 +59,11 @@ def _frozen_plan(
                     "module_path": module_path,
                     "app_kind": app_kind,
                 },
-                "steps": [{"id": "write", "kind": "python"}],
+                "steps": [
+                    {"id": "write", "kind": "python"},
+                    {"id": "run-generator", "kind": "gate", "hardness": "soft", "skip_flag": "no-external-generators"},
+                    {"id": "scaffold", "kind": "python"},
+                ],
             }
         },
     }
@@ -99,10 +106,11 @@ def _run(
     plan: Path,
     stub_dir: Path | None = None,
     *,
+    step: str = "write",
     inspect: bool = False,
 ) -> subprocess.CompletedProcess:
     module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
-    cmd = ["uv", "run", str(module_py), "--plan", str(plan), "--step", "write"]
+    cmd = ["uv", "run", str(module_py), "--plan", str(plan), "--step", step]
     if inspect:
         cmd.append("--inspect")
     env = {**os.environ, "PLUGIN_ROOT": str(_PLUGIN_ROOT), "PROJECT_DIR": str(project)}
@@ -121,6 +129,8 @@ def test_manifest_parses_and_is_valid():
     assert mani.default_enabled is False, "language overlays must be opt-in (default_enabled=false)"
     assert mani.reconcile is True
     assert any(s.id == "write" and s.kind == "python" for s in mani.steps)
+    assert any(s.id == "run-generator" and s.kind == "gate" for s in mani.steps)
+    assert any(s.id == "scaffold" and s.kind == "python" for s in mani.steps)
     assert "gitignore-generate" in mani.order.get("after", [])
     assert "precommit-setup" in mani.order.get("after", [])
 
@@ -129,10 +139,10 @@ def test_manifest_parses_and_is_valid():
     assert "app_kind" in input_keys
 
 
-# ── happy path ───────────────────────────────────────────────────────────────
+# ── happy path (--step write) ─────────────────────────────────────────────────
 
 def test_happy_path_creates_golangci_yml(tmp_path):
-    """Happy path: .golangci.yml is created with expected content."""
+    """Happy path: .golangci.yml is created with expected content (write step)."""
     project = tmp_path / "myservice"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)
@@ -153,7 +163,7 @@ def test_happy_path_creates_golangci_yml(tmp_path):
 
 
 def test_happy_path_creates_cmd_main_go(tmp_path):
-    """Happy path: cmd/main.go is created."""
+    """Happy path: cmd/main.go is created (write step)."""
     project = tmp_path / "mycli"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)
@@ -170,7 +180,7 @@ def test_happy_path_creates_cmd_main_go(tmp_path):
 
 
 def test_happy_path_appends_gitignore_block(tmp_path):
-    """Happy path: *.test marker present in .gitignore after run."""
+    """Happy path: *.test marker present in .gitignore after write step."""
     project = tmp_path / "myservice"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)
@@ -186,7 +196,7 @@ def test_happy_path_appends_gitignore_block(tmp_path):
 
 
 def test_happy_path_appends_precommit_hooks(tmp_path):
-    """Happy path: go pre-commit hooks appended to .pre-commit-config.yaml."""
+    """Happy path: go pre-commit hooks appended to .pre-commit-config.yaml (write step)."""
     project = tmp_path / "myservice"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)
@@ -203,10 +213,25 @@ def test_happy_path_appends_precommit_hooks(tmp_path):
     assert "go-fmt" in pc_content
 
 
+# ── scaffold step (--step scaffold) ──────────────────────────────────────────
+
+def test_scaffold_runs_go_mod_init(tmp_path):
+    """scaffold step: go mod init is invoked with the stub on PATH."""
+    project = tmp_path / "myservice"
+    project.mkdir()
+    stub_dir = _stub_go_and_git(tmp_path)
+    plan = _frozen_plan(tmp_path, module_path="github.com/example/myservice")
+
+    proc = _run(project, plan, stub_dir, step="scaffold")
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok"
+
+
 # ── module_path derived from git remote ──────────────────────────────────────
 
 def test_module_path_derived_from_git_remote(tmp_path):
-    """When module_path is empty, derive from git remote (stubbed)."""
+    """When module_path is empty, derive from git remote (stubbed) in write step."""
     project = tmp_path / "myrepo"
     project.mkdir()
     # Stub git to return an HTTPS remote
@@ -287,7 +312,7 @@ def test_tool_missing_warns_and_continues(tmp_path):
 # ── idempotence ───────────────────────────────────────────────────────────────
 
 def test_idempotent_no_double_append_gitignore(tmp_path):
-    """*.test marker must appear exactly once after two runs."""
+    """*.test marker must appear exactly once after two write-step runs."""
     project = tmp_path / "myservice"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)
@@ -303,7 +328,7 @@ def test_idempotent_no_double_append_gitignore(tmp_path):
 
 
 def test_idempotent_no_double_append_precommit(tmp_path):
-    """tekwizely/pre-commit-golang marker must appear exactly once after two runs."""
+    """tekwizely/pre-commit-golang marker must appear exactly once after two write-step runs."""
     project = tmp_path / "myservice"
     project.mkdir()
     stub_dir = _stub_go_and_git(tmp_path)

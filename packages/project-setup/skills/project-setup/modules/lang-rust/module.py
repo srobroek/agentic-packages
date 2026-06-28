@@ -6,13 +6,12 @@
 
 Ports setup-rust.sh (138 lines) to a native-root Python module.
 
-Steps (all under step id "write"):
-  1. cargo init .  OR write workspace Cargo.toml  (skip if Cargo.toml exists)
-  2. Write rust-toolchain.toml  (write-if-absent, stable channel + rustfmt/clippy)
-  3. Write clippy.toml  (write-if-absent, template verbatim)
-  4. Write rustfmt.toml  (write-if-absent, template verbatim)
-  5. Append Rust .gitignore block  (grep-guarded by '/target')
-  6. Append pre-commit-rust hooks  (grep-guarded by 'doublify/pre-commit-rust')
+Steps:
+  write    (python) — Write rust-toolchain.toml, clippy.toml, rustfmt.toml,
+                      Cargo.toml (workspace=true only, deterministic),
+                      append Rust .gitignore block, append pre-commit-rust hooks.
+  scaffold (python) — Run `cargo init .` (workspace=false only; G4-gated).
+                      When workspace=true, this is a no-op (no generator needed).
 
 Note: the legacy --esp branch (esp-idf toolchain) is preserved as a
 crate_kind=="esp" branch that writes a rust-toolchain.toml with channel="esp".
@@ -21,7 +20,7 @@ External tool absence/failure is NON-FATAL: a warning is emitted and the
 module continues.  This mirrors the legacy WARN pattern in setup-rust.sh.
 
 Invoked by the runner as:
-    uv run module.py --plan <frozen_plan.json> --step write [--inspect]
+    uv run module.py --plan <frozen_plan.json> --step <write|scaffold> [--inspect]
 """
 
 from __future__ import annotations
@@ -58,16 +57,20 @@ def _load_sdk():
     sys.modules["sdk"] = mod          # register BEFORE exec_module (the @dataclass(Exception) footgun)
     spec.loader.exec_module(mod)
     return mod
-def main() -> int:
-    ap = argparse.ArgumentParser(description="lang-rust module")
-    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
-    ap.add_argument("--step", required=True, help="step id to run")
-    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
-    args = ap.parse_args()
 
-    sdk = _load_sdk()
-    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-rust")
 
+# --------------------------------------------------------------------------- #
+# Step handlers                                                                #
+# --------------------------------------------------------------------------- #
+
+def _do_write(sdk, inputs, args) -> int:
+    """write step: deterministic config writes (no external generator).
+
+    Writes rust-toolchain.toml, clippy.toml, rustfmt.toml, and (workspace=true)
+    a deterministic Cargo.toml workspace template. Also appends the Rust
+    .gitignore block and pre-commit-rust hooks. Does NOT run cargo init —
+    that is the scaffold step (G4-gated, spec 004 FR-013).
+    """
     workspace: bool = inputs.get_bool("workspace", default=False)
     crate_kind: str = inputs.get_str("crate_kind", default="")
 
@@ -78,7 +81,9 @@ def main() -> int:
     diffs = []
     files_written: list[str] = []
 
-    # ── 1. Cargo init / workspace ──────────────────────────────────────────── #
+    # ── 1. Cargo.toml — workspace mode only (deterministic write) ─────────── #
+    # workspace=false: Cargo.toml is created by `cargo init` in the scaffold step.
+    # workspace=true:  write a deterministic workspace template here; no generator.
     cargo_toml = project_dir / "Cargo.toml"
     if not cargo_toml.exists():
         if workspace:
@@ -93,16 +98,7 @@ def main() -> int:
             diffs.append(diff)
             if diff.kind in ("create", "modify"):
                 files_written.append(diff.path)
-        else:
-            if not args.inspect:
-                sdk.run_tool(
-                    ["cargo", "init", "."],
-                    cwd=project_dir,
-                    warnings=warnings,
-                    label="cargo init",
-                )
-            else:
-                warnings.append("inspect: would run cargo init .")
+        # workspace=false: skip here — scaffold will run cargo init
     else:
         diffs.append(sdk.Diff(path="Cargo.toml", kind="skip", preview="(Cargo.toml already exists)"))
 
@@ -203,6 +199,92 @@ def main() -> int:
     )
     sdk.emit_result(result)
     return 0
+
+
+def _do_scaffold(sdk, inputs, args) -> int:
+    """scaffold step: run `cargo init .` (G4-gated, workspace=false only).
+
+    Separated from `write` (spec 004 FR-013) so the soft G4 gate can skip JUST
+    the external-generator run while the deterministic `write` step's config
+    files already landed. When workspace=true, this is a clean no-op — the
+    workspace Cargo.toml was written deterministically in the write step.
+    """
+    workspace: bool = inputs.get_bool("workspace", default=False)
+
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    project_dir = Path(project_dir_env).resolve() if project_dir_env else Path.cwd().resolve()
+
+    warnings: list[str] = []
+    diffs = []
+    files_written: list[str] = []
+
+    if workspace:
+        # workspace=true: no generator needed, Cargo.toml was written in the write step
+        result = sdk.ModuleResult(
+            module_id="lang-rust",
+            step_id=args.step,
+            status="ok",
+            files_written=files_written,
+            diffs=diffs,
+            warnings=warnings,
+        )
+        sdk.emit_result(result)
+        return 0
+
+    # workspace=false: run cargo init (may create Cargo.toml + src/main.rs)
+    cargo_toml = project_dir / "Cargo.toml"
+    if not cargo_toml.exists():
+        if not args.inspect:
+            sdk.run_tool(
+                ["cargo", "init", "."],
+                cwd=project_dir,
+                warnings=warnings,
+                label="cargo init",
+            )
+        else:
+            warnings.append("inspect: would run cargo init .")
+    else:
+        diffs.append(sdk.Diff(path="Cargo.toml", kind="skip", preview="(Cargo.toml already exists)"))
+
+    result = sdk.ModuleResult(
+        module_id="lang-rust",
+        step_id=args.step,
+        status="ok",
+        files_written=files_written,
+        diffs=diffs,
+        warnings=warnings,
+    )
+    sdk.emit_result(result)
+    return 0
+
+
+STEP_HANDLERS = {
+    "write": _do_write,
+    "scaffold": _do_scaffold,
+    # "run-generator" is kind=gate — handled by the runner's gate subsystem.
+}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="lang-rust module")
+    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
+    ap.add_argument("--step", required=True, help="step id to run")
+    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
+    args = ap.parse_args()
+
+    handler = STEP_HANDLERS.get(args.step)
+    if handler is None:
+        print(
+            f"Unknown step: {args.step!r}. "
+            f"Python-handled steps: {list(STEP_HANDLERS)}. "
+            f"Agent/gate steps are dispatched by the runner, not by module.py.",
+            file=sys.stderr,
+        )
+        return 1
+
+    sdk = _load_sdk()
+    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-rust")
+    return handler(sdk, inputs, args)
 
 
 if __name__ == "__main__":

@@ -32,3 +32,21 @@ required = false
 [[steps]]
 id = "write"
 kind = "python"
+
+# G4 — external-generator-run confirm (spec 004). SOFT gate: cargo init reaches
+# the filesystem and may create/overwrite files, but the user already opted into
+# the overlay, so it proceeds by default; --no-external-generators flips it to skip.
+# Ordered AFTER the deterministic `write` so a declined gate (gate-blocked) skips
+# ONLY the trailing `scaffold` step — the config files (rust-toolchain.toml,
+# clippy.toml, rustfmt.toml, .gitignore, pre-commit hooks) are already written.
+# workspace=true: scaffold is a no-op (Cargo.toml written deterministically in write).
+[[steps]]
+id = "run-generator"
+kind = "gate"
+hardness = "soft"
+skip_flag = "no-external-generators"
+message = "Run the external cargo init generator (may create/overwrite project files). The deterministic config files are already written — declining skips only the generator."
+
+[[steps]]
+id = "scaffold"
+kind = "python"

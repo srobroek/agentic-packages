@@ -6,19 +6,22 @@
 
 Ports setup-go.sh (145 lines) to a native-root Python module.
 
-Steps (all under step id "write"):
-  1. Derive module path from git remote if not provided (same normalization as legacy)
-  2. go mod init <module_path>  (skip if go.mod already exists)
-  3. Create cmd/ internal/ pkg/ directories + cmd/main.go  (write-if-absent)
-  4. Write .golangci.yml  (write-if-absent, template verbatim)
-  5. Append Go .gitignore block  (grep-guarded by '*.test')
-  6. Append pre-commit-golang hooks  (grep-guarded by 'tekwizely/pre-commit-golang')
+Steps:
+  write    (python) — Derive module path from git remote if not provided,
+                      create cmd/ internal/ pkg/ directories + cmd/main.go,
+                      write .golangci.yml, append Go .gitignore block,
+                      append pre-commit-golang hooks.
+  scaffold (python) — Run `go mod init <module_path>` (G4-gated).
+
+Ordering note: cmd/main.go is a plain file write (package main / fmt.Println)
+that does NOT require go.mod to exist. The deterministic write step can safely
+precede the go mod init generator.
 
 External tool absence/failure is NON-FATAL: a warning is emitted and the
 module continues.  This mirrors the legacy WARN pattern in setup-go.sh.
 
 Invoked by the runner as:
-    uv run module.py --plan <frozen_plan.json> --step write [--inspect]
+    uv run module.py --plan <frozen_plan.json> --step <write|scaffold> [--inspect]
 """
 
 from __future__ import annotations
@@ -58,6 +61,8 @@ def _load_sdk():
     sys.modules["sdk"] = mod          # register BEFORE exec_module (the @dataclass(Exception) footgun)
     spec.loader.exec_module(mod)
     return mod
+
+
 def _derive_module_path(project_dir: Path, warnings: list[str]) -> str:
     """Derive a Go module path from git remote, mirroring legacy setup-go.sh lines 30-38."""
     git = shutil.which("git")
@@ -86,18 +91,23 @@ def _derive_module_path(project_dir: Path, warnings: list[str]) -> str:
     return fallback
 
 
+# --------------------------------------------------------------------------- #
+# Step handlers                                                                #
+# --------------------------------------------------------------------------- #
 
+def _do_write(sdk, inputs, args) -> int:
+    """write step: deterministic layout writes (no external generator).
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description="lang-go module")
-    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
-    ap.add_argument("--step", required=True, help="step id to run")
-    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
-    args = ap.parse_args()
+    Derives the Go module path (needed for cmd/main.go content), creates the
+    standard Go layout (cmd/, internal/, pkg/, cmd/main.go), writes
+    .golangci.yml, appends the Go .gitignore block, and appends pre-commit-golang
+    hooks. Does NOT run go mod init — that is the scaffold step (G4-gated,
+    spec 004 FR-013).
 
-    sdk = _load_sdk()
-    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-go")
-
+    Ordering safety: cmd/main.go is `package main` + fmt.Println — it does NOT
+    import anything that requires go.mod to exist. The write step precedes the
+    scaffold generator safely.
+    """
     module_path: str = inputs.get_str("module_path", default="")
     # app_kind accepted but no structural branches in legacy — free-form placeholder
 
@@ -108,24 +118,11 @@ def main() -> int:
     diffs = []
     files_written: list[str] = []
 
-    # ── 1. Derive module path ───────────────────────────────────────────────── #
+    # ── 1. Derive module path (needed for cmd/main.go project_name) ─────────── #
     if not module_path:
         module_path = _derive_module_path(project_dir, warnings)
 
-    # ── 2. go mod init ─────────────────────────────────────────────────────── #
-    go_mod = project_dir / "go.mod"
-    if not go_mod.exists():
-        if not args.inspect:
-            sdk.run_tool(
-                ["go", "mod", "init", module_path],
-                cwd=project_dir,
-                warnings=warnings,
-                label="go mod init",
-            )
-        else:
-            warnings.append(f"inspect: would run go mod init {module_path}")
-
-    # ── 3. Standard Go layout ──────────────────────────────────────────────── #
+    # ── 2. Standard Go layout ──────────────────────────────────────────────── #
     project_name = project_dir.name
     main_go_rel = "cmd/main.go"
     main_go_body = f'package main\n\nimport "fmt"\n\nfunc main() {{\n\tfmt.Println("{project_name}")\n}}\n'
@@ -143,7 +140,7 @@ def main() -> int:
     if diff.kind in ("create", "modify"):
         files_written.append(diff.path)
 
-    # ── 4. .golangci.yml ───────────────────────────────────────────────────── #
+    # ── 3. .golangci.yml ───────────────────────────────────────────────────── #
     golangci_body = (_TEMPLATES / "golangci.yml").read_text(encoding="utf-8")
     diff = sdk.idempotent_write(
         ".golangci.yml",
@@ -156,7 +153,7 @@ def main() -> int:
     if diff.kind in ("create", "modify"):
         files_written.append(diff.path)
 
-    # ── 5. Append Go .gitignore block ──────────────────────────────────────── #
+    # ── 4. Append Go .gitignore block ──────────────────────────────────────── #
     gitignore = project_dir / ".gitignore"
     gi_block = (_TEMPLATES / "gitignore-block.txt").read_text(encoding="utf-8")
     if not args.inspect:
@@ -175,7 +172,7 @@ def main() -> int:
         else:
             diffs.append(sdk.Diff(path=".gitignore", kind="skip", preview="(*.test already present)"))
 
-    # ── 6. Append Go pre-commit hooks ──────────────────────────────────────── #
+    # ── 5. Append Go pre-commit hooks ──────────────────────────────────────── #
     precommit = project_dir / ".pre-commit-config.yaml"
     pc_block = (_TEMPLATES / "precommit-block.yaml").read_text(encoding="utf-8")
     if precommit.exists():
@@ -211,6 +208,83 @@ def main() -> int:
     )
     sdk.emit_result(result)
     return 0
+
+
+def _do_scaffold(sdk, inputs, args) -> int:
+    """scaffold step: run `go mod init <module_path>` (G4-gated).
+
+    Separated from `write` (spec 004 FR-013) so the soft G4 gate can skip JUST
+    the external-generator run while the deterministic `write` step's layout
+    files (cmd/main.go, .golangci.yml, .gitignore, pre-commit hooks) already
+    landed. go mod init does not depend on any file from the write step.
+    """
+    module_path: str = inputs.get_str("module_path", default="")
+
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    project_dir = Path(project_dir_env).resolve() if project_dir_env else Path.cwd().resolve()
+
+    warnings: list[str] = []
+    diffs = []
+    files_written: list[str] = []
+
+    # ── 1. Derive module path (must match what write step derived) ─────────── #
+    if not module_path:
+        module_path = _derive_module_path(project_dir, warnings)
+
+    # ── 2. go mod init ─────────────────────────────────────────────────────── #
+    go_mod = project_dir / "go.mod"
+    if not go_mod.exists():
+        if not args.inspect:
+            sdk.run_tool(
+                ["go", "mod", "init", module_path],
+                cwd=project_dir,
+                warnings=warnings,
+                label="go mod init",
+            )
+        else:
+            warnings.append(f"inspect: would run go mod init {module_path}")
+    else:
+        diffs.append(sdk.Diff(path="go.mod", kind="skip", preview="(go.mod already exists)"))
+
+    result = sdk.ModuleResult(
+        module_id="lang-go",
+        step_id=args.step,
+        status="ok",
+        files_written=files_written,
+        diffs=diffs,
+        warnings=warnings,
+    )
+    sdk.emit_result(result)
+    return 0
+
+
+STEP_HANDLERS = {
+    "write": _do_write,
+    "scaffold": _do_scaffold,
+    # "run-generator" is kind=gate — handled by the runner's gate subsystem.
+}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="lang-go module")
+    ap.add_argument("--plan", required=True, help="path to the frozen plan.json")
+    ap.add_argument("--step", required=True, help="step id to run")
+    ap.add_argument("--inspect", action="store_true", help="dry pass: preview, no write")
+    args = ap.parse_args()
+
+    handler = STEP_HANDLERS.get(args.step)
+    if handler is None:
+        print(
+            f"Unknown step: {args.step!r}. "
+            f"Python-handled steps: {list(STEP_HANDLERS)}. "
+            f"Agent/gate steps are dispatched by the runner, not by module.py.",
+            file=sys.stderr,
+        )
+        return 1
+
+    sdk = _load_sdk()
+    inputs = sdk.load_frozen_inputs(args.plan, module_id="lang-go")
+    return handler(sdk, inputs, args)
 
 
 if __name__ == "__main__":

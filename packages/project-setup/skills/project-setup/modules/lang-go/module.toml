@@ -32,3 +32,20 @@ required = false
 [[steps]]
 id = "write"
 kind = "python"
+
+# G4 — external-generator-run confirm (spec 004). SOFT gate: go mod init reaches
+# the filesystem and creates go.mod, but the user already opted into the overlay,
+# so it proceeds by default; --no-external-generators flips it to skip.
+# Ordered AFTER the deterministic `write` so a declined gate (gate-blocked) skips
+# ONLY the trailing `scaffold` step — the layout files (cmd/main.go, .golangci.yml,
+# .gitignore, pre-commit hooks) are already written.
+[[steps]]
+id = "run-generator"
+kind = "gate"
+hardness = "soft"
+skip_flag = "no-external-generators"
+message = "Run the external go mod init generator (creates go.mod). The deterministic layout files are already written — declining skips only the generator."
+
+[[steps]]
+id = "scaffold"
+kind = "python"
