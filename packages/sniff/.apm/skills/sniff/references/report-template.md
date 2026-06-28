@@ -82,6 +82,43 @@ Legend:
 - **Back-compat:** <safe | the surface that breaks and how to stage it>
 - **Adversarial note:** <what refactor-challenger said — confirmed / scoped-down>
 
+## Prevent recurrence (lint/config recommendations)
+For smells a tool *can* enforce, recommend the rule/config that stops them coming
+back — so the audit closes the loop instead of being a one-off cleanup. Only
+suggest enabling a rule the project doesn't already have on (respect Step 2.5),
+and flag the expected one-off churn so the user can weigh it.
+
+A short table of what to add and why:
+
+| Smell it prevents | Tool | Rule | Where | One-off churn? |
+|-------------------|------|------|-------|----------------|
+| magic numbers | ruff | `PLR2004` | `pyproject.toml` | low (excl. tests) |
+| complexity creep | clippy | `cognitive_complexity` | `Cargo.toml` | medium |
+| floating promises | eslint | `@typescript-eslint/no-floating-promises` | eslint config | low |
+| ... | ... | ... | ... | ... |
+
+**Then show the exact config to paste**, per tool, as a fenced diff/snippet the
+user can drop in — not just the rule name. Examples:
+
+```toml
+# pyproject.toml — enforce the magic-number + complexity smells found above
+[tool.ruff.lint]
+extend-select = ["PLR2004", "C901"]
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR2004"]            # fixed literals are expected in tests
+```
+```toml
+# Cargo.toml — set the complexity bar repo-wide
+[lints.clippy]
+cognitive_complexity = "warn"
+```
+
+Keep it advisory and small — config for the *confirmed* smells, not a maximal
+lint setup. Show the snippet only for tools the repo already uses (or note the
+install step). Flag any rule whose adoption implies a large one-time fix, and
+say so rather than burying it. This is a recommendation; do not apply it unless
+the user asks (and then it's a step-7 apply, with a verification re-run).
+
 ## Dropped & downgraded (transparency)
 | Finding | Verdict | Reason (from refactor-challenger) |
 |---------|---------|-----------------------------------|

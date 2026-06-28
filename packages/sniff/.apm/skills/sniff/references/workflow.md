@@ -154,6 +154,40 @@ the user's, not yours.
 checkpoint; if you find yourself in Step 3 without having shown the probe and
 gotten a depth answer, you skipped a required step.
 
+## Step 2.5 — Inventory the project's existing lint config (MANDATORY, before any tool runs)
+
+A tool run that ignores the repo's own configuration produces a flood of false
+positives the maintainer already silenced — the single worst failure mode of
+this skill (e.g. forcing clippy `-W pedantic -W nursery` onto a repo that pins
+`[lints.clippy]` yields hundreds of deliberately-allowed warnings). So before
+Step 3, **find and read** every config that governs a detected tool, and let it
+dictate the invocation:
+
+- Rust: `[lints.clippy]` / `[lints.rust]` in `Cargo.toml` (workspace + crate),
+  `clippy.toml`, `rust-toolchain.toml`.
+- Python: `[tool.ruff]` (`select`/`ignore`/`extend-select`/`per-file-ignores`),
+  `[tool.pylint]`, `[tool.mypy]`/`mypy.ini`, `setup.cfg`, `.flake8`.
+- JS/TS: `eslint.config.*` / `.eslintrc*`, `biome.json`, `tsconfig.json`
+  (`strict`, `compilerOptions`), `.prettierrc`.
+- Go: `.golangci.yml`. Shell: `.shellcheckrc`. CSS: `.stylelintrc*`.
+  YAML/MD: `.yamllint`, `.markdownlint*`. Cross-cutting: `.editorconfig`.
+
+Rules:
+- **Honor it.** Run each tool the way the repo configures it (ruff
+  `--extend-select` not `--select`; clippy with NO extra `-W` when a clippy
+  config exists; respect `per-file-ignores`, disabled rules, configured
+  line-length/indent). The language docs' invocations are the *no-project-config*
+  fallback, not an override.
+- **A rule the project disabled is NOT a finding.** If you run a broader rule set
+  than the project enables, mark anything that only fires under your widening as
+  **advisory/low — "the project opted out"**, never as a regression. Drop
+  artifacts like `RUF100` unused-noqa whose referenced rule isn't in the
+  project's own select.
+- **Record the config you found** in the coverage note, so the report shows which
+  rules were in force.
+
+**Report:** the per-tool config inventory and how it shapes each invocation.
+
 ## Step 3 — Tool-driven detection
 
 **Before running each language's tools, read that language doc's *Pragmatism
@@ -202,23 +236,43 @@ Tools miss design-level smells: poor names, low cohesion, wrong abstraction
 level, non-idiomatic constructs, conceptual duplication. Read the code for these,
 guided by `references/languages/<lang>.md` (its smell checklist + idioms).
 
-Choose inline vs. fan-out by a concrete threshold (size and language-count are
-two axes — state both):
+Decide inline-vs-fan-out, then — if fanning out — **propose a fan-out plan and
+let the user adjust it** (don't silently fix it at one hound per language; a
+29k-LOC Rust crate set deserves more than one hound, a 12-file repo deserves
+none).
 
-- **You are already a sub-agent** (e.g. spawned by another skill) → always read
-  inline; never fan out (you typically can't spawn). This case wins over the rest.
-- **Single language**, **≤ 50 files AND ≤ 10k LOC** → **read inline**; spawning is
-  overhead. If *either* threshold is exceeded, fan out by splitting the file set
-  into chunks for parallel `bloodhound` agents.
-- **Multiple languages** → fan out **one `bloodhound` per language, in parallel**,
-  *when the target is large*; a **small** multi-language target (a handful of
-  files per language, comfortably under the single-language thresholds) reads
-  inline. Don't spawn 3 agents for 12 files.
+**First, the inline gate (no proposal needed):**
+- **You are already a sub-agent** (spawned by another skill) → always read inline;
+  you can't spawn. This wins over everything else.
+- **Small target** — single language ≤ 50 files AND ≤ 10k LOC, or a multi-language
+  target with only a handful of files per language → **read inline**. Don't spawn
+  3 agents for 12 files.
+
+**Otherwise, propose a plan and confirm (interactive runs):**
+1. Compute a default split from the resolved per-language counts: **one hound per
+   language**, and **split any single language that exceeds the threshold
+   (~50 files / ~10k LOC) into N hounds by subtree/crate/dir**, so no one hound
+   carries an oversized slice. Cap total parallelism at a sane number (≈8).
+2. **Show the proposed plan** — e.g. `Rust 29k LOC/141 files → 3 hounds (core /
+   cli / gui); Vue+TS 7k/63 → 1 hound`. State the file/LOC basis.
+3. **Let the user adjust** — more/fewer hounds, a different split, or "just
+   inline it". Accept their change; then spawn. (Non-interactive runs skip the
+   confirmation and use the computed default.)
 
 When you fan out: build each Brief from `references/scout-brief.md` — pass the
 **resolved target file list** (and the worktree path, for ref targets) as the
 Scope so each agent reads only the target. Collect each agent's structured
 findings.
+
+**Don't re-run tools the hound was handed (no double-run).** Step 3 already ran
+the static-analysis tools — config-correct, per the Step 2.5 inventory. So in
+each Brief, **pass that language's Step-3 findings** and tell the hound the tools
+have already run: its job is the **reading layer** (design smells tools can't
+see) plus **verifying/contextualizing** the handed findings — NOT re-running
+clippy/ruff/eslint. Re-running wastes a compile and risks a *different*
+(config-blind) invocation than Step 3 used. Only ask a hound to run a tool itself
+when Step 3 did **not** cover it for that language (e.g. quick mode skipped it,
+or a tool became available only inside the worktree).
 
 Every finding must cite a specific `file:line`. No guessing.
 
