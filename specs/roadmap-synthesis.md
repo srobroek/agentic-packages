@@ -1,9 +1,48 @@
 # Roadmap Synthesis: Specs 006–014 (Batch 2)
 
 **Created**: 2026-06-28  
-**Status**: Pre-planning — awaiting human decisions on consolidated questions below  
+**Status**: **Human decisions RESOLVED 2026-06-28 (see "Resolved Decisions" at top).**
+Specs are ready for plan.md authoring in the recommended sequence.  
 **Covers**: roadmap ranks #4–#12, feature specs 006 through 014  
-**Foundation**: specs 001–005 shipped and green (613 tests at 005 ship)
+**Foundation**: specs 001–005 shipped and green (616 tests; +Go/Rust G4)
+
+---
+
+## Resolved Decisions (2026-06-28, user)
+
+The five consolidated human questions are answered. All other per-spec OQs are
+implementer-resolvable with the leans recorded in each spec's memory.md.
+
+- **Q2 (012, HIGH) → `--refresh` OVERRIDES `reproduce_only`.** An explicit
+  `--refresh <module>` fires the agent even on a `reproduce_only` step (consistent
+  with 003 FR-010: `--refresh` is the only path to fresh research). Impl: in
+  `run_agent_phase`, check `_module_refreshed(module_id)` BEFORE the `reproduce_only`
+  guard. This is the project-wide contract for all future `reproduce_only` steps.
+- **Q4 (014, HIGH) → SPLIT into 014 / 015 / 016.** The bundled 014 spec becomes the
+  shared preamble (settled decisions inherited); produce three thin plan.md files:
+  **016-readme-draft** (simplest, no security surface — ship first), **015-pkgadd-resolver**
+  (security-sensitive path-traversal work — deeper review), **014-org-policy**
+  (runner validation change). Renumber the three sub-features into their own dirs at
+  plan time; no spec re-authoring needed.
+- **Q1 (009, MED) → `orm_intent` default = `"none"` (string sentinel).** Zero runner
+  change; `when = "orm_intent != none"` then correctly suppresses on the default.
+  Consistent with 013's `ui_kit_id` default. (Truthy-`when` form NOT added — no
+  consumer justifies the runner change.)
+- **Q3 (009, MED) → add Litestar to the base `resolve.md` in 009's PR.** Additive
+  one table-row change; shipping `web-resolve.md` that lists Litestar while the base
+  resolver omits it is an inconsistency. 009 tests must cover the Litestar path.
+- **Q5 (012, MED) → LOCAL date** (`datetime.date.today().isoformat()`) for
+  `written_at`. Advisory human-readable field; byte-identity already holds via plan
+  freeze. Document the policy in a `plan.py` comment.
+
+**Scope note (user clarification on 009):** ORM and Litestar are roadmap-scoped
+*options*, not load-bearing needs. The ORM sub-resolver pins + cross-validates the
+Python *data tier* (SQLModel/SQLAlchemy + the correct async/sync driver for the DB +
+alembic-if-ORM) — the persistence analogue of what 003 did for the framework; it
+closes an unpinned-data-layer drift gap, but only matters for Python-web/DB projects.
+Litestar is merely one option in the {FastAPI, Litestar, Django} choice set. **009 as
+a whole is opt-in** — build it when a Python-web/DB use case is actually present;
+it is the most deferrable spec in the batch otherwise.
 
 ---
 
