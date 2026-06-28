@@ -40,6 +40,22 @@ class InputType(str, Enum):
 
 
 @dataclass
+class BrownfieldArtifactDecl:
+    """A single artifact entry declared in a module's [brownfield] section.
+
+    Spec 017 FR-003. Mirrors ``InputSpec``'s role for the brownfield table.
+
+    path:
+        Project-relative path the module owns (e.g. ``".gitignore"``).
+    policy:
+        One of ``"preserve"`` | ``"merge"`` | ``"overwrite"``.
+    """
+
+    path: str
+    policy: str  # validated at parse time against _VALID_BROWNFIELD_POLICIES
+
+
+@dataclass
 class InputSpec:
     key: str
     type: InputType
@@ -80,6 +96,9 @@ class ModuleManifest:
     inputs: list[InputSpec]
     steps: list[StepSpec]
     errors: list[SetupError] = field(default_factory=list)
+    # Spec 017 FR-003: optional [brownfield] declarations; empty by default so
+    # modules that omit the section are fully backward-compatible.
+    brownfield: list[BrownfieldArtifactDecl] = field(default_factory=list)
 
     # Convenience accessors
     @property
@@ -106,8 +125,11 @@ class ModuleManifest:
 # speckit extension.yml and the shared-contracts.md example). Allowed but not
 # required; reserved for future manifest-format evolution.
 _KNOWN_TOP_LEVEL = frozenset(
-    {"schema_version", "meta", "module", "order", "tools", "inputs", "steps"}
+    {"schema_version", "meta", "module", "order", "tools", "inputs", "steps", "brownfield"}
 )
+
+# Spec 017 FR-003: valid policies for [brownfield] artifact entries.
+_VALID_BROWNFIELD_POLICIES = frozenset({"preserve", "merge", "overwrite"})
 
 _REQUIRED_META_KEYS = frozenset({"repository", "author"})
 
@@ -299,6 +321,12 @@ def parse_manifest(toml_path: Path) -> ModuleManifest:
     input_keys = frozenset(s.key for s in inputs)
     steps = _parse_steps(steps_raw, module_id, errors, input_keys)
 
+    # ── [brownfield] (spec 017 FR-003) ────────────────────────────────────── #
+    brownfield_raw = data.get("brownfield", [])
+    if not isinstance(brownfield_raw, list):
+        brownfield_raw = []
+    brownfield = _parse_brownfield(brownfield_raw, module_id, errors)
+
     return ModuleManifest(
         meta=dict(meta_raw),
         module=dict(module_raw),
@@ -307,12 +335,31 @@ def parse_manifest(toml_path: Path) -> ModuleManifest:
         inputs=inputs,
         steps=steps,
         errors=errors,
+        brownfield=brownfield,
     )
 
 
 # --------------------------------------------------------------------------- #
 # Helpers                                                                      #
 # --------------------------------------------------------------------------- #
+def _empty_manifest(errors: list[SetupError]) -> ModuleManifest:
+    """Return a structurally valid but empty ``ModuleManifest`` with *errors* set.
+
+    Used as the fast-exit when the TOML file cannot be parsed at all, so callers
+    always receive a ``ModuleManifest`` (never a raw exception).
+    """
+    return ModuleManifest(
+        meta={},
+        module={},
+        order={"requires": [], "after": [], "before": []},
+        tools={"required": []},
+        inputs=[],
+        steps=[],
+        errors=errors,
+        brownfield=[],
+    )
+
+
 def _parse_inputs(
     raw: list[Any],
     module_id: str | None,
@@ -412,6 +459,49 @@ def _parse_inputs(
             required=required,
             allow_secret=allow_secret,
         ))
+    return result
+
+
+def _parse_brownfield(
+    raw: list[Any],
+    module_id: str | None,
+    errors: list[SetupError],
+) -> list[BrownfieldArtifactDecl]:
+    """Parse the list of artifact declarations from [brownfield] in module.toml.
+
+    Spec 017 FR-003. Mirrors ``_parse_inputs``'s style: accumulate errors,
+    never raise. An unknown policy value appends a ``SetupError`` and skips
+    the entry.
+    """
+    result = []
+    for i, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            errors.append(SetupError(
+                error_code=ErrorCode.MANIFEST_MALFORMED,
+                module_id=module_id,
+                expected="dict for [brownfield] entry",
+                received=str(type(entry)),
+                how_to_fix=f"Fix [brownfield] entry #{i} — must be a TOML inline table with path and policy",
+            ))
+            continue
+
+        path = entry.get("path", f"<brownfield#{i}>")
+        policy = entry.get("policy", "")
+
+        if policy not in _VALID_BROWNFIELD_POLICIES:
+            errors.append(SetupError(
+                error_code=ErrorCode.MANIFEST_MALFORMED,
+                module_id=module_id,
+                expected=f"brownfield policy in {sorted(_VALID_BROWNFIELD_POLICIES)}",
+                received=f"'{policy}' for artifact '{path}'",
+                how_to_fix=(
+                    f"Set policy for brownfield artifact '{path}' to one of: "
+                    + ", ".join(sorted(_VALID_BROWNFIELD_POLICIES))
+                ),
+            ))
+            continue
+
+        result.append(BrownfieldArtifactDecl(path=path, policy=policy))
     return result
 
 

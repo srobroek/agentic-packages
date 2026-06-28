@@ -16,6 +16,8 @@ _RUNNER = Path(__file__).resolve().parents[1] / "skills" / "project-setup" / "ru
 
 
 def _load(name: str):
+    if name in sys.modules:
+        return sys.modules[name]
     spec = importlib.util.spec_from_file_location(name, _RUNNER / f"{name}.py")
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)

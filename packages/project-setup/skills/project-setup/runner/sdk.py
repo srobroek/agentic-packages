@@ -28,6 +28,7 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -186,6 +187,7 @@ def idempotent_write(
     project_dir: str | Path | None = None,
     reconcile: bool = False,
     inspect: bool = False,
+    merge: bool = False,
 ) -> Diff:
     """Write *body* to *rel_path* relative to *project_dir* idempotently.
 
@@ -208,6 +210,13 @@ def idempotent_write(
         existing files (write-if-absent).
     inspect:
         If True: produce the ``Diff`` preview without writing anything.
+    merge:
+        If True (spec 017 FR-004): when the file exists and is non-empty,
+        append only the lines from *body* not already present, using
+        ``merge_append_lines`` (append-only, dedup, idempotent). Takes
+        precedence over *reconcile* when both are True. When the file is
+        absent, behaves like a normal create. Non-UTF-8 existing content
+        falls back to the reconcile/skip path (never raises).
 
     Returns
     -------
@@ -233,13 +242,38 @@ def idempotent_write(
     # Normalize body to bytes (the canonical byte form)
     if isinstance(body, str):
         body_bytes = body.encode("utf-8")
+        body_text: str | None = body
     else:
         body_bytes = bytes(body)
+        try:
+            body_text = body_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            body_text = None
 
     rel_str = str(rel_path)
 
     if abs_path.exists():
         existing = abs_path.read_bytes()
+
+        # ── merge path (spec 017 FR-004): takes precedence over reconcile ────── #
+        if merge and existing and body_text is not None:
+            try:
+                existing_text = existing.decode("utf-8")
+            except UnicodeDecodeError:
+                # Non-UTF-8 existing content: fall back to reconcile/skip
+                existing_text = None
+
+            if existing_text is not None:
+                merged_text = merge_append_lines(existing_text, body_text)
+                merged_bytes = merged_text.encode("utf-8")
+                if merged_bytes == existing:
+                    return Diff(path=rel_str, kind="skip", preview="(merge: nothing new)")
+                if not inspect:
+                    abs_path.parent.mkdir(parents=True, exist_ok=True)
+                    abs_path.write_bytes(merged_bytes)
+                return Diff(path=rel_str, kind="modify", preview=_preview(merged_bytes))
+            # Fall through to reconcile/skip below when existing is non-UTF-8
+
         if existing == body_bytes:
             return Diff(path=rel_str, kind="skip", preview="(identical, no change)")
         if reconcile:
@@ -292,6 +326,154 @@ def scan_top_level_dirs(project_dir: "str | Path | None" = None) -> "frozenset[s
         return frozenset(e.name for e in os.scandir(base) if e.is_dir())
     except OSError:
         return frozenset()
+
+
+# --------------------------------------------------------------------------- #
+# brownfield_probe — read-only artifact detector (spec 017 FR-001)             #
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class BrownfieldArtifact:
+    """Record returned by ``brownfield_probe`` for one artifact path.
+
+    Spec 017 FR-001. Immutable; safe to cache.
+
+    path:
+        The relative path as given by the caller.
+    exists:
+        True when the resolved absolute path exists on the filesystem.
+    empty:
+        True when the file exists AND its text content is entirely whitespace
+        (or the file is zero bytes). A directory is never empty=True. A
+        non-existent path is always empty=False.
+    """
+
+    path: str
+    exists: bool
+    empty: bool
+
+
+def brownfield_probe(
+    artifacts: "str | list[str]",
+    *,
+    project_dir: "str | Path | None" = None,
+) -> "list[BrownfieldArtifact]":
+    """Probe one or more project-relative artifact paths for existence and emptiness.
+
+    Spec 017 FR-001. Pure, read-only, offline — NEVER raises. A missing
+    project dir, a missing artifact, or an unreadable file all yield
+    ``exists=False`` (mirroring ``scan_top_level_dirs``'s defensive style).
+
+    Parameters
+    ----------
+    artifacts:
+        A single str path or a list of str paths, each relative to
+        *project_dir*.
+    project_dir:
+        The project root. Defaults to ``$PROJECT_DIR`` env var or ``cwd()``.
+
+    Returns
+    -------
+    list[BrownfieldArtifact]
+        One record per artifact, in the same order as *artifacts*.
+    """
+    if project_dir is None:
+        env_pd = os.environ.get("PROJECT_DIR")
+        project_dir = Path(env_pd) if env_pd else Path.cwd()
+    try:
+        base = Path(project_dir).resolve()
+    except Exception:
+        base = Path.cwd()
+
+    if isinstance(artifacts, str):
+        artifact_list = [artifacts]
+    else:
+        artifact_list = list(artifacts)
+
+    results: list[BrownfieldArtifact] = []
+    for rel in artifact_list:
+        try:
+            abs_path = base / rel
+            if not abs_path.exists():
+                results.append(BrownfieldArtifact(path=rel, exists=False, empty=False))
+                continue
+            # Directories count as existing but never empty per spec
+            if abs_path.is_dir():
+                results.append(BrownfieldArtifact(path=rel, exists=True, empty=False))
+                continue
+            # It's a file — check for zero-byte or whitespace-only
+            try:
+                raw = abs_path.read_bytes()
+                if not raw:
+                    results.append(BrownfieldArtifact(path=rel, exists=True, empty=True))
+                    continue
+                try:
+                    text = raw.decode("utf-8")
+                    empty = not text.strip()
+                except UnicodeDecodeError:
+                    # Binary file: non-empty by definition
+                    empty = False
+                results.append(BrownfieldArtifact(path=rel, exists=True, empty=empty))
+            except OSError:
+                # Unreadable file: treat as not-exists per spec
+                results.append(BrownfieldArtifact(path=rel, exists=False, empty=False))
+        except Exception:
+            results.append(BrownfieldArtifact(path=rel, exists=False, empty=False))
+    return results
+
+
+# --------------------------------------------------------------------------- #
+# merge_append_lines — append-only dedup merge helper (spec 017 FR-004)       #
+# --------------------------------------------------------------------------- #
+def merge_append_lines(existing_text: str, body_text: str) -> str:
+    """Return *existing_text* with only the new lines from *body_text* appended.
+
+    Spec 017 FR-004. Membership test compares lines after ``.rstrip()``
+    (trailing-whitespace-insensitive). Properties guaranteed:
+
+    - Existing content is preserved verbatim (exact bytes/newlines unchanged).
+    - New lines are appended in *body_text*'s canonical order.
+    - Deduplication: a body line already present in existing is skipped; a
+      body line appearing more than once in body is appended only once.
+    - Idempotent: calling again with the same body yields no new lines ⇒ the
+      caller sees an unchanged string and may emit ``skip``.
+    - Join: exactly one newline separates the existing block from the appended
+      block (no double-blank gap; the trailing newline is normalised before
+      appending).
+
+    Parameters
+    ----------
+    existing_text:
+        The verbatim current content of the file.
+    body_text:
+        The full desired content; only lines absent from *existing_text* are
+        appended.
+
+    Returns
+    -------
+    str
+        The merged text, or *existing_text* unchanged when nothing new exists.
+    """
+    existing_lines_rstripped: set[str] = {
+        line.rstrip() for line in existing_text.splitlines()
+    }
+
+    new_lines: list[str] = []
+    seen_in_body: set[str] = set()
+    for line in body_text.splitlines():
+        key = line.rstrip()
+        if key in existing_lines_rstripped:
+            continue
+        if key in seen_in_body:
+            continue
+        seen_in_body.add(key)
+        new_lines.append(line)
+
+    if not new_lines:
+        return existing_text
+
+    # Ensure exactly one trailing newline on existing content before appending
+    base = existing_text.rstrip("\n") + "\n"
+    return base + "\n".join(new_lines) + "\n"
 
 
 # --------------------------------------------------------------------------- #
@@ -552,6 +734,16 @@ _SECRET_PATTERNS: list[tuple[str, "re.Pattern[str]"]] = [
     ("GitLab PAT", re.compile(r"\bglpat-[A-Za-z0-9_-]{16,}")),
     ("Slack token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}")),
     ("PEM private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    # Additional anchored provider shapes cherry-picked from the gitleaks ruleset
+    # (MIT-licensed, github.com/gitleaks/gitleaks). Anchored only — no
+    # generic/entropy rules.
+    ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
+    ("Stripe secret key", re.compile(r"\b(?:sk|rk)_live_[0-9A-Za-z]{24,}")),
+    ("Twilio API key", re.compile(r"\bSK[0-9a-fA-F]{32}\b")),
+    ("SendGrid key", re.compile(r"\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}")),
+    ("npm token", re.compile(r"\bnpm_[A-Za-z0-9]{36}\b")),
+    ("PyPI token", re.compile(r"\bpypi-[A-Za-z0-9_-]{16,}")),
+    ("JWT", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")),
 ]
 
 
