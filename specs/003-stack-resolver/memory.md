@@ -75,38 +75,44 @@ finding was first surfaced by an Explore subagent and I confirmed it line-by-lin
 Each is written so it can be answered without re-reading the spec. Numbered for
 reference from the handover.
 
-### OQ-1 — Split the runner contract fixes into their own spec? (HIGH — affects spec count)
+### OQ-1 — Split the runner contract fixes into their own spec? (HIGH) — RESOLVED 2026-06-28: option A
 
-FR-009/010/011 are runner-library changes (`reproduce.py`, `pipeline.py`, `plan.py`,
-`cli.py`), not module work. I bundled them into 003 because a Tier-2 module is the
-only thing that exercises them and they're meaningless alone. **But** they are
-arguably a "Tier-2 runner contract" spec that should land BEFORE the resolver module,
-matching the roadmap's "build #3 refresh-gate as the structural guarantee" framing.
-- **Option A (chosen in draft)**: keep them in 003; one spec ships the contract +
-  first user together.
-- **Option B**: extract a spec 003a "Tier-2 runner contract" (reproduce-replay +
-  --refresh + re-freeze), ship it first, then 003 becomes pure module work.
-- **My lean**: A, because the contract is untestable without a real Tier-2 module to
-  drive it — but this is the user's call on spec granularity.
+**User chose A: keep FR-009/010/011 inside 003.** One spec ships the runner contract +
+its first consumer together. Confirmed rationale: the contract is untestable without a
+real Tier-2 module to drive it. NOT extracted into a separate "003a" spec. spec.md
+Status + Dependencies section + plan.md reflect this.
 
-### OQ-2 — How should same-run agent→python visibility be implemented? (HIGH — core design)
+### OQ-2 — How should same-run agent→python visibility be implemented? (HIGH) — RESOLVED 2026-06-28: option B
 
-FR-011 needs the agent's decision to reach a later python step via the frozen plan.
-Three implementable shapes, each with a cost:
-- **(a) Re-freeze mid-execution**: after each agent step, fold `answers_to_persist`
-  into `resolved_answers`, rebuild + re-freeze the plan, continue. Simple mental
-  model; but the plan is currently frozen once and `build_drift_report` already ran
-  the inspect pass over the OLD plan — ordering gets subtle (the inspect/confirm pass
-  in `pipeline.py:498` happens before any agent step runs).
-- **(b) Two-phase plan**: run agent steps FIRST (a pre-pass), fold their answers, THEN
-  freeze the plan once and run the inspect→confirm→write over python+gate steps. Clean
-  separation; changes the execution loop structure in `pipeline.py`.
-- **(c) Sidecar decision file**: agent writes its decision to a cache file the python
-  step reads (NOT via the plan). Rejected — violates shared-contracts §6 ("agent args
-  /channels are never an input channel"; the frozen plan is the sole input).
-- **My lean**: (b) — it matches "research happens, freezes, then deterministic writes"
-  and keeps one freeze. But it's a real change to the execute loop; needs user/plan
-  sign-off. Flagging because it's the highest-risk part of 003.
+**User chose B: the two-phase plan.** Run ALL `kind=agent` steps first (Phase A), fold
+their decisions into resolved answers, re-freeze the plan (v2, authoritative), then run
+`kind=python`/`kind=gate` steps (Phase B) reading v2. Rejected: (a) re-freeze
+mid-execution — temporal hazard (the inspect/confirm pass at `pipeline.py:498` already
+ran over the old plan); (c) sidecar file — bypasses the frozen-plan input channel
+(shared-contracts §6). Full design in `plan.md` Phase 3 + the two subtleties below.
+
+### Phase design + TWO SUBTLETIES discovered while designing B (durable — drives plan.md/impl)
+
+The two-phase restructure lives in `run_pipeline` (`pipeline.py`) + a helper in
+`reproduce.py`. The execute PRIMITIVES (`run_agent_step`, `run_python_step`,
+`run_gate_step`) do NOT change. Current single pass: `build_drift_report(plan)`
+[inspects python steps only, `reproduce.py:143`] → `apply(plan)` [dispatches all kinds].
+B becomes: freeze v1 → **Phase A** (agent steps; fold answers) → **re-freeze v2** →
+**Phase B** (`build_drift_report` + `apply` over python+gate only).
+
+- **SUBTLETY 1 — the re-freeze MUST compose gate messages.** The bare gate renders a
+  static `message` string (`executor.py:427`). For the pin-table gate to DISPLAY the
+  resolved pins, the v2 re-freeze must template each `kind=gate` step's `message` from
+  the agent decision (pins are known by then). So re-freeze does TWO things: fold
+  answers AND compose gate messages. Spec-004's richer gate would carry structured data
+  instead of a baked string; 003 bakes the string at re-freeze. (Design point, not a
+  blocker.)
+- **SUBTLETY 2 — phasing is GLOBAL, not per-module.** Today `apply` interleaves per
+  module (module A's python could precede module B's agent). Global Phase A → Phase B
+  means ALL agent steps run before ANY python step. Fine for the resolver (an agent
+  step needs only interview answers + its own research, never another module's writes),
+  but it becomes an INVARIANT: a `kind=agent` step MUST NOT depend on a Phase-B file
+  write. Encode as an invariant (consistent with the Tier-2 principle), not a bug.
 
 ### OQ-3 — `--refresh` granularity and CLI surface (MED)
 
@@ -170,15 +176,17 @@ specced is "proceed now with agent-knowledge pins, `--refresh` later."
 5. Go/Rust are out of scope for 003 (pattern extends later). If the user wants all
    four languages in 003, scope ~doubles.
 
-## NEXT ARTIFACTS (speckit flow) — not yet produced
+## NEXT ARTIFACTS (speckit flow)
 
-This session produced `spec.md` + this `memory.md` ONLY. Still to author (when the
-user confirms scope / answers the HIGH OQs): `plan.md`, `data-model.md` (decision
-schema + verify-result shape), `contracts/` (the agent decision contract + the
-SDK verify-helper signature + the reproduce-replay contract), `tasks.md`, `research.md`
-(registry endpoint shapes + the re-freeze design from OQ-2), `quickstart.md`,
-`checklists/requirements.md`. I deliberately stopped at spec+memory because OQ-1/OQ-2
-(spec granularity + the core re-freeze design) change everything downstream.
+Produced so far: `spec.md`, this `memory.md`, **`plan.md`** (phased build order with
+the two-phase execution design as Phase 3). Still to author (when implementation
+starts): `data-model.md` (decision schema + verify-result shape), `contracts/` (the
+agent decision contract + the SDK verify-helper signature + the reproduce-replay
+contract + the two-phase execution contract), `tasks.md`, `research.md` (registry
+endpoint shapes + the gate-message-composition detail), `quickstart.md`,
+`checklists/requirements.md`. These were intentionally deferred from the planning
+session: they're produced by `/speckit.tasks` + implementation, and OQ-3/4/5 (CLI
+grammar, offline policy, resolver placement) are resolved as they're written.
 
 ## Determinism rules carried from 001/002 (must hold)
 

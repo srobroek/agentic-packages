@@ -5,9 +5,12 @@ dedicated `feat/stack-resolver` branch
 
 **Created**: 2026-06-27
 
-**Status**: Draft (authored independently from the 002 roadmap + gates-analysis +
-the corrected research-backend decision; **two verified code findings below
-reshape scope** — see "Current state" and "Settled decisions D/E")
+**Status**: Draft — scope settled. Authored independently from the 002 roadmap +
+gates-analysis + the corrected research-backend decision; **two verified code
+findings below reshape scope** (see "Current state"). The two HIGH open questions
+are now **resolved by the user**: OQ-1 → keep the runner-contract fixes inside 003
+(option A); OQ-2 → same-run agent→python visibility via the **two-phase plan**
+(option B). Both are folded into "Settled decisions" + `plan.md`.
 
 **Input**: The headline Tier-2 feature the user named — "which framework + which
 current versions + which companion libs", instantiated for Python and TypeScript.
@@ -159,12 +162,29 @@ runner contract changes):
   is always explicit, per-key, and gated behind an old-vs-new diff confirm
   (roadmap #3). Plain reproduce never researches. This is what makes F safe by
   construction rather than convention.
-- **H — Same-run agent→python visibility via re-freeze.** After an agent step
-  emits its decision, the runner MUST fold `answers_to_persist` into the resolved
-  answers and **re-freeze the plan** before any dependent `kind=python` step runs,
-  so the python step reads the agent's pins through the frozen plan (preserving the
-  shared-contracts §6 "frozen plan is the only input channel" rule). The agent step
-  MUST be ordered before the python write step within the module's `[[steps]]`.
+- **H — Same-run agent→python visibility via a two-phase plan (option B, chosen).**
+  The runner splits execution into **Phase A (research/decide)** and **Phase B
+  (deterministic writes)**, with a single authoritative freeze between them:
+  1. Build + freeze the plan v1 from interview answers (as today).
+  2. **Phase A:** run ALL `kind=agent` steps (topo order). In init they invoke the
+     agent; in reproduce they REPLAY the committed `agent-steered` answer with zero
+     network (FR-009); under `--refresh` they re-invoke + diff-gate (FR-010). Fold
+     every agent decision into `resolved_answers`.
+  3. **Re-freeze the plan v2** — now carrying the agent pins — as the single
+     authoritative plan (FR-011). For `kind=gate` steps, re-freeze ALSO composes the
+     gate `message` from the resolved decision (so the bare gate can render the pin
+     table; see "Two design subtleties" in `plan.md`).
+  4. **Phase B:** run `build_drift_report` + `apply` over `kind=python` and
+     `kind=gate` steps, reading plan v2. The pin-table gate fires before its python
+     write. This preserves shared-contracts §6 ("the frozen plan is the only input
+     channel" — agent args are never a channel).
+
+  This makes phasing **global**: every agent step runs before any python step. That
+  is an invariant, not a limitation — a `kind=agent` step MUST NOT depend on a
+  Phase-B file write (consistent with the Tier-2 principle that an agent decides
+  from prose + research, never from another module's writes). Plan v1 exists only so
+  the Phase-A agent can read its interview inputs; plan v2 is the authoritative
+  freeze every Tier-1 write reproduces from.
 - **I — Registry verification is a shared SDK helper.** The MCP-free verify
   primitive (D) lives in the runner SDK (`sdk.py`) so `lang-python`, `lang-ts`, and
   later `package-add` reuse one implementation. It is stdlib-`urllib`-only,
@@ -312,11 +332,14 @@ pinned; external scaffolder runs (if any) stay behind the existing generator gat
   agent research and re-verifies pins; it MUST present an old-vs-new diff gate per
   refreshed key and MUST NOT re-persist or re-write without confirmation. Plain
   reproduce MUST NEVER research.
-- **FR-011**: After an agent step emits its decision in init/refresh mode, the runner
-  MUST fold the decision into the resolved answers and re-freeze the plan before any
-  dependent `kind=python` step executes, so the python step reads the decision via
-  the frozen plan. *(Fixes the verified freeze-once-before-execute gap,
-  `pipeline.py:481`.)*
+- **FR-011**: Execution MUST be split into two phases with one authoritative freeze
+  between them (the two-phase plan, Settled Decision H): **Phase A** runs all
+  `kind=agent` steps and folds their decisions into the resolved answers; the runner
+  then **re-freezes the plan (v2)**; **Phase B** runs `kind=python` (+ `kind=gate`)
+  steps reading plan v2, so a python step reads the agent's decision via the frozen
+  plan. Phasing is global (all agent steps precede all python steps); a `kind=agent`
+  step MUST NOT depend on a Phase-B file write. *(Fixes the verified
+  freeze-once-before-execute gap, `pipeline.py:481`.)*
 
 ### Gate + non-interactive
 
@@ -390,16 +413,23 @@ pinned; external scaffolder runs (if any) stay behind the existing generator gat
 
 ## Dependencies & Open Questions
 
-**Hard dependency**: 003's correctness requires the runner contract fixes (FR-009,
-FR-010, FR-011). These touch the 001 runner library (`reproduce.py`, `pipeline.py`,
-`plan.py`, `cli.py`, `sdk.py`), not just a new module directory. They are bundled
-into 003 because a Tier-2 module is the only thing that exercises them and they are
-meaningless without it — but **see Open Question OQ-1**: the user may prefer to split
-them into a separate "Tier-2 runner contract" spec ahead of the module.
+**Hard dependency, resolved (OQ-1 → option A):** 003's correctness requires the
+runner contract fixes (FR-009, FR-010, FR-011). These touch the 001 runner library
+(`reproduce.py`, `pipeline.py`, `plan.py`, `cli.py`, `sdk.py`), not just a new
+module directory. **The user chose to keep them inside 003** — a Tier-2 module is
+the only thing that exercises the contract, so the contract and its first consumer
+ship together. (Not extracted into a separate "003a" spec.)
+
+**Same-run agent→python design, resolved (OQ-2 → option B):** the two-phase plan
+(Settled Decision H + `plan.md` Phase 3). Not the mid-execution re-freeze (option A,
+rejected — temporal hazard) nor the sidecar file (option C, rejected — bypasses the
+frozen-plan input channel).
 
 **Soft dependency on 004**: the rich G6 pin-review gate (hardness, allow-flags,
 inline verify status) is 004. 003 ships the bare gate; 004 upgrades it. No ordering
 deadlock — 003 works standalone, 004 makes the gate nicer.
 
-Open questions requiring user input are tracked in `memory.md` (OQ-1 … OQ-6) so they
-can be addressed without re-reading this spec.
+**Remaining open questions** (OQ-3 … OQ-6, all MED/LOW) are tracked in `memory.md`
+so they can be addressed without re-reading this spec. None block authoring `plan.md`;
+they are resolved during planning/implementation (CLI grammar, offline-verify policy,
+resolver-on-lang-* vs shared module, `cli.py`/`mode.py` verification).
