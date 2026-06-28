@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.1...sniff--v2.1.0) (2026-06-28)
+
+
+### Features
+
+* **sniff:** config-aware scanning, no double-run, user-adjustable fan-out [skip tests] ([#409](https://github.com/srobroek/agentic-packages/issues/409)) ([849fa80](https://github.com/srobroek/agentic-packages/commit/849fa80b3328a7b459f3178fa6ca352d6506ec46))
+
 ## [2.0.1](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.0...sniff--v2.0.1) (2026-06-28)
 
 
