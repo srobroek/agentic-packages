@@ -63,3 +63,21 @@ message = "TypeScript stack decision (agent-resolved, registry-verified):\n{deci
 [[steps]]
 id = "write"
 kind = "python"
+
+# G4 — external-generator-run confirm (spec 004). SOFT gate: the scaffolder reaches
+# the network and may --force-overwrite files, but the user already opted into the
+# overlay, so it proceeds by default; --no-external-generators flips it to skip.
+# Ordered AFTER the deterministic `write` so a declined gate (gate-blocked) skips
+# ONLY the trailing `scaffold` step — the pinned package.json + tsconfig already
+# landed (FR-013, Subtlety 1). The `when` confines the gate to frameworks that run
+# an external generator; plain/sst still need bun/pnpm init, so no when there.
+[[steps]]
+id = "run-generator"
+kind = "gate"
+hardness = "soft"
+skip_flag = "no-external-generators"
+message = "Run the external framework scaffolder (network; nuxi/create-vite/bun init may overwrite files in the project dir). The deterministic pinned package.json is already written — declining skips only the generator."
+
+[[steps]]
+id = "scaffold"
+kind = "python"

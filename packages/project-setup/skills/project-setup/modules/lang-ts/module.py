@@ -146,6 +146,50 @@ def _patch_package_json(
         return False
 
 
+def _patch_pins_into_package_json(
+    sdk, project_dir, pinned_deps, dev_deps, package_manager_pin,
+    diffs, files_written, warnings, *, inspect: bool,
+) -> None:
+    """Merge the frozen pins into package.json (idempotent; safe to call twice).
+
+    Called once in the deterministic ``write`` step and again after the external
+    generator runs in ``scaffold`` (the generator may have --force-overwritten
+    package.json, dropping the pins — re-merging restores the frozen decision).
+    """
+    any_pins = bool(pinned_deps or dev_deps or package_manager_pin)
+    if not any_pins:
+        return
+    if inspect:
+        diffs.append(sdk.Diff(
+            path="package.json",
+            kind="modify",
+            preview=(
+                f"(would write {len(pinned_deps)} runtime pins + {len(dev_deps)} dev pins"
+                + (f", packageManager={package_manager_pin!r}" if package_manager_pin else "")
+                + ")"
+            ),
+        ))
+        return
+    patched = _patch_package_json(
+        project_dir / "package.json",
+        pinned_deps=list(pinned_deps),
+        dev_deps=list(dev_deps),
+        package_manager_pin=package_manager_pin,
+        warnings=warnings,
+    )
+    if patched:
+        if "package.json" not in files_written:
+            files_written.append("package.json")
+        diffs.append(sdk.Diff(
+            path="package.json",
+            kind="modify",
+            preview=(
+                f"(pinned deps written: {len(pinned_deps)} runtime, "
+                f"{len(dev_deps)} dev, packageManager={package_manager_pin!r})"
+            ),
+        ))
+
+
 # --------------------------------------------------------------------------- #
 # Step handlers                                                                #
 # --------------------------------------------------------------------------- #
@@ -231,52 +275,13 @@ def _do_write(sdk, inputs, args) -> int:
             sdk.emit_result(result)
             return 0
 
-    # ── 1. Framework scaffold (scaffolder runs are non-fatal; pinned write is separate) #
-    if framework == "nuxt":
-        if not (project_dir / "nuxt.config.ts").exists():
-            if not args.inspect:
-                sdk.run_tool(
-                    _pkgx_cmd(pkg_manager, "nuxi@latest", "init", ".", "--force",
-                              "--packageManager", pkg_manager),
-                    cwd=project_dir,
-                    warnings=warnings,
-                    label="nuxi init",
-                    timeout=180,
-                )
-            else:
-                warnings.append(f"inspect: would run nuxi@latest init . --force --packageManager {pkg_manager}")
-        else:
-            diffs.append(sdk.Diff(path="nuxt.config.ts", kind="skip", preview="(Nuxt already scaffolded)"))
-
-    elif framework == "vite":
-        if not (project_dir / "vite.config.ts").exists():
-            if not args.inspect:
-                sdk.run_tool(
-                    _pkgx_cmd(pkg_manager, "create-vite", ".", "--template", "vue-ts"),
-                    cwd=project_dir,
-                    warnings=warnings,
-                    label="create-vite vue-ts",
-                    timeout=180,
-                )
-            else:
-                warnings.append("inspect: would run create-vite . --template vue-ts")
-        else:
-            diffs.append(sdk.Diff(path="vite.config.ts", kind="skip", preview="(Vite already scaffolded)"))
-
-    else:  # plain / sst / unknown-treated-as-plain
-        package_json = project_dir / "package.json"
-        if not package_json.exists():
-            if not args.inspect:
-                if pkg_manager == "bun":
-                    sdk.run_tool(["bun", "init", "-y"], cwd=project_dir, warnings=warnings, label="bun init", timeout=180)
-                else:
-                    sdk.run_tool(["pnpm", "init"], cwd=project_dir, warnings=warnings, label="pnpm init", timeout=180)
-            else:
-                warnings.append(f"inspect: would run {pkg_manager} init")
-        else:
-            diffs.append(sdk.Diff(path="package.json", kind="skip", preview="(package.json already exists)"))
-
-        # tsconfig.json (write-if-absent) — deterministic write regardless of scaffolder
+    # ── 1. tsconfig.json + src/ (deterministic, plain only) ────────────────── #
+    # The external scaffolders (nuxi/create-vite) emit their own tsconfig, so this
+    # deterministic tsconfig is the plain-framework baseline. The generators
+    # themselves run in the SEPARATE, G4-gated `scaffold` step (spec 004 FR-013),
+    # which is ordered AFTER this deterministic write so a declined generator gate
+    # skips ONLY the scaffolder while these writes still land.
+    if framework not in ("nuxt", "vite"):  # plain / sst / unknown-treated-as-plain
         tsconfig_body = (_TEMPLATES / "tsconfig.json").read_text(encoding="utf-8")
         diff = sdk.idempotent_write(
             "tsconfig.json",
@@ -288,54 +293,16 @@ def _do_write(sdk, inputs, args) -> int:
         diffs.append(diff)
         if diff.kind in ("create", "modify"):
             files_written.append(diff.path)
-            # ensure src/ directory exists
             if not args.inspect:
                 (project_dir / "src").mkdir(exist_ok=True)
 
     # ── 2. Write pinned deps into package.json (deterministic, FR-005/FR-012) ─ #
-    # This runs regardless of whether the scaffolder succeeded — the pinned
-    # package.json write is a deterministic first-class action, not a scaffolder
-    # side-effect.
-    any_pins = bool(pinned_deps or dev_deps or package_manager_pin)
-    if any_pins and not args.inspect:
-        patched = _patch_package_json(
-            project_dir / "package.json",
-            pinned_deps=list(pinned_deps),
-            dev_deps=list(dev_deps),
-            package_manager_pin=package_manager_pin,
-            warnings=warnings,
-        )
-        if patched:
-            if "package.json" not in files_written:
-                files_written.append("package.json")
-            diffs.append(sdk.Diff(
-                path="package.json",
-                kind="modify",
-                preview=(
-                    f"(pinned deps written: {len(pinned_deps)} runtime, "
-                    f"{len(dev_deps)} dev, packageManager={package_manager_pin!r})"
-                ),
-            ))
-    elif any_pins and args.inspect:
-        diffs.append(sdk.Diff(
-            path="package.json",
-            kind="modify",
-            preview=(
-                f"(would write {len(pinned_deps)} runtime pins + {len(dev_deps)} dev pins"
-                + (f", packageManager={package_manager_pin!r}" if package_manager_pin else "")
-                + ")"
-            ),
-        ))
-
-    # ── 3. pkg install (non-fatal, skipped under inspect) ─────────────────── #
-    if not args.inspect:
-        sdk.run_tool(
-            _pkg_cmd(pkg_manager, "install"),
-            cwd=project_dir,
-            warnings=warnings,
-            label=f"{pkg_manager} install",
-            timeout=180,
-        )
+    # First-class deterministic action — independent of the scaffolder. For nuxt/
+    # vite the generator may later --force-overwrite package.json; the scaffold
+    # step re-merges these pins afterwards so the frozen decision is preserved.
+    _patch_pins_into_package_json(sdk, project_dir, pinned_deps, dev_deps,
+                                  package_manager_pin, diffs, files_written,
+                                  warnings, inspect=args.inspect)
 
     # ── 4. Append Node .gitignore block ────────────────────────────────────── #
     gitignore = project_dir / ".gitignore"
@@ -430,10 +397,93 @@ def _do_write(sdk, inputs, args) -> int:
     return 0
 
 
+def _do_scaffold(sdk, inputs, args) -> int:
+    """scaffold step: run the external framework generator + pkg install (G4).
+
+    Separated from ``write`` (spec 004 FR-013) so the soft G4 gate can skip JUST
+    the external-generator run (network + may --force-overwrite files) while the
+    deterministic ``write`` step's pinned package.json / tsconfig already landed.
+    A declined G4 gate (gate-blocked) skips this step entirely; CI runs it unless
+    --no-external-generators is passed. After the generator runs we RE-MERGE the
+    frozen pins (the generator may have clobbered package.json).
+    """
+    pkg_manager: str = inputs.get_choice("package_manager", default="bun")
+    framework: str = inputs.get_str("framework", default="plain") or "plain"
+    pinned_deps: list[str] = inputs.get_list("pinned_deps", default=[])
+    dev_deps: list[str] = inputs.get_list("dev_deps", default=[])
+    package_manager_pin: str = inputs.get_str("package_manager_pin", default="")
+    if framework not in ("nuxt", "vite", "plain", "sst"):
+        framework = "plain"
+
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    project_dir = Path(project_dir_env).resolve() if project_dir_env else Path.cwd().resolve()
+
+    warnings: list[str] = []
+    diffs = []
+    files_written: list[str] = []
+
+    # ── External framework generator (network; may --force-overwrite) ──────── #
+    if framework == "nuxt":
+        if not (project_dir / "nuxt.config.ts").exists():
+            if not args.inspect:
+                sdk.run_tool(
+                    _pkgx_cmd(pkg_manager, "nuxi@latest", "init", ".", "--force",
+                              "--packageManager", pkg_manager),
+                    cwd=project_dir, warnings=warnings, label="nuxi init", timeout=180,
+                )
+            else:
+                warnings.append(f"inspect: would run nuxi@latest init . --force --packageManager {pkg_manager}")
+        else:
+            diffs.append(sdk.Diff(path="nuxt.config.ts", kind="skip", preview="(Nuxt already scaffolded)"))
+    elif framework == "vite":
+        if not (project_dir / "vite.config.ts").exists():
+            if not args.inspect:
+                sdk.run_tool(
+                    _pkgx_cmd(pkg_manager, "create-vite", ".", "--template", "vue-ts"),
+                    cwd=project_dir, warnings=warnings, label="create-vite vue-ts", timeout=180,
+                )
+            else:
+                warnings.append("inspect: would run create-vite . --template vue-ts")
+        else:
+            diffs.append(sdk.Diff(path="vite.config.ts", kind="skip", preview="(Vite already scaffolded)"))
+    else:  # plain / sst
+        package_json = project_dir / "package.json"
+        if not package_json.exists():
+            if not args.inspect:
+                if pkg_manager == "bun":
+                    sdk.run_tool(["bun", "init", "-y"], cwd=project_dir, warnings=warnings, label="bun init", timeout=180)
+                else:
+                    sdk.run_tool(["pnpm", "init"], cwd=project_dir, warnings=warnings, label="pnpm init", timeout=180)
+            else:
+                warnings.append(f"inspect: would run {pkg_manager} init")
+        else:
+            diffs.append(sdk.Diff(path="package.json", kind="skip", preview="(package.json already exists)"))
+
+    # ── Re-merge frozen pins (the generator may have clobbered package.json) ── #
+    _patch_pins_into_package_json(sdk, project_dir, pinned_deps, dev_deps,
+                                  package_manager_pin, diffs, files_written,
+                                  warnings, inspect=args.inspect)
+
+    # ── pkg install (non-fatal, skipped under inspect) ─────────────────────── #
+    if not args.inspect:
+        sdk.run_tool(
+            _pkg_cmd(pkg_manager, "install"),
+            cwd=project_dir, warnings=warnings, label=f"{pkg_manager} install", timeout=180,
+        )
+
+    result = sdk.ModuleResult(
+        module_id="lang-ts", step_id=args.step, status="ok",
+        files_written=files_written, diffs=diffs, warnings=warnings,
+    )
+    sdk.emit_result(result)
+    return 0
+
+
 STEP_HANDLERS = {
     "write": _do_write,
+    "scaffold": _do_scaffold,
     # "resolve" is kind=agent — handled by the runner's Tier-2 agent subsystem.
-    # "pins" is kind=gate — handled by the runner's gate subsystem.
+    # "pins"/"run-generator" are kind=gate — handled by the runner's gate subsystem.
 }
 
 
