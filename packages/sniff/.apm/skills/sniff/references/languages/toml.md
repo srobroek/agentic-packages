@@ -15,10 +15,10 @@ How sniff knows TOML is present: key files, extensions, config.
 
 ## Tools
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| taplo | `taplo lint <files>` | syntax, duplicate keys, schema conformance (built-in catalog for Cargo/pyproject) | `install-tools.sh --install data` |
-| taplo | `taplo fmt --check <files>` | formatting/style diff (table style, alignment, key order) | `install-tools.sh --install data` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| taplo | `taplo lint <files>` | syntax, duplicate keys, schema conformance (built-in catalog for Cargo/pyproject) | default-on | `install-tools.sh --install data` |
+| taplo | `taplo fmt --check <files>` | formatting/style diff (table style, alignment, key order) | default-on | `install-tools.sh --install data` |
 
 Notes: taplo is the single tool — it lints, formats, and validates against
 schemas in one binary. `taplo lint` ships an online schema catalog (the JSON

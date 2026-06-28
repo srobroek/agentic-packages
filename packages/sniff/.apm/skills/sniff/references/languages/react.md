@@ -18,10 +18,10 @@ How sniff knows React is present.
 Run ESLint with the React plugin stack first; it is the meta-linter and the only
 tool that flags the highest-value hook smell (`exhaustive-deps`).
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| ESLint + `eslint-plugin-react` + `eslint-plugin-react-hooks` + `eslint-plugin-jsx-a11y` | `npx eslint --format json .` | hook deps (`react-hooks/exhaustive-deps`), rules of hooks (`react-hooks/rules-of-hooks`), missing keys (`react/jsx-key`), unstable nested components, a11y | `install-tools.sh --install js-ts` |
-| typescript-eslint + `tsc` | `tsc --noEmit --strict` | prop/type smells, `any` leakage — see `./typescript.md` | `install-tools.sh --install js-ts` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| ESLint + `eslint-plugin-react` + `eslint-plugin-react-hooks` + `eslint-plugin-jsx-a11y` | `npx eslint --format json .` | hook deps (`react-hooks/exhaustive-deps`), rules of hooks (`react-hooks/rules-of-hooks`), missing keys (`react/jsx-key`), unstable nested components, a11y | default-on (mandatory when React present) | `install-tools.sh --install js-ts` |
+| typescript-eslint + `tsc` | `tsc --noEmit --strict` | prop/type smells, `any` leakage — see `./typescript.md` | default-on | `install-tools.sh --install js-ts` |
 
 Notes: ESLint is the React meta-linter — do not stack point tools. The two
 load-bearing rules are `react-hooks/exhaustive-deps` (missing/incorrect effect

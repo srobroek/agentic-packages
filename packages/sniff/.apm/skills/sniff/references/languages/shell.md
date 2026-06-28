@@ -14,17 +14,19 @@ How sniff knows shell is present: key files, extensions, config.
 
 ## Tools
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| shellcheck | `shellcheck -f json <files>` | quoting/word-splitting, unset vars, unchecked `cd`, useless `cat`, `ls` parsing, `[` vs `[[`, sh-vs-bash portability | `install-tools.sh --install shell` |
-| shfmt | `shfmt -d .` | formatting/indent diff; `-i 2 -ci` to enforce style | `install-tools.sh --install shell` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| shellcheck | `shellcheck -f json <files>` | quoting/word-splitting, unset vars, unchecked `cd`, useless `cat`, `ls` parsing, `[` vs `[[`, sh-vs-bash portability | default-on | `install-tools.sh --install shell` |
+| shfmt | `shfmt -d .` | format drift (advisory); `-i 2 -ci` to enforce style | default-on | `install-tools.sh --install shell` |
 
 Notes: shellcheck is the essential analyzer — it does real dataflow on variable
 use and quoting, and it auto-detects the shell from the shebang (override with
 `-s bash`/`-s sh`). It is also embedded inside `hadolint` (Dockerfile `RUN`) and
 `actionlint` (GHA `run:`), so for those targets prefer the host tool and don't
 re-run shellcheck standalone. shfmt only reports formatting; it does not find
-logic bugs. No grep fallback — if shellcheck is absent, record a coverage gap.
+logic bugs. **bashate is REDUNDANT here — its checks are subsumed by
+shellcheck + shfmt, so it is not a default-on tool.** No grep fallback — if
+shellcheck is absent, record a coverage gap.
 
 ## Smell checklist
 

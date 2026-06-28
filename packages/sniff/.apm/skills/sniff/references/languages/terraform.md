@@ -18,19 +18,22 @@ How sniff knows Terraform is present: key files, extensions, config.
 Primary first. Exact invocation + machine-readable flag. Canonical detail in
 `../tooling.md`; this is the runnable subset.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| tflint | `tflint -f json --recursive` | provider-aware rules: deprecated syntax, unpinned providers, invalid instance types, unused declarations, naming | `install-tools.sh --install infra` |
-| trivy | `trivy config --format json .` | IaC misconfig: open ingress, public buckets, missing encryption, IAM `*` | `install-tools.sh --install security` |
-| checkov | `checkov -d . -o json` | deep policy checks (1000+ rules): CIS benchmarks, encryption, logging | `install-tools.sh --install security` |
-| terraform fmt | `terraform fmt -check -recursive` | canonical formatting (style) | bundled toolchain |
-| terraform validate | `terraform validate -json` | type/reference validity within an initialized module | bundled toolchain |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| tflint | `tflint -f json --recursive` | provider-aware rules: deprecated syntax, unpinned providers, invalid instance types, unused declarations, naming | default-on | `install-tools.sh --install infra` |
+| terraform fmt | `terraform fmt -check -recursive` | canonical formatting (style); built-in toolchain | default-on | bundled toolchain |
+| terraform validate | `terraform validate -json` | type/reference validity within an initialized module; built-in toolchain | default-on | bundled toolchain |
+| trivy | `trivy config --format json .` | IaC misconfig: open ingress, public buckets, missing encryption, IAM `*` | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
+| checkov | `checkov -d . -o json` | deep policy checks (1000+ rules): CIS benchmarks, encryption, logging | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
 
 Notes: `tflint` is the provider-aware meta-linter (init plugins with `tflint --init`
-to load the AWS/GCP/Azure ruleset). `trivy config` and `checkov` overlap heavily on
+to load the AWS/GCP/Azure ruleset); it plus `terraform fmt -check` and
+`terraform validate` are the default-on correctness/style pass. `trivy config` and
+`checkov` are the **security** pass (opt-in, not smell): they overlap heavily on
 misconfig — run both on a deep pass, but if one is present trivy is faster and
 covers the same top-severity findings; reserve checkov for benchmark-grade policy
-runs. `terraform validate` only checks an *initialized* module (`terraform init`
+runs. **tfsec is deprecated — its rules folded into `trivy config`; use trivy, not
+tfsec.** `terraform validate` only checks an *initialized* module (`terraform init`
 must have run); skip in CI where init is unavailable and lean on tflint instead.
 
 ## Smell checklist

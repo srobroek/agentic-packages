@@ -16,11 +16,11 @@ How sniff knows a Dockerfile is present: key files, extensions, config.
 Primary first. Exact invocation + machine-readable flag. Canonical detail in
 `../tooling.md`; this is the runnable subset.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| hadolint | `hadolint -f json <Dockerfile>` | AST rules: pinning, `apt` hygiene, `ADD` vs `COPY`, `USER`, layer order; **embeds shellcheck** for `RUN` lines | `install-tools.sh --install infra` |
-| trivy (config) | `trivy config --format json <dir>` | Dockerfile misconfig: root user, missing `HEALTHCHECK`, exposed secrets | `install-tools.sh --install security` |
-| trivy (image) | `trivy image --format json <image:tag>` | built-image scan: OS/library CVEs, embedded secrets in layers | `install-tools.sh --install security` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| hadolint | `hadolint -f json <Dockerfile>` | AST rules: pinning, `apt` hygiene, `ADD` vs `COPY`, `USER`, layer order; **embeds shellcheck** for `RUN` lines | default-on | `install-tools.sh --install infra` |
+| trivy (config) | `trivy config --format json <dir>` | Dockerfile misconfig: root user, missing `HEALTHCHECK`, exposed secrets | opt-in (security) | `install-tools.sh --install security` |
+| trivy (image) | `trivy image --format json <image:tag>` | built-image scan: OS/library CVEs, embedded secrets in layers | opt-in (security; needs a built image) | `install-tools.sh --install security` |
 
 Notes: `hadolint` is the primary AST linter and already runs `shellcheck` over
 every `RUN` body, so do not separately shellcheck a Dockerfile. `trivy config`

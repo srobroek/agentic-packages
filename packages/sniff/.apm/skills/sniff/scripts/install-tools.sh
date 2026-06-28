@@ -21,16 +21,18 @@ set -euo pipefail
 #   dup       jscpd                         (cross-language duplication; use only where a language lacks native dup)
 #   security  trivy checkov gitleaks        (IaC/container misconfig, CVEs, secrets)
 #   rust      (clippy via rustup) cargo-machete
-#   go        golangci-lint
+#   go        golangci-lint deadcode(x/tools)
 #   python    ruff vulture pylint mypy pyright
-#   js-ts     eslint knip biome             (project-local; see notes)
+#   js-ts     eslint(+sonarjs/unicorn) knip madge type-coverage dependency-cruiser biome  (project-local)
 #   shell     shellcheck shfmt
 #   sql       sqlfluff
-#   css       stylelint                     (project-local)
+#   css       stylelint(+configs) stylelint-declaration-strict-value  (project-local)
 #   data      yamllint taplo check-jsonschema
-#   api       spectral buf
-#   infra     hadolint tflint actionlint kube-linter
-#   docs      markdownlint-cli2 lychee
+#   api       vacuum spectral oasdiff graphql-inspector buf
+#   infra     hadolint tflint actionlint kube-linter kubeconform
+#   docs      markdownlint-cli2 lychee cspell
+# Per-tool default-on vs opt-in tiers live in the language docs (the source of
+# truth); this script just provisions. Records: name|probe-bin|key|hint[|pkg][|mise-spec]
 #
 # Portability floor: bash 3.2.57 + BSD userland. No mapfile, no associative
 # arrays, no GNU-only flags.
@@ -65,6 +67,7 @@ tools_for() {
       ;;
     go)
       echo "golangci-lint|golangci-lint|brew|brew install golangci-lint  (or: https://golangci-lint.run)"
+      echo "deadcode|deadcode|go|go install golang.org/x/tools/cmd/deadcode@latest||go:golang.org/x/tools/cmd/deadcode"
       ;;
     python)
       echo "ruff|ruff|pipx|pipx install ruff  (or: uv tool install ruff)"
@@ -74,9 +77,12 @@ tools_for() {
       echo "pyright|pyright|pipx|pipx install pyright  (or: npm i -g pyright)"
       ;;
     js-ts)
-      echo "eslint|eslint|npm-local|npm i -D eslint typescript-eslint eslint-plugin-sonarjs  (project-local)"
-      echo "knip|knip|npm-local|npm i -D knip  (project-local)"
-      echo "biome|biome|npm-local|npm i -D --save-exact @biomejs/biome  (project-local)"
+      echo "eslint|eslint|npm-local|npm i -D eslint typescript-eslint eslint-plugin-sonarjs eslint-plugin-unicorn  (project-local; sonarjs = cognitive-complexity + dup)"
+      echo "knip|knip|npm-local|npm i -D knip  (project-local; dead files/exports/deps)"
+      echo "madge|madge|npm-local|npm i -D madge  (project-local; circular deps)"
+      echo "type-coverage|type-coverage|npm-local|npm i -D type-coverage  (project-local; any-leakage %)"
+      echo "dependency-cruiser|depcruise|npm-local|npm i -D dependency-cruiser  (project-local; cycles + architecture boundaries)"
+      echo "biome|biome|npm-local|npm i -D --save-exact @biomejs/biome  (project-local; fast lint+fmt, JSON too)"
       ;;
     shell)
       echo "shellcheck|shellcheck|brew|brew install shellcheck"
@@ -86,7 +92,8 @@ tools_for() {
       echo "sqlfluff|sqlfluff|pipx|pipx install sqlfluff"
       ;;
     css)
-      echo "stylelint|stylelint|npm-local|npm i -D stylelint stylelint-config-standard  (project-local)"
+      echo "stylelint|stylelint|npm-local|npm i -D stylelint stylelint-config-standard stylelint-config-recommended-scss  (project-local; add -recommended-vue for Vue SFC styles)"
+      echo "stylelint-declaration-strict-value|stylelint|npm-local|npm i -D stylelint-declaration-strict-value  (project-local; OPT-IN: enforce tokens over magic colors/sizes)"
       ;;
     data)
       echo "yamllint|yamllint|pipx|pipx install yamllint"
@@ -94,7 +101,10 @@ tools_for() {
       echo "check-jsonschema|check-jsonschema|pipx|pipx install check-jsonschema"
       ;;
     api)
-      echo "spectral|spectral|npm|npm i -g @stoplight/spectral-cli|@stoplight/spectral-cli"
+      echo "vacuum|vacuum|brew|brew install daveshanley/vacuum/vacuum  (OpenAPI lint; Go, fast, spectral-ruleset compatible)|daveshanley/vacuum/vacuum"
+      echo "spectral|spectral|npm|npm i -g @stoplight/spectral-cli  (OpenAPI lint; Node alternative to vacuum)|@stoplight/spectral-cli"
+      echo "oasdiff|oasdiff|brew|brew install oasdiff/homebrew-oasdiff/oasdiff  (OPT-IN: OpenAPI breaking-change vs base; needs CI baseline)|oasdiff/homebrew-oasdiff/oasdiff"
+      echo "graphql-inspector|graphql-inspector|npm|npm i -g @graphql-inspector/cli  (OPT-IN: GraphQL breaking-change diff; needs baseline)"
       echo "buf|buf|brew|brew install bufbuild/buf/buf  (or: https://buf.build)|bufbuild/buf/buf"
       ;;
     infra)
@@ -102,10 +112,12 @@ tools_for() {
       echo "tflint|tflint|brew|brew install tflint"
       echo "actionlint|actionlint|brew|brew install actionlint"
       echo "kube-linter|kube-linter|brew|brew install kube-linter"
+      echo "kubeconform|kubeconform|brew|brew install kubeconform  (k8s manifest schema validation)"
       ;;
     docs)
       echo "markdownlint-cli2|markdownlint-cli2|npm|npm i -g markdownlint-cli2"
-      echo "lychee|lychee|cargo|cargo install lychee  (or: brew install lychee)"
+      echo "lychee|lychee|cargo|cargo install lychee  (or: brew install lychee)  (OPT-IN: dead-link check; network)"
+      echo "cspell|cspell|npm|npm i -g cspell  (OPT-IN: offline spell-check across code + docs)"
       ;;
     *)
       return 1
@@ -159,6 +171,7 @@ manager_cmd() {
       cargo)     echo "mise-cargo"; return ;;
       npm)       echo "mise-npm"; return ;;
       pipx)      echo "mise-pipx"; return ;;
+      go)        echo "mise-reg"; return ;;   # via go: mise-spec (field 6)
       brew)      echo "mise-reg"; return ;;  # registry binary (aqua/ubi), by name
       # npm-local stays project-local; rustup stays a toolchain component.
     esac
@@ -169,6 +182,7 @@ manager_cmd() {
     npm)       if have npm; then echo "npm"; fi ;;
     npm-local) if have npm; then echo "npm-local"; fi ;;
     cargo)     if have cargo; then echo "cargo"; fi ;;
+    go)        if have go; then echo "go"; fi ;;
     rustup)    if have rustup; then echo "rustup"; fi ;;
     *)         echo "" ;;
   esac
@@ -229,6 +243,12 @@ install_one() {
     uv-tool)   run uv tool install "$pkg" || printf '      (failed — try: %s)\n' "$hint" ;;
     npm)       run npm install -g "$pkg" || printf '      (failed — try: %s)\n' "$hint" ;;
     cargo)     run cargo install "$pkg" || printf '      (failed — try: %s)\n' "$hint" ;;
+    go)
+      # Import path comes from the mise-spec field (field 6, "go:<path>"); strip
+      # the prefix and pin @latest for a plain `go install`.
+      go_path="${mise_spec#go:}"
+      case "$go_path" in *@*) : ;; *) go_path="${go_path}@latest" ;; esac
+      run go install "$go_path" || printf '      (failed — try: %s)\n' "$hint" ;;
     rustup)    run rustup component add clippy || printf '      (failed — try: %s)\n' "$hint" ;;
     # mise routes: explicit backend for source-built tools (the cargo/npm/pipx
     # package name may differ from the binary — use $pkg), registry-by-name (or an

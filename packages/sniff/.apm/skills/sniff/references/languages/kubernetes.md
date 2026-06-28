@@ -20,12 +20,12 @@ How sniff knows manifests are k8s (vs plain YAML): key markers.
 Primary first. Exact invocation + machine-readable flag. Canonical detail in
 `../tooling.md`; this is the runnable subset.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| kube-linter | `kube-linter lint --format json <path>` | missing limits/requests, probes, `runAsNonRoot`, `:latest`, privileged, hostPath | `install-tools.sh --install infra` |
-| kubeconform | `kubeconform -output json <files>` | schema validity against the k8s OpenAPI / CRD schemas | `install-tools.sh --install infra` |
-| trivy (config) | `trivy config --format json <dir>` | k8s misconfig: privileged, hostNetwork, capabilities, secrets as env | `install-tools.sh --install security` |
-| checkov | `checkov -d . --framework kubernetes -o json` | deep policy/benchmark checks | `install-tools.sh --install security` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| kube-linter | `kube-linter lint --format json <path>` | missing limits/requests, probes, `runAsNonRoot`, `:latest`, privileged, hostPath | default-on | `install-tools.sh --install infra` |
+| kubeconform | `kubeconform -output json <files>` | schema validity against the k8s OpenAPI / CRD schemas | default-on | `install-tools.sh --install infra` |
+| trivy (config) | `trivy config --format json <dir>` | k8s misconfig: privileged, hostNetwork, capabilities, secrets as env | opt-in (security; overlaps kube-linter's security checks) | `install-tools.sh --install security` |
+| checkov | `checkov -d . --framework kubernetes -o json` | deep policy/benchmark checks | opt-in (security) | `install-tools.sh --install security` |
 
 Notes: `kube-linter` is the primary semantic linter (reliability + security
 posture). `kubeconform` only validates *schema* (does the manifest parse against

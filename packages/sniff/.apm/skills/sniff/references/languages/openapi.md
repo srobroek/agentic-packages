@@ -22,22 +22,25 @@ How sniff knows an OpenAPI/Swagger contract is present.
 Primary first. Run on the **resolved** spec (all `$ref`s dereferenced) so rules
 see the full graph. Spectral and vacuum overlap heavily — run one as the linter.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| spectral | `spectral lint -f json <spec>` | rule-based design smells, naming, missing schemas/operationId, governance rulesets | `install-tools.sh --install api` |
-| vacuum | `vacuum lint -d <spec>` | same rule classes as spectral, much faster on large specs (`-d` = details) | `install-tools.sh --install api` |
-| openapi-spec-validator | `openapi-spec-validator <spec>` | strict spec-validity (structural conformance to the OAS schema), not style | `install-tools.sh --install api` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| vacuum | `vacuum lint -d <spec>` | rule-based design smells, naming, missing schemas/operationId, governance rulesets (Go, fast on large specs; `-d` = details) | default-on (preferred linter) | `install-tools.sh --install api` |
+| spectral | `spectral lint -f json <spec>` | same rule classes as vacuum; the meta-linter for Node-centric repos | default-on (alternative — use ONE of vacuum/spectral, not both) | `install-tools.sh --install api` |
+| openapi-spec-validator | `openapi-spec-validator <spec>` | strict spec-validity (structural conformance to the OAS schema), not style | default-on | `install-tools.sh --install api` |
+| oasdiff | `oasdiff breaking <base> <revision>` | breaking-change detection vs a baseline spec (removed paths/fields, narrowed types, newly-required request fields) | opt-in (needs a CI baseline — prior spec / git ref / published version) | `install-tools.sh --install api` |
 
-Notes: spectral is the meta-linter — its `spectral:oas` ruleset already flags
-missing `operationId`, missing descriptions, unused/duplicate components, and
-invalid examples. vacuum is a drop-in faster alternative covering the same rule
-classes; pick one as the linter, not both. openapi-spec-validator only answers
-"is this a valid OAS document" — keep it for the validity gate, not for smells.
-**Breaking-change detection is not built into these linters**: diff the current
-spec against the baseline manually (removed paths/operations, removed response
-fields, narrowed types, newly-required request fields) — see Pragmatism notes.
-If the project already pins a Spectral ruleset, respect it rather than imposing
-defaults.
+Notes: vacuum and spectral are the meta-linters — both flag missing
+`operationId`, missing descriptions, unused/duplicate components, and invalid
+examples against the same rule classes. They use a compatible ruleset format, so
+**pick exactly one** (vacuum preferred for speed on large specs; spectral for
+Node-centric repos that already wire it in) — running both is redundant.
+openapi-spec-validator only answers "is this a valid OAS document" — keep it for
+the validity gate, not for smells. **Breaking-change detection is not built into
+the linters**: run `oasdiff` against the baseline (opt-in — needs a CI baseline
+spec, git ref, or published version) to catch removed paths/operations, removed
+response fields, narrowed types, and newly-required request fields; without a
+baseline, diff manually — see Pragmatism notes. If the project already pins a
+Spectral ruleset, respect it rather than imposing defaults.
 
 ## Smell checklist
 

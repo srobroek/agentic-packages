@@ -20,11 +20,11 @@ How sniff knows a CI/CD pipeline is present: key files.
 Primary first. Exact invocation + machine-readable flag. Canonical detail in
 `../tooling.md`; this is the runnable subset.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| actionlint | `actionlint -format '{{json .}}'` | workflow AST: bad syntax, invalid `needs`/`if`, expr typos; **embeds shellcheck** for `run:` steps | `install-tools.sh --install infra` |
-| zizmor | `zizmor --format json <workflow>` | GHA security dataflow: `pull_request_target` injection, `persist-credentials`, template injection | `install-tools.sh --install infra` |
-| pinact | `pinact run --check` | verifies every `uses:` is pinned to a full commit SHA | `install-tools.sh --install infra` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| actionlint | `actionlint -format '{{json .}}'` | workflow AST: bad syntax, invalid `needs`/`if`, expr typos; **embeds shellcheck** for `run:` steps | default-on | `install-tools.sh --install infra` |
+| zizmor | `zizmor --format json <workflow>` | GHA security dataflow: `pull_request_target` injection, `persist-credentials`, template injection | opt-in (security-only) | `install-tools.sh --install infra` |
+| pinact | `pinact run --check` | verifies every `uses:` is pinned to a full commit SHA | opt-in (mutating fixer + needs a token) | `install-tools.sh --install infra` |
 
 Notes: `actionlint` is the primary AST linter and already runs `shellcheck` over
 every `run:` body, so do not separately shellcheck a workflow. `zizmor` is the

@@ -19,11 +19,11 @@ How sniff knows a Protobuf contract is present.
 Primary first. buf is the AST linter **and** the breaking-change detector;
 protolint is a lint-only alternative.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| buf (lint) | `buf lint` | AST-level style/naming/structure rules (snake_case fields, enum zero-value, package versioning, etc.) | `install-tools.sh --install api` |
-| buf (breaking) | `buf breaking --against <ref>` | wire- and source-compat regression detection vs a baseline (git ref, image, or registry module) | `install-tools.sh --install api` |
-| protolint | `protolint lint <files>` | lint-only alternative (naming, ordering, style); no breaking-change detection | `install-tools.sh --install api` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| buf (lint) | `buf lint` | AST-level style/naming/structure rules (snake_case fields, enum zero-value, package versioning, etc.) | default-on | `install-tools.sh --install api` |
+| buf (breaking) | `buf breaking --against <ref>` | wire- and source-compat regression detection vs a baseline (git ref, image, or registry module) | opt-in (needs a baseline, CI) | `install-tools.sh --install api` |
+| protolint | `protolint lint <files>` | lint-only alternative (naming, ordering, style); no breaking-change detection | opt-in (redundant — `buf lint` covers it) | `install-tools.sh --install api` |
 
 Notes: buf is the meta-tool here — `buf lint` covers naming/structure and
 `buf breaking --against <ref>` is the authoritative wire-compat gate (it

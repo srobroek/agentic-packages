@@ -13,18 +13,27 @@ How sniff knows Go is present: a module manifest plus `.go` sources.
 The analyzers to run, primary first. golangci-lint is the meta-linter; it
 collapses ~50 analyzers into one AST parse, so most dimensions need no extra tool.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| golangci-lint (primary) | `golangci-lint run --out-format json ./...` | complexity (gocyclo/gocognit), dup (dupl), dead code (unused/deadcode), idioms (revive), bugs (staticcheck), security (gosec), magic numbers (mnd), unchecked errors (errcheck), unused params (unparam) | `install-tools.sh --install go` |
-| go vet | `go vet ./...` | built-in correctness checks (printf, struct tags, lock copying) | bundled with toolchain |
-| deadcode | `deadcode -json ./...` | whole-program reachability for unused functions (more precise than `unused`) | `install-tools.sh --install go` (`golang.org/x/tools/cmd/deadcode`) |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| golangci-lint (primary) | `golangci-lint run --enable=gocyclo,gocognit,dupl,revive,unparam,gocritic,misspell --out-format json ./...` — **explicitly enable the smell linters**: its defaults are only `errcheck`/`govet`/`ineffassign`/`staticcheck`/`unused`, so the complexity/dup/idiom checks sniff cares about are OFF unless `--enable`d (or enabled in `.golangci.yml`). | complexity (gocyclo/gocognit), dup (dupl), dead code (unused), idioms (revive/gocritic), bugs (staticcheck), magic numbers (mnd), unchecked errors (errcheck), unused params (unparam), spelling (misspell) | default-on | `install-tools.sh --install go` |
+| go vet | `go vet ./...` | built-in correctness checks (printf, struct tags, lock copying) | default-on | bundled with toolchain |
+| deadcode | `deadcode -json ./...` | whole-program reachability for unused functions — `golangci`'s `unused` does NOT cover this | default-on | `install-tools.sh --install go` (`golang.org/x/tools/cmd/deadcode`) |
+| staticcheck / gocyclo / gocognit (standalone) | `staticcheck ./...` / `gocyclo .` / `gocognit .` | bugs / cyclomatic + cognitive complexity, run individually | opt-in (redundant — bundled in golangci-lint) | manual: `go install honnef.co/go/tools/cmd/staticcheck@latest` (and the gocyclo/gocognit cmds) |
+| gosec | `gosec -fmt json ./...` | security issues (injection, weak crypto, file perms) | opt-in (security, not smell) | manual: `go install github.com/securego/gosec/v2/cmd/gosec@latest` |
 
 Notes: golangci-lint is the single entry point — it already wraps `go vet` and
 makes **lizard and jscpd redundant for Go** (gocyclo/gocognit cover complexity,
-`dupl` covers token duplication). Respect `.golangci.yml`: if the project
-disables a linter, do not re-flag what it intentionally suppresses. Run
-`deadcode` on deep passes for whole-program dead-function detection that the
-file-local `unused` linter misses; note the gap if it is not installed.
+`dupl` covers token duplication). **But its defaults are minimal** — only
+`errcheck`/`govet`/`ineffassign`/`staticcheck`/`unused` run out of the box, so the
+smell linters sniff relies on (`gocyclo`, `gocognit`, `dupl`, `revive`,
+`unparam`, `gocritic`, `misspell`) must be `--enable`d explicitly (unless the repo
+already enables them in `.golangci.yml`). Respect `.golangci.yml`: if the project
+disables a linter, do not re-flag what it intentionally suppresses. Always run
+`deadcode` — it does whole-program unreachable-function detection that golangci's
+file-local `unused` linter does **not** cover; note the gap if it is not
+installed. Running standalone `staticcheck`/`gocyclo`/`gocognit` or `gosec` is
+opt-in: the first three are already bundled in golangci-lint (redundant), and
+`gosec` is a security scanner rather than a smell detector.
 
 ## Smell checklist
 

@@ -16,18 +16,19 @@ How sniff knows JSON is present: key files, extensions, config.
 
 ## Tools
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| biome | `npx biome lint --reporter=json <files>` | duplicate keys, formatting, basic structure | `install-tools.sh --install data` |
-| check-jsonschema | `check-jsonschema --schemafile <schema> <file>` | schema conformance against a JSON Schema | `install-tools.sh --install data` |
-| jq | `jq -e <filter> <file>` | ad-hoc structural queries only — **NOT a linter** | (usually present) |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| biome | `npx biome lint --reporter=json <files>` | duplicate keys, formatting, basic structure | default-on | `install-tools.sh --install data` |
+| check-jsonschema | `check-jsonschema --schemafile <schema> <file>` | schema conformance against a JSON Schema | opt-in (only when a `$schema` field or a known schema-backed config — GitHub workflows, Renovate, etc. — is present) | `install-tools.sh --install data` |
 
 Notes: biome is the primary format linter and catches the high-value duplicate-key
 case plus formatting; it also covers JSON inside JS/TS projects already using
 biome. check-jsonschema is the conformance gate when a schema exists (point
-`--schemafile` at a local schema or a registered URL). jq is for exploration and
-one-off extraction in the analysis itself — do not treat jq exit codes as lint
-findings. No grep fallback; if biome is absent, record a coverage gap.
+`--schemafile` at a local schema or a registered URL). **jq is NOT a linter and is
+excluded from the tool tiers** — it is for ad-hoc exploration and one-off
+extraction in the analysis itself (`jq -e <filter> <file>`); never treat jq exit
+codes as lint findings. No grep fallback; if biome is absent, record a coverage
+gap.
 
 ## Smell checklist
 

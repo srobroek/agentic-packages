@@ -13,12 +13,13 @@ How sniff knows Rust is present: a Cargo manifest plus `.rs` sources.
 The analyzers to run, primary first. Rust's standard toolchain covers nearly
 every dimension through clippy; resist stacking cross-language tools.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| clippy (primary) | `cargo clippy --message-format=json` — **first, with NO extra `-W` flags** (honors the repo's `[lints.clippy]` / `clippy.toml`, Hard Rule). Add `-- -W clippy::pedantic -W clippy::nursery` **only** when the repo pins no clippy lint config; on a repo that already raised the bar (e.g. a `chore/clippy-pedantic` branch) the extra flags re-flood it with hundreds of findings it deliberately allows. | idioms, complexity, dead code, perf, footguns — nearly all | `install-tools.sh --install rust` (rustup component) |
-| cargo-machete | `cargo machete` | unused declared dependencies (fast, manifest-level) | `install-tools.sh --install rust` |
-| cargo-udeps (nightly) | `cargo +nightly udeps --output json` | compiler-accurate unused deps; deep runs only | manual: `cargo install cargo-udeps` (not in a bundle) |
-| rustc lints | `cargo build --message-format=json` (compiler `warning` diagnostics) | dead_code, unused_variables, unreachable, type-level issues clippy may not duplicate | bundled with toolchain |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| clippy (primary) | `cargo clippy --message-format=json` — **first, with NO extra `-W` flags** (honors the repo's `[lints.clippy]` / `clippy.toml`, Hard Rule). Add `-- -W clippy::pedantic -W clippy::nursery` **only** when the repo pins no clippy lint config; on a repo that already raised the bar (e.g. a `chore/clippy-pedantic` branch) the extra flags re-flood it with hundreds of findings it deliberately allows. | idioms, complexity, dead code, perf, footguns — nearly all | default-on | `install-tools.sh --install rust` (rustup component) |
+| cargo-machete | `cargo machete` | unused declared dependencies (fast, manifest-level) | default-on | `install-tools.sh --install rust` |
+| rustc lints | `cargo build --message-format=json` (compiler `warning` diagnostics) | dead_code, unused_variables, unreachable, type-level issues clippy may not duplicate | default-on (implicit — runs under clippy's own compile) | bundled with toolchain |
+| cargo-udeps (nightly) | `cargo +nightly udeps --output json` | compiler-accurate unused deps; deep runs only | opt-in (nightly + full build; machete covers it) | manual: `cargo install cargo-udeps` (not in a bundle) |
+| cargo-geiger | `cargo geiger --output-format Json` | `unsafe` usage footprint across the dep tree | opt-in (unsafe-footprint audit, not general smell) | manual: `cargo install cargo-geiger` (not in a bundle) |
 
 Notes: clippy is the meta-linter — it is rustc-integrated and type/MIR aware, so
 it subsumes the complexity, dup, dead-code, and idiom dimensions other languages
@@ -50,6 +51,8 @@ complexity, and there is no idiomatic token-dup story worth a separate tool
 (cross-crate exact-file duplication is the one exception — see Pragmatism notes).
 cargo-udeps needs nightly — skip it (and note the gap) if `rust-toolchain.toml`
 pins stable and nightly is unavailable; `cargo machete` is the stable fallback.
+Rust has **no native duplication detector** — the cross-language `jscpd`/`lizard`
+tools cover that dimension when cross-crate exact-file duplication matters.
 
 ## Smell checklist
 

@@ -20,10 +20,10 @@ How sniff knows a GraphQL contract is present.
 Primary first. graphql-eslint lints SDL design; graphql-inspector diffs two
 schema versions for breaking changes.
 
-| Tool | Invocation | Covers | Installed via |
-|------|-----------|--------|---------------|
-| graphql-eslint | `npx eslint --format json <schema-glob>` (ESLint config enabling `@graphql-eslint/eslint-plugin` with a `*.graphql` override) | SDL smells: naming, nullability hints, deprecation, descriptions, unused types | `install-tools.sh --install api` |
-| graphql-inspector | `graphql-inspector diff <old-schema> <new-schema>` | breaking-/dangerous-/non-breaking-change classification between two schema versions | `install-tools.sh --install api` |
+| Tool | Invocation | Covers | Tier | Installed via |
+|------|-----------|--------|------|---------------|
+| graphql-eslint | `npx eslint --format json <schema-glob>` (ESLint config enabling `@graphql-eslint/eslint-plugin` with a `*.graphql` override) | SDL smells: naming, nullability hints, deprecation, descriptions, unused types | default-on (when an ESLint/Node toolchain is present) | `install-tools.sh --install api` |
+| graphql-inspector | `graphql-inspector diff <old-schema> <new-schema>` | breaking-/dangerous-/non-breaking-change classification between two schema versions | opt-in (needs a baseline schema / git ref, CI) | `install-tools.sh --install api` |
 
 Notes: graphql-eslint runs **through ESLint** — it needs an ESLint config with a
 `*.graphql`/`*.gql` override applying the GraphQL processor and parser; if the
