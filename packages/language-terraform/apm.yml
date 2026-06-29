@@ -1,5 +1,5 @@
 name: language-terraform
-version: 1.1.0
+version: 1.1.1
 description: >-
   Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's
   deployment-strategies specialists. No dedicated quality skill yet.

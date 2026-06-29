@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v1.1.0...speckit--v2.0.0) (2026-06-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** the /speckit.memory-md.* commands and the mcp-speckit-memory MCP server are no longer installed by speckit setup.
+
+### Features
+
+* **speckit:** drop memory-md extension and mcp-speckit-memory package ([#415](https://github.com/srobroek/agentic-packages/issues/415)) ([855bd7d](https://github.com/srobroek/agentic-packages/commit/855bd7d86bf8cadadbdc94179bc80c35eb06119d))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-v1.0.1...speckit--v1.1.0) (2026-06-27)
 
 

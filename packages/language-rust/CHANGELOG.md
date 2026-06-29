@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/language-rust--v1.1.0...language-rust--v1.1.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **build-native-plugins:** emit parseable {git,path} bundle deps ([#417](https://github.com/srobroek/agentic-packages/issues/417)) ([8bd39d4](https://github.com/srobroek/agentic-packages/commit/8bd39d47a8f03a7f162849099844ae332f858105))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/language-rust-v1.0.0...language-rust--v1.1.0) (2026-06-27)
 
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v2.0.0...srobroek-agentic--v3.0.0) (2026-06-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** the /speckit.memory-md.* commands and the mcp-speckit-memory MCP server are no longer installed by speckit setup.
+
+### Features
+
+* **speckit:** drop memory-md extension and mcp-speckit-memory package ([#415](https://github.com/srobroek/agentic-packages/issues/415)) ([855bd7d](https://github.com/srobroek/agentic-packages/commit/855bd7d86bf8cadadbdc94179bc80c35eb06119d))
+
+
+### Bug Fixes
+
+* **build-native-plugins:** emit parseable {git,path} bundle deps ([#417](https://github.com/srobroek/agentic-packages/issues/417)) ([8bd39d4](https://github.com/srobroek/agentic-packages/commit/8bd39d47a8f03a7f162849099844ae332f858105))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v1.3.0...srobroek-agentic--v2.0.0) (2026-06-28)
 
 
