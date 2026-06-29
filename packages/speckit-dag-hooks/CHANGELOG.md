@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v2.0.0...speckit-dag-hooks--v2.1.0) (2026-06-29)
+
+
+### Features
+
+* **speckit:** swap status extension for the maintained status-report ([#422](https://github.com/srobroek/agentic-packages/issues/422)) ([da823c6](https://github.com/srobroek/agentic-packages/commit/da823c6b6d238591f619c90284408455894ae78b))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v1.1.0...speckit-dag-hooks--v2.0.0) (2026-06-29)
 
 

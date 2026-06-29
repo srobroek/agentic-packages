@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/speckit--v3.0.0...speckit--v3.1.0) (2026-06-29)
+
+
+### Features
+
+* **speckit:** swap status extension for the maintained status-report ([#422](https://github.com/srobroek/agentic-packages/issues/422)) ([da823c6](https://github.com/srobroek/agentic-packages/commit/da823c6b6d238591f619c90284408455894ae78b))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v2.0.0...speckit--v3.0.0) (2026-06-29)
 
 
