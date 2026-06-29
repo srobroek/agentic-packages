@@ -992,18 +992,6 @@
         }
       ]
     },
-    "packages/mcp-speckit-memory": {
-      "release-type": "simple",
-      "component": "mcp-speckit-memory",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-tauri": {
       "release-type": "simple",
       "component": "mcp-tauri",

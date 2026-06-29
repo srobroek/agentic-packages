@@ -42,7 +42,6 @@ Pre-wired Model Context Protocol servers. Installing one adds the server's tools
 | `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
 | `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
-| `mcp-speckit-memory` | MCP server package for the Spec Kit Memory Hub (memory-md) extension: durable, repository-native project memory (decisions, bugs, lessons) with a SQLite cache exposed as MCP tools. The launcher resolves the project-local memory-md extension and builds its server in-place on first use, since the upstream binary is not published to npm. |
 | `mcp-tauri` | MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup. |
 <!-- END:mcp -->
 

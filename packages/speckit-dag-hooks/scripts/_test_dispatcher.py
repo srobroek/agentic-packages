@@ -105,22 +105,8 @@ def main():
     assert "spec.md" in d["reason"], "T3 reason: %r" % d["reason"]
     print("T3 PASS: HARD-MISSING block on specs/<feat>/spec.md, reason=%r" % d["reason"])
 
-    # T3b: memory-synthesis.md is a HARD prerequisite -> plan blocks when it is
-    # absent even though spec.md exists.
+    # T4: HARD-EXISTS fires (spec.md + plan.md present) -> PreToolUse deny.
     open(os.path.join(proj, "specs", "001-demo", "spec.md"), "w").write("x")
-    d = run(
-        "pre",
-        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.plan"},
-        env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo/"},
-        project_dir=proj,
-        cwd=proj,
-    )
-    assert d is not None and d["decision"] == "block", "T3b: expected block, got %r" % d
-    assert "memory-synthesis.md" in d["reason"], "T3b reason: %r" % d["reason"]
-    print("T3b PASS: HARD-MISSING block on memory-synthesis.md, reason=%r" % d["reason"])
-
-    # T4: HARD-EXISTS fires (spec.md + memory-synthesis.md + plan.md present) -> PreToolUse deny.
-    open(os.path.join(proj, "specs", "001-demo", "memory-synthesis.md"), "w").write("x")
     open(os.path.join(proj, "specs", "001-demo", "plan.md"), "w").write("x")
     d = run(
         "pre",
@@ -184,7 +170,6 @@ def main():
         json.dumps({"feature_directory": "specs/001-demo"})
     )
     open(os.path.join(wt, "specs", "001-demo", "spec.md"), "w").write("x")
-    open(os.path.join(wt, "specs", "001-demo", "memory-synthesis.md"), "w").write("x")
     d = run(
         "pre",
         {
@@ -281,9 +266,8 @@ def main():
         "speckit.review.run": "# /speckit.review.run",
         "speckit.qa.run": "# /speckit.qa.run",
         "speckit.critique.run": "# /speckit.critique.run",
-        # memory-md.init-project: its prefix (memory-md-init) is ITSELF a node,
+        # fleet.review: its prefix (fleet) is ITSELF a node (/speckit.fleet.run),
         # so this proves exact match wins over stripping to a real parent.
-        "speckit.memory-md.init-project": "# /speckit.memory-md.init-project",
         "speckit.fleet.review": "# /speckit.fleet.review",
     }
     for cmd, prefix in exact_cases.items():

@@ -130,15 +130,11 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 #                                          at setup time and its .zip archive is installed
 # `specify extension add --from` requires a real archive URL (a bare repo URL is fetched as a
 # zip and fails); `latest-release:` exists so we track newest WITHOUT pinning a version.
-#   memory-md -- installed from upstream's latest RELEASE (DyanGalih/spec-kit-memory-hub), NOT
-#   the community catalog: the catalog still serves the old 0.8.5, and the repo's `main` branch
-#   currently trails its release tags, so we resolve the latest release rather than a branch.
 EXTENSIONS=(
   agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
   fix-findings fleet github-issues iterate onboard optimize qa reconcile
   refine retro review roadmap security-review status tinyspec verify verify-tasks worktree
-  memory-md=latest-release:DyanGalih/spec-kit-memory-hub
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit
@@ -218,33 +214,6 @@ for entry in "${EXTENSIONS[@]}"; do
   fi
   specify extension enable "$ext" </dev/null >/dev/null 2>&1 || true
 done
-
-echo "==> 3.5/5 build the memory-md MCP server (if installed)"
-# The memory-md extension (DyanGalih/spec-kit-memory-hub) ships TypeScript source
-# but no built dist/ and no node_modules (both gitignored, stripped from the release
-# archive), and `speckit-memory` is NOT published to npm -- so the upstream
-# `npx -y speckit-memory mcp-start` cannot work. The mcp-speckit-memory APM package
-# registers a stdio MCP server that runs `node <ext>/dist/bin/speckit-memory.js
-# mcp-start`. Build it here, eagerly, so the first MCP launch doesn't pay a cold
-# better-sqlite3 native compile during the client's stdio-init handshake (which can
-# time out). The MCP launcher rebuilds on demand as a fallback if this is skipped.
-MEMORY_EXT_DIR=".specify/extensions/memory-md"
-if [ ! -f "$MEMORY_EXT_DIR/package.json" ]; then
-  echo "    memory-md not installed (no $MEMORY_EXT_DIR/package.json) -- skipping build"
-elif [ -f "$MEMORY_EXT_DIR/dist/bin/speckit-memory.js" ]; then
-  echo "    = memory-md server already built -- skipping (rm dist/ to rebuild)"
-elif ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
-  echo "    WARNING: node/npm not on PATH -- cannot build the memory-md MCP server now;" >&2
-  echo "             the MCP launcher will build it on first use instead." >&2
-else
-  echo "    + building memory-md MCP server in $MEMORY_EXT_DIR (npm install && npm run build)"
-  # Best-effort: a build failure (e.g. no C toolchain for better-sqlite3) must not
-  # abort setup -- the launcher retries on demand and surfaces the same error there.
-  if ! ( cd "$MEMORY_EXT_DIR" && npm install --no-audit --no-fund && npm run build ); then
-    echo "    WARNING: memory-md MCP server build failed (need Node.js >=18 + a C" >&2
-    echo "             toolchain for better-sqlite3); the launcher will retry on first use." >&2
-  fi
-fi
 
 echo "==> 4/5 register extension commands for: ${RENDER_LIST[*]} (primary=$INTEGRATION)"
 # `specify extension add` only renders an extension's command files for the
