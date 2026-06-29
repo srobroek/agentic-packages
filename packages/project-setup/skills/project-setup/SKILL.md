@@ -254,6 +254,14 @@ declared choice. Read ONLY the manifest's `[[inputs]]` for this (it is data) —
 `module.py` or runner logic. Do not truncate, summarize, or substitute your own shortlist
 for what the manifest declares.
 
+**RULE 6 — keep the user oriented: always say which MODULE you're on.** The user should
+never wonder what a question or action belongs to. Prefix every interview question with
+its module (e.g. "**lang-python** — which Python version?", "**license-write** — pick a
+license:"), and as the runner executes, note each module as its steps run (e.g.
+"Running **gitignore-generate**…", then a one-line result). Group questions by module and
+announce the module before its block. A brief running account of which module is active —
+during the interview AND during execution — is the goal; keep it concise, not verbose.
+
 ## Module selection (FR-005)
 
 Before running the pipeline for a new project, you MUST conduct module selection:
