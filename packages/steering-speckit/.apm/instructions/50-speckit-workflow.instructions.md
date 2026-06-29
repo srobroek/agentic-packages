@@ -131,7 +131,7 @@ Use the right tool for the gap:
 
 ## On Resume
 
-1. Determine the last completed step; `/speckit.status.show` shows current
+1. Determine the last completed step; `/speckit.status-report.show` shows current
    spec state
 2. Resume at the appropriate workflow step
 
@@ -159,6 +159,9 @@ Commands outside the numbered workflow above.
 - `fix-findings` -- fix issues from verify/review/qa
 - `reconcile.run` -- reconcile divergent state
 - `doctor.check` -- diagnose speckit health
+- `status-report.show` -- read-only workflow progress (active feature, artifact
+  status, task completion, next-action recommendation). Anytime/advisory. Writes
+  a regenerated `specs/spec-status.md` on each run (gitignored).
 
 ### Diagrams
 - `diagram.status` -- status diagram

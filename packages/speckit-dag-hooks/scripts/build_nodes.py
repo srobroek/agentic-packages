@@ -605,7 +605,7 @@ COMMAND_LABELS: dict = {
     "review-tests": "/speckit.review.tests",
     "review-types": "/speckit.review.types",
     "roadmap-write": "/speckit.roadmap.write",
-    "status-show": "/speckit.status.show",
+    "status-report-show": "/speckit.status-report.show",
     "sync-analyze": "/speckit.sync.analyze",
     "sync-conflicts": "/speckit.sync.conflicts",
     "tinyspec-classify": "/speckit.tinyspec.classify",
@@ -1423,11 +1423,11 @@ def build_main_graph() -> Graph:
     # Phase: status / doctor / worktree advisory + utility
     # ======================================================================
     g.node(
-        "status-show",
-        title="/speckit.status.show",
-        context=["Read-only. Surfaces current feature + which artefacts exist."],
+        "status-report-show",
+        title="/speckit.status-report.show",
+        context=["Read-only progress report. Surfaces current feature + which artefacts exist."],
         soft=["(none; reads .specify/feature.json + spec/plan/task artefacts)"],
-        postconditions=["(no artefact)"],
+        postconditions=["`specs/spec-status.md` (regenerated each run; gitignored)"],
         conditional=[
             "Use the output to pick the next DAG node -- typically the first phase whose artefact is missing.",
         ],
@@ -1613,7 +1613,7 @@ def build_main_graph() -> Graph:
     g.phase("tinyspec", ["tinyspec-classify", "tinyspec-tinyspec", "tinyspec-implement"])
     g.phase("github-issues", ["github-issues-import", "github-issues-link", "github-issues-sync"])
     g.phase("orchestration", ["fleet", "fleet-review", "conduct"])
-    g.phase("utility", ["status-show", "doctor-check", "worktree-create", "worktree-list", "worktree-clean", "critique-critique-template", "qa-qa-template", "retro-retro-template"])
+    g.phase("utility", ["status-report-show", "doctor-check", "worktree-create", "worktree-list", "worktree-clean", "critique-critique-template", "qa-qa-template", "retro-retro-template"])
 
     return g
 

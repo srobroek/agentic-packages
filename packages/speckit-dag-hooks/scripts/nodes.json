@@ -1225,7 +1225,7 @@
       "title": "/speckit.specify -- before you run this"
     }
   },
-  "status-show": {
+  "status-report-show": {
     "post": {
       "conditional": [
         "Use the output to pick the next DAG node -- typically the first phase whose artefact is missing."
@@ -1234,21 +1234,21 @@
         "(return to invoker)"
       ],
       "postconditions": [
-        "(no artefact)"
+        "`specs/spec-status.md` (regenerated each run; gitignored)"
       ],
-      "title": "/speckit.status.show -- what to do next"
+      "title": "/speckit.status-report.show -- what to do next"
     },
     "pre": {
       "came_from": [
         "(anytime -- advisory)"
       ],
       "context": [
-        "Read-only. Surfaces current feature + which artefacts exist."
+        "Read-only progress report. Surfaces current feature + which artefacts exist."
       ],
       "soft": [
         "(none; reads .specify/feature.json + spec/plan/task artefacts)"
       ],
-      "title": "/speckit.status.show -- before you run this"
+      "title": "/speckit.status-report.show -- before you run this"
     }
   },
   "sync-analyze": {
