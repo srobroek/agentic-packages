@@ -41,3 +41,6 @@ __pycache__/
 
 # uv lockfiles (runner is dependency-free; no committed lock)
 uv.lock
+
+# Internal scratch: decision logs, proposals, audits (not for the public repo)
+reviews/
