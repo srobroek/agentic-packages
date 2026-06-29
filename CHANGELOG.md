@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.0.0...srobroek-agentic--v4.0.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* release-please workflow aborts when there is nothing to release ([#423](https://github.com/srobroek/agentic-packages/issues/423)) ([5c8209f](https://github.com/srobroek/agentic-packages/commit/5c8209fd62d18ef00fe6ed7d5155db41102be070))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v3.0.0...srobroek-agentic--v4.0.0) (2026-06-29)
 
 
