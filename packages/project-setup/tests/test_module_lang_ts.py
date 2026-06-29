@@ -318,7 +318,12 @@ def _frozen_plan_with_pins(
     dev_deps: list[str] | None = None,
     package_manager_pin: str = "bun@1.1.38",
 ) -> Path:
-    """Build a frozen plan.json that carries resolved agent pins."""
+    """Build a frozen plan.json that carries resolved agent pins.
+
+    Spec-013 fields (template_id, runtime, node_line, ui_kit_id,
+    ui_kit_init_command) are omitted intentionally; the module defaults them
+    to "none"/"bun"/"" via get_str defaults so these tests are unaffected.
+    """
     plan = {
         "schema_version": 1,
         "mode": mode,
@@ -337,6 +342,14 @@ def _frozen_plan_with_pins(
                     "pinned_deps": pinned_deps if pinned_deps is not None else ["vue@3.5.13"],
                     "dev_deps": dev_deps if dev_deps is not None else ["typescript@5.7.2", "@biomejs/biome@1.9.4"],
                     "package_manager_pin": package_manager_pin,
+                    # Spec-013 defaults: template_id=none avoids template writes in
+                    # pre-013 tests; runtime=bun avoids .node-version writes.
+                    "template_id": "none",
+                    "runtime": "bun",
+                    "node_line": "",
+                    "ui_kit_id": "none",
+                    "ui_kit_init_command": "",
+                    "test_runner": "",
                 },
                 "steps": [{"id": "write", "kind": "python"}],
             }
@@ -571,6 +584,7 @@ def test_sc006_pinned_package_json_is_deterministic(tmp_path):
         tmp_path,
         mode="reproduce",
         framework="plain",
+        package_manager="pnpm",  # consistent with package_manager_pin=pnpm@9.14.2
         pinned_deps=["vue@3.5.13"],
         dev_deps=["typescript@5.7.2", "@biomejs/biome@1.9.4"],
         package_manager_pin="pnpm@9.14.2",
@@ -593,6 +607,68 @@ def test_sc006_pinned_package_json_is_deterministic(tmp_path):
         "package.json is not byte-identical across two runs — Tier-1 determinism violated.\n"
         f"Run 1:\n{content1.decode()}\nRun 2:\n{content2.decode()}"
     )
+
+
+# ── spec 013 Phase 1: manifest-level assertions ───────────────────────────────
+
+def test_013_manifest_no_errors():
+    """spec 013 Phase 1: manifest parses with no errors (when predicate on declared ui_kit_id)."""
+    manifest = _load("manifest")
+    mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
+    assert not mani.errors, (
+        "lang-ts manifest has errors after spec-013 Phase 1 changes: "
+        + str(mani.errors)
+    )
+
+
+def test_013_six_new_inputs_declared():
+    """spec 013 Phase 1: all six new agent-decided inputs are declared."""
+    manifest = _load("manifest")
+    mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
+    input_keys = {inp.key for inp in mani.inputs}
+    for key in ("test_runner", "template_id", "ui_kit_id", "ui_kit_init_command", "runtime", "node_line"):
+        assert key in input_keys, f"Expected declared input '{key}' in lang-ts manifest"
+
+
+def test_013_step_order():
+    """spec 013 Phase 1: step IDs are in the exact order mandated by FR-019."""
+    manifest = _load("manifest")
+    mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
+    assert [s.id for s in mani.steps] == [
+        "resolve",
+        "pins",
+        "write",
+        "run-generator",
+        "scaffold",
+        "ui-kit-init",
+        "ui-kit-scaffold",
+    ], f"Unexpected step order: {[s.id for s in mani.steps]}"
+
+
+def test_013_ui_kit_init_step_fields():
+    """spec 013 Phase 1: ui-kit-init gate step has correct kind, hardness, init_only, allow_flag, when."""
+    manifest = _load("manifest")
+    mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
+    step = next((s for s in mani.steps if s.id == "ui-kit-init"), None)
+    assert step is not None, "ui-kit-init step not found in manifest"
+    assert step.kind == "gate", f"Expected kind=gate, got: {step.kind!r}"
+    assert step.hardness == "hard", f"Expected hardness=hard, got: {step.hardness!r}"
+    assert step.init_only is True, "Expected init_only=True"
+    assert step.allow_flag == "allow-ui-kit-init", (
+        f"Expected allow_flag='allow-ui-kit-init', got: {step.allow_flag!r}"
+    )
+    assert step.when == "ui_kit_id != none", (
+        f"Expected when='ui_kit_id != none', got: {step.when!r}"
+    )
+
+
+def test_013_ui_kit_scaffold_step_is_python():
+    """spec 013 Phase 1: ui-kit-scaffold step is kind=python."""
+    manifest = _load("manifest")
+    mani = manifest.parse_manifest(_PLUGIN_ROOT / _MODULE_REL / "module.toml")
+    step = next((s for s in mani.steps if s.id == "ui-kit-scaffold"), None)
+    assert step is not None, "ui-kit-scaffold step not found in manifest"
+    assert step.kind == "python", f"Expected kind=python, got: {step.kind!r}"
 
 
 def test_sc006_scaffolder_absence_does_not_block_pinned_write(tmp_path):
@@ -632,3 +708,469 @@ def test_sc006_scaffolder_absence_does_not_block_pinned_write(tmp_path):
     data = json.loads(pkg_json.read_text())
     assert data.get("dependencies", {}).get("vue") == "3.5.13"
     assert data.get("packageManager") == "bun@1.1.38"
+
+
+# ── spec 013 Phase 2 & 3: helper + new tests ─────────────────────────────────
+
+def _frozen_plan_013(
+    tmp: Path,
+    *,
+    mode: str = "reproduce",
+    framework: str = "vite",
+    package_manager: str = "bun",
+    pinned_deps: list[str] | None = None,
+    dev_deps: list[str] | None = None,
+    package_manager_pin: str = "bun@1.1.38",
+    template_id: str = "none",
+    runtime: str = "bun",
+    node_line: str = "",
+    ui_kit_id: str = "none",
+    ui_kit_init_command: str = "",
+    step_id: str = "write",
+) -> Path:
+    """Build a frozen plan for spec-013 Phase 2/3 tests (write or ui-kit-scaffold step)."""
+    plan = {
+        "schema_version": 1,
+        "mode": mode,
+        "order": ["lang-ts"],
+        "modules": {
+            "lang-ts": {
+                "id": "lang-ts",
+                "version": "1.0.0",
+                "reconcile": True,
+                "module_rel_root": _MODULE_REL,
+                "answers": {
+                    "package_manager": package_manager,
+                    "framework": framework,
+                    "target": "",
+                    "ui_kit": "",
+                    "pinned_deps": pinned_deps if pinned_deps is not None else [],
+                    "dev_deps": dev_deps if dev_deps is not None else [],
+                    "package_manager_pin": package_manager_pin,
+                    "template_id": template_id,
+                    "runtime": runtime,
+                    "node_line": node_line,
+                    "ui_kit_id": ui_kit_id,
+                    "ui_kit_init_command": ui_kit_init_command,
+                    "test_runner": "",
+                },
+                "steps": [{"id": step_id, "kind": "python"}],
+            }
+        },
+    }
+    p = tmp / "plan.json"
+    p.write_text(json.dumps(plan))
+    return p
+
+
+def _run_step(
+    project: Path,
+    plan: Path,
+    stub_dir: Path | None = None,
+    *,
+    step: str = "write",
+    inspect: bool = False,
+) -> "subprocess.CompletedProcess":
+    """Run an arbitrary step (write or ui-kit-scaffold) via uv run."""
+    module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
+    cmd = ["uv", "run", str(module_py), "--plan", str(plan), "--step", step]
+    if inspect:
+        cmd.append("--inspect")
+    env = {**os.environ, "PLUGIN_ROOT": str(_PLUGIN_ROOT), "PROJECT_DIR": str(project)}
+    if stub_dir is not None:
+        env["PATH"] = f"{stub_dir}:{env.get('PATH', '')}"
+    return subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=str(project))
+
+
+# ── SC-001 (spec 013): vite + vitest-browser template + bun → writes vitest.config.ts ─
+
+def test_013_sc001_vitest_browser_template_written(tmp_path):
+    """SC-001: framework=vite, template_id=vitest-browser, package_manager=bun,
+    package_manager_pin=bun@1.1.38 → writes package.json (packageManager=bun@1.1.38),
+    vitest.config.ts from templates/vitest-browser/, NO .node-version."""
+    project = tmp_path / "myapp"
+    project.mkdir()
+    stub_dir = _stub_pkg_managers(tmp_path)
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="reproduce",
+        framework="vite",
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        template_id="vitest-browser",
+        runtime="bun",
+        node_line="",
+    )
+
+    proc = _run_step(project, plan_path, stub_dir, step="write")
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    # vitest.config.ts written from template
+    vitest_config = project / "vitest.config.ts"
+    assert vitest_config.exists(), "vitest.config.ts not written"
+    content = vitest_config.read_text()
+    assert "jsdom" in content, "expected jsdom environment in vitest-browser template"
+    assert "defineConfig" in content
+
+    # package.json with packageManager
+    pkg_json = project / "package.json"
+    assert pkg_json.exists(), "package.json not written"
+    data = json.loads(pkg_json.read_text())
+    assert data.get("packageManager") == "bun@1.1.38"
+
+    # No .node-version for bun runtime
+    assert not (project / ".node-version").exists(), ".node-version must NOT be written for bun runtime"
+
+
+# ── SC-002 (spec 013): two _do_write invocations → byte-identical output ─────
+
+def test_013_sc002_write_is_byte_identical(tmp_path):
+    """SC-002: two runs with the same frozen plan produce byte-identical files."""
+    project = tmp_path / "myapp"
+    project.mkdir()
+    stub_dir = _stub_pkg_managers(tmp_path)
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="reproduce",
+        framework="vite",
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        template_id="vitest-browser",
+        runtime="bun",
+        node_line="",
+    )
+
+    proc1 = _run_step(project, plan_path, stub_dir, step="write")
+    assert proc1.returncode == 0, proc1.stderr
+    content_vitest1 = (project / "vitest.config.ts").read_bytes()
+    content_pkg1 = (project / "package.json").read_bytes()
+
+    # Delete files so second run writes fresh
+    (project / "vitest.config.ts").unlink()
+    (project / "package.json").unlink()
+
+    proc2 = _run_step(project, plan_path, stub_dir, step="write")
+    assert proc2.returncode == 0, proc2.stderr
+    content_vitest2 = (project / "vitest.config.ts").read_bytes()
+    content_pkg2 = (project / "package.json").read_bytes()
+
+    assert content_vitest1 == content_vitest2, (
+        "vitest.config.ts is not byte-identical across two runs — Tier-1 determinism violated"
+    )
+    assert content_pkg1 == content_pkg2, (
+        "package.json is not byte-identical across two runs — Tier-1 determinism violated"
+    )
+
+
+# ── SC-006 (spec 013): runtime=node → .node-version + engines + packageManager ─
+
+def test_013_sc006_node_runtime_writes_node_version_and_engines(tmp_path):
+    """SC-006: runtime=node, node_line=22, pnpm@9.14.2 → .node-version=22, engines.node=>=22."""
+    project = tmp_path / "myapp"
+    project.mkdir()
+    stub_dir = _stub_pkg_managers(tmp_path)
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="reproduce",
+        framework="plain",
+        package_manager="pnpm",
+        package_manager_pin="pnpm@9.14.2",
+        template_id="none",
+        runtime="node",
+        node_line="22",
+    )
+
+    proc = _run_step(project, plan_path, stub_dir, step="write")
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    # .node-version written
+    nv = project / ".node-version"
+    assert nv.exists(), ".node-version not written for runtime=node"
+    assert nv.read_text() == "22\n", f"Expected '22\\n', got {nv.read_text()!r}"
+
+    # package.json: engines + packageManager
+    pkg_json = project / "package.json"
+    assert pkg_json.exists()
+    data = json.loads(pkg_json.read_text())
+    assert data.get("engines", {}).get("node") == ">=22", (
+        f"Expected engines.node=>=22; got: {data.get('engines')}"
+    )
+    assert data.get("packageManager") == "pnpm@9.14.2", (
+        f"Expected packageManager=pnpm@9.14.2; got: {data.get('packageManager')}"
+    )
+
+
+# ── SC-007 (spec 013): bun@latest → INPUT_VALUE_INVALID ──────────────────────
+
+def test_013_sc007_pm_pin_latest_rejected(tmp_path):
+    """SC-007: package_manager_pin='bun@latest' → INPUT_VALUE_INVALID, nothing written."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="init",
+        framework="plain",
+        package_manager="bun",
+        package_manager_pin="bun@latest",
+        template_id="none",
+        runtime="bun",
+        node_line="",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    def _stub_verify(pins, ecosystem, **kwargs):
+        return {p: sdk.PIN_VERIFIED for p in pins}
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_stub_verify):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = _io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 1, "Expected non-zero exit for bun@latest pin"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "error", result
+    assert result["error"] is not None
+    error_text = str(result["error"])
+    assert "bun@latest" in error_text or "INPUT_VALUE_INVALID" in error_text or "invalid" in error_text.lower(), (
+        f"Expected INPUT_VALUE_INVALID about bun@latest; got: {result['error']}"
+    )
+    # Nothing written
+    assert not (project / "package.json").exists(), "package.json must not be written for invalid pin"
+
+
+# ── SC-008 (spec 013): PM/pin mismatch → INPUT_VALUE_INVALID ──────────────────
+
+def test_013_sc008_pm_pin_mismatch_rejected(tmp_path):
+    """SC-008: package_manager=bun, package_manager_pin=pnpm@9.14.2 → INPUT_VALUE_INVALID."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="init",
+        framework="plain",
+        package_manager="bun",
+        package_manager_pin="pnpm@9.14.2",  # mismatch: PM=bun but pin=pnpm
+        template_id="none",
+        runtime="bun",
+        node_line="",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    def _stub_verify(pins, ecosystem, **kwargs):
+        return {p: sdk.PIN_VERIFIED for p in pins}
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_stub_verify):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = _io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 1, "Expected non-zero exit for PM/pin mismatch"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "error", result
+    assert result["error"] is not None
+    assert not (project / "package.json").exists(), "package.json must not be written for PM/pin mismatch"
+
+
+# ── SC-009 (spec 013): unknown template_id → INPUT_VALUE_INVALID ──────────────
+
+def test_013_sc009_unknown_template_id_rejected(tmp_path):
+    """SC-009: template_id='bogus' → INPUT_VALUE_INVALID, no config file written."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+    (project / ".gitignore").write_text("# base\n")
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="init",
+        framework="plain",
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        template_id="bogus",  # not in _ALLOWED_TEMPLATE_IDS
+        runtime="bun",
+        node_line="",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="write", inspect=False, plan=str(plan_path))
+
+    def _stub_verify(pins, ecosystem, **kwargs):
+        return {p: sdk.PIN_VERIFIED for p in pins}
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "verify_pins", side_effect=_stub_verify):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = _io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_write(sdk, inputs, args_ns)
+
+    assert ret == 1, "Expected non-zero exit for bogus template_id"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "error", result
+    # No config file should exist
+    assert not (project / "vitest.config.ts").exists(), "vitest.config.ts must not be written for invalid template_id"
+    assert not (project / "playwright.config.ts").exists(), "playwright.config.ts must not be written for invalid template_id"
+
+
+# ── SC-010 (spec 013): bad ui_kit_init_command → INPUT_VALUE_INVALID ──────────
+
+def test_013_sc010_bad_ui_kit_init_command_rejected(tmp_path):
+    """SC-010: ui_kit_id=shadcn, ui_kit_init_command='rm -rf /' → INPUT_VALUE_INVALID."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="init",
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        ui_kit_id="shadcn",
+        ui_kit_init_command="rm -rf /",  # not in allowlist
+        step_id="ui-kit-scaffold",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="ui-kit-scaffold", inspect=False, plan=str(plan_path))
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+        captured = _io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            ret = mmod._do_ui_kit_scaffold(sdk, inputs, args_ns)
+
+    assert ret == 1, "Expected non-zero exit for disallowed ui_kit_init_command"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "error", result
+    assert result["error"] is not None
+
+
+# ── SC-012 (spec 013): ui_kit_id=none → _do_ui_kit_scaffold no-op ────────────
+
+def test_013_sc012_ui_kit_id_none_is_noop(tmp_path):
+    """SC-012: ui_kit_id=none → _do_ui_kit_scaffold returns 0, nothing executed."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="init",
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        ui_kit_id="none",
+        ui_kit_init_command="",
+        step_id="ui-kit-scaffold",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="ui-kit-scaffold", inspect=False, plan=str(plan_path))
+
+    run_tool_called = []
+
+    def _should_not_run(*args, **kwargs):
+        run_tool_called.append(args)
+        return False
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "run_tool", side_effect=_should_not_run):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = _io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_ui_kit_scaffold(sdk, inputs, args_ns)
+
+    assert ret == 0, "Expected 0 for ui_kit_id=none"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "ok", result
+    assert not run_tool_called, "run_tool must NOT be called when ui_kit_id=none"
+
+
+# ── reproduce safe-skip (spec 013 FR-010, SC-005): ui-kit-scaffold writes note ─
+
+def test_013_ui_kit_scaffold_reproduce_safe_skips(tmp_path):
+    """Reproduce path: ui_kit_id=shadcn + valid command + mode=reproduce →
+    STACK-NOTES.md written with command, run_tool NOT called."""
+    mmod = _load_module_inprocess()
+    sdk = sys.modules["ps_sdk"]
+
+    project = tmp_path / "myapp"
+    project.mkdir()
+
+    plan_path = _frozen_plan_013(
+        tmp_path,
+        mode="reproduce",  # not init → safe-skip
+        package_manager="bun",
+        package_manager_pin="bun@1.1.38",
+        ui_kit_id="shadcn",
+        ui_kit_init_command="bunx shadcn@latest init --defaults",
+        step_id="ui-kit-scaffold",
+    )
+
+    import unittest.mock, types, io as _io, contextlib
+
+    args_ns = types.SimpleNamespace(step="ui-kit-scaffold", inspect=False, plan=str(plan_path))
+
+    run_tool_called = []
+
+    def _should_not_run(*args, **kwargs):
+        run_tool_called.append(args)
+        return False
+
+    with unittest.mock.patch.dict(os.environ, {"PROJECT_DIR": str(project), "PLUGIN_ROOT": str(_PLUGIN_ROOT)}):
+        with unittest.mock.patch.object(sdk, "run_tool", side_effect=_should_not_run):
+            inputs = sdk.load_frozen_inputs(str(plan_path), module_id="lang-ts")
+            captured = _io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                ret = mmod._do_ui_kit_scaffold(sdk, inputs, args_ns)
+
+    assert ret == 0, f"Expected 0 for safe-skip; got {ret}; stdout={captured.getvalue()}"
+    result = json.loads(captured.getvalue())
+    assert result["status"] == "ok", result
+    assert not run_tool_called, "run_tool must NOT be called on reproduce"
+
+    # STACK-NOTES.md must contain the init command
+    stack_notes = project / "STACK-NOTES.md"
+    assert stack_notes.exists(), "STACK-NOTES.md not written on reproduce safe-skip"
+    notes_content = stack_notes.read_text()
+    assert "bunx shadcn@latest init --defaults" in notes_content, (
+        f"Expected init command in STACK-NOTES.md; got:\n{notes_content}"
+    )

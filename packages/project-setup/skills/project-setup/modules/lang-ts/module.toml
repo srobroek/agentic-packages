@@ -44,6 +44,43 @@ prompt = "UI kit (optional, e.g. shadcn, naive-ui — leave empty for none)?"
 default = ""
 required = false
 
+# spec 013: agent-decided depth-resolver answers, declared so `when` predicates parse (004 OQ-2).
+[[inputs]]
+key = "test_runner"
+type = "string"
+default = ""
+required = false
+
+[[inputs]]
+key = "template_id"
+type = "string"
+default = "none"
+required = false
+
+[[inputs]]
+key = "ui_kit_id"
+type = "string"
+default = "none"
+required = false
+
+[[inputs]]
+key = "ui_kit_init_command"
+type = "string"
+default = ""
+required = false
+
+[[inputs]]
+key = "runtime"
+type = "string"
+default = "bun"
+required = false
+
+[[inputs]]
+key = "node_line"
+type = "string"
+default = ""
+required = false
+
 [[steps]]
 id = "resolve"
 kind = "agent"
@@ -80,4 +117,24 @@ message = "Run the external framework scaffolder (network; nuxi/create-vite/bun 
 
 [[steps]]
 id = "scaffold"
+kind = "python"
+
+# G7 — ui-kit-init gate (spec 013 FR-007, FR-011). HARD gate guards the
+# non-idempotent network command `shadcn init` (or equivalent). init_only=true
+# so a plain reproduce auto-proceeds (the consented decision replays byte-
+# identically) but ui-kit-scaffold safe-skips on reproduce to avoid clobbering
+# already-scaffolded files. The `when` drops the gate entirely when ui_kit_id is
+# "none" (the declared default) so pure-TS projects never see the prompt.
+# CI opts in via --allow-ui-kit-init.
+[[steps]]
+id = "ui-kit-init"
+kind = "gate"
+hardness = "hard"
+allow_flag = "allow-ui-kit-init"
+init_only = true
+when = "ui_kit_id != none"
+message = "UI-kit init command (agent-decided; non-idempotent, reaches network):\n{decision}\nRun the UI-kit init command?"
+
+[[steps]]
+id = "ui-kit-scaffold"
 kind = "python"

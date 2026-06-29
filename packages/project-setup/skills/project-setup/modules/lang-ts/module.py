@@ -35,10 +35,35 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
 _TEMPLATES = Path(__file__).resolve().parent / "templates"
+
+# Allowed template_id enum values (FR-002, SC-009).
+_ALLOWED_TEMPLATE_IDS: frozenset[str] = frozenset({
+    "vitest-node",
+    "vitest-browser",
+    "bun-test",
+    "playwright-only",
+    "vitest-node+playwright",
+    "none",
+})
+
+# Allowed ui_kit_init_command prefixes (FR-008, SC-010, OQ-4 v1 allowlist).
+# nuxt-ui entries deferred with nuxt-ui (OQ-2).
+_UI_KIT_ALLOWLIST: tuple[str, ...] = (
+    "npx shadcn",
+    "bunx shadcn",
+    "pnpm dlx shadcn",
+)
+
+# packageManager pin shape: name@MAJOR.MINOR.PATCH[optional prerelease/build].
+# Rejects bare names, "latest", and ranges (FR-013, Decision D, SC-007).
+_PM_PIN_RE = re.compile(
+    r"[a-z@][a-z0-9._/@-]*@\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]*)?"
+)
 
 
 def _load_sdk():
@@ -96,6 +121,8 @@ def _patch_package_json(
     dev_deps: list[str],
     package_manager_pin: str,
     warnings: list[str],
+    *,
+    engines: dict[str, str] | None = None,
 ) -> bool:
     """Write merged runtime + dev deps into package.json.
 
@@ -104,6 +131,10 @@ def _patch_package_json(
     top-level ``packageManager`` field from package_manager_pin.  Writes with
     ``json.dumps(..., indent=2, sort_keys=True) + "\\n"`` for byte-stable
     determinism (Tier-1 guarantee: same answers → byte-identical output).
+
+    The optional *engines* keyword parameter (FR-014) additively merges the
+    provided dict into ``package.json["engines"]`` (sorted keys). Existing
+    callers that do not pass *engines* are unaffected (additive, keyword-only).
 
     Returns True if the file was written.  Never raises.
     """
@@ -136,6 +167,12 @@ def _patch_package_json(
         if package_manager_pin:
             data["packageManager"] = package_manager_pin
 
+        # Merge engines (FR-014/015, keyword-only, additive).
+        if engines:
+            existing_engines: dict[str, str] = dict(data.get("engines") or {})
+            existing_engines.update(engines)
+            data["engines"] = dict(sorted(existing_engines.items()))
+
         pkg_json_path.write_text(
             json.dumps(data, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -149,12 +186,17 @@ def _patch_package_json(
 def _patch_pins_into_package_json(
     sdk, project_dir, pinned_deps, dev_deps, package_manager_pin,
     diffs, files_written, warnings, *, inspect: bool,
+    engines: dict[str, str] | None = None,
 ) -> None:
     """Merge the frozen pins into package.json (idempotent; safe to call twice).
 
     Called once in the deterministic ``write`` step and again after the external
     generator runs in ``scaffold`` (the generator may have --force-overwritten
     package.json, dropping the pins — re-merging restores the frozen decision).
+
+    The optional *engines* keyword argument (FR-014) is passed through to
+    ``_patch_package_json`` for node-runtime engine constraints. Scaffold
+    re-merge calls this without *engines* (default None) — behaviour unchanged.
     """
     any_pins = bool(pinned_deps or dev_deps or package_manager_pin)
     if not any_pins:
@@ -176,6 +218,7 @@ def _patch_pins_into_package_json(
         dev_deps=list(dev_deps),
         package_manager_pin=package_manager_pin,
         warnings=warnings,
+        engines=engines,
     )
     if patched:
         if "package.json" not in files_written:
@@ -201,6 +244,9 @@ def _do_write(sdk, inputs, args) -> int:
     pinned_deps: list[str] = inputs.get_list("pinned_deps", default=[])
     dev_deps: list[str] = inputs.get_list("dev_deps", default=[])
     package_manager_pin: str = inputs.get_str("package_manager_pin", default="")
+    template_id: str = inputs.get_str("template_id", default="none") or "none"
+    runtime: str = inputs.get_str("runtime", default="bun") or "bun"
+    node_line: str = inputs.get_str("node_line", default="")
 
     # Normalize framework to known values; treat unknowns as "plain"
     if framework not in ("nuxt", "vite", "plain", "sst"):
@@ -217,6 +263,72 @@ def _do_write(sdk, inputs, args) -> int:
     warnings: list[str] = list(warnings_pre)
     diffs = []
     files_written: list[str] = []
+
+    # ── PM pin shape validation (FR-013, Decision D, SC-007) ──────────────── #
+    # Must reject "bun@latest", bare "bun", and ranges like "^1.0.0".
+    if package_manager_pin and not re.fullmatch(_PM_PIN_RE, package_manager_pin):
+        error = sdk.SetupError(
+            error_code=sdk.ErrorCode.INPUT_VALUE_INVALID,
+            module_id="lang-ts",
+            expected="packageManager pin in name@MAJOR.MINOR.PATCH format",
+            received=repr(package_manager_pin),
+            how_to_fix=(
+                f"package_manager_pin {package_manager_pin!r} is not a valid exact "
+                "semver pin. Use name@X.Y.Z (no 'latest', no ranges). "
+                "Re-run with --refresh lang-ts to let the agent correct it."
+            ),
+        )
+        sdk.emit_result(sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="error",
+            files_written=[], diffs=[], warnings=warnings, error=error.to_dict(),
+        ))
+        return 1
+
+    # ── PM/runtime consistency (FR-017, SC-008) ───────────────────────────── #
+    # pkg_manager (interview choice) must agree with pin name prefix.
+    if package_manager_pin:
+        pin_name = package_manager_pin.split("@")[0] if "@" in package_manager_pin else package_manager_pin
+        # For scoped packages (e.g. @foo/bar@1.2.3) the split at "@" gives "" for
+        # the first element; use rfind-based split in that case.
+        if not pin_name:
+            # scoped: last @ separates version; everything before is the name
+            at_idx = package_manager_pin.rfind("@")
+            pin_name = package_manager_pin[:at_idx]
+        if pin_name and pin_name != pkg_manager:
+            error = sdk.SetupError(
+                error_code=sdk.ErrorCode.INPUT_VALUE_INVALID,
+                module_id="lang-ts",
+                expected=f"package_manager_pin name to match package_manager ('{pkg_manager}')",
+                received=repr(package_manager_pin),
+                how_to_fix=(
+                    f"package_manager='{pkg_manager}' but package_manager_pin "
+                    f"starts with '{pin_name}'. They must agree. "
+                    "Re-run with --refresh lang-ts to correct the mismatch."
+                ),
+            )
+            sdk.emit_result(sdk.ModuleResult(
+                module_id="lang-ts", step_id=args.step, status="error",
+                files_written=[], diffs=[], warnings=warnings, error=error.to_dict(),
+            ))
+            return 1
+
+    # ── template_id validation (FR-002/FR-003, SC-009) ────────────────────── #
+    if template_id not in _ALLOWED_TEMPLATE_IDS:
+        error = sdk.SetupError(
+            error_code=sdk.ErrorCode.INPUT_VALUE_INVALID,
+            module_id="lang-ts",
+            expected=f"template_id in {sorted(_ALLOWED_TEMPLATE_IDS)}",
+            received=repr(template_id),
+            how_to_fix=(
+                f"template_id {template_id!r} is not a recognised template. "
+                "Re-run with --refresh lang-ts to let the agent correct it."
+            ),
+        )
+        sdk.emit_result(sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="error",
+            files_written=[], diffs=[], warnings=warnings, error=error.to_dict(),
+        ))
+        return 1
 
     # ── Pin verification (init mode only, FR-005/FR-012) ───────────────────── #
     # Include package_manager_pin in the verify batch (it is also a name@version)
@@ -300,9 +412,50 @@ def _do_write(sdk, inputs, args) -> int:
     # First-class deterministic action — independent of the scaffolder. For nuxt/
     # vite the generator may later --force-overwrite package.json; the scaffold
     # step re-merges these pins afterwards so the frozen decision is preserved.
+    # Pass engines only for node runtime (FR-014/015): bun → no engines field.
+    node_engines: dict[str, str] | None = None
+    if runtime == "node" and node_line:
+        node_engines = {"node": f">={node_line}"}
     _patch_pins_into_package_json(sdk, project_dir, pinned_deps, dev_deps,
                                   package_manager_pin, diffs, files_written,
-                                  warnings, inspect=args.inspect)
+                                  warnings, inspect=args.inspect,
+                                  engines=node_engines)
+
+    # ── 2b. Write .node-version (FR-014/015, SC-006) ──────────────────────── #
+    # node runtime + non-empty node_line → .node-version with reconcile=False
+    # (write-if-absent; existing .node-version is never overwritten).
+    # bun runtime → skip entirely (Bun manages its own version).
+    if runtime == "node" and node_line:
+        nv_diff = sdk.idempotent_write(
+            ".node-version",
+            f"{node_line}\n",
+            project_dir=project_dir,
+            reconcile=False,
+            inspect=args.inspect,
+        )
+        diffs.append(nv_diff)
+        if nv_diff.kind in ("create", "modify"):
+            files_written.append(nv_diff.path)
+
+    # ── 2c. Test-runner template instantiation (FR-003, SC-001/SC-002) ──────── #
+    # Write each file in templates/<template_id>/ verbatim (idempotent, reconcile=True).
+    # "none" → no config files written.
+    if template_id != "none":
+        template_dir = _TEMPLATES / template_id
+        for tpl_file in sorted(template_dir.iterdir()):
+            if not tpl_file.is_file():
+                continue
+            content = tpl_file.read_text(encoding="utf-8")
+            tpl_diff = sdk.idempotent_write(
+                tpl_file.name,
+                content,
+                project_dir=project_dir,
+                reconcile=True,
+                inspect=args.inspect,
+            )
+            diffs.append(tpl_diff)
+            if tpl_diff.kind in ("create", "modify"):
+                files_written.append(tpl_diff.path)
 
     # ── 4. Append Node .gitignore block ────────────────────────────────────── #
     gitignore = project_dir / ".gitignore"
@@ -479,11 +632,142 @@ def _do_scaffold(sdk, inputs, args) -> int:
     return 0
 
 
+def _do_ui_kit_scaffold(sdk, inputs, args) -> int:
+    """ui-kit-scaffold step: gate-guarded, non-idempotent UI-kit init command (FR-008).
+
+    This step is called by the runner only when the preceding ``ui-kit-init`` gate
+    returned True (confirmed/allowed). However, for the ``init_only`` gate the
+    runner auto-proceeds on plain reproduce (reproduce.apply init_only_bypass),
+    which means this step IS called on reproduce — but MUST NOT re-run the init
+    command (non-idempotent clobber risk, FR-010).
+
+    Execute-vs-safe-skip decision (gate-outcome detection rationale):
+    - When mode == "init": the gate was either confirmed by the user (TTY +
+      --allow-ui-kit-init) OR the runner blocked the step via gate_blocked=True
+      in which case this function is never called at all. So mode=="init" reliably
+      means "gate was confirmed — execute".
+    - When mode != "init" (reproduce/refresh): the init_only gate auto-proceeded,
+      but running the init command again would clobber already-scaffolded files.
+      Safe-skip and write a STACK-NOTES.md reminder.
+
+    NOTE: In the non-interactive CI path without --allow-ui-kit-init the hard gate
+    returns False → gate_blocked=True → this step is skipped by the runner entirely
+    (reproduce.apply continues past it). The STACK-NOTES note in that path is NOT
+    written by this function — the caller (runner) skips us. If CI-path STACK-NOTES
+    is needed, a future enhancement can add a gate-decline side-effect to the runner.
+    For now, the spec's SC-003 CI safe-skip path is covered by the runner's own skip.
+    """
+    ui_kit_id: str = inputs.get_str("ui_kit_id", default="none") or "none"
+    ui_kit_init_command: str = inputs.get_str("ui_kit_init_command", default="")
+
+    project_dir_env = os.environ.get("PROJECT_DIR")
+    project_dir = Path(project_dir_env).resolve() if project_dir_env else Path.cwd().resolve()
+
+    warnings: list[str] = []
+    diffs = []
+    files_written: list[str] = []
+
+    # ── FR-011 / SC-012: ui_kit_id == "none" → clean no-op ──────────────── #
+    if ui_kit_id == "none":
+        result = sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="ok",
+            files_written=[], diffs=[sdk.Diff(
+                path="ui-kit-scaffold",
+                kind="skip",
+                preview="(ui_kit_id=none — no UI kit init required)",
+            )],
+            warnings=[],
+        )
+        sdk.emit_result(result)
+        return 0
+
+    # ── Allowlist validation (FR-008, SC-010) ────────────────────────────── #
+    if not any(ui_kit_init_command.startswith(prefix) for prefix in _UI_KIT_ALLOWLIST):
+        error = sdk.SetupError(
+            error_code=sdk.ErrorCode.INPUT_VALUE_INVALID,
+            module_id="lang-ts",
+            expected=f"ui_kit_init_command starting with one of {list(_UI_KIT_ALLOWLIST)}",
+            received=repr(ui_kit_init_command),
+            how_to_fix=(
+                f"ui_kit_init_command {ui_kit_init_command!r} is not in the allowed "
+                "prefix list. Re-run with --refresh lang-ts to let the agent correct it."
+            ),
+        )
+        sdk.emit_result(sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="error",
+            files_written=[], diffs=[], warnings=warnings, error=error.to_dict(),
+        ))
+        return 1
+
+    # ── Safe-skip on reproduce (FR-009/010, SC-005) ───────────────────────── #
+    # The init_only gate auto-proceeds on reproduce (init_only_bypass=True),
+    # meaning this step IS called. We must not re-run the non-idempotent command.
+    # Only execute when mode == "init" (gate was explicitly confirmed this run).
+    if inputs.mode != "init":
+        # Append a STACK-NOTES.md reminder (idempotent — command string is marker).
+        stack_notes_path = project_dir / "STACK-NOTES.md"
+        note_block = (
+            f"\n## UI-kit init (manual step)\n\n"
+            f"The UI-kit init command was NOT re-run on reproduce (non-idempotent).\n"
+            f"To re-initialize, run:\n\n"
+            f"    {ui_kit_init_command}\n\n"
+            f"Or re-run project-setup with `--refresh lang-ts` to re-trigger the gate.\n"
+        )
+        if not args.inspect:
+            sdk.append_if_absent(
+                stack_notes_path, ui_kit_init_command, note_block, warnings, "ui-kit-scaffold note"
+            )
+            files_written.append("STACK-NOTES.md")
+        diffs.append(sdk.Diff(
+            path="STACK-NOTES.md",
+            kind="modify",
+            preview=f"(safe-skip: ui-kit init is non-idempotent on reproduce; note appended: {ui_kit_init_command!r})",
+        ))
+        result = sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="ok",
+            files_written=files_written if not args.inspect else [],
+            diffs=diffs, warnings=warnings,
+        )
+        sdk.emit_result(result)
+        return 0
+
+    # ── Execute (init + gate confirmed) ──────────────────────────────────── #
+    if args.inspect:
+        diffs.append(sdk.Diff(
+            path="ui-kit-scaffold",
+            kind="create",
+            preview=f"(would run: {ui_kit_init_command})",
+        ))
+        result = sdk.ModuleResult(
+            module_id="lang-ts", step_id=args.step, status="ok",
+            files_written=[], diffs=diffs, warnings=warnings,
+        )
+        sdk.emit_result(result)
+        return 0
+
+    cmd_parts = ui_kit_init_command.split()
+    sdk.run_tool(cmd_parts, cwd=project_dir, warnings=warnings, label="ui-kit init", timeout=180)
+
+    diffs.append(sdk.Diff(
+        path="ui-kit-scaffold",
+        kind="create",
+        preview=f"(ran: {ui_kit_init_command})",
+    ))
+    result = sdk.ModuleResult(
+        module_id="lang-ts", step_id=args.step, status="ok",
+        files_written=files_written, diffs=diffs, warnings=warnings,
+    )
+    sdk.emit_result(result)
+    return 0
+
+
 STEP_HANDLERS = {
     "write": _do_write,
     "scaffold": _do_scaffold,
+    "ui-kit-scaffold": _do_ui_kit_scaffold,
     # "resolve" is kind=agent — handled by the runner's Tier-2 agent subsystem.
-    # "pins"/"run-generator" are kind=gate — handled by the runner's gate subsystem.
+    # "pins"/"run-generator"/"ui-kit-init" are kind=gate — handled by the runner's
+    # gate subsystem.
 }
 
 

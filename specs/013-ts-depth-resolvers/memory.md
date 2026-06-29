@@ -200,9 +200,50 @@ small extra complexity of the allowlist. The allowlist covers both `bunx shadcn`
    reading the call sites at `module.py:173-189` (`_patch_pins_into_package_json`
    calls it by keyword for `package_manager_pin`).
 
-## AS-BUILT (TBD)
+## AS-BUILT (2026-06-29)
 
-_Populated after implementation._
+Shipped on `feat/project-setup-modular-redesign`. Full suite 707 passed, 4 deselected.
+NO runner changes (as designed) — all module-level on `lang-ts`.
+
+**Phase 1 (module.toml):** 6 declared inputs added (test_runner, template_id, ui_kit_id
+[default "none"], ui_kit_init_command, runtime [default "bun"], node_line) so the
+`when="ui_kit_id != none"` predicate parses (004 OQ-2). Two new steps appended:
+`ui-kit-init` (gate, hard, allow_flag=allow-ui-kit-init, init_only, when) →
+`ui-kit-scaffold` (python). Final order: resolve→pins→write→run-generator→scaffold→
+ui-kit-init→ui-kit-scaffold (FR-019).
+
+**Phase 2 (write step):** _ALLOWED_TEMPLATE_IDS frozenset; template instantiation iterates
+`templates/<template_id>/` and idempotent_write(reconcile=True) each file (FR-003); unknown
+id → INPUT_VALUE_INVALID (SC-009). _PM_PIN_RE shape guard rejects latest/range/bare-name
+(FR-013, SC-007). PM/runtime consistency check (FR-017, SC-008). `.node-version` write-if-
+absent + `engines.node` merge for runtime=node (FR-014, SC-006); none for bun (FR-015).
+`_patch_package_json` + `_patch_pins_into_package_json` gained an ADDITIVE keyword
+`engines: dict|None=None` (existing positional callers unaffected). 6 template files created:
+vitest-node/, vitest-browser/, bun-test/, playwright-only/, vitest-node+playwright/ (2 files).
+
+**Phase 3 (_do_ui_kit_scaffold):** _UI_KIT_ALLOWLIST = (npx shadcn, bunx shadcn, pnpm dlx
+shadcn). ui_kit_id=none → no-op (SC-012); command not in allowlist → INPUT_VALUE_INVALID
+(SC-010). Execute-vs-safeskip: keys off inputs.mode — mode=="init" (gate confirmed this run)
+executes via sdk.run_tool; else (reproduce) SAFE-skips + writes STACK-NOTES.md via
+append_if_absent (SC-005). The runner's gate_blocked latch (reproduce.py:465-477) skips the
+step entirely when the hard gate is declined — so the step is only reached when allowed.
+
+**FR-009 AMENDED (user, 2026-06-29):** original required a STACK-NOTES write in the CI
+(--non-interactive) gate-blocked path. That is unachievable (runner skips the gate-blocked
+python step entirely) AND unnecessary (CI workspace is ephemeral; the runner's `[SKIP]` log
+line is the record; pins still land). STACK-NOTES remains on the interactive/reproduce
+safe-skip path (FR-010, SC-005, tested). Gate stays HARD (Decision E preserved).
+
+**Test coverage:** 30 lang-ts module tests. SC-001/002/006/007/008/009/010/012 + reproduce
+safe-skip directly tested. SC-003 (CI STACK-NOTES) → amended away. SC-004 (confirmed gate
+executes run_tool) structurally present, inspect-path tested, no live-subprocess integration
+(acceptable — run_tool is the shared, separately-tested primitive). SC-011 (phase ordering)
+covered by 003's proven two-phase plan (test_two_phase_resolver), not re-asserted.
+
+**Two pre-existing test edits (verified legitimate, not weakening):** test_gate_g4_generator
+step-order list updated for the 2 new Phase-1 steps; SC-006 fixture's package_manager
+corrected bun→pnpm to match its own pnpm pin (the new FR-017 check exposed the fixture's
+internal inconsistency).
 
 ## DETERMINISM RULES CARRIED FROM 001/002/003 (must hold)
 

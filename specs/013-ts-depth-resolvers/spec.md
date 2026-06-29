@@ -5,7 +5,12 @@ dedicated `feat/ts-depth-resolvers` branch
 
 **Created**: 2026-06-28
 
-**Status**: Draft (2026-06-28)
+**Status**: **Implemented (2026-06-29)** — three depth resolvers added to `lang-ts`
+(test-runner+template_id, ui-kit init, runtime/PM) with NO runner changes; full suite
+707 passed, 4 deselected. v1 scoped to `ui_kit_id ∈ {shadcn, none}` (nuxt-ui deferred,
+OQ-2). FR-009 amended (CI gate-blocked path: runner `[SKIP]` log is the record, not a
+STACK-NOTES file — see FR-009 note + `reviews/autonomous-drive-decision-log.md`). See
+`memory.md` → AS-BUILT.
 
 **Input**: Roadmap rank #11 from `reviews/tier2-agentic-features-roadmap.md:95-99` —
 "ts-test-tooling-resolver + ts-ui-kit-resolver + ts-runtime-pm-resolver (ts depth)".
@@ -349,10 +354,21 @@ frozen plan because Phase A (agent steps) completed before Phase B (scaffolder).
   hardcoded allowlist of safe prefixes before executing it. An unrecognized command
   MUST emit `INPUT_VALUE_INVALID` and write nothing. The allowlist: `["npx shadcn",
   "bunx shadcn", "npx nuxi module add @nuxt/ui", "bunx nuxi module add @nuxt/ui"]`.
-- **FR-009**: In `--non-interactive` (without `--allow-ui-kit-init`), the `ui-kit-init`
-  gate MUST SAFE-skip the `ui-kit-scaffold` step and MUST write a `STACK-NOTES.md`
-  entry recording the manual `ui_kit_init_command`. This file is written via
-  `sdk.append_if_absent` (idempotent; the manual command is the marker).
+- **FR-009** *(amended 2026-06-29)*: In `--non-interactive` (without
+  `--allow-ui-kit-init`), the `ui-kit-init` hard gate is not confirmed, so the runner's
+  gate-blocking (`reproduce.apply`: a declined/unconfirmed hard gate sets `gate_blocked`
+  and SKIPS the following `kind=python` step entirely, emitting a `[SKIP] … preceding
+  gate not confirmed` notify) prevents the `ui-kit-scaffold` step from running at all.
+  The deterministic pinned `package.json` (the `write` step) still lands; only the
+  non-idempotent `shadcn init` is deferred. **CI's record of the deferral is the runner's
+  `[SKIP]` log line, NOT a `STACK-NOTES.md` file** — CI runs in an ephemeral workspace
+  where a written file is discarded and unread, so the persistent-breadcrumb rationale
+  for STACK-NOTES (FR-010) does not apply. *(Original FR-009 required a STACK-NOTES write
+  in this path; that was unachievable without a runner change and unnecessary in CI —
+  see `reviews/autonomous-drive-decision-log.md`. The STACK-NOTES breadcrumb is written
+  on the INTERACTIVE/REPRODUCE safe-skip path where a human is at a surviving checkout:
+  FR-010, tested by SC-005.)* The gate stays HARD (Decision E: explicit opt-in for a
+  non-idempotent network command).
 - **FR-010**: On plain reproduce (no `--refresh lang-ts`), the `ui-kit-scaffold` step
   MUST be SAFE-skipped and MUST append a note to `STACK-NOTES.md` explaining the
   non-idempotent clobber risk and the `--refresh lang-ts` path to re-execute. The

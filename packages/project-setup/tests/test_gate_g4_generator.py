@@ -50,12 +50,15 @@ def test_lang_ts_step_order_and_g4_gate():
     m = manifest.parse_manifest(_MODULES / "lang-ts" / "module.toml")
     assert not m.errors, [e.to_dict() for e in m.errors]
     order = [(s.id, s.kind) for s in m.steps]
+    # Full step order as of spec 013 Phase 1 (FR-019).
     assert order == [
         ("resolve", "agent"),
         ("pins", "gate"),
         ("write", "python"),
         ("run-generator", "gate"),
         ("scaffold", "python"),
+        ("ui-kit-init", "gate"),
+        ("ui-kit-scaffold", "python"),
     ], order
     g4 = [s for s in m.steps if s.id == "run-generator"][0]
     assert g4.hardness == "soft"
