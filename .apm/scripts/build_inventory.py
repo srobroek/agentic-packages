@@ -171,6 +171,34 @@ def _is_local_source(source) -> bool:
     return isinstance(source, str) and source.startswith("./")
 
 
+def _external_repo_slug(source) -> str:
+    """Best-effort ``owner/repo`` slug from an external marketplace source.
+
+    Handles the string forms (``owner/repo``, ``host/owner/repo``,
+    ``https://host/owner/repo[.git]``) and the dict/``type:`` form
+    (``{repo: owner/repo}`` or ``{url: ...}``). Used only to build a GitHub link
+    in the docs table; returns "" if it cannot parse a slug.
+    """
+    if isinstance(source, dict):
+        source = source.get("repo") or source.get("url") or ""
+    if not isinstance(source, str) or not source:
+        return ""
+    s = source.strip()
+    s = s.removeprefix("https://").removeprefix("http://")
+    if s.startswith("github.com/"):
+        s = s[len("github.com/"):]
+    s = s.removesuffix(".git")
+    parts = [p for p in s.split("/") if p]
+    # owner/repo lives in the FIRST two segments for owner/repo and
+    # github.com/owner/repo forms (host already stripped above).
+    if len(parts) >= 2 and "." not in parts[0]:
+        return f"{parts[0]}/{parts[1]}"
+    # host.tld/owner/repo (non-github host kept its dotted first segment).
+    if len(parts) >= 3 and "." in parts[0]:
+        return f"{parts[1]}/{parts[2]}"
+    return ""
+
+
 def _external_entries(marketplace: dict) -> dict[str, dict]:
     """Map name -> full entry for marketplace packages with an EXTERNAL source.
 
@@ -271,7 +299,10 @@ def build_context(marketplace: dict | None = None) -> dict:
     # land in stable position; preserve every key the author wrote. A name that
     # ALSO has a local packages/ dir is a collision -- the local dir wins (it is
     # the buildable source of truth) and the external entry is skipped with a
-    # warning, so the block never carries two entries for one name.
+    # warning, so the block never carries two entries for one name. The surviving
+    # ones are also collected as doc-table records (they live in another repo, so
+    # the packages/* walk can't describe them).
+    external_marketplace: list[dict] = []
     for name, entry in external.items():
         if name in found:
             warnings.append(
@@ -282,6 +313,14 @@ def build_context(marketplace: dict | None = None) -> dict:
         marketplace_entries.append(
             {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
         )
+        external_marketplace.append({
+            "name": name,
+            "source": entry.get("source"),
+            "repo": _external_repo_slug(entry.get("source")),
+            "ref": entry.get("ref", ""),
+            "category": entry.get("category", ""),
+            "tags": list(entry.get("tags") or []),
+        })
 
     # A curated name with no packages/ dir is "dropped" ONLY if it is not a
     # recognised external entry -- external sources are intentionally dir-less.
@@ -298,6 +337,7 @@ def build_context(marketplace: dict | None = None) -> dict:
         by_kind[p["classification"]].append(p)
 
     external_sources = _external_sources(packages)
+    external_marketplace.sort(key=lambda e: e["name"])
 
     counts = {kind: len(items) for kind, items in by_kind.items()}
     counts["total"] = len(packages)
@@ -306,6 +346,7 @@ def build_context(marketplace: dict | None = None) -> dict:
         "packages": packages,
         "by_kind": by_kind,
         "external_sources": external_sources,
+        "external_marketplace": external_marketplace,
         "counts": counts,
         "marketplace": {
             "entries": marketplace_entries,

@@ -48,4 +48,4 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 
 ---
 
-See also: [bundles](bundles.md) · [agents](agents.md) · [steering](steering.md) · [hooks and MCP](hooks-and-mcp.md) · [SpecKit](speckit.md)
+See also: [bundles](bundles.md) · [agents](agents.md) · [steering](steering.md) · [hooks and MCP](hooks-and-mcp.md) · [external repos](external-repos.md) · [SpecKit](speckit.md)

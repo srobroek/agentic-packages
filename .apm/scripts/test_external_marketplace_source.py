@@ -72,6 +72,61 @@ def test_is_local_source(source, is_local):
     assert bi._is_local_source(source) is is_local
 
 
+@pytest.mark.parametrize(
+    "source,slug",
+    [
+        ("srobroek/project-setup", "srobroek/project-setup"),
+        ("github.com/srobroek/vibe-hero", "srobroek/vibe-hero"),
+        ("https://github.com/srobroek/vibe-hero", "srobroek/vibe-hero"),
+        ("https://github.com/srobroek/vibe-hero.git", "srobroek/vibe-hero"),
+        ("gitlab.com/group/repo", "group/repo"),
+        ({"type": "github", "repo": "a/b"}, "a/b"),
+        ({"type": "url", "url": "https://github.com/c/d"}, "c/d"),
+        ("", ""),
+        (None, ""),
+    ],
+)
+def test_external_repo_slug(source, slug):
+    assert bi._external_repo_slug(source) == slug
+
+
+# --------------------------------------------------------------------------- #
+# external_marketplace doc-table records                                       #
+# --------------------------------------------------------------------------- #
+
+def test_external_marketplace_records_built():
+    mk = _marketplace(
+        {
+            "name": "zzz-demo",
+            "source": "srobroek/project-setup",
+            "ref": "v1.2.3",
+            "category": "project-lifecycle",
+            "tags": ["skill", "lifecycle"],
+        }
+    )
+    ctx = bi.build_context(mk)
+    em = ctx["external_marketplace"]
+    rec = [r for r in em if r["name"] == "zzz-demo"]
+    assert rec, "external_marketplace record missing"
+    r = rec[0]
+    assert r["repo"] == "srobroek/project-setup"
+    assert r["ref"] == "v1.2.3"
+    assert r["category"] == "project-lifecycle"
+    assert r["tags"] == ["skill", "lifecycle"]
+
+
+def test_external_marketplace_excludes_local_and_collisions():
+    # Local packages never appear; a colliding external name (also a local dir)
+    # is excluded from external_marketplace too (local wins).
+    mk = _marketplace(
+        {"name": "agent-coder", "source": "srobroek/elsewhere", "ref": "main"}
+    )
+    ctx = bi.build_context(mk)
+    names = {r["name"] for r in ctx["external_marketplace"]}
+    assert "agent-coder" not in names
+    assert not any(bi._is_local_source(r.get("source")) for r in ctx["external_marketplace"])
+
+
 # --------------------------------------------------------------------------- #
 # external entry preservation                                                  #
 # --------------------------------------------------------------------------- #
