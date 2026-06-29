@@ -17,6 +17,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -162,10 +163,21 @@ def test_git_missing_warns_and_continues(tmp_path, monkeypatch):
     project = tmp_path / "proj"
     project.mkdir()
 
-    # Provide a PATH that has no git binary
-    empty_bin = tmp_path / "empty_bin"
-    empty_bin.mkdir()
-    monkeypatch.setenv("PATH", f"{empty_bin}:{os.environ.get('PATH', '')}")
+    # Provide a PATH that has the tools the subprocess needs (uv, and whatever uv
+    # needs to provision python) but NO git, so the module's shutil.which("git")
+    # returns None and the git-missing warning path fires. Prepending an empty dir
+    # is NOT enough — which() scans the whole PATH and would still find the real
+    # git further down. We REPLACE PATH with a dir of symlinks to only the
+    # essential tools (excluding git).
+    tools_bin = tmp_path / "tools_bin"
+    tools_bin.mkdir()
+    for tool in ("uv", "env", "bash", "sh", "python3", "python", "dirname", "uname"):
+        real = shutil.which(tool)
+        if real:
+            (tools_bin / tool).symlink_to(real)
+    # Sanity: git must NOT be resolvable on the curated PATH.
+    monkeypatch.setenv("PATH", str(tools_bin))
+    assert shutil.which("git") is None, "test setup error: git still on PATH"
 
     plan = _frozen_plan(tmp_path, init_git=True)
     proc = _run(project, plan)

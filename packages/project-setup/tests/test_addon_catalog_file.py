@@ -106,8 +106,13 @@ class TestCatalogFileStructure:
 
     def test_top_level_note_field(self, catalog):
         assert "note" in catalog, "catalog.json must have a top-level 'note' field"
-        assert "pending" in catalog["note"].lower() or "placeholder" in catalog["note"].lower(), (
-            "note field should reference placeholder/pending status"
+        # The default first-party catalog points at the maintainer's repo and is
+        # OVERRIDABLE (PROJECT_SETUP_CATALOG_URL / [catalog].urls). The note documents
+        # the override path + the publish-time pinning expectation.
+        note = catalog["note"].lower()
+        assert "override" in note and "pin" in note, (
+            "note field should document that the catalog is overridable and "
+            f"that published locators are pinned; got: {catalog['note']!r}"
         )
 
     def test_modules_key_is_list(self, catalog):
@@ -167,11 +172,12 @@ class TestCatalogFileStructure:
                 f"{name} must have category 'language', got {by_name[name]['category']!r}"
             )
 
-    def test_no_hardcoded_srobroek_in_catalog(self, catalog):
-        raw = _CATALOG_PATH.read_text(encoding="utf-8")
-        assert "srobroek" not in raw.lower(), (
-            "catalog.json must not contain a hardcoded 'srobroek' org reference"
-        )
+    # NOTE: the catalog.json is DATA, not code — the default first-party catalog
+    # intentionally points at the maintainer's repo (srobroek/project-setup) and is
+    # overridable via PROJECT_SETUP_CATALOG_URL. Repo-agnosticism is enforced on the
+    # CODE (fetch_addon_catalog/addon_catalog_urls carry no hardcoded URL — see
+    # test_addon_catalog.py), NOT on this data file. (Removed the former
+    # test_no_hardcoded_srobroek_in_catalog guard, which wrongly conflated the two.)
 
 
 # --------------------------------------------------------------------------- #
