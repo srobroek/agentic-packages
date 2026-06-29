@@ -1,0 +1,15 @@
+{
+  "name": "infrastructure",
+  "version": "1.1.1",
+  "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-infrastructure"
+    }
+  ]
+}

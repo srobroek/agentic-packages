@@ -1,0 +1,9 @@
+{
+  "name": "hooks-subagent-worktree",
+  "version": "0.4.0",
+  "description": "Enforce an explicit worktree-isolation decision on every subagent spawn. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to re-issue with `isolation:\"worktree\"` (the child writes to THIS repo) or with an `[iso:skip]` sentinel appended to the description (read-only, a different repo, or must edit the parent tree directly). The sentinel is stripped from the description before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

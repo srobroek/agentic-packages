@@ -1,5 +1,51 @@
 # Changelog
 
+## [2.2.1](https://github.com/srobroek/agentic-packages/compare/sniff--v2.2.0...sniff--v2.2.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **sniff:** give every tool a complete run recipe (command, config, exit codes, gotchas) [skip tests] ([#413](https://github.com/srobroek/agentic-packages/issues/413)) ([fca782e](https://github.com/srobroek/agentic-packages/commit/fca782e9b81a1e76f786385b4af97471299c0345))
+
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.1.0...sniff--v2.2.0) (2026-06-28)
+
+
+### Features
+
+* **sniff:** complete tool catalog + propose-full-set selection model [skip tests] ([#411](https://github.com/srobroek/agentic-packages/issues/411)) ([99c8ea6](https://github.com/srobroek/agentic-packages/commit/99c8ea63ba7b273e5bccf0e4b5d4533d7d7f449c))
+
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.1...sniff--v2.1.0) (2026-06-28)
+
+
+### Features
+
+* **sniff:** config-aware scanning, no double-run, user-adjustable fan-out [skip tests] ([#409](https://github.com/srobroek/agentic-packages/issues/409)) ([849fa80](https://github.com/srobroek/agentic-packages/commit/849fa80b3328a7b459f3178fa6ca352d6506ec46))
+
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/sniff--v2.0.0...sniff--v2.0.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **sniff:** ask target kind then specifics, with the full kind list incl. language/area filter [skip tests] ([#407](https://github.com/srobroek/agentic-packages/issues/407)) ([38688ef](https://github.com/srobroek/agentic-packages/commit/38688ef601072b477b7b0cd979eda640ec843195))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/sniff--v1.1.0...sniff--v2.0.0) (2026-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405))
+
+### Features
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405)) ([61e03ab](https://github.com/srobroek/agentic-packages/commit/61e03abb39d495575bc84a765227814c5c3d7111))
+
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/sniff-v1.0.0...sniff--v1.1.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/sniff-v0.1.2...sniff-v1.0.0) (2026-06-26)
 
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "separate-pull-requests": false,
-  "tag-separator": "-",
+  "tag-separator": "--",
   "include-component-in-tag": true,
   "changelog-sections": [
     {
@@ -983,18 +983,6 @@
     "packages/mcp-serena": {
       "release-type": "simple",
       "component": "mcp-serena",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-speckit-memory": {
-      "release-type": "simple",
-      "component": "mcp-speckit-memory",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

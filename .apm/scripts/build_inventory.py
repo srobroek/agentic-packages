@@ -94,11 +94,16 @@ def _classify(name: str, pkg_dir: Path) -> str:
         return "steering"
     if name.startswith("hooks-"):
         return "hooks"
-    # A skill package ships exactly one skill under .apm/skills/<skill>/ and no
-    # agents. A bundle is either a pure dependency aggregator (no own primitives)
-    # or a multi-primitive package like speckit (skills + agents + hooks).
-    if len(skills) == 1 and not has_agents:
+    # Classify by the package's OWN primitives. A `bundle` is ONLY a pure
+    # aggregator -- it ships no primitives of its own and exists to pull in other
+    # packages via dependencies. A package that rolls its own skill(s) or
+    # agent(s) is classified by those even when it ALSO has dependencies and even
+    # when it ships several primitive types (e.g. `sniff` and `speckit` ship
+    # skills + agents; they are skill packages, not bundles).
+    if skills:
         return "skill"
+    if has_agents:
+        return "agent"
     return "bundle"
 
 

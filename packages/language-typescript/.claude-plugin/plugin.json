@@ -1,0 +1,19 @@
+{
+  "name": "language-typescript",
+  "version": "1.1.1",
+  "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/typescript-quality"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/language-steering-typescript"
+    }
+  ]
+}

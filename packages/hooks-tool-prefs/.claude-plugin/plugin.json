@@ -1,0 +1,9 @@
+{
+  "name": "hooks-tool-prefs",
+  "version": "1.1.0",
+  "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

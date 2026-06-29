@@ -1,5 +1,5 @@
 name: steering-speckit
-version: 1.0.0
+version: 2.0.0
 description: >-
   Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG,
   human-gating rules, and command reference. Opt-in -- install alongside the

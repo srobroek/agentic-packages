@@ -1,5 +1,5 @@
 name: hooks-quality
-version: 1.0.1
+version: 1.2.0
 description: >-
   Opt-in code-quality hooks: advisory linting/formatting feedback after edits
   and a quality check before commits. The before-commit gate is a FALLBACK — it

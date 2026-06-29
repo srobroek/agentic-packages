@@ -1,0 +1,9 @@
+{
+  "name": "hooks-branch-check",
+  "version": "1.1.0",
+  "description": "Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

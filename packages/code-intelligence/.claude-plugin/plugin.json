@@ -1,0 +1,43 @@
+{
+  "name": "code-intelligence",
+  "version": "1.1.1",
+  "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/codebase-index"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/codebase-memory"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/mcp-codebase-memory"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/explore"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/research"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/web-fetch"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-project-structure"
+    }
+  ]
+}

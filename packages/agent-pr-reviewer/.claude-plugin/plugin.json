@@ -1,0 +1,9 @@
+{
+  "name": "agent-pr-reviewer",
+  "version": "1.1.0",
+  "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

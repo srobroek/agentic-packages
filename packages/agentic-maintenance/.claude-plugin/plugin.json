@@ -1,0 +1,31 @@
+{
+  "name": "agentic-maintenance",
+  "version": "1.1.1",
+  "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/optimize-steering"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/audit-steering"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/write-a-skill"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-coder"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
+    }
+  ]
+}

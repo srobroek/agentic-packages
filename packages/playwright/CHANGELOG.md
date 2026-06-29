@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/playwright--v2.0.0...playwright--v2.0.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **build-native-plugins:** emit parseable {git,path} bundle deps ([#417](https://github.com/srobroek/agentic-packages/issues/417)) ([8bd39d4](https://github.com/srobroek/agentic-packages/commit/8bd39d47a8f03a7f162849099844ae332f858105))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/playwright--v1.1.0...playwright--v2.0.0) (2026-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405))
+
+### Features
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405)) ([61e03ab](https://github.com/srobroek/agentic-packages/commit/61e03abb39d495575bc84a765227814c5c3d7111))
+
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/playwright-v1.0.0...playwright--v1.1.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/playwright-v0.1.2...playwright-v1.0.0) (2026-06-26)
 
 

@@ -1,0 +1,9 @@
+{
+  "name": "hooks-git-workflow",
+  "version": "1.1.0",
+  "description": "Opt-in git workflow hooks: warn (non-blocking) on commits when tests are stale or failing, track edit-vs-test state, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

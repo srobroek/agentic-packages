@@ -3,14 +3,26 @@ name: Release Please
 # Maintains a release PR from Conventional Commits (feat/fix/...), updates
 # CHANGELOG.md and the version in apm.yml, and tags a release on merge.
 #
-# Artifact freshness is NOT handled here. release-please updates the authoritative
-# version state (apm.yml $.version + .release-please-manifest.json) directly. The
-# only release-derived artifact that goes stale is the `version` field inside the
-# generated marketplace.json (a catalog display value for the native-plugin path),
-# and the PR check (build-artifacts.yml `check-artifacts`) regenerates + gates that
-# on every subsequent PR. A post-release auto-commit can't push to main anyway --
-# branch protection requires status checks that don't run on a bot's direct push --
-# so it is intentionally omitted.
+# Artifact freshness: release-please updates the authoritative version state
+# (apm.yml $.version + .release-please-manifest.json) but does NOT regenerate the
+# version-derived artifacts -- the `version` field in each package's generated
+# .claude-plugin/plugin.json and the per-plugin versions in .claude-plugin/
+# marketplace.json. Those go stale the moment a version bumps, and the required
+# `check-artifacts` PR check fails on the drift. So the "Sync generated artifacts"
+# step below regenerates them and amends them onto the release branch whenever a
+# release PR is open. (Before the native-plugin layout existed there were no such
+# artifacts, so this was a no-op; #401 was the first release that carried them and
+# the first to surface the drift, once the PAT below made the PR checks actually run.)
+#
+# TOKEN: the release PR is authored with RELEASE_PLEASE_PAT_AGENTIC_PACKAGES (a fine-grained PAT),
+# NOT the default GITHUB_TOKEN. GitHub deliberately does not trigger workflows from
+# commits made by GITHUB_TOKEN, so the required PR checks (check-artifacts,
+# tests-gate) would complete as `action_required` 0s no-ops and the release PR would
+# stay permanently BLOCKED. A PAT-authored commit triggers those workflows normally,
+# so the release PR self-satisfies branch protection. If the secret is absent the
+# action falls back to GITHUB_TOKEN and the deadlock returns -- keep the secret set.
+# The same PAT pushes the artifact-sync commit so it, too, triggers the checks.
+# PAT scope (fine-grained, this repo only): Contents RW + Pull requests RW.
 
 on:
   push:
@@ -24,9 +36,58 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Checkout with the PAT persisted as the push credential, so the artifact
+      # sync below pushes with a token whose commits trigger the required checks.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_PAT_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@v5
         with:
+          # Fine-grained PAT so the release PR's commits trigger the required PR
+          # checks (a GITHUB_TOKEN-authored commit does not). Falls back to
+          # GITHUB_TOKEN if the secret is unset -- see the header note.
+          token: ${{ secrets.RELEASE_PLEASE_PAT_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # When a release PR is open, its apm.yml/manifest version bumps make the
+      # generated plugin.json + marketplace.json versions stale, failing the
+      # required check-artifacts gate. Regenerate them and amend onto the release
+      # branch so the PR self-satisfies branch protection. No-op (no diff -> no
+      # commit) when artifacts are already in sync. The push uses the PAT
+      # persisted by checkout above, so it re-triggers the PR checks.
+      - name: Set up Python
+        if: ${{ steps.release.outputs.pr }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Sync generated artifacts on the release PR
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          RELEASE_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$RELEASE_BRANCH"
+          git checkout "$RELEASE_BRANCH"
+
+          python3 -m pip install --quiet apm-cli jinja2
+          python3 .apm/scripts/build-native-plugins.py
+          python3 .apm/scripts/render-docs.py all
+          apm pack
+
+          if git diff --quiet; then
+            echo "Generated artifacts already in sync; nothing to amend."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: sync generated artifacts to released versions"
+          git push origin "HEAD:$RELEASE_BRANCH"

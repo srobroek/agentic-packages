@@ -1,0 +1,9 @@
+{
+  "name": "hooks-precommit-gate",
+  "version": "0.3.0",
+  "description": "Ensures the pre-commit framework actually runs. PreToolUse on git commit/push: when the repo HAS a .pre-commit-config.yaml but the matching git hook is not installed (.git/hooks/pre-commit / pre-push missing), it blocks with \"run pre-commit install\"; it also blocks --no-verify, which would skip the framework. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (whose enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

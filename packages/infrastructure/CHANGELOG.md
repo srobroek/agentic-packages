@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/infrastructure--v1.1.0...infrastructure--v1.1.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **build-native-plugins:** emit parseable {git,path} bundle deps ([#417](https://github.com/srobroek/agentic-packages/issues/417)) ([8bd39d4](https://github.com/srobroek/agentic-packages/commit/8bd39d47a8f03a7f162849099844ae332f858105))
+
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/infrastructure-v1.0.0...infrastructure--v1.1.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/infrastructure-v0.2.0...infrastructure-v1.0.0) (2026-06-26)
 
 

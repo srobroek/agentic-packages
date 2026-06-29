@@ -15,20 +15,12 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-edit-advisory.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-edit-advisory.sh"
+            "command": "${PLUGIN_ROOT}/scripts/quality-edit-advisory.sh",
+            "timeout": 3
           }
         ]
       }

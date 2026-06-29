@@ -310,7 +310,11 @@ def _build_release_config(pkgs: list[str]) -> dict:
     return {
         "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
         "separate-pull-requests": False,
-        "tag-separator": "-",
+        # Double-dash separator: tags render as `{component}--v{version}`, the
+        # convention Claude `/plugin` + Codex `plugin add` use for native version
+        # resolution (APM's remote resolver matches `{name}--v{version}` only).
+        # Existing single-dash tags are kept (backfilled) for back-compat.
+        "tag-separator": "--",
         "include-component-in-tag": True,
         "changelog-sections": CHANGELOG_SECTIONS,
         "packages": packages,

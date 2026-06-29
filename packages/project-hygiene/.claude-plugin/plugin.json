@@ -1,0 +1,10 @@
+{
+  "name": "project-hygiene",
+  "version": "0.2.0",
+  "description": "Audit project-local APM agents, skills, hooks, MCP config, generated steering, and package fit. Use when asked for project hygiene, cleanup, installed agent or skill review, stale generated assets, duplicate tooling, or agentic package drift.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "skills": "./.apm/skills"
+}

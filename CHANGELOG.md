@@ -1,5 +1,46 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v2.0.0...srobroek-agentic--v3.0.0) (2026-06-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** the /speckit.memory-md.* commands and the mcp-speckit-memory MCP server are no longer installed by speckit setup.
+
+### Features
+
+* **speckit:** drop memory-md extension and mcp-speckit-memory package ([#415](https://github.com/srobroek/agentic-packages/issues/415)) ([855bd7d](https://github.com/srobroek/agentic-packages/commit/855bd7d86bf8cadadbdc94179bc80c35eb06119d))
+
+
+### Bug Fixes
+
+* **build-native-plugins:** emit parseable {git,path} bundle deps ([#417](https://github.com/srobroek/agentic-packages/issues/417)) ([8bd39d4](https://github.com/srobroek/agentic-packages/commit/8bd39d47a8f03a7f162849099844ae332f858105))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v1.3.0...srobroek-agentic--v2.0.0) (2026-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405))
+
+### Features
+
+* rebuild sniff as a refactoring auditor across 21 languages ([#405](https://github.com/srobroek/agentic-packages/issues/405)) ([61e03ab](https://github.com/srobroek/agentic-packages/commit/61e03abb39d495575bc84a765227814c5c3d7111))
+
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.2.0...srobroek-agentic--v1.3.0) (2026-06-27)
+
+
+### Features
+
+* install this marketplace natively in Claude Code and Codex ([#400](https://github.com/srobroek/agentic-packages/issues/400)) ([105c91c](https://github.com/srobroek/agentic-packages/commit/105c91c45dfbc0333a098d52934d19f4bfe6a630))
+
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.1.0...srobroek-agentic-v1.2.0) (2026-06-26)
+
+
+### Features
+
+* **hooks-quality:** defer before-commit gate to pre-commit when installed ([#392](https://github.com/srobroek/agentic-packages/issues/392)) ([525f6cc](https://github.com/srobroek/agentic-packages/commit/525f6cca7783c961b66eb47c00233d1d51a4eadc))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic-v1.0.1...srobroek-agentic-v1.1.0) (2026-06-26)
 
 

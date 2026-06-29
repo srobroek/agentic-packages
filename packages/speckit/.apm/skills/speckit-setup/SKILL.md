@@ -24,9 +24,9 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    the active feature, so this scaffold is a prerequisite.
 2. **Register the community catalog** -- `specify extension catalog add --name community
    --install-allowed <catalog.community.json>`.
-3. **Install + enable the 29 required extensions** -- `agent-assign`, `archive`, `brownfield`,
+3. **Install + enable the 28 required extensions** -- `agent-assign`, `archive`, `brownfield`,
    `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
-   `fleet`, `github-issues`, `iterate`, `memory-md`, `onboard`, `optimize`, `qa`, `reconcile`,
+   `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`,
    `refine`, `retro`, `review`, `roadmap`, `security-review`, `status`, `tinyspec`, `verify`,
    `verify-tasks`, `worktree`. `agent-assign` is mandatory: steering routes implementation
    through it and the DAG hard-blocks the deprecated `/speckit.implement`. Most install from
@@ -35,24 +35,7 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    archive via `specify extension add NAME --from <url>`) or `name=latest-release:<owner>/<repo>`
    (resolve the newest GitHub release tag at setup time and install its archive — tracks
    latest without pinning). Custom-source installs are best-effort: an unreachable source
-   warns and is skipped rather than aborting setup. Currently `memory-md` uses
-   `latest-release:DyanGalih/spec-kit-memory-hub` (the catalog still ships the old 0.8.5; the
-   1.x line adds the SQLite/MCP backend and the `before_specify` memory hook).
-
-3.5. **Build the memory-md MCP server.** The 1.x `memory-md` extension ships a native MCP
-   server, but the release archive carries only TypeScript source -- no built `dist/`, no
-   `node_modules` (both gitignored) -- and the `speckit-memory` binary is NOT published to npm,
-   so the upstream `npx -y speckit-memory mcp-start` does not work. The setup script builds the
-   server in-place (`cd .specify/extensions/memory-md && npm install && npm run build`) right
-   after the extension install loop, so the first MCP launch doesn't pay a cold `better-sqlite3`
-   native compile during the client's stdio-init handshake. The build is best-effort: a missing
-   Node toolchain warns and is skipped (the MCP launcher rebuilds on demand as a fallback). The
-   server itself is registered with the harness by the `mcp-speckit-memory` APM package (a
-   dependency of the `speckit` bundle), whose launcher resolves the project-local extension dir,
-   builds it if needed, then runs `node dist/bin/speckit-memory.js mcp-start` over stdio. With it
-   registered, the `/speckit.memory-md.*` prompts call the native MCP tools
-   (`speckit_memory_search`, `speckit_memory_synthesize`, `speckit_memory_refresh_cache`, ...)
-   instead of shelling out to `npx`.
+   warns and is skipped rather than aborting setup.
 4. **Register extension commands for the requested integration** -- `specify extension add`
    only renders an extension's command files for the integration active at add-time, and
    `specify integration switch` re-registers all extensions only on a *genuine* switch
@@ -67,25 +50,6 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    0.11.x, workflows are a first-class primitive, not extensions. The local `speckit` definition
    overrides the upstream `Full SDD Cycle` that `specify init` bundles, and routes implementation
    through the agent-assign flow instead of the deprecated `/speckit.implement`.
-
-6. **Tune the memory-md config (agent step, not the bash script).** `memory-md` owns its own
-   config file: `/speckit.memory-md.init` creates `.specify/extensions/memory-md/config.yml`
-   from the extension's `config-template.yml` during bootstrap. Do NOT have setup write that
-   file. After `init` has created it, the agent applies these project-specific adjustments
-   (the values that a generic template cannot know):
-   - **`optimizer.auto_index_on_doc_change: true`** -- re-index the doc cache automatically when
-     docs change, so retrieval stays fresh without a manual `/speckit.memory-md.index-docs` after
-     every edit. (Template default is `false`.)
-   - **`indexing.include.memory`** -- ensure ALL of `.specify/memory` is indexed: include
-     `.specify/memory/**/*.md` (not just the handful of named files), so the constitution,
-     roadmap, decisions, bugs, and any other governance artefacts are all retrievable.
-   - **`indexing.include.code`** -- set to match the project's actual language(s) and layout.
-     The template assumes `src/**/*.{ts,tsx,js,jsx}`; replace/extend it for the detected
-     stack (e.g. `**/*.py`, `**/*.go`, `**/*.rs`) and for monorepos point it at each package's
-     source root rather than a single top-level `src/`. This is judgment the agent makes from
-     the repo; never hard-code a single language assumption.
-   Leave the rest of the template (retrieval caps, `require_*` gates, SQLite optimizer, standard
-   excludes) at its defaults unless the project needs otherwise.
 
 ## How to run
 
@@ -175,7 +139,7 @@ Each row is a `/speckit.<step>` command. "Next (default -> conditions)" reflects
 | Step | What it does | Produces | Next (default -> conditions) |
 |------|-------------|----------|-----------------------------|
 | `specify` | Create spec.md from requirements | `spec.md` | `clarify` - one-paragraph -> `tinyspec.classify`; bug -> `bugfix.report` |
-| `clarify` | Interactive requirements clarification | `clarifications.md` | `memory-md.plan-with-memory` -> `plan` if memory-md not installed |
+| `clarify` | Interactive requirements clarification | `clarifications.md` | `plan` |
 | `plan` | Architecture & implementation plan | `plan.md` | `tasks` -> `critique.run` if user requests critique first |
 | `tasks` | Task breakdown with dependency graph | `tasks.md` | `checklist` |
 | `checklist` | Requirements-quality gate over spec + plan + tasks | `checklist.md` | `critique.run` + `security-review` (parallel) -> `diagram.dependencies` if both skipped |
@@ -193,16 +157,16 @@ Each row is a `/speckit.<step>` command. "Next (default -> conditions)" reflects
 | `qa.run` (11c) | QA retest of the implementation | QA results | `code-review` + `security-review` (parallel) -> `fix-findings` if failed |
 | `code-review` (12) | General code-quality review | findings | `cleanup` (with 13 clean) |
 | `security-review` (13) | Security/compliance review | findings | `cleanup` (with 12 clean) |
-| `cleanup` | Auto-fix small issues, file issues for large | `cleanup-report.md` | `memory-md.capture` -> `sync.analyze` if no lessons |
+| `cleanup` | Auto-fix small issues, file issues for large | `cleanup-report.md` | `sync.analyze` |
 | `sync.analyze` | Detect spec<->code drift | `sync-report.md` | `sync.conflicts` |
 | `sync.conflicts` | Detect inter-spec contradictions | findings | `retro.run` |
 | `retro.run` | Retrospective (needs full session context) | retro notes | docs update |
 | `checkpoint.commit` (19) | Final commit | commit | (done) |
 | `iterate.define` / `iterate.apply` | Scope change (MANDATORY once tasks.md exists) | `pending-iteration.md`, updated spec/plan/tasks | resume at the step where the change was triggered |
 
-This table covers the default workflow path. The node store guards ~86 commands
+This table covers the default workflow path. The node store guards ~74 commands
 in total, including optional/diagnostic ones (`status.*`, `doctor`, `diagram.*`,
-`memory-md.*`, `tinyspec.*`, `bugfix.*`, `worktree.*`, ...). Run
+`tinyspec.*`, `bugfix.*`, `worktree.*`, ...). Run
 `/speckit.status.show` for the current state, or see the steering-speckit
 Command Reference for the full list.
 

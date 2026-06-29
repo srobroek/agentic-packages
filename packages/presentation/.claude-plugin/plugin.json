@@ -1,0 +1,9 @@
+{
+  "name": "presentation",
+  "version": "1.1.0",
+  "description": "Presentation bundle for general decks, Marp slides, and PowerPoint template workflows.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "MIT"
+}

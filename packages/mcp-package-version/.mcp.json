@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "mcp-package-version": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-package-version"
+      ]
+    }
+  }
+}
