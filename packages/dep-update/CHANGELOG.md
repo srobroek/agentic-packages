@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/dep-update--v0.1.0...dep-update--v1.0.0) (2026-06-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* standalone, agent-driven project scaffolding with git-distributed add-on modules ([#418](https://github.com/srobroek/agentic-packages/issues/418))
+
+### Features
+
+* standalone, agent-driven project scaffolding with git-distributed add-on modules ([#418](https://github.com/srobroek/agentic-packages/issues/418)) ([318dc97](https://github.com/srobroek/agentic-packages/commit/318dc975d485dd04cf1903262b1227242204d482))
+
 ## 0.1.0
 
 ### Features
