@@ -819,7 +819,7 @@ marketplace:
         - verification
     - name: vibe-hero
       source: srobroek/vibe-hero
-      ref: d7d3856446287dd659b69e6ee8b78557c686400f
+      ref: v0.2.0
       category: onboarding
       tags:
         - mcp

@@ -1379,8 +1379,8 @@
       "source": {
         "source": "url",
         "url": "srobroek/vibe-hero",
-        "ref": "d7d3856446287dd659b69e6ee8b78557c686400f",
-        "sha": "d7d3856446287dd659b69e6ee8b78557c686400f"
+        "ref": "v0.2.0",
+        "sha": "cbd3321cf60bf710f13d2fdb06f432e2ba316479"
       },
       "policy": {
         "installation": "AVAILABLE",
