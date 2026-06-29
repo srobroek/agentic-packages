@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "go-quality"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/go-quality"
     },
     {
-      "name": "language-steering-go"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/language-steering-go"
     }
   ]
 }

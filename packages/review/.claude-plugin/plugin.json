@@ -8,13 +8,16 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "code-review"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/code-review"
     },
     {
-      "name": "verify"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/verify"
     },
     {
-      "name": "agent-pr-reviewer"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
     }
   ]
 }

@@ -116,13 +116,21 @@ def _bundle_dependencies(deps: list[str]) -> list[dict]:
     resolve within the same generated marketplace. External members (e.g.
     `wshobson/*`) need a cross-marketplace allowlist and are intentionally NOT
     auto-added here (a native install would fail to resolve them otherwise).
-    Bare-name entries track whatever version the marketplace provides.
+
+    Entries use the object form ``{git, path}`` (no ``ref``) so they keep
+    tracking whatever version the marketplace provides while remaining a valid
+    APM dependency reference. A bare ``{name: ...}`` object is rejected by
+    apm's ``DependencyReference.parse_from_dict`` ("Object-style dependency
+    must have a 'git', 'path', or 'registry' field"), which broke transitive
+    resolution for every bundle.
     """
     out: list[dict] = []
     for dep in deps:
         m = _FIRST_PARTY.search(dep)
         if m:
-            out.append({"name": m.group(1)})
+            out.append(
+                {"git": "srobroek/agentic-packages", "path": f"packages/{m.group(1)}"}
+            )
     return out
 
 

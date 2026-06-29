@@ -8,19 +8,24 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "hooks-package-file-guard"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/hooks-package-file-guard"
     },
     {
-      "name": "hooks-package-investigate"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/hooks-package-investigate"
     },
     {
-      "name": "hooks-pkg-version-warn"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/hooks-pkg-version-warn"
     },
     {
-      "name": "dep-audit"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/dep-audit"
     },
     {
-      "name": "mcp-package-version"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/mcp-package-version"
     }
   ]
 }

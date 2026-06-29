@@ -8,25 +8,32 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "catchup"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/catchup"
     },
     {
-      "name": "handover"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/handover"
     },
     {
-      "name": "commit-push-merge"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/commit-push-merge"
     },
     {
-      "name": "commit-push-pr"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/commit-push-pr"
     },
     {
-      "name": "quick-commit"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/quick-commit"
     },
     {
-      "name": "verify"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/verify"
     },
     {
-      "name": "agent-pr-reviewer"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
     }
   ]
 }

@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "python-quality"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/python-quality"
     },
     {
-      "name": "language-steering-python"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/language-steering-python"
     }
   ]
 }

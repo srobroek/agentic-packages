@@ -8,28 +8,36 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "codebase-index"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/codebase-index"
     },
     {
-      "name": "codebase-memory"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/codebase-memory"
     },
     {
-      "name": "mcp-codebase-memory"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/mcp-codebase-memory"
     },
     {
-      "name": "explore"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/explore"
     },
     {
-      "name": "research"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/research"
     },
     {
-      "name": "web-fetch"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/web-fetch"
     },
     {
-      "name": "agent-pr-reviewer"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
     },
     {
-      "name": "steering-project-structure"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-project-structure"
     }
   ]
 }

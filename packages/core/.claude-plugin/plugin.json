@@ -8,16 +8,20 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "project-lifecycle"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/project-lifecycle"
     },
     {
-      "name": "code-intelligence"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/code-intelligence"
     },
     {
-      "name": "agentic-maintenance"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agentic-maintenance"
     },
     {
-      "name": "resume-session"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/resume-session"
     }
   ]
 }
