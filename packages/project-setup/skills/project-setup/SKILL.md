@@ -241,17 +241,18 @@ or describe anything else you want.
 For a long marketplace package list, same idea: number every package in tables; the user
 picks by number; an "other / type a package not listed" answer is always available.
 
-**RULE 5 — the option set is the module's DECLARED choices, not your general knowledge.**
-For any `choice` / `multichoice` input, the authoritative list of options is the module's
-`[[inputs]] choices` in its `module.toml` — show ALL of them, never a "basics-only" subset
-you recalled from memory. Example: the `license` input in `license-write/module.toml`
-declares all 13 SPDX licenses (agpl-3.0, apache-2.0, bsd-2-clause, bsd-3-clause, bsl-1.0,
-cc0-1.0, epl-2.0, gpl-2.0, gpl-3.0, lgpl-2.1, mit, mpl-2.0, unlicense) with default
-apache-2.0 — present the full numbered list (you may recommend the common few and mark the
-module's `default`), not just "MIT / Apache". If you are unsure of a module's options,
-that is the one acceptable reason to read its `module.toml` `[[inputs]]` (NOT the runner
-internals): read the `choices` to enumerate them faithfully. Do not truncate, summarize,
-or substitute your own shortlist for what the manifest declares.
+**RULE 5 — ALWAYS read a choice's options from the module manifest before presenting it;
+never from memory.** Before you present ANY `choice` / `multichoice` question, READ that
+input's `choices` from its `module.toml` `[[inputs]]` and list them VERBATIM — every
+option, plus the declared `default`. Do this every time; do NOT present options you
+recalled from general knowledge, even if you are confident you know them (that is exactly
+how the `license` question wrongly showed only "MIT / Apache" instead of the 13 the
+manifest declares: agpl-3.0, apache-2.0, bsd-2-clause, bsd-3-clause, bsl-1.0, cc0-1.0,
+epl-2.0, gpl-2.0, gpl-3.0, lgpl-2.1, mit, mpl-2.0, unlicense, default apache-2.0). You may
+recommend a common few and mark the `default`, but the full numbered list must be every
+declared choice. Read ONLY the manifest's `[[inputs]]` for this (it is data) — not
+`module.py` or runner logic. Do not truncate, summarize, or substitute your own shortlist
+for what the manifest declares.
 
 ## Module selection (FR-005)
 
