@@ -19,6 +19,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `commit-push-pr` | Commit local changes when needed, push, and open or update a pull request for review. |
 | `debate` | Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. |
 | `dep-audit` | Scan the project's lockfiles and manifests for known-vulnerable dependencies using the ecosystem's native scanners (npm/pnpm audit, pip-audit, cargo audit, govulncheck, osv-scanner) and report CVEs grouped by severity. Never auto-fixes. |
+| `dep-update` | Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively — one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it. |
 | `eli5` | Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts. |
 | `explore` | Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory. |
 | `find-tools` | Discover and vet reusable skills, agents, MCP servers, connectors, and APM packages. Use when the user asks to find a capability, compare tools, fill a marketplace gap, evaluate an external package, or decide whether to adopt, wrap, fork, reject, or build. |
@@ -28,7 +29,6 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7). |
 | `playwright` | Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data. |
 | `project-hygiene` | Audit project-local APM agents, skills, hooks, MCP config, generated steering, and package fit. Use when asked for project hygiene, cleanup, installed agent or skill review, stale generated assets, duplicate tooling, or agentic package drift. |
-| `project-setup` | Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts. |
 | `python-quality` | Run Python format, lint, type-check, and test commands with the project toolchain. |
 | `quick-commit` | Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows. |
 | `research` | Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch). |

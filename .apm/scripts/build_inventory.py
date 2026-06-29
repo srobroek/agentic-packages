@@ -47,8 +47,14 @@ APM_YML = ROOT / "apm.yml"
 # packages: "srobroek/agentic-packages/packages/<name>#<ref>".
 _FIRST_PARTY = re.compile(r"srobroek/agentic-packages/packages/([\w-]+)")
 
-# Per-entry key order in the rendered marketplace block.
-_MARKETPLACE_ENTRY_ORDER = ("name", "source", "category", "tags")
+# Per-entry key order in the rendered marketplace block. Local entries only ever
+# carry name/source/category/tags, so the `if k in entry` filter leaves them
+# byte-identical. The git-source fields (ref/subdir/version/tag_pattern) exist
+# only on hand-authored EXTERNAL entries (a marketplace package whose `source` is
+# a git repo, not ./packages/<dir>) and are slotted into canonical position here.
+_MARKETPLACE_ENTRY_ORDER = (
+    "name", "source", "ref", "subdir", "version", "tag_pattern", "category", "tags",
+)
 
 
 def _load_manifest_path(path: Path) -> dict:
@@ -153,6 +159,36 @@ def _existing_curation(marketplace: dict) -> dict[str, dict]:
     return out
 
 
+def _is_local_source(source) -> bool:
+    """A marketplace entry is LOCAL when its source is a ``./...`` relative path.
+
+    APM derives ``PackageEntry.is_local`` the same way (a leading ``./`` marks a
+    local-path package; every other string form -- ``owner/repo``,
+    ``host.tld/owner/repo``, ``https://...`` -- and the dict/``type:`` form are
+    remote git sources). Anything not local is an external entry this generator
+    must preserve verbatim rather than regenerate from a packages/ dir.
+    """
+    return isinstance(source, str) and source.startswith("./")
+
+
+def _external_entries(marketplace: dict) -> dict[str, dict]:
+    """Map name -> full entry for marketplace packages with an EXTERNAL source.
+
+    These are hand-authored entries whose ``source`` points at a git repo (not a
+    sibling ``./packages/<dir>``), so the packages/ walk never produces them. They
+    are returned verbatim -- including ``source``/``ref``/``subdir``/category/tags
+    -- so they round-trip through render-docs instead of being dropped.
+    """
+    out: dict[str, dict] = {}
+    for entry in marketplace.get("packages") or []:
+        if not (isinstance(entry, dict) and entry.get("name")):
+            continue
+        if _is_local_source(entry.get("source")):
+            continue
+        out[str(entry["name"])] = dict(entry)
+    return out
+
+
 def _package_own_tags(pkg: dict) -> list[str]:
     """A package's own tags (``tags`` plus ``keywords``, deduped, order-stable)."""
     tags: list[str] = []
@@ -174,6 +210,7 @@ def build_context(marketplace: dict | None = None) -> dict:
         root = _load_manifest_path(APM_YML)
         marketplace = root.get("marketplace") or {}
     curation = _existing_curation(marketplace)
+    external = _external_entries(marketplace)
 
     packages: list[dict] = []
     found: set[str] = set()
@@ -229,7 +266,26 @@ def build_context(marketplace: dict | None = None) -> dict:
             "includes_resolved": includes,
         })
 
-    for stale in sorted(set(curation) - found):
+    # Append hand-authored external entries (git-source packages with no
+    # packages/ dir). Reshape through the canonical key order so git-source fields
+    # land in stable position; preserve every key the author wrote. A name that
+    # ALSO has a local packages/ dir is a collision -- the local dir wins (it is
+    # the buildable source of truth) and the external entry is skipped with a
+    # warning, so the block never carries two entries for one name.
+    for name, entry in external.items():
+        if name in found:
+            warnings.append(
+                f"{name}: external marketplace source ignored -- a packages/{name} "
+                f"dir exists and takes precedence (remove one to resolve)"
+            )
+            continue
+        marketplace_entries.append(
+            {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
+        )
+
+    # A curated name with no packages/ dir is "dropped" ONLY if it is not a
+    # recognised external entry -- external sources are intentionally dir-less.
+    for stale in sorted(set(curation) - found - set(external)):
         warnings.append(f"{stale}: in marketplace block but no packages/ dir -- dropped")
 
     packages.sort(key=lambda p: p["name"])

@@ -1,0 +1,10 @@
+{
+  "name": "dep-update",
+  "version": "0.1.0",
+  "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively — one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "skills": "./.apm/skills"
+}

@@ -320,6 +320,18 @@
         }
       ]
     },
+    "packages/dep-update": {
+      "release-type": "simple",
+      "component": "dep-update",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/dependency-quality": {
       "release-type": "simple",
       "component": "dependency-quality",
@@ -1067,18 +1079,6 @@
     "packages/project-lifecycle": {
       "release-type": "simple",
       "component": "project-lifecycle",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/project-setup": {
-      "release-type": "simple",
-      "component": "project-setup",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

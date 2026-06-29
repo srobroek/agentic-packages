@@ -269,6 +269,18 @@
       "category": "security"
     },
     {
+      "name": "dep-update",
+      "source": {
+        "source": "local",
+        "path": "./packages/dep-update"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
       "name": "dependency-quality",
       "source": {
         "source": "local",
@@ -1027,8 +1039,10 @@
     {
       "name": "project-setup",
       "source": {
-        "source": "local",
-        "path": "./packages/project-setup"
+        "source": "url",
+        "url": "srobroek/project-setup",
+        "ref": "d2f70e9a472a248234019e79535a23012e65aeea",
+        "sha": "d2f70e9a472a248234019e79535a23012e65aeea"
       },
       "policy": {
         "installation": "AVAILABLE",

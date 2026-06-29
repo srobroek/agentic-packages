@@ -247,6 +247,19 @@
       "source": "./packages/dep-audit"
     },
     {
+      "name": "dep-update",
+      "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively — one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "dependencies",
+        "upgrade",
+        "advisory",
+        "cve"
+      ],
+      "source": "./packages/dep-update"
+    },
+    {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
       "version": "1.1.1",
@@ -917,13 +930,18 @@
     {
       "name": "project-setup",
       "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
-      "version": "0.3.0",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "lifecycle",
         "bootstrap"
       ],
-      "source": "./packages/project-setup"
+      "source": {
+        "source": "github",
+        "repo": "srobroek/project-setup",
+        "ref": "d2f70e9a472a248234019e79535a23012e65aeea",
+        "sha": "d2f70e9a472a248234019e79535a23012e65aeea"
+      }
     },
     {
       "name": "python-quality",
