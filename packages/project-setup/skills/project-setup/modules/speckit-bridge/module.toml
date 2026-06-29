@@ -23,6 +23,20 @@ choices = ["none", "lightweight", "full"]
 default = "none"
 required = false
 
+[[inputs]]
+key = "marketplace"
+type = "string"
+prompt = "Marketplace name (blank = no marketplace selected)"
+default = ""
+required = false
+
+[[inputs]]
+key = "speckit_source"
+type = "string"
+prompt = "speckit package locator if your marketplace provides one (blank = use public github/spec-kit)"
+default = ""
+required = false
+
 [[steps]]
 id = "setup"
 kind = "python"
