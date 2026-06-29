@@ -114,10 +114,27 @@ def _rows_external_sources(ctx):
     return rows
 
 
+def _rows_external_repos(ctx):
+    """Top-level marketplace entries hosted in another git repo (not packages/)."""
+    rows = []
+    for e in ctx.get("external_marketplace", []):
+        repo = e.get("repo") or ""
+        name = e["name"]
+        link = f"[`{name}`](https://github.com/{repo})" if repo else f"`{name}`"
+        ref = e.get("ref") or ""
+        # A 40-char hex ref is a commit SHA -- show the short form; tags as-is.
+        is_sha = len(ref) == 40 and all(c in "0123456789abcdef" for c in ref.lower())
+        ref_disp = f"`{ref[:7]}`" if is_sha else (f"`{ref}`" if ref else "")
+        tags = ", ".join(f"`{t}`" for t in e.get("tags") or [])
+        rows.append([link, e.get("category", ""), ref_disp, tags])
+    return rows
+
+
 # marker -> (template name, headers, row-builder, target doc file)
 TABLE_SECTIONS = {
     "bundles": ("bundles.jinja", ["Bundle", "What it gives you", "Includes"], _rows_bundles, "docs/bundles.md"),
     "external-sources": ("external-sources.jinja", ["Source repo", "Count", "Members pulled"], _rows_external_sources, "docs/bundles.md"),
+    "external-repos": ("external-repos.jinja", ["Plugin", "Category", "Pinned ref", "Tags"], _rows_external_repos, "docs/external-repos.md"),
     "skills": ("skills.jinja", ["Skill", "Description"], _rows_simple("skill"), "docs/skills.md"),
     "agents": ("agents.jinja", ["Agent", "Description"], _rows_simple("agent"), "docs/agents.md"),
     "steering": ("steering.jinja", ["Steering Package", "Description"], _rows_simple("steering"), "docs/steering.md"),

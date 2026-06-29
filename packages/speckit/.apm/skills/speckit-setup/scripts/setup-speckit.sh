@@ -162,13 +162,41 @@ fi
 echo "==> 2/5 register community extension catalog"
 # Match on URL, not just name: a default catalog (e.g. 'custom' from
 # SPECKIT_CATALOG_URL) may already point at this community URL.
+#
+# Two failure modes this guards against (both make re-runs non-deterministic):
+#   1. `specify ... catalog list` WRAPS the URL across terminal lines even in
+#      captured (non-TTY) output, so a single-line `grep -F "$CATALOG_URL"`
+#      never matches a wrapped URL. Collapse all whitespace before matching.
+#   2. When SPECKIT_CATALOG_URL is set, `catalog list` shows only the env-var
+#      'custom' catalog and MASKS a persistent same-URL 'community' catalog from
+#      an earlier run. The name guard then misses it, we fall through to
+#      `catalog add --name community`, specify rejects the duplicate, and
+#      `set -e` aborts before extensions install. So treat a failing add whose
+#      cause is "already exists" as success -- the desired end state (a catalog
+#      for this URL is registered) is already true.
 catalogs="$(specify extension catalog list 2>/dev/null || true)"
-if printf '%s\n' "$catalogs" | grep -qF "$CATALOG_URL"; then
+# Whitespace-collapsed haystack so a line-wrapped URL still matches.
+catalogs_flat="$(printf '%s' "$catalogs" | tr -s '[:space:]' ' ')"
+if printf '%s' "$catalogs_flat" | grep -qF "$CATALOG_URL"; then
   echo "    a catalog for this URL is already registered -- skipping"
 elif printf '%s\n' "$catalogs" | grep -qw "$CATALOG_NAME"; then
   echo "    catalog '$CATALOG_NAME' already registered -- skipping"
 else
-  specify extension catalog add --name "$CATALOG_NAME" --install-allowed "$CATALOG_URL" </dev/null
+  # Disable -e around the add so an "already exists" rejection (masked catalog,
+  # mode 2 above) does not abort the whole setup; surface any other failure.
+  set +e
+  add_out="$(specify extension catalog add --name "$CATALOG_NAME" --install-allowed "$CATALOG_URL" </dev/null 2>&1)"
+  add_rc=$?
+  set -e
+  if [ "$add_rc" -ne 0 ]; then
+    if printf '%s' "$add_out" | grep -qi 'already exists'; then
+      echo "    catalog '$CATALOG_NAME' already exists (masked from list) -- skipping"
+    else
+      printf '%s\n' "$add_out" >&2
+      echo "ERROR: failed to register catalog '$CATALOG_NAME' ($CATALOG_URL)" >&2
+      exit 1
+    fi
+  fi
 fi
 
 echo "==> 3/5 install + enable ${#EXTENSIONS[@]} extensions"
@@ -210,10 +238,25 @@ for entry in "${EXTENSIONS[@]}"; do
     fi
   else
     echo "    + $ext"
-    specify extension add "$ext" </dev/null
+    # Best-effort, matching the custom-source branch above: a single broken
+    # upstream (e.g. an extension whose tagged release archive 404s/400s) must
+    # NOT abort the whole required-extension install under set -e. Warn, record,
+    # and continue so the remaining catalog extensions still install.
+    if ! specify extension add "$ext" </dev/null; then
+      echo "    WARNING: could not install '$ext' from the '$CATALOG_NAME' catalog -- skipping" >&2
+      FAILED_EXTENSIONS="$FAILED_EXTENSIONS $ext"
+      continue
+    fi
   fi
   specify extension enable "$ext" </dev/null >/dev/null 2>&1 || true
 done
+
+# Surface any skipped extensions as a single end-of-step summary so a partial
+# install is visible without scrolling back through the per-extension output.
+if [ -n "${FAILED_EXTENSIONS# }" ]; then
+  echo "    NOTE: these extensions were skipped (upstream unavailable):${FAILED_EXTENSIONS}" >&2
+  echo "          re-run setup-speckit.sh later to retry them once upstream is fixed." >&2
+fi
 
 echo "==> 4/5 register extension commands for: ${RENDER_LIST[*]} (primary=$INTEGRATION)"
 # `specify extension add` only renders an extension's command files for the

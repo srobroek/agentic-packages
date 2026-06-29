@@ -206,6 +206,15 @@ marketplace:
         - dependencies
         - audit
         - cve
+    - name: dep-update
+      source: ./packages/dep-update
+      category: code-intelligence
+      tags:
+        - skill
+        - dependencies
+        - upgrade
+        - advisory
+        - cve
     - name: dependency-quality
       source: ./packages/dependency-quality
       category: project-lifecycle
@@ -623,7 +632,8 @@ marketplace:
         - bundle
         - lifecycle
     - name: project-setup
-      source: ./packages/project-setup
+      source: srobroek/project-setup
+      ref: 5736e2bd671e1f7af118f17e83230b733abfb563
       category: project-lifecycle
       tags:
         - skill
@@ -807,6 +817,15 @@ marketplace:
         - skill
         - quality
         - verification
+    - name: vibe-hero
+      source: srobroek/vibe-hero
+      ref: d7d3856446287dd659b69e6ee8b78557c686400f
+      category: onboarding
+      tags:
+        - mcp
+        - steering
+        - onboarding
+        - learning
     - name: web-fetch
       source: ./packages/web-fetch
       category: code-intelligence

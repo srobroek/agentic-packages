@@ -40,6 +40,20 @@ jobs:
             xargs -0 -I{} sh -c 'python3 -m json.tool "{}" > /dev/null || { echo "::error::Invalid JSON: {}"; exit 1; }'
           echo "All hook JSON files are valid."
 
+      - name: Generator unit tests (.apm/scripts)
+        # The doc generators are not covered by the per-package test.yml matrix
+        # (it scans packages/* only). Run their unit tests here, where Python +
+        # PyYAML are already provisioned, so behavior like external marketplace
+        # sources is regression-pinned independently of the staleness diff below.
+        run: |
+          gen_tests=$(find .apm/scripts -name 'test_*.py' 2>/dev/null || true)
+          if [ -n "$gen_tests" ]; then
+            pip install pytest
+            echo "$gen_tests" | xargs -r python3 -m pytest -q
+          else
+            echo "no generator tests in .apm/scripts"
+          fi
+
       - name: Regenerate non-destructive artifacts
         run: |
           # Native plugin layout FIRST: each package's committed .claude-plugin/

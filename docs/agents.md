@@ -17,4 +17,4 @@ The four standalone agents below are also bundled into domain bundles (e.g. `age
 
 ---
 
-See also: [bundles](bundles.md) · [skills](skills.md) · [steering](steering.md) · [hooks and MCP](hooks-and-mcp.md) · [SpecKit](speckit.md)
+See also: [bundles](bundles.md) · [skills](skills.md) · [steering](steering.md) · [hooks and MCP](hooks-and-mcp.md) · [external repos](external-repos.md) · [SpecKit](speckit.md)

@@ -47,4 +47,4 @@ Pre-wired Model Context Protocol servers. Installing one adds the server's tools
 
 ---
 
-See also: [bundles](bundles.md) · [skills](skills.md) · [agents](agents.md) · [steering](steering.md) · [SpecKit](speckit.md)
+See also: [bundles](bundles.md) · [skills](skills.md) · [agents](agents.md) · [steering](steering.md) · [external repos](external-repos.md) · [SpecKit](speckit.md)

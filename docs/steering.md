@@ -29,4 +29,4 @@ Language steering (`language-steering-<lang>`) carries the opinionated default s
 
 ---
 
-See also: [bundles](bundles.md) · [skills](skills.md) · [agents](agents.md) · [hooks and MCP](hooks-and-mcp.md) · [SpecKit](speckit.md)
+See also: [bundles](bundles.md) · [skills](skills.md) · [agents](agents.md) · [hooks and MCP](hooks-and-mcp.md) · [external repos](external-repos.md) · [SpecKit](speckit.md)
