@@ -84,6 +84,68 @@ parse_locator = _locator_mod.parse_locator
 
 
 # --------------------------------------------------------------------------- #
+# Source-pin validation (FR-001, FR-002, FR-003 — spec 014)                   #
+# --------------------------------------------------------------------------- #
+
+def validate_sources(sources: list[dict]) -> list[SetupError]:
+    """Validate that every git source has an explicit ref pin.
+
+    A git source is considered unpinned — and rejected with
+    ``ORG_SOURCE_UNPINNED`` — when ALL of the following hold:
+
+    1. Its locator resolves to ``kind="git"`` (remote git repository).
+    2. The source dict has no ``"ref"`` key (or the value is empty/falsy).
+    3. The locator string contains no ``"#"`` fragment (no inline ref pin).
+
+    Any source that has an explicit ``ref`` field, a ``#ref`` fragment in the
+    locator, or is a local-path source (``kind="local"``) passes unconditionally.
+
+    Parameters
+    ----------
+    sources:
+        The assembled ``all_sources`` list (committed + extra_sources).
+
+    Returns
+    -------
+    list[SetupError]
+        One ``ORG_SOURCE_UNPINNED`` error per unpinned git source; empty list
+        when all sources are properly pinned or the list is empty.
+    """
+    errors: list[SetupError] = []
+    for src in sources:
+        locator_str = src.get("locator", "")
+        if not locator_str:
+            continue
+        # Fast reject: if the dict already has an explicit ref field, it's pinned.
+        if src.get("ref"):
+            continue
+        # Fast reject: if the locator string has a '#' fragment, it's pinned.
+        if "#" in locator_str:
+            continue
+        # Parse the locator to distinguish git from local sources.
+        try:
+            loc = parse_locator(locator_str)
+        except Exception:
+            # Unparseable locators are skipped here; fetch will handle them.
+            continue
+        if loc.kind != "git":
+            # Local-path sources are exempt (FR-001).
+            continue
+        # At this point: git source, no ref field, no fragment — unpinned.
+        errors.append(SetupError(
+            error_code=ErrorCode.ORG_SOURCE_UNPINNED,
+            expected="explicit git ref (tag or SHA) for source",
+            received=locator_str,
+            how_to_fix=(
+                f"Pin the org source to an immutable ref: add ref=\"vX.Y.Z\" "
+                f"to the [[source]] record or use {locator_str}#vX.Y.Z. "
+                f"Unpinned git sources are a supply-chain risk."
+            ),
+        ))
+    return errors
+
+
+# --------------------------------------------------------------------------- #
 # Pipeline result                                                              #
 # --------------------------------------------------------------------------- #
 @dataclass
@@ -328,6 +390,15 @@ def run_pipeline(
     all_sources = list(committed_sources)
     if extra_sources:
         all_sources.extend(extra_sources)
+
+    # Source-pin validation: reject unpinned git sources before any fetch (FR-002).
+    source_errors = validate_sources(all_sources)
+    if source_errors:
+        result.errors.extend(source_errors)
+        result.success = False
+        for err in source_errors:
+            io.notify(f"[ERROR] {err.how_to_fix}")
+        return result
 
     # ── Stage 2: fetch sources into cache ──────────────────────────────────── #
     fetched_roots: list[Path] = []
