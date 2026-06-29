@@ -28,6 +28,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -292,6 +293,79 @@ def scan_top_level_dirs(project_dir: "str | Path | None" = None) -> "frozenset[s
         return frozenset(e.name for e in os.scandir(base) if e.is_dir())
     except OSError:
         return frozenset()
+
+
+# --------------------------------------------------------------------------- #
+# detect_marketplaces — offline registry detection (spec 018 FR-001)           #
+# --------------------------------------------------------------------------- #
+def detect_marketplaces(home: "str | Path | None" = None) -> "dict[str, list[str]]":
+    """Return per-system marketplace names read from the user's offline registry files.
+
+    Spec 018 FR-001. Reads three registry files without network or subprocess:
+
+    - APM:         ``<home>/.apm/marketplaces.json``
+    - Claude Code: ``<home>/.claude/plugins/known_marketplaces.json``
+    - Codex:       ``<home>/.codex/config.toml``
+
+    Returns ``{"apm": [...], "claude-code": [...], "codex": [...]}`` where each
+    list contains marketplace NAMES found in the respective registry.  A missing
+    file, malformed JSON/TOML, or empty registry yields an empty list for that
+    system — NEVER raises.
+
+    This is registry-PRESENCE detection (offline). The result is intended to be
+    frozen into ``answers.toml`` by the interview (FR-002).  Modules MUST NOT
+    call this at execute time; they must read the frozen answer instead, to
+    preserve the determinism contract (Decision F — re-detecting at execute time
+    would make a clone behave differently on a machine with vs without a
+    marketplace).
+    """
+    base = Path(home) if home is not None else Path.home()
+
+    # --- APM: ~/.apm/marketplaces.json ---
+    # Shape: {"marketplaces": [{"name": "...", "url": "...", ...}, ...]}
+    apm_names: list[str] = []
+    try:
+        raw = (base / ".apm" / "marketplaces.json").read_bytes()
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            for m in data.get("marketplaces", []):
+                if isinstance(m, dict) and m.get("name"):
+                    apm_names.append(m["name"])
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        apm_names = []
+    except Exception:  # noqa: BLE001 — broad safety net, never raises
+        apm_names = []
+
+    # --- Claude Code: ~/.claude/plugins/known_marketplaces.json ---
+    # Shape: a flat object whose KEYS are marketplace names
+    # e.g. {"claude-plugins-official": {...}, "repomix": {...}}
+    cc_names: list[str] = []
+    try:
+        raw = (base / ".claude" / "plugins" / "known_marketplaces.json").read_bytes()
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            cc_names = list(data.keys())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        cc_names = []
+    except Exception:  # noqa: BLE001
+        cc_names = []
+
+    # --- Codex: ~/.codex/config.toml ---
+    # Shape: [marketplaces.<name>] tables → top-level key "marketplaces" is a
+    # dict whose keys are names (e.g. {"openai-bundled": {...}, ...})
+    codex_names: list[str] = []
+    try:
+        raw = (base / ".codex" / "config.toml").read_bytes()
+        data = tomllib.loads(raw.decode("utf-8"))
+        marketplaces = data.get("marketplaces", {})
+        if isinstance(marketplaces, dict):
+            codex_names = list(marketplaces.keys())
+    except (FileNotFoundError, tomllib.TOMLDecodeError, OSError):
+        codex_names = []
+    except Exception:  # noqa: BLE001
+        codex_names = []
+
+    return {"apm": apm_names, "claude-code": cc_names, "codex": codex_names}
 
 
 # --------------------------------------------------------------------------- #
