@@ -129,12 +129,16 @@ def _read_committed_answers(project_dir: Path) -> dict[str, dict[str, Any]]:
             data = tomllib.load(fh)
     except Exception:
         return {}
-    # Structure: {module: {mod_id: {key: value}, "mod_id.source": {...}}}
+    # Structure: {module: {mod_id: {key: value, source: {provenance}}, ...}}
+    # The nested "source" sub-table is the per-key provenance record — it is NOT
+    # an answer value and must be stripped before the dict is used as answers.
     module_section = data.get("module", {})
     answers: dict[str, dict[str, Any]] = {}
     for key, val in module_section.items():
         if isinstance(val, dict) and "." not in key:
-            answers[key] = val
+            # Strip the reserved "source" provenance sub-table; it must not be
+            # treated as an answer value and must not bleed into final_answers.
+            answers[key] = {k: v for k, v in val.items() if k != "source"}
     return answers
 
 
@@ -197,6 +201,33 @@ def _interview_module(
                 value = io.ask(input_spec, default)
         else:
             value = io.ask(input_spec, default)
+
+        # FR-012: do NOT promote a value to "flag" (user-choice) provenance when
+        # the user has only echoed back the existing committed/home value or the
+        # bare manifest default — neither case represents an active user decision:
+        #
+        #   (a) key in current_answers and value == current_answers[key]:
+        #       The user accepted the committed/home value unchanged (e.g. hit
+        #       enter).  The answer is already covered by the "project"/"home"
+        #       layer in resolve_final_answers; adding it to user_choices would
+        #       re-stamp it as "flag" and mask the true provenance on re-runs.
+        #
+        #   (b) key not in current_answers and value == inp.default:
+        #       The answer was never committed.  The interview echoed the manifest
+        #       default unchanged; that is not a committed decision, just the
+        #       fallback.  resolve_final_answers already applies manifest defaults
+        #       via the layering model, so persisting this would be both redundant
+        #       and harmful (FR-012: spuriously adds a never-committed key).
+        #
+        # In both cases the value is already captured by a lower-precedence layer
+        # and does not need to be in user_choices.  If the user actively types a
+        # different value, value != the baseline and it IS a real choice, kept.
+        if key in current_answers:
+            if value == current_answers[key]:
+                continue  # user accepted committed value unchanged; not a new choice
+        else:
+            if value == inp.default:
+                continue  # user accepted manifest default; not a committed decision
 
         # G8 — secret-detected abort (spec 004 FR-018/019). A value matching a known
         # credential shape is REFUSED: it is dropped (never added to `collected`, so
@@ -576,10 +607,31 @@ def run_pipeline(
         sources=all_sources,
         skill_version=skill_version,
     )
+    # FR-012: strip keys whose only provenance is the bare manifest default
+    # ("default") before writing answers.toml.  Manifest defaults are always
+    # recomputed from the manifest on every run (the layering model applies them
+    # unconditionally) — persisting them is redundant and harmful: it causes
+    # answers.toml to grow with never-committed default values, which violates
+    # the FR-012 boundary when a reproduce_only advisory agent returns an empty
+    # answers_to_persist.  Keys with provenance above "default" (home, project,
+    # agent-steered, flag) represent real committed decisions and are kept.
+    _DEFAULT_PROV = _contracts.Provenance.DEFAULT.value
+    persist_answers: dict[str, dict[str, Any]] = {}
+    persist_prov: dict[str, dict[str, str]] = {}
+    for _mod_id, _mod_answers in final_answers.items():
+        _mod_prov = provenance_map.get(_mod_id, {})
+        _filtered = {
+            k: v for k, v in _mod_answers.items()
+            if _mod_prov.get(k, _DEFAULT_PROV) != _DEFAULT_PROV
+        }
+        _filtered_prov = {k: v for k, v in _mod_prov.items() if k in _filtered}
+        if _filtered:
+            persist_answers[_mod_id] = _filtered
+            persist_prov[_mod_id] = _filtered_prov
     answers_path = write_answers_toml(
         project_dir,
-        answers=final_answers,
-        provenance_map=provenance_map,
+        answers=persist_answers,
+        provenance_map=persist_prov,
     )
     # Persist the resolved enabled set (FR-004): write [modules].enabled so
     # reproduce can replay the exact module set without re-grilling.
