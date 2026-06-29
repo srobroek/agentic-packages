@@ -16,14 +16,34 @@ work around it, install `uv` (https://docs.astral.sh/uv/).
 
 ## How to run it end-to-end
 
-The entry point is the runner CLI:
+**There is ONE entrypoint — invoke it; do NOT inspect the internals.** The runner is
+the source of truth for orchestration. Do **not** read `runner/*.py`, `module.py`,
+`executor.py`, or any module source to "understand how it works" or to plan execution —
+that wastes time and is unnecessary. You only ever run this one command:
 
 ```
-uv run <plugin-root>/skills/project-setup/runner/cli.py --project-dir <dir>
+uv run <plugin-root>/skills/project-setup/runner/cli.py --project-dir <dir> [flags]
 ```
 
 `<plugin-root>` is this skill's directory (resolved at runtime via `${PLUGIN_ROOT}`).
-The runner executes a fixed pipeline:
+There are **no per-script parameters and no legacy `.sh` scripts** — the project's
+answers are NOT passed as CLI arguments; the runner collects them in the interview and
+freezes them to `.project-setup/answers.toml`. The complete flag set is:
+
+| flag | meaning |
+|---|---|
+| `--project-dir <dir>` | the project directory to set up (default `.`) |
+| `--non-interactive` | no prompts; use defaults + committed answers only (CI) |
+| `--dry-run` | run the interview + build the plan but write nothing |
+| `--skill-version <v>` | advisory version string recorded in `sources.toml` |
+| `--refresh <module[.key]>` | reproduce only: re-research the named agent decision(s); repeatable |
+| `--allow-public-repo` | CI opt-in: create a PUBLIC GitHub repo (G3 hard gate) |
+| `--allow-install` | CI opt-in: run the batched `apm install` (G2 supply-chain gate) |
+| `--allow-stack-write` | CI opt-in: write agent-researched dependency pins (G6) |
+| `--no-external-generators` | CI opt-out: skip external scaffolders like `nuxi init` (G4 soft) |
+
+If a step fails, read its structured error (each carries `how_to_fix`) — do not read the
+runner source to diagnose it. The runner executes a fixed pipeline:
 
 1. **Resolve sources** — read module sources (bundled + any declared in config).
 2. **Fetch/cache** — clone declared git sources into `~/.cache/project-setup/`
@@ -224,13 +244,25 @@ legitimately secret-shaped non-secret value.
 
 ## Safe execution & failure handling
 
-- A single module or source failure is reported and the run continues; it does
-  not abort the whole setup. A re-run reaches the intended end state.
-- The validate-closed gate is the only hard stop before writes — if it fails,
-  read its structured errors (each has `how_to_fix`) and fix the answers/sources,
-  then re-run. Do not try to bypass the gate.
-- If a step's error names a missing tool, install the tool or disable the module;
-  do not hand-fake the output.
+**If a step or the runner fails, STOP — do not work around it.** Report to the user
+exactly what failed (the step/module + its structured error and `how_to_fix`) and ask
+for follow-up instructions. Do **not** get creative: do not hand-install packages the
+runner couldn't, do not hand-edit generated files (`apm.yml`, manifests, etc.) to route
+around a failure, do not inspect the runner/module source to invent a fix, and do not
+substitute your own implementation for what a step was supposed to produce. A failed
+step is a signal to pause and consult the user, not a problem for you to solve
+autonomously. The user decides whether to retry, skip the module, fix the environment,
+or abort.
+
+- A single module or source failure is reported by the runner and the run continues
+  past it where the runner is designed to (non-fatal steps); it does not silently
+  abort the whole setup. Still: surface every failure to the user — never bury it.
+- The validate-closed gate is the only hard stop before writes — if it fails, report
+  its structured errors (each has `how_to_fix`) to the user and ask how to proceed. Do
+  not silently change answers/sources to force it closed, and do not bypass the gate.
+- If a step's error names a missing tool, report it and ask the user whether to install
+  the tool or disable the module — do not hand-fake the output and do not install
+  arbitrary tooling on your own initiative.
 
 ## What "done" means
 
