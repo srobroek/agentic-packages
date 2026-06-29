@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Set up, scaffold, or bootstrap a new project or repository — for any language (Python, FastAPI, TypeScript, Go, Rust, etc.). Use whenever the user says "set up a project", "start a new project", "scaffold a repo", "create a new <language/framework> project/service/app", "initialize a repo", adds a monorepo package, or re-runs setup to fix drift. A generic, config-driven runner where every capability (git, GitHub, dirs, pre-commit, license, gitignore, CI, README, env, APM/MCP, SpecKit, language overlays) is a discoverable module.
+description: Set up, scaffold, bootstrap, spin up, stand up, or initialize a NEW project or repository — for any language or framework (Python, FastAPI, TypeScript, Go, Rust, etc.). Use whenever the user wants to start/create/spin up/stand up/build/make/"get going" a new project, service, API, app, or repo — e.g. "set up a project", "start a new project", "spin up a FastAPI service", "create a new <language/framework> app", "scaffold a repo", "initialize a repo", "make a new project" — or adds a monorepo package, or re-runs setup to fix drift. A generic, config-driven runner that SCAFFOLDS (it does not deploy or release): every capability (git, GitHub, dirs, pre-commit, license, gitignore, CI, README, env, APM/MCP, SpecKit, language overlays) is a discoverable module.
 ---
 
 # Project Setup (runner + modules)
