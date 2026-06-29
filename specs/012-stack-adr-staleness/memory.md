@@ -220,9 +220,51 @@ bootstrap pattern is acceptable.
    it from `FrozenInputs` (unchanged). Confirm with human which approach (plan-level
    field vs module-answer) is preferred.
 
-## AS-BUILT (TBD)
+## AS-BUILT (2026-06-29)
 
-*To be filled in after implementation.*
+Shipped on `feat/project-setup-modular-redesign`. Full suite 693 passed, 4 deselected.
+
+**Runner primitives (commit `6b1be3b`):**
+- `StepSpec.reproduce_only: bool = False` (manifest.py) — parsed like `init_only`.
+  `run_agent_phase` (reproduce.py ~629-640) do_invoke branch: a `reproduce_only` agent
+  fires on plain reproduce, is skipped at init UNLESS `--refresh` names it (Q2 override).
+  The `else` branch is byte-identical to pre-012 (backward-compat; SC-009).
+- `ExecutionPlan.written_at: str = ""` (plan.py) — set to `datetime.date.today().isoformat()`
+  (LOCAL date, Q5) at every `freeze()`; `load_plan` defaults `""` for pre-012 plans
+  (SC-010). `reproduce_only` serialized into the step dict when True.
+- Tests: `test_reproduce_only.py` (4) + `test_plan.py` (+7).
+
+**stack-adr module (commit B):**
+- `default_enabled = FALSE` (opt-in) — **CHANGED from the spec's original Decision J**
+  at the user's direction. Reason: stack-adr's value is tied to a lang-* resolver; default-on
+  for a bare greenfield repo wrote an unsolicited near-empty STACK.md and broke the 6-core
+  parity contract (`test_parity_baseline_scaffold.py`). Decision J + FR-001 amended.
+- Steps: `write` (kind=python, both modes) → `staleness` (kind=agent, `reproduce_only=true`)
+  → `staleness-gate` (kind=gate, `hardness=informational`, `init_only=true`, STATIC message).
+- `written_at` determinism (the memory Assumption-4 trap): the write step reads the date
+  from its own frozen `written_at` DERIVED answer (seeded at first init from
+  `plan.written_at`, emitted via answers_to_persist), NOT live `plan.written_at` — so
+  reproduce on a later date is byte-identical. ADR number = deterministic max+1 `sorted(glob)`
+  scan at first init, then read from frozen `adr_path` (derived) on reproduce (no re-scan).
+  Resolver-module discovery is by answer-key presence (`pinned_deps`/`framework`/`rationale`),
+  NOT hard-coded lang ids (FR-004). No wall-clock in module.py (FR-007 verified).
+- Advisory surfaced via the agent step's `message` (NOT `{decision}` — FR-012 forbids the
+  answers_to_persist that token needs); the gate carries a static message.
+- Tests: `test_module_stack_adr.py` (21).
+
+**Pre-existing bug found + fixed SEPARATELY (commit `e5e8eb5`):** the SC-005 FR-012
+boundary test exposed that unanswered manifest defaults were persisted to `answers.toml`
+as `'flag'` (user-choice) provenance. Fixed in pipeline.py (_read_committed_answers source-
+strip + _interview_module echo-back suppression + stage-8 default-provenance persist filter)
+as its OWN commit, not folded into 012. The SC-005 test lives with that commit.
+
+**SC coverage:** SC-001/002/003 + edge (no-resolver stub) + written_at determinism +
+inspect-no-write: `test_module_stack_adr.py`. SC-004/005/009/010 (runner-level dispatch +
+answers.toml-stability + backward-compat): `test_reproduce_only.py` + `test_plan.py`.
+SC-006/007/008 (the agent's live staleness behavior: informational-gate non-blocking,
+network-unreachable degrade, CVE-severity advisory) are AGENT-RUNTIME behaviors steered by
+`steering/staleness.md` — not unit-testable without a live model; covered by the
+informational-gate machinery (004) + the steering doc, honestly NOT asserted here.
 
 ## Determinism rules for 012 (must hold)
 

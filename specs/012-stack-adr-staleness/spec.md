@@ -5,7 +5,17 @@ dedicated `feat/stack-adr-staleness` branch
 
 **Created**: 2026-06-28
 
-**Status**: **Draft (2026-06-28)**
+**Status**: **Implemented (2026-06-29)** — both parts shipped and green. Runner
+primitives `StepSpec.reproduce_only` + `ExecutionPlan.written_at` (commit `6b1be3b`);
+the `stack-adr` module (deterministic STACK.md/ADR write + reproduce-only staleness
+advisory) follows. Two decisions changed from the Draft: (1) **`stack-adr` is now
+`default_enabled = false` (opt-in)** — Decision J amended at the user's direction to
+keep the 6-core minimal default footprint (a bare greenfield repo no longer gets an
+unsolicited STACK.md stub); (2) the SC-005 FR-012 boundary test surfaced a **pre-existing
+provenance/persist bug** (unanswered manifest defaults written to `answers.toml` as
+user-choice provenance) — fixed in a SEPARATE commit (`e5e8eb5`, `fix(project-setup):
+don't persist unanswered manifest defaults …`), not folded into this feature. Full suite
+693 passed, 4 deselected. See `memory.md` → AS-BUILT and `reviews/autonomous-drive-decision-log.md`.
 
 **Input**: Roadmap rank #10 from `reviews/tier2-agentic-features-roadmap.md:89-93`
 ("stack-decision-record + reproduce-time staleness check — medium value / small
@@ -187,12 +197,16 @@ Letters restart at A for this spec.
   with an empty dict there is nothing to merge. The frozen `answers.toml` is
   unchanged by the advisory step. This is the hard boundary between "advisory" and
   "mutation."
-- **J — `stack-adr` is `default_enabled = true`.** Both parts provide high-signal
-  output at low cost for any project that uses a lang-* resolver. A team can opt
-  out by disabling the module. It is NOT `requires = ["lang-python"]` because it
-  works on any combination of enabled lang-* modules, including TypeScript-only
-  projects; if no lang-* module is enabled, it emits a minimal record of
-  non-resolver decisions (framework = none, no pins) rather than erroring.
+- **J — `stack-adr` is `default_enabled = false` (opt-in).** *(Amended 2026-06-28:
+  originally `true`; the user chose opt-in.)* The stack record's value is tied to a
+  lang-* resolver producing pins/framework decisions; enabling it for a bare greenfield
+  project with no resolver would write a near-empty stub the user did not ask for, and
+  would break the minimal-core default footprint (the 6-core parity contract in
+  `test_parity_baseline_scaffold.py`). So it is **opt-in**: enabled explicitly, or
+  alongside a lang-* resolver. It is still NOT `requires = ["lang-python"]` — it works
+  on any combination of enabled lang-* modules (TypeScript-only included); if enabled
+  with no lang-* module it emits a minimal record of non-resolver decisions
+  (framework = none, no pins) rather than erroring.
 
 ## User Scenarios & Testing
 
@@ -315,8 +329,9 @@ step writes by exact path, not by re-scanning).
 
 - **FR-001**: A new `stack-adr` module MUST exist at
   `modules/stack-adr/module.toml` + `module.py` + `templates/` + `steering/`.
-  Its `module.toml` MUST declare `id = "stack-adr"`, `default_enabled = true`,
-  `reconcile = true`, and `[order] after = ["lang-python", "lang-ts"]`.
+  Its `module.toml` MUST declare `id = "stack-adr"`, `default_enabled = false`
+  (opt-in, Decision J as amended), `reconcile = true`, and
+  `[order] after = ["lang-python", "lang-ts"]`.
 - **FR-002**: The module MUST declare two inputs: `format` (choice: `"simple"` |
   `"adr"`, default `"simple"`) and `adr_path` (string, derived at init by the write
   step from the ADR scan, persisted to `answers.toml` as a `"derived"` provenance
