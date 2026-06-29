@@ -254,6 +254,20 @@ declared choice. Read ONLY the manifest's `[[inputs]]` for this (it is data) —
 `module.py` or runner logic. Do not truncate, summarize, or substitute your own shortlist
 for what the manifest declares.
 
+**RULE 5b — large catalogues (dozens+ of options, e.g. a marketplace's ~100+ packages):
+curate HONESTLY; never claim to have shown more than you did.** A full numbered table
+(RULE 4) works for the bundled modules (~24) but NOT for a 100+ package marketplace — do
+not dump 100 rows, and do NOT show 12 and then say "the full list is shown above" or "you
+can pick any of the ~N above". That is a false claim and is forbidden. Instead:
+1. State the REAL total accurately ("the marketplace has 117 packages") — get the count
+   from the actual catalogue (the browse/marketplace output you read), never a guess.
+2. Show a CURATED recommended subset in a table, and say plainly it is a subset
+   ("I've picked the N most relevant; this is not the full list").
+3. Give a REAL way to reach the rest: offer to list a category in full, to search by
+   keyword, or let the user name any package directly — and actually do it when asked.
+Honesty rule: only the words "shown above / listed above / full list" when every item
+truly is. If you curated, say "recommended subset" and point to how to see the rest.
+
 **RULE 6 — keep the user oriented: always say which MODULE you're on.** The user should
 never wonder what a question or action belongs to. Prefix every interview question with
 its module (e.g. "**lang-python** — which Python version?", "**license-write** — pick a
