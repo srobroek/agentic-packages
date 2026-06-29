@@ -648,6 +648,13 @@ def run_agent_phase(
                 "module_id": mod_id,
                 "step_id": step_id,
                 "answers": dict(answers.get(mod_id, {})),
+                # spec 007: a read-only snapshot of ALL answers resolved so far (every
+                # module folded in topo order before this one). Lets a cross-cutting
+                # agent (e.g. ci-github-actions, ordered `after` the lang-* overlays)
+                # size its decision to the actual resolved stack. Additive + a COPY —
+                # agents persist ONLY via `answers_to_persist`, never by mutating context;
+                # existing single-module agents ignore this key.
+                "all_answers": {m: dict(a) for m, a in answers.items()},
             }
             response = run_agent(step_dict, mod_id, io, context)
             atp = response.get("answers_to_persist", {}) if isinstance(response, dict) else {}

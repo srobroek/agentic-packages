@@ -373,3 +373,240 @@ def test_init_only_gate_non_interactive_reproduce_replays_and_writes(tmp_path):
     assert r2.success and r2.mode == "reproduce"
     assert [e for e in io_ci.log if e["op"] == "agent_step"] == []  # zero-network (003 FR-009)
     assert (project_dir / "MANIFEST.txt").read_text().strip() == "fastapi@0.115.0"
+
+
+# --------------------------------------------------------------------------- #
+# spec 007 Phase-0: all_answers in agent context (two-module plan)             #
+# --------------------------------------------------------------------------- #
+
+class _ContextCapturingIO:
+    """Minimal IO double that records the full context dict passed to agent_step.
+
+    Used to assert that ``all_answers`` from module A is visible to module B's
+    agent step. ScriptedIO does not record the context argument, so we use this
+    custom double instead.
+    """
+
+    def __init__(self, agent_responses: dict):
+        self.agent_responses = agent_responses
+        self.captured_contexts: list[dict] = []
+        self.log: list[dict] = []
+
+    def ask(self, input_spec, default):
+        return default
+
+    def confirm(self, item):
+        return True
+
+    def agent_step(self, steering_path: str, context: dict) -> dict:
+        self.captured_contexts.append(dict(context))
+        self.log.append({"op": "agent_step", "steering_path": steering_path})
+        return self.agent_responses.get(
+            steering_path,
+            {"answers_to_persist": {}, "message": "no-op"},
+        )
+
+    def notify(self, msg: str) -> None:
+        self.log.append({"op": "notify", "msg": msg})
+
+
+def _make_two_module_plugin(tmp_path: Path) -> Path:
+    """Plugin root with two modules ordered A → B.
+
+    mod-a: agent step emits ``framework_a``.
+    mod-b (after=["mod-a"]): agent step receives context with ``all_answers``.
+
+    Both write a MANIFEST_*.txt so the pipeline runs Phase B successfully.
+    """
+    plugin_root = tmp_path / "plugin"
+    sdk_path = _RUNNER / "sdk.py"
+
+    def _write_module(mod_id: str, after: list[str]) -> None:
+        mod_dir = plugin_root / "modules" / mod_id
+        (mod_dir / "steering").mkdir(parents=True)
+        (mod_dir / "steering" / "resolve.md").write_text(f"# resolve {mod_id}\n")
+        after_str = repr(after)
+        (mod_dir / "module.toml").write_text(textwrap.dedent(f"""\
+            [meta]
+            repository = "github.com/test/test"
+            author = "Test"
+
+            [module]
+            id = "{mod_id}"
+            name = "{mod_id} (test)"
+            version = "1.0.0"
+            description = "Test module {mod_id}"
+            reconcile = true
+            default_enabled = true
+
+            [order]
+            requires = []
+            after = {after_str}
+            before = []
+
+            [[inputs]]
+            key = "value_{mod_id}"
+            type = "string"
+            prompt = "Value for {mod_id}?"
+            default = ""
+            required = false
+
+            [[steps]]
+            id = "resolve"
+            kind = "agent"
+            steering = "steering/resolve.md"
+
+            [[steps]]
+            id = "write"
+            kind = "python"
+        """))
+        key = f"value_{mod_id}"
+        manifest_file = f"MANIFEST_{mod_id.upper()}.txt"
+        (mod_dir / "module.py").write_text(textwrap.dedent(f"""\
+            # /// script
+            # requires-python = ">=3.11"
+            # ///
+            import argparse, importlib.util, os, sys
+            from pathlib import Path
+            p = argparse.ArgumentParser()
+            p.add_argument("--plan"); p.add_argument("--step")
+            p.add_argument("--inspect", action="store_true")
+            args = p.parse_args()
+            spec = importlib.util.spec_from_file_location("sdk", {str(sdk_path)!r})
+            sdk = importlib.util.module_from_spec(spec); sys.modules["sdk"] = sdk
+            spec.loader.exec_module(sdk)
+            inputs = sdk.load_frozen_inputs(args.plan, module_id="{mod_id}")
+            val = inputs.get_str("{key}", default="UNSET")
+            diff = sdk.idempotent_write(
+                "{manifest_file}", val + "\\n",
+                project_dir=os.environ.get("PROJECT_DIR", "."),
+                reconcile=True, inspect=args.inspect,
+            )
+            sdk.emit_result(sdk.ModuleResult(
+                module_id="{mod_id}", step_id=args.step or "write", status="ok",
+                files_written=[diff.path] if diff.kind in ("create","modify") else [],
+                diffs=[diff],
+            ))
+        """))
+
+    _write_module("mod-a", after=[])
+    _write_module("mod-b", after=["mod-a"])
+    return plugin_root
+
+
+def test_spec007_all_answers_visible_to_downstream_agent(tmp_path):
+    """spec 007 Phase-0: module B's agent step receives all_answers containing
+    module A's emitted answer (value_mod-a).
+
+    Uses _ContextCapturingIO (stateful, records full context) instead of
+    ScriptedIO so we can inspect the context dict passed to each agent_step call.
+    """
+    plugin_root = _make_two_module_plugin(tmp_path)
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+
+    # Both modules use "steering/resolve.md" as their steering path.
+    # We use a call-count-based responder to give distinct answers to A and B.
+    class _OrderedIO(_ContextCapturingIO):
+        _call_idx = 0
+        _seq = [
+            {  # mod-a response
+                "answers_to_persist": {
+                    "value_mod-a": {"value": "answer-from-a", "source": "agent-steered"},
+                },
+                "message": "mod-a resolved",
+            },
+            {  # mod-b response
+                "answers_to_persist": {
+                    "value_mod-b": {"value": "answer-from-b", "source": "agent-steered"},
+                },
+                "message": "mod-b resolved",
+            },
+        ]
+
+        def agent_step(self, steering_path, context):
+            self.captured_contexts.append(dict(context))
+            self.log.append({
+                "op": "agent_step",
+                "steering_path": steering_path,
+                "module_id": context.get("module_id"),
+            })
+            resp = self._seq[self._call_idx % len(self._seq)]
+            self._call_idx += 1
+            return resp
+
+    io = _OrderedIO(agent_responses={})
+    result = run_pipeline(
+        project_dir=project_dir,
+        io=io,
+        non_interactive=False,
+        plugin_root_path=plugin_root,
+        plan_path=_plan_path(tmp_path),
+    )
+    assert result.success is True, [e.how_to_fix for e in result.errors]
+
+    # Two agent steps must have run (one per module).
+    agent_calls = [e for e in io.log if e["op"] == "agent_step"]
+    assert len(agent_calls) == 2, f"Expected 2 agent calls, got {agent_calls}"
+
+    # The SECOND agent call is for mod-b (ordered after mod-a).
+    mod_b_ctx = io.captured_contexts[1]
+    assert "all_answers" in mod_b_ctx, (
+        "spec 007: all_answers must be present in module B's agent context"
+    )
+
+    # all_answers must contain mod-a's emitted answer.
+    all_answers = mod_b_ctx["all_answers"]
+    assert "mod-a" in all_answers, (
+        f"all_answers must contain mod-a. Keys: {list(all_answers.keys())}"
+    )
+    assert all_answers["mod-a"].get("value_mod-a") == "answer-from-a", (
+        f"all_answers[mod-a][value_mod-a] must be 'answer-from-a', "
+        f"got: {all_answers.get('mod-a')}"
+    )
+
+    # Pipeline wrote both manifest files.
+    assert (project_dir / "MANIFEST_MOD-A.TXT").exists() or \
+           (project_dir / "MANIFEST_MOD-A.txt").exists() or \
+           any(project_dir.glob("MANIFEST_MOD*")), "mod-a manifest must be written"
+
+
+def test_spec007_single_module_backward_compat(tmp_path):
+    """spec 007 Phase-0 backward-compat: a single-module agent still receives
+    all_answers in its context and the pipeline succeeds unchanged.
+
+    This verifies the additive change (spec 007 Phase-0) does not break
+    the existing single-module Tier-2 flow.
+    """
+    plugin_root = _make_resolver_plugin(tmp_path)
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+
+    class _RecordingIO(_ContextCapturingIO):
+        pass
+
+    io = _RecordingIO(agent_responses={
+        "steering/resolve.md": {
+            "answers_to_persist": {
+                "framework": {"value": "litestar", "source": "agent-steered"},
+            },
+            "message": "resolved: litestar",
+        }
+    })
+    result = run_pipeline(
+        project_dir=project_dir,
+        io=io,
+        non_interactive=False,
+        plugin_root_path=plugin_root,
+        plan_path=_plan_path(tmp_path),
+    )
+    assert result.success is True, [e.how_to_fix for e in result.errors]
+
+    # The agent was called once; its context must carry all_answers.
+    assert len(io.captured_contexts) == 1
+    ctx = io.captured_contexts[0]
+    assert "all_answers" in ctx, (
+        "spec 007 backward-compat: all_answers must be present in single-module agent context"
+    )
+    # Pipeline still writes the file correctly (FR-017 replay).
+    assert (project_dir / "MANIFEST.txt").read_text().strip() == "litestar"

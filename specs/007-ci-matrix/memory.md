@@ -203,7 +203,53 @@ version matrix is the right default (anti-goal: over-broad matrices burn minutes
    matrix, action refs, commands) for meaningful human review without being the exact
    YAML bytes.
 
-## AS-BUILT (TBD)
+## AS-BUILT (2026-06-29)
 
-_Not yet implemented. This section will be filled after implementation to record
-refinements, surprising interactions, and deviations from the spec._
+Shipped on `feat/project-setup-modular-redesign`. Full suite 731 passed, 4 deselected.
+
+**THE CORE GAP (found at plan-authoring, before any code — synthesis OQ-3 told me to
+verify Phase-A ordering):** the spec's central premise — the CI agent reads "the frozen
+answers for all active language overlays from its context dict" (FR-005a, Settled Decision
+C/I, Assumption 4) — was UNSUPPORTED. `run_agent_phase` built the agent context as
+`{module_id, step_id, answers: <THIS module's answers only>}` (reproduce.py:647-651 +
+executor.py:536-539). No cross-module visibility existed. The python step COULD read the
+full plan (`sdk.load_plan().modules[...].answers`), but the agent's DECISION context could
+not.
+
+**RESOLUTION (user-approved runner change — Phase 0):** broadened the Phase-A agent
+context with an additive read-only `all_answers` snapshot (reproduce.py, in run_agent_phase):
+`"all_answers": {m: dict(a) for m, a in answers.items()}`. `answers` is the topo-ordered
+accumulator, so a module ordered `after` lang-* sees their already-emitted answers. A COPY
+(read-only intent; agents persist only via answers_to_persist). Backward-compatible: every
+existing agent ignores the key — verified by the full suite (731) + a dedicated
+`test_two_phase_resolver.py::test_spec007_single_module_backward_compat`. Cross-module
+visibility proven by `test_spec007_all_answers_visible_to_downstream_agent` (a context-
+capturing IO double asserts module B sees module A's emitted answer). **This `all_answers`
+view is now reusable infrastructure for any future cross-cutting agent module.**
+
+**The module:** modules/ci-github-actions/ (module.toml + module.py + steering/resolve.md,
+NO templates — YAML rendered programmatically). default_enabled=false, reconcile=true,
+after=[justfile-write, lang-*]. Steps: resolve(agent, reads all_answers) → ci-review(gate,
+hard, allow-ci-write, init_only) → write(python). Flat agent-steered encoding (OQ-2):
+ci_plan_jobs (list), ci_plan_action_refs (list), ci_plan_matrix (JSON string of
+{lang,version} dicts), ci_plan_commands (flat list). render_ci_yaml is a pure-stdlib
+canonical serializer (deterministic key order, real true/false, byte-identical — SC-006).
+Command validation drops unknown `just <recipe>` / missing package.json scripts with WARN;
+floating action refs → FIXME placeholder + WARN; matrix trimmed to the frozen lang version
+(reads python_version via load_plan). Zero jobs/commands → files_written=[] + warning, no
+empty YAML. dependencies=[] (stdlib only). NO network anywhere (SC-007 structural).
+
+**OQ leans applied:** OQ-1 no live GH API probe; OQ-2 flat keys; OQ-3 no ci_matrix_versions
+(single-version matrix). 
+
+**Tests:** test_module_ci_github_actions.py (22) + 2 Phase-0 tests in test_two_phase_resolver.
+
+**SC coverage:** SC-001/002/003/004/005/006/008 directly tested. SC-007 (reproduce
+zero-network) is STRUCTURAL — _do_write has zero network primitives (no urllib/http/socket,
+unlike lang-* which call verify_pins), so there is nothing to block; no dedicated
+network-double test (acceptable — honest note). SC-009 (no runner regression) = full suite 731.
+
+**Implementation notes / minor deviations:** (1) commands are a shared flat list across
+jobs in v1 (a multi-job plan repeats them per job) — a future iteration can split per-job
+if steering emits a per-job encoding; (2) `actions/setup-python` is omitted when `setup-uv`
+is present (uv subsumes python setup) — the SC-001 test reflects this.

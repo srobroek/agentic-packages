@@ -5,7 +5,15 @@ dedicated `feat/ci-matrix` branch
 
 **Created**: 2026-06-28
 
-**Status**: Draft (2026-06-28)
+**Status**: **Implemented (2026-06-29)** — new `ci-github-actions` module shipped + a
+small additive runner change. Full suite 731 passed, 4 deselected. A premise check before
+build found the CI agent could NOT see other modules' frozen answers (the runner gave an
+agent only its OWN answers), which 007's "size the matrix to the actual stack" depends on;
+RESOLVED (user) with a backward-compatible runner change: the Phase-A agent context now
+carries a read-only `all_answers` snapshot (Settled Decision C/I/Assumption-4 now
+supported). OQ leans applied: no live GitHub API probe (OQ-1), flat `ci_plan_*` keys
+(OQ-2), single-version matrix (OQ-3). See `memory.md` → AS-BUILT and
+`reviews/autonomous-drive-decision-log.md`.
 
 **Input**: Roadmap rank #5 `ci-matrix-sized-to-stack` in
 `reviews/tier2-agentic-features-roadmap.md:59-63`.
