@@ -25,8 +25,10 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import shutil
 import sys
+import tomllib
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -75,6 +77,7 @@ import io_adapter  # noqa: E402
 
 run_pipeline = pipeline.run_pipeline
 TerminalIO = io_adapter.TerminalIO
+FileAnswersIO = io_adapter.FileAnswersIO
 
 
 # --------------------------------------------------------------------------- #
@@ -127,6 +130,21 @@ def _build_parser() -> argparse.ArgumentParser:
             "Each refreshed decision is shown as an old-vs-new diff and applied "
             "only on confirm; all other agent steps replay their committed "
             "decision with zero network. Ignored in init mode."
+        ),
+    )
+    p.add_argument(
+        "--answers",
+        default=None,
+        metavar="FILE",
+        help=(
+            "Path to a JSON or TOML file of pre-collected answers "
+            "(format: {\"module_id.key\": value, ..., \"enabled\": [\"module-id\", ...]}). "
+            "Drives the runner non-interactively; the agent collects answers up front "
+            "(interview + agent-steered decisions) and passes them here. "
+            "Example: {\"core-identity.project_name\": \"my-app\", "
+            "\"core-identity.license\": \"mit\", "
+            "\"enabled\": [\"lang-python\"]}. "
+            "On parse error the runner exits 1 — it does NOT fall back to stdin."
         ),
     )
 
@@ -191,14 +209,50 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    io = TerminalIO()
+    # ── IO construction (FR-001/002/006) ─────────────────────────────────────── #
+    # Priority: --answers (agent path) > --non-interactive > TerminalIO (human).
+    non_interactive = args.non_interactive
+    if args.answers:
+        answers_path = Path(args.answers).expanduser().resolve()
+        try:
+            if answers_path.suffix.lower() == ".toml":
+                with answers_path.open("rb") as _f:
+                    raw_answers: dict = tomllib.load(_f)
+            else:
+                with answers_path.open("r", encoding="utf-8") as _f:
+                    raw_answers = json.load(_f)
+        except Exception as exc:
+            print(
+                f"Error: could not read --answers {args.answers}: {exc}",
+                file=sys.stderr,
+            )
+            return 1
+        # Pull the optional top-level "enabled" list out of the dict; the rest
+        # are answer entries keyed as "module_id.key" (or bare "key").
+        enabled: list[str] | None = raw_answers.pop("enabled", None)
+        if enabled is not None and not isinstance(enabled, list):
+            print(
+                f"Error: 'enabled' in --answers file must be a list of module ids, got {type(enabled).__name__}",
+                file=sys.stderr,
+            )
+            return 1
+        io = FileAnswersIO(
+            answers=raw_answers,
+            enabled=enabled,
+            active_flags=_active_flags(args),
+        )
+        non_interactive = True  # answer-driven implies non-interactive semantics
+    elif args.non_interactive:
+        io = TerminalIO()
+    else:
+        io = TerminalIO()
 
     try:
         result = run_pipeline(
             project_dir=project_dir,
             io=io,
             skill_version=args.skill_version,
-            non_interactive=args.non_interactive,
+            non_interactive=non_interactive,
             dry_run=args.dry_run,
             refresh=args.refresh,
             active_flags=_active_flags(args),

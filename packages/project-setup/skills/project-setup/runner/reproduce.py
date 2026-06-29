@@ -643,6 +643,13 @@ def run_agent_phase(
                 # agent call, no network. (FR-009 replay.)
                 continue
 
+            # Answer-driven IO (FileAnswersIO): all answers are pre-frozen by the
+            # agent up front. Skip the live agent call entirely — the agent-steered
+            # answers are already in resolved_answers (or will be supplied via
+            # io.ask). (FR-004 / spec 019 SC-003)
+            if getattr(io, "is_answer_driven", False):
+                continue
+
             step_dict = {"id": step_id, "kind": "agent", "steering": steering}
             context = {
                 "module_id": mod_id,

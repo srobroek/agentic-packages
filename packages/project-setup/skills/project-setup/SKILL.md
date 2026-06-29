@@ -24,25 +24,52 @@ declared `[[inputs]] choices` to enumerate a question's options faithfully is fi
 expected — see RULE 5; that is data, not logic.) You only ever run this one command:
 
 ```
-uv run <plugin-root>/skills/project-setup/runner/cli.py --project-dir <dir> [flags]
+uv run <plugin-root>/skills/project-setup/runner/cli.py --project-dir <dir> --answers <file> [gate flags]
 ```
 
-`<plugin-root>` is this skill's directory (resolved at runtime via `${PLUGIN_ROOT}`).
-There are **no per-script parameters and no legacy `.sh` scripts** — the project's
-answers are NOT passed as CLI arguments; the runner collects them in the interview and
-freezes them to `.project-setup/answers.toml`. The complete flag set is:
+`<plugin-root>` is this skill's directory (resolved at runtime via `${CLAUDE_PLUGIN_ROOT}`).
+There are **no per-script parameters and no legacy `.sh` scripts**. The runner is
+**answer-driven** in a **two-phase model**: YOU (the agent) do all the asking first, then
+hand the runner a frozen answer set — the runner never prompts.
+
+1. **Phase 1 — you collect every answer.** Conduct the whole interview yourself (module
+   selection per FR-005 + every module's inputs) AND resolve any agent-steered decisions
+   (e.g. stack/framework/pinned versions). The runner does NOT ask the user anything.
+2. **Phase 2 — write an answers file and run the CLI with `--answers`.** The file is JSON:
+   keys are `"module_id.key"` → value, plus an optional `"enabled"` list of the module
+   ids to run. Include agent-steered answers as ordinary entries (so the runner's
+   agent-phase is a no-op — no callbacks). Example:
+   ```json
+   {
+     "enabled": ["lang-python", "precommit-setup"],
+     "core-identity.name": "demo", "core-identity.org": "acme",
+     "core-identity.layout": "single", "core-identity.license": "mit",
+     "license-write.license": "mit",
+     "lang-python.framework": "fastapi", "lang-python.python_version": "3.13"
+   }
+   ```
+   Then `uv run <root>/runner/cli.py --project-dir <dir> --answers answers.json [gate flags]`.
+   The runner validates, builds the plan, executes, and writes `.project-setup/`.
+
+Gates are driven by the per-action flags below (NOT by prompts): with `--answers` the run
+is non-interactive, so a hard gate SAFE-skips unless you pass its `--allow-*` flag. The
+complete flag set:
 
 | flag | meaning |
 |---|---|
 | `--project-dir <dir>` | the project directory to set up (default `.`) |
-| `--non-interactive` | no prompts; use defaults + committed answers only (CI) |
-| `--dry-run` | run the interview + build the plan but write nothing |
+| `--answers <file>` | **(primary)** JSON/TOML of pre-collected answers (`module.key`→value + optional `enabled`); runs non-interactively |
+| `--non-interactive` | no prompts; defaults + committed answers only (CI, no `--answers`) |
+| `--dry-run` | build the plan but write nothing |
 | `--skill-version <v>` | advisory version string recorded in `sources.toml` |
 | `--refresh <module[.key]>` | reproduce only: re-research the named agent decision(s); repeatable |
 | `--allow-public-repo` | CI opt-in: create a PUBLIC GitHub repo (G3 hard gate) |
 | `--allow-install` | CI opt-in: run the batched `apm install` (G2 supply-chain gate) |
 | `--allow-stack-write` | CI opt-in: write agent-researched dependency pins (G6) |
 | `--no-external-generators` | CI opt-out: skip external scaffolders like `nuxi init` (G4 soft) |
+
+(Running with NO `--answers` and NO `--non-interactive` falls back to an interactive stdin
+interview — that is the legacy/human-debug path, not how you, the agent, drive it.)
 
 If a step fails, read its structured error (each carries `how_to_fix`) — do not read the
 runner source to diagnose it. The runner executes a fixed pipeline:

@@ -243,6 +243,10 @@ def _interview_module(
         # Map InputSpec to a dict for io.ask
         input_spec = {
             "key": key,
+            # FR-003: disambiguate shared keys across modules. getattr-guarded so a
+            # minimal manifest stub (e.g. the G8 interview unit tests) without `.id`
+            # still works — production ModuleManifest always provides the `.id` property.
+            "module_id": getattr(manifest, "id", ""),
             "type": getattr(inp.type, "value", str(inp.type)),
             "prompt": inp.prompt,
             "choices": inp.choices,
@@ -486,6 +490,7 @@ def run_pipeline(
         # Non-interactive callers that don't supply it get base-only (FR-007).
         _mod_sel_spec = {
             "key": "enabled",
+            "module_id": "modules",  # FR-003: sentinel so FileAnswersIO can resolve the enabled list
             "type": "list",
             "prompt": "Optional modules to enable (space/comma-separated ids, or leave blank for base only):",
             "choices": None,

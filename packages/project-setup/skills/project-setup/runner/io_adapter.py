@@ -248,3 +248,112 @@ class ScriptedIO:
 
     def notify(self, msg: str) -> None:
         self.log.append({"op": "notify", "msg": msg})
+
+
+# --------------------------------------------------------------------------- #
+# FileAnswersIO — production answer-driven adapter (non-interactive)          #
+# --------------------------------------------------------------------------- #
+class FileAnswersIO:
+    """Production non-interactive IO adapter driven by a pre-collected answers dict.
+
+    The agent collects all answers up front (interview + agent-steered decisions),
+    writes them to a JSON/TOML file, and passes the file to ``--answers``. This
+    adapter reads that dict and never calls ``input()``.
+
+    Lookup order for ``ask``:
+      1. ``"{module_id}.{key}"`` when ``module_id`` is present in *input_spec*.
+      2. Bare ``"{key}"`` — fallback for shared defaults.
+      3. The *default* argument.
+
+    Gates are driven by the per-action flags (``active_flags``) and the
+    ``non_interactive=True`` path in ``executor.run_gate_step``, which honours
+    ``allow_flag``/``skip_flag`` + hardness semantics without prompting.
+    ``confirm`` returns ``False`` so that any residual interactive confirm call
+    (e.g. a file-write confirm) safe-skips; the answer-driven path passes
+    ``non_interactive=True`` to ``run_pipeline`` so hard-gate decisions are made
+    in ``run_gate_step`` — not here.
+
+    The ``enabled`` module-selection list may be supplied separately because its
+    source is a top-level key in the answers file, not a ``module_id.key`` entry.
+
+    All interactions are recorded in ``.log`` for assertions (mirrors ScriptedIO).
+    Stdlib only.
+    """
+
+    _ENABLED_KEY = "enabled"
+
+    #: Marker queried by run_agent_phase to skip live agent calls when
+    #: all answers are pre-frozen. Additive — does not break the protocol.
+    is_answer_driven: bool = True
+
+    def __init__(
+        self,
+        answers: dict[str, Any] | None = None,
+        enabled: list[str] | None = None,
+        active_flags: frozenset[str] | None = None,
+    ) -> None:
+        self.answers: dict[str, Any] = answers or {}
+        self.enabled: list[str] | None = enabled
+        self.active_flags: frozenset[str] = active_flags or frozenset()
+        self.log: list[dict[str, Any]] = []
+
+    def ask(self, input_spec: dict[str, Any], default: Any) -> Any:
+        key = input_spec.get("key", "")
+        module_id = input_spec.get("module_id", "")
+
+        # Special case: module-selection "enabled" question — return the
+        # pre-supplied enabled list so the agent's confirmed module set is honored.
+        if key == self._ENABLED_KEY and self.enabled is not None:
+            self.log.append({"op": "ask", "key": key, "module_id": module_id, "value": self.enabled, "source": "enabled"})
+            return self.enabled
+
+        # Resolve module_id.key first (FR-003), then bare key, then default.
+        if module_id:
+            qualified = f"{module_id}.{key}"
+            if qualified in self.answers:
+                value = self.answers[qualified]
+                self.log.append({"op": "ask", "key": key, "module_id": module_id, "value": value, "source": "qualified"})
+                return value
+
+        if key in self.answers:
+            value = self.answers[key]
+            self.log.append({"op": "ask", "key": key, "module_id": module_id, "value": value, "source": "bare"})
+            return value
+
+        self.log.append({"op": "ask", "key": key, "module_id": module_id, "value": default, "source": "default"})
+        return default
+
+    # Non-interactive ask alias so pipeline._interview_module's non-interactive
+    # branch (which calls ask_non_interactive when available) also goes through
+    # our answer-lookup instead of the TerminalIO default-only path.
+    def ask_non_interactive(self, input_spec: dict[str, Any], default: Any) -> Any:
+        return self.ask(input_spec, default)
+
+    def confirm(self, item: dict[str, Any]) -> bool:
+        """Never prompt. Return False (safe-skip default for non-interactive use).
+
+        In answer-driven mode run_pipeline is called with non_interactive=True,
+        so run_gate_step handles hard/soft gate semantics via flags — this method
+        is only reached for file-write confirms, which should safe-skip (the
+        pipeline writes files through the python-step path, not through io.confirm).
+        """
+        path = item.get("path", "")
+        self.log.append({"op": "confirm", "path": path, "result": False})
+        return False
+
+    def agent_step(
+        self,
+        steering_path: str,
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        """No-op: agent-steered answers are pre-seeded in the answers dict.
+
+        Returns an empty ``answers_to_persist`` so the agent-phase fold loop
+        short-circuits (reproduce.py line ~661: ``if not atp: continue``).
+        """
+        self.log.append({"op": "agent_step", "steering_path": steering_path})
+        return {"answers_to_persist": {}, "message": "answer-driven: agent-steered answers pre-seeded"}
+
+    def notify(self, msg: str) -> None:
+        print(msg)
+        self.log.append({"op": "notify", "msg": msg})
