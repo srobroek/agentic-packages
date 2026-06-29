@@ -169,34 +169,75 @@ and the next steps the user takes (e.g. "write your app under `src/`, add tests 
 phase — there isn't one. If you find yourself writing `.py`/`.ts` source modules,
 models, routers, migrations, or test files, you have exceeded scope: stop.
 
-## How to ask the user (one question at a time, options listed in text)
+## How to ask the user (one question at a time, always an escape hatch)
 
 This governs EVERY choice you surface — modules, marketplace packages, MCP servers,
-leaf/sub-packages, language overlays, versions, anything. Two hard rules:
+leaf/sub-packages, language overlays, versions, anything. Three rules:
 
 **RULE 1 — ONE question at a time.** Ask a single question, wait for the answer, then ask
 the next. Do NOT batch several decisions into one multi-question prompt, and do NOT fire a
-stack of choice-widgets at once. Each decision is its own turn. This keeps the interview
+stack of choice-prompts at once. Each decision is its own turn — this keeps the interview
 legible and lets earlier answers shape later questions.
 
-**RULE 2 — ALWAYS list the options in plain text; never rely on a picker widget to carry
-them.** Write the options out in your message as a numbered/bulleted list the user can
-read in full, then ask them to answer in free text (e.g. "reply with the numbers/names you
-want, or 'recommended' to take the defaults"). Do NOT use a fixed multi-select / choice
-widget to PRESENT options — those silently cap at ~4 and drop the rest, so the user never
-sees most of their menu. That is a bug.
+**RULE 2 — A menu/choice prompt is fine** (for any number of options, including small
+ones). Use it to present the choices clearly. Recommend a sensible default and label it.
 
-For any list of options (especially > a handful):
-1. **Recommend** a small default set, each with a one-line reason.
-2. **List ALL the other available options** in text (grouped/categorized if long) — hide
-   none.
-3. **Ask, in free text,** for one decision: accept the recommended set, add from the rest,
-   or remove any.
+**RULE 3 — ALWAYS include an "another option" / "other" escape** so the user is never
+limited to only the shown choices — they can always type their own answer or ask to see
+more. This matters most when there are MORE options than the menu can show (a menu caps at
+~4 visible choices): then the menu MUST carry an explicit "Other / more options" choice,
+AND you list the remaining options in your message text so the user can see the full menu
+and name any of them via the escape. Never let the widget's size silently drop options the
+user should know about.
 
-The ONLY acceptable use of a choice widget is a genuinely tiny, closed question (a yes/no,
-or ≤3 mutually-exclusive modes) — and even then the options must be self-evident. When in
-doubt: list options in text and ask one free-text question. Never let the UI element
-decide how many options the user gets to see.
+**RULE 4 — present option sets as NUMBERED TABLES, grouped by category, selectable by
+number.** For modules, packages, plugins, MCP servers, overlays — any set of options —
+do NOT use loose bullet lists. Render markdown tables grouped into these categories (omit
+a group if empty):
+
+- **Mandatory** (always run, cannot be deselected) — show for transparency, not selectable.
+- **Recommended** (your proposed defaults for this project).
+- **Optional** (available, not recommended — the rest of the menu).
+- **Not applicable** (excluded for this project, with the reason — e.g. other languages).
+
+Number the rows in a single continuous sequence across the selectable groups so the user
+can answer by number. Each table: `#`, name, and a one-line reason/what-it-does. Then ask
+ONE question: which to enable — accept the recommended set, or give the numbers to
+add/remove — and always allow a free-text "other" answer. Example shape:
+
+```
+Mandatory (always run)
+| name | what it does |
+| core-identity, dirs-scaffold, gitignore-generate, license-write, agents-md, git-init | base scaffold |
+
+Recommended for a FastAPI service
+| # | module | why |
+| 1 | lang-python      | Python overlay: pins 3.13, uv + pyproject.toml |
+| 2 | precommit-setup  | ruff lint/format enforced on commit |
+| 3 | justfile-write   | run/test/lint task shortcuts |
+
+Optional (available)
+| #  | module | what it does |
+| 4  | quality-hooks    | extra agent quality hooks |
+| 5  | github-repo      | create + push a GitHub repo |
+| 6  | apm-install      | install agentic (APM) packages |
+| 7  | codex-config     | write .codex/ config |
+| 8  | speckit-bridge   | SpecKit spec-driven workflow |
+| 9  | mcp-config       | configure MCP servers |
+| 10 | env-example      | .env.example from the stack |
+| 11 | stack-adr        | STACK.md decision record |
+| 12 | ci-github-actions| CI workflow sized to the stack |
+
+Not applicable here
+| module | reason |
+| lang-ts / lang-go / lang-rust | project is Python |
+
+→ Enable the recommended set (1–3)? Or reply with numbers to add/remove (e.g. "1,2,3,5"),
+or describe anything else you want.
+```
+
+For a long marketplace package list, same idea: number every package in tables; the user
+picks by number; an "other / type a package not listed" answer is always available.
 
 ## Module selection (FR-005)
 
@@ -238,16 +279,14 @@ Before running the pipeline for a new project, you MUST conduct module selection
    `"latest"` → latest-at-clone-time (documented, intentional exception to
    byte-identity for one-time external installs).
 
-3. **Propose an enablement set with rationale** — following "How to ask the user"
-   above (ONE question at a time; options listed in text, not a widget): give a
-   RECOMMENDED set (each with a one-line reason, e.g. "lang-python: Python project;
-   precommit-setup: you mentioned wanting linting"), then list ALL the OTHER available
-   optional modules in text so the user sees the full menu, and ask them — in free
-   text — to accept / add / remove. Do NOT cram the catalogue into a choice widget.
-   Start from the base set and add only what fits the intent. The SAME rule applies
-   when the chosen marketplace exposes many packages/leaf packages: recommend a few,
-   list ALL the rest in text, ask as one free-text question — never a capped widget,
-   never several pickers at once.
+3. **Propose an enablement set as NUMBERED TABLES** (see "How to ask the user" RULE 4):
+   present Mandatory / Recommended / Optional / Not-applicable tables, rows numbered in
+   one continuous sequence, each with a one-line reason. Then ask ONE question — accept
+   the recommended set or give numbers to add/remove, with a free-text "other" always
+   available. Start from the base set and add only what fits the intent. The SAME table
+   format applies when the chosen marketplace exposes many packages/leaf packages: number
+   every package in tables, select by number, "type one not listed" always available —
+   one question at a time, never several prompts at once.
 
 4. **Confirm with the user** — show the final proposed set (base + optional) and
    ask for explicit approval.  The user may add or remove modules.
