@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Bootstrap or update a repo with a modular, config-driven runner. The skill is generic; every capability (git, GitHub, dirs, pre-commit, license, gitignore, APM, SpecKit, language overlays, identity) is a discoverable module. Use when creating a project, adding a monorepo package, choosing modules/sources, or re-running setup to fix drift.
+description: Set up, scaffold, or bootstrap a new project or repository — for any language (Python, FastAPI, TypeScript, Go, Rust, etc.). Use whenever the user says "set up a project", "start a new project", "scaffold a repo", "create a new <language/framework> project/service/app", "initialize a repo", adds a monorepo package, or re-runs setup to fix drift. A generic, config-driven runner where every capability (git, GitHub, dirs, pre-commit, license, gitignore, CI, README, env, APM/MCP, SpecKit, language overlays) is a discoverable module.
 ---
 
 # Project Setup (runner + modules)
