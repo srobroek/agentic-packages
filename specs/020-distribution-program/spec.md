@@ -5,12 +5,14 @@ dedicated `feat/distribution-program` branch
 
 **Created**: 2026-06-29
 
-**Status**: **Draft (2026-06-29)** — ONE spec covering the whole distribution program
-(consolidated at the user's request). Decisions all locked in
-`[[project-setup-distribution-program]]`. Builds on the answer-driven CLI keystone
-(spec 019). Sequenced so the IN-REPO, unblocked work ships first; the outward
-repo-extraction + catalog-publish CI is staged behind a handoff (creating/pushing a new
-repo is an outward action requiring the user).
+**Status**: **Implemented (in-repo groups) (2026-06-29)** — Groups A (SHA cache), B (addon
+catalog + agent offer), C (sources schema validation + author docs/scaffold), and the
+in-repo prep of D/E (addon catalog.json + publish-workflow template + CLAUDE_PLUGIN_ROOT
+token fix) are SHIPPED; full suite 943 passed, 4 deselected. The OUTWARD remainder — actually
+creating/pushing the standalone repo, wiring the catalog-publish workflow to a live repo,
+and deleting the 18 modules from the bundled payload once they have a fetch home — is a
+USER HANDOFF (see AS-BUILT + the program memory). Consolidated at the user's request;
+builds on spec 019. See `memory.md` AS-BUILT + `[[project-setup-distribution-program]]`.
 
 **Input**: User: make project-setup a standalone, distributable tool — own repo + native
 Claude plugin; thin 6-module core + addon modules fetched from git (internal AND external);

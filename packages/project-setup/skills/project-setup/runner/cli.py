@@ -281,7 +281,7 @@ def _load_sdk():
     except ModuleNotFoundError:
         pass
     # Fallback: file-path load for direct invocation outside the executor.
-    plugin_root = os.environ.get("PLUGIN_ROOT")
+    plugin_root = os.environ.get("PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
     else:

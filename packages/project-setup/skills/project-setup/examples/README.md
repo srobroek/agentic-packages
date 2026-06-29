@@ -105,7 +105,7 @@ def _load_sdk():
         pass
     # Fallback: load by file path for direct invocation outside the executor
     # (e.g. functional tests that run `uv run module.py` without PYTHONPATH).
-    plugin_root = os.environ.get("PLUGIN_ROOT")
+    plugin_root = os.environ.get("PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
     else:

@@ -305,6 +305,8 @@ def run_python_step(
     run_env.setdefault("PROJECT_DIR", str(project_dir))
     # Ensure PLUGIN_ROOT is set so modules can load the SDK
     run_env.setdefault("PLUGIN_ROOT", str(plugin_root_path))
+    # Also set CLAUDE_PLUGIN_ROOT so native-plugin installs (which export this token) work (spec 020 FR-E1/E3).
+    run_env.setdefault("CLAUDE_PLUGIN_ROOT", str(plugin_root_path))
     # Put the runner dir on PYTHONPATH so module.py can `import sdk` directly
     # (spec 005). `uv run` propagates PYTHONPATH into the PEP-723 script's
     # sys.path (verified, uv 0.11.8). Modules keep a path-load fallback for

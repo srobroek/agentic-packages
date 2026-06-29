@@ -61,7 +61,7 @@ def _load_sdk():
     except ModuleNotFoundError:
         pass
     # Fallback: locate sdk.py by path (PLUGIN_ROOT, or __file__-relative).
-    plugin_root = os.environ.get("PLUGIN_ROOT")
+    plugin_root = os.environ.get("PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
         if not sdk_path.is_file():

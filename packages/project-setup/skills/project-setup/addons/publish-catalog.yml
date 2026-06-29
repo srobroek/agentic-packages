@@ -1,0 +1,154 @@
+# Template: copy into .github/workflows/ of a project-setup addon repo to publish its
+# addon catalog.json. Pin every locator to the release tag.
+#
+# Usage
+# -----
+# 1. Copy this file to .github/workflows/publish-catalog.yml in your addon repo.
+# 2. Replace REPO_OWNER / REPO_NAME with your org/repo slug (or set them as repo
+#    variables: vars.REPO_OWNER, vars.REPO_NAME).
+# 3. The catalog is built from every modules/<id>/module.toml file found in the repo.
+# 4. On each push to the default branch (rolling "main" catalog) AND on each published
+#    release (immutable pinned catalog at that tag), the catalog.json is pushed to the
+#    gh-pages branch and is also uploaded as a release asset.
+#
+# Catalog JSON shape produced
+# ---------------------------
+# {
+#   "schema": "project-setup-addon-catalog/v1",
+#   "ref":    "<git-ref-or-tag>",
+#   "modules": [
+#     { "name": "<id>", "description": "...", "locator": "<owner>/<repo>/modules/<id>",
+#       "category": "<category>", "ref": "<git-ref-or-tag>" }
+#   ]
+# }
+#
+# IMPORTANT: Real/published catalogs MUST pin each locator's ref to an immutable tag
+# (not "main"). The ORG_SOURCE_UNPINNED gate in project-setup enforces this at
+# runtime when users select addons from the catalog.
+
+name: Publish addon catalog
+
+on:
+  push:
+    branches: [main]          # Rolling catalog on every merge to main
+  release:
+    types: [published]        # Immutable catalog pinned to the release tag
+
+# Parameterize your repo slug here, or promote these to repo/org variables.
+env:
+  REPO_OWNER: ${{ vars.REPO_OWNER || github.repository_owner }}
+  REPO_NAME:  ${{ vars.REPO_NAME  || github.event.repository.name }}
+
+jobs:
+  publish-catalog:
+    name: Build and publish catalog.json
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push to gh-pages and upload release assets
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve git ref
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "value=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Build catalog.json from every modules/*/module.toml using an inline Python script.
+      # No third-party deps required — standard library only.
+      - name: Build catalog.json
+        id: build
+        run: |
+          python3 - <<'PYEOF'
+          import json, pathlib, sys
+
+          try:
+              import tomllib
+          except ImportError:
+              try:
+                  import tomli as tomllib   # Python < 3.11 fallback (add to dev deps if needed)
+              except ImportError:
+                  print("ERROR: tomllib/tomli not available. Requires Python 3.11+ or 'tomli' package.", file=sys.stderr)
+                  sys.exit(1)
+
+          import os
+          repo_owner = os.environ["REPO_OWNER"]
+          repo_name  = os.environ["REPO_NAME"]
+          git_ref    = "${{ steps.ref.outputs.value }}"
+
+          modules_dir = pathlib.Path("modules")
+          if not modules_dir.is_dir():
+              print(f"No modules/ directory found — nothing to catalog.", file=sys.stderr)
+              catalog = {"schema": "project-setup-addon-catalog/v1", "ref": git_ref, "modules": []}
+              pathlib.Path("catalog.json").write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
+              sys.exit(0)
+
+          records = []
+          for toml_path in sorted(modules_dir.glob("*/module.toml")):
+              module_id = toml_path.parent.name
+              try:
+                  data = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  print(f"WARN: skipping {toml_path}: {exc}", file=sys.stderr)
+                  continue
+
+              mod = data.get("module", {})
+              name        = mod.get("id", module_id)
+              description = mod.get("description", "")
+              category    = mod.get("category", "")
+
+              # Locator points at this repo's module path, pinned to the current ref.
+              locator = f"{repo_owner}/{repo_name}/modules/{name}"
+
+              records.append({
+                  "name":        name,
+                  "description": description,
+                  "locator":     locator,
+                  "category":    category,
+                  "ref":         git_ref,
+              })
+
+          catalog = {
+              "schema":  "project-setup-addon-catalog/v1",
+              "ref":     git_ref,
+              "modules": records,
+          }
+          out = pathlib.Path("catalog.json")
+          out.write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
+          print(f"Built catalog.json with {len(records)} module(s) at ref={git_ref!r}")
+          PYEOF
+
+      - name: Show catalog summary
+        run: |
+          echo "--- catalog.json (first 40 lines) ---"
+          head -40 catalog.json
+
+      # Publish to gh-pages branch so the catalog is reachable via a stable raw URL:
+      #   https://raw.githubusercontent.com/<owner>/<repo>/gh-pages/catalog.json
+      # or via GitHub Pages:
+      #   https://<owner>.github.io/<repo>/catalog.json
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .          # catalog.json is at repo root after build step
+          publish_branch: gh-pages
+          keep_files: true        # do not wipe other gh-pages content
+          # Commit only catalog.json so the branch stays lean
+          include_files: catalog.json
+
+      # Also upload as a release asset when triggered by a published release,
+      # so users can pin to an immutable artifact URL.
+      - name: Upload catalog.json as release asset
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: catalog.json
+          tag_name: ${{ github.event.release.tag_name }}

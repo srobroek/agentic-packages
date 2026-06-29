@@ -52,7 +52,7 @@ def _load_sdk():
         return sdk
     except ModuleNotFoundError:
         pass
-    plugin_root = os.environ.get("PLUGIN_ROOT")
+    plugin_root = os.environ.get("PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         sdk_path = Path(plugin_root) / "runner" / "sdk.py"
         if not sdk_path.is_file():
