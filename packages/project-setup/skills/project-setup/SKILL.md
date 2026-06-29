@@ -174,6 +174,21 @@ Before running the pipeline for a new project, you MUST conduct module selection
    Detection runs ONCE at init and the *choice* is frozen; reproduce replays the
    frozen choice and never re-detects.
 
+   **Version choices (FR-V1–FR-V4).** After the user picks their packages and
+   sources, default ALL installable packages to `latest` — never carry a
+   hardcoded pin. Then offer a per-package version override: "Pin any package to
+   a specific version? Leave blank to use latest for all." For packages left at
+   `latest`, ask whether the user wants **latest-always** (freeze the literal
+   `"latest"` — clones re-resolve to the newest release at clone time; this is
+   the default, matching one-time scaffolders like `nuxi@latest`) or
+   **latest-today** (resolve the current version NOW and freeze that concrete
+   number — clones get the identical build). Record the answers as frozen inputs:
+   `speckit_version` (for speckit-bridge), `mcp_versions` as `"name=version
+   name2=version2"` (for mcp-config), and version-bearing locators for
+   apm-install. A concrete version → identical install on reproduce;
+   `"latest"` → latest-at-clone-time (documented, intentional exception to
+   byte-identity for one-time external installs).
+
 3. **Propose an enablement set with rationale** — list the optional modules you
    recommend enabling, each with a one-line reason (e.g. "lang-python: Python
    project; precommit-setup: you mentioned wanting linting; github-repo: you

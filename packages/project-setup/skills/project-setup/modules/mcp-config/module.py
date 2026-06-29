@@ -32,9 +32,11 @@ Invoked by the runner as:
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib.util
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -80,6 +82,52 @@ _PUBLIC_MCP: dict[str, dict] = {
 _KNOWN_NAMES = ", ".join(sorted(_PUBLIC_MCP))
 
 
+def _parse_mcp_versions(raw: str) -> dict[str, str]:
+    """Parse 'name=version' overrides from a space-or-comma-separated string.
+
+    Examples:
+      "context7=1.0.14 repomix=0.2.0"  → {"context7": "1.0.14", "repomix": "0.2.0"}
+      ""                                → {}
+      "bogus-no-equals"                 → {} (malformed token silently ignored)
+    """
+    result: dict[str, str] = {}
+    if not raw or not raw.strip():
+        return result
+    # Split on commas or whitespace
+    tokens = re.split(r"[,\s]+", raw.strip())
+    for token in tokens:
+        if not token:
+            continue
+        if "=" in token:
+            name, _, version = token.partition("=")
+            name = name.strip()
+            version = version.strip()
+            if name and version:
+                result[name] = version
+        # tokens without "=" are silently ignored (malformed)
+    return result
+
+
+def _apply_version(server_spec: dict, version: str) -> dict:
+    """Return a copy of server_spec with the package token in args versioned.
+
+    The package token is the first arg after '-y' that is NOT a flag (does not
+    start with '-').  e.g. args=['-y', '@upstash/context7-mcp'] → token becomes
+    '@upstash/context7-mcp@1.0.14'.  Flags after the package (like '--mcp') are
+    preserved unchanged.
+    """
+    import copy
+    spec = copy.deepcopy(server_spec)
+    args: list = spec.get("args", [])
+    # Find the first non-flag token (the package name)
+    for i, token in enumerate(args):
+        if not token.startswith("-"):
+            args[i] = f"{token}@{version}"
+            break
+    spec["args"] = args
+    return spec
+
+
 # --------------------------------------------------------------------------- #
 # Step handlers                                                                #
 # --------------------------------------------------------------------------- #
@@ -87,6 +135,8 @@ _KNOWN_NAMES = ", ".join(sorted(_PUBLIC_MCP))
 def _do_write(sdk, inputs, args) -> int:
     """write step: merge selected MCP server entries into .mcp.json."""
     mcp_servers: list = inputs.get_list("mcp_servers", default=[])
+    mcp_versions_raw = inputs.get_str("mcp_versions", default="")
+    version_overrides = _parse_mcp_versions(mcp_versions_raw)
     warnings: list[str] = []
 
     # FR-010: empty list → clean no-op, nothing written.
@@ -113,7 +163,14 @@ def _do_write(sdk, inputs, args) -> int:
             continue
         name = name.strip()
         if name in _PUBLIC_MCP:
-            selected[name] = _PUBLIC_MCP[name]
+            base_spec = _PUBLIC_MCP[name]
+            if name in version_overrides:
+                # Pin the package token to the specified version
+                spec = _apply_version(base_spec, version_overrides[name])
+            else:
+                # No override — use the unpinned (latest) public ref
+                spec = copy.deepcopy(base_spec)
+            selected[name] = spec
         else:
             warnings.append(
                 f"WARN: unknown MCP server {name!r}; skipped — "

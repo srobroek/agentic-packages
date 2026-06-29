@@ -48,6 +48,7 @@ def _frozen_plan(
     mcp_servers: list | None = None,
     marketplace: str = "",
     reconcile: bool = True,
+    mcp_versions: str = "",
 ) -> Path:
     """Build a frozen plan.json for the mcp-config write step."""
     if mcp_servers is None:
@@ -65,6 +66,7 @@ def _frozen_plan(
                 "answers": {
                     "mcp_servers": mcp_servers,
                     "marketplace": marketplace,
+                    "mcp_versions": mcp_versions,
                 },
                 "steps": [
                     {"id": "resolve", "kind": "agent", "steering": "steering/resolve.md"},
@@ -135,10 +137,18 @@ def test_manifest_parses_and_is_valid():
     write_step = next(s for s in mani.steps if s.id == "write")
     assert write_step.kind == "python"
 
-    # inputs: mcp_servers + marketplace both declared
+    # inputs: mcp_servers + marketplace + mcp_versions all declared
     input_keys = [i.key for i in mani.inputs]
     assert "mcp_servers" in input_keys, f"mcp_servers input missing; got {input_keys}"
     assert "marketplace" in input_keys, f"marketplace input missing; got {input_keys}"
+    # FR-V2: mcp_versions per-server version override must be declared
+    assert "mcp_versions" in input_keys, (
+        f"mcp_versions input missing from manifest; got: {input_keys}"
+    )
+    mv_input = next(i for i in mani.inputs if i.key == "mcp_versions")
+    assert mv_input.default == "", (
+        f"mcp_versions default should be '' (empty = all latest), got: {mv_input.default!r}"
+    )
 
     # order: after dirs-scaffold
     after = mani.order.get("after", [])
@@ -396,3 +406,128 @@ def test_no_srobroek_runtime_literal_in_module_py():
                 f"module.py contains 'srobroek' in a string constant at line {node.lineno}: "
                 f"{node.value!r}"
             )
+
+
+# --------------------------------------------------------------------------- #
+# FR-V2: per-server version overrides via mcp_versions                         #
+# --------------------------------------------------------------------------- #
+
+def test_mcp_versions_pins_package_token(tmp_path):
+    """mcp_versions='context7=1.0.14' → context7 args contain '@upstash/context7-mcp@1.0.14'."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    plan = _frozen_plan(
+        tmp_path,
+        mcp_servers=["context7"],
+        mcp_versions="context7=1.0.14",
+    )
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+    assert ".mcp.json" in result["files_written"]
+
+    doc = json.loads((project / ".mcp.json").read_text())
+    servers = doc["mcpServers"]
+    assert "context7" in servers
+    # The versioned package token must be in args
+    args = servers["context7"]["args"]
+    assert "@upstash/context7-mcp@1.0.14" in args, (
+        f"Expected versioned package token in args, got: {args}"
+    )
+
+
+def test_mcp_versions_no_override_is_unpinned(tmp_path):
+    """mcp_versions='' (default) → context7 args contain '@upstash/context7-mcp' (no @version)."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    plan = _frozen_plan(
+        tmp_path,
+        mcp_servers=["context7"],
+        mcp_versions="",
+    )
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    doc = json.loads((project / ".mcp.json").read_text())
+    args = doc["mcpServers"]["context7"]["args"]
+    # The unpinned token must be present; no @version appended
+    assert "@upstash/context7-mcp" in args, f"Expected base package in args, got: {args}"
+    for token in args:
+        assert not (token.startswith("@upstash/context7-mcp@") and token != "@upstash/context7-mcp"), (
+            f"No version suffix expected in unpinned mode, got: {token!r}"
+        )
+
+
+def test_mcp_versions_repomix_pin_preserves_mcp_flag(tmp_path):
+    """mcp_versions='repomix=0.2.0' → package token pinned but '--mcp' flag preserved."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    plan = _frozen_plan(
+        tmp_path,
+        mcp_servers=["repomix"],
+        mcp_versions="repomix=0.2.0",
+    )
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    doc = json.loads((project / ".mcp.json").read_text())
+    args = doc["mcpServers"]["repomix"]["args"]
+    # Package token must be versioned
+    assert "repomix@0.2.0" in args, f"Expected pinned repomix token, got: {args}"
+    # --mcp flag must be preserved
+    assert "--mcp" in args, f"--mcp flag must be preserved after pinning, got: {args}"
+
+
+def test_mcp_versions_multiple_overrides(tmp_path):
+    """mcp_versions='context7=1.0.14 repomix=0.2.0' → both servers pinned."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    plan = _frozen_plan(
+        tmp_path,
+        mcp_servers=["context7", "repomix"],
+        mcp_versions="context7=1.0.14 repomix=0.2.0",
+    )
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+
+    doc = json.loads((project / ".mcp.json").read_text())
+    servers = doc["mcpServers"]
+    assert "@upstash/context7-mcp@1.0.14" in servers["context7"]["args"]
+    assert "repomix@0.2.0" in servers["repomix"]["args"]
+    assert "--mcp" in servers["repomix"]["args"]
+
+
+def test_mcp_versions_partial_override(tmp_path):
+    """mcp_versions pins only context7; repomix stays unpinned."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    plan = _frozen_plan(
+        tmp_path,
+        mcp_servers=["context7", "repomix"],
+        mcp_versions="context7=1.0.14",
+    )
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+
+    doc = json.loads((project / ".mcp.json").read_text())
+    servers = doc["mcpServers"]
+    # context7 pinned
+    assert "@upstash/context7-mcp@1.0.14" in servers["context7"]["args"]
+    # repomix unpinned
+    repomix_args = servers["repomix"]["args"]
+    assert "repomix" in repomix_args, f"Expected bare 'repomix' token, got: {repomix_args}"
+    assert not any("repomix@" in t for t in repomix_args), (
+        f"repomix should be unpinned (no version suffix), got: {repomix_args}"
+    )

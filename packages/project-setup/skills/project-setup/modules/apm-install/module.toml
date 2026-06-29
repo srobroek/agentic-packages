@@ -18,7 +18,7 @@ after = ["dirs-scaffold", "precommit-setup"]
 [[inputs]]
 key = "agentic_packages"
 type = "string"
-prompt = "APM package locator(s) to install, e.g. <pkg>@<your-marketplace> (leave blank to install nothing)"
+prompt = "APM package locator(s) to install, e.g. <pkg>@<your-marketplace> or <pkg>@<your-marketplace>@<version> (version optional; latest if omitted; leave blank to install nothing)"
 default = ""
 required = false
 

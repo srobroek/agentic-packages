@@ -183,6 +183,31 @@ the file, check for ≥1 entry. No network, no subprocess.
   STACK.md, pinned manifest + toolchain, README draft). Anything not produced by a module
   step is out of scope.
 
+### Version policy (no pins; latest-default; per-package override)
+
+- **FR-V1**: The tool MUST NOT carry a hardcoded version pin for ANY package it
+  installs. The `_SPECKIT_PIN` constant introduced in P3 MUST be removed — when setting
+  up a project the default is the LATEST version of each package, not a maintained
+  constant that goes stale.
+- **FR-V2**: Each installable package (spec-kit, each mcp-config MCP server, each
+  apm-install package) MUST support a per-package version CHOICE, defaulting to
+  `"latest"`. `"latest"` → an UNPINNED install command (`uvx … specify`,
+  `npx -y <pkg>`, `apm install <pkg>`); a concrete version → the pinned form
+  (`npx -y <pkg>@<ver>`, `<pkg>@<ver>`). Modules read the per-package version answer and
+  build the command accordingly — no version logic beyond latest-vs-pinned.
+- **FR-V3**: The FR-005 interview MUST default ALL packages to `latest`, then OFFER a
+  per-package override ("pin any to a specific version? blank = all latest"). The user
+  pins only what they choose; the rest stay latest. The interview MUST also ask, for
+  latest selections, whether the user wants **latest-today** (resolve `latest` to the
+  concrete current version NOW and freeze that number → clones get the identical version)
+  or **latest-always** (freeze the literal `"latest"` → clones re-resolve to newest at
+  clone time). Default: latest-always (consistent with one-time external scaffolders like
+  `nuxi@latest`/`create-vite`, which are outside Tier-1 byte-identity).
+- **FR-V4**: The frozen per-package version answer is what the module replays on
+  reproduce: a concrete version → identical install; `"latest"` → latest-at-clone-time.
+  This is a deliberate, documented exception to byte-identity for one-time external
+  installs (the install runs once at init/clone, it is not a replayed Tier-1 artifact).
+
 ### Metadata + standalone hygiene
 
 - **FR-013**: The ~21 `[meta] repository = "github.com/srobroek/agentic-packages"` strings

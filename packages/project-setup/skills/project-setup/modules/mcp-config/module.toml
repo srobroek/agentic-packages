@@ -29,6 +29,13 @@ default = ""
 required = false
 prompt = "Marketplace to source MCP servers from (leave blank to use public upstream refs)"
 
+[[inputs]]
+key = "mcp_versions"
+type = "string"
+default = ""
+required = false
+prompt = "Pin specific MCP server versions as 'name=version' (space-separated; blank = all latest)"
+
 [[steps]]
 id = "resolve"
 kind = "agent"

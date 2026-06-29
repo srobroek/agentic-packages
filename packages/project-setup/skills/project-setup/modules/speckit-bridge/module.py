@@ -12,8 +12,11 @@ Modes:
 full-mode install precedence:
   1. If speckit_source is non-empty (the interview froze a marketplace locator),
      install that via apm then delegate to setup-speckit.sh as before.
-  2. Otherwise, use PUBLIC spec-kit (github.com/github/spec-kit) via pinned
-     `uv tool install specify-cli --from <git-url>@<PIN>`, then `specify init .`.
+  2. Otherwise, use PUBLIC spec-kit (github.com/github/spec-kit).
+     - speckit_version == "" or "latest" → unpinned: installs the current latest.
+     - speckit_version == "vX.Y.Z" → pinned: installs that exact version.
+     Command: `uv tool install specify-cli --from <git-url>[@<version>]`
+     then `specify init .`.
   3. If neither uv/specify is available nor a marketplace speckit, degrade
      gracefully: emit status=ok with a warning + the manual public command
      (FR-008 non-fatal contract).
@@ -32,13 +35,28 @@ import subprocess
 import sys
 from pathlib import Path
 
-# maintained pin; bump deliberately. Public spec-kit: github.com/github/spec-kit
-_SPECKIT_PIN = "v0.0.55"
+# Public spec-kit git source (github.com/github/spec-kit).
+# No pin constant — the version is an opt-in per-invocation choice (FR-V1/FR-V2).
+# "latest" (or blank) → unpinned install command (resolves current HEAD/release).
+# A concrete version string (e.g. "v0.0.61") → pinned install command.
 _SPECKIT_GIT = "git+https://github.com/github/spec-kit.git"
-_SPECKIT_MANUAL_CMD = (
-    f"uv tool install specify-cli --from {_SPECKIT_GIT}@{_SPECKIT_PIN} "
-    "&& specify init ."
-)
+
+
+def _speckit_ref(version: str) -> str:
+    """Return the --from ref for uv tool install.
+
+    "latest" or "" → unpinned (no @tag appended).
+    Any other string → pinned as {_SPECKIT_GIT}@{version}.
+    """
+    if not version or version.lower() == "latest":
+        return _SPECKIT_GIT
+    return f"{_SPECKIT_GIT}@{version}"
+
+
+def _speckit_manual_cmd(version: str) -> str:
+    """Return the manual install+init command for the given version choice."""
+    ref = _speckit_ref(version)
+    return f"uv tool install specify-cli --from {ref} && specify init ."
 
 
 def _load_sdk():
@@ -114,8 +132,11 @@ def _run_cmd(cmd: list[str], env: dict, cwd: str) -> tuple[int, str, str]:
         return 1, "", str(exc)
 
 
-def _install_public_speckit(env: dict, cwd: str) -> tuple[bool, str]:
+def _install_public_speckit(env: dict, cwd: str, version: str = "latest") -> tuple[bool, str]:
     """Install PUBLIC spec-kit via uv and run `specify init .`.
+
+    version: "latest" or "" → unpinned (current HEAD/release).
+             any other string → pinned @version.
 
     Returns (success: bool, detail: str).
     Degrades gracefully when uv or specify is unavailable.
@@ -123,9 +144,10 @@ def _install_public_speckit(env: dict, cwd: str) -> tuple[bool, str]:
     if not shutil.which("uv"):
         return False, "uv not found on PATH"
 
+    ref = _speckit_ref(version)
     install_cmd = [
         "uv", "tool", "install", "specify-cli",
-        "--from", f"{_SPECKIT_GIT}@{_SPECKIT_PIN}",
+        "--from", ref,
     ]
     rc_install, _, stderr_install = _run_cmd(install_cmd, env, cwd)
     if rc_install != 0:
@@ -154,6 +176,7 @@ def main() -> int:
 
     spec_mode = inputs.get_choice("spec_mode", default="none")
     speckit_source = inputs.get_str("speckit_source", default="")
+    speckit_version = inputs.get_str("speckit_version", default="latest")
     # marketplace is read for context but speckit_source is the operative signal
     # (the interview sets speckit_source when it resolves a marketplace locator)
 
@@ -320,27 +343,29 @@ def main() -> int:
 
     # --------------------------------------------------------------------- #
     # Path B: no marketplace speckit — use PUBLIC spec-kit (default).        #
+    # speckit_version controls pinning: "latest"/""=unpinned, else pinned.   #
     # --------------------------------------------------------------------- #
+    version_label = speckit_version if speckit_version and speckit_version.lower() != "latest" else "latest"
+    manual_cmd = _speckit_manual_cmd(speckit_version)
+
     if args.inspect:
         result = sdk.ModuleResult(
             module_id="speckit-bridge",
             step_id=args.step,
             status="ok",
             message=(
-                f"would install public spec-kit via: "
-                f"uv tool install specify-cli --from {_SPECKIT_GIT}@{_SPECKIT_PIN} "
-                f"&& specify init ."
+                f"would install public spec-kit ({version_label}) via: {manual_cmd}"
             ),
         )
         sdk.emit_result(result)
         return 0
 
-    success, detail = _install_public_speckit(env, cwd)
+    success, detail = _install_public_speckit(env, cwd, version=speckit_version)
     if not success:
         # Graceful degrade (FR-008): warn + manual command, non-fatal
         warnings.append(
             f"Public spec-kit install skipped ({detail}). "
-            f"To set up spec-kit manually: {_SPECKIT_MANUAL_CMD}"
+            f"To set up spec-kit manually: {manual_cmd}"
         )
         result = sdk.ModuleResult(
             module_id="speckit-bridge",
@@ -357,7 +382,7 @@ def main() -> int:
         step_id=args.step,
         status="ok",
         warnings=warnings,
-        message=f"speckit setup completed via public spec-kit ({_SPECKIT_PIN})",
+        message=f"speckit setup completed via public spec-kit ({version_label})",
     )
     sdk.emit_result(result)
     return 0

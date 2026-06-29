@@ -37,6 +37,13 @@ prompt = "speckit package locator if your marketplace provides one (blank = use 
 default = ""
 required = false
 
+[[inputs]]
+key = "speckit_version"
+type = "string"
+prompt = "spec-kit version to install (e.g. 'v0.0.61'), or 'latest' to always use the current release"
+default = "latest"
+required = false
+
 [[steps]]
 id = "setup"
 kind = "python"

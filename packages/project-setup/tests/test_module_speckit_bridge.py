@@ -55,6 +55,7 @@ def _frozen_plan(
     spec_mode: str = "none",
     speckit_source: str = "",
     marketplace: str = "",
+    speckit_version: str = "latest",
 ) -> Path:
     plan = {
         "schema_version": 1,
@@ -70,6 +71,7 @@ def _frozen_plan(
                     "spec_mode": spec_mode,
                     "speckit_source": speckit_source,
                     "marketplace": marketplace,
+                    "speckit_version": speckit_version,
                 },
                 "steps": [{"id": "setup", "kind": "python"}],
             }
@@ -165,6 +167,14 @@ def test_manifest_parses_and_is_valid():
     assert "spec_mode" in input_keys
     assert "marketplace" in input_keys
     assert "speckit_source" in input_keys
+    # FR-V2: speckit_version input must be declared with default "latest"
+    assert "speckit_version" in input_keys, (
+        f"speckit_version input missing from manifest; got: {input_keys}"
+    )
+    sv_input = next(i for i in mani.inputs if i.key == "speckit_version")
+    assert sv_input.default == "latest", (
+        f"speckit_version default should be 'latest', got: {sv_input.default!r}"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -421,6 +431,88 @@ def test_full_mode_graceful_degrade_specify_missing_after_install(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# Version policy (FR-V1 / FR-V2)                                               #
+# --------------------------------------------------------------------------- #
+
+def test_full_mode_latest_uses_unpinned_ref(tmp_path):
+    """spec_mode=full, speckit_version='latest' → --from ref has no @tag (unpinned).
+
+    Uses --inspect so no actual uv/specify calls are made; the message must
+    reference the unpinned git URL without any @v... tag.
+    """
+    project = tmp_path / "proj"
+    project.mkdir()
+    plan = _frozen_plan(tmp_path, spec_mode="full", speckit_source="", speckit_version="latest")
+    proc = _run(project, plan, inspect=True)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+    msg = result.get("message", "")
+    # The --from ref must NOT contain a @v... version pin
+    assert "github/spec-kit" in msg, f"Expected git URL in inspect message, got: {msg!r}"
+    # "latest" → no @vX.Y.Z in the git URL portion
+    import re
+    assert not re.search(r"spec-kit\.git@v\S+", msg), (
+        f"Unpinned install expected (no @v tag) but found one in: {msg!r}"
+    )
+
+
+def test_full_mode_pinned_version_uses_pinned_ref(tmp_path):
+    """spec_mode=full, speckit_version='v0.0.61' → --from ref is pinned @v0.0.61."""
+    project = tmp_path / "proj"
+    project.mkdir()
+    plan = _frozen_plan(tmp_path, spec_mode="full", speckit_source="", speckit_version="v0.0.61")
+    proc = _run(project, plan, inspect=True)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+    msg = result.get("message", "")
+    assert "v0.0.61" in msg, f"Expected pinned version in inspect message, got: {msg!r}"
+    assert "spec-kit.git@v0.0.61" in msg, (
+        f"Expected pinned ref 'spec-kit.git@v0.0.61' in message, got: {msg!r}"
+    )
+
+
+def test_full_mode_default_version_is_latest(tmp_path):
+    """spec_mode=full with no speckit_version answer → defaults to 'latest' (unpinned)."""
+    project = tmp_path / "proj"
+    project.mkdir()
+    # Build plan WITHOUT speckit_version in answers (omit key entirely)
+    plan_data = {
+        "schema_version": 1,
+        "mode": "init",
+        "order": ["speckit-bridge"],
+        "modules": {
+            "speckit-bridge": {
+                "id": "speckit-bridge",
+                "version": "1.0.0",
+                "reconcile": False,
+                "module_rel_root": _MODULE_REL,
+                "answers": {
+                    "spec_mode": "full",
+                    "speckit_source": "",
+                    "marketplace": "",
+                    # speckit_version intentionally absent → module default "latest"
+                },
+                "steps": [{"id": "setup", "kind": "python"}],
+            }
+        },
+    }
+    plan = tmp_path / "plan_noversion.json"
+    plan.write_text(json.dumps(plan_data))
+    proc = _run(project, plan, inspect=True)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", result
+    msg = result.get("message", "")
+    # Should not have @v... in the git URL — defaults to unpinned
+    import re
+    assert not re.search(r"spec-kit\.git@v\S+", msg), (
+        f"Default (no speckit_version) should be unpinned, but found pin in: {msg!r}"
+    )
+
+
+# --------------------------------------------------------------------------- #
 # Source-code audit                                                              #
 # --------------------------------------------------------------------------- #
 
@@ -429,4 +521,15 @@ def test_no_srobroek_in_module():
     source = _MODULE_PY.read_text()
     assert "srobroek" not in source, (
         "srobroek literal found in module.py — all srobroek refs must be removed"
+    )
+
+
+def test_no_speckit_pin_constant_in_module():
+    """FR-V1: module.py must NOT contain _SPECKIT_PIN or 'v0.0.55' (the old hardcoded pin)."""
+    source = _MODULE_PY.read_text()
+    assert "_SPECKIT_PIN" not in source, (
+        "_SPECKIT_PIN constant found in module.py — hardcoded pins must be removed (FR-V1)"
+    )
+    assert "v0.0.55" not in source, (
+        "'v0.0.55' literal found in module.py — hardcoded pins must be removed (FR-V1)"
     )
