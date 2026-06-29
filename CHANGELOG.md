@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v3.0.0...srobroek-agentic--v4.0.0) (2026-06-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* standalone, agent-driven project scaffolding with git-distributed add-on modules ([#418](https://github.com/srobroek/agentic-packages/issues/418))
+
+### Features
+
+* standalone, agent-driven project scaffolding with git-distributed add-on modules ([#418](https://github.com/srobroek/agentic-packages/issues/418)) ([318dc97](https://github.com/srobroek/agentic-packages/commit/318dc975d485dd04cf1903262b1227242204d482))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v2.0.0...srobroek-agentic--v3.0.0) (2026-06-29)
 
 
