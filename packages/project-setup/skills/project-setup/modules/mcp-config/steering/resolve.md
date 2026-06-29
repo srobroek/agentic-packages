@@ -30,7 +30,7 @@ from this list:
 | `codebase-memory`  | `npx`   | `-y codebase-memory-mcp`         |
 
 Do NOT invent names outside this list. Do NOT reference any marketplace-specific
-or private package locators (e.g. `@srobroek-agentic`, `core@srobroek-agentic`).
+or private package locators (e.g. `@your-marketplace`, `core@your-marketplace`).
 The default source is always PUBLIC upstream refs.
 
 ## What to decide

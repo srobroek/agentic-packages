@@ -75,7 +75,7 @@ case "$1" in
   --version) echo "apm 0.0.0-fake" ;;
   marketplace)
     case "$2" in
-      list) echo "srobroek-agentic" ;;
+      list) echo "your-marketplace" ;;
       browse) echo "  (fake) no packages" ;;
       add|update) : ;;
       *) : ;;

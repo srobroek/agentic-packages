@@ -53,7 +53,7 @@ def test_secret_shapes_detected(value, expect):
 
 
 @pytest.mark.parametrize("value", [
-    "my-project", "3.13", "core@srobroek-agentic", "fastapi@0.115.0",
+    "my-project", "3.13", "core@your-marketplace", "fastapi@0.115.0",
     "", "   ", "a-normal-description", "bun@1.1.38",
 ])
 def test_non_secrets_pass(value):

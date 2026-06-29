@@ -124,6 +124,31 @@ version, description, reconcile), `[order]` (requires/after/before — no priori
   precommit-setup, quality-hooks, lang-ts, lang-python, lang-go, lang-rust,
   speckit-bridge, package-add.
 
+## Scope: this skill SCAFFOLDS — it does NOT build the product
+
+**Hard boundary. Read this before running anything.** project-setup creates a
+project's *scaffold* and then STOPS. It is done when the runner's modules have run,
+the answers are frozen, and `.project-setup/` is committed — at that point you
+**hand off to the user**, you do not keep building.
+
+**In scope** (only what bundled MODULES produce): directory structure, `.gitignore`,
+`LICENSE`, `AGENTS.md`, pre-commit config, `justfile`, the CI workflow YAML,
+`.env.example`, `STACK.md`, a pinned dependency manifest + toolchain (e.g.
+`pyproject.toml` + `uv`), a README *draft*, and any agent-steered *decisions* frozen
+to `answers.toml`.
+
+**Out of scope — do NOT author any of this:** application source code, business
+logic, ORM models, endpoint/route handlers, database schemas, hand-written
+migrations, or a test suite. Those are the user's product work, not setup. A pinned
+`pyproject.toml` is in scope; the FastAPI app that uses it is not. A CI workflow that
+runs `pytest` is in scope; writing the tests it runs is not.
+
+**When the modules have run, STOP and print a concise handoff**: what was scaffolded,
+and the next steps the user takes (e.g. "write your app under `src/`, add tests under
+`tests/`, run `just test`"). Do NOT invent a post-scaffold "I'll fill in the app now"
+phase — there isn't one. If you find yourself writing `.py`/`.ts` source modules,
+models, routers, migrations, or test files, you have exceeded scope: stop.
+
 ## Module selection (FR-005)
 
 Before running the pipeline for a new project, you MUST conduct module selection:
@@ -133,16 +158,32 @@ Before running the pipeline for a new project, you MUST conduct module selection
    accept vague answers; ask follow-up questions until you have enough signal to
    propose a concrete set.
 
-2. **Propose an enablement set with rationale** — list the optional modules you
+2. **Detect marketplaces and offer sources (do NOT assume one).** This skill is
+   marketplace-agnostic and ships with NO default marketplace. If the project will
+   use agentic packages (APM packages, MCP servers, speckit), call
+   `sdk.detect_marketplaces()` (reads `~/.apm/marketplaces.json`,
+   `~/.claude/plugins/known_marketplaces.json`, `~/.codex/config.toml` offline) and:
+   - **Present the detected marketplaces by name** and ask which to use for package
+     installs, AND ask whether the user wants to add any other marketplace.
+   - **If none is detected and the user names none**, offer the canonical PUBLIC
+     upstreams (spec-kit via `uvx`/`uv tool`, MCP servers via `npx` — `mcp-config`)
+     at the relevant gate, or skip package installs entirely (pure scaffolding).
+   - **Never push a specific org's marketplace.** The chosen marketplace + package
+     list are recorded as frozen answers (e.g. `apm-install.marketplace` /
+     `agentic_packages`, `mcp-config.mcp_servers`, `speckit-bridge.speckit_source`).
+   Detection runs ONCE at init and the *choice* is frozen; reproduce replays the
+   frozen choice and never re-detects.
+
+3. **Propose an enablement set with rationale** — list the optional modules you
    recommend enabling, each with a one-line reason (e.g. "lang-python: Python
    project; precommit-setup: you mentioned wanting linting; github-repo: you
    want the repo auto-created").  Start from the base set and add only what
    fits the intent.
 
-3. **Confirm with the user** — show the final proposed set (base + optional) and
+4. **Confirm with the user** — show the final proposed set (base + optional) and
    ask for explicit approval.  The user may add or remove modules.
 
-4. **Pass the selection to the runner** — supply the confirmed list as the
+5. **Pass the selection to the runner** — supply the confirmed list as the
    ``enabled`` answer in the ScriptedIO / CLI invocation so the pipeline records
    it.  The runner persists it as ``[modules].enabled`` in
    `.project-setup/answers.toml` so clones reproduce the exact set.
@@ -186,6 +227,8 @@ legitimately secret-shaped non-secret value.
   committed.
 - The observable scaffold matches the answers (the per-module functional tests
   encode this; run `uv run --with pytest pytest -q .../tests/` to verify).
+- **You STOP here and hand off.** Print what was scaffolded + the user's next steps;
+  do not continue into authoring application code, tests, or migrations (see "Scope").
 
 ## Checking validity
 

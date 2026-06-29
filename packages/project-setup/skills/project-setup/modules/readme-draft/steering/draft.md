@@ -10,7 +10,7 @@ agent-steered answer.
 Read ONLY these frozen answers — do NOT read any file from the project directory:
 
 - `project_name` — the project name (e.g. `"my-api"`, `"acme-platform"`).
-- `org` — the GitHub owner / organisation (e.g. `"acme-corp"`, `"srobroek"`).
+- `org` — the GitHub owner / organisation (e.g. `"acme-corp"`, `"your-org"`).
   May be empty.
 - `layout` — `"single"` or `"monorepo"`.
 - `language` — primary language id (e.g. `"python"`, `"typescript"`, `"go"`,

@@ -5,9 +5,13 @@ dedicated `feat/standalone-decouple` branch
 
 **Created**: 2026-06-29
 
-**Status**: **Draft (2026-06-29)** — decouple project-setup from the
-srobroek/agentic-packages marketplace so the skill is a fully standalone scaffolding
-tool. Decisions resolved with the user 2026-06-29; see the matching `memory.md` and
+**Status**: **Implemented (2026-06-29)** — project-setup is now standalone /
+marketplace-agnostic. ZERO srobroek references in the shipped skill (SC-001 verified).
+Shipped across 5 phases: sdk.detect_marketplaces (P1) · apm-install drop-baseline (P2) ·
+speckit-bridge public spec-kit (P3) · new mcp-config module (P4) · genericize meta +
+SKILL.md scope/interview/stop (P5). Full suite 822 passed, 4 deselected. Two live-e2e
+caveats to confirm: `_SPECKIT_PIN`/`specify init .` (P3) are plausible-but-unverified
+against the real public CLI. See `memory.md` → AS-BUILT and
 `[[project-setup-standalone-decouple]]`.
 
 **Input**: User directive — "we should only be using apm if the user has an apm
