@@ -65,7 +65,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "steering"
@@ -119,7 +119,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "graph"
@@ -195,7 +195,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "baseline"
@@ -205,7 +205,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "data"
@@ -226,7 +226,7 @@
     {
       "name": "debugging",
       "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "debugging"
@@ -249,7 +249,7 @@
     {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "dependencies",
@@ -323,7 +323,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "frontend"
@@ -590,7 +590,7 @@
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "infrastructure"
@@ -631,7 +631,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "go"
@@ -661,7 +661,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "python"
@@ -671,7 +671,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "rust"
@@ -741,7 +741,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "terraform"
@@ -751,7 +751,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "typescript"
@@ -865,7 +865,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "planning"
@@ -875,7 +875,7 @@
     {
       "name": "playwright",
       "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "skill",
         "frontend",
@@ -907,7 +907,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "lifecycle"
@@ -982,7 +982,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "bundle",
         "review"
@@ -1049,7 +1049,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1059,7 +1059,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "tags": [
         "bundle",
         "speckit",
@@ -1141,7 +1141,7 @@
     {
       "name": "steering-speckit",
       "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "tags": [
         "steering",
         "speckit"

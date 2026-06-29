@@ -1,6 +1,6 @@
 {
   "name": "debugging",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Local debugging escalation: the unstuck skill and the adversarial-challenger agent for when you are blocked. For production/distributed incident debugging, see the incident-response bundle.",
   "author": {
     "name": "Sjors Robroek"
