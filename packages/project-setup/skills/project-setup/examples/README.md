@@ -21,7 +21,7 @@ Every module lives in its own subdirectory:
 
 ---
 
-## module.toml schema (shared-contracts.md §1)
+## module.toml schema (see [shared-contracts.md](shared-contracts.md) §1)
 
 ```toml
 schema_version = "1.0"
@@ -179,13 +179,20 @@ same `id` at higher precedence.
 **Git source** — add an entry to `.project-setup/sources.toml`:
 
 ```toml
-[[sources]]
-id  = "my-org/my-modules"
-git = "https://github.com/my-org/my-modules.git"
-ref = "main"
+[[source]]
+locator = "https://github.com/my-org/my-modules.git"
+ref     = "v1.0.0"
+# subdir = "modules"   # optional: subdirectory within the repo containing modules
 ```
 
-Then run `project-setup fetch` to populate the cache.
+The correct top-level key is `[[source]]` (singular). The required field is
+`locator` (a git URL or short `org/repo` form); `ref` must be an explicit tag
+or SHA (unpinned sources are rejected — supply-chain safety). `subdir` is
+optional.
+
+Fetch happens **automatically** when the pipeline runs — there is no separate
+fetch subcommand. Sources declared in `sources.toml` are fetched and their
+modules discovered before the interview starts.
 
 ---
 

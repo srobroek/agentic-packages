@@ -212,14 +212,24 @@ class TestCacheKey:
         b = parse_locator("myorg/repo-b")
         assert cache_key(a) != cache_key(b)
 
-    def test_different_refs_same_repo_give_same_key(self):
+    def test_different_refs_same_repo_give_different_keys(self):
+        # FR-A1: different pinned refs must map to DIFFERENT cache dirs so they
+        # do not thrash each other.
         main = parse_locator("myorg/myrepo#main")
         dev = parse_locator("myorg/myrepo#develop")
-        assert cache_key(main) == cache_key(dev)
+        assert cache_key(main) != cache_key(dev)
 
-    def test_different_subdirs_same_repo_give_same_key(self):
+    def test_same_ref_same_repo_give_same_key(self):
+        # FR-A2: two projects on the same (origin, ref) share one cache dir.
+        a = parse_locator("myorg/myrepo#v1.0.0")
+        b = parse_locator("myorg/myrepo#v1.0.0")
+        assert cache_key(a) == cache_key(b)
+
+    def test_different_subdirs_same_repo_and_ref_give_same_key(self):
+        # Subdir slicing happens inside the cache entry; it does not affect key.
         a = parse_locator("myorg/myrepo/pkg-a")
         b = parse_locator("myorg/myrepo/pkg-b")
+        # Both have ref="HEAD" so they share a cache dir (same origin+ref).
         assert cache_key(a) == cache_key(b)
 
     def test_key_is_hex_string(self):

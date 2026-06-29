@@ -201,12 +201,19 @@ def normalize_origin(raw_origin: str) -> str:
 def cache_key(locator: Locator) -> str:
     """Return a short stable hex digest for *locator*.
 
-    For git locators the key is derived from the normalized origin only (not
-    the ref or subdir) so that the same repository always maps to the same
-    cache directory regardless of which branch is requested.  Subdir slicing
-    and ref checkout happen inside that single cache entry.
+    For **git** locators the key is derived from the normalized origin AND the
+    ref so that different pinned refs of the same repository map to DIFFERENT
+    cache directories (e.g. ``org/addons#v1`` and ``org/addons#v2`` coexist
+    without thrashing).  The same ``(origin, ref)`` pair always resolves to the
+    same directory, enabling cross-project reuse when two projects pin the same
+    addon at the same ref.  Subdir slicing happens inside the cache entry and
+    does not affect the key.
 
-    For local locators the key is derived from the absolute origin path.
+    For **local** locators the key is derived from the absolute origin path
+    only (the ref field is unused for local sources).
     """
-    seed = locator.origin.encode()
+    if locator.kind == "local":
+        seed = locator.origin.encode()
+    else:
+        seed = f"{locator.origin}@{locator.ref}".encode()
     return hashlib.sha256(seed).hexdigest()[:16]

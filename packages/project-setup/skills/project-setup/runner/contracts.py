@@ -58,6 +58,7 @@ class ErrorCode(str, Enum):
     PATH_ESCAPE = "PATH_ESCAPE"
     FETCH_FAILED = "FETCH_FAILED"
     ORG_SOURCE_UNPINNED = "ORG_SOURCE_UNPINNED"
+    SOURCES_SCHEMA_INVALID = "SOURCES_SCHEMA_INVALID"
 
 
 # Manifest fields that, if present, are a hard error. `priority` enforces the

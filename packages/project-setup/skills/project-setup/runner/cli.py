@@ -173,6 +173,29 @@ def _build_parser() -> argparse.ArgumentParser:
         "--no-external-generators", action="store_true", default=False,
         help="CI opt-out: skip external scaffolders like 'nuxi init' (G4 soft gate).",
     )
+
+    # ── New-module scaffold (FR-C5) ──────────────────────────────────────────── #
+    p.add_argument(
+        "--new-module",
+        default=None,
+        metavar="ID",
+        help=(
+            "Scaffold a new addon module directory with starter module.toml, "
+            "module.py, and test stub. Writes to "
+            ".project-setup/modules/<id>/ in --project-dir (or --new-module-dest). "
+            "Exits immediately after scaffolding without running the pipeline."
+        ),
+    )
+    p.add_argument(
+        "--new-module-dest",
+        default=None,
+        metavar="DIR",
+        help=(
+            "Destination directory for --new-module (overrides the default "
+            ".project-setup/modules/<id>/ placement). The <id> subdirectory "
+            "is created inside this dir."
+        ),
+    )
     return p
 
 
@@ -194,12 +217,269 @@ def _active_flags(args: argparse.Namespace) -> frozenset[str]:
 
 
 # --------------------------------------------------------------------------- #
+# New-module scaffold (FR-C5)                                                  #
+# --------------------------------------------------------------------------- #
+
+_MODULE_TOML_TEMPLATE = """\
+schema_version = "1.0"
+
+[meta]
+repository = "github.com/owner/repo"   # replace with your repo URL
+author     = "Your Name"
+
+[module]
+id          = "{id}"
+name        = "{name}"
+version     = "0.1.0"
+description = "TODO: describe what this module does."
+reconcile   = false
+# default_enabled is FORBIDDEN on non-bundled (addon) modules — do not add it.
+
+[order]
+requires = []
+after    = []
+
+# Input declarations drive the interview and are frozen into the plan.
+# Remove or customise this example input.
+[[inputs]]
+key      = "greeting"
+type     = "string"
+prompt   = "What greeting should {name} write?"
+default  = "Hello, world!"
+required = false
+
+# Steps are listed in execution order.
+[[steps]]
+id   = "write"
+kind = "python"
+"""
+
+_MODULE_PY_TEMPLATE = '''\
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+"""Starter module for {id}.
+
+Run standalone:
+    uv run module.py --plan /path/to/plan.json --step write [--inspect]
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import os
+import sys
+from pathlib import Path
+
+
+def _load_sdk():
+    # Fast path: executor puts runner dir on PYTHONPATH (spec 005).
+    try:
+        import sdk
+        return sdk
+    except ModuleNotFoundError:
+        pass
+    # Fallback: file-path load for direct invocation outside the executor.
+    plugin_root = os.environ.get("PLUGIN_ROOT")
+    if plugin_root:
+        sdk_path = Path(plugin_root) / "runner" / "sdk.py"
+    else:
+        sdk_path = Path(__file__).resolve().parents[2] / "runner" / "sdk.py"
+    spec = importlib.util.spec_from_file_location("sdk", sdk_path)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["sdk"] = mod   # register BEFORE exec_module (sys.modules footgun)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _do_write(sdk, inputs, args):
+    """Step: write — write a placeholder file."""
+    greeting = inputs.get_str("greeting", "Hello, world!")
+    body = f"{{greeting}}\\n"
+
+    diff = sdk.idempotent_write(
+        "{id}/greeting.txt",
+        body,
+        reconcile=inputs.reconcile,
+        inspect=args.inspect,
+    )
+
+    sdk.emit_result(sdk.ModuleResult(
+        module_id="{id}",
+        step_id=args.step,
+        status="ok",
+        files_written=[] if args.inspect else [diff.path],
+        diffs=[diff],
+    ))
+    return 0
+
+
+STEP_HANDLERS = {{
+    "write": _do_write,
+}}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--plan", required=True)
+    ap.add_argument("--step", required=True)
+    ap.add_argument("--inspect", action="store_true")
+    args = ap.parse_args()
+
+    sdk = _load_sdk()
+    inputs = sdk.load_frozen_inputs(args.plan, module_id="{id}")
+
+    handler = STEP_HANDLERS.get(args.step)
+    if handler is None:
+        print(f"Unknown step: {{args.step!r}}", file=sys.stderr)
+        return 1
+    return handler(sdk, inputs, args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
+
+_TEST_TEMPLATE = '''\
+"""Stub tests for the {id} module.
+
+Run:
+    uv run --with pytest pytest -q test_{id_safe}.py
+"""
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+_MODULE_DIR = Path(__file__).resolve().parent
+
+
+def _load_parse_manifest():
+    """Load parse_manifest from the runner (two levels up from modules/<id>/)."""
+    runner = _MODULE_DIR.parents[2] / "runner"
+    for dep in (
+        "contracts", "paths", "manifest",
+    ):
+        for cand in (runner / f"{{dep}}.py", runner / "sources" / f"{{dep}}.py"):
+            if cand.is_file() and dep not in sys.modules:
+                spec = importlib.util.spec_from_file_location(dep, cand)
+                assert spec and spec.loader
+                mod = importlib.util.module_from_spec(spec)
+                sys.modules[dep] = mod
+                spec.loader.exec_module(mod)
+                break
+    manifest_path = runner / "manifest.py"
+    if "manifest" not in sys.modules:
+        spec = importlib.util.spec_from_file_location("manifest", manifest_path)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["manifest"] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules["manifest"].parse_manifest
+
+
+def test_manifest_parses_without_errors():
+    """module.toml must be accepted by parse_manifest with no errors."""
+    parse_manifest = _load_parse_manifest()
+    manifest = parse_manifest(_MODULE_DIR / "module.toml")
+    assert manifest.errors == [], (
+        f"module.toml has parse errors: {{[e.how_to_fix for e in manifest.errors]}}"
+    )
+    assert manifest.id == "{id}"
+
+
+def test_module_py_compiles():
+    """module.py must be importable (syntax-valid Python)."""
+    import py_compile
+    py_compile.compile(str(_MODULE_DIR / "module.py"), doraise=True)
+'''
+
+
+def _scaffold_new_module(module_id: str, dest_dir: Path) -> int:
+    """Write the starter module directory for *module_id* under *dest_dir*.
+
+    Creates *dest_dir*/<module_id>/ containing:
+    - module.toml  — valid manifest skeleton
+    - module.py    — minimal working Tier-1 handler
+    - test_<id>.py — stub test that calls parse_manifest
+
+    Returns 0 on success, 1 on error (with message already printed to stderr).
+    """
+    import re
+
+    # Validate id: must be non-empty, lowercase, kebab-case
+    if not module_id or not re.match(r"^[a-z][a-z0-9-]*$", module_id):
+        print(
+            f"Error: --new-module id must be lowercase kebab-case (e.g. 'my-module'), "
+            f"got: {module_id!r}",
+            file=sys.stderr,
+        )
+        return 1
+
+    module_dir = dest_dir / module_id
+    if module_dir.exists():
+        print(
+            f"Error: destination already exists: {module_dir}\n"
+            "Remove it first or choose a different id.",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Derive a human name from the id (kebab → Title Case)
+    name = " ".join(part.title() for part in module_id.split("-"))
+    # Safe Python identifier for the test file name
+    id_safe = module_id.replace("-", "_")
+
+    try:
+        module_dir.mkdir(parents=True, exist_ok=False)
+
+        (module_dir / "module.toml").write_text(
+            _MODULE_TOML_TEMPLATE.format(id=module_id, name=name),
+            encoding="utf-8",
+        )
+        (module_dir / "module.py").write_text(
+            _MODULE_PY_TEMPLATE.format(id=module_id),
+            encoding="utf-8",
+        )
+        (module_dir / f"test_{id_safe}.py").write_text(
+            _TEST_TEMPLATE.format(id=module_id, id_safe=id_safe),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        print(f"Error: could not scaffold module: {exc}", file=sys.stderr)
+        return 1
+
+    print(
+        f"Scaffolded module '{module_id}' at {module_dir}\n"
+        f"  module.toml   — edit metadata, inputs, steps\n"
+        f"  module.py     — implement step handlers\n"
+        f"  test_{id_safe}.py — add tests\n"
+        f"\n"
+        f"To use locally, add .project-setup/modules/{module_id}/ to your project\n"
+        f"(or declare it as a [[source]] in .project-setup/sources.toml for git dist).",
+    )
+    return 0
+
+
+# --------------------------------------------------------------------------- #
 # Main                                                                        #
 # --------------------------------------------------------------------------- #
 def main(argv: list[str] | None = None) -> int:
     """Parse arguments, construct IO + Pipeline, return POSIX exit code."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+
+    # ── --new-module: scaffold and exit (no pipeline run) ───────────────────── #
+    if args.new_module:
+        project_dir = Path(args.project_dir).expanduser().resolve()
+        if args.new_module_dest:
+            dest_dir = Path(args.new_module_dest).expanduser().resolve()
+        else:
+            dest_dir = project_dir / ".project-setup" / "modules"
+        return _scaffold_new_module(args.new_module, dest_dir)
 
     project_dir = Path(args.project_dir).expanduser().resolve()
     if not project_dir.exists():

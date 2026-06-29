@@ -87,8 +87,91 @@ parse_locator = _locator_mod.parse_locator
 # Source-pin validation (FR-001, FR-002, FR-003 — spec 014)                   #
 # --------------------------------------------------------------------------- #
 
+def validate_sources_schema(sources: list[dict]) -> list[SetupError]:
+    """Validate the SHAPE of each source record (FR-C1).
+
+    Detects mis-keyed records BEFORE pin validation so authors get a clear,
+    actionable error instead of a silent skip.
+
+    Checks (in order per record):
+    1. If the dict has an ``id`` or ``git`` key (but no ``locator``) → the
+       author used the legacy/wrong schema.  Emit ``SOURCES_SCHEMA_INVALID``.
+    2. If the dict is missing ``locator`` entirely (and not the above case) →
+       ``SOURCES_SCHEMA_INVALID`` for missing required key.
+    3. Otherwise the shape is acceptable (``locator`` present); pin validation
+       runs next.
+
+    Parameters
+    ----------
+    sources:
+        Raw source records as parsed from the TOML (before any pin check).
+
+    Returns
+    -------
+    list[SetupError]
+        One ``SOURCES_SCHEMA_INVALID`` error per bad record; empty when all
+        records carry a ``locator`` key.
+    """
+    errors: list[SetupError] = []
+    for i, src in enumerate(sources):
+        if not isinstance(src, dict):
+            errors.append(SetupError(
+                error_code=ErrorCode.SOURCES_SCHEMA_INVALID,
+                expected="[[source]] record as a TOML table (dict)",
+                received=repr(src),
+                how_to_fix=(
+                    "Each source must be a [[source]] table with a `locator` key "
+                    "(+ optional ref, subdir). Example:\n"
+                    "  [[source]]\n"
+                    "  locator = \"github.com/org/repo\"\n"
+                    "  ref     = \"v1.0.0\""
+                ),
+            ))
+            continue
+        has_locator = "locator" in src
+        has_id = "id" in src
+        has_git = "git" in src
+        if not has_locator and (has_id or has_git):
+            # Legacy / wrong schema: user wrote [[sources]] with id/git keys.
+            received_keys = ", ".join(sorted(src.keys()))
+            errors.append(SetupError(
+                error_code=ErrorCode.SOURCES_SCHEMA_INVALID,
+                expected="[[source]] record with a `locator` key (+ optional ref, subdir)",
+                received=f"source record #{i} uses unknown keys: {{{received_keys}}}",
+                how_to_fix=(
+                    "source record uses an unknown schema (id/git); use [[source]] "
+                    "with a `locator` key (+ optional ref, subdir). Example:\n"
+                    "  [[source]]\n"
+                    "  locator = \"github.com/org/repo\"\n"
+                    "  ref     = \"v1.0.0\""
+                ),
+            ))
+        elif not has_locator:
+            received_keys = ", ".join(sorted(src.keys())) if src else "(empty)"
+            errors.append(SetupError(
+                error_code=ErrorCode.SOURCES_SCHEMA_INVALID,
+                expected="[[source]] record with a `locator` key",
+                received=f"source record #{i} missing required `locator`; keys present: {{{received_keys}}}",
+                how_to_fix=(
+                    "source record missing required `locator`. Add the locator field:\n"
+                    "  [[source]]\n"
+                    "  locator = \"github.com/org/repo\"\n"
+                    "  ref     = \"v1.0.0\""
+                ),
+            ))
+    return errors
+
+
 def validate_sources(sources: list[dict]) -> list[SetupError]:
-    """Validate that every git source has an explicit ref pin.
+    """Validate sources.toml records: schema first, then ref-pin check.
+
+    Combines schema validation (``validate_sources_schema``) with the existing
+    ref-pin check so callers see ALL problems in one pass.
+
+    Schema errors (``SOURCES_SCHEMA_INVALID``) are returned first; if any exist
+    the pin check is skipped for that record (it has no ``locator`` to check).
+    Records that pass schema validation are then checked for ref pinning
+    (``ORG_SOURCE_UNPINNED``).
 
     A git source is considered unpinned — and rejected with
     ``ORG_SOURCE_UNPINNED`` — when ALL of the following hold:
@@ -108,11 +191,28 @@ def validate_sources(sources: list[dict]) -> list[SetupError]:
     Returns
     -------
     list[SetupError]
-        One ``ORG_SOURCE_UNPINNED`` error per unpinned git source; empty list
-        when all sources are properly pinned or the list is empty.
+        Schema errors first, then one ``ORG_SOURCE_UNPINNED`` per unpinned git
+        source; empty list when all records are valid and properly pinned.
     """
     errors: list[SetupError] = []
-    for src in sources:
+
+    # Phase 1: schema validation — detect mis-keyed records loudly.
+    schema_errors = validate_sources_schema(sources)
+    errors.extend(schema_errors)
+
+    # Collect the indices of records that failed schema validation so we skip
+    # pin-checking them (they have no usable locator).
+    bad_indices = set()
+    if schema_errors:
+        # Rebuild the set: any record without a 'locator' key failed schema.
+        for i, src in enumerate(sources):
+            if not isinstance(src, dict) or "locator" not in src:
+                bad_indices.add(i)
+
+    # Phase 2: ref-pin check for records that passed schema validation.
+    for i, src in enumerate(sources):
+        if i in bad_indices:
+            continue
         locator_str = src.get("locator", "")
         if not locator_str:
             continue
@@ -169,7 +269,14 @@ class PipelineResult:
 # Helper: read committed sources.toml                                          #
 # --------------------------------------------------------------------------- #
 def _read_committed_sources(project_dir: Path) -> list[dict[str, Any]]:
-    """Parse .project-setup/sources.toml and return the [[source]] records."""
+    """Parse .project-setup/sources.toml and return the [[source]] records.
+
+    Raises ``SetupError(SOURCES_SCHEMA_INVALID)`` if the file uses the WRONG
+    top-level key ``[[sources]]`` (plural) instead of the correct ``[[source]]``
+    (singular).  This is a loud, un-ignorable error — a silent empty-return
+    would hide a misconfigured sources file and leave the user confused about
+    why their addon modules never appear.
+    """
     src_toml = project_setup_dir(project_dir) / "sources.toml"
     if not src_toml.is_file():
         return []
@@ -178,6 +285,30 @@ def _read_committed_sources(project_dir: Path) -> list[dict[str, Any]]:
             data = tomllib.load(fh)
     except Exception:
         return []
+    # FR-C1: detect [[sources]] (plural) — the most common authoring mistake.
+    if "sources" in data and "source" not in data:
+        raise SetupError(
+            error_code=ErrorCode.SOURCES_SCHEMA_INVALID,
+            expected="top-level [[source]] table (singular)",
+            received="top-level [[sources]] table (plural) in sources.toml",
+            how_to_fix=(
+                "found [[sources]] — the correct table is [[source]] (singular). "
+                "Rename every [[sources]] entry to [[source]] in "
+                ".project-setup/sources.toml."
+            ),
+        )
+    # Also warn if both keys exist (partial migration) — treat as schema error.
+    if "sources" in data and "source" in data:
+        raise SetupError(
+            error_code=ErrorCode.SOURCES_SCHEMA_INVALID,
+            expected="only [[source]] table (singular) — no [[sources]] (plural)",
+            received="both [[source]] and [[sources]] keys found in sources.toml",
+            how_to_fix=(
+                "sources.toml contains both [[source]] and [[sources]] tables. "
+                "Remove all [[sources]] (plural) entries; the correct key is "
+                "[[source]] (singular)."
+            ),
+        )
     return list(data.get("source", []))
 
 
@@ -389,7 +520,13 @@ def run_pipeline(
     # ── Stage 1: resolve sources ─────────────────────────────────────────────── #
     committed_sources: list[dict[str, Any]] = []
     if mode == "reproduce":
-        committed_sources = _read_committed_sources(project_dir)
+        try:
+            committed_sources = _read_committed_sources(project_dir)
+        except SetupError as exc:
+            result.errors.append(exc)
+            result.success = False
+            io.notify(f"[ERROR] {exc.how_to_fix}")
+            return result
 
     all_sources = list(committed_sources)
     if extra_sources:

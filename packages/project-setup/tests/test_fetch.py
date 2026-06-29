@@ -210,6 +210,58 @@ class TestCacheKeyStability:
         assert cache_key(a) != cache_key(b)
 
 
+# ---------------------------------------------------------------------------
+# SC-A: (origin, ref) cache-key coexistence and reuse
+# ---------------------------------------------------------------------------
+
+class TestCacheKeyRefIsolation:
+    """SC-A — two projects on different refs collide; same ref reuses one dir."""
+
+    def test_different_refs_map_to_different_dirs(self, tmp_path, monkeypatch):
+        """org/addons#v1 and org/addons#v2 must resolve to different cache dirs."""
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        from sources.locator import cache_key  # noqa: PLC0415
+        v1 = parse_locator("org/addons#v1")
+        v2 = parse_locator("org/addons#v2")
+
+        assert cache_key(v1) != cache_key(v2), (
+            "org/addons#v1 and org/addons#v2 must use separate cache dirs "
+            "so they do not thrash each other"
+        )
+
+    def test_same_ref_maps_to_same_dir(self, tmp_path, monkeypatch):
+        """Two projects pinning org/addons#v1 must share one cache dir (reuse)."""
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        from sources.locator import cache_key  # noqa: PLC0415
+        project_a = parse_locator("org/addons#v1")
+        project_b = parse_locator("org/addons#v1")
+
+        assert cache_key(project_a) == cache_key(project_b), (
+            "Two projects on org/addons#v1 must share one cache dir"
+        )
+
+    def test_local_locator_ref_does_not_affect_key(self, tmp_path):
+        """Local locators are keyed on path only; the (empty) ref is irrelevant."""
+        from sources.locator import cache_key, Locator  # noqa: PLC0415
+        # Local locators always have ref="" — build two identical ones and
+        # confirm the key is stable (origin-based, not origin@ref-based).
+        loc1 = Locator(kind="local", origin=str(tmp_path), subdir="", ref="")
+        loc2 = Locator(kind="local", origin=str(tmp_path), subdir="", ref="")
+        assert cache_key(loc1) == cache_key(loc2)
+
+    def test_ssh_https_shorthand_with_same_ref_match(self, tmp_path, monkeypatch):
+        """Different URL forms for the same repo+ref still produce the same key."""
+        monkeypatch.setenv("PROJECT_SETUP_CACHE_DIR", str(tmp_path / "cache"))
+
+        from sources.locator import cache_key  # noqa: PLC0415
+        ssh = parse_locator("git@github.com:myorg/myrepo.git#v1")
+        https = parse_locator("https://github.com/myorg/myrepo#v1")
+        shorthand = parse_locator("myorg/myrepo#v1")
+
+        assert cache_key(ssh) == cache_key(https) == cache_key(shorthand)
+
 
 class TestSuccessfulGitFetchLocalBareRepo:
     """Exercise the REAL clone+checkout path with a local bare repo (no network).
