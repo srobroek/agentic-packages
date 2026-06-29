@@ -169,27 +169,34 @@ and the next steps the user takes (e.g. "write your app under `src/`, add tests 
 phase — there isn't one. If you find yourself writing `.py`/`.ts` source modules,
 models, routers, migrations, or test files, you have exceeded scope: stop.
 
-## How to present choices (do NOT truncate long option lists)
+## How to ask the user (one question at a time, options listed in text)
 
-This applies to EVERY choice you surface — modules, marketplace packages, MCP servers,
-leaf/sub-packages, language overlays, anything.
+This governs EVERY choice you surface — modules, marketplace packages, MCP servers,
+leaf/sub-packages, language overlays, versions, anything. Two hard rules:
 
-**Never force a list of more than ~4 options into a fixed multi-select widget.** A
-4-option multi-select silently drops every option beyond the fourth — so a marketplace
-with 20 packages, or the full module catalogue, gets misrepresented as "pick up to 4".
-That is a bug: the user never sees most of their options.
+**RULE 1 — ONE question at a time.** Ask a single question, wait for the answer, then ask
+the next. Do NOT batch several decisions into one multi-question prompt, and do NOT fire a
+stack of choice-widgets at once. Each decision is its own turn. This keeps the interview
+legible and lets earlier answers shape later questions.
 
-Instead, for any choice with **more than 4 options**:
-1. **Present a RECOMMENDED set** (the few you'd enable for this project) with a one-line
-   reason each.
-2. **List the OTHER available options** in plain text (grouped/categorized if long), so
-   the user can see the full menu — do not hide any.
-3. **Ask the user to choose freely** — to accept the recommended set, add from the other
-   options, or remove any — as a free-text answer, NOT a capped multi-select.
+**RULE 2 — ALWAYS list the options in plain text; never rely on a picker widget to carry
+them.** Write the options out in your message as a numbered/bulleted list the user can
+read in full, then ask them to answer in free text (e.g. "reply with the numbers/names you
+want, or 'recommended' to take the defaults"). Do NOT use a fixed multi-select / choice
+widget to PRESENT options — those silently cap at ~4 and drop the rest, so the user never
+sees most of their menu. That is a bug.
 
-Reserve fixed multi-select / single-select widgets for genuinely small, closed sets
-(≤4 mutually-exclusive or clearly-bounded options, e.g. a yes/no or a 3-way mode). When
-in doubt, present-as-text-and-ask beats a widget that drops options.
+For any list of options (especially > a handful):
+1. **Recommend** a small default set, each with a one-line reason.
+2. **List ALL the other available options** in text (grouped/categorized if long) — hide
+   none.
+3. **Ask, in free text,** for one decision: accept the recommended set, add from the rest,
+   or remove any.
+
+The ONLY acceptable use of a choice widget is a genuinely tiny, closed question (a yes/no,
+or ≤3 mutually-exclusive modes) — and even then the options must be self-evident. When in
+doubt: list options in text and ask one free-text question. Never let the UI element
+decide how many options the user gets to see.
 
 ## Module selection (FR-005)
 
@@ -231,14 +238,16 @@ Before running the pipeline for a new project, you MUST conduct module selection
    `"latest"` → latest-at-clone-time (documented, intentional exception to
    byte-identity for one-time external installs).
 
-3. **Propose an enablement set with rationale** — following "How to present choices"
-   above: give a RECOMMENDED set (each with a one-line reason, e.g. "lang-python:
-   Python project; precommit-setup: you mentioned wanting linting"), then list the
-   OTHER available optional modules in text so the user sees the full menu, and ask
-   them to choose freely (accept / add / remove). Do NOT cram the catalogue into a
-   4-option widget. Start from the base set and add only what fits the intent. The
-   SAME rule applies when the chosen marketplace exposes many packages/leaf packages:
-   recommend a few, list the rest, ask — never a capped multi-select.
+3. **Propose an enablement set with rationale** — following "How to ask the user"
+   above (ONE question at a time; options listed in text, not a widget): give a
+   RECOMMENDED set (each with a one-line reason, e.g. "lang-python: Python project;
+   precommit-setup: you mentioned wanting linting"), then list ALL the OTHER available
+   optional modules in text so the user sees the full menu, and ask them — in free
+   text — to accept / add / remove. Do NOT cram the catalogue into a choice widget.
+   Start from the base set and add only what fits the intent. The SAME rule applies
+   when the chosen marketplace exposes many packages/leaf packages: recommend a few,
+   list ALL the rest in text, ask as one free-text question — never a capped widget,
+   never several pickers at once.
 
 4. **Confirm with the user** — show the final proposed set (base + optional) and
    ask for explicit approval.  The user may add or remove modules.
