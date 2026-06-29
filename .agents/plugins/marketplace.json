@@ -1375,6 +1375,20 @@
       "category": "quality"
     },
     {
+      "name": "vibe-hero",
+      "source": {
+        "source": "url",
+        "url": "srobroek/vibe-hero",
+        "ref": "d7d3856446287dd659b69e6ee8b78557c686400f",
+        "sha": "d7d3856446287dd659b69e6ee8b78557c686400f"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "onboarding"
+    },
+    {
       "name": "web-fetch",
       "source": {
         "source": "local",

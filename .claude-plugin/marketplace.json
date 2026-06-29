@@ -1230,6 +1230,23 @@
       "source": "./packages/verify"
     },
     {
+      "name": "vibe-hero",
+      "description": "APM project for vibe-hero",
+      "version": "1.0.0",
+      "tags": [
+        "mcp",
+        "steering",
+        "onboarding",
+        "learning"
+      ],
+      "source": {
+        "source": "github",
+        "repo": "srobroek/vibe-hero",
+        "ref": "d7d3856446287dd659b69e6ee8b78557c686400f",
+        "sha": "d7d3856446287dd659b69e6ee8b78557c686400f"
+      }
+    },
+    {
       "name": "web-fetch",
       "description": "Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online.",
       "version": "1.1.0",
