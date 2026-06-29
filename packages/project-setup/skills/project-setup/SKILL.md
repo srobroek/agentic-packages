@@ -18,8 +18,10 @@ work around it, install `uv` (https://docs.astral.sh/uv/).
 
 **There is ONE entrypoint — invoke it; do NOT inspect the internals.** The runner is
 the source of truth for orchestration. Do **not** read `runner/*.py`, `module.py`,
-`executor.py`, or any module source to "understand how it works" or to plan execution —
-that wastes time and is unnecessary. You only ever run this one command:
+`executor.py`, or any module *logic/source* to "understand how it works" or to plan
+execution — that wastes time and is unnecessary. (Reading a `module.toml` manifest's
+declared `[[inputs]] choices` to enumerate a question's options faithfully is fine and
+expected — see RULE 5; that is data, not logic.) You only ever run this one command:
 
 ```
 uv run <plugin-root>/skills/project-setup/runner/cli.py --project-dir <dir> [flags]
@@ -238,6 +240,18 @@ or describe anything else you want.
 
 For a long marketplace package list, same idea: number every package in tables; the user
 picks by number; an "other / type a package not listed" answer is always available.
+
+**RULE 5 — the option set is the module's DECLARED choices, not your general knowledge.**
+For any `choice` / `multichoice` input, the authoritative list of options is the module's
+`[[inputs]] choices` in its `module.toml` — show ALL of them, never a "basics-only" subset
+you recalled from memory. Example: the `license` input in `license-write/module.toml`
+declares all 13 SPDX licenses (agpl-3.0, apache-2.0, bsd-2-clause, bsd-3-clause, bsl-1.0,
+cc0-1.0, epl-2.0, gpl-2.0, gpl-3.0, lgpl-2.1, mit, mpl-2.0, unlicense) with default
+apache-2.0 — present the full numbered list (you may recommend the common few and mark the
+module's `default`), not just "MIT / Apache". If you are unsure of a module's options,
+that is the one acceptable reason to read its `module.toml` `[[inputs]]` (NOT the runner
+internals): read the `choices` to enumerate them faithfully. Do not truncate, summarize,
+or substitute your own shortlist for what the manifest declares.
 
 ## Module selection (FR-005)
 
