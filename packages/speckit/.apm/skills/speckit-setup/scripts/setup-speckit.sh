@@ -130,11 +130,21 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 #                                          at setup time and its .zip archive is installed
 # `specify extension add --from` requires a real archive URL (a bare repo URL is fetched as a
 # zip and fails); `latest-release:` exists so we track newest WITHOUT pinning a version.
+#   status-report -- the Open-Agent-Tools/spec-kit-status extension (catalog id
+#   `status-report`), NOT the single-commit KhawarHabibKhan `status` extension it
+#   replaced. Both ship a read-only progress command; status-report is the more
+#   maintained one (script-driven JSON, cross-platform). It provides
+#   `/speckit.status-report.show`. NOTE: despite its read-only catalog tag it
+#   writes `specs/spec-status.md` on every run -- gitignored in the scaffold.
+#   Installed via `latest-release:` (newest GitHub release tag resolved at setup
+#   time) rather than the community catalog, which lags behind upstream.
 EXTENSIONS=(
   agent-assign
   archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
   fix-findings fleet github-issues iterate onboard optimize qa reconcile
-  refine retro review roadmap security-review status tinyspec verify verify-tasks worktree
+  refine retro review roadmap security-review
+  status-report=latest-release:Open-Agent-Tools/spec-kit-status
+  tinyspec verify verify-tasks worktree
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit
@@ -149,7 +159,7 @@ WORKFLOWS=(speckit speckit-quality speckit-full)
 need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found on PATH" >&2; exit 1; }; }
 need specify
 
-echo "==> 1/5 specify init (.specify/ scaffold) -- integration=$INTEGRATION script=$SCRIPT_FLAVOR"
+echo "==> 1/6 specify init (.specify/ scaffold) -- integration=$INTEGRATION script=$SCRIPT_FLAVOR"
 if [ -d .specify ] && [ -z "$FORCE" ]; then
   echo "    .specify/ already present -- skipping init (pass --force to re-run)"
 else
@@ -159,7 +169,7 @@ else
   specify init --here --integration "$INTEGRATION" --script "$SCRIPT_FLAVOR" $FORCE </dev/null
 fi
 
-echo "==> 2/5 register community extension catalog"
+echo "==> 2/6 register community extension catalog"
 # Match on URL, not just name: a default catalog (e.g. 'custom' from
 # SPECKIT_CATALOG_URL) may already point at this community URL.
 #
@@ -199,7 +209,7 @@ else
   fi
 fi
 
-echo "==> 3/5 install + enable ${#EXTENSIONS[@]} extensions"
+echo "==> 3/6 install + enable ${#EXTENSIONS[@]} extensions"
 installed="$(specify extension list 2>/dev/null || true)"
 for entry in "${EXTENSIONS[@]}"; do
   # Split "name=source" (custom source) from a bare "name" (community catalog).
@@ -258,7 +268,7 @@ if [ -n "${FAILED_EXTENSIONS# }" ]; then
   echo "          re-run setup-speckit.sh later to retry them once upstream is fixed." >&2
 fi
 
-echo "==> 4/5 register extension commands for: ${RENDER_LIST[*]} (primary=$INTEGRATION)"
+echo "==> 4/6 register extension commands for: ${RENDER_LIST[*]} (primary=$INTEGRATION)"
 # `specify extension add` only renders an extension's command files for the
 # integration that is ACTIVE at add-time, and `specify integration switch`
 # re-registers all installed+enabled extensions ONLY on a genuine switch
@@ -303,7 +313,7 @@ for target in "${RENDER_LIST[@]}"; do
   fi
 done
 
-echo "==> 5/5 install workflow definitions from local dirs: ${WORKFLOWS[*]}"
+echo "==> 5/6 install workflow definitions from local dirs: ${WORKFLOWS[*]}"
 for wf in "${WORKFLOWS[@]}"; do
   wf_dir="$WORKFLOW_ROOT/$wf"
   if [ ! -f "$wf_dir/workflow.yml" ]; then
@@ -320,6 +330,23 @@ for wf in "${WORKFLOWS[@]}"; do
   fi
   specify workflow add "$wf_dir" </dev/null
 done
+
+echo "==> 6/6 ignore generated status-report artefact"
+# The status-report extension (/speckit.status-report.show) regenerates
+# specs/spec-status.md on every run despite its read-only catalog tag. It is a
+# derived report, not a tracked spec artefact (spec.md/plan.md/tasks.md ARE
+# tracked), so ignore just that one file to keep it out of `git status` and
+# accidental commits. Idempotent: append the entry only if absent.
+GITIGNORE_ENTRY="specs/**/spec-status.md"
+if [ -f .gitignore ] && grep -qxF "$GITIGNORE_ENTRY" .gitignore; then
+  echo "    = $GITIGNORE_ENTRY (already ignored)"
+else
+  echo "    + $GITIGNORE_ENTRY"
+  # Ensure a trailing newline before appending so we never glue onto a last
+  # line that lacks one.
+  [ -f .gitignore ] && [ -n "$(tail -c1 .gitignore 2>/dev/null)" ] && printf '\n' >> .gitignore
+  printf '# SpecKit status-report generated artefact (regenerated each run)\n%s\n' "$GITIGNORE_ENTRY" >> .gitignore
+fi
 
 echo ""
 echo "==> SpecKit setup complete."

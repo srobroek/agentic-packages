@@ -16,7 +16,7 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
 
 ## What it does
 
-`scripts/setup-speckit.sh` performs five steps:
+`scripts/setup-speckit.sh` performs six steps:
 
 1. **`specify init --here`** -- scaffolds `.specify/` (constitution, feature dirs, workflow
    state). Defaults to `--integration codex --script sh`; override with `--integration` /
@@ -27,7 +27,7 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
 3. **Install + enable the 28 required extensions** -- `agent-assign`, `archive`, `brownfield`,
    `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`,
    `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`,
-   `refine`, `retro`, `review`, `roadmap`, `security-review`, `status`, `tinyspec`, `verify`,
+   `refine`, `retro`, `review`, `roadmap`, `security-review`, `status-report`, `tinyspec`, `verify`,
    `verify-tasks`, `worktree`. `agent-assign` is mandatory: steering routes implementation
    through it and the DAG hard-blocks the deprecated `/speckit.implement`. Most install from
    the community catalog by name. The setup list also supports inline custom sources for
@@ -50,6 +50,10 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
    0.11.x, workflows are a first-class primitive, not extensions. The local `speckit` definition
    overrides the upstream `Full SDD Cycle` that `specify init` bundles, and routes implementation
    through the agent-assign flow instead of the deprecated `/speckit.implement`.
+6. **Ignore the generated status-report artefact** -- append `specs/**/spec-status.md` to
+   `.gitignore` (idempotent). The `status-report` extension regenerates `specs/spec-status.md`
+   on every `/speckit.status-report.show` run despite its read-only catalog tag; it is a derived
+   report, not a tracked spec artefact, so it stays out of `git status` and commits.
 
 ## How to run
 
@@ -165,9 +169,9 @@ Each row is a `/speckit.<step>` command. "Next (default -> conditions)" reflects
 | `iterate.define` / `iterate.apply` | Scope change (MANDATORY once tasks.md exists) | `pending-iteration.md`, updated spec/plan/tasks | resume at the step where the change was triggered |
 
 This table covers the default workflow path. The node store guards ~74 commands
-in total, including optional/diagnostic ones (`status.*`, `doctor`, `diagram.*`,
+in total, including optional/diagnostic ones (`status-report.*`, `doctor`, `diagram.*`,
 `tinyspec.*`, `bugfix.*`, `worktree.*`, ...). Run
-`/speckit.status.show` for the current state, or see the steering-speckit
+`/speckit.status-report.show` for the current state, or see the steering-speckit
 Command Reference for the full list.
 
 ## Rules
