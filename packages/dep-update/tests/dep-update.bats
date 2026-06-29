@@ -25,6 +25,14 @@ setup() {
   # Find python3 location and add its directory explicitly.
   PYTHON3_DIR="$(dirname "$(command -v python3 2>/dev/null || echo /usr/bin/python3)")"
   BASE_PATH="${PYTHON3_DIR}:${BASE_PATH}"
+
+  # PATH for "tool absent" assertions: it must NOT resolve any package manager.
+  # BASE_PATH includes /usr/local/bin, where CI runners (e.g. GitHub
+  # ubuntu-latest) ship npm/node -- so a npm-absent test that uses BASE_PATH
+  # passes on a clean laptop but fails in CI because npm IS found there. Exclude
+  # /usr/local/bin here; python3 stays via its explicit dir, and present-tool
+  # tests inject their own stub into ${STUB} so they are unaffected.
+  ABSENT_PATH="${PYTHON3_DIR}:/usr/bin:/bin"
 }
 
 teardown() {
@@ -398,8 +406,9 @@ EOF
 # --- PM absent -> print manual command, exit 0 ----------------------------
 
 @test "apply: uv absent prints manual command and exits 0 (no abort)" {
-  # No uv stub installed; no uv on PATH.
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  # No uv stub installed; ABSENT_PATH guarantees uv is unresolvable (BASE_PATH
+  # would find a /usr/local/bin uv on some runners).
+  run env PATH="${STUB}:${ABSENT_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
   [[ "$output" == *"SKIP"* ]]
@@ -439,8 +448,10 @@ EOF
 # --- Node: npm absent -> print manual command ------------------------------
 
 @test "apply: node npm absent prints manual npm install command" {
-  # No npm stub; DEP_UPDATE_PKG_MANAGER not set; no lockfile -> defaults to npm.
-  run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_PKG_MANAGER="npm" \
+  # No npm stub. ABSENT_PATH excludes /usr/local/bin, where CI runners ship npm
+  # -- with BASE_PATH this test passes locally but npm IS found in CI, so the
+  # script runs `npm install` instead of printing the manual SKIP message.
+  run env PATH="${STUB}:${ABSENT_PATH}" DEP_UPDATE_PKG_MANAGER="npm" \
     /bin/bash "${SCRIPTS}/apply.sh" "npm" "lodash" "4.17.21" "$PROJ"
   [ "$status" -eq 0 ]
   [[ "$output" == *"SKIP"* ]]
@@ -500,8 +511,8 @@ EOF
   local before
   before=$(python3 -c "import hashlib; print(hashlib.md5(open('${PROJ}/.project-setup/answers.toml','rb').read()).hexdigest())")
 
-  # Run apply (uv absent -> prints manual command, no write).
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  # Run apply (uv absent via ABSENT_PATH -> prints manual command, no write).
+  run env PATH="${STUB}:${ABSENT_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
 
