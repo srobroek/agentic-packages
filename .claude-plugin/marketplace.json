@@ -939,8 +939,8 @@
       "source": {
         "source": "github",
         "repo": "srobroek/project-setup",
-        "ref": "5736e2bd671e1f7af118f17e83230b733abfb563",
-        "sha": "5736e2bd671e1f7af118f17e83230b733abfb563"
+        "ref": "project-setup-v0.3.0",
+        "sha": "122971c684a7c8a85eab409b6d19401f1568deef"
       }
     },
     {
