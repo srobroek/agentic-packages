@@ -78,7 +78,6 @@
   "packages/mcp-playwright": "1.1.0",
   "packages/mcp-repomix": "1.1.0",
   "packages/mcp-serena": "1.1.0",
-  "packages/mcp-speckit-memory": "0.3.0",
   "packages/mcp-tauri": "1.1.0",
   "packages/optimize-steering": "1.1.0",
   "packages/planning-product": "1.1.0",

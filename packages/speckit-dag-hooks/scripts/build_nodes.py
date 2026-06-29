@@ -588,18 +588,6 @@ COMMAND_LABELS: dict = {
     "github-issues-sync": "/speckit.github-issues.sync",
     "iterate-apply": "/speckit.iterate.apply",
     "iterate-define": "/speckit.iterate.define",
-    "memory-md-audit": "/speckit.memory-md.audit",
-    "memory-md-capture": "/speckit.memory-md.capture",
-    "memory-md-capture-from-diff": "/speckit.memory-md.capture-from-diff",
-    "memory-md-init": "/speckit.memory-md.init",
-    "memory-md-init-project": "/speckit.memory-md.init-project",
-    "memory-md-log-finding": "/speckit.memory-md.log-finding",
-    "memory-md-plan-with-memory": "/speckit.memory-md.plan-with-memory",
-    "memory-md-prepare-context": "/speckit.memory-md.prepare-context",
-    "memory-md-share-lesson": "/speckit.memory-md.share-lesson",
-    "memory-md-specify": "/speckit.memory-md.specify",
-    "memory-md-sync-shared": "/speckit.memory-md.sync-shared",
-    "memory-md-token-report": "/speckit.memory-md.token-report",
     "qa-qa-template": "/speckit.qa.qa-template",
     "qa-run": "/speckit.qa.run",
     "reconcile": "/speckit.reconcile.run",
@@ -632,7 +620,7 @@ COMMAND_LABELS: dict = {
 def _command_label(node_id: str) -> str:
     """Render a node id as its /speckit.<...> slash-command label.
 
-    Multi-word commands (agent-assign, github-issues, memory-md, ...) and
+    Multi-word commands (agent-assign, github-issues, ...) and
     every command whose label is not simply "/speckit." + id carry an explicit
     entry in ``COMMAND_LABELS``. Single-segment commands (analyze, plan,
     clarify, ...) fall through to the default.
@@ -745,9 +733,10 @@ def cmd_validate(g: Graph) -> int:
 def build_main_graph() -> Graph:
     """Return the migrated SpecKit DAG (Stage 2).
 
-    Authored from the committed scripts/nodes.json content. The 17 cut node
-    families (brownfield.*, diagram.*, onboard.*, optimize.*) are NOT authored;
-    edges that targeted them are re-pointed onto the surviving workflow.
+    Authored from the committed scripts/nodes.json content. The cut node
+    families (brownfield.*, diagram.*, onboard.*, optimize.*, memory-md.*) are
+    NOT authored; edges that targeted them are re-pointed onto the surviving
+    workflow.
     """
     g = Graph()
 
@@ -770,42 +759,8 @@ def build_main_graph() -> Graph:
     )
 
     # ======================================================================
-    # Phase: bootstrap / memory init
+    # Phase: bootstrap
     # ======================================================================
-    g.node(
-        "memory-md-init",
-        title="/speckit.memory-md.init",
-        context=[
-            "Idempotent. Re-running this command no-ops if `docs/memory/INDEX.md` already exists.",
-            "Invoked once per project after `specify init` + extension install. Subsequent feature cycles use `/speckit.memory-md.plan-with-memory`.",
-        ],
-        soft=["(none; this is the entry point that creates docs/memory/)"],
-        postconditions=[
-            "`docs/memory/INDEX.md`",
-            "`docs/memory/{ARCHITECTURE,BUGS,DECISIONS,WORKLOG,PROJECT_CONTEXT}.md`",
-            "`.specify/memory/{constitution,architecture_constitution,DECISIONS,BUGS}.md` (templates)",
-        ],
-        conditional=[
-            "If `constitution.md` already exists, skip `/speckit.constitution` and go directly to `/speckit.specify`.",
-        ],
-    ).hint("(project bootstrap, once -- see project-setup SKILL.md step 10)", direction="from") \
-     .hint("(return to bootstrap workflow)")
-
-    g.node(
-        "memory-md-init-project",
-        title="/speckit.memory-md.init-project",
-        context=[
-            "Profiles the project (language/framework) so /speckit.memory-md.share-lesson and /speckit.memory-md.sync-shared route lessons to the right cross-project channels in the global shared memory (~/.spec-kit/shared-memory.sqlite). Optional but required before using the shared-lesson commands.",
-        ],
-        soft=["docs/memory/INDEX.md"],
-        postconditions=[
-            "project tech-stack profile recorded (language + optional framework) used to scope cross-project shared-memory sync channels",
-        ],
-        conditional=[
-            "One-time per project. Re-running refreshes the detected language/framework profile; harmless if unchanged.",
-        ],
-    ).hint("(return to bootstrap workflow -- then /speckit.constitution or /speckit.specify)")
-
     g.node(
         "constitution",
         title="/speckit.constitution",
@@ -818,20 +773,6 @@ def build_main_graph() -> Graph:
             "If you started here from an existing project, confirm `.specify/memory/architecture_constitution.md` and `.specify/memory/DECISIONS.md` reflect reality before specifying features.",
         ],
     ).hint("(project bootstrap)", direction="from")
-
-    g.node(
-        "memory-md-specify",
-        title="/speckit.memory-md.specify",
-        context=[
-            "Runs on the before_specify hook: prepares and synthesises relevant project memory into specs/<feat>/memory-synthesis.md so the spec is written with prior decisions/lessons in view. Mandatory hook in memory-md (optional: false).",
-            "Reads from the SQLite memory cache; if the index is missing run /speckit.memory-md.init first.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[".specify/memory/constitution.md"],
-        postconditions=[
-            "specs/<feat>/memory-synthesis.md (<=900 words, the synthesised memory context for this spec)",
-        ],
-    ).hint("(project bootstrap, before the first /speckit.specify)", direction="from")
 
     # ======================================================================
     # Phase: specify / clarify / plan
@@ -860,23 +801,6 @@ def build_main_graph() -> Graph:
         hard_missing=["specs/<feat>/spec.md"],
         soft=[],
         postconditions=["`specs/<feat>/clarifications.md`"],
-        conditional=[
-            "If memory-md is installed but `docs/memory/INDEX.md` is missing, run `/speckit.memory-md.init` first.",
-        ],
-    )
-
-    g.node(
-        "memory-md-plan-with-memory",
-        title="/speckit.memory-md.plan-with-memory",
-        context=[
-            "Selectively indexes durable memory (decisions, bugs, architecture) and synthesises it into a short artefact the planner reads. memory-md is installed by default; skip only if it was deliberately removed.",
-        ],
-        hard_missing=["docs/memory/INDEX.md", "specs/<feat>/spec.md"],
-        soft=[],
-        postconditions=["`specs/<feat>/memory-synthesis.md`"],
-        conditional=[
-            "If `memory-synthesis.md` is empty or just boilerplate, the planner can ignore it; don't bend the plan around an empty synthesis.",
-        ],
     )
 
     g.node(
@@ -884,11 +808,10 @@ def build_main_graph() -> Graph:
         title="/speckit.plan",
         context=[
             "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-            "`memory-synthesis.md` is a HARD prerequisite for planning. If it is missing, STOP and run `/speckit.memory-md.plan-with-memory` first -- do not plan without synthesised memory.",
             "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch.",
         ],
         hard_exists=["specs/<feat>/plan.md"],
-        hard_missing=["specs/<feat>/spec.md", "specs/<feat>/memory-synthesis.md"],
+        hard_missing=["specs/<feat>/spec.md"],
         soft=["specs/<feat>/clarifications.md"],
         postconditions=["`specs/<feat>/plan.md`"],
     )
@@ -1217,101 +1140,8 @@ def build_main_graph() -> Graph:
     )
 
     # ======================================================================
-    # Phase: memory capture + sync/drift
+    # Phase: sync/drift
     # ======================================================================
-    g.node(
-        "memory-md-capture",
-        title="/speckit.memory-md.capture",
-        context=[
-            "Human-in-the-loop: capture proposes durable lessons; you approve before they land in BUGS.md / DECISIONS.md / LESSONS.md. Skip noise; prefer pattern-level captures over one-off observations.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=["specs/<feat>/verify-report.md"],
-        postconditions=["additions to `docs/memory/{BUGS,DECISIONS,LESSONS}.md`"],
-    )
-
-    g.node(
-        "memory-md-capture-from-diff",
-        title="/speckit.memory-md.capture-from-diff",
-        context=[
-            "Reviews `git diff` and proposes lessons. Optimised for rapid bug-fix capture; lower ceremony than `/speckit.memory-md.capture`.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[],
-        postconditions=["additions to `docs/memory/BUGS.md` (and optionally DECISIONS.md)"],
-        conditional=["If the diff is purely formatting / whitespace, this is a no-op."],
-    ).hint("(any post-quick-fix moment with a meaningful git diff)", direction="from") \
-     .hint("(return to invoker -- typically verify or close-out)")
-
-    g.node(
-        "memory-md-share-lesson",
-        title="/speckit.memory-md.share-lesson",
-        context=[
-            "Anonymises paths via SHA-256 before elevating the lesson to the shared global pool. Never share lessons containing secrets or proprietary identifiers.",
-        ],
-        hard_missing=["docs/memory/LESSONS.md"],
-        soft=[],
-        postconditions=["global shared-lessons store updated"],
-    ).hint("(manual: when a local lesson has been validated and is worth sharing)", direction="from")
-
-    g.node(
-        "memory-md-sync-shared",
-        title="/speckit.memory-md.sync-shared",
-        context=[
-            "Syncs matching tech-stack lessons from other projects into `docs/memory/SHARED_LESSONS.md`. Run at feature-start to absorb cross-project learnings.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[],
-        postconditions=["`docs/memory/SHARED_LESSONS.md` refreshed"],
-    ).hint("(new feature start -- bring matching tech-stack lessons into local context)", direction="from") \
-     .hint("/speckit.plan - /speckit.specify (the imported lessons inform planning)")
-
-    g.node(
-        "memory-md-prepare-context",
-        title="/speckit.memory-md.prepare-context",
-        context=[
-            "Use when the implementation is drifting and the agent needs to re-anchor in the memory index. Cheap to invoke; doesn't mutate spec/plan/tasks.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[],
-        postconditions=["refreshed local DB cache + regenerated synthesis blocks"],
-    ).hint("(any active implementation phase -- mid-cycle context refresh)", direction="from") \
-     .hint("(return to the phase that invoked it -- agent-assign.execute, verify, review, etc.)")
-
-    g.node(
-        "memory-md-audit",
-        title="/speckit.memory-md.audit",
-        context=[
-            "Finds contradictions, stale items, and duplicates across the memory tree. Read the proposals carefully before accepting cleanups.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[],
-        postconditions=["`docs/memory/audit-report.md`"],
-    ).hint("(periodic memory hygiene -- invoke when memory gets noisy)", direction="from")
-
-    g.node(
-        "memory-md-log-finding",
-        title="/speckit.memory-md.log-finding",
-        context=[
-            "Converts audit findings into actionable follow-ups (typically gh issues).",
-        ],
-        hard_missing=["docs/memory/audit-report.md"],
-        soft=[],
-        postconditions=["gh issues opened OR project tracker entries created"],
-    ).hint("(return -- terminal for the audit sub-cycle)")
-
-    g.node(
-        "memory-md-token-report",
-        title="/speckit.memory-md.token-report",
-        context=[
-            "Compares estimated token usage of full vs optimised retrieval. Use to decide whether the optimizer is paying off.",
-        ],
-        hard_missing=["docs/memory/INDEX.md"],
-        soft=[],
-        postconditions=["(no artefact; report printed)"],
-    ).hint("(anytime -- token / context cost audit)", direction="from") \
-     .hint("(return -- advisory)")
-
     g.node(
         "sync-analyze",
         title="/speckit.sync.analyze",
@@ -1642,20 +1472,12 @@ def build_main_graph() -> Graph:
     # ======================================================================
     # Edges (canonical store; came_from/going_to are projections)
     # ======================================================================
-    # -- bootstrap / memory init --
-    g.edge("memory-md-init", "memory-md-init-project", "default", note="recommended next -- profile the project for shared-memory channels")
-    g.edge("memory-md-init", "constitution", "conditional", note="preferred for greenfield")
-    g.edge("memory-md-init", "specify", "conditional", note="acceptable if constitution already exists")
-    g.edge("memory-md-init-project", "memory-md-sync-shared", "optional", note="pull matching shared lessons once channels are configured")
-    g.edge("constitution", "memory-md-specify", "default", note="before_specify hook prepares memory context")
-    g.edge("constitution", "specify", "conditional", note="if memory-md is not installed")
-    g.edge("memory-md-specify", "specify", "default", note="proceed to write the spec with memory context loaded")
+    # -- bootstrap --
+    g.edge("constitution", "specify", "default", note="proceed to write the spec")
 
     # -- specify / clarify / plan --
     g.edge("specify", "clarify", "default")
-    g.edge("clarify", "memory-md-plan-with-memory", "default", note="memory-md is installed by default")
-    g.edge("clarify", "plan", "conditional", note="only if memory-md is not installed")
-    g.edge("memory-md-plan-with-memory", "plan", "default", note="the planner reads memory-synthesis.md")
+    g.edge("clarify", "plan", "default")
     g.edge("plan", "tasks", "default")
     g.edge("plan", "critique-run", "conditional", note="only if user explicitly requests critique before tasks")
     g.edge("tasks", "checklist", "default", note="requirements-quality gate over spec + plan + tasks")
@@ -1727,17 +1549,9 @@ def build_main_graph() -> Graph:
     g.edge("fix-findings", "fix-findings", "conditional", note="loop -- when review shows the fix is incomplete or regressed")
     g.edge("fix-findings", "review-run", "conditional", note="loop until clean, after the fixes pass review")
     g.edge("fix-findings", "verify", "conditional", note="re-verify after substantial fixes")
-    g.edge("cleanup", "memory-md-capture", "default", note="capture lessons while context is fresh")
-    g.edge("cleanup", "sync-analyze", "conditional", note="if no lessons to capture")
+    g.edge("cleanup", "sync-analyze", "default", note="proceed to drift check")
 
-    # -- memory capture + sync/drift -> retro -> checkpoint -> archive --
-    g.edge("memory-md-capture", "sync-analyze", "default", note="proceed to drift check")
-    g.edge("memory-md-capture", "memory-md-share-lesson", "conditional", note="if a captured lesson is generally applicable across projects")
-    g.edge("verify", "memory-md-capture", "conditional", note="early capture")
-    g.edge("bugfix-patch", "memory-md-capture-from-diff", "default", note="fast capture")
-    g.edge("memory-md-share-lesson", "memory-md-sync-shared", "default", note="propagate to other projects")
-    g.edge("memory-md-capture", "memory-md-sync-shared", "optional", note="bring matching tech-stack lessons into local context")
-    g.edge("memory-md-audit", "memory-md-log-finding", "default", note="turn audit findings into tracker items")
+    # -- sync/drift -> retro -> checkpoint -> archive --
     g.edge("sync-analyze", "sync-conflicts", "default")
     g.edge("sync-conflicts", "retro-run", "default")
     g.edge("sync-conflicts", "reconcile", "conditional", note="if conflicts need active resolution")
@@ -1787,19 +1601,18 @@ def build_main_graph() -> Graph:
     # ======================================================================
     # Phase groupings (documentary only -- do not affect emitted JSON)
     # ======================================================================
-    g.phase("bootstrap", ["memory-md-init", "memory-md-init-project", "constitution", "memory-md-specify"])
-    g.phase("specify", ["specify", "clarify", "memory-md-plan-with-memory", "plan", "tasks"])
+    g.phase("bootstrap", ["constitution"])
+    g.phase("specify", ["specify", "clarify", "plan", "tasks"])
     g.phase("pre-impl-review", ["checklist", "critique-run", "security-review", "analyze", "taskstoissues", "checkpoint-commit"])
     g.phase("implement", ["agent-assign-assign", "agent-assign-validate", "agent-assign-execute", "implement", "converge"])
     g.phase("post-impl-review", ["verify-tasks", "verify", "review-run", "review-code", "review-comments", "review-errors", "review-simplify", "review-tests", "review-types", "qa-run", "code-review", "fix-findings", "cleanup"])
-    g.phase("close-out", ["memory-md-capture", "memory-md-capture-from-diff", "sync-analyze", "sync-conflicts", "reconcile", "retro-run", "archive"])
+    g.phase("close-out", ["sync-analyze", "sync-conflicts", "reconcile", "retro-run", "archive"])
     g.phase("refine", ["refine-update", "refine-diff", "refine-propagate", "refine-status"])
     g.phase("iterate", ["iterate-define", "iterate-apply", "roadmap-write"])
     g.phase("bugfix", ["bugfix-report", "bugfix-verify", "bugfix-patch"])
     g.phase("tinyspec", ["tinyspec-classify", "tinyspec-tinyspec", "tinyspec-implement"])
     g.phase("github-issues", ["github-issues-import", "github-issues-link", "github-issues-sync"])
     g.phase("orchestration", ["fleet", "fleet-review", "conduct"])
-    g.phase("memory", ["memory-md-share-lesson", "memory-md-sync-shared", "memory-md-prepare-context", "memory-md-audit", "memory-md-log-finding", "memory-md-token-report"])
     g.phase("utility", ["status-show", "doctor-check", "worktree-create", "worktree-list", "worktree-clean", "critique-critique-template", "qa-qa-template", "retro-retro-template"])
 
     return g

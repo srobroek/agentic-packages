@@ -576,13 +576,6 @@ marketplace:
       tags:
         - mcp
         - semantic
-    - name: mcp-speckit-memory
-      source: ./packages/mcp-speckit-memory
-      category: mcp
-      tags:
-        - mcp
-        - speckit
-        - memory
     - name: mcp-tauri
       source: ./packages/mcp-tauri
       category: mcp

@@ -145,7 +145,6 @@
   "bugfix-patch": {
     "post": {
       "going_to": [
-        "/speckit.memory-md.capture-from-diff (default -- fast capture)",
         "/speckit.verify -- re-verify if the fix touched implementation"
       ],
       "title": "/speckit.bugfix.patch -- what to do next"
@@ -275,12 +274,8 @@
   },
   "clarify": {
     "post": {
-      "conditional": [
-        "If memory-md is installed but `docs/memory/INDEX.md` is missing, run `/speckit.memory-md.init` first."
-      ],
       "going_to": [
-        "/speckit.memory-md.plan-with-memory (default -- memory-md is installed by default)",
-        "/speckit.plan -- only if memory-md is not installed"
+        "/speckit.plan (default)"
       ],
       "postconditions": [
         "`specs/<feat>/clarifications.md`"
@@ -304,8 +299,7 @@
   "cleanup": {
     "post": {
       "going_to": [
-        "/speckit.memory-md.capture (default -- capture lessons while context is fresh)",
-        "/speckit.sync.analyze -- if no lessons to capture"
+        "/speckit.sync.analyze (default -- proceed to drift check)"
       ],
       "postconditions": [
         "`specs/<feat>/cleanup-report.md`"
@@ -389,8 +383,7 @@
         "If you started here from an existing project, confirm `.specify/memory/architecture_constitution.md` and `.specify/memory/DECISIONS.md` reflect reality before specifying features."
       ],
       "going_to": [
-        "/speckit.memory-md.specify (default -- before_specify hook prepares memory context)",
-        "/speckit.specify -- if memory-md is not installed"
+        "/speckit.specify (default -- proceed to write the spec)"
       ],
       "postconditions": [
         "`.specify/memory/constitution.md` (filled in)"
@@ -399,7 +392,6 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.memory-md.init -- preferred for greenfield",
         "(project bootstrap)"
       ],
       "context": [
@@ -736,326 +728,6 @@
       "title": "/speckit.iterate.define -- before you run this"
     }
   },
-  "memory-md-audit": {
-    "post": {
-      "going_to": [
-        "/speckit.memory-md.log-finding (default -- turn audit findings into tracker items)"
-      ],
-      "postconditions": [
-        "`docs/memory/audit-report.md`"
-      ],
-      "title": "/speckit.memory-md.audit -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(periodic memory hygiene -- invoke when memory gets noisy)"
-      ],
-      "context": [
-        "Finds contradictions, stale items, and duplicates across the memory tree. Read the proposals carefully before accepting cleanups."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.audit -- before you run this"
-    }
-  },
-  "memory-md-capture": {
-    "post": {
-      "going_to": [
-        "/speckit.sync.analyze (default -- proceed to drift check)",
-        "/speckit.memory-md.share-lesson -- if a captured lesson is generally applicable across projects",
-        "/speckit.memory-md.sync-shared -- bring matching tech-stack lessons into local context"
-      ],
-      "postconditions": [
-        "additions to `docs/memory/{BUGS,DECISIONS,LESSONS}.md`"
-      ],
-      "title": "/speckit.memory-md.capture -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.cleanup (default -- capture lessons while context is fresh)",
-        "/speckit.verify -- early capture"
-      ],
-      "context": [
-        "Human-in-the-loop: capture proposes durable lessons; you approve before they land in BUGS.md / DECISIONS.md / LESSONS.md. Skip noise; prefer pattern-level captures over one-off observations."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [
-        "specs/<feat>/verify-report.md"
-      ],
-      "title": "/speckit.memory-md.capture -- before you run this"
-    }
-  },
-  "memory-md-capture-from-diff": {
-    "post": {
-      "conditional": [
-        "If the diff is purely formatting / whitespace, this is a no-op."
-      ],
-      "going_to": [
-        "(return to invoker -- typically verify or close-out)"
-      ],
-      "postconditions": [
-        "additions to `docs/memory/BUGS.md` (and optionally DECISIONS.md)"
-      ],
-      "title": "/speckit.memory-md.capture-from-diff -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.bugfix.patch (default -- fast capture)",
-        "(any post-quick-fix moment with a meaningful git diff)"
-      ],
-      "context": [
-        "Reviews `git diff` and proposes lessons. Optimised for rapid bug-fix capture; lower ceremony than `/speckit.memory-md.capture`."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.capture-from-diff -- before you run this"
-    }
-  },
-  "memory-md-init": {
-    "post": {
-      "conditional": [
-        "If `constitution.md` already exists, skip `/speckit.constitution` and go directly to `/speckit.specify`."
-      ],
-      "going_to": [
-        "/speckit.memory-md.init-project (default -- recommended next -- profile the project for shared-memory channels)",
-        "/speckit.constitution -- preferred for greenfield",
-        "/speckit.specify -- acceptable if constitution already exists",
-        "(return to bootstrap workflow)"
-      ],
-      "postconditions": [
-        "`docs/memory/INDEX.md`",
-        "`docs/memory/{ARCHITECTURE,BUGS,DECISIONS,WORKLOG,PROJECT_CONTEXT}.md`",
-        "`.specify/memory/{constitution,architecture_constitution,DECISIONS,BUGS}.md` (templates)"
-      ],
-      "title": "/speckit.memory-md.init -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(project bootstrap, once -- see project-setup SKILL.md step 10)"
-      ],
-      "context": [
-        "Idempotent. Re-running this command no-ops if `docs/memory/INDEX.md` already exists.",
-        "Invoked once per project after `specify init` + extension install. Subsequent feature cycles use `/speckit.memory-md.plan-with-memory`."
-      ],
-      "soft": [
-        "(none; this is the entry point that creates docs/memory/)"
-      ],
-      "title": "/speckit.memory-md.init -- before you run this"
-    }
-  },
-  "memory-md-init-project": {
-    "post": {
-      "conditional": [
-        "One-time per project. Re-running refreshes the detected language/framework profile; harmless if unchanged."
-      ],
-      "going_to": [
-        "/speckit.memory-md.sync-shared -- pull matching shared lessons once channels are configured",
-        "(return to bootstrap workflow -- then /speckit.constitution or /speckit.specify)"
-      ],
-      "postconditions": [
-        "project tech-stack profile recorded (language + optional framework) used to scope cross-project shared-memory sync channels"
-      ],
-      "title": "/speckit.memory-md.init-project -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.memory-md.init (default -- recommended next -- profile the project for shared-memory channels)"
-      ],
-      "context": [
-        "Profiles the project (language/framework) so /speckit.memory-md.share-lesson and /speckit.memory-md.sync-shared route lessons to the right cross-project channels in the global shared memory (~/.spec-kit/shared-memory.sqlite). Optional but required before using the shared-lesson commands."
-      ],
-      "soft": [
-        "docs/memory/INDEX.md"
-      ],
-      "title": "/speckit.memory-md.init-project -- before you run this"
-    }
-  },
-  "memory-md-log-finding": {
-    "post": {
-      "going_to": [
-        "(return -- terminal for the audit sub-cycle)"
-      ],
-      "postconditions": [
-        "gh issues opened OR project tracker entries created"
-      ],
-      "title": "/speckit.memory-md.log-finding -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.memory-md.audit (default -- turn audit findings into tracker items)"
-      ],
-      "context": [
-        "Converts audit findings into actionable follow-ups (typically gh issues)."
-      ],
-      "hard_missing": [
-        "docs/memory/audit-report.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.log-finding -- before you run this"
-    }
-  },
-  "memory-md-plan-with-memory": {
-    "post": {
-      "conditional": [
-        "If `memory-synthesis.md` is empty or just boilerplate, the planner can ignore it; don't bend the plan around an empty synthesis."
-      ],
-      "going_to": [
-        "/speckit.plan (default -- the planner reads memory-synthesis.md)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/memory-synthesis.md`"
-      ],
-      "title": "/speckit.memory-md.plan-with-memory -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.clarify (default -- memory-md is installed by default)"
-      ],
-      "context": [
-        "Selectively indexes durable memory (decisions, bugs, architecture) and synthesises it into a short artefact the planner reads. memory-md is installed by default; skip only if it was deliberately removed."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md",
-        "specs/<feat>/spec.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.plan-with-memory -- before you run this"
-    }
-  },
-  "memory-md-prepare-context": {
-    "post": {
-      "going_to": [
-        "(return to the phase that invoked it -- agent-assign.execute, verify, review, etc.)"
-      ],
-      "postconditions": [
-        "refreshed local DB cache + regenerated synthesis blocks"
-      ],
-      "title": "/speckit.memory-md.prepare-context -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(any active implementation phase -- mid-cycle context refresh)"
-      ],
-      "context": [
-        "Use when the implementation is drifting and the agent needs to re-anchor in the memory index. Cheap to invoke; doesn't mutate spec/plan/tasks."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.prepare-context -- before you run this"
-    }
-  },
-  "memory-md-share-lesson": {
-    "post": {
-      "going_to": [
-        "/speckit.memory-md.sync-shared (default -- propagate to other projects)"
-      ],
-      "postconditions": [
-        "global shared-lessons store updated"
-      ],
-      "title": "/speckit.memory-md.share-lesson -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.memory-md.capture -- if a captured lesson is generally applicable across projects",
-        "(manual: when a local lesson has been validated and is worth sharing)"
-      ],
-      "context": [
-        "Anonymises paths via SHA-256 before elevating the lesson to the shared global pool. Never share lessons containing secrets or proprietary identifiers."
-      ],
-      "hard_missing": [
-        "docs/memory/LESSONS.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.share-lesson -- before you run this"
-    }
-  },
-  "memory-md-specify": {
-    "post": {
-      "going_to": [
-        "/speckit.specify (default -- proceed to write the spec with memory context loaded)"
-      ],
-      "postconditions": [
-        "specs/<feat>/memory-synthesis.md (<=900 words, the synthesised memory context for this spec)"
-      ],
-      "title": "/speckit.memory-md.specify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.constitution (default -- before_specify hook prepares memory context)",
-        "(project bootstrap, before the first /speckit.specify)"
-      ],
-      "context": [
-        "Runs on the before_specify hook: prepares and synthesises relevant project memory into specs/<feat>/memory-synthesis.md so the spec is written with prior decisions/lessons in view. Mandatory hook in memory-md (optional: false).",
-        "Reads from the SQLite memory cache; if the index is missing run /speckit.memory-md.init first."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [
-        ".specify/memory/constitution.md"
-      ],
-      "title": "/speckit.memory-md.specify -- before you run this"
-    }
-  },
-  "memory-md-sync-shared": {
-    "post": {
-      "going_to": [
-        "/speckit.plan - /speckit.specify (the imported lessons inform planning)"
-      ],
-      "postconditions": [
-        "`docs/memory/SHARED_LESSONS.md` refreshed"
-      ],
-      "title": "/speckit.memory-md.sync-shared -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.memory-md.init-project -- pull matching shared lessons once channels are configured",
-        "/speckit.memory-md.share-lesson (default -- propagate to other projects)",
-        "/speckit.memory-md.capture -- bring matching tech-stack lessons into local context",
-        "(new feature start -- bring matching tech-stack lessons into local context)"
-      ],
-      "context": [
-        "Syncs matching tech-stack lessons from other projects into `docs/memory/SHARED_LESSONS.md`. Run at feature-start to absorb cross-project learnings."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.sync-shared -- before you run this"
-    }
-  },
-  "memory-md-token-report": {
-    "post": {
-      "going_to": [
-        "(return -- advisory)"
-      ],
-      "postconditions": [
-        "(no artefact; report printed)"
-      ],
-      "title": "/speckit.memory-md.token-report -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(anytime -- token / context cost audit)"
-      ],
-      "context": [
-        "Compares estimated token usage of full vs optimised retrieval. Use to decide whether the optimizer is paying off."
-      ],
-      "hard_missing": [
-        "docs/memory/INDEX.md"
-      ],
-      "soft": [],
-      "title": "/speckit.memory-md.token-report -- before you run this"
-    }
-  },
   "plan": {
     "post": {
       "going_to": [
@@ -1069,21 +741,18 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.clarify -- only if memory-md is not installed",
-        "/speckit.memory-md.plan-with-memory (default -- the planner reads memory-synthesis.md)",
+        "/speckit.clarify (default)",
         "/speckit.github-issues.import -- if the issue is well-defined enough to skip specify"
       ],
       "context": [
         "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-        "`memory-synthesis.md` is a HARD prerequisite for planning. If it is missing, STOP and run `/speckit.memory-md.plan-with-memory` first -- do not plan without synthesised memory.",
         "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch."
       ],
       "hard_exists": [
         "specs/<feat>/plan.md"
       ],
       "hard_missing": [
-        "specs/<feat>/spec.md",
-        "specs/<feat>/memory-synthesis.md"
+        "specs/<feat>/spec.md"
       ],
       "soft": [
         "specs/<feat>/clarifications.md"
@@ -1540,9 +1209,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.memory-md.init -- acceptable if constitution already exists",
-        "/speckit.constitution -- if memory-md is not installed",
-        "/speckit.memory-md.specify (default -- proceed to write the spec with memory context loaded)",
+        "/speckit.constitution (default -- proceed to write the spec)",
         "/speckit.refine.status (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage to assess impact)",
         "/speckit.iterate.apply (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage)",
         "/speckit.github-issues.import -- treat imported issue as feature seed",
@@ -1600,8 +1267,7 @@
     },
     "pre": {
       "came_from": [
-        "/speckit.cleanup -- if no lessons to capture",
-        "/speckit.memory-md.capture (default -- proceed to drift check)",
+        "/speckit.cleanup (default -- proceed to drift check)",
         "/speckit.reconcile.run -- to confirm reconciliation closed the drift"
       ],
       "context": [
@@ -1755,7 +1421,6 @@
         "/speckit.review.run (default)",
         "/speckit.bugfix.report -- if verify surfaces gaps that look like bugs rather than spec violations",
         "/speckit.converge -- if verify finds unmet FR/SC that is unbuilt work, not a bug or scope change",
-        "/speckit.memory-md.capture -- early capture",
         "/speckit.bugfix.report -- if a verification failure triages as a bug rather than a spec gap"
       ],
       "postconditions": [

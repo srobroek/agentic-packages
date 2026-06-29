@@ -13,6 +13,3 @@ category: speckit
 tags:
   - bundle
   - speckit
-dependencies:
-  apm:
-    - srobroek/agentic-packages/packages/mcp-speckit-memory#main
