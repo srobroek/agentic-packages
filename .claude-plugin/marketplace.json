@@ -1231,7 +1231,7 @@
     },
     {
       "name": "vibe-hero",
-      "description": "APM project for vibe-hero",
+      "description": "vibe-hero — adaptive learning that takes you from zero to hero on agentic coding tools (Claude Code first; Codex/Kiro architecture-ready). This repo is both the source and its own Claude Code marketplace: it publishes the @vibe-hero/server MCP engine to npm and ships the `vibe-hero` plugin (MCP server + four skills + an end-of-work quiz hook). Quiz-primary progress, per-tool Elo graduation, telemetry only as a trigger, privacy by construction.",
       "version": "1.0.0",
       "tags": [
         "mcp",
@@ -1242,8 +1242,8 @@
       "source": {
         "source": "github",
         "repo": "srobroek/vibe-hero",
-        "ref": "d7d3856446287dd659b69e6ee8b78557c686400f",
-        "sha": "d7d3856446287dd659b69e6ee8b78557c686400f"
+        "ref": "v0.2.0",
+        "sha": "cbd3321cf60bf710f13d2fdb06f432e2ba316479"
       }
     },
     {
