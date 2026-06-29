@@ -328,6 +328,38 @@ Before running the pipeline for a new project, you MUST conduct module selection
    Detection runs ONCE at init and the *choice* is frozen; reproduce replays the
    frozen choice and never re-detects.
 
+2b. **Fetch the addon catalog and offer catalog addons (spec 020 FR-B4).**
+   Immediately after marketplace detection, call `sdk.addon_catalog_urls()` to
+   retrieve configured catalog URLs (reads `$PROJECT_SETUP_CATALOG_URL` env and
+   `~/.config/project-setup/config.toml` `[catalog] urls`). For each URL call
+   `sdk.fetch_addon_catalog(url)` and collect the returned records.
+
+   - **No URLs configured / all fetches return empty** — skip silently.  Offer only
+     bundled modules plus any sources already declared in the project.  Behavior is
+     identical to today's bundled-only flow (FR-B6).
+   - **Records returned** — present catalog addons **in the same numbered-table
+     format** (RULES 4/5b) alongside bundled Optional modules.  Mark each row's
+     source clearly: `(catalog: <name>)` so the user knows it is a remote addon, not
+     bundled.  Apply the same Recommended / Optional / Not-applicable grouping.
+   - **On selection of a catalog addon:**
+     1. Obtain a ref.  Use the record's `ref` field if present; if absent, **ask the
+        user** for a version tag / commit SHA before proceeding.  An unpinned git
+        source is rejected by the `ORG_SOURCE_UNPINNED` gate — every selected addon
+        **must** carry an explicit ref.
+     2. Write a `[[source]]` entry to `.project-setup/sources.toml`:
+        ```toml
+        [[source]]
+        locator = "<record.locator>"
+        ref     = "<resolved-ref>"
+        # subdir = "<if the catalog record specifies one>"
+        ```
+     3. The runner's existing `[[source]]` fetch + discover pipeline picks up the
+        new entry on the next run — no extra wiring needed.
+   - The user may also paste a raw locator directly (the existing manual path), which
+     follows the same ref-pinning requirement.
+   - Do NOT hardcode any catalog URL.  With no URL in the user's config or env, skip
+     this step entirely.
+
    **Version choices (FR-V1–FR-V4).** After the user picks their packages and
    sources, default ALL installable packages to `latest` — never carry a
    hardcoded pin. Then offer a per-package version override: "Pin any package to

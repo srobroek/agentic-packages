@@ -369,6 +369,147 @@ def detect_marketplaces(home: "str | Path | None" = None) -> "dict[str, list[str
 
 
 # --------------------------------------------------------------------------- #
+# fetch_addon_catalog — runtime catalog fetch (spec 020 FR-B1)                 #
+# --------------------------------------------------------------------------- #
+def fetch_addon_catalog(
+    url: str,
+    *,
+    timeout: float = 10.0,
+    _opener: "Any | None" = None,
+) -> "list[dict]":
+    """Fetch an addon catalog JSON from *url* and return the list of records.
+
+    Spec 020 FR-B1.  This is a discovery aid fetched at INIT — it is NOT frozen;
+    only the chosen source locators (written to ``.project-setup/sources.toml``)
+    are frozen.  The URL is caller-supplied (see ``addon_catalog_urls`` for how
+    to resolve it from config/env) — there is NO hardcoded default.
+
+    The catalog JSON may be either:
+
+    - A JSON **list** of record objects, OR
+    - A JSON **object** with a top-level ``"modules"`` or ``"addons"`` key whose
+      value is a list of record objects.
+
+    Each record is expected to have ``{name, description, locator, category}``
+    fields; extra keys are ignored and missing optional keys are tolerated.
+    Non-conforming records (not a dict) are silently dropped.
+
+    On **any** failure — network error, timeout, malformed JSON, unexpected shape,
+    empty response — returns ``[]`` and NEVER raises (mirrors
+    ``detect_marketplaces`` defensiveness).  Stdlib urllib only; no third-party
+    HTTP client.
+
+    Parameters
+    ----------
+    url:
+        The catalog JSON endpoint to fetch.
+    timeout:
+        Per-request timeout in seconds.
+    _opener:
+        Test seam: a callable ``(url, timeout) -> parsed-json`` used in place of
+        the real network fetch.  When ``None`` the stdlib ``urllib.request`` is
+        used.  Should raise on failure (same contract as ``_registry_get``).
+    """
+    import json as _json
+    import urllib.request
+
+    try:
+        if _opener is not None:
+            data = _opener(url, timeout)
+        else:
+            with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
+                data = _json.loads(resp.read().decode("utf-8"))
+
+        # Tolerate both shapes: bare list OR object with a "modules"/"addons" key.
+        if isinstance(data, list):
+            records = data
+        elif isinstance(data, dict):
+            records = data.get("modules") or data.get("addons") or []
+            if not isinstance(records, list):
+                return []
+        else:
+            return []
+
+        # Filter: keep only dict records; drop anything else silently.
+        return [r for r in records if isinstance(r, dict)]
+
+    except Exception:  # noqa: BLE001 — broad safety net, never raises
+        return []
+
+
+# --------------------------------------------------------------------------- #
+# addon_catalog_urls — resolve catalog URLs from config/env (spec 020 FR-B2)  #
+# --------------------------------------------------------------------------- #
+def addon_catalog_urls(home: "str | Path | None" = None) -> "list[str]":
+    """Return the list of addon catalog URLs from env and/or home config.
+
+    Spec 020 FR-B2.  Sources (in priority order, merged + deduped, env first):
+
+    1. ``PROJECT_SETUP_CATALOG_URL`` env var — a single URL or a
+       comma/space-separated list of URLs.
+    2. Home config TOML (``~/.config/project-setup/config.toml``) — either
+       ``[catalog] urls = [...]`` (list under a ``[catalog]`` table) or a
+       top-level ``catalog_urls`` key (list).
+
+    No hardcoded default URLs — an unconfigured install returns ``[]`` and no
+    remote fetch occurs (FR-B6 behavior unchanged).  Never raises; a missing
+    file, malformed TOML, or wrong-type value yields ``[]`` for that source.
+    Uses ``paths.home_config_path()`` for the default config location.
+
+    Parameters
+    ----------
+    home:
+        Override the home directory used to locate the config file (test seam,
+        mirrors ``detect_marketplaces``).  When ``None``, ``paths.home_config_path()``
+        is used (which itself respects ``$PROJECT_SETUP_CONFIG`` / ``$XDG_CONFIG_HOME``).
+    """
+    import paths as _paths_local
+
+    seen: dict[str, None] = {}  # ordered dedup via insertion-ordered dict
+
+    # ── Source 1: env var (single or comma/space-separated list) ──────────── #
+    env_val = os.environ.get("PROJECT_SETUP_CATALOG_URL", "").strip()
+    if env_val:
+        # Split on commas first, then whitespace within each token.
+        for token in re.split(r"[,\s]+", env_val):
+            token = token.strip()
+            if token:
+                seen[token] = None
+
+    # ── Source 2: home config TOML ─────────────────────────────────────────── #
+    try:
+        if home is not None:
+            cfg_path = Path(home) / ".config" / "project-setup" / "config.toml"
+        else:
+            cfg_path = _paths_local.home_config_path()
+
+        if cfg_path.is_file():
+            with open(cfg_path, "rb") as fh:
+                cfg_data = tomllib.load(fh)
+
+            # [catalog] urls = [...] takes precedence over catalog_urls top-level.
+            catalog_section = cfg_data.get("catalog", {})
+            if isinstance(catalog_section, dict):
+                urls_val = catalog_section.get("urls")
+                if isinstance(urls_val, list):
+                    for u in urls_val:
+                        if isinstance(u, str) and u.strip():
+                            seen[u.strip()] = None
+
+            # Fallback: top-level catalog_urls list.
+            top_level = cfg_data.get("catalog_urls")
+            if isinstance(top_level, list):
+                for u in top_level:
+                    if isinstance(u, str) and u.strip():
+                        seen[u.strip()] = None
+
+    except Exception:  # noqa: BLE001 — broad safety net, never raises
+        pass
+
+    return list(seen)
+
+
+# --------------------------------------------------------------------------- #
 # splice_between_sentinels — replace a marked span inside a file (spec 006)     #
 # --------------------------------------------------------------------------- #
 def splice_between_sentinels(
