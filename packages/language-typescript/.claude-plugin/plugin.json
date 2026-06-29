@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "typescript-quality"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/typescript-quality"
     },
     {
-      "name": "language-steering-typescript"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/language-steering-typescript"
     }
   ]
 }

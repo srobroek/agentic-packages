@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "rust-quality"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/rust-quality"
     },
     {
-      "name": "language-steering-rust"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/language-steering-rust"
     }
   ]
 }

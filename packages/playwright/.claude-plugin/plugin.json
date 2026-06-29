@@ -9,7 +9,8 @@
   "skills": "./.apm/skills",
   "dependencies": [
     {
-      "name": "mcp-playwright"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/mcp-playwright"
     }
   ]
 }

@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "playwright"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/playwright"
     },
     {
-      "name": "steering-frontend"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-frontend"
     }
   ]
 }

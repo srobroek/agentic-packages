@@ -8,10 +8,12 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "unstuck"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/unstuck"
     },
     {
-      "name": "agent-adversarial-challenger"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-adversarial-challenger"
     }
   ]
 }

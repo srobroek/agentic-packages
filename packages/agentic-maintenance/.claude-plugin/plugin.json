@@ -8,19 +8,24 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "optimize-steering"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/optimize-steering"
     },
     {
-      "name": "audit-steering"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/audit-steering"
     },
     {
-      "name": "write-a-skill"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/write-a-skill"
     },
     {
-      "name": "agent-coder"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-coder"
     },
     {
-      "name": "agent-pr-reviewer"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/agent-pr-reviewer"
     }
   ]
 }

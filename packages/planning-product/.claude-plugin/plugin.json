@@ -8,16 +8,20 @@
   "license": "Apache-2.0",
   "dependencies": [
     {
-      "name": "debate"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/debate"
     },
     {
-      "name": "eli5"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/eli5"
     },
     {
-      "name": "research"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/research"
     },
     {
-      "name": "web-fetch"
+      "git": "srobroek/agentic-packages",
+      "path": "packages/web-fetch"
     }
   ]
 }
