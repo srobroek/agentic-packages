@@ -69,8 +69,12 @@ jobs:
 
       - name: Sync generated artifacts on the release PR
         if: ${{ steps.release.outputs.pr }}
+        # NOTE: step-level `env` is evaluated even when the `if` guard is false, so
+        # `fromJSON(...)` must be guarded too -- when release-please opens no PR,
+        # `outputs.pr` is '' and a bare `fromJSON('')` aborts the whole job with
+        # "Error reading JToken". Only parse when the output is non-empty.
         env:
-          RELEASE_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          RELEASE_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
         run: |
           set -euo pipefail
           git fetch origin "$RELEASE_BRANCH"
