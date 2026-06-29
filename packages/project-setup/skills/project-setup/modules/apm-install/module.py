@@ -11,13 +11,11 @@ Migrated from the legacy monolith project-setup.sh Step 10b (lines 998-1073):
   - apm compile --target codex --no-constitution (lines 1034-1044).
   - patch/audit best-effort (lines 1047-1073).
 
-Baseline MCP packages always added:
-  mcp-codebase-memory mcp-context7 mcp-package-version mcp-repomix @srobroek-agentic
+Pure consumer of frozen answers: installs ONLY packages the user supplied, from
+the marketplace the user selected. Empty package list = clean no-op (nothing
+installed, status ok). No baseline packages are appended automatically.
 
 apm-missing is NON-FATAL: warn + echo the manual command.
-
-Note: apm_deps union across modules is future scope; agentic_packages + baseline
-MCP is the current contract.
 
 Invoked by the runner as:
     uv run module.py --plan <frozen_plan.json> --step install [--inspect]
@@ -32,14 +30,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-_BASELINE_MCP = [
-    "mcp-codebase-memory@srobroek-agentic",
-    "mcp-context7@srobroek-agentic",
-    "mcp-package-version@srobroek-agentic",
-    "mcp-repomix@srobroek-agentic",
-]
-
 
 def _load_sdk():
     """Load the runner SDK. Fast path: `import sdk` (the executor puts the runner
@@ -121,7 +111,8 @@ def main() -> int:
     sdk = _load_sdk()
     inputs = sdk.load_frozen_inputs(args.plan, module_id="apm-install")
 
-    agentic_packages = inputs.get_str("agentic_packages", default="core@srobroek-agentic")
+    agentic_packages = inputs.get_str("agentic_packages", default="")
+    marketplace = inputs.get_str("marketplace", default="")
     compile_claude = inputs.get_bool("compile_claude", default=True)
 
     project_dir_env = os.environ.get("PROJECT_DIR")
@@ -145,12 +136,24 @@ def main() -> int:
     warnings: list[str] = []
     messages: list[str] = []
 
-    # Compose package list: agentic_packages + 4 baseline MCP
-    packages = [agentic_packages] + _BASELINE_MCP
+    # Compose package list: ONLY what the user supplied (no baseline appended)
+    packages = [p for p in [agentic_packages] if p.strip()]
 
     install_cmd_str = (
         f"apm install --target claude,codex,agent-skills {' '.join(packages)}"
+        if packages else "apm install (no packages selected)"
     )
+
+    # PRIMARY precondition: packages must be non-empty (FR-004/SC-003)
+    if not packages:
+        result = sdk.ModuleResult(
+            module_id="apm-install",
+            step_id=args.step,
+            status="ok",
+            message="no APM packages selected; nothing to install",
+        )
+        sdk.emit_result(result)
+        return 0
 
     if args.inspect:
         result = sdk.ModuleResult(
@@ -162,6 +165,7 @@ def main() -> int:
         sdk.emit_result(result)
         return 0
 
+    # SECONDARY precondition: apm binary must be available (FR-005)
     if not _apm_available(env, cwd):
         warnings.append(
             f"apm not found; run manually: {install_cmd_str}"

@@ -18,8 +18,15 @@ after = ["dirs-scaffold", "precommit-setup"]
 [[inputs]]
 key = "agentic_packages"
 type = "string"
-prompt = "APM agentic-packages source locator (e.g. core@srobroek-agentic)"
-default = "core@srobroek-agentic"
+prompt = "APM package locator(s) to install, e.g. <pkg>@<your-marketplace> (leave blank to install nothing)"
+default = ""
+required = false
+
+[[inputs]]
+key = "marketplace"
+type = "string"
+prompt = "APM marketplace to install from (leave blank if none / pure scaffolding)"
+default = ""
 required = false
 
 [[inputs]]
@@ -34,8 +41,7 @@ required = false
 # arbitrary code/hooks/MCP) so a human can eyeball for typosquats before one
 # batched confirm. CI must pass --allow-install; otherwise it SAFE-skips the
 # install and the python step prints the manual `apm install …` command.
-# The baseline list below MUST stay in sync with _BASELINE_MCP in module.py;
-# the user-selected locator is rendered from the frozen answers via {decision}.
+# Renders ONLY the user-selected packages via {decision} — no baseline list.
 [[steps]]
 id = "confirm-install"
 kind = "gate"
@@ -43,13 +49,6 @@ hardness = "hard"
 allow_flag = "allow-install"
 message = """Install APM packages — each runs arbitrary code, hooks, and MCP servers. Review for typosquats before approving.
 
-baseline (always):
-  - mcp-codebase-memory@srobroek-agentic
-  - mcp-context7@srobroek-agentic
-  - mcp-package-version@srobroek-agentic
-  - mcp-repomix@srobroek-agentic
-
-you/agent selected:
 {decision}"""
 
 [[steps]]

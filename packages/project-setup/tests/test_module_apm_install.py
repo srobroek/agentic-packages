@@ -1,11 +1,15 @@
 """End-to-end tests for the apm-install module.
 
 Verifies:
-  - manifest parses and is valid (id, default_enabled, reconcile, after order, step)
-  - missing apm warns and continues (status=ok)
+  - manifest parses and is valid (id, default_enabled, reconcile, after order, step,
+    marketplace input declared, agentic_packages default == "")
+  - missing apm warns and continues (status=ok) — requires non-empty packages
   - --inspect emits "would run" and does not call apm
   - apm present: runs install + compile (codex + claude) → status=ok
+    asserts install command contains ONLY the user-supplied package (no baseline appended)
   - compile_claude=False: claude compile step is skipped → status=ok
+  - empty agentic_packages → clean no-op (install subprocess never invoked) SC-003
+  - "srobroek" does not appear in module.py source SC-001 / FR-014
 
 All tests use offline stub scripts on PATH — no real apm/mise/uv tool calls are made.
 
@@ -41,7 +45,8 @@ def _load(name: str):
 def _frozen_plan(
     tmp: Path,
     *,
-    agentic_packages: str = "core@srobroek-agentic",
+    agentic_packages: str = "",
+    marketplace: str = "",
     compile_claude: bool = True,
 ) -> Path:
     plan = {
@@ -56,6 +61,7 @@ def _frozen_plan(
                 "module_rel_root": _MODULE_REL,
                 "answers": {
                     "agentic_packages": agentic_packages,
+                    "marketplace": marketplace,
                     "compile_claude": compile_claude,
                 },
                 "steps": [{"id": "install", "kind": "python"}],
@@ -114,6 +120,15 @@ def test_manifest_parses_and_is_valid():
     assert "dirs-scaffold" in (after or []), f"Expected dirs-scaffold in after, got: {after}"
     assert "precommit-setup" in (after or []), f"Expected precommit-setup in after, got: {after}"
     assert any(s.id == "install" and s.kind == "python" for s in mani.steps)
+    # FR-003: agentic_packages default must be "" (empty)
+    ap_inputs = [i for i in mani.inputs if i.key == "agentic_packages"]
+    assert ap_inputs, "agentic_packages input not found in manifest"
+    assert ap_inputs[0].default == "", (
+        f"agentic_packages default must be '' (standalone), got: {ap_inputs[0].default!r}"
+    )
+    # marketplace input must be declared
+    mp_inputs = [i for i in mani.inputs if i.key == "marketplace"]
+    assert mp_inputs, "marketplace input not declared in module.toml"
 
 
 def test_apm_missing_warns_and_continues(tmp_path, monkeypatch):
@@ -130,7 +145,8 @@ def test_apm_missing_warns_and_continues(tmp_path, monkeypatch):
     path_parts = [str(stub_bin)] + ([uv_dir] if uv_dir else []) + ["/usr/bin", "/bin"]
     monkeypatch.setenv("PATH", ":".join(path_parts))
 
-    plan = _frozen_plan(tmp_path)
+    # Non-empty agentic_packages so the code reaches the apm-availability check
+    plan = _frozen_plan(tmp_path, agentic_packages="mypkg@my-marketplace")
     proc = _run(project, plan)
     assert proc.returncode == 0, proc.stderr
     result = json.loads(proc.stdout)
@@ -155,7 +171,8 @@ def test_inspect_skips_execution(tmp_path, monkeypatch):
     )
     monkeypatch.setenv("PATH", f"{stub_bin}:{os.environ.get('PATH', '')}")
 
-    plan = _frozen_plan(tmp_path)
+    # Non-empty agentic_packages so the code reaches the inspect branch
+    plan = _frozen_plan(tmp_path, agentic_packages="mypkg@my-marketplace")
     proc = _run(project, plan, inspect=True)
     assert proc.returncode == 0, proc.stderr
     result = json.loads(proc.stdout)
@@ -174,10 +191,22 @@ def test_apm_present_runs_install_and_compile(tmp_path, monkeypatch):
 
     stub_bin = tmp_path / "stub_bin"
     stub_bin.mkdir()
-    _stub_apm(stub_bin)
+    call_log = tmp_path / "apm_calls.txt"
+    _make_exec(
+        stub_bin / "apm",
+        f"#!/usr/bin/env bash\n"
+        f'echo "$@" >> {call_log}\n'
+        f"{_APM_STUB_BODY}",
+    )
     monkeypatch.setenv("PATH", f"{stub_bin}:{os.environ.get('PATH', '')}")
 
-    plan = _frozen_plan(tmp_path, compile_claude=True)
+    # Explicit non-empty package from user-chosen marketplace
+    plan = _frozen_plan(
+        tmp_path,
+        agentic_packages="mypkg@my-marketplace",
+        marketplace="my-marketplace",
+        compile_claude=True,
+    )
     proc = _run(project, plan)
     assert proc.returncode == 0, proc.stderr
     result = json.loads(proc.stdout)
@@ -188,6 +217,62 @@ def test_apm_present_runs_install_and_compile(tmp_path, monkeypatch):
         if "failed" in w.lower()
     ]
     assert not hard_warnings, f"Unexpected failure warnings: {hard_warnings}"
+
+    # Assert install command contains ONLY the user-supplied package (SC-004)
+    # No srobroek or mcp-* baseline packages should be present
+    if call_log.exists():
+        calls = call_log.read_text()
+        assert "mypkg@my-marketplace" in calls, (
+            f"Expected user package in install call, got: {calls}"
+        )
+        assert "srobroek" not in calls, (
+            f"srobroek must not appear in any apm call, got: {calls}"
+        )
+        # Baseline mcp-* packages must not be appended
+        for baseline in ("mcp-codebase-memory", "mcp-context7", "mcp-package-version", "mcp-repomix"):
+            assert baseline not in calls, (
+                f"Baseline package {baseline!r} must not be appended, got: {calls}"
+            )
+
+
+def test_empty_packages_is_noop(tmp_path, monkeypatch):
+    """SC-003: empty agentic_packages → clean no-op; install subprocess never invoked."""
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    stub_bin = tmp_path / "stub_bin"
+    stub_bin.mkdir()
+    marker = tmp_path / "apm_was_called"
+    _make_exec(
+        stub_bin / "apm",
+        f"#!/usr/bin/env bash\ntouch {marker}\n{_APM_STUB_BODY}",
+    )
+    monkeypatch.setenv("PATH", f"{stub_bin}:{os.environ.get('PATH', '')}")
+
+    # Empty agentic_packages (the new standalone default)
+    plan = _frozen_plan(tmp_path, agentic_packages="", marketplace="")
+    proc = _run(project, plan)
+    assert proc.returncode == 0, proc.stderr
+    result = json.loads(proc.stdout)
+    assert result["status"] == "ok", f"Expected ok, got: {result}"
+    # Must report no-op message
+    msg = result.get("message", "")
+    assert "no apm packages selected" in msg.lower() or "nothing to install" in msg.lower(), (
+        f"Expected no-op message, got: {msg!r}"
+    )
+    # apm must never have been invoked (even for --version check)
+    assert not marker.exists(), (
+        "apm was invoked despite empty package list — install subprocess must not run"
+    )
+
+
+def test_no_srobroek_in_module(tmp_path):
+    """FR-014/SC-001: 'srobroek' must not appear in module.py runtime source."""
+    module_py = _PLUGIN_ROOT / _MODULE_REL / "module.py"
+    source = module_py.read_text()
+    assert "srobroek" not in source, (
+        "Found 'srobroek' in module.py — all srobroek references must be removed (FR-003/FR-014)"
+    )
 
 
 def test_compile_claude_false_skips_claude_compile(tmp_path, monkeypatch):
@@ -206,7 +291,12 @@ def test_compile_claude_false_skips_claude_compile(tmp_path, monkeypatch):
     )
     monkeypatch.setenv("PATH", f"{stub_bin}:{os.environ.get('PATH', '')}")
 
-    plan = _frozen_plan(tmp_path, compile_claude=False)
+    # Non-empty agentic_packages so the install path is taken
+    plan = _frozen_plan(
+        tmp_path,
+        agentic_packages="mypkg@my-marketplace",
+        compile_claude=False,
+    )
     proc = _run(project, plan)
     assert proc.returncode == 0, proc.stderr
     result = json.loads(proc.stdout)

@@ -106,50 +106,44 @@ def test_g3_ci_safe_skips_without_flag():
 # --------------------------------------------------------------------------- #
 # G2 — batched install gate, full untruncated list (SC-004)                    #
 # --------------------------------------------------------------------------- #
-def test_g2_present_and_lists_all_packages():
+def test_g2_present_and_lists_selected_package():
+    # spec 018: standalone — the G2 gate renders ONLY the user-selected locator via
+    # {decision}; there is NO hardcoded srobroek baseline block anymore.
     m = _manifest("apm-install")
-    plan = _build(m, {"agentic_packages": "core@srobroek-agentic"})
+    plan = _build(m, {"agentic_packages": "mypkg@my-marketplace"})
     gates = _gate_steps(plan, "apm-install")
     assert len(gates) == 1
     g = gates[0]
     assert g["id"] == "confirm-install"
     assert g["allow_flag"] == "allow-install"
     msg = g["message"]
-    # every baseline package appears untruncated
-    for pkg in (
-        "mcp-codebase-memory@srobroek-agentic",
-        "mcp-context7@srobroek-agentic",
-        "mcp-package-version@srobroek-agentic",
-        "mcp-repomix@srobroek-agentic",
-    ):
-        assert pkg in msg, f"baseline package {pkg} missing from G2 message"
-    # the user-selected locator (rendered via {decision}) appears too
-    assert "core@srobroek-agentic" in msg
-    # grouping headers present
-    assert "baseline" in msg and "selected" in msg
+    # the user-selected locator (rendered via {decision}) appears
+    assert "mypkg@my-marketplace" in msg
+    # NO srobroek baseline leaked into the gate message
+    assert "srobroek" not in msg, "G2 gate message must carry no srobroek baseline"
+    assert "mcp-codebase-memory" not in msg and "mcp-repomix" not in msg
 
 
-def test_g2_baseline_matches_module_constant():
-    # Guard against drift between the G2 literal list and _BASELINE_MCP in module.py.
+def test_g2_no_baseline_constant_in_module():
+    # spec 018: standalone — apm-install must NOT carry a hardcoded _BASELINE_MCP
+    # constant (the old srobroek baseline). Guards against its reintroduction.
     import importlib.util as iu
     mpath = _MODULES / "apm-install" / "module.py"
     spec = iu.spec_from_file_location("apm_install_mod", mpath)
     mod = iu.module_from_spec(spec)
     sys.modules["apm_install_mod"] = mod
     spec.loader.exec_module(mod)
-    baseline = mod._BASELINE_MCP
-
-    m = _manifest("apm-install")
-    g = [s for s in m.steps if s.kind == "gate"][0]
-    for pkg in baseline:
-        assert pkg in g.message, (
-            f"{pkg} is in _BASELINE_MCP but not in the G2 gate message — they drifted"
-        )
+    assert not hasattr(mod, "_BASELINE_MCP"), (
+        "_BASELINE_MCP must not exist — apm-install is standalone (spec 018)"
+    )
+    # and the module source carries no srobroek runtime literal
+    src = mpath.read_text(encoding="utf-8")
+    assert "srobroek" not in src, "apm-install/module.py must carry no srobroek literal"
 
 
 def test_g2_ci_safe_skips_without_flag():
     m = _manifest("apm-install")
-    plan = _build(m, {"agentic_packages": "core@srobroek-agentic"})
+    plan = _build(m, {"agentic_packages": "mypkg@my-marketplace"})
     g = _gate_steps(plan, "apm-install")[0]
 
     class _IO:
