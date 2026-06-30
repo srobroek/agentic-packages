@@ -633,7 +633,7 @@ marketplace:
         - lifecycle
     - name: project-setup
       source: srobroek/project-setup
-      ref: project-setup-v0.4.1
+      ref: project-setup-v0.5.0
       category: project-lifecycle
       tags:
         - skill
