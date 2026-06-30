@@ -18,9 +18,9 @@ ordinary bug work and return here when the diagnosis loop stalls.
 - A `STUCK DETECTOR` hook alert is a direct trigger. It only fires with
   failure evidence and reports re-edited files, same-command failure streaks,
   and content flip-flops (edits reverting earlier versions). Alerts escalate:
-  nudge, then directive, then a gate that pauses source-file edits until
-  `unstuck` or `diagnose` is invoked, a test passes, or a commit lands
-  (override: `UNSTUCK_GATE_OFF=1`).
+  nudge, then directive, then a once-per-episode advisory suggesting the
+  agent step back and change approach (edits still proceed; override to
+  suppress: `UNSTUCK_GATE_OFF=1`).
 - Do not use `unstuck` as a replacement for normal test, build, or traceback
   diagnosis.
 

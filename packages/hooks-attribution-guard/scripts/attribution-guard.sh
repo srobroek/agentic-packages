@@ -3,15 +3,13 @@ set -euo pipefail
 
 # attribution-guard.sh
 #
-# PreToolUse hook (Claude + Codex). Blocks `git commit` invocations whose
-# command line carries AI authorship attribution -- Co-Authored-By trailers
-# pointing at Claude/Anthropic, "Generated with ..." trailers, or
-# AI-assisted/AI-generated phrasing -- so that the human stays the sole author
-# of record.
+# PreToolUse hook (Claude + Codex). Warns when `git commit` invocations carry
+# AI authorship attribution -- Co-Authored-By trailers pointing at
+# Claude/Anthropic, "Generated with ..." trailers, or AI-assisted/AI-generated
+# phrasing -- so that the human stays the sole author of record.
 #
-# Blocking model: prints an actionable message to stderr and exits 2, the
-# Claude-native "deny + feedback to the model" contract. Codex honors a non-zero
-# exit on a PreToolUse hook the same way.
+# Non-blocking model: emits allow+additionalContext JSON on stdout (exit 0).
+# Claude surfaces the advisory to the model; Codex treats exit 0 as allow.
 #
 # Portability floor: bash 3.2.57 + BSD grep. No PCRE, no \b. Case-insensitive
 # matching via grep -i; structure-only matching via tr-lowercasing where needed.
@@ -36,18 +34,13 @@ if [ -z "$command" ] || [ "$command" = "null" ]; then
   exit 0
 fi
 
-# Block: emit an actionable message to stderr and exit 2 (Claude-native deny).
+# Warn: emit an allow+additionalContext JSON on stdout (non-blocking advisory).
 # $1 = short description of what was detected, woven into the message.
 block() {
-  {
-    printf 'BLOCKED: this git commit carries AI authorship attribution (%s).\n' "$1"
-    printf 'The human is the sole author of record. Remove the attribution before committing:\n'
-    printf '  - drop any "Co-Authored-By: Claude ..." / "...@anthropic" trailer\n'
-    printf '  - drop "Generated with/by Claude/AI" and Claude Code trailer URLs\n'
-    printf '  - drop "AI-assisted" / "AI-generated" authorship qualifiers\n'
-    printf 'Then re-run the commit with a clean message.\n'
-  } >&2
-  exit 2
+  warn_msg="this git commit carries AI authorship attribution ($1). The human is the sole author of record — drop any 'Co-Authored-By: Claude/...' trailer, 'Generated with/by Claude/AI' lines, Claude Code trailer URLs, and 'AI-assisted/AI-generated' qualifiers, then re-commit with a clean message. Proceeding."
+  jq -cn --arg ctx "$warn_msg" \
+    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}' 2>/dev/null || true
+  exit 0
 }
 
 # Anchor to an actual `git commit`. This must fire for `git commit ...` and for

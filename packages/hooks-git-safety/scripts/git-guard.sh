@@ -29,15 +29,30 @@ cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
 
 lowered="$(printf '%s' "$command" | tr '[:upper:]' '[:lower:]')"
 
-# Hard reject: the operation is refused outright.
+# Decision helpers. The `2>/dev/null || true` guard before `exit 0` is
+# load-bearing on BOTH: under `set -euo pipefail` a jq hiccup would otherwise
+# exit the script NONZERO, which Codex's exit-code contract reads as a hard
+# block. Emit best-effort, then exit 0 so the DECISION lives in the JSON, not
+# the exit code (the repo's established cross-tool contract — same as
+# subagent-worktree-guard and chezmoi-guard).
+
+# deny: BLOCK the command. The reason is fed back to the model (Claude), which
+# adapts and re-issues — no human is involved, so it does not stall auto mode.
+# Reserved for operations that genuinely must not run as written: here, a
+# destructive op whose target the guard cannot verify because it hides behind an
+# unexpanded shell variable. (`ask` — the human-confirmation decision — is never
+# emitted by this guard, as it WOULD stall a non-interactive run.)
 deny() {
-  jq -cn --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'
+  jq -cn --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}' 2>/dev/null || true
   exit 0
 }
 
-# Soft block: surface the reason and require the user to confirm before running.
-ask() {
-  jq -cn --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$reason}}'
+# warn: ALLOW the command but inject a RELEVANT advisory naming exactly what is
+# at risk for this invocation. The command proceeds (auto mode handles it); the
+# note just lets the agent confirm intent. Used for recoverable, intentional ops
+# (reset --hard / checkout -- / restore / clean on a dirty tree, force push).
+warn() {
+  jq -cn --arg reason "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$reason}}' 2>/dev/null || true
   exit 0
 }
 
@@ -110,6 +125,19 @@ strip_git_prefix() {
         rest="$(strip_one_token "$rest")"          # drop the (quote-aware) arg
         rest="${rest#"${rest%%[![:space:]]*}"}"   # drop trailing spaces
         ;;
+      # Long global options that take a SEPARATE value token in SPACE form
+      # (`--git-dir <path>`, `--work-tree <path>`, `--namespace <ns>`,
+      # `--super-prefix <p>`). The `=value` inline forms are handled by the
+      # generic `-*` branch below; here we must additionally consume the value
+      # token (which may be quoted with spaces) so it is not mistaken for the
+      # subcommand — otherwise `--git-dir 'a b' reset --hard` leaves `'a b'` as
+      # the apparent subcommand and the reset/--hard match is lost.
+      --git-dir[[:space:]]*|--work-tree[[:space:]]*|--namespace[[:space:]]*|--super-prefix[[:space:]]*|--exec-path[[:space:]]*)
+        rest="$(strip_one_token "$rest")"          # drop the option token
+        rest="${rest#"${rest%%[![:space:]]*}"}"   # drop spaces after the flag
+        rest="$(strip_one_token "$rest")"          # drop the (quote-aware) value
+        rest="${rest#"${rest%%[![:space:]]*}"}"   # drop trailing spaces
+        ;;
       # Any other leading option token (--bare, -p, --no-pager, --git-dir=...,
       # --work-tree=..., --paginate, ...). These carry no separate arg token,
       # but an inline value may be quoted/spaced (--git-dir='/a b'), so strip it
@@ -139,20 +167,28 @@ strip_git_prefix() {
 #      (catches `git -C '/spaced path' <subcmd>` bypasses).
 sub="$(strip_git_prefix "$lowered")"
 
+# A THIRD view: the command with all single/double quote CHARACTERS removed, so a
+# flag or value that was quoted (`reset '--hard'`, `checkout '--' f`, `clean '-f'`,
+# or a `--git-dir 'a b'` whose inner space split the token) collapses to its bare
+# form. Matching against this catches the quote-obfuscation class that breaks the
+# `--hard([[:space:]]|$)`-style anchors on the raw `lowered`/`sub` views. (Quotes
+# only ever wrap tokens here; removing them cannot fabricate a destructive verb.)
+unquoted="$(printf '%s' "$lowered" | tr -d '"'"'")"
+sub_unquoted="$(strip_git_prefix "$unquoted")"
+
 # Leading `git` plus global options, when args are NOT quoted-with-spaces.
 git='git([[:space:]]+-[^[:space:]]+([[:space:]]+[^[:space:]]+)?)*[[:space:]]+'
 
 # match_sub <ere-without-git-prefix>
 # True if the pattern matches the unquoted-prefix form OR the stripped-subcommand
-# form. The stripped form has no leading `git`, so it is anchored at start.
+# form, on EITHER the raw or the quote-collapsed view. The stripped forms have no
+# leading `git`, so they are anchored at start.
 match_sub() {
   local pat="$1"
-  if [[ "$lowered" =~ ${git}${pat} ]]; then
-    return 0
-  fi
-  if [[ -n "$sub" && "$sub" =~ ^${pat} ]]; then
-    return 0
-  fi
+  if [[ "$lowered" =~ ${git}${pat} ]]; then return 0; fi
+  if [[ -n "$sub" && "$sub" =~ ^${pat} ]]; then return 0; fi
+  if [[ "$unquoted" =~ ${git}${pat} ]]; then return 0; fi
+  if [[ -n "$sub_unquoted" && "$sub_unquoted" =~ ^${pat} ]]; then return 0; fi
   return 1
 }
 
@@ -203,19 +239,77 @@ uncommitted_work_at_risk() {
 # is given, or when --staged is absent (worktree is restore's default). Short
 # flags (-S/-W) collapse ambiguously under lowercasing (-S→-s collides with
 # --source's -s), so we classify on the long forms and let any short-flag form
-# fall through to the destructive branch (errs toward ask — safe).
+# fall through to the destructive branch (errs toward warn — safe).
 restore_is_staged_only() {
   [[ "$lowered" =~ (^|[[:space:]])--staged([[:space:]]|$) ]] || return 1
   [[ "$lowered" =~ (^|[[:space:]])--worktree([[:space:]]|$) ]] && return 1
   return 0
 }
 
+# Does the command redirect git to a DIFFERENT repo/worktree through an
+# UNEXPANDED shell variable or `~` — e.g. `git -C "$DIR" ...`,
+# `git --git-dir=$X ...`, `git --work-tree=~/wt ...`? When it does, the guard
+# cannot resolve WHICH working tree the destructive op will hit, so it cannot
+# verify what is at risk. Policy: deny and have the agent resolve the variable
+# to a literal first (so the target is auditable) rather than guess. Tested on
+# the original case-preserving $command so `-C` is not confused with `-c`.
+redirect_target_unverifiable() {
+  # The redirect VALUE may be a quoted path that contains spaces (e.g.
+  # `-C 'sp $D'`, `--git-dir='a b/$X'`), so the `$`/`~` we care about can sit
+  # PAST an internal space. The earlier `[^[:space:]]*[\$~]` form stopped at the
+  # first space and missed it. Instead, after the flag, allow any run of
+  # non-quote, non-separator characters (which MAY include spaces) up to a `$`
+  # or `~`. `[^'"\;&|]` keeps the scan inside a single (quoted or bare) argument
+  # without crossing into the next command or a closing quote+space boundary.
+  local val="[^\"'\\;&|]*[\$~]"
+  # -C <value> (space form; the value token follows the flag).
+  if [[ "$command" =~ (^|[[:space:]])-C[[:space:]]+[\"\']?${val} ]]; then
+    return 0
+  fi
+  # --git-dir / --work-tree, in `=value` or ` value` form.
+  if [[ "$command" =~ (^|[[:space:]])--git-dir[[:space:]=][\"\']?${val} ]] \
+    || [[ "$command" =~ (^|[[:space:]])--work-tree[[:space:]=][\"\']?${val} ]]; then
+    return 0
+  fi
+  return 1
+}
+
 # ---------------------------------------------------------------------------
-# HARD DENY (locked policy): only truly unrecoverable operations.
-#   * git reset --hard  (destroys uncommitted work) — but ONLY when the tracked
-#     tree is dirty, since a clean reset --hard loses nothing
-#   * git push --force / --force-with-lease / -f  (rewrites remote history)
+# Locked policy: this guard NEVER hard-blocks. Every git op it covers loses at
+# most uncommitted/local/remote-rewritable state — all recoverable in the sense
+# that matters (no machine-wide, unrecoverable destruction like `rm -rf /`). So:
+#   * reset --hard, push --force, checkout --, restore, clean -f  -> NON-BLOCKING
+#     WARN, and only when this specific invocation would actually lose work
+#     (dirty tree / real force). A no-loss invocation passes SILENTLY.
+#   * branch -D, tag -d, stash drop/clear, worktree remove --force are DROPPED
+#     entirely: all are reflog/gc-recoverable, so auto mode just handles them.
+# A warn names exactly what is at risk for THIS command (relevance) and exits 0.
+#
+# EXCEPTION — unverifiable target: when one of these destructive ops is pointed
+# at another tree through an UNEXPANDED variable (`git -C "$DIR" reset --hard`,
+# `--git-dir=$X`, `--work-tree=~/wt`), the guard cannot see which tree will be
+# hit, so it cannot judge the risk. That case DENIES (block + tell the agent to
+# resolve the variable to a literal path first) — the agent re-issues an
+# auditable command with no human involved.
 # ---------------------------------------------------------------------------
+
+# Patterns for the destructive subcommands this guard covers. A redirect through
+# an unexpanded variable is only a problem when one of these actually runs.
+reset_hard_pat='reset([[:space:]]+[^[:space:]]+)*[[:space:]]+--hard([[:space:]]|$)'
+checkout_dd_pat='checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+--([[:space:]]|$)'
+restore_pat='restore([[:space:]]|$)'
+clean_force_pat='clean([[:space:]]+[^[:space:]]+)*[[:space:]]+(--force|-[a-z]*f[a-z]*)([[:space:]]|$)'
+
+# Deny FIRST when a DESTRUCTIVE op rides on an unverifiable (variable/~) target.
+# A `restore --staged` (without --worktree) only unstages the index and is fully
+# reversible no matter which tree it points at, so it is NOT destructive and must
+# be excluded from this deny (else `git -C "$D" restore --staged f` false-denies).
+if redirect_target_unverifiable \
+  && { match_sub "$reset_hard_pat" || match_sub "$checkout_dd_pat" \
+       || { match_sub "$restore_pat" && ! restore_is_staged_only; } \
+       || match_sub "$clean_force_pat"; }; then
+  deny "this destructive git op targets another working tree through an unexpanded shell variable or '~' (e.g. -C \"\$DIR\" / --git-dir=\$X / --work-tree=~/...), so the guard cannot verify which tree's uncommitted work it would discard. Re-run with the variable resolved to a literal path (e.g. run \`echo \"\$DIR\"\` first, then pass the actual path) so the target is auditable."
+fi
 
 # `--hard` may appear ANYWHERE in the reset invocation, not only immediately
 # after `reset`: `git reset --hard`, `git reset HEAD --hard`,
@@ -223,82 +317,63 @@ restore_is_staged_only() {
 # `([[:space:]]+[^[:space:]]+)*` consumes zero-or-more intervening tokens, so
 # both the immediate and the trailing-flag forms are caught.
 #
-# Only block when work would actually be lost: a dirty tracked tree (or an
+# Only warn when work would actually be lost: a dirty tracked tree (or an
 # undeterminable state). A clean tracked tree means `reset --hard` discards
-# nothing unrecoverable, so it is allowed through.
-if match_sub 'reset([[:space:]]+[^[:space:]]+)*[[:space:]]+--hard([[:space:]]|$)'; then
+# nothing, so it passes silently.
+if match_sub "$reset_hard_pat"; then
   if uncommitted_work_at_risk; then
-    deny "refusing git reset --hard: the working tree has uncommitted changes to tracked files that would be permanently lost. Commit or stash them first."
+    warn "git reset --hard: the working tree has uncommitted changes to tracked files (staged + unstaged) that will be permanently discarded and are NOT in the reflog. Commit or stash them first if you need them. Proceeding."
   fi
 fi
 
-# Force push rewrites remote history and can destroy other people's commits —
-# locked policy classifies this as a hard deny.
+# Force push rewrites only REMOTE history (remote-rewritable, not machine-
+# destructive), so it is a non-blocking warn rather than a hard block.
 if match_sub 'push([[:space:]]+[^[:space:]]+)*[[:space:]]+(--force-with-lease|--force|-f)([[:space:]=]|$)'; then
-  deny "refusing git force push (hard block: rewrites remote history, can destroy commits)"
+  warn "git push --force/--force-with-lease: this rewrites the remote branch history and can overwrite commits pushed by others. Verify the remote ref is what you expect before proceeding. Proceeding."
 fi
 
 # ---------------------------------------------------------------------------
-# ASK (recoverable ops): confirm before running.
+# Recoverable working-tree ops: warn (only when work is at risk), never block.
 # ---------------------------------------------------------------------------
 
 # `git checkout -- <path>` discards uncommitted worktree changes to those paths
 # (old-style equivalent of `restore --worktree`). Only an uncommitted change is
-# at risk — committed content is recoverable — so ask only when the tree is
+# at risk — committed content is recoverable — so warn only when the tree is
 # dirty (or its state is undeterminable); a clean tree loses nothing.
-if match_sub 'checkout([[:space:]]+[^[:space:]]+)*[[:space:]]+--([[:space:]]|$)'; then
+if match_sub "$checkout_dd_pat"; then
   if uncommitted_work_at_risk; then
-    ask "git checkout -- discards uncommitted changes to the named paths — confirm to proceed."
+    warn "git checkout -- <path>: discards uncommitted working-tree changes to the named paths (gone for good, not recoverable from the reflog). Proceeding."
   fi
 fi
 
 # `git restore` matched at command position (subcommand form only — not a stray
 # `--source`/`--staged` appearing in some other command's args).
-if match_sub 'restore([[:space:]]|$)'; then
+if match_sub "$restore_pat"; then
   # --staged WITHOUT --worktree only unstages the index; the working tree is
-  # untouched and it is fully reversible — always allow. Any form that touches
-  # the working tree (default, or explicit --worktree) discards uncommitted
-  # changes, so ask only when those changes actually exist.
+  # untouched and it is fully reversible — always allow silently. Any form that
+  # touches the working tree (default, or explicit --worktree) discards
+  # uncommitted changes, so warn only when those changes actually exist.
   if ! restore_is_staged_only && uncommitted_work_at_risk; then
-    ask "git restore discards uncommitted changes to the named paths — confirm to proceed."
+    warn "git restore (working tree): discards uncommitted changes to the named paths (not recoverable from the reflog). Proceeding."
   fi
 fi
 
 # Destructive git clean. Force is requested via --force OR a flag cluster that
 # contains `f` in ANY ordering: -f, -df, -fd, -xdf, -dfx, ... Match a cluster of
-# lowercase short flags that includes an `f`.
-if match_sub 'clean([[:space:]]+[^[:space:]]+)*[[:space:]]+(--force|-[a-z]*f[a-z]*)([[:space:]]|$)'; then
-  ask "destructive git clean removes untracked files — confirm to proceed."
-fi
-
-# Branch deletion. `git branch -d`/`--delete` is the SAFE, merge-checked delete:
-# git refuses it unless the branch is fully merged, so the commits stay
-# reachable elsewhere — allow silently. Only a FORCE delete (`-D`, or
-# `--delete --force`/`-df`) removes a possibly-unmerged branch, so ask on that.
-# -d and -D differ ONLY by case, which the lowercased view collapses, so detect
-# force on the original case-preserving $command (as the -C check does).
-if match_sub 'branch[[:space:]]+(--delete|-[a-z]*d[a-z]*)([[:space:]]|$)'; then
-  if [[ "$command" =~ (^|[[:space:]])-[a-zA-Z]*[Df][a-zA-Z]*([[:space:]]|$) ]] \
-    || [[ "$command" =~ (^|[[:space:]])--force([[:space:]]|$) ]]; then
-    ask "git branch force-deletion removes a possibly-unmerged branch — confirm to proceed."
+# lowercase short flags that includes an `f`. Stay SILENT when there is nothing
+# untracked to remove (a clean clean loses nothing).
+if match_sub "$clean_force_pat"; then
+  # If `clean -nd` (dry-run) prints nothing, there are no untracked files to
+  # delete -> pass silently. Any output (or an undeterminable state) -> warn.
+  clean_preview="$(git -C "$cwd" clean -nd 2>/dev/null || printf '%s' "UNDETERMINABLE")"
+  if [[ -n "$clean_preview" ]]; then
+    warn "git clean -f: permanently deletes untracked files in the working tree (with -x, also ignored files); they are not recoverable. Proceeding."
   fi
 fi
 
-if match_sub 'stash[[:space:]]+(drop|clear)'; then
-  ask "git stash drop/clear permanently discards stashed work — confirm to proceed."
-fi
-
-if match_sub 'tag([[:space:]]+[^[:space:]]+)*[[:space:]]+(-d|--delete)([[:space:]]|$)'; then
-  ask "git tag deletion — confirm to proceed."
-fi
-
-# git worktree remove refuses to delete a worktree with uncommitted or untracked
-# changes UNLESS --force, so the plain form is safe — allow it. Only the force
-# form can discard uncommitted work, so ask on --force/-f.
-if match_sub 'worktree[[:space:]]+remove([[:space:]]|$)'; then
-  if [[ "$command" =~ (^|[[:space:]])(--force|-[a-zA-Z]*f[a-zA-Z]*)([[:space:]]|$) ]]; then
-    ask "git worktree remove --force discards any uncommitted changes in that worktree — confirm to proceed."
-  fi
-fi
+# branch -D, tag -d, stash drop/clear, and worktree remove --force are
+# intentionally NOT guarded: each only removes a ref or a stash entry, while the
+# underlying commits/objects stay reachable via the reflog (and survive until
+# gc), so the operation is recoverable. Auto mode handles them.
 
 exit 0
