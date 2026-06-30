@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# chezmoi-guard.sh — PreToolUse hook. Denies direct edits / shell mutations of a
-# file that chezmoi ACTUALLY manages, steering changes to the chezmoi source.
+# chezmoi-guard.sh — PreToolUse hook. Warns (non-blocking) when a direct edit or
+# shell mutation targets a file that chezmoi ACTUALLY manages, steering changes to
+# the chezmoi source. The hook emits permissionDecision:"allow" with an
+# additionalContext advisory — the operation proceeds; chezmoi apply will overwrite
+# the target, so the source-of-truth is unaffected and recovery is trivial.
 #
 # Management is decided by EXACT membership in `chezmoi managed` (cached, 60s TTL),
 # which is equivalent to `chezmoi source-path <file>` succeeding but ~500x faster
@@ -14,7 +17,7 @@
 # Exact membership matches what source-path would confirm, without that false block.
 #
 # When chezmoi is NOT installed the hook is a clean ALLOW (exit 0): membership is
-# undecidable, so it never blocks.
+# undecidable, so it never warns.
 set -euo pipefail
 
 payload="$(cat)"
@@ -27,18 +30,12 @@ payload="$(cat)"
 # A bare-string tool_input is ambiguous (some tools pass the file path, some pass
 # a command), so we feed it to BOTH checks: file_path catches a bare managed path,
 # command catches a managed write verb/redirect. Neither check denies unless an
-# exact managed write target is found, so applying both is safe.
+# exact managed write target is found, so applying both is safe (both warn+exit).
 cmd="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
 file_path="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.file_path // .tool_input.path // empty) end' 2>/dev/null || true)"
 
-deny() {
-  jq -cn --arg reason "$1" '{
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: $reason
-    }
-  }'
+warn() {
+  jq -cn --arg ctx "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}' 2>/dev/null || true
   exit 0
 }
 
@@ -115,14 +112,14 @@ is_chezmoi_managed() {
 if [[ -n "$file_path" && "$file_path" != "null" ]]; then
   abs_path="$(normalize_path "$file_path")"
   if is_chezmoi_managed "$abs_path"; then
-    deny "refusing direct edits to chezmoi-managed file '$file_path'; edit the chezmoi source instead (chezmoi source-path '$file_path')"
+    warn "heads-up: '$file_path' is chezmoi-managed; a direct edit here will be overwritten on the next 'chezmoi apply'. Edit the source instead: chezmoi edit '$file_path' (source: chezmoi source-path '$file_path'). Proceeding."
   fi
 fi
 
 # --- Shell commands that mutate files ------------------------------------------
 [[ -z "$cmd" || "$cmd" == "null" ]] && exit 0
 
-# Only deny when a chezmoi-managed file is an actual WRITE TARGET. A managed path
+# Only warn when a chezmoi-managed file is an actual WRITE TARGET. A managed path
 # that merely appears as a READ argument (cat/diff/ls/grep/readlink ...) must pass,
 # even alongside an unrelated redirect like `>/dev/null`. So we collect the precise
 # set of write-target tokens — never "every dotfile path in the command" — and
@@ -163,12 +160,80 @@ while IFS= read -r rt; do
 done < <(printf '%s' "$cmd" | grep -oE '[0-9]*>>?[[:space:]]*("[^"]*"|'\''[^'\'']*'\''|[^[:space:]|&;<>]+)' || true)
 
 # (b) In-place / destructive verbs whose path operands ARE the target
-#     (rm, touch, chmod, chown, tee, ln, sed -i, perl -pi). Scan dotfile operands.
-if printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])(rm|touch|chmod|chown|tee|ln)([[:space:]]|$)|(^|[[:space:]])sed[[:space:]].*-i|(^|[[:space:]])perl[[:space:]].*-pi'; then
+#     (rm, touch, chmod, chown, tee, ln, sed -i, perl -pi). Scan dotfile operands
+#     ONLY in segments whose first word is one of those verbs, to avoid flagging a
+#     read-only managed reference in a compound command like:
+#       chmod /tmp/foo && diff ~/.config/MANAGED /tmp/foo
+#     Split on shell separators (||, &&, |, ;, &) into segments; for each segment
+#     check whether its first word is an in-place verb, then collect dotfile tokens
+#     from that segment only, first stripping `< token` input-redirect sources so a
+#     read source (e.g. `sed -i s/x/y/ file < ~/.config/MANAGED`) is not flagged.
+while IFS= read -r segment; do
+  # Trim leading whitespace, then peel leading wrappers and NAME=value env-
+  # assignments so the REAL verb (rm/tee/chmod/...) becomes first_word even when
+  # the command is prefixed with e.g. `sudo rm`, `env rm`, `time tee`,
+  # `FOO=bar rm`, or `sudo -u root tee`. Bash 3.2 / BSD-safe: uses only case
+  # globbing and parameter expansion, no ERE/grep.
+  trimmed="${segment#"${segment%%[! ]*}"}"
+  # Strip loop: peel one token at a time while it looks like a wrapper or
+  # NAME=value assignment; stop when the leading token is neither.
+  while :; do
+    first_word="${trimmed%% *}"
+    case "$first_word" in
+      # NAME=value env assignment — strip this token (first_word already has it)
+      # and any leading whitespace before the next token.
+      *=*)
+        trimmed="${trimmed#"$first_word"}"
+        trimmed="${trimmed#"${trimmed%%[! ]*}"}"
+        continue
+        ;;
+      # Known wrappers; each may be followed by option tokens ("-u root",
+      # "--preserve-env", etc.) — strip the wrapper word and any immediately
+      # following option-flag tokens (words starting with -).
+      sudo|doas|env|time|nice|command|exec|xargs|stdbuf|nohup|setsid|ionice)
+        trimmed="${trimmed#"$first_word"}"
+        trimmed="${trimmed#"${trimmed%%[! ]*}"}"
+        # Consume option tokens (words starting with '-') and their value args
+        # (the single word immediately following a -* option, which may be a
+        # username, group, etc. — e.g. `-u root` for sudo).
+        while :; do
+          next="${trimmed%% *}"
+          case "$next" in
+            -*)
+              trimmed="${trimmed#"$next"}"
+              trimmed="${trimmed#"${trimmed%%[! ]*}"}"
+              # The token after a -flag is its value argument — consume it too,
+              # unless the following token itself starts with '-' (another flag).
+              val="${trimmed%% *}"
+              case "$val" in
+                -*|'') : ;;  # another flag or empty — don't consume
+                *) trimmed="${trimmed#"$val"}"; trimmed="${trimmed#"${trimmed%%[! ]*}"}"; ;;
+              esac
+              ;;
+            *) break ;;
+          esac
+        done
+        continue
+        ;;
+    esac
+    break
+  done
+  first_word="${trimmed%% *}"
+  case "$first_word" in
+    rm|touch|chmod|chown|tee|ln|sed|perl) : ;;
+    *) continue ;;
+  esac
+  # For sed/perl require the -i / -pi flag to be present in this segment
+  case "$first_word" in
+    sed)  printf '%s' "$segment" | grep -qE -- '-i' || continue ;;
+    perl) printf '%s' "$segment" | grep -qE -- '-pi' || continue ;;
+  esac
+  # Strip `< token` input-redirect sources so they are not mistaken for write targets
+  seg_write="$(printf '%s' "$segment" | sed -E 's/<[[:space:]]*("[^"]*"|'\''[^'\'']*'\''|[^[:space:]|&;<>]+)//g')"
   while IFS= read -r tok; do
     [[ -n "$tok" ]] && targets+=("$tok")
-  done < <(printf '%s' "$cmd" | grep -oE "$dotfile_re" || true)
-fi
+  done < <(printf '%s' "$seg_write" | grep -oE "$dotfile_re" || true)
+done < <(printf '%s\n' "$cmd" | tr -s '|&;' '\n' || true)
 
 # (c) cp / mv: the destination is the last argument — check only that, so a
 #     managed file used as a read SOURCE (`cp managed /tmp/x`) is not blocked.
@@ -182,12 +247,12 @@ if printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])(cp|mv)([[:space:]]|$)'; then
   targets+=("$(unquote "$(printf '%s' "$cp_mv" | awk '{print $NF}')")")
 fi
 
-# Decision is always chezmoi's: deny iff a write-target is an exact managed entry.
+# Decision is always chezmoi's: warn if a write-target is an exact managed entry.
 for tok in ${targets[@]+"${targets[@]}"}; do
   [[ -z "$tok" ]] && continue
   abs="$(normalize_path "$tok")"
   if is_chezmoi_managed "$abs"; then
-    deny "refusing shell write to chezmoi-managed file '$tok'; edit the chezmoi source instead (chezmoi source-path '$tok')"
+    warn "heads-up: shell write targets chezmoi-managed file '$tok'; it will be overwritten on the next 'chezmoi apply'. Edit the source instead (chezmoi source-path '$tok'). Proceeding."
   fi
 done
 

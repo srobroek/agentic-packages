@@ -1,7 +1,7 @@
 {
   "name": "hooks-squash-merge",
-  "version": "1.1.0",
-  "description": "Opinionated git policy hook: require an explicit merge strategy on gh pr merge (--squash for feature PRs, --merge for release PRs). Blocks strategy-less PR merges. Cross-tool (Claude + Codex).",
+  "version": "1.2.0",
+  "description": "Opinionated git policy hook: advise an explicit merge strategy on gh pr merge. Emits a non-blocking advisory (allow + additionalContext) when no strategy flag is present; silent when --squash / -s / --merge / -m / --rebase / -r or --help is provided. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },

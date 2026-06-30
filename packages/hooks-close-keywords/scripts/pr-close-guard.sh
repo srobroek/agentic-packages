@@ -34,13 +34,14 @@ cmd="$(
 [ -z "$cmd" ] || [ "$cmd" = "null" ] && exit 0
 
 # Only gate `gh pr create` / `gh pr edit`, anchored to command position.
+# Allow optional leading whitespace before the command (issue #2).
 printf '%s' "$cmd" \
-  | grep -Eq '(^|[;&|][[:space:]]*)gh[[:space:]]+pr[[:space:]]+(create|edit)([[:space:]]|$)' \
+  | grep -Eq '(^[[:space:]]*|[;&|][[:space:]]*)gh[[:space:]]+pr[[:space:]]+(create|edit)([[:space:]]|$)' \
   || exit 0
 
-deny() {
-  jq -cn --arg reason "$1" \
-    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$reason}}'
+warn() {
+  jq -cn --arg ctx "$1" \
+    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}' 2>/dev/null || true
   exit 0
 }
 
@@ -51,27 +52,39 @@ deny() {
 # single/double quotes.
 body="$(
   printf '%s' "$cmd" | awk '
-  {
-    s = $0; n = length(s); i = 1
+  # Accumulate all input lines into a single string so embedded newlines
+  # inside a quoted --body value are preserved (issue #1). BSD awk RS="\0"
+  # is paragraph-mode, not NUL-byte mode, so we must accumulate manually.
+  { buf = (NR==1) ? $0 : buf "\n" $0 }
+  END {
+    s = buf; n = length(s); i = 1
     # tokenize quote-aware into TOK[] preserving the unquoted value
     tc = 0
     while (i <= n) {
       c = substr(s,i,1)
-      if (c == " " || c == "\t") { i++; continue }
+      if (c == " " || c == "\t" || c == "\n") { i++; continue }
       tok = ""
       while (i <= n) {
         c = substr(s,i,1)
-        if (c == " " || c == "\t") break
-        if (c == "\x27") { # single quote
+        if (c == " " || c == "\t" || c == "\n") break
+        if (c == "\x27") { # single quote: no escapes inside
           i++
           while (i <= n && substr(s,i,1) != "\x27") { tok = tok substr(s,i,1); i++ }
           i++  # closing quote
           continue
         }
-        if (c == "\"") {
+        if (c == "\"") { # double quote: spans newlines, handles backslash escapes (issues #1, #3)
           i++
-          while (i <= n && substr(s,i,1) != "\"") { tok = tok substr(s,i,1); i++ }
-          i++
+          while (i <= n) {
+            c = substr(s,i,1)
+            if (c == "\"") { i++; break }
+            if (c == "\\") {
+              i++
+              if (i <= n) { tok = tok substr(s,i,1); i++ }
+              continue
+            }
+            tok = tok c; i++
+          }
           continue
         }
         tok = tok c; i++
@@ -81,9 +94,9 @@ body="$(
     # find --body / -b / --body=... ; print its value and stop
     for (k = 1; k <= tc; k++) {
       t = TOK[k]
-      if (t == "--body" || t == "-b") { if (k < tc) { print TOK[k+1]; exit } }
-      if (substr(t,1,7) == "--body=") { print substr(t,8); exit }
-      if (substr(t,1,3) == "-b=")     { print substr(t,4); exit }
+      if (t == "--body" || t == "-b") { if (k < tc) { printf "%s", TOK[k+1]; exit } }
+      if (substr(t,1,7) == "--body=") { printf "%s", substr(t,8); exit }
+      if (substr(t,1,3) == "-b=")     { printf "%s", substr(t,4); exit }
     }
   }'
 )"
@@ -96,4 +109,4 @@ fixed="$(printf '%s' "$body" | "$NORMALIZE" 2>/dev/null || true)"
 # Unchanged -> the body is already correct (or has no malformed close) -> allow.
 [ "$fixed" = "$body" ] && exit 0
 
-deny "$(printf 'This PR body has a comma-list close that GitHub will only apply to the FIRST issue (e.g. "Closes #1, #2" leaves #2 open). Re-run gh pr %s with this corrected --body so every issue closes:\n\n%s' "create-or-edit" "$fixed")"
+warn "$(printf 'Heads-up: this gh pr --body has a comma-list close keyword; GitHub closes only the FIRST issue, so the later issues stay open. Suggested corrected body:\n\n%s' "$fixed")"
