@@ -1,5 +1,5 @@
 {
-  ".": "4.0.2",
+  ".": "4.1.0",
   "packages/agent-adversarial-challenger": "1.1.0",
   "packages/agent-coder": "1.1.0",
   "packages/agent-external-repo-worker": "1.1.0",
@@ -32,7 +32,7 @@
   "packages/find-tools": "0.2.0",
   "packages/frontend": "1.1.1",
   "packages/go-quality": "1.1.0",
-  "packages/goal-writer": "0.1.0",
+  "packages/goal-writer": "0.2.0",
   "packages/governance": "1.1.0",
   "packages/handover": "1.1.0",
   "packages/headroom": "0.2.0",
