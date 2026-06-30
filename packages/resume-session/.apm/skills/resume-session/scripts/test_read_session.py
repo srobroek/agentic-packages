@@ -123,3 +123,52 @@ def test_offset_zero_shows_newest(tmp_path, monkeypatch, capsys):
     rc = _run_main(["--file", str(p), "--agent", "claude", "--offset", "0"], monkeypatch)
     assert rc == 0
     assert "Recent turns" in capsys.readouterr().out
+
+
+# --- cross-worktree session resolution ---------------------------------------
+
+def test_worktree_projects_lists_all(monkeypatch):
+    porcelain = (
+        "worktree /repo/main\nHEAD aaaa\nbranch refs/heads/main\n\n"
+        "worktree /repo/wt-x\nHEAD bbbb\nbranch refs/heads/topic\n\n"
+    )
+    class _R:
+        returncode = 0
+        stdout = porcelain
+    monkeypatch.setattr(rs.subprocess, "run", lambda *a, **k: _R())
+    monkeypatch.setattr(rs.os.path, "isdir", lambda p: True)
+    assert rs.worktree_projects("/repo/main") == ["/repo/main", "/repo/wt-x"]
+
+
+def test_worktree_projects_non_repo_falls_back(monkeypatch):
+    class _R:
+        returncode = 128
+        stdout = ""
+    monkeypatch.setattr(rs.subprocess, "run", lambda *a, **k: _R())
+    assert rs.worktree_projects("/solo") == ["/solo"]
+
+
+def test_resolve_finds_session_in_sibling_worktree(tmp_path, monkeypatch):
+    """A bare session id is resolved from a SIBLING worktree's project dir."""
+    # Two encoded project dirs under a fake CLAUDE_ROOT: main has nothing,
+    # the sibling holds the target transcript.
+    claude_root = tmp_path / "projects"
+    main_dir = claude_root / rs.encode_project("/repo/main")
+    sib_dir = claude_root / rs.encode_project("/repo/wt-x")
+    main_dir.mkdir(parents=True)
+    sib_dir.mkdir(parents=True)
+    target = sib_dir / "deadbeef-0000-0000-0000-000000000000.jsonl"
+    target.write_text("{}\n", encoding="utf-8")
+
+    monkeypatch.setattr(rs, "CLAUDE_ROOT", str(claude_root))
+    monkeypatch.setattr(rs, "worktree_projects", lambda project: ["/repo/main", "/repo/wt-x"])
+
+    class Args:
+        file = None
+        session = "deadbeef"
+        project = "/repo/main"
+        agent = "claude"
+
+    path, agent = rs.resolve_file(Args())
+    assert agent == "claude"
+    assert path == str(target)
