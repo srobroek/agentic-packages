@@ -91,7 +91,7 @@
   "packages/quick-commit": "1.1.0",
   "packages/research": "1.1.0",
   "packages/resume-cv": "1.1.0",
-  "packages/resume-session": "1.1.0",
+  "packages/resume-session": "1.2.0",
   "packages/review": "1.1.1",
   "packages/rust-quality": "1.1.0",
   "packages/secrets-scan": "1.2.1",

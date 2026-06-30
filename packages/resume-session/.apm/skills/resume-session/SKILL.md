@@ -13,7 +13,9 @@ session**, and **the user confirms before any work resumes**.
 
 - Use `scripts/list-sessions.py` and `scripts/read-session.py` for everything.
   NEVER identify sessions by reading `.jsonl` files, `cat`/`tail`/`grep` on
-  transcripts, or scanning `git log`. The scripts already give you what you need.
+  transcripts, or running `git log` yourself. The scripts already give you what
+  you need — including the per-worktree git activity, which `list-sessions.py`
+  gathers for you; do not run your own `git log`/`git worktree` to reconstruct it.
 - Load **exactly one** session — the one the user picks. Never read a second
   session's transcript, not even "to compare" or "to find the real thread".
 - The two **STOP** gates below are hard. Until the user answers, do not read a
@@ -26,21 +28,35 @@ session**, and **the user confirms before any work resumes**.
    `python3 scripts/list-sessions.py` (auto-detects the git repo root; pass
    `--project PATH` for another repo, `--agent claude|codex` to narrow). It
    prints a newest-first summary per session: id, agent, last-active, turns,
-   branch, title, and a `↳ left off:` line. Read nothing else.
+   branch, `worktree:`, title, and a `↳ left off:` line. Read nothing else.
+   - **Worktree-aware by default.** Whether you start in the main checkout or in
+     a linked worktree, the script enumerates *every* worktree of the repo
+     (`git worktree list`) and scans each one's transcripts — so a session
+     started in a sibling worktree still shows up, tagged with its worktree.
+     Pass `--no-worktrees` to scan only the current checkout.
+   - **Git-activity overview.** When the repo has more than one worktree, the
+     script also prints a "Worktree git activity" block (most recently committed
+     first), with each worktree's branch, last-commit time + subject, and a
+     `✎ dirty` mark for uncommitted changes. Use it as a *second* signal
+     alongside transcript activity: the freshly-committed or dirty worktree is
+     usually where the live work is. Pass `--no-git` to skip it.
 
 2. **STOP. Present the list and let the user choose.** Show the newest few rows
-   — including the `↳ left off:` line, which is the high-level description of
-   each session — and ask which to resume. You may recommend the best match to
-   their stated task, but **wait for their answer** — do not pick for them, and
-   do not read any session yet.
+   — including the `worktree:` and `↳ left off:` lines, which together say where
+   and on what each session was working — and ask which to resume. If several
+   worktrees are active, the git-activity block helps you recommend the best
+   match. You may recommend, but **wait for their answer** — do not pick for
+   them, and do not read any session yet.
    - Only exception: if the user already gave a session id, skip to step 3.
 
 3. **Read that one session.** Run
    `python3 scripts/read-session.py --session <id>` (newest 8 turns, filtered,
-   newest-first). Read top-down; anchor on the **Latest plan / todo state**
-   block. Stop reading as soon as you can state what was being done and what
-   remains. If still unclear, page back with `--offset N --turns N` (the footer
-   prints the exact command). Never open another session or a raw transcript.
+   newest-first). The id resolves across all worktrees automatically, so a
+   session from a sibling worktree opens without extra flags. Read top-down;
+   anchor on the **Latest plan / todo state** block. Stop reading as soon as you
+   can state what was being done and what remains. If still unclear, page back
+   with `--offset N --turns N` (the footer prints the exact command). Never open
+   another session or a raw transcript.
 
 4. **STOP. Summarize, surface ambiguities, and ask.** Tell the user in a few
    lines: the goal, the last action, the current todo/plan state, branch/cwd,
@@ -51,6 +67,11 @@ session**, and **the user confirms before any work resumes**.
 5. **Resume.** Only after the user confirms: optionally do a quick reality check
    (`git status`, branch, referenced files exist), then continue from the agreed
    next step. If they only wanted a status, stop after the summary.
+   - **Mind the worktree.** If the chosen session's `cwd` (shown in the resume
+     context) is a *different* worktree than the one you are running in, its
+     files and branch live there. Confirm with the user whether to operate in
+     that worktree before touching files — paths from the transcript are
+     relative to its worktree, not yours.
 
 ## Notes
 

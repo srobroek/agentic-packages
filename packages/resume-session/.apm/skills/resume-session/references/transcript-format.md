@@ -15,6 +15,28 @@ agent reconstructs the leftoff state without loading full history.
   file may contain more than one `sessionId` value when a session was
   forked/resumed; the stem still identifies it.
 
+### Worktrees: one transcript family, many project dirs
+- Each git worktree (the main checkout and every linked worktree) has its own
+  working directory, so each encodes to a **different** `~/.claude/projects/<encoded>`
+  dir, and Codex rollouts are tagged with that worktree's `cwd`. A session
+  started in one worktree therefore does not appear under another worktree's
+  encoded dir.
+- `git worktree list --porcelain` returns the **whole** worktree family from any
+  member — the main checkout (always listed first) and every linked worktree —
+  so the result is identical whether the skill starts in the main repo or in a
+  linked worktree. Both of the user's cases ("started in a worktree" / "started
+  in the parent") reduce to: enumerate the family, scan every member.
+- `list-sessions.py` enumerates the family and scans each member's transcript
+  dir, tagging every session with its worktree (`wt_path`/`wt_branch`). For
+  Codex it walks the rollout tree **once** and matches each rollout's `cwd`
+  against the set of worktree paths (a per-worktree walk would rescan the whole
+  tree N times). Prunable / on-disk-missing worktrees are skipped.
+- `read-session.py` resolves a bare session id across **all** worktree project
+  dirs (`worktree_projects()`), so a session picked from a sibling worktree opens
+  without `--project`. An id prefix that matches transcripts in more than one
+  worktree is reported as ambiguous.
+- `--no-worktrees` (list only) restricts the scan to the current checkout.
+
 ### Codex
 - Rollups under `~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-<ts>-<session-id>.jsonl`.
 - The working directory is not in the path; it lives in the first record's
@@ -54,6 +76,22 @@ the whole file for the last `TodoWrite` (Claude) or `update_plan` (Codex) call
 and renders it at the top regardless of the current window, with glyphs:
 `[x]` completed, `[~]` in progress, `[ ]` pending.
 
+## Leftoff signal: per-worktree git activity
+
+Transcript recency answers "which session was last active"; git activity answers
+"which worktree is the live one". When more than one worktree exists,
+`list-sessions.py` prints a **Worktree git activity** block (most recently
+committed first) before the session list:
+
+- One `git show -s --format=%H<NUL>%ct<NUL>%s <head>...` call resolves every
+  worktree HEAD's commit epoch + subject in a single batch.
+- Each row shows the worktree, its branch, the last-commit relative + absolute
+  time, the commit subject, and a `✎ dirty` flag when
+  `git status --porcelain` reports uncommitted changes.
+- A recently-committed or dirty worktree is a strong hint for where work is
+  ongoing — pair it with the session list's `↳ left off:` to pick the right
+  thread. `--no-git` skips this block.
+
 ## Filtering (what the scripts strip)
 
 Emitted output keeps only: real user prompts, assistant text, tool calls (name
@@ -84,8 +122,13 @@ entire history.
 
 ## Script reference
 
-- `list-sessions.py [--project PATH] [--agent claude|codex|all] [--limit N] [--json]`
-  — selectable table, newest first; `--json` for machine output.
+- `list-sessions.py [--project PATH] [--agent claude|codex|all] [--limit N]
+  [--no-worktrees] [--no-git] [--json]` — selectable table, newest first, across
+  all worktrees of the repo by default; precedes it with a per-worktree git
+  activity block when more than one worktree exists. `--no-worktrees` scans only
+  the current checkout; `--no-git` drops the git block; `--json` emits
+  `{project, worktrees[], sessions[]}` for machine output.
 - `read-session.py (--session ID | --file PATH) [--project PATH] [--agent ...]
   [--turns N] [--offset M] [--max-chars N] [--include-thinking]` — filtered,
-  newest-first window with metadata, latest plan, and a paging footer.
+  newest-first window with metadata, latest plan, and a paging footer. A bare
+  `--session` id resolves across every worktree of the repo.

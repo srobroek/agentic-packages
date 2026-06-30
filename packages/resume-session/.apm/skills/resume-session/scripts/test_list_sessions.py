@@ -109,9 +109,127 @@ def test_negative_limit_keeps_entries(tmp_path, monkeypatch):
     """
     entries = [{"last_ts": float(i), "title": f"t{i}", "branch": "", "agent": "claude",
                 "session_id": f"id{i}", "turns": 1, "last": "", "path": ""} for i in range(3)]
-    monkeypatch.setattr(lst, "collect_claude", lambda project: entries)
-    monkeypatch.setattr(lst, "collect_codex", lambda project: [])
+    monkeypatch.setattr(lst, "collect_claude_worktrees", lambda wts: entries)
+    monkeypatch.setattr(lst, "collect_codex", lambda wts: [])
+    monkeypatch.setattr(lst, "list_worktrees", lambda project: [])
     monkeypatch.setattr(sys, "argv",
                         ["list-sessions.py", "--project", str(tmp_path), "--limit", "-1", "--json"])
     rc = lst.main()
     assert rc == 0
+
+
+# --- worktree discovery ------------------------------------------------------
+
+_PORCELAIN = (
+    "worktree /repo/main\n"
+    "HEAD aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111\n"
+    "branch refs/heads/main\n"
+    "\n"
+    "worktree /repo/wt-feature\n"
+    "HEAD bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222\n"
+    "branch refs/heads/feature/nested/name\n"
+    "\n"
+    "worktree /repo/wt-detached\n"
+    "HEAD cccc3333cccc3333cccc3333cccc3333cccc3333\n"
+    "detached\n"
+    "\n"
+    "worktree /repo/wt-gone\n"
+    "HEAD dddd4444dddd4444dddd4444dddd4444dddd4444\n"
+    "branch refs/heads/dead\n"
+    "prunable gitdir file points to non-existent location\n"
+)
+
+
+def _fake_git(stdout, returncode=0):
+    class _R:
+        pass
+    def run(cmd, capture_output=True, text=True, timeout=None):
+        r = _R()
+        r.returncode = returncode
+        r.stdout = stdout
+        return r
+    return run
+
+
+def test_list_worktrees_parses_porcelain(monkeypatch):
+    monkeypatch.setattr(lst.subprocess, "run", _fake_git(_PORCELAIN))
+    # All listed paths "exist" except the pruned one; the gone one is skipped
+    # both by prunable AND by the isdir check, so cover both.
+    monkeypatch.setattr(lst.os.path, "isdir",
+                        lambda p: p in ("/repo/main", "/repo/wt-feature", "/repo/wt-detached"))
+    wts = lst.list_worktrees("/repo/main")
+    paths = [w["path"] for w in wts]
+    assert paths == ["/repo/main", "/repo/wt-feature", "/repo/wt-detached"]
+    assert wts[0]["is_main"] is True
+    assert wts[1]["is_main"] is False
+    # Multi-segment branch name preserved, refs/heads/ stripped.
+    assert wts[1]["branch"] == "feature/nested/name"
+    assert wts[2]["detached"] is True
+    # The prunable worktree is dropped entirely.
+    assert "/repo/wt-gone" not in paths
+
+
+def test_list_worktrees_non_repo_returns_empty(monkeypatch):
+    monkeypatch.setattr(lst.subprocess, "run", _fake_git("", returncode=128))
+    assert lst.list_worktrees("/not/a/repo") == []
+
+
+def test_commit_info_batches_heads(monkeypatch):
+    out = (
+        "aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111\x001700000000\x00first subject\n"
+        "bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222\x001700000500\x00second subject\n"
+    )
+    monkeypatch.setattr(lst.subprocess, "run", _fake_git(out))
+    wts = [{"head": "aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"},
+           {"head": "bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222"}]
+    info = lst.commit_info(wts, "/repo/main")
+    assert info["aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"] == (1700000000.0, "first subject")
+    assert info["bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222"][1] == "second subject"
+
+
+def test_sessions_tagged_with_worktree(tmp_path, monkeypatch, capsys):
+    """A session from a sibling worktree is listed and labeled with it."""
+    monkeypatch.setattr(lst, "list_worktrees", lambda project: [
+        {"path": "/repo/main", "head": "h1", "branch": "main",
+         "detached": False, "is_main": True},
+        {"path": "/repo/wt-x", "head": "h2", "branch": "topic",
+         "detached": False, "is_main": False},
+    ])
+    monkeypatch.setattr(lst, "commit_info", lambda wts, project: {
+        "h1": (1700000000.0, "main commit"),
+        "h2": (1700000500.0, "topic commit"),
+    })
+    monkeypatch.setattr(lst, "is_dirty", lambda path: False)
+
+    def fake_collect_claude(project):
+        if project == "/repo/wt-x":
+            return [{"agent": "claude", "session_id": "sib123", "title": "sibling task",
+                     "goal": "", "last": "did sibling work", "branch": "topic",
+                     "last_ts": 1700000400.0, "turns": 5, "path": "x.jsonl"}]
+        return []
+
+    monkeypatch.setattr(lst, "collect_claude", fake_collect_claude)
+    monkeypatch.setattr(lst, "collect_codex", lambda wts: [])
+    monkeypatch.setattr(sys, "argv", ["list-sessions.py", "--project", "/repo/main"])
+    rc = lst.main()
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "across 2 worktrees" in out
+    assert "Worktree git activity" in out
+    assert "topic commit" in out  # git-activity overview rendered
+    assert "worktree: wt-x" in out  # session tagged with its worktree
+    assert "sib123" in out
+
+
+def test_no_worktrees_flag_scans_only_project(tmp_path, monkeypatch, capsys):
+    """--no-worktrees must not call list_worktrees; scans the project alone."""
+    def boom(project):
+        raise AssertionError("list_worktrees called under --no-worktrees")
+    monkeypatch.setattr(lst, "list_worktrees", boom)
+    monkeypatch.setattr(lst, "collect_claude", lambda project: [])
+    monkeypatch.setattr(lst, "collect_codex", lambda wts: [])
+    monkeypatch.setattr(sys, "argv",
+                        ["list-sessions.py", "--project", str(tmp_path), "--no-worktrees"])
+    rc = lst.main()
+    assert rc == 0
+    assert "No prior sessions" in capsys.readouterr().out

@@ -57,6 +57,32 @@ def encode_project(path: str) -> str:
     return re.sub(r"[/.]", "-", path)
 
 
+def worktree_projects(project: str) -> list[str]:
+    """Every worktree path of the repo containing `project`, project first.
+
+    A session chosen from `list-sessions.py` may live in a SIBLING worktree
+    (each worktree has its own ~/.claude/projects/<encoded> dir), so resolving a
+    bare session id has to search them all -- not just the current checkout.
+    Falls back to [project] when git is unavailable or `project` is not a repo.
+    """
+    paths = [project]
+    try:
+        r = subprocess.run(
+            ["git", "-C", project, "worktree", "list", "--porcelain"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return paths
+    if r.returncode != 0:
+        return paths
+    for line in r.stdout.splitlines():
+        if line.startswith("worktree "):
+            p = line[len("worktree "):]
+            if os.path.isdir(p) and p not in paths:
+                paths.append(p)
+    return paths
+
+
 def parse_ts(value):
     if not value:
         return None
@@ -125,17 +151,23 @@ def resolve_file(args) -> tuple[str, str]:
     project = os.path.realpath(os.path.expanduser(args.project or default_project()))
 
     if args.agent in (None, "claude"):
-        proj_dir = os.path.join(CLAUDE_ROOT, encode_project(project))
-        if os.path.isdir(proj_dir):
-            matches = [
-                os.path.join(proj_dir, n)
-                for n in os.listdir(proj_dir)
-                if n.endswith(".jsonl") and n.startswith(sid)
-            ]
-            if len(matches) == 1:
-                return matches[0], "claude"
-            if len(matches) > 1:
-                sys.exit(f"error: session prefix '{sid}' is ambiguous: {len(matches)} matches")
+        # Search this checkout AND every sibling worktree's transcript dir, since
+        # the chosen session may belong to another worktree of the same repo.
+        matches = []
+        for wt in worktree_projects(project):
+            proj_dir = os.path.join(CLAUDE_ROOT, encode_project(wt))
+            if os.path.isdir(proj_dir):
+                matches += [
+                    os.path.join(proj_dir, n)
+                    for n in os.listdir(proj_dir)
+                    if n.endswith(".jsonl") and n.startswith(sid)
+                ]
+        # A full session id is unique, so identical paths can't recur; distinct
+        # paths mean a genuinely ambiguous prefix across worktrees.
+        if len(matches) == 1:
+            return matches[0], "claude"
+        if len(matches) > 1:
+            sys.exit(f"error: session prefix '{sid}' is ambiguous: {len(matches)} matches")
 
     if args.agent in (None, "codex"):
         for root, _, files in os.walk(CODEX_ROOT):
