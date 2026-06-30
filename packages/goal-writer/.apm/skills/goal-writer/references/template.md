@@ -5,6 +5,16 @@ it to `~/.local/state/agentic-tools/goals/` (see SKILL.md Persistence). Prefer
 `scripts/new-goal.py`; it normalizes slugs, writes frontmatter, scaffolds the
 sections, and sets user-private permissions (`0700` dir, `0600` file).
 
+Open the doc body with a short "how to use" note so the across-turn agent treats
+it as actionable, not just background:
+
+```
+> **How to use this doc:** the Results and Exit conditions below are the work to
+> execute -- derive your task plan from them (this doc is not an ordered plan;
+> build the plan at execution time). The other sections are context to steer by.
+> The `/goal` completion line references this file by path.
+```
+
 ## Frontmatter
 
 ```yaml
@@ -53,16 +63,29 @@ Validation -> gated by -> Exit conditions.**
 | KPI | band + target (or TBD+proxy) + method | bare metric, no number/band, no method |
 | Exit condition | independently verifiable predicate | not testable, or depends on opinion |
 
-## The /goal line
+## The /goal block
 
-Mechanically AND-join the Exit conditions:
+The block must be self-sufficient to *steer* (the across-turn agent loses
+chat/compacted context) and sharp to *test*. Four parts, in order:
 
 ```
+Goal: <one-sentence destination>
+
+Work definition (execute the Results + Exit conditions; build your task plan
+from them, re-read for diagnosis/bands/constraints):
+<absolute path to the saved goal doc>
+
+Constraints: <the few non-negotiables that must survive compaction --
+measurement protocol, scope boundaries, key decisions>
+
 Done when: (1) <exit condition 1> AND (2) <exit condition 2> AND (3) <exit condition 3>
 ```
 
-This line is what the `/goal` command re-evaluates each turn until satisfied. It
-must contain only verifiable predicates -- no rationale, no context.
+The `Done when:` line is the mechanical AND-join the `/goal` command
+re-evaluates each turn -- only verifiable predicates, no rationale. The Goal,
+doc reference, and Constraints carry just enough context to steer; the full
+nine-section doc lives at the referenced path, not in the block. Never paste
+Outcomes or TBD-target KPIs into the completion condition.
 
 ## Worked example
 
@@ -107,9 +130,18 @@ rate regression; on-call sign-off.
 - Front-end render performance.
 ```
 
-`/goal` line:
+`/goal` block:
 
 ```
+Goal: reduce checkout-API latency so users stop abandoning slow requests.
+
+Work definition (execute the Results + Exit conditions; build your task plan
+from them, re-read for diagnosis/bands/constraints):
+~/.local/state/agentic-tools/goals/shop__reduce-checkout-latency.md
+
+Constraints: measure p95 via the Grafana checkout_p95 panel over 24h windows;
+band 150-250ms; scope is the checkout API only (search/catalog out of scope).
+
 Done when: (1) checkout p95 latency is within 150-250ms over a 24h production
 window AND (2) checkout error rate stays <= 0.5% in the 24h canary AND (3) the
 p95 alert is live on the Grafana board

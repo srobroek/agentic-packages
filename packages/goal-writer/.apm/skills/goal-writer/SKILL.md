@@ -1,13 +1,13 @@
 ---
 name: goal-writer
-description: Turn a vague goal prompt into a structured, actionable goal -- outcomes, concrete results, measurable KPIs, validation, and verifiable exit conditions -- then emit a completion-condition line to paste into the /goal command plus a saved context doc. Use when the user asks to structure a goal, turn a vague goal/objective into an actionable one, make a goal measurable, or prep text for /goal. NOT for setting a /goal condition already written (use /goal directly), PRDs or issues (use to-prd / to-issues), or open-ended planning (use debate).
+description: Turn a vague goal prompt into a structured, actionable goal -- outcomes, concrete results, measurable KPIs, validation, and verifiable exit conditions -- saved as a context doc, then emit a self-sufficient /goal block (goal + work-definition reference + constraints + AND-joined exit conditions) to paste into the /goal command. Use when the user asks to structure a goal, turn a vague goal/objective into an actionable one, make a goal measurable, or prep text for /goal. NOT for setting a /goal condition already written (use /goal directly), PRDs or issues (use to-prd / to-issues), or open-ended planning (use debate).
 ---
 
 # Goal Writer
 
 Convert a vague goal into a structured, actionable one through a relentless
-interview, then produce two artifacts: a `/goal` completion-condition line and a
-saved context doc.
+interview, save it as a context doc, then emit a self-sufficient `/goal` block
+that references the doc and tests done-ness via AND-joined exit conditions.
 
 ## Workflow
 
@@ -17,11 +17,13 @@ saved context doc.
    do not re-litigate a sharp answer.
 3. Compose the full goal doc from `references/template.md`, enforcing the chain
    **Results -> Outcomes -> KPIs -> Validation -> Exit conditions**.
-4. Build the `/goal` line: the **mechanical AND-join** of the verifiable exit
-   conditions (see Output). No distillation, no interpretation.
-5. Show both blocks in chat. Ask the user to confirm, adjust, or discard.
-6. On confirm: persist via `scripts/new-goal.py` (see Persistence) and report
-   the file path. Always print the `/goal` line so it can be copied immediately.
+4. Show the composed doc in chat for review; apply any adjustments the user asks
+   for.
+5. **Always** persist the doc via `scripts/new-goal.py` (see Persistence) -- the
+   `/goal` block references it by absolute path, so the file is a hard
+   dependency, not an opt-in. Capture the path the script prints.
+6. Emit the `/goal` block (see Output) using that real path, so it can be pasted
+   immediately.
 
 ## Interview
 
@@ -50,16 +52,29 @@ KPI -> attach one or it is not a tracked outcome.
 
 ## Output
 
-Emit two blocks:
+Emit one `/goal` block. It must be self-sufficient to *steer* (the across-turn
+agent loses chat/compacted context) and sharp to *test*. Four parts, in order:
 
-1. **`/goal` line** -- `Done when: (1) <exit cond 1> AND (2) <exit cond 2> AND
-   ...`, joining the Exit conditions verbatim. This is what the across-turn
-   `/goal` evaluator tests, so every term must be independently verifiable.
-2. **Context doc** -- the full template from `references/template.md`.
+1. **Goal** -- the one-sentence destination.
+2. **Work definition + doc reference** -- the absolute path to the saved doc,
+   framed as actionable: the doc's **Results** and **Exit conditions** are the
+   work to execute (build the task plan from them at execution time); re-read it
+   for diagnosis, bands, and constraints. The doc is the durable backing store
+   the line points at -- not just "context to read."
+3. **Constraints** -- the few non-negotiables that must survive compaction
+   (measurement protocol, scope boundaries, key decisions).
+4. **`Done when:`** -- the **mechanical AND-join** of the verifiable exit
+   conditions: `Done when: (1) <exit cond 1> AND (2) <exit cond 2> AND ...`,
+   joined verbatim. No distillation. This is the part the evaluator tests, so
+   every term must be independently verifiable.
+
+The full template (`references/template.md`) is the saved doc, not pasted into
+`/goal`. Do NOT paste Outcomes/KPIs (with TBD targets) into the completion
+condition -- aspirational prose is not a testable done-check.
 
 ## Persistence
 
-After the user confirms, run `scripts/new-goal.py` to write the context doc to
+Run `scripts/new-goal.py` to write the context doc to
 `~/.local/state/agentic-tools/goals/<project-slug>__<goal-slug>.md` with
 user-private permissions. Goals are kept (not overwritten) -- a project has many
 goals over time; the goal-slug distinguishes them. The doc is ephemeral local
@@ -70,10 +85,11 @@ body from `references/template.md`, mode `0600`.
 
 ## Rules
 
-- Stop at step 5 and wait; never auto-save without confirmation.
+- Review with the user before saving (step 4), but always save (step 5) -- the
+  `/goal` block depends on the file path.
 - Do not invent KPI targets the user did not give -- use the TBD-with-proxy form.
-- Keep the `/goal` line a literal AND-join; if it grows unwieldy, that signals
-  too many exit conditions -- surface that in the interview, do not summarize.
+- Keep `Done when:` a literal AND-join; if it grows unwieldy, that signals too
+  many exit conditions -- surface that in the interview, do not summarize.
 - Do not store secrets or credential values in the goal doc.
 
 ## References
