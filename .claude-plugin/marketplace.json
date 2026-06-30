@@ -941,7 +941,7 @@
     {
       "name": "project-setup",
       "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
-      "version": "0.5.3",
+      "version": "0.5.4",
       "tags": [
         "skill",
         "lifecycle",
@@ -950,8 +950,8 @@
       "source": {
         "source": "github",
         "repo": "srobroek/project-setup",
-        "ref": "project-setup-v0.5.3",
-        "sha": "433c61788f40a5426ba55a4b4ec54c0f1bfbb33c"
+        "ref": "project-setup-v0.5.4",
+        "sha": "54e115822dbbbb583c8146a47879fd68ab08205f"
       }
     },
     {
