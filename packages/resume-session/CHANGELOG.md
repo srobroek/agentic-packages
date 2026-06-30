@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/resume-session--v1.1.0...resume-session--v1.2.0) (2026-06-30)
+
+
+### Features
+
+* **resume-session:** make session discovery worktree-aware ([#437](https://github.com/srobroek/agentic-packages/issues/437)) ([72612af](https://github.com/srobroek/agentic-packages/commit/72612afbaa8f7a135317da37bb40470818875f92))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/resume-session-v1.0.0...resume-session--v1.1.0) (2026-06-27)
 
 
