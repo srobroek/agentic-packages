@@ -1,7 +1,7 @@
 {
   "name": "hooks-bash-safety",
   "version": "1.3.0",
-  "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, etc.) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive verbs warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups silent; unexpanded $var targets denied; ~/subpath and outside-tree paths warn (non-blocking); quoted bypass forms and flags-after-target denied. Matching anchored to command position. No \"ask\" ever emitted. Cross-tool (Claude + Codex).",
+  "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, /dev/random, /dev/urandom, /dev/stdout, /dev/stdin) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive/disruptive verbs also warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups are silent; unexpanded $var targets are denied; ~/subpath, repo root/.git, and outside-tree paths warn (non-blocking). Quoted bypass forms (rm -rf \"/etc\") and flags-after-target (rm /path -rf) are denied. Matching is anchored to command position to avoid quoted-string false positives. No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },
