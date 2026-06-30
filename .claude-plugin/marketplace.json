@@ -355,6 +355,17 @@
       "source": "./packages/go-quality"
     },
     {
+      "name": "goal-writer",
+      "description": "Turn a vague goal prompt into a structured, actionable goal -- with outcomes, concrete results, measurable KPIs, validation, and verifiable exit conditions -- then emit a completion-condition line for the /goal command plus a saved context doc.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "planning",
+        "goals"
+      ],
+      "source": "./packages/goal-writer"
+    },
+    {
       "name": "governance",
       "description": "Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows.",
       "version": "1.1.0",
