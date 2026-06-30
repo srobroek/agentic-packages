@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.1](https://github.com/srobroek/agentic-packages/compare/speckit--v3.1.0...speckit--v3.1.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **hooks:** rework PreToolUse guards to never stall auto mode ([#432](https://github.com/srobroek/agentic-packages/issues/432)) ([e00ebb7](https://github.com/srobroek/agentic-packages/commit/e00ebb723fd8e00031fdf28c02ca6b846053d652))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/speckit--v3.0.0...speckit--v3.1.0) (2026-06-29)
 
 
