@@ -114,15 +114,15 @@ decision() {
   printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
 }
 
-@test "pr guard: malformed --body (double-quoted) -> deny with corrected body" {
+@test "pr guard: malformed --body (double-quoted) -> allow+additionalContext with corrected body" {
   pr 'gh pr create --title t --body "Closes #1, #2, #3"'
-  [ "$(decision)" = "deny" ]
-  printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecisionReason' | grep -q 'Closes #1, closes #2, closes #3'
+  [ "$(decision)" = "allow" ]
+  printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext' | grep -q 'Closes #1, closes #2, closes #3'
 }
 
-@test "pr guard: --body= inline form on gh pr edit -> deny" {
+@test "pr guard: --body= inline form on gh pr edit -> allow+additionalContext" {
   pr 'gh pr edit 5 --body="Fixes #1, #2"'
-  [ "$(decision)" = "deny" ]
+  [ "$(decision)" = "allow" ]
 }
 
 @test "pr guard: already-correct body -> allow" {
@@ -150,4 +150,33 @@ decision() {
   output="$(printf '' | /bin/bash "$PRG" 2>&1)" && status=0 || status=$?
   [ "$status" -eq 0 ]
   [ -z "$output" ]
+}
+
+# --- issue #1: multi-line body (literal newlines) ----------------------------
+
+@test "pr guard: --body with literal newlines still warns (issue #1)" {
+  # Body contains real embedded newlines; the guard must scan across them.
+  local cmd
+  cmd=$'gh pr create --body "## Summary\n\nCloses #1, #2"'
+  output="$(jq -cn --arg c "$cmd" '{tool_input:{command:$c}}' | /bin/bash "$PRG" 2>&1)" && status=0 || status=$?
+  [ "$status" -eq 0 ]
+  [ "$(decision)" = "allow" ]
+  printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext' | grep -q 'closes #2'
+}
+
+# --- issue #2: leading whitespace before gh pr command ----------------------
+
+@test "pr guard: leading spaces before gh pr create -> warns (issue #2)" {
+  pr '    gh pr create --body "Closes #1, #2"'
+  [ "$(decision)" = "allow" ]
+  printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext' | grep -q 'closes #2'
+}
+
+# --- issue #3: backslash-escaped quotes in body ------------------------------
+
+@test "pr guard: backslash-escaped quotes -> warns, corrected body preserves quotes (issue #3)" {
+  pr 'gh pr create --body "Closes #1, #2 {\"k\":\"v\"}"'
+  [ "$(decision)" = "allow" ]
+  # Corrected body must keep the braces/quotes intact.
+  printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext' | grep -q '{"k":"v"}'
 }

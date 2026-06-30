@@ -97,32 +97,69 @@ assert_decision() {
   assert_decision allow "$(obj_payload 'gh pr view 123')"
 }
 
+@test "allow (FP1): echo gh pr merge does not fire advisory" {
+  assert_decision allow "$(obj_payload 'echo gh pr merge')"
+}
+
+@test "allow (FP1): echoed quoted phrase does not fire advisory" {
+  assert_decision allow "$(obj_payload 'echo "run gh pr merge later"')"
+}
+
 # ---------------------------------------------------------------------------
-# DENY (block) — a real `gh pr merge` with NO genuine strategy provided.
+# ALLOW+additionalContext — a real `gh pr merge` with NO genuine strategy
+# provided (non-blocking advisory: allow + additionalContext, never deny).
 # ---------------------------------------------------------------------------
 
-@test "deny: no strategy at all" {
-  assert_decision deny "$(obj_payload 'gh pr merge 123')"
+@test "advisory: no strategy at all" {
+  assert_decision allow "$(obj_payload 'gh pr merge 123')"
 }
 
-@test "deny: --mergetool must NOT be treated as the 'merge' strategy" {
-  assert_decision deny "$(obj_payload 'gh pr merge 123 --mergetool')"
+@test "advisory: --mergetool must NOT be treated as the 'merge' strategy" {
+  assert_decision allow "$(obj_payload 'gh pr merge 123 --mergetool')"
 }
 
-@test "deny: --squash only inside a -t subject value (not a real strategy)" {
-  assert_decision deny "$(obj_payload 'gh pr merge 123 -t "use --squash"')"
+@test "advisory: --squash only inside a -t subject value (not a real strategy)" {
+  assert_decision allow "$(obj_payload 'gh pr merge 123 -t "use --squash"')"
 }
 
-@test "deny: --merge only inside a --body value (not a real strategy)" {
-  assert_decision deny "$(obj_payload 'gh pr merge 123 --body "we will --merge later"')"
+@test "advisory: --merge only inside a --body value (not a real strategy)" {
+  assert_decision allow "$(obj_payload 'gh pr merge 123 --body "we will --merge later"')"
 }
 
-@test "deny: --squash only inside an inline --title= value" {
-  assert_decision deny "$(obj_payload 'gh pr merge 123 --title=use-the---squash-flag')"
+@test "advisory: --squash only inside an inline --title= value" {
+  assert_decision allow "$(obj_payload 'gh pr merge 123 --title=use-the---squash-flag')"
 }
 
-@test "deny: STRING tool_input with no strategy" {
-  assert_decision deny "$(str_payload 'gh pr merge 123')"
+@test "advisory: STRING tool_input with no strategy" {
+  assert_decision allow "$(str_payload 'gh pr merge 123')"
+}
+
+@test "advisory (FN2): -R is --repo, not the -r rebase strategy" {
+  assert_decision allow "$(obj_payload 'gh pr merge -R owner/repo')"
+}
+
+@test "advisory (FN2): uppercase -R owner/repo with PR number fires advisory" {
+  assert_decision allow "$(obj_payload 'gh pr merge -R owner/repo 123')"
+}
+
+@test "advisory (FN3): -r on chained command after && does not satisfy strategy" {
+  assert_decision allow "$(obj_payload 'gh pr merge && git rebase -r')"
+}
+
+@test "advisory (FN3): -r on chained command after ; does not satisfy strategy" {
+  assert_decision allow "$(obj_payload 'gh pr merge; foo -r bar')"
+}
+
+@test "advisory (FN4): merge glued to ; fires advisory" {
+  assert_decision allow "$(obj_payload 'gh pr merge;')"
+}
+
+@test "advisory (FN4): merge glued to | fires advisory" {
+  assert_decision allow "$(obj_payload 'gh pr merge|cat')"
+}
+
+@test "advisory (FN4): merge glued to > fires advisory" {
+  assert_decision allow "$(obj_payload 'gh pr merge>out')"
 }
 
 # ---------------------------------------------------------------------------
@@ -155,10 +192,18 @@ assert_decision() {
   [ "$status" -eq 0 ]
 }
 
-@test "guard exits 0 even when it blocks (decision is in stdout JSON)" {
+@test "guard exits 0 even when it advises (decision is in stdout JSON)" {
   local payload
   payload="$(obj_payload 'gh pr merge 123')"
   run bash -c "printf '%s' '$payload' | /usr/bin/env bash '$GUARD'"
   [ "$status" -eq 0 ]
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "deny"' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "allow"' >/dev/null
+}
+
+@test "advisory carries additionalContext explaining the issue" {
+  local payload out ctx
+  payload="$(obj_payload 'gh pr merge 123')"
+  out="$(printf '%s' "$payload" | /usr/bin/env bash "$GUARD" 2>/dev/null || true)"
+  ctx="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.additionalContext // empty')"
+  [ -n "$ctx" ]
 }

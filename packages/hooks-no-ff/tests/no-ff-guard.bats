@@ -99,34 +99,44 @@ assert_decision() {
 }
 
 # ---------------------------------------------------------------------------
-# ASK — real merge lacking a genuine --no-ff token (advisory, NOT hard deny).
+# ALLOW+additionalContext — real merge lacking a genuine --no-ff token
+# (non-blocking advisory: allow + additionalContext, never deny or ask).
 # ---------------------------------------------------------------------------
 
-@test "ask: bare merge of a feature branch" {
-  assert_decision ask "$(obj_payload 'git merge feature')"
+@test "advisory: bare merge of a feature branch" {
+  assert_decision allow "$(obj_payload 'git merge feature')"
 }
 
-@test "ask: merge with -C global option" {
-  assert_decision ask "$(obj_payload 'git -C /repo merge feature')"
+@test "advisory: merge with -C global option" {
+  assert_decision allow "$(obj_payload 'git -C /repo merge feature')"
 }
 
-@test "ask: merge with stacked global options" {
-  assert_decision ask "$(obj_payload 'git -C /repo --no-pager merge feature')"
+@test "advisory: merge with stacked global options" {
+  assert_decision allow "$(obj_payload 'git -C /repo --no-pager merge feature')"
 }
 
-@test "ask: --no-ff appears ONLY inside a trailing comment (must not satisfy)" {
-  assert_decision ask "$(obj_payload 'git merge feature # remember --no-ff')"
+@test "advisory: --no-ff appears ONLY inside a trailing comment (must not satisfy)" {
+  assert_decision allow "$(obj_payload 'git merge feature # remember --no-ff')"
 }
 
-@test "ask: real merge via STRING tool_input" {
-  assert_decision ask "$(str_payload 'git merge feature')"
+@test "advisory: real merge via STRING tool_input" {
+  assert_decision allow "$(str_payload 'git merge feature')"
 }
 
-@test "advisory decision is exactly 'ask', never 'deny'" {
+@test "allow (FP5): git commit with semicolon inside quoted -m message is silent" {
+  assert_decision allow "$(obj_payload 'git commit -m "fixed bug; git merge feature next"')"
+}
+
+@test "allow (FP5): single-quoted commit message with semicolon and git merge is silent" {
+  assert_decision allow "$(obj_payload "git commit -m 'added feature; git merge main'")"
+}
+
+@test "advisory decision is exactly 'allow', never 'deny' or 'ask'" {
   local got
   got="$(decision_of "$(obj_payload 'git merge feature')")"
-  [ "$got" = "ask" ]
+  [ "$got" = "allow" ]
   [ "$got" != "deny" ]
+  [ "$got" != "ask" ]
 }
 
 # ---------------------------------------------------------------------------
@@ -164,5 +174,13 @@ assert_decision() {
   payload="$(obj_payload 'git merge feature')"
   run bash -c "printf '%s' '$payload' | /usr/bin/env bash '$GUARD'"
   [ "$status" -eq 0 ]
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "ask"' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "allow"' >/dev/null
+}
+
+@test "advisory carries additionalContext explaining the issue" {
+  local payload out ctx
+  payload="$(obj_payload 'git merge feature')"
+  out="$(printf '%s' "$payload" | /usr/bin/env bash "$GUARD" 2>/dev/null || true)"
+  ctx="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.additionalContext // empty')"
+  [ -n "$ctx" ]
 }

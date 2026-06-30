@@ -215,9 +215,10 @@ EOF
   run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
 {"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
 EOF
-  # Deferred label present but only ONE spec: label -> must block.
-  [ "$status" -eq 2 ]
-  echo "$output$stderr" | grep -qi "TWO spec" || echo "${lines[*]}" | grep -qi "TWO spec"
+  # Deferred label present but only ONE spec: label -> must emit advisory (non-blocking).
+  [ "$status" -eq 0 ]
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
+  echo "$ctx" | grep -qi "TWO spec"
 }
 
 @test "issue-label-guard.sh: deferred label with two spec labels passes" {
@@ -230,12 +231,73 @@ EOF
   [ "$status" -eq 0 ]
 }
 
-@test "issue-label-guard.sh: missing spec label is still blocked" {
+@test "issue-label-guard.sh: missing spec label -> advisory allow" {
   mkdir -p "$TESTDIR/.specify"
   cd "$TESTDIR"
   cmd='gh issue create --title "x" --label "phase:impl"'
   run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
 {"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
 EOF
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 0 ]
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
+  [ -n "$ctx" ]
+}
+
+@test "issue-label-guard.sh: missing phase label -> advisory allow" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  cmd='gh issue create --title "x" --label "spec:001"'
+  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
+{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
+EOF
+  [ "$status" -eq 0 ]
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
+  [[ "$ctx" == *"phase:"* ]]
+}
+
+@test "issue-label-guard.sh: GraphQL createIssue missing spec -> advisory allow" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  cmd='gh api graphql -f query="mutation { createIssue(input: { title: \"x\" }) }"'
+  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
+{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
+EOF
+  [ "$status" -eq 0 ]
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
+  [[ "$ctx" == *"spec:"* ]]
+}
+
+# --- issue #6: false positives on echo/comment containing mutation + createIssue( ---
+
+@test "issue-label-guard.sh: 'echo mutation; echo createIssue(' -> silent (issue #6)" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  cmd='echo mutation; echo "createIssue("'
+  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
+{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
+EOF
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "issue-label-guard.sh: comment with mutation and createIssue( -> silent (issue #6)" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  cmd='# run a mutation that calls createIssue() without spec'
+  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
+{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
+EOF
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "issue-label-guard.sh: echoed 'gh issue create' phrase -> silent (no advisory)" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  cmd='echo "gh issue create later"'
+  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
+{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
+EOF
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
 }

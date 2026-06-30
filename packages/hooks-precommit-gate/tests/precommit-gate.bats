@@ -3,12 +3,14 @@
 # Coverage for precommit-gate.sh — the PreToolUse hook that ensures the
 # pre-commit framework is actually active when a repo opts into it.
 #
-# The hook reads a JSON event on stdin and either allows (exit 0, no output) or
-# blocks (exit 2 + stderr). Fixtures are throwaway git repos in various states:
+# The hook is NON-BLOCKING: it reads a JSON event on stdin and either allows
+# silently (exit 0, no output) or emits a single advisory JSON object with
+# permissionDecision:"allow" + additionalContext (still exit 0). No exit 2
+# remains. Fixtures are throwaway git repos in various states:
 #   - no .pre-commit-config.yaml            -> always allow (silent)
-#   - config + the relevant git hook present -> allow
-#   - config + git hook MISSING              -> block
-#   - --no-verify / -n                       -> block (skips the framework)
+#   - config + the relevant git hook present -> allow (silent)
+#   - config + git hook MISSING              -> allow + advisory
+#   - --no-verify / -n                       -> allow + advisory
 #
 # Portability floor: bash 3.2.57 + BSD userland.
 # Run: bats packages/hooks-precommit-gate/tests/precommit-gate.bats
@@ -57,9 +59,13 @@ payload() {
   jq -cn --arg cwd "$1" --arg cmd "$2" '{cwd:$cwd, tool_input:{command:$cmd}}'
 }
 
-# run_gate <payload> -> sets $status and $output (stderr+stdout).
+# run_gate <payload> -> sets $status, $output, $decision, $ctx.
+# decision == "allow" + non-empty $ctx means advisory fired.
+# Empty $output / empty $decision means silent allow.
 run_gate() {
   output="$(printf '%s' "$1" | /bin/bash "$GUARD" 2>&1)" && status=0 || status=$?
+  decision="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null || true)"
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
 }
 
 # --- parse / portability floor ---------------------------------------------
@@ -92,55 +98,79 @@ run_gate() {
   [ -z "$output" ]
 }
 
-# --- config present + hook installed -> allow ------------------------------
+# --- config present + hook installed -> silent allow -----------------------
 
-@test "config + installed hooks: git commit -> allow" {
+@test "config + installed hooks: git commit -> allow (silent)" {
   local r; r="$(new_repo installed)"
   run_gate "$(payload "$r" 'git commit -m x')"
   [ "$status" -eq 0 ]
+  [ -z "$decision" ]
 }
 
-@test "config + installed hooks: git push -> allow" {
+@test "config + installed hooks: git push -> allow (silent)" {
   local r; r="$(new_repo installed)"
   run_gate "$(payload "$r" 'git push origin main')"
   [ "$status" -eq 0 ]
+  [ -z "$decision" ]
 }
 
-# --- config present + hook MISSING -> block --------------------------------
+# --- config present + hook MISSING -> advisory (allow + additionalContext) -
 
-@test "config, no installed hook: git commit -> block (exit 2)" {
+@test "config, no installed hook: git commit -> advisory allow" {
   local r; r="$(new_repo config)"
   run_gate "$(payload "$r" 'git commit -m x')"
-  [ "$status" -eq 2 ]
-  [[ "$output" == *"pre-commit install"* ]]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [[ "$ctx" == *"pre-commit install"* ]]
 }
 
-@test "config, no installed hook: git push -> block (exit 2)" {
+@test "config, no installed hook: git push -> advisory allow" {
   local r; r="$(new_repo config)"
   run_gate "$(payload "$r" 'git push origin main')"
-  [ "$status" -eq 2 ]
-  [[ "$output" == *"pre-push"* ]]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [[ "$ctx" == *"pre-push"* ]]
 }
 
-# --- --no-verify / -n bypass -> block (even with hooks installed) ----------
+# --- --no-verify / -n bypass -> advisory (allow + additionalContext) -------
 
-@test "installed hooks but --no-verify: git commit -> block" {
+@test "installed hooks but --no-verify: git commit -> advisory allow" {
   local r; r="$(new_repo installed)"
   run_gate "$(payload "$r" 'git commit --no-verify -m x')"
-  [ "$status" -eq 2 ]
-  [[ "$output" == *"no-verify"* ]]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [[ "$ctx" == *"no-verify"* ]]
 }
 
-@test "installed hooks but -n short flag: git commit -> block" {
+@test "installed hooks but -n short flag: git commit -> advisory allow" {
   local r; r="$(new_repo installed)"
   run_gate "$(payload "$r" 'git commit -n -m x')"
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [ -n "$ctx" ]
 }
 
-@test "installed hooks but --no-verify: git push -> block" {
+@test "installed hooks but --no-verify: git push -> advisory allow" {
   local r; r="$(new_repo installed)"
   run_gate "$(payload "$r" 'git push --no-verify origin main')"
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [ -n "$ctx" ]
+}
+
+# --- false-positive regression: rg -n in piped command ---------------------
+# `git commit -m x && rg -n '^- [ ] T014' file`: the -n belongs to rg, not to
+# git commit. The hook must emit an advisory (missing hook) but must NOT mention
+# --no-verify in the advisory text.
+
+@test "git commit && rg -n: advisory fires for missing hook, NOT for no-verify" {
+  local r; r="$(new_repo config)"
+  run_gate "$(payload "$r" "git commit -m x && rg -n '^- [ ] T014' file")"
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  # Advisory should mention missing hook, not --no-verify
+  [[ "$ctx" == *"pre-commit hook is not installed"* ]]
+  [[ "$ctx" != *"no-verify"* ]]
 }
 
 # --- not a commit/push git command -> allow --------------------------------
@@ -176,7 +206,7 @@ run_gate() {
 @test "external core.hooksPath (corporate wrapper) -> allow (fail open)" {
   # When core.hooksPath points outside the repo, a centralized hooks manager
   # owns the hooks; pre-commit's per-repo install does not apply normally and we
-  # must not block. config present + missing local hook would otherwise block.
+  # must not block. config present + missing local hook would otherwise advise.
   local r ext; r="$(new_repo config)"
   ext="$(mktemp -d "${BATS_TEST_TMPDIR}/exthooks.XXXXXX")"
   git -C "$r" config core.hooksPath "$ext"
@@ -184,10 +214,12 @@ run_gate() {
   [ "$status" -eq 0 ]
 }
 
-@test "string-form tool_input is handled (config, missing hook -> block)" {
+@test "string-form tool_input is handled (config, missing hook -> advisory allow)" {
   local r; r="$(new_repo config)"
   run_gate "$(jq -cn --arg cwd "$r" --arg cmd 'git commit -m x' '{cwd:$cwd, tool_input:$cmd}')"
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [ -n "$ctx" ]
 }
 
 @test "empty stdin -> allow (exit 0)" {
@@ -198,4 +230,41 @@ run_gate() {
 @test "non-JSON stdin -> allow (exit 0)" {
   run_gate "not json at all {"
   [ "$status" -eq 0 ]
+}
+
+# --- issue #4: -C inside a commit message -> must NOT fail-open --------------
+# A literal ' -C ' inside the -m value should not trigger the redirect guard.
+
+@test "-C inside commit message -> advisory for missing hook, not fail-open (issue #4)" {
+  local r; r="$(new_repo config)"
+  run_gate "$(payload "$r" "git commit -m 'change dir with -C flag'")"
+  [ "$status" -eq 0 ]
+  # Must advise about the missing hook, not silently fail-open.
+  [ "$decision" = "allow" ]
+  [[ "$ctx" == *"not installed"* ]]
+}
+
+@test "--git-dir inside commit message -> advisory, not fail-open (issue #4)" {
+  local r; r="$(new_repo config)"
+  run_gate "$(payload "$r" "git commit -m 'use --git-dir option'")"
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [[ "$ctx" == *"not installed"* ]]
+}
+
+# --- issue #5: --no-verify / -n only in commit message -> no false positive --
+
+@test "--no-verify only in commit message -> silent (issue #5)" {
+  local r; r="$(new_repo installed)"
+  run_gate "$(payload "$r" "git commit -m 'add --no-verify support'")"
+  [ "$status" -eq 0 ]
+  # hooks are installed, --no-verify is only in the message -> completely silent
+  [ -z "$output" ]
+}
+
+@test "-n only in commit message -> silent (issue #5)" {
+  local r; r="$(new_repo installed)"
+  run_gate "$(payload "$r" "git commit -m 'use -n for dry run'")"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
 }

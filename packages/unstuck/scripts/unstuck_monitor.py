@@ -8,8 +8,8 @@ string -- Codex ignores the hooks.json "args" field):
            Tracks re-edits and content flip-flops of source files.
   bash     PostToolUse Bash. Tracks per-command failure streaks; a passing
            test runner or git commit fully resets state.
-  gate     PreToolUse Edit|Write|MultiEdit. After the third alert, denies
-           source-file edits until released.
+  gate     PreToolUse Edit|Write|MultiEdit. After the third alert, emits an
+           advisory once per stuck episode (edit still proceeds).
   release  Claude PreToolUse Skill / Codex UserPromptSubmit. Invoking the
            unstuck or diagnose skill lifts the gate.
 
@@ -19,7 +19,8 @@ flip-flop). Any green test run or commit zeroes everything, so healthy
 TDD/refactor churn never fires.
 
 Escalation ladder: alert 1 = advisory nudge; alert 2 = directive with the
-unstuck workflow inlined; alert 3 = hard gate on source-file edits.
+unstuck workflow inlined; alert 3 = advisory suggesting the agent step back
+and change approach (edit still proceeds; not a hard gate).
 Escape hatch: UNSTUCK_GATE_OFF=1.
 
 Never blocks on errors: malformed input, missing git, or corrupt state all
@@ -82,6 +83,7 @@ def fresh_state():
         "fire_count": 0,
         "last_fired": 0,
         "gated": False,
+        "gate_notified": False,
     }
 
 
@@ -248,41 +250,29 @@ def alert_message(st):
         return (
             "STUCK DETECTOR (second alert): " + evidence + ". Stop the "
             "current approach. Invoke the unstuck skill NOW, before any "
-            "further edits. " + WORKFLOW_INLINE + " Source-file edits will "
-            "be gated on the next alert."
+            "further edits. " + WORKFLOW_INLINE
         )
     return (
-        "STUCK DETECTOR (gate engaged): " + evidence + ". Source-file edits "
-        "are paused until the unstuck or diagnose skill is invoked, or a "
-        "test run passes, or a commit lands. " + WORKFLOW_INLINE
+        "STUCK DETECTOR (repeated alerts, no progress): " + evidence + ". "
+        "The agent appears stuck. This edit is proceeding, but continuing "
+        "the same approach is unlikely to help. Step back: invoke the "
+        "unstuck or diagnose skill, ask for help, or try a fundamentally "
+        "different approach. " + WORKFLOW_INLINE
     )
 
 
 GATE_REASON = (
-    "STUCK DETECTOR GATE: repeated alerts with no green test or commit "
-    "since. Source-file edits are paused. Invoke the unstuck skill (or "
-    "diagnose) to lift the gate, or produce a passing test run / commit. "
-    "Override for legitimate long grinds: set UNSTUCK_GATE_OFF=1."
+    "STUCK DETECTOR ADVISORY: repeated alerts with no green test or commit "
+    "since. This edit is proceeding, but the pattern strongly suggests the "
+    "agent is stuck. Invoke the unstuck skill (or diagnose) to challenge "
+    "the current approach, or produce a passing test run / commit. "
+    "Override to suppress this advisory: set UNSTUCK_GATE_OFF=1."
 )
 
 
 def emit_context(event, msg):
     json.dump(
         {"hookSpecificOutput": {"hookEventName": event, "additionalContext": msg}},
-        sys.stdout,
-    )
-    sys.stdout.write("\n")
-
-
-def emit_deny(reason):
-    json.dump(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "deny",
-                "permissionDecisionReason": reason,
-            }
-        },
         sys.stdout,
     )
     sys.stdout.write("\n")
@@ -389,7 +379,10 @@ def phase_gate(payload, st):
     if not st.get("gated") or os.environ.get("UNSTUCK_GATE_OFF") == "1":
         return False
     if any(tracked(p) for p in edited_files(payload) if p):
-        emit_deny(GATE_REASON)
+        if not st.get("gate_notified"):
+            emit_context("PreToolUse", GATE_REASON)
+            st["gate_notified"] = True
+            return True  # state is dirty; persist the notified flag
     return False
 
 
@@ -401,6 +394,7 @@ def phase_release(payload, st):
     text = text or str(payload.get("prompt") or "")
     if st.get("gated") and RELEASE_SKILLS_RE.search(text):
         st["gated"] = False
+        st["gate_notified"] = False
         return True
     return False
 

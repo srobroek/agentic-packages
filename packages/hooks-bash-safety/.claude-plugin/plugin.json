@@ -1,7 +1,7 @@
 {
   "name": "hooks-bash-safety",
-  "version": "1.2.0",
-  "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME, mkfs, dd to a device, sandbox-bypass), ask on curl|sh pipes, warn on sudo + destructive verbs. rm -rf allows project-local/temp cleanup silently and asks only on absolute/parent/variable targets. Matching is anchored to command position to avoid quoted-string false positives. Cross-tool (Claude + Codex).",
+  "version": "1.3.0",
+  "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, etc.) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive verbs warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups silent; unexpanded $var targets denied; ~/subpath and outside-tree paths warn (non-blocking); quoted bypass forms and flags-after-target denied. Matching anchored to command position. No \"ask\" ever emitted. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },
