@@ -390,7 +390,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Advises against AI authorship attribution in git commits (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers). Emits a non-blocking advisory (allow + additionalContext, exit 0) so the human stays the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not flagged. Cross-tool (Claude + Codex).",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "git",
@@ -401,7 +401,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, /dev/random, /dev/urandom, /dev/stdout, /dev/stdin) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive/disruptive verbs also warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups are silent; unexpanded $var targets are denied; ~/subpath, repo root/.git, and outside-tree paths warn (non-blocking). Quoted bypass forms (rm -rf \"/etc\") and flags-after-target (rm /path -rf) are denied. Matching is anchored to command position to avoid quoted-string false positives. No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "bash",
@@ -423,7 +423,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source — the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "chezmoi",
@@ -435,7 +435,7 @@
     {
       "name": "hooks-close-keywords",
       "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow + additionalContext carrying the corrected body) when a malformed comma-list close is detected. Cross-tool (Claude + Codex).",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "hooks",
         "git",
@@ -447,7 +447,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target — agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "git",
@@ -469,7 +469,7 @@
     {
       "name": "hooks-no-ff",
       "description": "Opinionated git policy hook: advise --no-ff on real git merge invocations so feature-branch history is preserved. Emits a non-blocking advisory (allow + additionalContext) when --no-ff is absent; silent on --abort / --continue / --quit / --ff-only / --squash. Cross-tool (Claude + Codex).",
-      "version": "1.2.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "git",
@@ -525,7 +525,7 @@
     {
       "name": "hooks-precommit-gate",
       "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory — the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "hooks",
         "git",
@@ -547,7 +547,7 @@
     {
       "name": "hooks-squash-merge",
       "description": "Opinionated git policy hook: advise an explicit merge strategy on gh pr merge. Emits a non-blocking advisory (allow + additionalContext) when no strategy flag is present; silent when --squash / -s / --merge / -m / --rebase / -r or --help is provided. Cross-tool (Claude + Codex).",
-      "version": "1.2.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "git",
@@ -1021,7 +1021,7 @@
     {
       "name": "secrets-scan",
       "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "security",
         "secrets",
@@ -1067,7 +1067,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "tags": [
         "bundle",
         "speckit"
@@ -1210,7 +1210,7 @@
     {
       "name": "unstuck",
       "description": "Escalate stalled debugging by challenging assumptions after the normal diagnosis loop has failed and the agent is going in circles. Ships an outcome-gated stuck detector (re-edit churn, failure streaks, flip-flops) with an escalating nudge/directive/edit-gate ladder on both runtimes.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "skill",
         "debugging",
