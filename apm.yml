@@ -640,7 +640,7 @@ marketplace:
         - lifecycle
     - name: project-setup
       source: srobroek/project-setup
-      ref: project-setup-v0.5.3
+      ref: project-setup-v0.5.4
       category: project-lifecycle
       tags:
         - skill

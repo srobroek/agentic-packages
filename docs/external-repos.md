@@ -7,7 +7,7 @@ Unlike local packages, these are **fetched from their source repo on install** r
 <!-- BEGIN:external-repos -->
 | Plugin | Category | Pinned ref | Tags |
 | --- | --- | --- | --- |
-| [`project-setup`](https://github.com/srobroek/project-setup) | project-lifecycle | `project-setup-v0.5.3` | `skill`, `lifecycle`, `bootstrap` |
+| [`project-setup`](https://github.com/srobroek/project-setup) | project-lifecycle | `project-setup-v0.5.4` | `skill`, `lifecycle`, `bootstrap` |
 | [`vibe-hero`](https://github.com/srobroek/vibe-hero) | onboarding | `v0.2.0` | `mcp`, `steering`, `onboarding`, `learning` |
 <!-- END:external-repos -->
 
