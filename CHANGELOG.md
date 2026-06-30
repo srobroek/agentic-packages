@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.1.0...srobroek-agentic--v4.2.0) (2026-06-30)
+
+
+### Features
+
+* **goal-writer:** emit a self-sufficient /goal block, always save the doc ([#442](https://github.com/srobroek/agentic-packages/issues/442)) ([a6f6b44](https://github.com/srobroek/agentic-packages/commit/a6f6b44c609ae03677a2f0033c2b8677e7aeec70))
+
 ## [4.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.0.2...srobroek-agentic--v4.1.0) (2026-06-30)
 
 
