@@ -23,3 +23,20 @@ initial version instead of bloating runtime instruction files.
 
 Use Astro for marketing or content docs, VitePress for technical docs, and
 Storybook for shared UI or design systems.
+
+## Shipped Docs Describe Current Behavior
+
+When a project's documentation site ships as part of the product (an Astro,
+Starlight, VitePress, or similar released docs artifact), write every page to
+describe actual current behavior only.
+
+Do not document upcoming, planned, or "coming soon" features in shipped docs --
+not even in a marked callout or aside, and not in future tense. Shipped docs are
+a released artifact, not planning notes: a future-feature section is an
+unkeepable promise to users, it rots when scope slips, and doc-sample test gates
+assert docs against the current build, so future-behavior samples either lie or
+break CI.
+
+Document an unshipped feature as current behavior and land that doc in the same
+PR as its implementation, never ahead of it. Capture upcoming behavior in
+spec or plan artifacts, not the docs site.
