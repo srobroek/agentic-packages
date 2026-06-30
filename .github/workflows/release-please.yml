@@ -14,7 +14,7 @@ name: Release Please
 # artifacts, so this was a no-op; #401 was the first release that carried them and
 # the first to surface the drift, once the PAT below made the PR checks actually run.)
 #
-# TOKEN: the release PR is authored with RELEASE_PLEASE_PAT_AGENTIC_PACKAGES (a fine-grained PAT),
+# TOKEN: the release PR is authored with PAT_RELEASE_AGENTIC_PACKAGES (a fine-grained PAT),
 # NOT the default GITHUB_TOKEN. GitHub deliberately does not trigger workflows from
 # commits made by GITHUB_TOKEN, so the required PR checks (check-artifacts,
 # tests-gate) would complete as `action_required` 0s no-ops and the release PR would
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PLEASE_PAT_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
 
       - name: Run release-please
         id: release
@@ -51,7 +51,7 @@ jobs:
           # Fine-grained PAT so the release PR's commits trigger the required PR
           # checks (a GITHUB_TOKEN-authored commit does not). Falls back to
           # GITHUB_TOKEN if the secret is unset -- see the header note.
-          token: ${{ secrets.RELEASE_PLEASE_PAT_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
