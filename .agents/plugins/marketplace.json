@@ -1041,8 +1041,8 @@
       "source": {
         "source": "url",
         "url": "srobroek/project-setup",
-        "ref": "project-setup-v0.5.1",
-        "sha": "d9a7fff227a811caee722d85aed8aca701dd026f"
+        "ref": "project-setup-v0.5.2",
+        "sha": "c7c1368986cf039532709eb63fb3fc7d1c8f411f"
       },
       "policy": {
         "installation": "AVAILABLE",
