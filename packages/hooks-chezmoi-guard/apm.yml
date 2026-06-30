@@ -1,11 +1,11 @@
 name: hooks-chezmoi-guard
-version: 1.3.0
+version: 2.0.0
 description: >-
   PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact
   membership in `chezmoi managed`, 60s cache). Emits permissionDecision:"allow"
   + additionalContext steering changes to the chezmoi source — the operation
-  proceeds. Read-only references and unmanaged paths are silent.
-  Cross-tool (Claude + Codex).
+  proceeds. Read-only references and unmanaged paths are silent. Cross-tool
+  (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions

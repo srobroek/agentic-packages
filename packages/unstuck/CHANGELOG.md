@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/unstuck--v1.1.0...unstuck--v1.1.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **hooks:** rework PreToolUse guards to never stall auto mode ([#432](https://github.com/srobroek/agentic-packages/issues/432)) ([e00ebb7](https://github.com/srobroek/agentic-packages/commit/e00ebb723fd8e00031fdf28c02ca6b846053d652))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/unstuck-v1.0.0...unstuck--v1.1.0) (2026-06-27)
 
 

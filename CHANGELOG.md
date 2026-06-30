@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.0.1...srobroek-agentic--v4.0.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **hooks:** rework PreToolUse guards to never stall auto mode ([#432](https://github.com/srobroek/agentic-packages/issues/432)) ([e00ebb7](https://github.com/srobroek/agentic-packages/commit/e00ebb723fd8e00031fdf28c02ca6b846053d652))
+
 ## [4.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.0.0...srobroek-agentic--v4.0.1) (2026-06-29)
 
 

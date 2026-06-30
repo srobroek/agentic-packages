@@ -1,5 +1,5 @@
 name: unstuck
-version: 1.1.0
+version: 1.1.1
 description: >-
   Escalate stalled debugging by challenging assumptions after the normal
   diagnosis loop has failed and the agent is going in circles. Ships an
