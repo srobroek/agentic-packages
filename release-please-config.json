@@ -440,6 +440,18 @@
         }
       ]
     },
+    "packages/goal-writer": {
+      "release-type": "simple",
+      "component": "goal-writer",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/governance": {
       "release-type": "simple",
       "component": "governance",

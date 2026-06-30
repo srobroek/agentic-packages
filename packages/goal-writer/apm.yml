@@ -1,0 +1,17 @@
+name: goal-writer
+version: 0.1.0
+description: >-
+  Turn a vague goal prompt into a structured, actionable goal -- with outcomes,
+  concrete results, measurable KPIs, validation, and verifiable exit conditions
+  -- then emit a completion-condition line for the /goal command plus a saved
+  context doc.
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto
+category: planning-product
+tags:
+  - skill
+  - planning
+  - goals

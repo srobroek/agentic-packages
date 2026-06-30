@@ -24,6 +24,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `explore` | Lightweight read-only codebase orientation: file discovery, path tracing, and "where is X" lookups. For structured graph queries, use codebase-memory. |
 | `find-tools` | Discover and vet reusable skills, agents, MCP servers, connectors, and APM packages. Use when the user asks to find a capability, compare tools, fill a marketplace gap, evaluate an external package, or decide whether to adopt, wrap, fork, reject, or build. |
 | `go-quality` | Run Go format, lint, and test checks with the project toolchain. |
+| `goal-writer` | Turn a vague goal prompt into a structured, actionable goal -- with outcomes, concrete results, measurable KPIs, validation, and verifiable exit conditions -- then emit a completion-condition line for the /goal command plus a saved context doc. |
 | `handover` | Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. |
 | `headroom` | Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats. |
 | `optimize-steering` | Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7). |

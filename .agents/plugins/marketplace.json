@@ -389,6 +389,18 @@
       "category": "languages"
     },
     {
+      "name": "goal-writer",
+      "source": {
+        "source": "local",
+        "path": "./packages/goal-writer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "planning-product"
+    },
+    {
       "name": "governance",
       "source": {
         "source": "local",

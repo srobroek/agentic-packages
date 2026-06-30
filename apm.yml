@@ -274,6 +274,13 @@ marketplace:
         - skill
         - languages
         - go
+    - name: goal-writer
+      source: ./packages/goal-writer
+      category: planning-product
+      tags:
+        - skill
+        - planning
+        - goals
     - name: governance
       source: ./packages/governance
       category: governance
