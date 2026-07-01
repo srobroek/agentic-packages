@@ -660,6 +660,15 @@ marketplace:
         - skill
         - lifecycle
         - git
+    - name: release-please
+      source: ./packages/release-please
+      category: project-lifecycle
+      tags:
+        - skill
+        - hooks
+        - release
+        - release-please
+        - ci-cd
     - name: research
       source: ./packages/research
       category: code-intelligence

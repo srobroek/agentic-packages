@@ -1124,6 +1124,18 @@
         }
       ]
     },
+    "packages/release-please": {
+      "release-type": "simple",
+      "component": "release-please",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/research": {
       "release-type": "simple",
       "component": "research",
