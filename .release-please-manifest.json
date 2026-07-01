@@ -89,6 +89,7 @@
   "packages/project-lifecycle": "1.1.1",
   "packages/python-quality": "1.1.0",
   "packages/quick-commit": "1.1.0",
+  "packages/release-please": "0.1.0",
   "packages/research": "1.1.0",
   "packages/resume-cv": "1.1.0",
   "packages/resume-session": "1.2.0",
