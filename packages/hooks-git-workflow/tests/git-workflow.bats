@@ -158,6 +158,35 @@ tracker_bash() {
   [ "$(jq -r '.last_edit' "$STATE")" != "0" ]
 }
 
+@test "tracker: a docs-only Edit does NOT stamp last_edit (no false gate)" {
+  printf '{"last_edit":0,"last_test":0,"test_passed":false}\n' > "$STATE"
+  jq -cn '{tool_name:"Edit", tool_input:{file_path:"README.md"}}' | (cd "$REPO" && /bin/bash "$TRACKER")
+  [ "$(jq -r '.last_edit' "$STATE")" == "0" ]
+}
+
+@test "tracker: a config-only Edit (.toml/.json/.yml) does NOT stamp last_edit" {
+  for p in pyproject.toml config.json ci.yml notes.txt; do
+    printf '{"last_edit":0,"last_test":0,"test_passed":false}\n' > "$STATE"
+    jq -cn --arg p "$p" '{tool_name:"Edit", tool_input:{file_path:$p}}' | (cd "$REPO" && /bin/bash "$TRACKER")
+    [ "$(jq -r '.last_edit' "$STATE")" == "0" ]
+  done
+}
+
+@test "tracker: an apply_patch touching a code file stamps last_edit" {
+  printf '{"last_edit":0,"last_test":0,"test_passed":false}\n' > "$STATE"
+  jq -cn '{tool_name:"apply_patch", tool_input:{input:"*** Update File: src/main.rs\n@@\n-old\n+new\n"}}' | (cd "$REPO" && /bin/bash "$TRACKER")
+  [ "$(jq -r '.last_edit' "$STATE")" != "0" ]
+}
+
+@test "gate: docs-only edit then push is ALLOWED (regression: no false block)" {
+  # A docs edit must not arm the gate. After a docs-only Edit, last_edit stays 0,
+  # so the gate's "no edits recorded -> allow" path fires and the push proceeds.
+  printf '{"last_edit":0,"last_test":0,"test_passed":false}\n' > "$STATE"
+  jq -cn '{tool_name:"Edit", tool_input:{file_path:"docs/guide.md"}}' | (cd "$REPO" && /bin/bash "$TRACKER")
+  out="$(jq -cn --arg d "$REPO" '{tool_input:{command:"git push"}, cwd:$d}' | /bin/bash "$GATE" 2>&1)"
+  [ -z "$out" ]   # allow == silent exit 0, no deny JSON
+}
+
 # --- uncommitted-warn -------------------------------------------------------
 
 @test "warn: dirty tracked tree -> systemMessage" {

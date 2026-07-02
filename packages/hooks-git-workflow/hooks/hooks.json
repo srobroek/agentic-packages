@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/pre-commit-test-gate.sh",
-            "if": "Bash(git commit*)"
+            "command": "${PLUGIN_ROOT}/scripts/pre-push-test-gate.sh"
           }
         ]
       }
@@ -28,7 +27,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh"
+            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh",
+            "async": true
           }
         ]
       },
@@ -37,7 +37,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh"
+            "command": "${PLUGIN_ROOT}/scripts/test-state-tracker.sh",
+            "async": true
           }
         ]
       }
