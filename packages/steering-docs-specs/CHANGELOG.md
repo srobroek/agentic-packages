@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs-v1.0.0...steering-docs-specs--v1.1.0) (2026-07-02)
+
+
+### Features
+
+* **steering-docs-specs:** shipped docs describe current behavior only ([#454](https://github.com/srobroek/agentic-packages/issues/454)) ([887b5b5](https://github.com/srobroek/agentic-packages/commit/887b5b5cb2d59982e170115278e1e058030ee898))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs-v0.1.1...steering-docs-specs-v1.0.0) (2026-06-26)
 
 
