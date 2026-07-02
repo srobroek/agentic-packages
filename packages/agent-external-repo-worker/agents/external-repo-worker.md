@@ -29,8 +29,19 @@ that are outside the caller project's current repo root.
 
 ## Working Directory
 
-- Default checkout root: `/tmp/agentic/external-repos/<repo-name>`.
-- Use a parent-provided isolated path when supplied.
+- If the parent supplied an explicit checkout path, use exactly that (the parent
+  owns collision-avoidance in that case — e.g. it deliberately wants one shared,
+  reused checkout for a single agent).
+- Otherwise create a **unique per-invocation** checkout directory —
+  `/tmp/agentic/external-repos/<repo-name>-<unique-suffix>` (derive the suffix
+  from your session/agent id, or `mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`).
+  Do **not** default to the bare, shared `/tmp/agentic/external-repos/<repo-name>`
+  path: other agents may be working in the same external repo at the same time,
+  and a shared checkout means interleaved edits, index races, and corrupted
+  state. Isolation-by-different-repo does not remove the need to isolate *within*
+  that repo.
+- Reuse an existing checkout only when the parent explicitly pointed you at one;
+  never silently adopt another invocation's directory.
 - Never clone or create a nested git repo inside the caller project's directory
   tree. Nested repos can break tools that rely on `git rev-parse --show-toplevel`.
 
@@ -57,7 +68,7 @@ that are outside the caller project's current repo root.
 
 ## Rules
 
-- Preserve unrelated local changes in reused checkouts.
+- Preserve unrelated local changes in a parent-provided reused checkout.
 - Do not import caller-project conventions unless the parent explicitly asks.
 - If the repo's own instructions conflict with the parent task, stop and report
   the conflict.

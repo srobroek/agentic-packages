@@ -34,6 +34,14 @@ You are not alone in the codebase. Do not revert, overwrite, or clean up
 changes outside your assigned scope. If surrounding changes affect your task,
 adapt and note the interaction.
 
+Because you edit the caller's tree in place, you and any sibling `coder` share
+one working tree. That is safe only when direct-edit coders run **one at a time**
+or over strictly disjoint file scopes — the main thread is responsible for
+ensuring that. If work should run **concurrently**, it must go to
+`parallel-coder` (each in its own isolated worktree) instead; do not assume the
+main thread serialized correctly, and flag any sign that a sibling is editing
+your files.
+
 Prefer existing project patterns and local helper APIs. Keep changes minimal
 and behavioral. Add or update focused tests when the task changes behavior
 or fixes a bug.

@@ -18,10 +18,25 @@ Choose by what the subagent does to the filesystem:
   and do **not** set an `isolation` field. "Otherwise" covers three cases:
   1. read-only (the subagent only inspects, never writes);
   2. it operates on a DIFFERENT repository (e.g. a clone under /tmp), so a
-     worktree of the current repo is irrelevant;
+     worktree of *the current repo* is irrelevant;
   3. it WRITES but must edit the parent working tree **directly** — its changes
      are meant to land in your current checkout, so isolating them into a
      throwaway worktree would strip the result.
+
+`[iso:skip]` only means "the current-repo worktree mechanism does not apply." It
+does **not** mean "no isolation is needed." This guard sees only one spawn at a
+time; it cannot know how many siblings you are launching concurrently. **You**
+must guarantee that concurrent writers never share a working tree:
+
+- Spawning several **direct-edit** writers (`coder`, or anything editing the
+  parent tree in place) at once → they collide on your checkout. Run them
+  serially, give each a disjoint file scope, or use `parallel-coder` (isolated
+  worktrees) instead.
+- Spawning several **different-repo** writers at once → each must get its **own
+  unique checkout path**, not a shared per-repo directory. Pass an explicit
+  isolated path per spawn (e.g. `external-repo-worker`, which defaults to a
+  unique path per invocation). Two writers in one external checkout corrupt each
+  other exactly like two in one worktree would.
 
 Do not add an `isolation` field set to anything other than `"worktree"` — the
 tool schema has no `"none"` value, so "no isolation" is expressed only by the

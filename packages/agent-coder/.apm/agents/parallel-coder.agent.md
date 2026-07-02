@@ -53,11 +53,17 @@ then query-docs) for library API documentation.
    your worktree and get it green before committing. If you cannot get it green,
    commit anyway so the work is reviewable, and flag the failure prominently in
    your report.
-2. **On Codex only:** you have no runtime-provided worktree. Before your first
-   commit, create a dedicated branch off the current HEAD
-   (`git switch -c coder/<short-task-slug>`) so your commits land on a branch the
-   main thread can review and merge — never commit onto the caller's active
-   branch.
+2. **On Codex only:** you have no runtime-provided worktree, so you must create
+   your own isolation before writing — you are likely one of several parallel
+   implementers and must not share the caller's single working tree. Create a
+   dedicated **linked worktree** off the current HEAD and work inside it:
+   `git worktree add -b coder/<short-task-slug> ../.pc-worktrees/<short-task-slug>`
+   (a unique per-agent path — never a shared directory), then `cd` into it and do
+   all edits/commits there. Report that worktree path so the main thread can
+   remove it after merging. If worktrees are unavailable, fall back to a
+   dedicated branch (`git switch -c coder/<short-task-slug>`) **only when you are
+   the sole implementer** — two Codex coders doing `git switch` on one checkout
+   will clobber each other. Never commit onto the caller's active branch.
 3. Stage and commit your work following the repository's commit conventions
    (match the surrounding history; no AI attribution or tool self-references in
    the message). Group logically separable changes into separate commits. Write
