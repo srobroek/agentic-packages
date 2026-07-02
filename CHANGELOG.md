@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.4.0...srobroek-agentic--v5.0.0) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* the `unstuck` package and the `debugging` bundle are removed. Anyone installing either must drop it; install agent-adversarial-challenger directly for the critic agent.
+
+### Features
+
+* retire the unstuck package and the debugging bundle ([#453](https://github.com/srobroek/agentic-packages/issues/453)) ([9c2c2eb](https://github.com/srobroek/agentic-packages/commit/9c2c2eb7a106158d1ccbb31b58e64c00ce4e872d))
+
 ## [4.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.3.0...srobroek-agentic--v4.4.0) (2026-07-02)
 
 
