@@ -4,13 +4,16 @@
 #
 # Portability floor: bash 3.2.57 + BSD sed/grep (stock macOS). These tests use
 # only core bats (run / status / output) — no bats-support / bats-assert — so
-# they run anywhere bats + jq are installed.
+# they run anywhere bats + jq + git are installed.
 #
 # The hook reads a JSON event on stdin and emits a Claude PreToolUse decision on
 # stdout. It fires only for tool_name == "Agent":
-#   * isolation key present     -> allow by omission (no output, exit 0)
-#   * description has [iso:skip] -> allow + updatedInput with sentinel stripped
-#   * otherwise                  -> deny with an instruction to re-issue
+#   * isolation key present       -> allow by omission (no output, exit 0)
+#   * [iso:readonly]              -> allow + updatedInput, sentinel stripped
+#   * [iso:extern]                -> allow + updatedInput, sentinel stripped
+#   * [iso:direct] in a worktree  -> allow + updatedInput, sentinel stripped
+#   * [iso:direct] on primary     -> deny (move to a worktree first)
+#   * otherwise                   -> deny (undeclared spawn)
 # Non-Agent tools and empty payloads pass through (no output, exit 0).
 
 setup() {
@@ -20,6 +23,18 @@ setup() {
     return 1
   }
   command -v jq >/dev/null 2>&1 || skip "jq not available"
+  command -v git >/dev/null 2>&1 || skip "git not available"
+
+  # Build a real primary checkout + a linked worktree so the [iso:direct] gate
+  # has genuine git state to read via the payload's cwd. BATS_TEST_TMPDIR is
+  # per-test and auto-cleaned.
+  PRIMARY="${BATS_TEST_TMPDIR}/primary"
+  WT="${BATS_TEST_TMPDIR}/wt"
+  git init -q "$PRIMARY"
+  git -C "$PRIMARY" config user.email t@t.t
+  git -C "$PRIMARY" config user.name t
+  git -C "$PRIMARY" commit -q --allow-empty -m init
+  git -C "$PRIMARY" worktree add -q "$WT" -b feature
 }
 
 # decision_of <json-payload>
@@ -33,6 +48,11 @@ decision_of() {
   else
     printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision'
   fi
+}
+
+# field_of <json-payload> <jq-filter>
+field_of() {
+  printf '%s' "$1" | "$GUARD" | jq -r "$2"
 }
 
 # --- pass-through cases -----------------------------------------------------
@@ -78,46 +98,109 @@ decision_of() {
   [ "$output" = "deny" ]
 }
 
-@test "deny reason names both the worktree and [iso:skip] options" {
+@test "deny reason names every option (worktree + all three tokens)" {
   out="$(printf '%s' '{"tool_name":"Agent","tool_input":{"description":"d","prompt":"x"}}' | "$GUARD")"
   reason="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecisionReason')"
   printf '%s' "$reason" | grep -q '"isolation":"worktree"'
-  printf '%s' "$reason" | grep -qF '[iso:skip]'
+  printf '%s' "$reason" | grep -qF '[iso:readonly]'
+  printf '%s' "$reason" | grep -qF '[iso:extern]'
+  printf '%s' "$reason" | grep -qF '[iso:direct]'
 }
 
-# --- sentinel opt-out -> allow + strip -------------------------------------
+# --- [iso:readonly] / [iso:extern] -> allow + strip ------------------------
 
-@test "Agent with [iso:skip] sentinel is allowed" {
-  run decision_of '{"tool_name":"Agent","tool_input":{"description":"read files [iso:skip]","prompt":"x"}}'
-  [ "$status" -eq 0 ]
+@test "[iso:readonly] is allowed and stripped" {
+  p='{"tool_name":"Agent","tool_input":{"description":"inspect things [iso:readonly]","prompt":"x"}}'
+  run decision_of "$p"
+  [ "$output" = "allow" ]
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.description')" = "inspect things" ]
+}
+
+@test "[iso:extern] is allowed and stripped" {
+  p='{"tool_name":"Agent","tool_input":{"description":"clone and build [iso:extern]","prompt":"x"}}'
+  run decision_of "$p"
+  [ "$output" = "allow" ]
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.description')" = "clone and build" ]
+}
+
+@test "readonly/extern allow regardless of cwd (primary checkout is fine)" {
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"x [iso:readonly]","prompt":"p"}}' "$PRIMARY")"
+  run decision_of "$p"
   [ "$output" = "allow" ]
 }
 
-@test "sentinel is stripped from the description via updatedInput" {
-  out="$(printf '%s' '{"tool_name":"Agent","tool_input":{"description":"read files [iso:skip]","prompt":"x","subagent_type":"general-purpose"}}' | "$GUARD")"
-  desc="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.updatedInput.description')"
-  [ "$desc" = "read files" ]
+@test "sentinel mid-description is stripped cleanly" {
+  p='{"tool_name":"Agent","tool_input":{"description":"before [iso:extern] after","prompt":"x"}}'
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.description')" = "before after" ]
 }
 
 @test "updatedInput preserves the other tool_input fields" {
-  out="$(printf '%s' '{"tool_name":"Agent","tool_input":{"description":"x [iso:skip]","prompt":"PROMPT","subagent_type":"coder","model":"haiku"}}' | "$GUARD")"
-  [ "$(printf '%s' "$out" | jq -r '.hookSpecificOutput.updatedInput.prompt')" = "PROMPT" ]
-  [ "$(printf '%s' "$out" | jq -r '.hookSpecificOutput.updatedInput.subagent_type')" = "coder" ]
-  [ "$(printf '%s' "$out" | jq -r '.hookSpecificOutput.updatedInput.model')" = "haiku" ]
+  p='{"tool_name":"Agent","tool_input":{"description":"x [iso:readonly]","prompt":"PROMPT","subagent_type":"coder","model":"haiku"}}'
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.prompt')" = "PROMPT" ]
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.subagent_type')" = "coder" ]
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.model')" = "haiku" ]
 }
 
-@test "the stripped description no longer triggers a deny (no re-fire loop)" {
-  # Feed the guard's own stripped output back in as a fresh spawn. Because the
-  # sentinel is gone AND no isolation was added, this WOULD deny — which is why
-  # the runtime must NOT re-fire PreToolUse on updatedInput. This test documents
-  # that the stripped form is a terminal state the guard treats as undeclared;
-  # the no-re-fire guarantee is the runtime's (verified separately end-to-end).
-  run decision_of '{"tool_name":"Agent","tool_input":{"description":"read files","prompt":"x"}}'
+# --- [iso:direct] gate: depends on whether cwd is a worktree ---------------
+
+@test "[iso:direct] from a linked worktree is allowed and stripped" {
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit the tree [iso:direct]","prompt":"x"}}' "$WT")"
+  run decision_of "$p"
+  [ "$output" = "allow" ]
+  [ "$(field_of "$p" '.hookSpecificOutput.updatedInput.description')" = "edit the tree" ]
+}
+
+@test "[iso:direct] from a worktree SUBDIR is allowed (relative git-common-dir resolved)" {
+  mkdir -p "$WT/nested/deep"
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit [iso:direct]","prompt":"x"}}' "$WT/nested/deep")"
+  run decision_of "$p"
+  [ "$output" = "allow" ]
+}
+
+@test "[iso:direct] on the PRIMARY checkout is denied" {
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit the tree [iso:direct]","prompt":"x"}}' "$PRIMARY")"
+  run decision_of "$p"
   [ "$output" = "deny" ]
 }
 
-@test "sentinel mid-description is stripped cleanly" {
-  out="$(printf '%s' '{"tool_name":"Agent","tool_input":{"description":"before [iso:skip] after","prompt":"x"}}' | "$GUARD")"
-  desc="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.updatedInput.description')"
-  [ "$desc" = "before after" ]
+@test "[iso:direct] on a primary-checkout SUBDIR is also denied (not misread as a worktree)" {
+  mkdir -p "$PRIMARY/sub/dir"
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit [iso:direct]","prompt":"x"}}' "$PRIMARY/sub/dir")"
+  run decision_of "$p"
+  [ "$output" = "deny" ]
+}
+
+@test "[iso:direct] deny reason tells the caller to move into a worktree" {
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit [iso:direct]","prompt":"x"}}' "$PRIMARY")"
+  reason="$(printf '%s' "$p" | "$GUARD" | jq -r '.hookSpecificOutput.permissionDecisionReason')"
+  printf '%s' "$reason" | grep -qi 'worktree'
+  printf '%s' "$reason" | grep -qF '[iso:direct]'
+}
+
+@test "[iso:direct] outside any git repo fails open (allowed)" {
+  # A non-git cwd cannot be classified as 'primary'; the gate must not block a
+  # spawn it cannot reason about.
+  p="$(printf '{"tool_name":"Agent","cwd":"%s","tool_input":{"description":"edit [iso:direct]","prompt":"x"}}' "$BATS_TEST_TMPDIR")"
+  # BATS_TEST_TMPDIR itself is not a git repo (the repos are subdirs of it).
+  run decision_of "$p"
+  [ "$output" = "allow" ]
+}
+
+@test "[iso:direct] with no cwd falls back to PWD without crashing" {
+  # No cwd key: the guard falls back to $PWD. We only assert it produces a
+  # valid decision (allow or deny) and does not error.
+  run decision_of '{"tool_name":"Agent","tool_input":{"description":"edit [iso:direct]","prompt":"x"}}'
+  [ "$status" -eq 0 ]
+  [ "$output" = "allow" ] || [ "$output" = "deny" ]
+}
+
+# --- no re-fire loop --------------------------------------------------------
+
+@test "a stripped description (token gone) denies as undeclared (documents no-re-fire need)" {
+  # Feed a stripped form back in as a fresh spawn. With the sentinel gone and no
+  # isolation added, this WOULD deny — which is why the runtime must NOT re-fire
+  # PreToolUse on updatedInput. The no-re-fire guarantee is the runtime's
+  # (verified separately end-to-end).
+  run decision_of '{"tool_name":"Agent","tool_input":{"description":"edit the tree","prompt":"x"}}'
+  [ "$output" = "deny" ]
 }

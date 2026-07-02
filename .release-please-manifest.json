@@ -50,7 +50,7 @@
   "packages/hooks-precommit-gate": "0.5.1",
   "packages/hooks-quality": "1.2.1",
   "packages/hooks-squash-merge": "2.0.0",
-  "packages/hooks-subagent-worktree": "0.4.0",
+  "packages/hooks-subagent-worktree": "0.5.0",
   "packages/hooks-tool-prefs": "1.1.1",
   "packages/hooks-worktree": "1.1.0",
   "packages/incident-response": "1.1.0",
