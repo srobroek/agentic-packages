@@ -8,6 +8,9 @@ targets:
   - claude
   - codex
 includes: auto
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/mcp-codebase-memory#>=1.0.0 <2.0.0
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
   check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
