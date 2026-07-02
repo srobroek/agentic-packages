@@ -1,9 +1,10 @@
 name: hooks-tool-prefs
 version: 1.1.1
 description: >-
-  Opinionated advisory hook: suggest preferred tools over deprecated ones (rg
-  over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just
-  over make). Advisory only, never blocks. Cross-tool (Claude + Codex).
+  Opinionated advisory hook: suggest project-default package managers, task
+  runners, and version managers (pnpm over npm/yarn, uv over pip/poetry/conda,
+  mise over nvm/pyenv/rbenv/asdf, just/task over make). Advisory only, never
+  blocks. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions

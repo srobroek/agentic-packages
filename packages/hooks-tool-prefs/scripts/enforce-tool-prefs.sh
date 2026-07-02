@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
-# Hook: PreToolUse:Bash — Suggest preferred tools over deprecated ones
-# Advisory only (additionalContext), does NOT block.
+# Hook: PreToolUse:Bash — Suggest preferred project-default tools (pnpm over
+# npm/yarn, uv over pip/poetry/conda, mise over nvm/pyenv/rbenv/asdf, just/task
+# over make). Advisory only (additionalContext), does NOT block.
+#
+# Scope: package managers, task runners, and version managers ONLY — the
+# rare, high-stakes, project-dependent commands where a wrong choice creates
+# real mess (e.g. npm install writing a conflicting lockfile in a pnpm repo).
+# CLI aesthetics (rg/fd/eza/bat) were deliberately removed: they have no
+# correctness impact, models follow static steering for them, and their
+# common substrings made this hook's expensive path fire on most commands.
 
 INPUT=$(cat)
 
@@ -9,9 +17,17 @@ INPUT=$(cat)
 # spawn on the hot path. SUPERSET filter on raw bytes — the command still has to
 # survive the structured matchers below — so it can never mask a real match.
 case "$INPUT" in
-  *grep*|*find*|*ls*|*cat*|*npm*|*yarn*|*pip*|*poetry*|*conda*|*make*|*nvm*|*pyenv*|*rbenv*|*asdf*) ;;
+  *npm*|*yarn*|*pip*|*poetry*|*conda*|*make*|*nvm*|*pyenv*|*rbenv*|*asdf*) ;;
   *) exit 0 ;;
 esac
+
+# Self-gate on the tool actually being Bash. The hooks.json matcher should
+# already scope us, but matcher/if-filter scoping has silently failed in this
+# repo before (see hooks-no-ff/hooks-squash-merge, which self-gate the same
+# way) and the Codex adapter may deliver other tools' payloads. A missing
+# tool_name (older payload shapes) is treated as Bash for back-compat.
+TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
+[ -n "$TOOL_NAME" ] && [ "$TOOL_NAME" != "Bash" ] && exit 0
 
 # tool_input may be an object ({command: "..."}) or a bare string. Use the
 # type-checked idiom so a string-form payload does not throw and bypass the
@@ -53,17 +69,6 @@ SEGMENTS=$(printf '%s\n' "$COMMAND" | awk -v sq="$SQ" '
 suggest_for() {
   local base="$1" segment="$2"
   case "$base" in
-    # CLI replacements
-    grep)   echo "Prefer rg (ripgrep) over grep for faster, more ergonomic search." ;;
-    find)   echo "Prefer fd over find for faster file discovery." ;;
-    ls)     echo "Prefer eza over ls for better output." ;;
-    cat)
-      # cat is fine for piping; only suggest bat for viewing
-      if ! echo "$COMMAND" | grep -qE '\|'; then
-        echo "Prefer bat over cat for syntax-highlighted viewing."
-      fi
-      ;;
-
     # Package managers
     npm)
       case "$(echo "$segment" | awk '{print $2}')" in

@@ -41,15 +41,24 @@ teardown() {
   [ -z "$output" ]
 }
 
-@test "plain cat (no pipeline) suggests bat" {
-  # cat used for viewing (no real pipe) -> suggest bat. NOTE: the cat-vs-pipe
-  # heuristic in the hook inspects the whole command for a literal `|` and is
-  # intentionally NOT quote-aware (a `|` inside a cat argument still suppresses
-  # the bat suggestion). That is a separate, pre-existing code path outside the
-  # quote-aware segment-splitter fix; this test only asserts the plain case.
-  run bash -c 'printf "%s" '\''{"tool_input":{"command":"cat file.txt"}}'\'' | bash "$1"' _ "$HOOK"
+@test "CLI tools (grep/find/ls/cat) produce no suggestion" {
+  # CLI aesthetics were removed from this hook (static steering owns them);
+  # only package managers, task runners, and version managers remain.
+  run bash -c 'printf "%s" '\''{"tool_input":{"command":"grep x f | find . -name y && ls -la; cat file.txt"}}'\'' | bash "$1"' _ "$HOOK"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"bat"* ]]
+  [ -z "$output" ]
+}
+
+@test "non-Bash tool_name is ignored even with a matching command" {
+  run bash -c 'printf "%s" '\''{"tool_name":"Grep","tool_input":{"command":"npm install"}}'\'' | bash "$1"' _ "$HOOK"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "explicit Bash tool_name still suggests" {
+  run bash -c 'printf "%s" '\''{"tool_name":"Bash","tool_input":{"command":"npm install"}}'\'' | bash "$1"' _ "$HOOK"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"pnpm install"* ]]
 }
 
 # --- 2. Malformed stdin: no jq error leak, exit 0 -------------------------
@@ -77,11 +86,11 @@ teardown() {
 # --- 3. String-form tool_input must not throw -----------------------------
 
 @test "string-form tool_input does not throw and still suggests" {
-  run bash -c 'printf "%s" '\''{"tool_input":"grep foo bar"}'\'' | bash "$1" 2>&1' _ "$HOOK"
+  run bash -c 'printf "%s" '\''{"tool_input":"pip install requests"}'\'' | bash "$1" 2>&1' _ "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" != *"Cannot index string"* ]]
   [[ "$output" != *"jq:"* ]]
-  [[ "$output" == *"rg"* ]]
+  [[ "$output" == *"uv"* ]]
 }
 
 @test "string-form tool_input with quoted metachar does not false-trigger" {
@@ -93,10 +102,10 @@ teardown() {
 # --- 4. Real chains still produce suggestions -----------------------------
 
 @test "real chain suggests for each segment" {
-  run bash -c 'printf "%s" '\''{"tool_input":{"command":"grep x file | npm install && make build"}}'\'' | bash "$1"' _ "$HOOK"
+  run bash -c 'printf "%s" '\''{"tool_input":{"command":"pip install x | npm install && make build"}}'\'' | bash "$1"' _ "$HOOK"
   [ "$status" -eq 0 ]
   ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext')"
-  [[ "$ctx" == *"rg"* ]]
+  [[ "$ctx" == *"uv"* ]]
   [[ "$ctx" == *"pnpm install"* ]]
   [[ "$ctx" == *"make"* ]]
 }
@@ -117,7 +126,7 @@ teardown() {
 }
 
 @test "output is always valid json when a suggestion fires" {
-  run bash -c 'printf "%s" '\''{"tool_input":{"command":"find . -name x"}}'\'' | bash "$1"' _ "$HOOK"
+  run bash -c 'printf "%s" '\''{"tool_input":{"command":"nvm use 20"}}'\'' | bash "$1"' _ "$HOOK"
   [ "$status" -eq 0 ]
   printf '%s' "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
 }
