@@ -3,7 +3,7 @@ name: coder
 description: >-
   Implementation subagent for bounded code changes, tests, refactors, and
   migrations. It edits the caller's working tree directly and does not commit —
-  the main thread commits its changes. Spawn it with the [iso:skip] token
+  the main thread commits its changes. Spawn it with the [iso:direct] token
   appended to the description (its result must land in your current checkout).
   Use when tasks have clear file/module ownership and the edits should appear in
   your tree. When you instead want the work isolated and handed back as a
