@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v1.1.0...hooks-package-investigate--v1.1.1) (2026-07-02)
+
+
+### Performance
+
+* **hooks:** cut PreToolUse:Bash hot-path cost with pre-jq bail + single-parse ([#450](https://github.com/srobroek/agentic-packages/issues/450)) ([58c1ce1](https://github.com/srobroek/agentic-packages/commit/58c1ce168e99ef1ac63427903c9180bf1ae916fe))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate-v1.0.1...hooks-package-investigate--v1.1.0) (2026-06-27)
 
 

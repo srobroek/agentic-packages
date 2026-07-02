@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.3.0...srobroek-agentic--v4.4.0) (2026-07-02)
+
+
+### Features
+
+* block git push on stale or failing unit tests ([#451](https://github.com/srobroek/agentic-packages/issues/451)) ([34041b8](https://github.com/srobroek/agentic-packages/commit/34041b8468c6d307ae8a5b074f9dc4942bf7d848))
+* parallel-coder agent + per-language LSP packages ([#449](https://github.com/srobroek/agentic-packages/issues/449)) ([112c80d](https://github.com/srobroek/agentic-packages/commit/112c80d900549c81b72c065ac0c5556f74263f3f))
+
 ## [4.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.2.0...srobroek-agentic--v4.3.0) (2026-07-01)
 
 

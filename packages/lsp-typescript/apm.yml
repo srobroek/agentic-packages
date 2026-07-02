@@ -1,5 +1,5 @@
 name: lsp-typescript
-version: 0.1.0
+version: 0.2.0
 description: >-
   TypeScript/JavaScript LSP server: registers typescript-language-server so
   agents get hover, diagnostics, go-to-definition, and references on TS/JS
@@ -19,12 +19,13 @@ dependencies:
   lsp:
     - name: typescript-language-server
       command: typescript-language-server
-      args: ["--stdio"]
+      args:
+        - '--stdio'
       extensionToLanguage:
-        ".ts": typescript
-        ".tsx": typescriptreact
-        ".js": javascript
-        ".jsx": javascriptreact
-        ".mjs": javascript
-        ".cjs": javascript
+        .ts: typescript
+        .tsx: typescriptreact
+        .js: javascript
+        .jsx: javascriptreact
+        .mjs: javascript
+        .cjs: javascript
       transport: stdio

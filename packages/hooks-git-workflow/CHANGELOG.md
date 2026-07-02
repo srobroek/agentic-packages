@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.1.0...hooks-git-workflow--v1.2.0) (2026-07-02)
+
+
+### Features
+
+* block git push on stale or failing unit tests ([#451](https://github.com/srobroek/agentic-packages/issues/451)) ([34041b8](https://github.com/srobroek/agentic-packages/commit/34041b8468c6d307ae8a5b074f9dc4942bf7d848))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow-v1.0.1...hooks-git-workflow--v1.1.0) (2026-06-27)
 
 

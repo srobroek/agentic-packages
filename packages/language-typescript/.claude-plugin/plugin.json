@@ -1,6 +1,6 @@
 {
   "name": "language-typescript",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
   "author": {
     "name": "Sjors Robroek"
