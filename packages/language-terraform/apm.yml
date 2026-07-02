@@ -15,4 +15,5 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/language-steering-terraform#main
+    - srobroek/agentic-packages/packages/lsp-terraform#main
     - wshobson/agents/plugins/deployment-strategies#main

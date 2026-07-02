@@ -16,4 +16,5 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/python-quality#^0.1.2
     - srobroek/agentic-packages/packages/language-steering-python#main
+    - srobroek/agentic-packages/packages/lsp-python#main
     - wshobson/agents/plugins/python-development#main

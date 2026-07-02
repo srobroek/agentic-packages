@@ -12,4 +12,5 @@ tags:
   - shell
 dependencies:
   apm:
+    - srobroek/agentic-packages/packages/lsp-shell#main
     - wshobson/agents/plugins/shell-scripting#main

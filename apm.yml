@@ -549,6 +549,42 @@ marketplace:
         - bundle
         - php
         - ruby
+    - name: lsp-go
+      source: ./packages/lsp-go
+      category: languages
+      tags:
+        - lsp
+        - go
+    - name: lsp-python
+      source: ./packages/lsp-python
+      category: languages
+      tags:
+        - lsp
+        - python
+    - name: lsp-rust
+      source: ./packages/lsp-rust
+      category: languages
+      tags:
+        - lsp
+        - rust
+    - name: lsp-shell
+      source: ./packages/lsp-shell
+      category: languages
+      tags:
+        - lsp
+        - shell
+    - name: lsp-terraform
+      source: ./packages/lsp-terraform
+      category: languages
+      tags:
+        - lsp
+        - terraform
+    - name: lsp-typescript
+      source: ./packages/lsp-typescript
+      category: languages
+      tags:
+        - lsp
+        - typescript
     - name: matt-skills
       source: ./packages/matt-skills
       category: planning-product
