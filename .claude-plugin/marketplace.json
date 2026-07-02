@@ -8,7 +8,7 @@
     {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "tags": [
         "agent",
         "adversarial",
@@ -1181,7 +1181,7 @@
     {
       "name": "steering-docs-specs",
       "description": "Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "steering",
         "docs"
