@@ -10,6 +10,10 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/language-steering-terraform"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/lsp-terraform"
     }
   ]
 }

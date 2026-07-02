@@ -14,6 +14,10 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/language-steering-typescript"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/lsp-typescript"
     }
   ]
 }
