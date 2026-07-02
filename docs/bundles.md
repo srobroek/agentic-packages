@@ -16,7 +16,6 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `codex-hook-contract` | Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks | self-contained |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `debugging` | Local debugging escalation | `unstuck`, `agent-adversarial-challenger` |
 | `dependency-quality` | Dependency hygiene bundle | `hooks-package-file-guard`, `hooks-package-investigate`, `hooks-pkg-version-warn`, `dep-audit`, `mcp-package-version` |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
