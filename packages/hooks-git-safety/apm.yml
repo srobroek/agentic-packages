@@ -1,5 +1,5 @@
 name: hooks-git-safety
-version: 2.0.0
+version: 2.0.1
 description: >-
   Git safety guards tuned for autonomous agents. DENY only when a destructive op
   targets another working tree through an unexpanded shell variable or ~ (the

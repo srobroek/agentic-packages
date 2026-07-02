@@ -1,5 +1,5 @@
 name: hooks-package-investigate
-version: 1.1.0
+version: 1.1.1
 description: >-
   Non-blocking PreToolUse Bash hook that nudges the agent to investigate a
   dependency's trustworthiness, maintenance, quality, popularity, and

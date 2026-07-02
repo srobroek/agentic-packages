@@ -1,5 +1,5 @@
 name: lsp-shell
-version: 0.1.0
+version: 0.2.0
 description: >-
   Shell LSP server: registers bash-language-server so agents get hover,
   diagnostics, go-to-definition, and references on Bash/POSIX shell sources.
@@ -19,8 +19,9 @@ dependencies:
   lsp:
     - name: bash-language-server
       command: bash-language-server
-      args: ["start"]
+      args:
+        - start
       extensionToLanguage:
-        ".sh": shellscript
-        ".bash": shellscript
+        .sh: shellscript
+        .bash: shellscript
       transport: stdio

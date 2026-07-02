@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/language-python--v1.1.1...language-python--v1.2.0) (2026-07-02)
+
+
+### Features
+
+* parallel-coder agent + per-language LSP packages ([#449](https://github.com/srobroek/agentic-packages/issues/449)) ([112c80d](https://github.com/srobroek/agentic-packages/commit/112c80d900549c81b72c065ac0c5556f74263f3f))
+
 ## [1.1.1](https://github.com/srobroek/agentic-packages/compare/language-python--v1.1.0...language-python--v1.1.1) (2026-06-29)
 
 

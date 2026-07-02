@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/srobroek/agentic-packages/compare/secrets-scan--v1.2.1...secrets-scan--v1.2.2) (2026-07-02)
+
+
+### Performance
+
+* **hooks:** cut PreToolUse:Bash hot-path cost with pre-jq bail + single-parse ([#450](https://github.com/srobroek/agentic-packages/issues/450)) ([58c1ce1](https://github.com/srobroek/agentic-packages/commit/58c1ce168e99ef1ac63427903c9180bf1ae916fe))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/secrets-scan--v1.2.0...secrets-scan--v1.2.1) (2026-06-30)
 
 
