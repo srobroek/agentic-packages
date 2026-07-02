@@ -1,6 +1,6 @@
 {
   "name": "hooks-pkg-version-warn",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

@@ -1,6 +1,6 @@
 {
   "name": "lsp-terraform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
   "author": {
     "name": "Sjors Robroek"

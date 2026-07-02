@@ -21,7 +21,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "agent",
         "engineering",
@@ -401,7 +401,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Advises against AI authorship attribution in git commits (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers). Emits a non-blocking advisory (allow + additionalContext, exit 0) so the human stays the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not flagged. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "git",
@@ -412,7 +412,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, /dev/random, /dev/urandom, /dev/stdout, /dev/stdin) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive/disruptive verbs also warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups are silent; unexpanded $var targets are denied; ~/subpath, repo root/.git, and outside-tree paths warn (non-blocking). Quoted bypass forms (rm -rf \"/etc\") and flags-after-target (rm /path -rf) are denied. Matching is anchored to command position to avoid quoted-string false positives. No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "bash",
@@ -434,7 +434,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source — the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "chezmoi",
@@ -446,7 +446,7 @@
     {
       "name": "hooks-close-keywords",
       "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow + additionalContext carrying the corrected body) when a malformed comma-list close is detected. Cross-tool (Claude + Codex).",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "tags": [
         "hooks",
         "git",
@@ -458,7 +458,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target — agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "git",
@@ -469,7 +469,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "git",
@@ -502,7 +502,7 @@
     {
       "name": "hooks-package-investigate",
       "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "hooks",
         "dependencies",
@@ -513,7 +513,7 @@
     {
       "name": "hooks-pkg-version-warn",
       "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "hooks",
         "dependencies",
@@ -536,7 +536,7 @@
     {
       "name": "hooks-precommit-gate",
       "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory — the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "tags": [
         "hooks",
         "git",
@@ -547,7 +547,7 @@
     {
       "name": "hooks-quality",
       "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK — it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "hooks",
         "quality",
@@ -582,7 +582,7 @@
     {
       "name": "hooks-tool-prefs",
       "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "hooks",
         "tooling",
@@ -655,7 +655,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "go"
@@ -685,7 +685,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "python"
@@ -695,7 +695,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "rust"
@@ -705,7 +705,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "shell"
@@ -765,7 +765,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "terraform"
@@ -775,7 +775,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "typescript"
@@ -796,7 +796,7 @@
     {
       "name": "lsp-go",
       "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "go"
@@ -806,7 +806,7 @@
     {
       "name": "lsp-python",
       "description": "Python LSP server: registers pyright (pyright-langserver) so agents get hover, diagnostics, go-to-definition, and references on Python sources. Installed transitively by the language-python bundle; also installable on its own.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "python"
@@ -816,7 +816,7 @@
     {
       "name": "lsp-rust",
       "description": "Rust LSP server: registers rust-analyzer so agents get hover, diagnostics, go-to-definition, and references on Rust sources. Installed transitively by the language-rust bundle; also installable on its own. Requires rust-analyzer on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "rust"
@@ -826,7 +826,7 @@
     {
       "name": "lsp-shell",
       "description": "Shell LSP server: registers bash-language-server so agents get hover, diagnostics, go-to-definition, and references on Bash/POSIX shell sources. Installed transitively by the language-shell bundle; also installable on its own. Requires bash-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "shell"
@@ -836,7 +836,7 @@
     {
       "name": "lsp-terraform",
       "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "terraform"
@@ -846,7 +846,7 @@
     {
       "name": "lsp-typescript",
       "description": "TypeScript/JavaScript LSP server: registers typescript-language-server so agents get hover, diagnostics, go-to-definition, and references on TS/JS sources. Installed transitively by the language-typescript bundle; also installable on its own. Requires typescript-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "lsp",
         "typescript"
@@ -1105,7 +1105,7 @@
     {
       "name": "secrets-scan",
       "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "tags": [
         "security",
         "secrets",

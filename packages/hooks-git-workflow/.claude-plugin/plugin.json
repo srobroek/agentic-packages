@@ -1,6 +1,6 @@
 {
   "name": "hooks-git-workflow",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
