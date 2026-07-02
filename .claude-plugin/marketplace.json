@@ -794,6 +794,66 @@
       "source": "./packages/language-web-scripting"
     },
     {
+      "name": "lsp-go",
+      "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "go"
+      ],
+      "source": "./packages/lsp-go"
+    },
+    {
+      "name": "lsp-python",
+      "description": "Python LSP server: registers pyright (pyright-langserver) so agents get hover, diagnostics, go-to-definition, and references on Python sources. Installed transitively by the language-python bundle; also installable on its own.",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "python"
+      ],
+      "source": "./packages/lsp-python"
+    },
+    {
+      "name": "lsp-rust",
+      "description": "Rust LSP server: registers rust-analyzer so agents get hover, diagnostics, go-to-definition, and references on Rust sources. Installed transitively by the language-rust bundle; also installable on its own. Requires rust-analyzer on PATH (APM writes the config; it does not install the binary).",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "rust"
+      ],
+      "source": "./packages/lsp-rust"
+    },
+    {
+      "name": "lsp-shell",
+      "description": "Shell LSP server: registers bash-language-server so agents get hover, diagnostics, go-to-definition, and references on Bash/POSIX shell sources. Installed transitively by the language-shell bundle; also installable on its own. Requires bash-language-server on PATH (APM writes the config; it does not install the binary).",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "shell"
+      ],
+      "source": "./packages/lsp-shell"
+    },
+    {
+      "name": "lsp-terraform",
+      "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "terraform"
+      ],
+      "source": "./packages/lsp-terraform"
+    },
+    {
+      "name": "lsp-typescript",
+      "description": "TypeScript/JavaScript LSP server: registers typescript-language-server so agents get hover, diagnostics, go-to-definition, and references on TS/JS sources. Installed transitively by the language-typescript bundle; also installable on its own. Requires typescript-language-server on PATH (APM writes the config; it does not install the binary).",
+      "version": "0.1.0",
+      "tags": [
+        "lsp",
+        "typescript"
+      ],
+      "source": "./packages/lsp-typescript"
+    },
+    {
       "name": "matt-skills",
       "description": "Bundle of Matt Pocock's engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.",
       "version": "1.1.0",

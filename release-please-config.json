@@ -932,6 +932,78 @@
         }
       ]
     },
+    "packages/lsp-go": {
+      "release-type": "simple",
+      "component": "lsp-go",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/lsp-python": {
+      "release-type": "simple",
+      "component": "lsp-python",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/lsp-rust": {
+      "release-type": "simple",
+      "component": "lsp-rust",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/lsp-shell": {
+      "release-type": "simple",
+      "component": "lsp-shell",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/lsp-terraform": {
+      "release-type": "simple",
+      "component": "lsp-terraform",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/lsp-typescript": {
+      "release-type": "simple",
+      "component": "lsp-typescript",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/matt-skills": {
       "release-type": "simple",
       "component": "matt-skills",
