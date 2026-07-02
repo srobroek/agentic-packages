@@ -55,13 +55,12 @@ marketplace:
   packages:
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger
-      category: debugging
+      category: quality
       tags:
         - agent
         - adversarial
         - critique
         - decision-review
-        - debugging
     - name: agent-coder
       source: ./packages/agent-coder
       category: engineering
@@ -191,12 +190,6 @@ marketplace:
         - skill
         - planning
         - analysis
-    - name: debugging
-      source: ./packages/debugging
-      category: debugging
-      tags:
-        - bundle
-        - debugging
     - name: dep-audit
       source: ./packages/dep-audit
       category: security
@@ -855,13 +848,6 @@ marketplace:
         - skill
         - languages
         - typescript
-    - name: unstuck
-      source: ./packages/unstuck
-      category: debugging
-      tags:
-        - skill
-        - debugging
-        - escalation
     - name: verify
       source: ./packages/verify
       category: quality
