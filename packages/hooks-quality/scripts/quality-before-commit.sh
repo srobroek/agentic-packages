@@ -4,6 +4,16 @@ set -euo pipefail
 payload="$(cat 2>/dev/null || true)"
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Cheap pre-jq bail: this guard acts ONLY on `git commit` commands, so if the raw
+# payload contains no `commit` token there is nothing to inspect. Skips the jq
+# spawn (the dominant per-call cost) for the common case on the hot path. Pure
+# SUPERSET filter on literal bytes — the command still has to survive the
+# structured checks below — so it can never mask a command jq would have flagged.
+case "$payload" in
+  *commit*) ;;
+  *) exit 0 ;;
+esac
+
 command="$(printf '%s' "$payload" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null || true)"
 if ! printf '%s' "$command" | grep -Eq '(^|[[:space:]])git([[:space:]][^;&|]*)?[[:space:]]+commit($|[[:space:]])'; then
   exit 0

@@ -42,6 +42,16 @@ payload="$(cat 2>/dev/null || true)"
 # scanner itself is the security control; the hook is only the trigger.
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Cheap pre-jq bail: this guard acts ONLY on `git commit` commands, so if the raw
+# payload contains no `commit` token there is nothing to inspect. Skips the jq
+# spawn (the dominant per-call cost) for the common case on the hot path. Pure
+# SUPERSET filter on literal bytes — the command still has to survive the
+# structured checks below — so it can never mask a command jq would have flagged.
+case "$payload" in
+  *commit*) ;;
+  *) exit 0 ;;
+esac
+
 # String-form tool_input idiom: tool_input may be an object {command: "..."} or
 # a bare string. Naive '.tool_input.command // .tool_input' THROWS on a string
 # input and silently bypasses the guard, so type-check first.
