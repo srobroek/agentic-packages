@@ -1328,6 +1328,18 @@
         }
       ]
     },
+    "packages/steering-architecture": {
+      "release-type": "simple",
+      "component": "steering-architecture",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-backend": {
       "release-type": "simple",
       "component": "steering-backend",

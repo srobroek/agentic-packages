@@ -774,6 +774,13 @@ marketplace:
         - bundle
         - speckit
         - hooks
+    - name: steering-architecture
+      source: ./packages/steering-architecture
+      category: steering
+      tags:
+        - steering
+        - architecture
+        - design
     - name: steering-backend
       source: ./packages/steering-backend
       category: steering

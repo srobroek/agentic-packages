@@ -1291,6 +1291,18 @@
       "category": "speckit"
     },
     {
+      "name": "steering-architecture",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-architecture"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
       "name": "steering-backend",
       "source": {
         "source": "local",

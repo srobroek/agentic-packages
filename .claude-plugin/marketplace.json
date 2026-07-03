@@ -1159,6 +1159,17 @@
       "source": "./packages/speckit-dag-hooks"
     },
     {
+      "name": "steering-architecture",
+      "description": "Cross-cutting design steering: compose over fork, keep generic cores case-agnostic, and make structural invariants a verifiable diff guard. Opt-in steering.",
+      "version": "1.0.0",
+      "tags": [
+        "steering",
+        "architecture",
+        "design"
+      ],
+      "source": "./packages/steering-architecture"
+    },
+    {
       "name": "steering-backend",
       "description": "Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering.",
       "version": "1.0.0",
