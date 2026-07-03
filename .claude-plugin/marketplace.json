@@ -20,7 +20,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work).",
-      "version": "1.2.0",
+      "version": "2.0.0",
       "tags": [
         "agent",
         "engineering",
@@ -31,7 +31,7 @@
     {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "agent",
         "engineering",
@@ -558,7 +558,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Enforce an explicit worktree-isolation decision on every subagent spawn, and refuse to delegate parent-tree writes from a non-isolated primary checkout. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to tag it with `isolation:\"worktree\"` (child writes THIS repo, isolated) or an `[iso:*]` sentinel on the description: `[iso:readonly]` (inspects only), `[iso:extern]` (writes its OWN clone of a different repo), or `[iso:direct]` (writes THIS repo's tree directly — allowed only from a worktree, denied on the primary checkout). The matched sentinel is stripped before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.5.0",
+      "version": "1.0.0",
       "tags": [
         "hooks",
         "worktree",
@@ -1161,7 +1161,7 @@
     {
       "name": "steering-architecture",
       "description": "Cross-cutting design steering: compose over fork, keep generic cores case-agnostic, and make structural invariants a verifiable diff guard. Opt-in steering.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "steering",
         "architecture",
