@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/srobroek/agentic-packages/compare/frontend--v1.1.2...frontend--v1.1.3) (2026-07-03)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#468](https://github.com/srobroek/agentic-packages/issues/468)) ([83b38c8](https://github.com/srobroek/agentic-packages/commit/83b38c8367e82b9df100780b31806524474f7864))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/frontend--v1.1.1...frontend--v1.1.2) (2026-07-03)
 
 
