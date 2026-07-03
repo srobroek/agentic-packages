@@ -14,10 +14,10 @@ tags:
   - planning
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/debate#^0.1.2
-    - srobroek/agentic-packages/packages/eli5#^0.1.2
-    - srobroek/agentic-packages/packages/research#^0.1.2
-    - srobroek/agentic-packages/packages/web-fetch#^0.1.2
+    - srobroek/agentic-packages/packages/debate#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/eli5#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/research#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/web-fetch#>=1.1.0 <2.0.0
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main
     - mattpocock/skills/skills/engineering/tdd#main

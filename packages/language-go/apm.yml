@@ -14,7 +14,7 @@ tags:
   - go
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/go-quality#^0.1.2
+    - srobroek/agentic-packages/packages/go-quality#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/language-steering-go#main
     - srobroek/agentic-packages/packages/lsp-go#main
     - wshobson/agents/plugins/systems-programming#main
