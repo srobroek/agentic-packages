@@ -176,6 +176,18 @@
         }
       ]
     },
+    "packages/cmux": {
+      "release-type": "simple",
+      "component": "cmux",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/code-intelligence": {
       "release-type": "simple",
       "component": "code-intelligence",

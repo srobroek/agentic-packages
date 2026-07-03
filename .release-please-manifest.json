@@ -10,6 +10,7 @@
   "packages/brownfield-project": "0.2.0",
   "packages/catchup": "1.1.0",
   "packages/chezmoi-editor": "1.1.0",
+  "packages/cmux": "0.1.0",
   "packages/code-intelligence": "1.1.1",
   "packages/code-review": "1.1.0",
   "packages/codebase-index": "1.1.0",

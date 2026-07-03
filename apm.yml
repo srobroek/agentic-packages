@@ -123,6 +123,13 @@ marketplace:
         - skill
         - dotfiles
         - chezmoi
+    - name: cmux
+      source: ./packages/cmux
+      category: developer-tools
+      tags:
+        - bundle
+        - cmux
+        - terminal
     - name: code-intelligence
       source: ./packages/code-intelligence
       category: code-intelligence
