@@ -15,9 +15,9 @@ tags:
   - review
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/code-review#^0.1.2
-    - srobroek/agentic-packages/packages/verify#^0.1.2
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
+    - srobroek/agentic-packages/packages/code-review#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/verify#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=1.1.0 <2.0.0
     - wshobson/agents/plugins/comprehensive-review#main
     - wshobson/agents/plugins/performance-testing-review#main
     - wshobson/agents/plugins/unit-testing#main

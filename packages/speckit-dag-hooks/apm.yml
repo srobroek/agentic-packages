@@ -17,4 +17,4 @@ tags:
   - hooks
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/speckit#^0.5.0
+    - srobroek/agentic-packages/packages/speckit#>=3.1.1 <4.0.0
