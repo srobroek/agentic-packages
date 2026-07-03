@@ -988,22 +988,6 @@
       "source": "./packages/project-lifecycle"
     },
     {
-      "name": "project-setup",
-      "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
-      "version": "0.6.1",
-      "tags": [
-        "skill",
-        "lifecycle",
-        "bootstrap"
-      ],
-      "source": {
-        "source": "github",
-        "repo": "srobroek/project-setup",
-        "ref": "project-setup-v0.6.1",
-        "sha": "829ff9159f1f1a6cf248790a6a38cb27167b7783"
-      }
-    },
-    {
       "name": "python-quality",
       "description": "Run Python format, lint, type-check, and test commands with the project toolchain.",
       "version": "1.1.0",
@@ -1301,23 +1285,6 @@
         "verification"
       ],
       "source": "./packages/verify"
-    },
-    {
-      "name": "vibe-hero",
-      "description": "vibe-hero — adaptive learning that takes you from zero to hero on agentic coding tools (Claude Code first; Codex/Kiro architecture-ready). This repo is both the source and its own Claude Code marketplace: it publishes the @vibe-hero/server MCP engine to npm and ships the `vibe-hero` plugin (MCP server + four skills + an end-of-work quiz hook). Quiz-primary progress, per-tool Elo graduation, telemetry only as a trigger, privacy by construction.",
-      "version": "1.0.0",
-      "tags": [
-        "mcp",
-        "steering",
-        "onboarding",
-        "learning"
-      ],
-      "source": {
-        "source": "github",
-        "repo": "srobroek/vibe-hero",
-        "ref": "v0.2.0",
-        "sha": "cbd3321cf60bf710f13d2fdb06f432e2ba316479"
-      }
     },
     {
       "name": "web-fetch",

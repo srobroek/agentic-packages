@@ -667,14 +667,6 @@ marketplace:
       tags:
         - bundle
         - lifecycle
-    - name: project-setup
-      source: srobroek/project-setup
-      ref: project-setup-v0.6.1
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - bootstrap
     - name: python-quality
       source: ./packages/python-quality
       category: languages
@@ -862,15 +854,6 @@ marketplace:
         - skill
         - quality
         - verification
-    - name: vibe-hero
-      source: srobroek/vibe-hero
-      ref: v0.2.0
-      category: onboarding
-      tags:
-        - mcp
-        - steering
-        - onboarding
-        - learning
     - name: web-fetch
       source: ./packages/web-fetch
       category: code-intelligence
