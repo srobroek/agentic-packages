@@ -9,8 +9,8 @@ agent reconstructs the leftoff state without loading full history.
 ### Claude Code
 - One JSONL file per session: `~/.claude/projects/<encoded-project>/<session-id>.jsonl`.
 - The project directory name encodes the absolute repo path by replacing every
-  `/` and `.` with `-`. Example: `/home/sjors/.config/fish` →
-  `-home-sjors--config-fish` (note the double dash from `/.config`).
+  `/` and `.` with `-`. Example: `/home/user/.config/fish` →
+  `-home-user--config-fish` (note the double dash from `/.config`).
 - The filename stem is the canonical session id (what `claude --resume` uses). A
   file may contain more than one `sessionId` value when a session was
   forked/resumed; the stem still identifies it.

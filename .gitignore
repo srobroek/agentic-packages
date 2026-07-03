@@ -38,6 +38,10 @@ __pycache__/
 # like apm_modules). Ignore the vendored extension trees; keep .specify/ config,
 # templates, workflows, and integration state committed.
 .specify/extensions/
+# Machine-local runtime state: absolute install-time `source` paths that only
+# resolve on the host that ran setup-speckit.sh (regenerated locally). Not
+# portable — must not travel with the repo.
+.specify/workflows/workflow-registry.json
 
 # uv lockfiles (runner is dependency-free; no committed lock)
 uv.lock
