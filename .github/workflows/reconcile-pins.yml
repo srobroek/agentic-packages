@@ -142,3 +142,71 @@ jobs:
               --title "fix(deps): sync internal package pins to released versions" \
               --body "$(printf 'Automated reconcile of first-party locator ranges in packages/*/apm.yml against .release-please-manifest.json.\n\nPolicy: floor = released version, ceiling = next major. `#main` refs are left floating.\n\nMerging this bumps the parent packages (fix -> patch release), whose tags re-trigger the reconcile to cascade the update up through nested bundles.')"
           fi
+
+      - name: Auto-merge the reconcile PR once checks pass
+        if: steps.reconcile.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # The reconcile PR is a mechanical fix(deps) bump gated only by the
+          # required checks (check-artifacts + tests-gate); main requires no
+          # review. Rather than wait for a human to click merge on a tiny +N/-N
+          # PR, poll until the required checks are green and squash-merge.
+          #
+          # Native GitHub auto-merge (gh pr merge --auto) is disabled on this
+          # repo, so this step drives the merge itself. The RELEASE PR that
+          # release-please opens from the resulting fix(deps) commit is NOT
+          # touched here -- that stays a manual release gate.
+          #
+          # main protection is strict (branch must be up to date), so if main
+          # moves under us we update the branch and let checks re-run.
+
+          num="$(gh pr list --head "$BUMP_BRANCH" --state open --json number --jq '.[0].number')"
+          if [ -z "$num" ]; then
+            echo "No open reconcile PR to merge."
+            exit 0
+          fi
+          echo "Reconcile PR: #$num"
+
+          # Poll up to ~15 min (30 * 30s). Required checks are fast (<1 min
+          # historically), so this almost always resolves in the first minutes.
+          for attempt in $(seq 1 30); do
+            state="$(gh pr view "$num" --json mergeStateStatus,state --jq '.state + "/" + .mergeStateStatus')"
+            echo "attempt $attempt: $state"
+            case "$state" in
+              MERGED/*)
+                echo "Already merged."; exit 0 ;;
+              CLOSED/*)
+                echo "PR was closed without merging; nothing to do."; exit 0 ;;
+              OPEN/CLEAN)
+                # All required checks passed and branch is up to date.
+                gh pr merge "$num" --squash --delete-branch
+                echo "Merged #$num."; exit 0 ;;
+              OPEN/BEHIND)
+                # Strict protection: main moved. Rebase the PR branch onto main
+                # (re-runs checks), then keep polling.
+                echo "Branch behind main; updating."
+                gh pr update-branch "$num" || true ;;
+              OPEN/BLOCKED|OPEN/UNKNOWN|OPEN/UNSTABLE)
+                # BLOCKED covers both "required checks still pending" and
+                # "a required check failed". Distinguish them: if any check
+                # has a failing conclusion, bail out fast instead of polling
+                # the full window; otherwise keep waiting for pending checks.
+                failed="$(gh pr view "$num" --json statusCheckRollup \
+                  --jq '[.statusCheckRollup[] | select((.conclusion // "") | test("FAILURE|TIMED_OUT|CANCELLED|ACTION_REQUIRED|STARTUP_FAILURE"))] | length')"
+                if [ "${failed:-0}" -gt 0 ]; then
+                  echo "::error::Reconcile PR #$num has $failed failing check(s); leaving it open for manual attention."
+                  exit 1
+                fi
+                # else: checks still pending / mergeability not yet computed.
+                : ;;
+              OPEN/DIRTY)
+                echo "::error::Reconcile PR #$num has conflicts; needs manual attention."
+                exit 1 ;;
+            esac
+            sleep 30
+          done
+
+          echo "::warning::Reconcile PR #$num not mergeable within the poll window; leaving it open for manual merge."
