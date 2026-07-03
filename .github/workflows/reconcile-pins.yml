@@ -20,11 +20,24 @@ name: Reconcile internal pins
 #   - Locators pinned to '#main' are deliberately floating and left alone;
 #     only refs that already look like a version range (#^x.y.z, #>=...,
 #     #x.y.z) are managed.
-#   - The commit is 'fix(deps): ...' so release-please attributes a patch bump
-#     to every parent package the commit touches, which releases the parents
-#     and re-triggers this workflow -- that cascade is what propagates a leaf
-#     bump up through nested bundles (leaf -> bundle -> umbrella), one release
-#     cycle per level.
+#   - Severity-matched bumps: each parent is bumped to match the HIGHEST
+#     severity among the dependency changes it receives. Per changed pin we
+#     compare the old pinned floor against the newly released version --
+#     different major = major, different minor = minor, else patch -- and take
+#     the max across all of a parent's changed pins. The reconcile then emits
+#     ONE commit per severity level, each touching only that group's files:
+#       patch -> 'fix(deps): ...'      (release-please: patch bump)
+#       minor -> 'feat(deps): ...'     (release-please: minor bump)
+#       major -> 'feat(deps)!: ...'    (release-please: major bump)
+#     release-please attributes each commit's conventional type to every path
+#     it touches, so a bundle whose biggest dep change was a minor gets a minor
+#     release, a major gets a major, etc. That released parent re-triggers this
+#     workflow, propagating the SAME severity up through nested bundles
+#     (leaf -> bundle -> umbrella), one release cycle per level. (Pre-1.0
+#     parents follow release-please's own 0.x mapping for these types.)
+#   - Because the bump type must differ per parent, the PR is REBASE-merged,
+#     not squashed: squashing would collapse the per-severity commits into a
+#     single type and flatten every parent to one bump. See the auto-merge step.
 #   - The PR is authored with PAT_RELEASE_AGENTIC_PACKAGES for the same reason
 #     release-please.yml uses it: GITHUB_TOKEN-authored commits do not trigger
 #     the required PR checks, and the PR would sit blocked forever.
@@ -78,7 +91,32 @@ jobs:
               r"(?P<name>[a-z0-9-]+))#(?P<ref>[\^>=<~ 0-9.]+)\s*$"
           )
 
+          _SEMVER = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+
+          def floor_of(ref):
+              """First semver in a managed ref is its floor (>=X, ^X, ~X, X)."""
+              mm = _SEMVER.search(ref)
+              return tuple(int(g) for g in mm.groups()) if mm else None
+
+          def severity(old_ref, new_version):
+              """patch|minor|major for moving old_ref's floor -> new_version."""
+              new = floor_of(new_version)
+              old = floor_of(old_ref)
+              if old is None or new is None:
+                  # Can't compare (e.g. a bare '#main' shouldn't reach here) --
+                  # treat as patch, the safest non-zero bump.
+                  return "patch"
+              if new[0] != old[0]:
+                  return "major"
+              if new[1] != old[1]:
+                  return "minor"
+              return "patch"
+
+          _RANK = {"patch": 0, "minor": 1, "major": 2}
+
           changed, skipped = [], []
+          # parent apm.yml path -> highest severity of its changed pins
+          parent_severity = {}
           for manifest_path in sorted(pathlib.Path("packages").glob("*/apm.yml")):
               lines = manifest_path.read_text().splitlines(keepends=True)
               dirty = False
@@ -95,22 +133,35 @@ jobs:
                   new_ref = f">={version} <{int(major) + 1}.0.0"
                   if ref == new_ref:
                       continue
+                  sev = severity(ref, version)
+                  key = str(manifest_path)
+                  if _RANK[sev] > _RANK.get(parent_severity.get(key, "patch"), -1) \
+                          or key not in parent_severity:
+                      parent_severity[key] = sev
                   lines[i] = f"{m.group('head')}#{new_ref}\n"
                   dirty = True
-                  changed.append(f"{manifest_path}: {name} '{ref}' -> '{new_ref}'")
+                  changed.append(f"{manifest_path}: {name} '{ref}' -> '{new_ref}' [{sev}]")
               if dirty:
                   manifest_path.write_text("".join(lines))
+
+          # Emit the per-severity file groups for the commit step to consume.
+          groups = {"patch": [], "minor": [], "major": []}
+          for path, sev in parent_severity.items():
+              groups[sev].append(path)
+          pathlib.Path(".reconcile-groups.json").write_text(json.dumps(groups))
 
           for entry in skipped:
               print(f"::warning::skipped {entry}")
           print("\n".join(changed) or "all pins already in sync")
           EOF
 
-          if git diff --quiet; then
+          # Exclude the scratch groups file from the "did anything change" test.
+          if git diff --quiet -- 'packages/*/apm.yml'; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            rm -f .reconcile-groups.json
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            git diff --stat
+            git diff --stat -- 'packages/*/apm.yml'
           fi
 
       - name: Push bump branch and open PR
@@ -132,15 +183,32 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BUMP_BRANCH"
-          git add packages/*/apm.yml
-          git commit -m "fix(deps): sync internal package pins to released versions"
+
+          # One commit per severity level, each staging only that group's files,
+          # with the conventional type release-please maps to that bump:
+          #   patch -> fix(deps):     minor -> feat(deps):     major -> feat(deps)!:
+          # Rebase-merging the PR (see auto-merge step) preserves these distinct
+          # types so each parent is released at its own severity.
+          commit_group() {
+            local sev="$1" type="$2" subject="$3"
+            local files
+            files=$(python3 -c "import json;print('\n'.join(json.load(open('.reconcile-groups.json'))['$sev']))")
+            [ -z "$files" ] && return 0
+            echo "$files" | tr '\n' '\0' | xargs -0 git add --
+            git commit -m "$type: $subject"
+          }
+          commit_group patch "fix(deps)"  "sync internal package pins (patch-level dep releases)"
+          commit_group minor "feat(deps)" "sync internal package pins (minor-level dep releases)"
+          commit_group major "feat(deps)!" "sync internal package pins (major-level dep releases)"
+
+          rm -f .reconcile-groups.json
           git push --force origin "$BUMP_BRANCH"
 
           if ! gh pr list --head "$BUMP_BRANCH" --state open --json number --jq '.[0].number' | grep -q .; then
             gh pr create \
               --head "$BUMP_BRANCH" \
               --title "fix(deps): sync internal package pins to released versions" \
-              --body "$(printf 'Automated reconcile of first-party locator ranges in packages/*/apm.yml against .release-please-manifest.json.\n\nPolicy: floor = released version, ceiling = next major. `#main` refs are left floating.\n\nMerging this bumps the parent packages (fix -> patch release), whose tags re-trigger the reconcile to cascade the update up through nested bundles.')"
+              --body "$(printf 'Automated reconcile of first-party locator ranges in packages/*/apm.yml against .release-please-manifest.json.\n\nPolicy: floor = released version, ceiling = next major. `#main` refs are left floating.\n\nEach parent is bumped to match the HIGHEST severity of the dep changes it receives (patch/minor/major), via one commit per level (fix(deps) / feat(deps) / feat(deps)!). This PR is REBASE-merged so those per-severity types survive; the released parents re-trigger the reconcile to cascade the update up through nested bundles.')"
           fi
 
       - name: Auto-merge the reconcile PR once checks pass
@@ -150,18 +218,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The reconcile PR is a mechanical fix(deps) bump gated only by the
+          # The reconcile PR is a mechanical dep-pin bump gated only by the
           # required checks (check-artifacts + tests-gate); main requires no
           # review. Rather than wait for a human to click merge on a tiny +N/-N
-          # PR, poll until the required checks are green and squash-merge.
+          # PR, poll until the required checks are green and REBASE-merge.
+          #
+          # Rebase (not squash) is required: the PR carries one commit per
+          # severity level (fix(deps) / feat(deps) / feat(deps)!) and squashing
+          # would collapse them into a single conventional type, flattening
+          # every parent to one bump. Rebase replays the distinct commits onto
+          # main so release-please bumps each parent at its own severity. Rebase
+          # also keeps main's required-linear-history happy.
           #
           # Native GitHub auto-merge (gh pr merge --auto) is disabled on this
           # repo, so this step drives the merge itself. The RELEASE PR that
-          # release-please opens from the resulting fix(deps) commit is NOT
-          # touched here -- that stays a manual release gate.
+          # release-please opens from the resulting commits is NOT touched here
+          # -- that stays a manual release gate.
           #
           # main protection is strict (branch must be up to date), so if main
-          # moves under us we update the branch and let checks re-run.
+          # moves under us we rebase the branch onto main and let checks re-run.
 
           num="$(gh pr list --head "$BUMP_BRANCH" --state open --json number --jq '.[0].number')"
           if [ -z "$num" ]; then
@@ -182,13 +257,14 @@ jobs:
                 echo "PR was closed without merging; nothing to do."; exit 0 ;;
               OPEN/CLEAN)
                 # All required checks passed and branch is up to date.
-                gh pr merge "$num" --squash --delete-branch
+                gh pr merge "$num" --rebase --delete-branch
                 echo "Merged #$num."; exit 0 ;;
               OPEN/BEHIND)
                 # Strict protection: main moved. Rebase the PR branch onto main
-                # (re-runs checks), then keep polling.
-                echo "Branch behind main; updating."
-                gh pr update-branch "$num" || true ;;
+                # (--rebase keeps the per-severity commits linear, no merge
+                # commit) and re-run checks, then keep polling.
+                echo "Branch behind main; rebasing onto main."
+                gh pr update-branch "$num" --rebase || true ;;
               OPEN/BLOCKED|OPEN/UNKNOWN|OPEN/UNSTABLE)
                 # BLOCKED covers both "required checks still pending" and
                 # "a required check failed". Distinguish them: if any check
