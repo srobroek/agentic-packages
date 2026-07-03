@@ -13,7 +13,10 @@ LAST_INDEX="$STATE_DIR/last-index-$(echo "$REPO_ROOT" | md5 2>/dev/null || echo 
 
 # Check staleness (>1 hour)
 if [ -f "$LAST_INDEX" ]; then
-    LAST_MOD=$(stat -f %m "$LAST_INDEX" 2>/dev/null || stat -c %Y "$LAST_INDEX" 2>/dev/null || echo 0)
+    # GNU-first: on Linux `stat -f` means --file-system and prints a multi-line
+    # block to stdout (only stderr is suppressed here), corrupting the arithmetic
+    # below. `stat -c` fails cleanly on macOS/BSD, so this order is safe on both.
+    LAST_MOD=$(stat -c %Y "$LAST_INDEX" 2>/dev/null || stat -f %m "$LAST_INDEX" 2>/dev/null || echo 0)
     NOW=$(date +%s)
     AGE=$(( NOW - LAST_MOD ))
     [ "$AGE" -lt 3600 ] && exit 0

@@ -60,7 +60,7 @@ in `config.toml`, these are the names the configs are written against.
 **[VERIFIED] Codex normalizes those event names to snake_case internally.**
 `config.toml` carries a `[hooks.state]` table whose keys are
 `pre_tool_use`, `post_tool_use`, `permission_request`, `user_prompt_submit`,
-and `stop` (e.g. `hooks.state."/home/sjors/.codex/hooks.json:pre_tool_use:0:0"`).
+and `stop` (e.g. `hooks.state."$HOME/.codex/hooks.json:pre_tool_use:0:0"`).
 The same `hooks.json` is configured in PascalCase but tracked in snake_case, so
 Codex maps `PreToolUse` -> `pre_tool_use` etc. for its trust/state bookkeeping.
 

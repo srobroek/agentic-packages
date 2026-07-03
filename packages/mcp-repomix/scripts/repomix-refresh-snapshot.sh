@@ -67,8 +67,18 @@ mkdir "$lock_dir" 2>/dev/null || exit 0
 (
   trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
   output="$repo_root/$output_rel"
+  # Bound the pack with a timeout when one is available. `timeout` is GNU
+  # coreutils (Linux); on macOS it ships as `gtimeout` via Homebrew and is
+  # absent from the stock userland. Fall back to running untimed rather than
+  # silently no-op'ing (bare `timeout` would return 127 on stock macOS).
+  timeout_cmd=""
+  if command -v timeout >/dev/null 2>&1; then
+    timeout_cmd="timeout 180"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    timeout_cmd="gtimeout 180"
+  fi
   # Write the marker ONLY on a successful pack.
-  if timeout 180 repomix --directory "$repo_root" --style xml --output "$output" >/dev/null 2>&1; then
+  if $timeout_cmd repomix --directory "$repo_root" --style xml --output "$output" >/dev/null 2>&1; then
     printf '%s\n' "$head_sha" >"$head_marker" 2>/dev/null || true
   fi
 ) >/dev/null 2>&1 &

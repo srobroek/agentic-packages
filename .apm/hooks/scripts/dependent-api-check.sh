@@ -27,7 +27,9 @@ fi
 # Look for core crate imports
 if echo "$CONTENT" | grep -qE 'astro_up_core::|use astro_up_core'; then
   # Extract the module paths being referenced
-  MODULES=$(echo "$CONTENT" | grep -oP 'astro_up_core::\w+(::\w+)*' | sort -u | head -5)
+  # POSIX ERE (grep -oE), not PCRE (grep -oP): -P is a GNU-only extension that
+  # stock macOS BSD grep rejects with "invalid option -- P". `\w` -> [[:alnum:]_].
+  MODULES=$(echo "$CONTENT" | grep -oE 'astro_up_core::[[:alnum:]_]+(::[[:alnum:]_]+)*' | sort -u | head -5)
   if [ -n "$MODULES" ]; then
     jq -n --arg mods "$MODULES" '{
       hookSpecificOutput: {
