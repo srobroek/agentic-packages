@@ -125,6 +125,18 @@
       "category": "dotfiles"
     },
     {
+      "name": "cmux",
+      "source": {
+        "source": "local",
+        "path": "./packages/cmux"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "developer-tools"
+    },
+    {
       "name": "code-intelligence",
       "source": {
         "source": "local",

@@ -116,6 +116,17 @@
       "source": "./packages/chezmoi-editor"
     },
     {
+      "name": "cmux",
+      "description": "cmux terminal control bundle: vendored user-facing skills that teach agents to drive and configure the cmux macOS terminal via its socket CLI -- topology and routing (windows, workspaces, panes, surfaces), customization, settings, socket policy, Ghostty rendering config, keyboard shortcuts, diagnostics, and shared behavior. Contributor skills (architecture, backend, release, testing) are omitted. Third-party (manaflow-ai/cmux publishes no APM/marketplace manifest); referenced as raw GitHub skill paths, same pattern as the other external bundles.",
+      "version": "0.1.0",
+      "tags": [
+        "bundle",
+        "cmux",
+        "terminal"
+      ],
+      "source": "./packages/cmux"
+    },
+    {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
       "version": "1.1.1",
