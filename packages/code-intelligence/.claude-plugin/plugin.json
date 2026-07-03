@@ -1,7 +1,7 @@
 {
   "name": "code-intelligence",
   "version": "1.1.1",
-  "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
+  "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure and architecture steering, and Hobson documentation/architecture plugins.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -38,6 +38,10 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/steering-project-structure"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-architecture"
     }
   ]
 }

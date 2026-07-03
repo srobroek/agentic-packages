@@ -3,7 +3,8 @@ version: 1.1.1
 description: >-
   Codebase understanding toolkit: graph/index/search skills (codebase-index,
   codebase-memory, explore), research and web-fetch, the PR reviewer agent,
-  project-structure steering, and Hobson documentation/architecture plugins.
+  project-structure and architecture steering, and Hobson
+  documentation/architecture plugins.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -22,6 +23,7 @@ dependencies:
     - srobroek/agentic-packages/packages/web-fetch#^0.1.2
     - srobroek/agentic-packages/packages/agent-pr-reviewer#^0.1.1
     - srobroek/agentic-packages/packages/steering-project-structure#^0.1.0
+    - srobroek/agentic-packages/packages/steering-architecture#^1.0.0
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main
