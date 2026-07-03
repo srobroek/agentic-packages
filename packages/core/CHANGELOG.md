@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/srobroek/agentic-packages/compare/core--v1.1.1...core--v1.1.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#466](https://github.com/srobroek/agentic-packages/issues/466)) ([d252bf8](https://github.com/srobroek/agentic-packages/commit/d252bf8604c34e6887ca95426d35026f18fca05f))
+
 ## [1.1.1](https://github.com/srobroek/agentic-packages/compare/core--v1.1.0...core--v1.1.1) (2026-06-29)
 
 

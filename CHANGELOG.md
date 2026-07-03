@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v6.0.0...srobroek-agentic--v6.1.0) (2026-07-03)
+
+
+### Features
+
+* **cmux:** add cmux terminal skills bundle ([#462](https://github.com/srobroek/agentic-packages/issues/462)) ([a11c3d4](https://github.com/srobroek/agentic-packages/commit/a11c3d43ba920948d3d347fdffb0d8d87724172f))
+
+
+### Bug Fixes
+
+* drop external marketplace members so release pack works offline ([#465](https://github.com/srobroek/agentic-packages/issues/465)) ([9f658d4](https://github.com/srobroek/agentic-packages/commit/9f658d4b8ae210f31eb6de2984f40e2bcbf3e4f8))
+
 ## [6.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v5.0.0...srobroek-agentic--v6.0.0) (2026-07-03)
 
 

@@ -1,5 +1,5 @@
 name: code-intelligence
-version: 1.1.1
+version: 1.1.2
 description: >-
   Codebase understanding toolkit: graph/index/search skills (codebase-index,
   codebase-memory, explore), research and web-fetch, the PR reviewer agent,
@@ -21,7 +21,9 @@ dependencies:
     - srobroek/agentic-packages/packages/research#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/web-fetch#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=1.1.0 <2.0.0
-    - srobroek/agentic-packages/packages/steering-project-structure#>=1.0.0 <2.0.0
+    - >-
+      srobroek/agentic-packages/packages/steering-project-structure#>=1.0.0
+      <2.0.0
     - wshobson/agents/plugins/code-documentation#main
     - wshobson/agents/plugins/documentation-generation#main
     - wshobson/agents/plugins/c4-architecture#main
