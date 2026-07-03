@@ -1,6 +1,6 @@
 {
   "name": "hooks-subagent-worktree",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Enforce an explicit worktree-isolation decision on every subagent spawn, and refuse to delegate parent-tree writes from a non-isolated primary checkout. A PreToolUse:Agent guard denies an undeclared spawn and instructs the parent to tag it with `isolation:\"worktree\"` (child writes THIS repo, isolated) or an `[iso:*]` sentinel on the description: `[iso:readonly]` (inspects only), `[iso:extern]` (writes its OWN clone of a different repo), or `[iso:direct]` (writes THIS repo's tree directly — allowed only from a worktree, denied on the primary checkout). The matched sentinel is stripped before the spawn proceeds. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
   "author": {
     "name": "Sjors Robroek"
