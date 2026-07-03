@@ -106,6 +106,7 @@
   "packages/sniff": "2.2.1",
   "packages/speckit": "3.1.1",
   "packages/speckit-dag-hooks": "2.1.0",
+  "packages/steering-architecture": "1.0.0",
   "packages/steering-backend": "1.0.0",
   "packages/steering-data": "1.0.0",
   "packages/steering-docs-specs": "1.1.0",

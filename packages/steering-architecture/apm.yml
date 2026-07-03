@@ -1,0 +1,16 @@
+name: steering-architecture
+version: 1.0.0
+description: >-
+  Cross-cutting design steering: compose over fork, keep generic cores
+  case-agnostic, and make structural invariants a verifiable diff guard.
+  Opt-in steering.
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto
+category: steering
+tags:
+  - steering
+  - architecture
+  - design
