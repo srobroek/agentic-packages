@@ -1,0 +1,144 @@
+name: Reconcile internal pins
+
+# When a package release tag lands, parents that depend on it via a version
+# range can be left pointing at a stale (or unsatisfiable) range -- pre-1.0
+# caret pins in particular are minor-locked and never pick up 1.x tags. This
+# workflow recomputes EVERY first-party locator range in packages/*/apm.yml
+# against the authoritative released versions in .release-please-manifest.json
+# and maintains a single rolling PR with the bumps.
+#
+# Design notes:
+#   - One workflow for ALL packages, triggered by any release tag. Merging a
+#     release PR pushes many tags at once; per-tag incremental updates would
+#     race each other on the bump branch. A full reconcile is idempotent, so
+#     concurrent tag pushes queue up (concurrency group below) and converge:
+#     the second run finds no further drift and exits.
+#   - Range policy: floor = the released version from the manifest, ceiling =
+#     the next major ('>=1.1.0 <2.0.0'). Majors therefore flow into the bump
+#     PR too -- the PR review is the gate, not the range. House style is
+#     bounded '>=x <y' (pre-1.0 caret is a known trap here).
+#   - Locators pinned to '#main' are deliberately floating and left alone;
+#     only refs that already look like a version range (#^x.y.z, #>=...,
+#     #x.y.z) are managed.
+#   - The commit is 'fix(deps): ...' so release-please attributes a patch bump
+#     to every parent package the commit touches, which releases the parents
+#     and re-triggers this workflow -- that cascade is what propagates a leaf
+#     bump up through nested bundles (leaf -> bundle -> umbrella), one release
+#     cycle per level.
+#   - The PR is authored with PAT_RELEASE_AGENTIC_PACKAGES for the same reason
+#     release-please.yml uses it: GITHUB_TOKEN-authored commits do not trigger
+#     the required PR checks, and the PR would sit blocked forever.
+
+on:
+  push:
+    tags:
+      - "*--v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: reconcile-internal-pins
+  cancel-in-progress: false
+
+env:
+  BUMP_BRANCH: bot/reconcile-internal-pins
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+
+      - name: Reconcile locator ranges against released versions
+        id: reconcile
+        run: |
+          set -euo pipefail
+          python3 - <<'EOF'
+          import json, pathlib, re, sys
+
+          manifest = json.loads(pathlib.Path(".release-please-manifest.json").read_text())
+          released = {
+              path.removeprefix("packages/"): version
+              for path, version in manifest.items()
+              if path.startswith("packages/")
+          }
+
+          # '- srobroek/agentic-packages/packages/<name>#<ref>' apm.yml lines.
+          # Only version-shaped refs are managed; '#main' stays floating.
+          LOCATOR = re.compile(
+              r"^(?P<head>\s*-\s+srobroek/agentic-packages/packages/"
+              r"(?P<name>[a-z0-9-]+))#(?P<ref>[\^>=<~ 0-9.]+)\s*$"
+          )
+
+          changed, skipped = [], []
+          for manifest_path in sorted(pathlib.Path("packages").glob("*/apm.yml")):
+              lines = manifest_path.read_text().splitlines(keepends=True)
+              dirty = False
+              for i, line in enumerate(lines):
+                  m = LOCATOR.match(line.rstrip("\n"))
+                  if not m:
+                      continue
+                  name, ref = m.group("name"), m.group("ref").strip()
+                  version = released.get(name)
+                  if version is None:
+                      skipped.append(f"{manifest_path}: {name} not in release manifest")
+                      continue
+                  major = version.split(".")[0]
+                  new_ref = f">={version} <{int(major) + 1}.0.0"
+                  if ref == new_ref:
+                      continue
+                  lines[i] = f"{m.group('head')}#{new_ref}\n"
+                  dirty = True
+                  changed.append(f"{manifest_path}: {name} '{ref}' -> '{new_ref}'")
+              if dirty:
+                  manifest_path.write_text("".join(lines))
+
+          for entry in skipped:
+              print(f"::warning::skipped {entry}")
+          print("\n".join(changed) or "all pins already in sync")
+          EOF
+
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat
+          fi
+
+      - name: Push bump branch and open PR
+        if: steps.reconcile.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # If the rolling branch already carries exactly this diff, don't
+          # force-push an identical tree -- it would only churn the PR checks.
+          if git fetch origin "$BUMP_BRANCH" 2>/dev/null; then
+            if git diff --quiet "origin/$BUMP_BRANCH" -- 'packages/*/apm.yml'; then
+              echo "Bump branch already up to date."
+              exit 0
+            fi
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BUMP_BRANCH"
+          git add packages/*/apm.yml
+          git commit -m "fix(deps): sync internal package pins to released versions"
+          git push --force origin "$BUMP_BRANCH"
+
+          if ! gh pr list --head "$BUMP_BRANCH" --state open --json number --jq '.[0].number' | grep -q .; then
+            gh pr create \
+              --head "$BUMP_BRANCH" \
+              --title "fix(deps): sync internal package pins to released versions" \
+              --body "$(printf 'Automated reconcile of first-party locator ranges in packages/*/apm.yml against .release-please-manifest.json.\n\nPolicy: floor = released version, ceiling = next major. `#main` refs are left floating.\n\nMerging this bumps the parent packages (fix -> patch release), whose tags re-trigger the reconcile to cascade the update up through nested bundles.')"
+          fi
