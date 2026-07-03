@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v1.1.0...agent-external-repo-worker--v1.1.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* **agents:** stop treating different-repo/direct-edit as isolation-free under concurrency ([#456](https://github.com/srobroek/agentic-packages/issues/456)) ([f4d0a21](https://github.com/srobroek/agentic-packages/commit/f4d0a21ae289f6554387ce0ad2cafb662b0d9c66))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker-v1.0.0...agent-external-repo-worker--v1.1.0) (2026-06-27)
 
 

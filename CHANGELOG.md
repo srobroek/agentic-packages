@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v5.0.0...srobroek-agentic--v6.0.0) (2026-07-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* enforce subagent isolation with a 3-token model (readonly/extern/direct) and primary-checkout deny gate ([#458](https://github.com/srobroek/agentic-packages/issues/458))
+
+### Features
+
+* add steering-architecture package (compose over fork) ([#460](https://github.com/srobroek/agentic-packages/issues/460)) ([7b3a91f](https://github.com/srobroek/agentic-packages/commit/7b3a91fce332182ec0efa3111edb511216bd3a7e))
+* enforce subagent isolation with a 3-token model (readonly/extern/direct) and primary-checkout deny gate ([#458](https://github.com/srobroek/agentic-packages/issues/458)) ([3cfc4c0](https://github.com/srobroek/agentic-packages/commit/3cfc4c060c75536319ae5ed57716b5190a4ad223))
+
 ## [5.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v4.4.0...srobroek-agentic--v5.0.0) (2026-07-02)
 
 

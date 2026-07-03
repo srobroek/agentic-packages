@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-coder--v1.2.0...agent-coder--v2.0.0) (2026-07-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* enforce subagent isolation with a 3-token model (readonly/extern/direct) and primary-checkout deny gate ([#458](https://github.com/srobroek/agentic-packages/issues/458))
+
+### Features
+
+* enforce subagent isolation with a 3-token model (readonly/extern/direct) and primary-checkout deny gate ([#458](https://github.com/srobroek/agentic-packages/issues/458)) ([3cfc4c0](https://github.com/srobroek/agentic-packages/commit/3cfc4c060c75536319ae5ed57716b5190a4ad223))
+
+
+### Bug Fixes
+
+* **agents:** stop treating different-repo/direct-edit as isolation-free under concurrency ([#456](https://github.com/srobroek/agentic-packages/issues/456)) ([f4d0a21](https://github.com/srobroek/agentic-packages/commit/f4d0a21ae289f6554387ce0ad2cafb662b0d9c66))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/agent-coder--v1.1.0...agent-coder--v1.2.0) (2026-07-02)
 
 
