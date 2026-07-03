@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/srobroek/agentic-packages/compare/playwright--v2.0.1...playwright--v2.0.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#466](https://github.com/srobroek/agentic-packages/issues/466)) ([d252bf8](https://github.com/srobroek/agentic-packages/commit/d252bf8604c34e6887ca95426d35026f18fca05f))
+
 ## [2.0.1](https://github.com/srobroek/agentic-packages/compare/playwright--v2.0.0...playwright--v2.0.1) (2026-06-29)
 
 
