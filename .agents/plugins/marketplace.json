@@ -1121,20 +1121,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "project-setup",
-      "source": {
-        "source": "url",
-        "url": "srobroek/project-setup",
-        "ref": "project-setup-v0.6.1",
-        "sha": "829ff9159f1f1a6cf248790a6a38cb27167b7783"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "python-quality",
       "source": {
         "source": "local",
@@ -1469,20 +1455,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "quality"
-    },
-    {
-      "name": "vibe-hero",
-      "source": {
-        "source": "url",
-        "url": "srobroek/vibe-hero",
-        "ref": "v0.2.0",
-        "sha": "cbd3321cf60bf710f13d2fdb06f432e2ba316479"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "onboarding"
     },
     {
       "name": "web-fetch",
