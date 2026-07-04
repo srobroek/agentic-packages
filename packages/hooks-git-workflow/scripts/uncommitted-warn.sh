@@ -18,7 +18,10 @@ if branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"; then
     if [[ "$n" =~ ^[0-9]+$ && "$n" -gt 0 ]]; then
       ahead="${n} commit(s) not pushed to ${upstream}"
     fi
-  elif git rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
+  elif git rev-parse --verify --quiet HEAD >/dev/null 2>&1 \
+       && [ -n "$(git remote 2>/dev/null)" ]; then
+    # A remote exists but this branch tracks nothing: real unpushed work.
+    # Stay silent for local-only repos with no remote (nowhere to push).
     ahead="branch '${branch}' has no upstream — commits are unpushed"
   fi
 fi
