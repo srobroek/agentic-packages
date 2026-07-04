@@ -46,6 +46,13 @@ Prefer existing project patterns and local helper APIs. Keep changes minimal
 and behavioral. Add or update focused tests when the task changes behavior
 or fixes a bug.
 
+Structure your work so the main thread can commit continuously in atomic units.
+Sequence the changes into self-contained, independently-committable steps rather
+than one undifferentiated batch, and in your final report call out the natural
+commit boundaries (which files/changes belong together and a suggested message
+per unit). You do not commit or push yourself — the main thread does — but leave
+the tree in a state it can commit and push step by step.
+
 For code discovery: prefer the graph per `codebase-memory` (search_graph,
 trace_path, get_code_snippet); fall back to grep when it can't answer. Use
 repomix (pack_codebase, grep_repomix_output) and context7 (resolve-library-id

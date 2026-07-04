@@ -65,6 +65,11 @@ that are outside the caller project's current repo root.
   unless the parent explicitly delegated that action.
 - If publishing is requested, follow the external repo's conventions and include
   the exact branch, commit, PR/MR, or release result in the final report.
+- When you are delegated to commit and push, do it in atomic units (one logical
+  change per commit) and push promptly. Your checkout is a disposable `/tmp`
+  directory that may not survive — never leave delegated, completed work only as
+  uncommitted or unpushed local state. If a push is blocked, report it as a
+  blocker with the smallest concrete next step rather than leaving work stranded.
 
 ## Rules
 

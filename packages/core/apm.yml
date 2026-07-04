@@ -18,6 +18,7 @@ dependencies:
     - srobroek/agentic-packages/packages/code-intelligence#>=1.1.2 <2.0.0
     - srobroek/agentic-packages/packages/agentic-maintenance#>=1.1.2 <2.0.0
     - srobroek/agentic-packages/packages/resume-session#>=1.2.0 <2.0.0
+    - srobroek/agentic-packages/packages/steering-delivery#>=0.1.0 <1.0.0
     - mattpocock/skills/skills/productivity/grill-me#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - wshobson/agents/plugins/context-management#main

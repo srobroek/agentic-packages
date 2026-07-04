@@ -36,6 +36,11 @@ Create a durable recovery prompt that `catchup` can read before doing fresh disc
 - Include commit hashes or branch-base details only when the next session materially depends on them.
 - Remove or replace TODO placeholders before reporting the handover complete.
 - If work is mid-refactor, explain the incomplete state explicitly.
+- Before handing off, commit and push completed work to its remote branch so it
+  survives — a handover is not a substitute for pushing. Never leave completed
+  work only as uncommitted or unpushed local state, especially in a disposable
+  (`/tmp`) worktree that may be cleaned up before the next session. Record any
+  work left intentionally uncommitted (and why) in the incomplete-state notes.
 - Do not store volatile session state in global memory. Handover files are the session bridge.
 - Never commit handover files. They are ephemeral local state, not project documentation.
 - Do not store secrets, tokens, private keys, one-time codes, session cookies, or raw credential values.

@@ -201,3 +201,22 @@ tracker_bash() {
   out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
   [ -z "$out" ]
 }
+
+@test "warn: commits ahead of upstream -> systemMessage" {
+  BARE="$(mktemp -d "${BATS_TEST_TMPDIR}/bare.XXXXXX")"; git init -q --bare "$BARE"
+  printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init
+  git -C "$REPO" remote add origin "$BARE"
+  git -C "$REPO" push -q -u origin HEAD
+  printf 'v2\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m ahead
+  out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
+  printf '%s' "$out" | jq -e '.systemMessage | test("Unpushed")' >/dev/null
+}
+
+@test "warn: pushed and clean -> no output" {
+  BARE="$(mktemp -d "${BATS_TEST_TMPDIR}/bare.XXXXXX")"; git init -q --bare "$BARE"
+  printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init
+  git -C "$REPO" remote add origin "$BARE"
+  git -C "$REPO" push -q -u origin HEAD
+  out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
+  [ -z "$out" ]
+}

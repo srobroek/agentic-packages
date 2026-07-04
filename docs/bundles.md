@@ -15,7 +15,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
 | `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `mcp-codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
 | `codex-hook-contract` | Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks | self-contained |
-| `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
+| `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
 | `dependency-quality` | Dependency hygiene bundle | `hooks-package-file-guard`, `hooks-package-investigate`, `hooks-pkg-version-warn`, `dep-audit`, `mcp-package-version` |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
