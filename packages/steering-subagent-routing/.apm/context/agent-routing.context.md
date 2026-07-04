@@ -52,7 +52,10 @@ Agents and orchestrators must clean up their worktrees and compilation
 artifacts once their work is done. Dead worktrees accumulate build output (a
 Rust `target/` dir alone can reach tens of GB) until the disk fills; a shared
 build directory would only mask this while serializing parallel builds. The
-worktree-removal step for a finished agent — and any periodic sweep an
-orchestrator runs after fan-in — should delete build dirs and remove the
-worktree: `rm -rf <worktree>/target` (plus `node_modules/` and similar), then
-`git worktree remove <worktree>` and `git worktree prune`.
+removal is gated on the worktree being confirmed clean: `git -C <worktree>
+status --porcelain` prints nothing and the branch is merged or harvested —
+never discard uncommitted work to force a removal. Once confirmed clean,
+delete build dirs (`rm -rf <worktree>/target`, plus `node_modules/` and
+similar) and run `git worktree remove <worktree>` and `git worktree prune`;
+orchestrators sweep this way after every fan-in and periodically via
+`git worktree list`.

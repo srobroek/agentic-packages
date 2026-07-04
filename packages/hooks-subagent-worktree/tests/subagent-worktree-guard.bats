@@ -7,7 +7,8 @@
 #
 # The hook reads a JSON event on stdin and, for tool_name == "Agent", emits a
 # non-blocking advisory. It NEVER denies. Contract:
-#   * isolation key present  -> silent (parent already chose), no output, exit 0
+#   * isolation key present  -> silent about isolation (parent already chose);
+#                                a stale-worktree notice may still be emitted
 #   * otherwise (Agent)      -> emit additionalContext advisory, exit 0
 #   * non-Agent / empty       -> pass through, no output, exit 0
 
@@ -78,4 +79,48 @@ ctx_of() {
 @test "advisory exits 0 (non-blocking)" {
   run bash -c 'printf "%s" "$1" | "$0"' "$GUARD" '{"tool_name":"Agent","tool_input":{"description":"d","prompt":"x"}}'
   [ "$status" -eq 0 ]
+}
+
+# --- stale agent worktrees -> reap notice ------------------------------------
+
+make_repo_with_stale_worktree() {
+  STALE_WORK="$(mktemp -d "${TMPDIR:-/tmp}/guard-bats.XXXXXX")"
+  STALE_REPO="${STALE_WORK}/repo"
+  mkdir -p "$STALE_REPO"
+  git -C "$STALE_REPO" init -q
+  git -C "$STALE_REPO" config user.email t@example.com
+  git -C "$STALE_REPO" config user.name "Test User"
+  git -C "$STALE_REPO" config commit.gpgsign false
+  printf 'hello\n' > "${STALE_REPO}/file.txt"
+  git -C "$STALE_REPO" add file.txt
+  git -C "$STALE_REPO" commit -qm init
+  git -C "$STALE_REPO" worktree add -q -b worktree-old "${STALE_WORK}/wt-old"
+}
+
+@test "declared isolation + stale agent worktree -> stale notice with confirm-clean gate" {
+  make_repo_with_stale_worktree
+  ctx="$(ctx_of "{\"tool_name\":\"Agent\",\"cwd\":\"${STALE_REPO}\",\"tool_input\":{\"description\":\"d\",\"prompt\":\"x\",\"isolation\":\"worktree\"}}")"
+  printf '%s' "$ctx" | grep -q 'Stale worktree notice'
+  printf '%s' "$ctx" | grep -q 'wt-old'
+  printf '%s' "$ctx" | grep -qi 'CONFIRM IT IS CLEAN'
+  printf '%s' "$ctx" | grep -qi 'never discard uncommitted work'
+  rm -rf "$STALE_WORK"
+}
+
+@test "declared isolation + repo without agent worktrees -> silent" {
+  STALE_WORK="$(mktemp -d "${TMPDIR:-/tmp}/guard-bats.XXXXXX")"
+  STALE_REPO="${STALE_WORK}/repo"
+  mkdir -p "$STALE_REPO"
+  git -C "$STALE_REPO" init -q
+  [ -z "$(ctx_of "{\"tool_name\":\"Agent\",\"cwd\":\"${STALE_REPO}\",\"tool_input\":{\"description\":\"d\",\"prompt\":\"x\",\"isolation\":\"worktree\"}}")" ]
+  rm -rf "$STALE_WORK"
+}
+
+@test "undeclared isolation + stale agent worktree -> advisory includes stale notice" {
+  make_repo_with_stale_worktree
+  ctx="$(ctx_of "{\"tool_name\":\"Agent\",\"cwd\":\"${STALE_REPO}\",\"tool_input\":{\"description\":\"d\",\"prompt\":\"x\"}}")"
+  printf '%s' "$ctx" | grep -qi 'Subagent isolation'
+  printf '%s' "$ctx" | grep -q 'Stale worktree notice'
+  printf '%s' "$ctx" | grep -q 'wt-old'
+  rm -rf "$STALE_WORK"
 }

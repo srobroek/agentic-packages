@@ -60,8 +60,10 @@ then query-docs) for library API documentation.
 
 If you create any throwaway workspace during the task — a scratch clone, temp
 directory, or extra worktree — delete it (including build artifacts such as
-`target/` or `node_modules/`) before finishing. Leave the caller's own build
-artifacts alone: they belong to the caller's incremental builds.
+`target/` or `node_modules/`) before finishing. For a git worktree or clone,
+confirm it is clean first: no uncommitted changes and nothing unharvested.
+Leave the caller's own build artifacts alone: they belong to the caller's
+incremental builds.
 
 Final response must include: changed files, verification commands and results,
 risks or blockers, follow-up needed from main thread.

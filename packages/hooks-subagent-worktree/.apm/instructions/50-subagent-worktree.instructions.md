@@ -44,15 +44,20 @@ compilation artifacts (a Rust `target/` dir alone can reach tens of GB), and
 dead worktrees silently fill the disk. Whoever creates a worktree owns its
 removal:
 
-- When an agent finishes and its branch is committed (and merged or harvested),
-  remove the worktree: `rm -rf <worktree>/target` (and other build dirs such as
-  `node_modules/`) followed by `git worktree remove <worktree>` and
-  `git worktree prune`.
+- Confirm the worktree is clean before removing it: `git -C <worktree> status
+  --porcelain` prints nothing, and the worktree branch's commits are merged or
+  otherwise harvested. If uncommitted or unharvested work remains, stop —
+  commit, stash, or escalate; never discard work to force a removal.
+- Only once confirmed clean, reclaim it: delete build dirs
+  (`rm -rf <worktree>/target`, `node_modules/`, and similar gitignored
+  output), then `git worktree remove <worktree>` and `git worktree prune`.
 - Orchestrators that fan out parallel worktree agents must sweep after fan-in:
-  once each child's result is collected, its worktree and artifacts go.
-- Periodically check `git worktree list` for strays and remove any worktree
-  whose work is done. Do not rely on a shared build directory to contain the
-  cost — the fix is not letting dead worktree artifacts accumulate.
+  once each child's branch is merged or harvested and its tree is confirmed
+  clean, its worktree and artifacts go.
+- Periodically check `git worktree list` for strays and apply the same
+  confirm-clean gate before removing any. Do not rely on a shared build
+  directory to contain the cost — the fix is not letting dead worktree
+  artifacts accumulate.
 
 ## You own concurrency safety
 
