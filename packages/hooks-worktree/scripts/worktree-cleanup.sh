@@ -51,6 +51,17 @@ else
     git -C "$REPO_ROOT" worktree remove "$TOPLEVEL" 2>/dev/null
 fi
 
+# Reclaim disk even when removal was refused (e.g. locked or dirty unmanaged
+# tree): build artifacts are reproducible, so a stranded worktree must not
+# keep holding them. Only delete directories git itself marks as ignored.
+if [ -d "$TOPLEVEL" ]; then
+  for artifact_dir in target node_modules dist .venv; do
+    if [ -d "$TOPLEVEL/$artifact_dir" ] && git -C "$TOPLEVEL" check-ignore -q "$artifact_dir" 2>/dev/null; then
+      rm -rf "$TOPLEVEL/${artifact_dir:?}"
+    fi
+  done
+fi
+
 # Delete worktree branch (recoverable; -d refuses unmerged work).
 if [ -n "$BRANCH" ]; then
     case "$BRANCH" in

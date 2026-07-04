@@ -74,6 +74,10 @@ that are outside the caller project's current repo root.
 ## Rules
 
 - Preserve unrelated local changes in a parent-provided reused checkout.
+- Your self-created clone is disposable: when the task is complete and reported
+  (and pushed, where delegated), remove it — or at minimum its build artifacts
+  (`target/`, `node_modules/`, and similar) — so dead `/tmp` checkouts do not
+  accumulate compiled output. Never delete a parent-provided reused checkout.
 - Do not import caller-project conventions unless the parent explicitly asks.
 - If the repo's own instructions conflict with the parent task, stop and report
   the conflict.

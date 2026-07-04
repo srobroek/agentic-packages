@@ -33,7 +33,7 @@ has_iso="$(
 [[ "$has_iso" == "yes" ]] && exit 0
 
 read -r -d '' advice <<'ADVICE' || true
-Subagent isolation (advisory, non-blocking): if this subagent WRITES files AND runs in parallel with other writers, pass isolation:"worktree" so they do not collide on a shared tree — Claude branches it from your current HEAD (worktree.baseRef=head) as worktree-<name>. A read-only, different-repo, or lone-writer subagent needs no isolation. If you DO run it in a worktree, instruct it to COMMIT its work before finishing: the worktree branch persists, but uncommitted changes there can be lost when the worktree is cleaned up.
+Subagent isolation (advisory, non-blocking): if this subagent WRITES files AND runs in parallel with other writers, pass isolation:"worktree" so they do not collide on a shared tree — Claude branches it from your current HEAD (worktree.baseRef=head) as worktree-<name>. A read-only, different-repo, or lone-writer subagent needs no isolation. If you DO run it in a worktree, instruct it to COMMIT its work before finishing: the worktree branch persists, but uncommitted changes there can be lost when the worktree is cleaned up. Afterward the worktree is yours to reap: once you have merged or harvested the child's branch, delete its build artifacts and remove the worktree (rm -rf <worktree>/target; git worktree remove <worktree>) — dead worktrees accumulate compiled output and fill the disk.
 ADVICE
 
 jq -n --arg ctx "$advice" '{

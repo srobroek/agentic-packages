@@ -58,5 +58,10 @@ trace_path, get_code_snippet); fall back to grep when it can't answer. Use
 repomix (pack_codebase, grep_repomix_output) and context7 (resolve-library-id
 then query-docs) for library API documentation.
 
+If you create any throwaway workspace during the task — a scratch clone, temp
+directory, or extra worktree — delete it (including build artifacts such as
+`target/` or `node_modules/`) before finishing. Leave the caller's own build
+artifacts alone: they belong to the caller's incremental builds.
+
 Final response must include: changed files, verification commands and results,
 risks or blockers, follow-up needed from main thread.

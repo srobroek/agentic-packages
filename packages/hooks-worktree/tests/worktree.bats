@@ -181,3 +181,21 @@ EOF
 
   rm -rf "$managed_root"
 }
+
+@test "cleanup: refused removal still deletes ignored build artifacts" {
+  WT="${WORK}/wt-artifacts"
+  git -C "$REPO" worktree add -q -b worktree-artifacts "$WT"
+  printf 'target/\n' > "${WT}/.gitignore"
+  git -C "$WT" add .gitignore
+  git -C "$WT" commit -qm "gitignore"
+  mkdir -p "${WT}/target/debug"
+  printf 'bin\n' > "${WT}/target/debug/app"
+  # Lock the worktree so non-force removal is refused (unmanaged path).
+  git -C "$REPO" worktree lock "$WT"
+  run bash "$CLEANUP" <<EOF
+{"cwd": "${WT}"}
+EOF
+  [ "$status" -eq 0 ]
+  [ -d "$WT" ]
+  [ ! -d "${WT}/target" ]
+}

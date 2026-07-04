@@ -67,11 +67,12 @@ ctx_of() {
   [ -n "$ctx" ]
 }
 
-@test "advisory mentions worktree isolation, parallel, and committing" {
+@test "advisory mentions worktree isolation, parallel, committing, and cleanup" {
   ctx="$(ctx_of '{"tool_name":"Agent","tool_input":{"description":"d","prompt":"x"}}')"
   printf '%s' "$ctx" | grep -qi 'worktree'
   printf '%s' "$ctx" | grep -qi 'commit'
   printf '%s' "$ctx" | grep -qi 'parallel'
+  printf '%s' "$ctx" | grep -qi 'worktree remove'
 }
 
 @test "advisory exits 0 (non-blocking)" {

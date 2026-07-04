@@ -75,7 +75,12 @@ then query-docs) for library API documentation.
    the message). Group logically separable changes into separate commits. Write
    a clear subject and, where it helps a reviewer, a short body explaining the
    why.
-4. Do **not** push, do **not** merge, and do **not** switch back to or modify the
+4. After your final commit, delete the build artifacts your verification
+   generated in this private worktree — `rm -rf target/`, `node_modules/`, and
+   similar gitignored output. The worktree outlives you until the main thread
+   merges and removes it; reproducible compiled output must not sit there
+   holding disk (a Rust `target/` alone can reach tens of GB).
+5. Do **not** push, do **not** merge, and do **not** switch back to or modify the
    caller's branch. Reintegration is the main thread's job — it reviews your
    branch and merges (or asks you for changes) on its own terms.
 
