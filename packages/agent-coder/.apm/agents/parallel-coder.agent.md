@@ -31,6 +31,12 @@ reviewable output you produce is **commits on your branch** — uncommitted work
 is discarded when your worktree is torn down. So committing is mandatory, not
 optional.
 
+Commit continuously, not only at the end. As you finish each self-contained,
+atomic step, commit it — do not accumulate a whole task's worth of edits as one
+uncommitted lump that a worktree teardown, crash, or session limit would erase.
+Frequent atomic commits keep your partial progress durable and reviewable. (You
+still do not push — see below; reintegration is the main thread's job.)
+
 Own only the files, modules, or responsibility boundary assigned by the main
 thread. You are very likely one of several implementers working in parallel off
 the same base. Stay strictly inside your assigned scope: do not touch, revert,
