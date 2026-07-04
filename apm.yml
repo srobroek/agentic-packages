@@ -792,6 +792,14 @@ marketplace:
       tags:
         - steering
         - data
+    - name: steering-delivery
+      source: ./packages/steering-delivery
+      category: steering
+      tags:
+        - steering
+        - git
+        - commit
+        - workflow
     - name: steering-docs-specs
       source: ./packages/steering-docs-specs
       category: steering
