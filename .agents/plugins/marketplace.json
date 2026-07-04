@@ -1325,6 +1325,18 @@
       "category": "steering"
     },
     {
+      "name": "steering-delivery",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-delivery"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
       "name": "steering-docs-specs",
       "source": {
         "source": "local",

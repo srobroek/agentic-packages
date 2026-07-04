@@ -1376,6 +1376,18 @@
         }
       ]
     },
+    "packages/steering-delivery": {
+      "release-type": "simple",
+      "component": "steering-delivery",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-docs-specs": {
       "release-type": "simple",
       "component": "steering-docs-specs",

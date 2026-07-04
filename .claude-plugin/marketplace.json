@@ -468,7 +468,7 @@
     },
     {
       "name": "hooks-git-workflow",
-      "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted work at session end. Cross-tool (Claude + Codex).",
+      "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
       "version": "1.2.0",
       "tags": [
         "hooks",
@@ -1183,6 +1183,18 @@
         "data"
       ],
       "source": "./packages/steering-data"
+    },
+    {
+      "name": "steering-delivery",
+      "description": "Opinionated delivery cadence: work like a developer who commits continuously. Commit and push after every meaningful, self-contained step; keep commits atomic; leave no unpushed local work stranded in a local or disposable worktree. Always-on steering. Opt-in.",
+      "version": "0.1.0",
+      "tags": [
+        "steering",
+        "git",
+        "commit",
+        "workflow"
+      ],
+      "source": "./packages/steering-delivery"
     },
     {
       "name": "steering-docs-specs",

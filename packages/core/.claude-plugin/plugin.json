@@ -22,6 +22,10 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/resume-session"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/steering-delivery"
     }
   ]
 }
