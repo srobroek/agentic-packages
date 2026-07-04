@@ -19,6 +19,20 @@ esac
 COMMAND=$(printf '%s' "$INPUT" | jq -r 'if (.tool_input|type)=="string" then .tool_input else (.tool_input.command // empty) end' 2>/dev/null)
 [ -z "$COMMAND" ] && exit 0
 
+# grep/find/ls/cat suggestions are gated on rtk NOT being installed. When the
+# rtk PreToolUse hook is active it rewrites `grep/find/ls/cat` to
+# `rtk grep/find/ls/read`, which compress output ~60-94% — a bigger token win
+# than steering to rg/fd/eza/bat (whose output rtk does not compress; rtk's
+# rg->grep rewrite is also broken on rg-only flags). Package-manager, task-runner
+# and version-manager suggestions are unaffected. Tests override via TOOL_PREFS_RTK.
+if [ -n "${TOOL_PREFS_RTK:-}" ]; then
+  HAS_RTK="$TOOL_PREFS_RTK"
+elif command -v rtk >/dev/null 2>&1; then
+  HAS_RTK=1
+else
+  HAS_RTK=0
+fi
+
 # Suggest for every command in a pipeline/chain, not only the first word:
 # split on top-level |, ||, &&, ;, & — but NOT separators inside quotes, so a
 # commit message like git commit -m "fix; make it work" is not mis-split into a
@@ -53,13 +67,14 @@ SEGMENTS=$(printf '%s\n' "$COMMAND" | awk -v sq="$SQ" '
 suggest_for() {
   local base="$1" segment="$2"
   case "$base" in
-    # CLI replacements
-    grep)   echo "Prefer rg (ripgrep) over grep for faster, more ergonomic search." ;;
-    find)   echo "Prefer fd over find for faster file discovery." ;;
-    ls)     echo "Prefer eza over ls for better output." ;;
+    # CLI replacements — skipped when rtk is present (it compresses these).
+    grep)   [ "$HAS_RTK" = 1 ] || echo "Prefer rg (ripgrep) over grep for faster, more ergonomic search." ;;
+    find)   [ "$HAS_RTK" = 1 ] || echo "Prefer fd over find for faster file discovery." ;;
+    ls)     [ "$HAS_RTK" = 1 ] || echo "Prefer eza over ls for better output." ;;
     cat)
-      # cat is fine for piping; only suggest bat for viewing
-      if ! echo "$COMMAND" | grep -qE '\|'; then
+      # cat is fine for piping; only suggest bat for viewing (and only when rtk
+      # is absent — rtk rewrites cat -> rtk read).
+      if [ "$HAS_RTK" != 1 ] && ! echo "$COMMAND" | grep -qE '\|'; then
         echo "Prefer bat over cat for syntax-highlighted viewing."
       fi
       ;;

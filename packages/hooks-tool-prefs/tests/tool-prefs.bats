@@ -17,6 +17,10 @@ setup() {
   # deterministic (no project files leaking in).
   TESTDIR="$(mktemp -d "${BATS_TEST_TMPDIR:-/tmp}/toolprefs.XXXXXX")"
   cd "$TESTDIR" || return 1
+  # Deterministic default: assume rtk is absent so grep/find/ls/cat suggestions
+  # fire regardless of whether the test host has rtk on PATH. The rtk-present
+  # gating is covered explicitly below via TOOL_PREFS_RTK=1.
+  export TOOL_PREFS_RTK=0
 }
 
 teardown() {
@@ -120,4 +124,30 @@ teardown() {
   run bash -c 'printf "%s" '\''{"tool_input":{"command":"find . -name x"}}'\'' | bash "$1"' _ "$HOOK"
   [ "$status" -eq 0 ]
   printf '%s' "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
+}
+
+# --- 5. rtk-present gating: grep/find/ls/cat suggestions are suppressed ----
+
+@test "with rtk present, grep/find/ls produce no suggestion" {
+  for cmd in "grep foo bar" "find . -name x" "ls -la"; do
+    run bash -c 'printf "%s" "{\"tool_input\":{\"command\":\"'"$cmd"'\"}}" | TOOL_PREFS_RTK=1 bash "$1"' _ "$HOOK"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+  done
+}
+
+@test "with rtk present, cat produces no bat suggestion" {
+  run bash -c 'printf "%s" '\''{"tool_input":{"command":"cat file.txt"}}'\'' | TOOL_PREFS_RTK=1 bash "$1"' _ "$HOOK"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "with rtk present, pnpm/make suggestions still fire (unaffected by gating)" {
+  : > justfile
+  run bash -c 'printf "%s" '\''{"tool_input":{"command":"grep x f | npm install && make build"}}'\'' | TOOL_PREFS_RTK=1 bash "$1"' _ "$HOOK"
+  [ "$status" -eq 0 ]
+  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext')"
+  [[ "$ctx" != *"rg"* ]]          # grep nudge suppressed
+  [[ "$ctx" == *"pnpm install"* ]] # pkg-manager nudge unaffected
+  [[ "$ctx" == *"just"* ]]         # task-runner nudge unaffected
 }
