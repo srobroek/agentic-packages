@@ -47,3 +47,12 @@ such as `git switch -c`, `git checkout -b`, `git worktree add`, `git merge`,
 point. Do not refresh Repomix on PR creation, PR review, or remote-only
 `gh pr merge`; the pack should reflect the local worktree after the relevant
 branch or merged base branch has actually been pulled or checked out.
+
+Agents and orchestrators must clean up their worktrees and compilation
+artifacts once their work is done. Dead worktrees accumulate build output (a
+Rust `target/` dir alone can reach tens of GB) until the disk fills; a shared
+build directory would only mask this while serializing parallel builds. The
+worktree-removal step for a finished agent — and any periodic sweep an
+orchestrator runs after fan-in — should delete build dirs and remove the
+worktree: `rm -rf <worktree>/target` (plus `node_modules/` and similar), then
+`git worktree remove <worktree>` and `git worktree prune`.
