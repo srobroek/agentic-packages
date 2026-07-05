@@ -947,6 +947,17 @@
       "source": "./packages/optimize-steering"
     },
     {
+      "name": "orchestrate",
+      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus task-specific agents (workflow-coder, integration-gatekeeper, ledger-scribe) and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "agent",
+        "orchestration"
+      ],
+      "source": "./packages/orchestrate"
+    },
+    {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
       "version": "1.1.2",
