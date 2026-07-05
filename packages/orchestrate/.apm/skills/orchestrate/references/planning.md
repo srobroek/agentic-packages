@@ -4,6 +4,11 @@ You (the orchestrator) always own the **high-level** plan. How the work is
 decomposed into executable units is **pluggable**: use an external framework when
 the project already has one, otherwise build the default runtime DAG.
 
+Owning the plan means owning the **decisions and the graph**, not doing the deep
+reading yourself. Push codebase exploration and any large planning pass to
+read-only agents (`Explore`, `Plan`) and keep only their conclusions — the
+orchestrator stays lean so its context lasts the whole run.
+
 ## Decide the planning system
 
 - **External framework in play (SpecKit or similar):** be aware of it and delegate

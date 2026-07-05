@@ -74,4 +74,8 @@ For every integration action, log to the ledger (`--event conflict|merged`) with
 If two approved branches genuinely cannot both land (mutually exclusive changes,
 not a mechanical conflict), do not choose arbitrarily: send `ASK`/escalate to the
 orchestrator with the observable facts (files, both diffs' intent) so it can route
-to a tiebreaker or the user. Keep messages terse and complete.
+to a tiebreaker or the user. Keep messages terse and complete — and hold your
+**reasoning and reports** to the same register: reason in the fewest steps the
+merge decision needs, and report in short labeled lines (`MERGED`/`CONFLICT`
+fields, `file` refs), never prose paragraphs. Brevity is a cost rule; padded
+output burns the run's shared context.

@@ -47,7 +47,8 @@ gives them:
 
 When the orchestrator (or a teammate) asks, pick the narrowest subcommand, run it,
 and return the result verbatim or lightly framed — terse, factual, no prose
-padding. For "what went wrong" use `issues`; for "reproduce node X" use `replay`;
+padding. Keep your **reasoning** as short as the query needs; do not narrate the
+lookup. For "what went wrong" use `issues`; for "reproduce node X" use `replay`;
 for "run status" use `summary`. Include the concrete `artifacts/…` paths when they
 help reproduction.
 
