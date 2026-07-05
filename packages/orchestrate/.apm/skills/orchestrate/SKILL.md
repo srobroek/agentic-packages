@@ -13,7 +13,7 @@ hooks:
   SubagentStart:
     - hooks:
         - type: command
-          command: "./scripts/inject-comms.sh"
+          command: '"$CLAUDE_PROJECT_DIR"/.claude/skills/orchestrate/scripts/inject-comms.sh'
 ---
 
 # Orchestrate

@@ -21,8 +21,9 @@ This file adds the per-verb field table and a worked example.
 | `ASK` | any → orch | node, question, who is waiting |
 
 Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
-a `file:line` or ledger/node id backing a claim; every factual field is either
-a pointer or the marker `untested` (see `comms-block.md`).
+a `file:line` or ledger/node id backing a claim; `open:` a known-unfinished or
+deferred item (distinct from `risks:` — hazards for the receiver); every factual
+field is either a pointer or the marker `untested` (see `comms-block.md`).
 
 ## Worked example — one node (`t3`) end to end
 
