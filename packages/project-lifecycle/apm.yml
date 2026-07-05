@@ -15,7 +15,7 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/catchup#>=1.1.0 <2.0.0
-    - srobroek/agentic-packages/packages/handover#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/handover#>=1.2.0 <2.0.0
     - srobroek/agentic-packages/packages/commit-push-merge#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/commit-push-pr#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/quick-commit#>=1.1.0 <2.0.0
