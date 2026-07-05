@@ -79,7 +79,7 @@ def lint(body: str) -> list[str]:
     m = LINE1_RE.match(line1)
     if not m:
         return [f"line 1: expected 'VERB <node-id>', got {line1!r}"]
-    verb, _node = m.group(1), m.group(2)
+    verb = m.group(1)
 
     known_verb = verb in VERBS
     if not known_verb:

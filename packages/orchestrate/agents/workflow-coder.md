@@ -39,7 +39,7 @@ Bundled scripts (skill `scripts/` dir):
 
 ## Work
 
-1. `graph.py … set-state <node> working`. Log `--event assign`→`working`.
+1. `graph.py … set-state <node> working`. Log `--event assign`.
 2. Own only your `scope`. Never touch/revert/tidy files another node owns
    (causes merge conflicts). Change outside scope seems needed → do NOT take
    it; raise it (ASK below), leave for the orchestrator.

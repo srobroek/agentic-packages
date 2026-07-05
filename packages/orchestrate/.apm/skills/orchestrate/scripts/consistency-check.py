@@ -43,8 +43,9 @@ def check(store: str) -> int:
     events_by_node: dict[str, set[str]] = {}
     for r in rows:
         n = r.get("node")
-        if n:
-            events_by_node.setdefault(n, set()).add(r.get("event"))
+        ev = r.get("event")
+        if n and ev:
+            events_by_node.setdefault(n, set()).add(ev)
 
     problems = 0
     nodes = gdata["nodes"]

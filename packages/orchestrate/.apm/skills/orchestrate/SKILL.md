@@ -54,10 +54,10 @@ Role: lead session / orchestrator.
    idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
    relay `ADVICE` back. — why: keeps every agent one hop from you so the comms
    protocol reaches all of them.
-6. **You own review/advice per code node; resume coders, never re-spawn.** Per
-   code-writing node: spawn a `workflow-reviewer` against the coder's branch;
-   broker the advisor/debugger on block (coder directs neither). Coder ends
-   its turn after `REPORTED` → becomes a resumable background subagent. Retain
+6. **You own review per code node; resume coders, never re-spawn.** Per
+   code-writing node: spawn a `workflow-reviewer` against the coder's branch.
+   Coder ends its turn after `REPORTED` → becomes a resumable background
+   subagent. Retain
    its `agentId`/name; drive fix rounds via SendMessage to that handle
    (auto-resumes with context + worktree). Never spawn a fresh coder for a
    node under review. Dismiss only on approval + merge.

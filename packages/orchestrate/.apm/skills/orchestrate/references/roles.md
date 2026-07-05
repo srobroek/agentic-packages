@@ -40,10 +40,8 @@ SKILL.md Core rules.
 | Researcher | nothing (read-only) | nothing | reads sources/code | returns a terse findings digest |
 | Tiebreaker | nothing (read-only) | nothing | reads the dispute | binding `ADVICE`, logged |
 
-**Only the orchestrator spawns or dismisses agents. No worker nests** — even
-where the platform would allow it. This keeps the spawn tree flat (orchestrator
-→ leaf) so the comms protocol reaches every agent and no context hides inside a
-nested child.
+**Only the orchestrator spawns or dismisses agents; no worker nests** — even
+where the platform would allow it (flat tree — SKILL.md core rule 5).
 
 ## Researcher fan-out / fan-in
 
