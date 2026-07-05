@@ -105,4 +105,9 @@ orchestrator surfaces it to the user and returns a decision. Never guess on
 product intent.
 
 Keep every message terse and complete: one verb, node id, then labeled fields.
-Facts over prose.
+Facts over prose. The same register governs your **reasoning and your reports**,
+not just messages — reason in the fewest steps the task needs (no narration of
+obvious moves, no restating the brief), and write every `--output`/`REPORTED`
+body as short labeled lines with `file:line` refs, never paragraphs. Long
+reasoning and padded reports burn the run's shared context — treat brevity as a
+cost rule.

@@ -24,6 +24,14 @@ escalations). Set effort with the agent's `effort` field or per-invocation.
 never-restarted process: the Gatekeeper and Scribe keep their state in the shared
 stores, so recycle them to shed context (see `references/lifecycle.md`).
 
+The **Orchestrator does not execute work** — it only coordinates. It spends its
+context on decomposition, routing, brokering review, gating merges, and the
+deterministic scripts; every token-heavy action (reading files, coding,
+research, diff review, tests) is delegated to a subagent so the lead session's
+context is never burned on content it could have handed off. Doing work yourself
+is not a shortcut — it is the fastest way to starve the run of its scarcest
+resource.
+
 ## Spawn authority (who may spawn what)
 
 - **Orchestrator** spawns everything *except* the Advisor, and owns **all**

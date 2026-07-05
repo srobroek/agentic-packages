@@ -9,6 +9,23 @@ mirrored to the ledger with the matching `--event`.
 SendMessage envelope: `to` = recipient name (or `main` for the orchestrator from a
 background subagent), `summary` = 5–10 words, `message` = the body below.
 
+## Terseness is not just the envelope
+
+The same terse, factual register governs an agent's **reasoning and output**, not
+only its `SendMessage` bodies. Every agent in the run — coder, reviewer,
+gatekeeper, scribe, advisor — thinks and reports in the same compressed style:
+short, direct, facts over prose. This is a cost rule, not a stylistic one — long
+reasoning and padded reports burn tokens and context across the whole fleet.
+
+- **Reasoning:** think in the fewest steps the problem needs; no narration of
+  obvious moves, no restating the brief, no throat-clearing. Get to the decision.
+- **Output/reports** (ledger `--output`, `REPORTED`/`REVIEW` bodies, advisor
+  `ADVICE`, end-of-run report): labeled fields and short lines, never paragraphs.
+  State the fact, the location (`file:line`), and the action — nothing else.
+- **No prose padding:** drop preamble, summaries of what you just did, hedging,
+  and closing pleasantries. If a field is empty, omit it rather than explaining
+  its absence.
+
 ## Verbs
 
 | Verb | From → To | Carries |

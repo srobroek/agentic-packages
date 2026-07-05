@@ -19,8 +19,26 @@ reproducible record. Reasoning stays with agents; everything deterministic runs
 through the bundled scripts. Keep all inter-agent messages terse and complete
 (see `references/message-grammar.md`).
 
+**You orchestrate; you do not execute.** Your context window is the run's
+scarcest, non-recoverable resource — spend it on coordination, never on content.
+Delegate every token-heavy action to a subagent and keep only its terse result;
+the details are in the first Core rule below.
+
 ## Core rules
 
+- **Orchestrate, don't execute — protect your context.** Doing the work yourself
+  is the one thing that can starve the whole run: the lead session's context is
+  finite and cannot be reclaimed, so anything that loads file contents, code, or
+  long output into *your* window is delegated, not done. Push **every**
+  token-heavy action to the cheapest capable subagent — reading source files,
+  writing or editing code, research, reviewing diffs, running tests/builds, deep
+  planning — and keep only the terse result it reports back. The **only** work you
+  perform directly is cheap, bounded coordination: the high-level decomposition,
+  running the bundled deterministic scripts (`graph.py`, `ledger.py`,
+  `discover-agents.py`, `conflict-probe.sh`), and relaying terse messages. If you
+  are about to open a file or make an edit, stop and spawn an agent for it
+  instead — even a "quick" one-line change or a single file read, because the
+  cost you are guarding is your context, not the edit.
 - **Cheapest capable model per role.** Route by `references/roles.md`; escalate
   up only on hard cases. Never put an expensive model on cheap mechanical work.
 - **Subagents, not teammates — always.** Fan out with the **Agent tool as
