@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic-v1.0.0...steering-pragmatic--v1.1.0) (2026-07-05)
+
+
+### Features
+
+* orchestrate comms protocol v2 with verified injection, concurrency-safe run scripts, and message linting ([#484](https://github.com/srobroek/agentic-packages/issues/484)) ([8c9cce2](https://github.com/srobroek/agentic-packages/commit/8c9cce2fbecd0f31aa2b254a7bd4d03392ce2166))
+* orchestrator-only-coordinates rule, terse agent reasoning/output, pragmatic terseness + comment guidance ([#483](https://github.com/srobroek/agentic-packages/issues/483)) ([446b624](https://github.com/srobroek/agentic-packages/commit/446b62498a0e96e5b6663a3977dbd931b64c8d41))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic-v0.2.0...steering-pragmatic-v1.0.0) (2026-06-26)
 
 

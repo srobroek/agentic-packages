@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v7.0.0...srobroek-agentic--v7.1.0) (2026-07-05)
+
+
+### Features
+
+* orchestrate comms protocol v2 with verified injection, concurrency-safe run scripts, and message linting ([#484](https://github.com/srobroek/agentic-packages/issues/484)) ([8c9cce2](https://github.com/srobroek/agentic-packages/commit/8c9cce2fbecd0f31aa2b254a7bd4d03392ce2166))
+
 ## [7.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v6.1.0...srobroek-agentic--v7.0.0) (2026-07-05)
 
 
