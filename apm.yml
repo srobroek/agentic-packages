@@ -642,6 +642,13 @@ marketplace:
         - skill
         - maintenance
         - steering
+    - name: orchestrate
+      source: ./packages/orchestrate
+      category: agentic-maintenance
+      tags:
+        - skill
+        - agent
+        - orchestration
     - name: planning-product
       source: ./packages/planning-product
       category: planning-product

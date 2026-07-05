@@ -1061,6 +1061,18 @@
       "category": "agentic-maintenance"
     },
     {
+      "name": "orchestrate",
+      "source": {
+        "source": "local",
+        "path": "./packages/orchestrate"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "agentic-maintenance"
+    },
+    {
       "name": "planning-product",
       "source": {
         "source": "local",
