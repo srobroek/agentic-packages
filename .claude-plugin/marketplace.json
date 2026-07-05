@@ -20,7 +20,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work).",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "tags": [
         "agent",
         "engineering",
@@ -31,7 +31,7 @@
     {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "agent",
         "engineering",
@@ -129,7 +129,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "tags": [
         "bundle",
         "graph"
@@ -172,7 +172,7 @@
     {
       "name": "codex-hook-contract",
       "description": "Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event names, the stdin payload shape (object vs string .tool_input), and how Codex honors a hook decision (permissionDecision vs decision.behavior vs exit codes), with exact tests to verify each open claim. Documentation only -- no scripts.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "tags": [
         "codex",
         "hooks",
@@ -205,7 +205,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "1.1.3",
+      "version": "1.2.0",
       "tags": [
         "bundle",
         "baseline"
@@ -378,7 +378,7 @@
     {
       "name": "handover",
       "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "skill",
         "lifecycle",
@@ -469,7 +469,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "hooks",
         "git",
@@ -569,7 +569,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder — if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none — and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "worktree",
@@ -907,7 +907,7 @@
     {
       "name": "mcp-repomix",
       "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "mcp",
         "repomix"
@@ -949,7 +949,7 @@
     {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus task-specific agents (workflow-coder, integration-gatekeeper, ledger-scribe) and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "skill",
         "agent",
@@ -1068,7 +1068,7 @@
     {
       "name": "resume-session",
       "description": "Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "skill",
         "lifecycle",
@@ -1198,7 +1198,7 @@
     {
       "name": "steering-delivery",
       "description": "Opinionated delivery cadence: work like a developer who commits continuously. Commit and push after every meaningful, self-contained step; keep commits atomic; leave no unpushed local work stranded in a local or disposable worktree. Always-on steering. Opt-in.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "steering",
         "git",

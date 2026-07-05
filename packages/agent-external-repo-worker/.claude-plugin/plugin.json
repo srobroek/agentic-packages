@@ -1,6 +1,6 @@
 {
   "name": "agent-external-repo-worker",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
   "author": {
     "name": "Sjors Robroek"

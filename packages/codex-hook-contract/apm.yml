@@ -1,5 +1,5 @@
 name: codex-hook-contract
-version: 0.2.0
+version: 0.2.1
 description: >-
   Reference doc for the Codex CLI hook contract as used by this monorepo's guard
   hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event

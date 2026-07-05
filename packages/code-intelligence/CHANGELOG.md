@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v1.1.2...code-intelligence--v1.1.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* remove hardcoded home paths and macOS/Linux portability breaks ([#474](https://github.com/srobroek/agentic-packages/issues/474)) ([c7169ec](https://github.com/srobroek/agentic-packages/commit/c7169ec479439bbbe1f2cbcd5383b1b29452ada1))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v1.1.1...code-intelligence--v1.1.2) (2026-07-03)
 
 

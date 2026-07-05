@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree--v1.0.0...hooks-subagent-worktree--v2.0.0) (2026-07-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **hooks-subagent-worktree:** the PreToolUse:Agent hook no longer denies subagent spawns or requires [iso:*] sentinels. It now posts a non-blocking advisory: if a subagent writes and runs in parallel, use isolation:"worktree"; if it runs isolated, commit before finishing so the worktree branch retains the work. Stays silent once isolation is declared. The 1.x deny-gate guessed wrong too often and blocked legitimate work; cmux native integration + Claude's native worktree lifecycle (baseRef=head) now cover what the gate approximated.
+
+### Features
+
+* **hooks-subagent-worktree:** convert deny-gate to non-blocking advisory ([#473](https://github.com/srobroek/agentic-packages/issues/473)) ([3bb8722](https://github.com/srobroek/agentic-packages/commit/3bb87228c332d6edd7e9e0c7011c679667c2bad6))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree--v0.5.0...hooks-subagent-worktree--v1.0.0) (2026-07-03)
 
 
