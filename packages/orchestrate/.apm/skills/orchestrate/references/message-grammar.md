@@ -31,8 +31,8 @@ reasoning and padded reports burn tokens and context across the whole fleet.
 | Verb | From → To | Carries |
 |---|---|---|
 | `ASSIGN` | orch → coder | node, title, scope, base, store, deps, commands, protocol |
-| `BLOCKED`/`ADVISE` | coder → advisor | node, the reasoning question + minimal code context |
-| `ADVICE` | advisor → coder | node, answer, rationale, refs |
+| `BLOCKED` | coder → orch | node, the reasoning question + minimal code context |
+| `ADVICE` | advisor → orch → coder | node, answer, rationale, refs (orch relays) |
 | `REPORTED` | coder → orch | node, branch, worktree, commits, verify, risks, status |
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
@@ -55,23 +55,32 @@ ASSIGN t3
   store:    /home/…/.orchestration/run-7f3a/     # DAG + ledger here
   deps:     t1(done), t2(done)
   commands: state=graph.py …set-state t3 <s>; log=ledger.py …add --node t3 --actor coder-t3 …
-  protocol: on block → spawn advisor. green → commit+push, log reported, REPORTED to main, stay alive.
+  protocol: on block → BLOCKED to main (don't spawn). green → commit+push, log reported, REPORTED to main, stay alive.
 ```
 
-**Blocked → advisor (coder's one nesting exception)**
+**Blocked → orchestrator brokers an advisor** (the coder spawns nothing)
 ```
-to: advisor-t3  summary: "advise on token refresh race"
+to: main        summary: "blocked on token refresh race"
 BLOCKED t3
   need:    Concurrent refresh can double-issue tokens. (a) mutex around refresh vs
            (b) single-flight dedupe by jti — which is safe here?
-  context: src/auth/refresh.rs:40-88 (pasted); tests/auth/refresh_test.rs
+  context: src/auth/refresh.rs:40-88; tests/auth/refresh_test.rs
 ```
+The orchestrator spawns a `workflow-advisor`, relays the question, receives its
+answer, then relays it back to the coder:
 ```
-to: coder-t3    summary: "recommend single-flight dedupe"
+to: advisor-t3  summary: "advice: single-flight dedupe"     # advisor → main
 ADVICE t3
   answer:  Use (b) single-flight keyed by jti.
   because: refresh runs in multiple worker procs; an in-proc mutex won't serialize them.
   refs:    guard with the existing jti store.
+```
+```
+to: coder-t3    summary: "advice on t3: single-flight dedupe"   # main → coder
+ADVICE t3
+  answer:  Use (b) single-flight keyed by jti.
+  because: multi-proc refresh; in-proc mutex won't serialize.
+  refs:    existing jti store.
 ```
 
 **Report (then stays alive)**

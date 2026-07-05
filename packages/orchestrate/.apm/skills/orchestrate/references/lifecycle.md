@@ -8,7 +8,7 @@ Agent lifecycle and task-node state share one vocabulary, tracked in the DAG wit
 ```
                  ┌────────── ASK (question) ──► waiting_human ──(answer)──┐
                  │                                                         ▼
-pending ─ready─► working ─(blocked)─► advisor ─► working ─► reported ─► in_review
+pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─► working ─► reported ─► in_review
    ▲ graph.py                                                               │
    │  ready                                     changes_requested ◄─────────┤ verdict=changes
    │                                                    │                   │ verdict=approve
@@ -23,7 +23,10 @@ pending ─ready─► working ─(blocked)─► advisor ─► working ─► 
 
 - `pending → ready`: computed by `graph.py ready` (all deps `merged`/`approved`/
   `dismissed` **and** scope globs disjoint from every in-flight node).
-- `reported → in_review`: coder finished; orchestrator spawns/relays to reviewer.
+- `reported → in_review`: coder finished; orchestrator spawns a `workflow-reviewer`.
+- `working (blocked)`: coder sends `BLOCKED` to the orchestrator and idles; the
+  orchestrator brokers a `workflow-advisor` and relays `ADVICE` back — the coder
+  spawns nothing.
 - `changes_requested → working`: coder applies exactly the `FIX` items; the **same**
   reviewer re-reviews the delta.
 - `approved → merged`: gatekeeper integrates FCFS after a clean conflict probe.
@@ -36,10 +39,11 @@ pending ─ready─► working ─(blocked)─► advisor ─► working ─► 
 - **Persistent** (spawned once, live the whole run, addressed on demand via
   SendMessage — never polled): **Integration Gatekeeper**, **Ledger Scribe**.
 - **Task-scoped, kept alive across fix rounds** (dismissed only after the node is
-  approved and merged): **Workflow-coder**; and the **Reviewer** for that node
-  (re-reviews deltas with prior context, dismissed on approval).
-- **Ephemeral** (spawn → return → maybe resume for follow-ups): **Researcher**,
-  **Advisor** (coder's child), **Tiebreaker**.
+  approved and merged): **Workflow-coder**; and the **Workflow-reviewer** for that
+  node (re-reviews deltas with prior context, dismissed on approval).
+- **Ephemeral** (spawn → return → maybe resume for follow-ups): **Researcher**
+  (incl. fan-out gatherers + synthesizer), **Workflow-advisor**
+  (orchestrator-brokered), **Tiebreaker**.
 
 Stopped background subagents auto-resume when they receive a SendMessage, so a
 "kept-alive" agent that has gone idle is simply messaged again — do not re-spawn a

@@ -53,14 +53,14 @@ inside your worktree.
    trace_path, get_code_snippet); fall back to grep. Use context7 for library
    API docs. Follow any task-specific tool guidance the orchestrator passed.
 
-## When you cannot reason (the one nesting exception)
+## When you cannot reason (raise it — do not spawn)
 
-If you are genuinely blocked on a design/reasoning decision — not a lookup —
-spawn a single read-only **advisor** subagent (an `adversarial-challenger` or
-`general-purpose` on opus) with the concrete question and the minimal code
-context. Keep the exchange in your context. Apply the advice, log
-`--event advice`. Do NOT spawn coders, reviewers, or any other worker; everything
-else routes through the orchestrator.
+If you are genuinely blocked on a design/reasoning decision — not a lookup — do
+**NOT** spawn anything. Send `BLOCKED <node>` to `main` with the concrete question
+and the minimal code context (`file:line`), then idle. The orchestrator brokers a
+read-only advisor and returns `ADVICE <node>`; apply it, log `--event advice`, and
+continue. You spawn no advisors, reviewers, or coders — the spawn tree is flat and
+everything routes through the orchestrator.
 
 ## Verify, commit, push, report — then end your turn (resumable)
 
@@ -89,6 +89,8 @@ context and worktree — you are the same agent, not a fresh one. Handle:
   (re-enter it if the shell reset); address exactly those items (nothing else),
   re-verify, commit + push, log `--event fix`, re-send `REPORTED`, end your turn.
   The same reviewer re-reviews your delta.
+- `ADVICE <node> …` (the orchestrator's answer to your `BLOCKED`) → apply it, log
+  `--event advice`, continue the work, then verify/report as normal.
 - `CONFLICT <node> with=… files=…` (from the Gatekeeper) → rebase your branch on
   the updated base, re-verify, push, report, end your turn.
 - `DISMISS <node>` (after your node is approved and merged) → only now delete build
@@ -104,10 +106,7 @@ product decision), send `ASK <node> <question>` to `main` and stay idle; the
 orchestrator surfaces it to the user and returns a decision. Never guess on
 product intent.
 
-Keep every message terse and complete: one verb, node id, then labeled fields.
-Facts over prose. The same register governs your **reasoning and your reports**,
-not just messages — reason in the fewest steps the task needs (no narration of
-obvious moves, no restating the brief), and write every `--output`/`REPORTED`
-body as short labeled lines with `file:line` refs, never paragraphs. Long
-reasoning and padded reports burn the run's shared context — treat brevity as a
-cost rule.
+Follow the run comms protocol (injected at spawn; `references/comms-block.md`):
+one verb + node id + labeled fields; your `REPORTED` and ledger entry **are** your
+output — do not restate them as session prose, no markdown headers or sign-offs,
+`file:line` refs, ≤1 status line. Padded reasoning burns the run's shared context.

@@ -9,10 +9,11 @@
 
 The default coordination model in this skill is **persistent/ephemeral background
 subagents addressed via SendMessage**, brokered by the orchestrator. That is
-cheaper and it composes with everything else here (coder→advisor nesting,
-persistent gatekeeper/scribe, worktree isolation). Teammates also cannot spawn
-background subagents, so the coder→advisor exception and the persistent
-gatekeeper/scribe do not even work inside a team.
+cheaper and it composes with everything else here (orchestrator-brokered advisor,
+persistent gatekeeper/scribe, worktree isolation). Teammates cannot spawn
+background subagents, so the orchestrator-brokered advisor and the persistent
+gatekeeper/scribe — all of which rely on the orchestrator spawning background
+subagents — do not work inside a team.
 
 Reach for Claude **agent-teams** only when agents must genuinely talk **peer-to-
 peer** and share a live task list in a way that routing every exchange through the
@@ -38,7 +39,7 @@ pipeline — use subagents.
 - **Small teams only.** 3–5 members; efficient models (sonnet/haiku), not a uniform
   opus team. Three focused teammates beat five scattered ones.
 - **Teammates can't spawn background subagents** (in-process). So the
-  coder→advisor exception and the persistent gatekeeper/scribe **do not work
+  orchestrator-brokered advisor and the persistent gatekeeper/scribe **do not work
   inside a team** — keep those on the subagent pipeline. Use a team as a bounded
   *burst* for the collaborative sub-problem, then return to the pipeline.
 - **No nested teams; one team per session; lead is fixed.** Address teammates by
@@ -49,7 +50,9 @@ pipeline — use subagents.
 ## How to run one
 
 Spawn teammates in natural language, naming the models and giving each a complete
-brief and a distinct lens (see the Claude Code agent-teams docs). Cap the size,
-keep the burst short, monitor and synthesize, then shut the teammates down and
-continue the main run on subagents. Log the team's outcome to the ledger like any
-other step.
+brief and a distinct lens (see the Claude Code agent-teams docs). **Paste
+`references/comms-block.md` verbatim into each teammate brief** — no `SubagentStart`
+hook reaches teammates, so this is the only channel that gives them the comms
+protocol. Cap the size, keep the burst short, monitor and synthesize, then shut the
+teammates down and continue the main run on subagents. Log the team's outcome to
+the ledger like any other step.

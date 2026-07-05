@@ -9,6 +9,11 @@ description: >-
   ephemeral subagents vs Claude agent-teams, worktree isolation, a deterministic
   task DAG, a forensic ledger, and terse inter-agent messaging. Not for single
   bounded edits (use `coder`) or one isolated branch (use `parallel-coder`).
+hooks:
+  SubagentStart:
+    - hooks:
+        - type: command
+          command: "./scripts/inject-comms.sh"
 ---
 
 # Orchestrate
@@ -51,15 +56,24 @@ the details are in the first Core rule below.
 - **Writers run in worktrees.** Implementation goes to the `workflow-coder`
   subagent (`isolation:"worktree"`); it self-commits, pushes, and reports its
   branch + worktree path.
-- **No nested subagents**, except (1) a coder spawning one read-only advisor when
-  blocked on reasoning, (2) spawning a strictly-cheaper model for mechanical bulk.
-  Everything else routes through you.
-- **Review is independent, and coders are resumed not re-spawned.** You spawn the
-  reviewer subagent against a coder's output. A coder ends its turn after
-  `REPORTED` and becomes a *resumable* background subagent — **retain its
-  `agentId`/name** and drive fix rounds by SendMessage to that same handle (which
-  auto-resumes it with its context + worktree). Never spawn a fresh coder for a
-  node under review; dismiss it only on approval + merge.
+- **No nested subagents — the spawn tree is flat.** Only you spawn agents; no
+  worker spawns a child. A coder blocked on a reasoning decision raises
+  `BLOCKED <node>` to you and idles; you broker a `workflow-advisor` and relay
+  `ADVICE` back. Keeping every agent one hop from you is what lets the comms
+  protocol reach all of them.
+- **You own review and advice for every code node; coders are resumed not
+  re-spawned.** For each code-writing node you spawn a `workflow-reviewer` against
+  the coder's branch, and you broker the `workflow-advisor` when a coder blocks —
+  the coder directs neither. A coder ends its turn after `REPORTED` and becomes a
+  *resumable* background subagent — **retain its `agentId`/name** and drive fix
+  rounds by SendMessage to that same handle (which auto-resumes it with its
+  context + worktree). Never spawn a fresh coder for a node under review; dismiss
+  it only on approval + merge.
+- **One comms protocol, auto-injected.** Every subagent you spawn is handed the
+  run comms protocol (`references/comms-block.md`) automatically by the skill's
+  `SubagentStart` hook — so reviewers, advisors, and researchers speak the verb
+  grammar without you pasting it. **Teammates are the exception** (no start-hook
+  reaches them): paste `comms-block.md` verbatim into each teammate brief.
 - **Persistent infra, addressed on demand.** The gatekeeper and ledger-scribe live
   the whole run as background subagents; reach them by SendMessage, never poll.
   Their state lives in the stores, so recycle them to shed context
@@ -78,7 +92,9 @@ the details are in the first Core rule below.
 3. **Discover agents.** Run `scripts/discover-agents.py` to catalog available
    agents (name/model/tools); match each task to an agent by
    `references/roles.md`. Bundle-provided roles: `workflow-coder`,
-   `integration-gatekeeper`, `ledger-scribe`.
+   `workflow-reviewer`, `workflow-advisor`, `integration-gatekeeper`,
+   `ledger-scribe`. Non-code roles route to built-ins (`Explore`,
+   `general-purpose`); for broad research use the fan-out/fan-in in `roles.md`.
 4. **Start persistent infra.** Spawn `integration-gatekeeper` and `ledger-scribe`
    once; hand them the store path.
 5. **Fan out (subagents, not teammates).** For each `graph.py … ready` node, use
@@ -87,11 +103,13 @@ the details are in the first Core rule below.
    `references/spawn-brief.md` (scope, base, store path, ledger/DAG commands,
    protocol). Never spawn teammates for this; if the harness offers to, decline.
    Agents append their own ledger events.
-6. **Broker review.** On `REPORTED`, record the coder's `agentId`, then spawn a
-   reviewer (`references/roles.md`) against the branch/worktree. Relay `REVIEW`
-   findings by SendMessage to that coder's `agentId` as `FIX` — this **resumes the
-   same coder** (its context + worktree intact); do not launch a new coder. Keep
-   the same reviewer for the delta; on `approve`, hand the node to the gatekeeper.
+6. **Broker review + advice.** On `REPORTED`, record the coder's `agentId`, then
+   spawn a `workflow-reviewer` against the branch/worktree. Relay `REVIEW` findings
+   by SendMessage to that coder's `agentId` as `FIX` — this **resumes the same
+   coder** (its context + worktree intact); do not launch a new coder. If a coder
+   raises `BLOCKED`, spawn a `workflow-advisor`, relay its `ADVICE` back, then
+   dismiss it. Keep the same reviewer for the delta; on `approve`, hand the node to
+   the gatekeeper.
 7. **Integrate.** The gatekeeper merges approved branches FCFS, conflict-guarded
    (`conflict-probe.sh`); it pushes conflicts back to coders. Dismiss each coder
    only after its node merges; sweep its worktree.
@@ -107,8 +125,10 @@ the details are in the first Core rule below.
 - `references/lifecycle.md` — state diagram, persistence classes, human-in-loop, cleanup.
 - `references/spawn-brief.md` — how to write an agent brief (what every brief must carry).
 - `references/message-grammar.md` — the terse verb-tag protocol + worked example.
+- `references/comms-block.md` — the canonical protocol injected into every subagent
+  (by the `SubagentStart` hook) and pasted into teammate briefs.
 - `references/ledger-and-dag.md` — store layout, schemas, script usage, git anchors.
 - `references/planning.md` — decomposition + pluggable frameworks + default DAG.
 - `references/teams.md` — when (rarely) and how to use Claude agent-teams.
-- `scripts/graph.py` · `ledger.py` · `discover-agents.py` · `conflict-probe.sh`
-  (stdlib/portable; `_test_graph.py`, `_test_ledger.py` self-tests).
+- `scripts/graph.py` · `ledger.py` · `discover-agents.py` · `conflict-probe.sh` ·
+  `inject-comms.sh` (stdlib/portable; `_test_graph.py`, `_test_ledger.py` self-tests).
