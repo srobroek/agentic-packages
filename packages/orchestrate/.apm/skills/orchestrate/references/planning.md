@@ -53,3 +53,8 @@ Good scopes are the single most important planning decision:
   dependency on the other so `ready`/`validate` serialize them.
 - Shared contracts/interfaces that several nodes depend on should be their own
   early node that the others depend on.
+
+## Concurrency cap
+
+Cap concurrent coders at `min(16, cores − 2)`, and lower further if disk is
+tight — each worktree carries its own copy of build artifacts.

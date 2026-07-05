@@ -25,8 +25,9 @@ store path, the protocol, or its scope. Keep it terse and complete.
 7. **Role-specific tool guidance** you want it to use (codebase-memory, context7,
    Playwright, project verify command). Do **not** rely on the agent's model
    metadata for this — pass it in the brief.
-8. **Escalation rules**: when to raise `BLOCKED` (a coder never spawns its own
-   advisor — you broker it), and when to `ASK` for product intent.
+8. **Escalation rules**: when to raise `BLOCKED kind:design|debug` (a coder never
+   spawns its own advisor/debugger — you broker it), and when to `ASK` for
+   product intent.
 
 ## Coder brief — copyable shape
 
@@ -39,14 +40,19 @@ ASSIGN <node>
   deps:     <node(done), …>
   commands:
     state:  graph.py --store <store> set-state <node> <state>
+    meta:   graph.py --store <store> set-meta <node> --assignee <agentId>
     log:    ledger.py --store <store> add --event <e> --node <node> --actor coder-<node> …
     verify: <project verify cmd, e.g. `just test` / `cargo test -p <crate>`>
-  protocol: on block → BLOCKED to main (do NOT spawn an advisor). After green:
+  protocol: on block → BLOCKED kind:<design|debug> to main (do NOT spawn). After green:
             commit + push branch, log `reported`, send REPORTED to main, STAY ALIVE.
             Apply only FIX items; same reviewer re-reviews delta. Dismissed on DISMISS.
   tools:    <codebase-memory / context7 / etc. as relevant>
   ASK:      raise ASK <node> for anything needing product intent not covered here.
 ```
+
+The orchestrator records `--assignee <agentId>` at spawn (before sending the
+brief) and `--branch --commit` once the node is `REPORTED` — see
+`references/lifecycle.md` (Resume).
 
 ## Persistent-infra brief (once each)
 
@@ -65,10 +71,11 @@ verdict with --event review. You are kept alive to re-review the delta only.`
 Escalate the reviewer to opus in the brief when the diff is complex or
 security-critical.
 
-## Advisor brief (you broker it when a coder raises BLOCKED)
+## Advisor / debugger brief (you broker it when a coder raises BLOCKED)
 
-Spawn a `workflow-advisor` with the coder's question verbatim + the minimal code
-context from its `BLOCKED`:
+Spawn a `workflow-advisor` (kind:design) or the catalog's `debugger` agent
+(kind:debug, else `general-purpose` read-only) with the coder's question
+verbatim + the minimal code context from its `BLOCKED`:
 `Answer <node>: <question>. Context: <file:line …>. Reply ADVICE <node> with
 answer / because / refs — one call, read-only.` Relay its `ADVICE` back to the
-coder, then dismiss the advisor.
+coder, then dismiss it.

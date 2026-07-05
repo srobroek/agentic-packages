@@ -1,17 +1,22 @@
 ORCHESTRATION COMMS PROTOCOL — active run. Follow exactly.
 
-Messaging (SendMessage): one VERB + node id up front, then labeled fields; facts,
-not prose. Envelope: `to`=<name|`main`>, `summary`=5–10 words, `message`=body.
-Verbs: ASSIGN, BLOCKED, ADVICE, REPORTED, REVIEW(approve|changes), FIX, CONFLICT,
-APPROVE, MERGED, DISMISS, ASK, RULE. One verb per message. Mirror every state
-change to the ledger (`--event` = the verb).
+Envelope (SendMessage): `to`=<name|main>, `summary`=5–10 words, `message`=ONE
+VERB + node id + labeled fields. Omit empty fields — never write "none".
 
-Register: your SendMessage / ledger entry IS your output. Do NOT restate it as
-session prose. No markdown headers, no sign-offs ("Exiting", "Final state:"), no
-restating the brief. Session text ≤ 1 status line. Reason in the fewest steps the
-task needs; refer to code as `file:line`, never paste worktree paths in prose.
+Verbs (11): ASSIGN BLOCKED ADVICE REPORTED REVIEW FIX CONFLICT APPROVE MERGED
+DISMISS ASK. No RULE — a tiebreaker's binding call also arrives as ADVICE.
+Mirror every state change to the ledger: `--event <verb-lowercase>`.
 
-Spawning: you do NOT spawn other agents. Blocked on a design/reasoning decision
-(not a lookup)? Send `BLOCKED <node>` to `main` and idle — the orchestrator
-brokers an advisor and returns `ADVICE`. Need product intent not in your brief?
-Send `ASK <node>` to `main`. Everything else routes through the orchestrator.
+Proof: every claim carries a pointer — `file:line`, a command result, or a
+ledger/node id — or the marker `untested`. Cite prior facts by ref; never
+restate or paste content.
+
+Scratch: working notes go to a scratch file in your worktree; cite it as
+`log:` in reports. Reason at the depth the task needs — terseness governs
+what you WRITE (wire messages, ledger entries, session text ≤1 line), not how
+you think. Never trade correctness for brevity; never pad.
+
+Spawning: none. Blocked on a design/reasoning decision (not a lookup)? Send
+`BLOCKED <node> kind:<design|debug>` to `main`, then idle. Need product intent
+not in your brief? Send `ASK <node>` to `main`. Everything else routes through
+the orchestrator.
