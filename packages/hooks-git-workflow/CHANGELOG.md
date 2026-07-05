@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.2.0...hooks-git-workflow--v1.3.0) (2026-07-05)
+
+
+### Features
+
+* continuous commit/push delivery cadence (steering-delivery package + agent/hook updates) ([#476](https://github.com/srobroek/agentic-packages/issues/476)) ([1f0534f](https://github.com/srobroek/agentic-packages/commit/1f0534f15b7b86952153feaacbbf3e2b9c8887c7))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.1.0...hooks-git-workflow--v1.2.0) (2026-07-02)
 
 

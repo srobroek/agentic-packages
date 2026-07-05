@@ -1,5 +1,24 @@
 # Changelog
 
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v6.1.0...srobroek-agentic--v7.0.0) (2026-07-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **hooks-subagent-worktree:** the PreToolUse:Agent hook no longer denies subagent spawns or requires [iso:*] sentinels. It now posts a non-blocking advisory: if a subagent writes and runs in parallel, use isolation:"worktree"; if it runs isolated, commit before finishing so the worktree branch retains the work. Stays silent once isolation is declared. The 1.x deny-gate guessed wrong too often and blocked legitimate work; cmux native integration + Claude's native worktree lifecycle (baseRef=head) now cover what the gate approximated.
+
+### Features
+
+* bump reconcile parents to match highest dependency severity ([#471](https://github.com/srobroek/agentic-packages/issues/471)) ([b412b3f](https://github.com/srobroek/agentic-packages/commit/b412b3fcf120b1fc7efd32ac3881d35a32188dbf))
+* continuous commit/push delivery cadence (steering-delivery package + agent/hook updates) ([#476](https://github.com/srobroek/agentic-packages/issues/476)) ([1f0534f](https://github.com/srobroek/agentic-packages/commit/1f0534f15b7b86952153feaacbbf3e2b9c8887c7))
+* **hooks-subagent-worktree:** convert deny-gate to non-blocking advisory ([#473](https://github.com/srobroek/agentic-packages/issues/473)) ([3bb8722](https://github.com/srobroek/agentic-packages/commit/3bb87228c332d6edd7e9e0c7011c679667c2bad6))
+* **orchestrate:** multi-agent orchestration skill with DAG, ledger, and bundled agents ([#479](https://github.com/srobroek/agentic-packages/issues/479)) ([cb184d3](https://github.com/srobroek/agentic-packages/commit/cb184d3ee33c67e479b432e0a4f48f9972041242))
+
+
+### Bug Fixes
+
+* remove hardcoded home paths and macOS/Linux portability breaks ([#474](https://github.com/srobroek/agentic-packages/issues/474)) ([c7169ec](https://github.com/srobroek/agentic-packages/commit/c7169ec479439bbbe1f2cbcd5383b1b29452ada1))
+
 ## [6.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v6.0.0...srobroek-agentic--v6.1.0) (2026-07-03)
 
 
