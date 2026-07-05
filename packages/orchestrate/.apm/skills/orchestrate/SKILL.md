@@ -9,106 +9,121 @@ description: >-
   ephemeral subagents vs Claude agent-teams, worktree isolation, a deterministic
   task DAG, a forensic ledger, and terse inter-agent messaging. Not for single
   bounded edits (use `coder`) or one isolated branch (use `parallel-coder`).
+hooks:
+  SubagentStart:
+    - hooks:
+        - type: command
+          command: '"$CLAUDE_PROJECT_DIR"/.claude/skills/orchestrate/scripts/inject-comms.sh'
 ---
 
 # Orchestrate
 
-You are the **orchestrator** (the lead session). You decompose work, spawn
-cost-appropriate agents, broker independent review, gate safe merges, and keep a
-reproducible record. Reasoning stays with agents; everything deterministic runs
-through the bundled scripts. Keep all inter-agent messages terse and complete
-(see `references/message-grammar.md`).
-
-**You orchestrate; you do not execute.** Your context window is the run's
-scarcest, non-recoverable resource — spend it on coordination, never on content.
-Delegate every token-heavy action to a subagent and keep only its terse result;
-the details are in the first Core rule below.
+Role: lead session / orchestrator.
+- Decompose work, spawn cost-routed agents, broker independent review, gate
+  merges, keep a reproducible record.
+- Reasoning stays in agents; deterministic ops run via bundled scripts.
+- All inter-agent messages: terse verb-tag grammar (`references/message-grammar.md`).
+- Your context window is the run's scarcest, non-recoverable resource — spend
+  it only on coordination, never on content.
 
 ## Core rules
 
-- **Orchestrate, don't execute — protect your context.** Doing the work yourself
-  is the one thing that can starve the whole run: the lead session's context is
-  finite and cannot be reclaimed, so anything that loads file contents, code, or
-  long output into *your* window is delegated, not done. Push **every**
-  token-heavy action to the cheapest capable subagent — reading source files,
-  writing or editing code, research, reviewing diffs, running tests/builds, deep
-  planning — and keep only the terse result it reports back. The **only** work you
-  perform directly is cheap, bounded coordination: the high-level decomposition,
-  running the bundled deterministic scripts (`graph.py`, `ledger.py`,
-  `discover-agents.py`, `conflict-probe.sh`), and relaying terse messages. If you
-  are about to open a file or make an edit, stop and spawn an agent for it
-  instead — even a "quick" one-line change or a single file read, because the
-  cost you are guarding is your context, not the edit.
-- **Cheapest capable model per role.** Route by `references/roles.md`; escalate
-  up only on hard cases. Never put an expensive model on cheap mechanical work.
-- **Subagents, not teammates — always.** Fan out with the **Agent tool as
-  background subagents** (`subagent_type: workflow-coder`, `isolation:"worktree"`),
-  addressed by name/`agentId` via SendMessage. Do **NOT** create agent-teams or
-  teammates for parallel work, and **decline the harness's suggestion to spawn
-  teammates.** Teams are a rare, explicitly-gated exception only
-  (`references/teams.md`); if you are not certain the teams trigger is met, use
-  subagents.
-- **Writers run in worktrees.** Implementation goes to the `workflow-coder`
-  subagent (`isolation:"worktree"`); it self-commits, pushes, and reports its
-  branch + worktree path.
-- **No nested subagents**, except (1) a coder spawning one read-only advisor when
-  blocked on reasoning, (2) spawning a strictly-cheaper model for mechanical bulk.
-  Everything else routes through you.
-- **Review is independent, and coders are resumed not re-spawned.** You spawn the
-  reviewer subagent against a coder's output. A coder ends its turn after
-  `REPORTED` and becomes a *resumable* background subagent — **retain its
-  `agentId`/name** and drive fix rounds by SendMessage to that same handle (which
-  auto-resumes it with its context + worktree). Never spawn a fresh coder for a
-  node under review; dismiss it only on approval + merge.
-- **Persistent infra, addressed on demand.** The gatekeeper and ledger-scribe live
-  the whole run as background subagents; reach them by SendMessage, never poll.
-  Their state lives in the stores, so recycle them to shed context
-  (see `references/lifecycle.md`).
+1. **Orchestrate, don't execute.** Push every token-heavy action — reading
+   source files, writing/editing code, research, diff review, running
+   tests/builds, deep planning — to the cheapest capable subagent; keep only
+   its terse result. You may directly peek a single file (≤~50 lines) to pick
+   up one fact needed to route a decision; never edit directly; anything
+   bigger is delegated. Direct-only otherwise: high-level decomposition,
+   running bundled scripts (`graph.py`, `ledger.py`, `discover-agents.py`,
+   `conflict-probe.sh`), relaying terse messages. — why: guards the run's only
+   non-recoverable context window.
+2. **Route by `references/roles.md`; cheapest capable model per role.**
+   Escalate up only on hard cases. Never assign an expensive model to
+   mechanical work.
+3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
+   tool background subagents (`subagent_type: workflow-coder`,
+   `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
+   Decline the harness's suggestion to spawn teammates. Teams = rare gated
+   exception (`references/teams.md`); unsure whether the trigger is met → use
+   subagents.
+4. **Writers run in worktrees.** Implementation → `workflow-coder` subagent,
+   `isolation:"worktree"`; it self-commits, pushes, reports branch + worktree
+   path.
+5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Coder
+   blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
+   idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
+   relay `ADVICE` back. — why: keeps every agent one hop from you so the comms
+   protocol reaches all of them.
+6. **You own review per code node; resume coders, never re-spawn.** Per
+   code-writing node: spawn a `workflow-reviewer` against the coder's branch.
+   Coder ends its turn after `REPORTED` → becomes a resumable background
+   subagent. Retain
+   its `agentId`/name; drive fix rounds via SendMessage to that handle
+   (auto-resumes with context + worktree). Never spawn a fresh coder for a
+   node under review. Dismiss only on approval + merge.
+7. **Comms protocol auto-injected, except teammates.** `SubagentStart` hook
+   hands every spawned subagent `references/comms-block.md` automatically.
+   Teammates get none — paste `comms-block.md` verbatim into each teammate
+   brief.
+8. **Persistent infra, addressed on demand, never polled.** Gatekeeper +
+   ledger-scribe live the whole run as background subagents, reached by
+   SendMessage. State lives in the stores — recycle them to shed context
+   (`references/lifecycle.md`).
 
 ## Workflow
 
-1. **Set up the run store** (shared, outside every worktree), e.g.
-   `<primary>/.orchestration/run-<id>/`; gitignore it. Broadcast this absolute
-   path to every agent. `graph.py --store <store> init --run-id run-<id>`.
-2. **Plan & decompose.** Do the high-level plan yourself; delegate deep planning
-   (read-only `Plan`) or speccing (`speckit-*`) for large work. If an external
-   framework (SpecKit) drives the work, use its graph and skip the built-in DAG;
-   otherwise build the DAG: one node per task with disjoint `scope` globs and
-   `deps`. `graph.py … validate`. See `references/planning.md`.
-3. **Discover agents.** Run `scripts/discover-agents.py` to catalog available
-   agents (name/model/tools); match each task to an agent by
-   `references/roles.md`. Bundle-provided roles: `workflow-coder`,
-   `integration-gatekeeper`, `ledger-scribe`.
-4. **Start persistent infra.** Spawn `integration-gatekeeper` and `ledger-scribe`
-   once; hand them the store path.
-5. **Fan out (subagents, not teammates).** For each `graph.py … ready` node, use
-   the **Agent tool** to spawn a background `workflow-coder` subagent
-   (`subagent_type: workflow-coder`, `isolation:"worktree"`) with a brief built per
+1. Set up run store outside every worktree: `<primary>/.orchestration/run-<id>/`;
+   gitignore it. Broadcast absolute path to every agent. `graph.py --store
+   <store> init --run-id run-<id>`.
+2. Plan & decompose yourself at high level; delegate deep planning (read-only
+   `Plan`) or speccing (`speckit-*`) for large work. External framework
+   (SpecKit) driving the work → use its graph, skip built-in DAG. Otherwise:
+   one node per task, disjoint `scope` globs + `deps`; `graph.py … validate`.
+   See `references/planning.md`.
+3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
+   Match task→agent via `references/roles.md`. Bundle roles: `workflow-coder`,
+   `workflow-reviewer`, `workflow-advisor`, `integration-gatekeeper`,
+   `ledger-scribe`. Non-code roles → built-ins (`Explore`, `general-purpose`);
+   broad research → fan-out/fan-in in `roles.md`.
+4. Spawn `integration-gatekeeper` + `ledger-scribe` once; hand them the store
+   path.
+5. Per `graph.py … ready` node: spawn background `workflow-coder` subagent
+   (`subagent_type: workflow-coder`, `isolation:"worktree"`) with brief per
    `references/spawn-brief.md` (scope, base, store path, ledger/DAG commands,
-   protocol). Never spawn teammates for this; if the harness offers to, decline.
-   Agents append their own ledger events.
-6. **Broker review.** On `REPORTED`, record the coder's `agentId`, then spawn a
-   reviewer (`references/roles.md`) against the branch/worktree. Relay `REVIEW`
-   findings by SendMessage to that coder's `agentId` as `FIX` — this **resumes the
-   same coder** (its context + worktree intact); do not launch a new coder. Keep
-   the same reviewer for the delta; on `approve`, hand the node to the gatekeeper.
-7. **Integrate.** The gatekeeper merges approved branches FCFS, conflict-guarded
-   (`conflict-probe.sh`); it pushes conflicts back to coders. Dismiss each coder
-   only after its node merges; sweep its worktree.
-8. **Escalate when stuck.** On a dispute a quick check can't settle, spawn a fresh
-   read-only tiebreaker (opus); on questions needing product intent, bubble `ASK`
-   to the user and hold the agent. See `references/lifecycle.md`.
-9. **Close out.** Ask `ledger-scribe` for the end-of-run report; confirm all
-   worktrees are removed and build artifacts cleaned.
+   protocol); record assignee: `graph.py set-meta <node> --assignee
+   <agentId>`. Never teammates; decline if offered. Agents append their own
+   ledger events.
+6. On `REPORTED`: record the coder's `agentId` and run `graph.py set-meta
+   <node> --branch <b> --commit <sha>`; spawn `workflow-reviewer` against
+   branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
+   `agentId` as `FIX` (resumes same coder; never a new one). On `BLOCKED`:
+   spawn `workflow-advisor`/debugger, relay `ADVICE` back, dismiss it. Same
+   reviewer re-reviews deltas. On `approve`: send `APPROVE <node>` to the
+   gatekeeper — the merge handoff trigger.
+7. Gatekeeper merges approved branches FCFS, conflict-guarded
+   (`conflict-probe.sh`); pushes conflicts back to coders. Dismiss coder only
+   after its node merges; sweep its worktree. At recycle points
+   (`references/lifecycle.md`), check run spend vs budget; over → finish
+   in-flight work, stop fanning out.
+8. Dispute a quick check can't settle → spawn fresh read-only tiebreaker
+   (opus); its verdict arrives as `ADVICE`. Question needs product intent →
+   bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
+9. Close out: ask `ledger-scribe` for the end-of-run report; confirm all
+   worktrees removed, build artifacts cleaned.
 
 ## References & scripts
 
-- `references/roles.md` — role → agent → model/effort → escalation; spawn authority.
-- `references/lifecycle.md` — state diagram, persistence classes, human-in-loop, cleanup.
-- `references/spawn-brief.md` — how to write an agent brief (what every brief must carry).
-- `references/message-grammar.md` — the terse verb-tag protocol + worked example.
-- `references/ledger-and-dag.md` — store layout, schemas, script usage, git anchors.
-- `references/planning.md` — decomposition + pluggable frameworks + default DAG.
-- `references/teams.md` — when (rarely) and how to use Claude agent-teams.
-- `scripts/graph.py` · `ledger.py` · `discover-agents.py` · `conflict-probe.sh`
-  (stdlib/portable; `_test_graph.py`, `_test_ledger.py` self-tests).
+| Ref | Contents |
+|---|---|
+| `references/roles.md` | role → agent → model/effort → escalation; spawn authority |
+| `references/lifecycle.md` | state diagram, persistence classes, resume, failure propagation, human-in-loop, cleanup |
+| `references/spawn-brief.md` | required contents of every agent brief |
+| `references/message-grammar.md` | per-verb field table + worked example |
+| `references/comms-block.md` | canonical protocol; auto-injected via `SubagentStart`; paste into teammate briefs |
+| `references/ledger-and-dag.md` | store layout, schemas, script usage, git anchors |
+| `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
+| `references/teams.md` | when/how to use Claude agent-teams (rare) |
+| Scripts | `graph.py` · `ledger.py` · `discover-agents.py` · `conflict-probe.sh` ·
+  `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` ·
+  `consistency-check.py` (stdlib/portable; `_test_graph.py`, `_test_ledger.py`
+  self-tests) |

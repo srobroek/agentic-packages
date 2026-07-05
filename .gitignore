@@ -48,3 +48,4 @@ uv.lock
 
 # Internal scratch: decision logs, proposals, audits (not for the public repo)
 reviews/
+.ruff_cache/

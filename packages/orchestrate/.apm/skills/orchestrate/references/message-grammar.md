@@ -1,47 +1,29 @@
 # Message grammar
 
-Inter-agent messages (SendMessage) are terse and objective but **complete** — the
-receiver is another model and must act without guessing. Frame: a **verb** and the
-**node id** up front, then a labeled field block carrying every fact the receiver
-needs. One verb per message; facts over prose. Every state-changing message is
-mirrored to the ledger with the matching `--event`.
-
-SendMessage envelope: `to` = recipient name (or `main` for the orchestrator from a
-background subagent), `summary` = 5–10 words, `message` = the body below.
-
-## Terseness is not just the envelope
-
-The same terse, factual register governs an agent's **reasoning and output**, not
-only its `SendMessage` bodies. Every agent in the run — coder, reviewer,
-gatekeeper, scribe, advisor — thinks and reports in the same compressed style:
-short, direct, facts over prose. This is a cost rule, not a stylistic one — long
-reasoning and padded reports burn tokens and context across the whole fleet.
-
-- **Reasoning:** think in the fewest steps the problem needs; no narration of
-  obvious moves, no restating the brief, no throat-clearing. Get to the decision.
-- **Output/reports** (ledger `--output`, `REPORTED`/`REVIEW` bodies, advisor
-  `ADVICE`, end-of-run report): labeled fields and short lines, never paragraphs.
-  State the fact, the location (`file:line`), and the action — nothing else.
-- **No prose padding:** drop preamble, summaries of what you just did, hedging,
-  and closing pleasantries. If a field is empty, omit it rather than explaining
-  its absence.
+Envelope, verb list, register, proof/ref rules, and the no-spawning rule: see
+`references/comms-block.md` (canonical, auto-injected into every subagent).
+This file adds the per-verb field table and a worked example.
 
 ## Verbs
 
 | Verb | From → To | Carries |
 |---|---|---|
 | `ASSIGN` | orch → coder | node, title, scope, base, store, deps, commands, protocol |
-| `BLOCKED`/`ADVISE` | coder → advisor | node, the reasoning question + minimal code context |
-| `ADVICE` | advisor → coder | node, answer, rationale, refs |
-| `REPORTED` | coder → orch | node, branch, worktree, commits, verify, risks, status |
+| `BLOCKED` | coder → orch | node, `kind:design\|debug`, the question + minimal code context |
+| `ADVICE` | advisor → orch → coder | node, answer, rationale, refs (orch relays) |
+| `REPORTED` | coder → orch | node, branch, worktree, commits, verify, risks, log, status |
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
 | `CONFLICT` | gatekeeper → coder | node, with(node), files, required action |
-| `APPROVE` | orch/reviewer | node (delta re-reviewed clean) |
+| `APPROVE` | orch → gatekeeper | node, branch, base — integrate this approved node (the handoff trigger) |
 | `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, question, who is waiting |
-| `RULE` | tiebreaker → orch | node, decision + rationale |
+
+Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
+a `file:line` or ledger/node id backing a claim; `open:` a known-unfinished or
+deferred item (distinct from `risks:` — hazards for the receiver); every factual
+field is either a pointer or the marker `untested` (see `comms-block.md`).
 
 ## Worked example — one node (`t3`) end to end
 
@@ -55,23 +37,33 @@ ASSIGN t3
   store:    /home/…/.orchestration/run-7f3a/     # DAG + ledger here
   deps:     t1(done), t2(done)
   commands: state=graph.py …set-state t3 <s>; log=ledger.py …add --node t3 --actor coder-t3 …
-  protocol: on block → spawn advisor. green → commit+push, log reported, REPORTED to main, stay alive.
+  protocol: on block → BLOCKED to main (don't spawn). green → commit+push, log reported, REPORTED to main, stay alive.
 ```
 
-**Blocked → advisor (coder's one nesting exception)**
+**Blocked → orchestrator brokers an advisor** (the coder spawns nothing)
 ```
-to: advisor-t3  summary: "advise on token refresh race"
+to: main        summary: "blocked on token refresh race"
 BLOCKED t3
+  kind:    design
   need:    Concurrent refresh can double-issue tokens. (a) mutex around refresh vs
            (b) single-flight dedupe by jti — which is safe here?
-  context: src/auth/refresh.rs:40-88 (pasted); tests/auth/refresh_test.rs
+  context: src/auth/refresh.rs:40-88; tests/auth/refresh_test.rs
 ```
+The orchestrator spawns a `workflow-advisor`, relays the question, receives its
+answer, then relays it back to the coder:
 ```
-to: coder-t3    summary: "recommend single-flight dedupe"
+to: advisor-t3  summary: "advice: single-flight dedupe"     # advisor → main
 ADVICE t3
   answer:  Use (b) single-flight keyed by jti.
   because: refresh runs in multiple worker procs; an in-proc mutex won't serialize them.
   refs:    guard with the existing jti store.
+```
+```
+to: coder-t3    summary: "advice on t3: single-flight dedupe"   # main → coder
+ADVICE t3
+  answer:  Use (b) single-flight keyed by jti.
+  because: multi-proc refresh; in-proc mutex won't serialize.
+  refs:    existing jti store.
 ```
 
 **Report (then stays alive)**
@@ -84,6 +76,7 @@ REPORTED t3
   changed:  src/auth/middleware.rs, src/auth/refresh.rs, tests/auth/*
   verify:   green (cargo test -p auth = 41 passed; clippy+fmt clean)
   risks:    validate_token signature changed — callers in src/api/** updated in scope
+  log:      /home/…/worktrees/t3/.scratch.md
   status:   alive, awaiting REVIEW
 ```
 
@@ -106,7 +99,11 @@ to: main   summary: "t3 approved"
 REVIEW t3  verdict: approve  note: both items resolved; delta re-reviewed
 ```
 
-**Integrate (conflict pushback, then merge)**
+**Handoff to the gatekeeper, then integrate (conflict pushback, then merge)**
+```
+to: gatekeeper  summary: "t3 approved, ready to integrate"
+APPROVE t3  branch: coder/t3-auth-middleware  base: main @ 3f9a1c2
+```
 ```
 to: coder-t3  summary: "t3 conflicts with t5 on routes"
 CONFLICT t3  with: t5  files: src/api/routes.rs

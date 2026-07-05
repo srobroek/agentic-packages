@@ -1,4 +1,4 @@
-# Lifecycle: states, spawn/dismiss, human-in-the-loop, cleanup
+# Lifecycle: states, spawn/dismiss, resume, human-in-the-loop, cleanup
 
 Agent lifecycle and task-node state share one vocabulary, tracked in the DAG with
 `graph.py set-state <node> <state>` and mirrored to the ledger.
@@ -8,51 +8,68 @@ Agent lifecycle and task-node state share one vocabulary, tracked in the DAG wit
 ```
                  ┌────────── ASK (question) ──► waiting_human ──(answer)──┐
                  │                                                         ▼
-pending ─ready─► working ─(blocked)─► advisor ─► working ─► reported ─► in_review
+pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─► working ─► reported ─► in_review
    ▲ graph.py                                                               │
    │  ready                                     changes_requested ◄─────────┤ verdict=changes
    │                                                    │                   │ verdict=approve
    └──────────── deps done + scope free ────────────────┘                   ▼
                                                                          approved
-                                             (gatekeeper: FCFS + conflict-probe)
+                                             (orch: APPROVE → gatekeeper: FCFS + conflict-probe)
                                     CONFLICT ─► working (rebase)          │
                                                                           ▼
                                                                 merged ─► dismissed
                                             (any state) ───────────────► failed
 ```
 
-- `pending → ready`: computed by `graph.py ready` (all deps `merged`/`approved`/
-  `dismissed` **and** scope globs disjoint from every in-flight node).
-- `reported → in_review`: coder finished; orchestrator spawns/relays to reviewer.
-- `changes_requested → working`: coder applies exactly the `FIX` items; the **same**
-  reviewer re-reviews the delta.
-- `approved → merged`: gatekeeper integrates FCFS after a clean conflict probe.
-- `waiting_human`: an agent raised `ASK`; it goes idle, the orchestrator surfaces
-  the question, then forwards the answer or lets the user message the agent.
-- `failed`: unrecoverable; logged with the error and surfaced.
+Blocked coders stay in `working` — `BLOCKED` is a message, not a node state.
+
+## Transitions
+
+| Transition | Trigger |
+|---|---|
+| `pending → ready` | `graph.py ready`: all deps `merged`/`approved`/`dismissed` AND scope globs disjoint from every in-flight node |
+| `reported → in_review` | coder finished; orchestrator spawns a `workflow-reviewer` |
+| `working` (blocked) | coder sends `BLOCKED kind:design\|debug` to orchestrator, idles; orchestrator brokers `workflow-advisor`/debugger, relays `ADVICE` back; coder spawns nothing |
+| `changes_requested → working` | coder applies exactly the `FIX` items; same reviewer re-reviews the delta |
+| `approved → merged` | orchestrator sends `APPROVE`; gatekeeper integrates FCFS after a clean conflict probe |
+| `waiting_human` | agent raised `ASK`; goes idle; orchestrator surfaces the question, forwards the answer or lets the user message the agent directly |
+| `failed` | unrecoverable; logged with the error, surfaced |
 
 ## Persistence classes
 
-- **Persistent** (spawned once, live the whole run, addressed on demand via
-  SendMessage — never polled): **Integration Gatekeeper**, **Ledger Scribe**.
-- **Task-scoped, kept alive across fix rounds** (dismissed only after the node is
-  approved and merged): **Workflow-coder**; and the **Reviewer** for that node
-  (re-reviews deltas with prior context, dismissed on approval).
-- **Ephemeral** (spawn → return → maybe resume for follow-ups): **Researcher**,
-  **Advisor** (coder's child), **Tiebreaker**.
+| Class | Agents | Rule |
+|---|---|---|
+| Persistent | Integration Gatekeeper, Ledger Scribe | spawned once, live the whole run, addressed via SendMessage — never polled |
+| Task-scoped | Workflow-coder; Workflow-reviewer (per node) | kept alive across fix rounds; reviewer re-reviews deltas with prior context; dismissed only after the node is approved and merged. Never re-spawn a fresh coder for an in-flight node — resume its handle instead. |
+| Ephemeral | Researcher (+ fan-out gatherers/synthesizer), Workflow-advisor/debugger (orchestrator-brokered), Tiebreaker | spawn → return → maybe resume for follow-ups |
 
-Stopped background subagents auto-resume when they receive a SendMessage, so a
-"kept-alive" agent that has gone idle is simply messaged again — do not re-spawn a
-fresh one for the same node (that loses its context and its name may be refused).
+Stopped background subagents auto-resume on SendMessage. Never re-spawn a fresh
+agent for the same node — it loses context and its name may be refused.
+
+## Resume after orchestrator compaction/crash
+
+1. List in-flight nodes: `graph.py --store <store> list --state
+   working,reported,in_review,changes_requested`.
+2. Recover each node's agent handle from its meta: `assignee`, set at spawn via
+   `graph.py --store <store> set-meta <node> --assignee <agentId>`.
+3. Cross-check with `ledger.py --store <store> agents`.
+4. Re-spawn only nodes whose meta shows no `assignee` (truly orphaned); resume
+   everything else by messaging the recovered handle.
+
+## Failure propagation
+
+- `failed` never satisfies a dependency — the ready computation already
+  requires deps to be `merged`/`approved`/`dismissed`, so a `failed` upstream
+  node permanently blocks its dependents.
+- `graph.py --store <store> impact <node>` lists every downstream node stranded
+  by a failure. The orchestrator re-plans (new node covering the gap) or
+  abandons the stranded subtree — never lets it silently stall as `pending`.
 
 ## Recycle persistent infra to shed context
 
-The Gatekeeper and Scribe hold **no durable state in their context** — the DAG,
-ledger, and git are the source of truth. So recycle them to reclaim their context
-window on long runs: dismiss the current one and spawn a fresh replacement with
-only the store path + run id; it rehydrates what it needs (Gatekeeper: approved-
-but-unmerged nodes via `graph.py list --state approved`, the current base, and any
-open conflicts from the ledger; Scribe: nothing — it reads on demand).
+The Gatekeeper and Scribe are restartable at any quiescent point — the DAG,
+ledger, and git are the source of truth, not their context. Dismiss the current
+one and spawn a fresh replacement with only the store path + run id.
 
 - **Gatekeeper:** recycle at a **quiescent point** — after a merge completes and
   before picking up the next, never mid-conflict-negotiation with a coder. Trigger
@@ -69,12 +86,7 @@ The orchestrator: (1) notifies the user; (2) holds the agent in `waiting_human`;
 (3) either forwards the user's answer (`FIX`/`ASSIGN`/free text) or lets the user
 select and message that agent directly. Never let an agent guess product intent.
 
-## Worktree & cleanup ownership
+## Worktree & cleanup
 
-Whoever creates a worktree owns its removal. After a node merges and its coder is
-dismissed, the orchestrator sweeps: confirm the worktree is clean
-(`git -C <wt> status --porcelain` empty and commits harvested), delete build dirs
-(`target/`, `node_modules/`, …), then `git worktree remove <wt>` + `git worktree
-prune`. Fan-out runs must sweep after fan-in; periodically check `git worktree
-list` for strays. The shared run store (`.orchestration/run-<id>/`) is kept for
-post-run forensics, not swept.
+Sweep after fan-in, per the global worktree rule. The run store
+(`.orchestration/run-<id>/`) is never swept.
