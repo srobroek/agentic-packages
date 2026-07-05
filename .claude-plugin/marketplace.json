@@ -948,7 +948,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus task-specific agents (workflow-coder, integration-gatekeeper, ledger-scribe) and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
+      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a SubagentStart comms-protocol hook, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
       "version": "0.2.0",
       "tags": [
         "skill",
