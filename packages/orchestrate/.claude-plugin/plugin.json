@@ -1,6 +1,6 @@
 {
   "name": "orchestrate",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus task-specific agents (workflow-coder, integration-gatekeeper, ledger-scribe) and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
   "author": {
     "name": "Sjors Robroek"

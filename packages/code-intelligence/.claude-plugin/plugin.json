@@ -1,6 +1,6 @@
 {
   "name": "code-intelligence",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
   "author": {
     "name": "Sjors Robroek"
