@@ -12,15 +12,25 @@ Store layout (shared, outside every worktree):
     <store>/artifacts/<seq>-input.md
     <store>/artifacts/<seq>-output.md
 
-The script stamps ts (UTC), run_id, seq; validates the event enum; writes any
---input-file/--output-file (or --input/--output text) into artifacts/ and records
-the *_ref; then flock-appends one JSON line.
+`--store` MUST be an absolute path (same rule as graph.py) -- a relative path
+would resolve against the caller's cwd, often a worktree, silently creating an
+orphan store instead of sharing the run's real one.
+
+The script stamps ts (UTC), run_id, seq; warns (does not die) on an event
+outside the canonical vocabulary; writes any --input-file/--output-file into
+artifacts/ and records the *_ref; then flock-appends one JSON line. Prefer
+--input-file/--output-file for real briefs/reports -- the file's full text
+always becomes the artifact of record. Plain --input/--output text is for
+short inline notes only: anything over 200 chars is still written whole to the
+artifact, but the in-row `input`/`output` field is truncated to its first 200
+chars so full payloads stop round-tripping through every query.
 
 Add:
     ledger.py --store D add --event reported --actor coder-t3 --role coder \
         --model sonnet --node t3 --state in_review \
-        --branch coder/t3 --commit a1b2c3d --pushed origin/coder/t3 \
-        --input "brief..." --output-file report.md \
+        --branch coder/t3 --worktree /path/to/wt --commit a1b2c3d \
+        --pushed origin/coder/t3 \
+        --input-file brief.md --output-file report.md \
         --result "green" --issue "..." --unexpected "..." --ref reviewer-t3
 
 Read (deterministic, no grep):
@@ -40,11 +50,15 @@ import json
 import os
 import sys
 
+# Canonical event vocabulary: the 11 message verbs, lowercased, plus two
+# ledger-only bookkeeping events. Unknown events are a warning, not a die --
+# one truncated/misnamed event should never break the whole run's audit trail.
 EVENTS = {
     "assign", "blocked", "advice", "reported", "review", "fix", "conflict",
-    "approve", "merged", "dismiss", "ask", "answer", "rule", "spawn", "error",
-    "note",
+    "approve", "merged", "dismiss", "ask", "failed", "note",
 }
+
+INLINE_LIMIT = 200
 
 
 def _ledger_path(store: str) -> str:
@@ -57,15 +71,25 @@ def _die(msg: str, code: int = 2) -> None:
 
 
 def _read_all(store: str) -> list[dict]:
+    """Read every ledger row, skipping (not raising on) unparsable lines --
+    one truncated/garbage trailing line must never break every read command.
+    Emits a single stderr warning with the count if any were skipped."""
     path = _ledger_path(store)
     if not os.path.exists(path):
         return []
     rows = []
+    bad = 0
     with open(path, encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
-            if line:
+            if not line:
+                continue
+            try:
                 rows.append(json.loads(line))
+            except ValueError:
+                bad += 1
+    if bad:
+        print(f"ledger.py: warning: skipped {bad} unparsable ledger line(s)", file=sys.stderr)
     return rows
 
 
@@ -106,11 +130,23 @@ def _write_artifact(store: str, seq: int, kind: str, text: str | None, path: str
     return os.path.join("artifacts", name)
 
 
+def _row_text(value: str | None, file_path: str | None) -> str | None:
+    """The in-row summary for input/output: a file placeholder when a file was
+    given, else the inline text capped at INLINE_LIMIT chars. The full text
+    always lives in the artifact (see _write_artifact / *_ref)."""
+    if file_path:
+        return f"(file:{os.path.basename(file_path)})"
+    if value is None:
+        return None
+    return value[:INLINE_LIMIT]
+
+
 def cmd_add(args) -> None:
     import fcntl
 
     if args.event not in EVENTS:
-        _die(f"invalid event {args.event}; one of {sorted(EVENTS)}")
+        print(f"ledger.py: warning: unknown event {args.event!r}; canonical: {sorted(EVENTS)}",
+              file=sys.stderr)
     os.makedirs(args.store, exist_ok=True)
     lock_path = os.path.join(args.store, ".ledger.lock")
     with open(lock_path, "w", encoding="utf-8") as lock:
@@ -139,9 +175,10 @@ def cmd_add(args) -> None:
             "pushed": args.pushed,
             "pr": args.pr,
             "merge_sha": args.merge_sha,
-            "input": args.input if not args.input_file else f"(file:{os.path.basename(args.input_file)})",
+            "worktree": args.worktree,
+            "input": _row_text(args.input, args.input_file),
             "input_ref": input_ref,
-            "output": args.output if not args.output_file else f"(file:{os.path.basename(args.output_file)})",
+            "output": _row_text(args.output, args.output_file),
             "output_ref": output_ref,
             "result": args.result,
             "issues": args.issue or [],
@@ -217,7 +254,7 @@ def cmd_replay(args) -> None:
         for k in ("issues", "unexpected"):
             for item in r.get(k) or []:
                 print(f"   {k[:-1] if k.endswith('s') else k}: {item}")
-        for k in ("commits", "pushed", "pr", "merge_sha"):
+        for k in ("commits", "pushed", "pr", "merge_sha", "worktree"):
             if r.get(k):
                 print(f"   {k}: {r[k]}")
         for ref in ("input_ref", "output_ref"):
@@ -283,13 +320,13 @@ def cmd_agents(args) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledger.py", description=__doc__)
-    p.add_argument("--store", required=True)
+    p.add_argument("--store", required=True, help="shared store dir (holds ledger.jsonl); must be absolute")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     a = sub.add_parser("add")
     for opt in ("--event", "--actor", "--role", "--model", "--effort", "--parent",
-                "--node", "--state", "--base", "--branch", "--pushed", "--pr",
-                "--input", "--output", "--result", "--run-id"):
+                "--node", "--state", "--base", "--branch", "--worktree", "--pushed",
+                "--pr", "--input", "--output", "--result", "--run-id"):
         a.add_argument(opt, required=(opt == "--event"),
                        dest="run_id" if opt == "--run-id" else None)
     a.add_argument("--merge-sha", dest="merge_sha")
@@ -328,6 +365,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> None:
     args = build_parser().parse_args(argv)
+    if not os.path.isabs(args.store):
+        _die(f"--store must be an absolute path (got {args.store!r})")
     args.fn(args)
 
 

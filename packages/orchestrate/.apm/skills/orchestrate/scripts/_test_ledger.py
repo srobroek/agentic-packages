@@ -37,8 +37,57 @@ class LedgerTest(unittest.TestCase):
         self.assertTrue(rows[0]["ts"].endswith("Z"))
         self.assertEqual(rows[1]["run_id"], "run-x")  # inherited
 
-    def test_rejects_bad_event(self):
-        run(self.dir, "add", "--event", "bogus", expect=2)
+    def test_unknown_event_warns_but_still_writes(self):
+        # canonical vocabulary is enforced with a warning, not a die -- a
+        # mistyped/novel event must never break the append.
+        proc = subprocess.run(
+            [sys.executable, LEDGER, "--store", self.dir, "add", "--event", "bogus",
+             "--actor", "main", "--node", "t9"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("warning", proc.stderr.lower())
+        rows = self._lines()
+        self.assertEqual(rows[0]["event"], "bogus")
+
+    def test_relative_store_rejected(self):
+        proc = subprocess.run(
+            [sys.executable, LEDGER, "--store", "relative/store/path", "query"],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("absolute", proc.stderr)
+
+    def test_corrupted_trailing_line_does_not_break_reads(self):
+        run(self.dir, "add", "--event", "assign", "--node", "t1", "--actor", "main")
+        run(self.dir, "add", "--event", "reported", "--node", "t1", "--actor", "coder-t1")
+        path = os.path.join(self.dir, "ledger.jsonl")
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write('{"seq": 3, "event": "reported", "node": "t1"  garbage not json\n')
+        proc = subprocess.run(
+            [sys.executable, LEDGER, "--store", self.dir, "summary"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("t1", proc.stdout)
+        self.assertIn("warning", proc.stderr.lower())
+        self.assertIn("1", proc.stderr)  # one bad line skipped
+
+    def test_worktree_flag_persisted(self):
+        run(self.dir, "add", "--event", "assign", "--node", "t1", "--actor", "main",
+            "--worktree", "/home/x/.claude/worktrees/t1")
+        rec = self._lines()[0]
+        self.assertEqual(rec["worktree"], "/home/x/.claude/worktrees/t1")
+
+    def test_long_inline_text_truncated_in_row_but_full_in_artifact(self):
+        long_text = "x" * 250
+        run(self.dir, "add", "--event", "reported", "--node", "t1", "--actor", "coder-t1",
+            "--output", long_text)
+        rec = self._lines()[0]
+        self.assertEqual(len(rec["output"]), 200)
+        self.assertEqual(rec["output_ref"], "artifacts/0001-output.md")
+        with open(os.path.join(self.dir, rec["output_ref"]), encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), long_text)
 
     def test_artifacts_written_and_referenced(self):
         run(self.dir, "add", "--event", "reported", "--node", "t1", "--actor", "coder-t1",
