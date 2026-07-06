@@ -14,8 +14,3 @@ branch at the end.
 - Before ending a session or handing off, confirm the tree is clean and the
   branch is pushed. Verify what actually landed (`git log`, `git status`) — do
   not assume a chained commit-and-push succeeded.
-
-This is the default working rhythm, not something to do only when asked. It does
-not override the rules on when to open PRs, merge, or run other outward-facing
-actions — those still need their normal triggers and confirmations. It concerns
-how you preserve work in progress, not when you publish or release it.

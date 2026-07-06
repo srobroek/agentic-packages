@@ -33,10 +33,10 @@ Role: lead session / orchestrator.
    tests/builds, deep planning — to the cheapest capable subagent; keep only
    its terse result. You may directly peek a single file (≤~50 lines) to pick
    up one fact needed to route a decision; never edit directly; anything
-   bigger is delegated. Direct-only otherwise: high-level decomposition,
-   running bundled scripts (`graph.py`, `ledger.py`, `discover-agents.py`,
-   `conflict-probe.sh`), relaying terse messages. — why: guards the run's only
-   non-recoverable context window.
+   bigger is delegated. Your own direct actions (only these): high-level
+   decomposition, running bundled scripts (`graph.py`, `ledger.py`,
+   `discover-agents.py`, `conflict-probe.sh`), relaying terse messages.
+   All other work must be delegated.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
@@ -52,8 +52,7 @@ Role: lead session / orchestrator.
 5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Coder
    blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
    idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
-   relay `ADVICE` back. — why: keeps every agent one hop from you so the comms
-   protocol reaches all of them.
+   relay `ADVICE` back.
 6. **You own review per code node; resume coders, never re-spawn.** Per
    code-writing node: spawn a `workflow-reviewer` against the coder's branch.
    Coder ends its turn after `REPORTED` → becomes a resumable background
@@ -61,10 +60,9 @@ Role: lead session / orchestrator.
    its `agentId`/name; drive fix rounds via SendMessage to that handle
    (auto-resumes with context + worktree). Never spawn a fresh coder for a
    node under review. Dismiss only on approval + merge.
-7. **Comms protocol auto-injected, except teammates.** `SubagentStart` hook
-   hands every spawned subagent `references/comms-block.md` automatically.
-   Teammates get none — paste `comms-block.md` verbatim into each teammate
-   brief.
+7. **SubagentStart hook auto-injects `comms-block.md` into every subagent.
+   Teammates are NOT subagents — the hook never reaches them: paste
+   `comms-block.md` verbatim into each teammate brief.**
 8. **Persistent infra, addressed on demand, never polled.** Gatekeeper +
    ledger-scribe live the whole run as background subagents, reached by
    SendMessage. State lives in the stores — recycle them to shed context
@@ -76,7 +74,8 @@ Role: lead session / orchestrator.
    gitignore it. Broadcast absolute path to every agent. `graph.py --store
    <store> init --run-id run-<id>`.
 2. Plan & decompose yourself at high level; delegate deep planning (read-only
-   `Plan`) or speccing (`speckit-*`) for large work. External framework
+   `Plan`) or speccing (`speckit-*`) for work spanning >3 tasks with
+   cross-cutting deps or an unfamiliar subsystem. External framework
    (SpecKit) driving the work → use its graph, skip built-in DAG. Otherwise:
    one node per task, disjoint `scope` globs + `deps`; `graph.py … validate`.
    See `references/planning.md`.
@@ -91,8 +90,7 @@ Role: lead session / orchestrator.
    (`subagent_type: workflow-coder`, `isolation:"worktree"`) with brief per
    `references/spawn-brief.md` (scope, base, store path, ledger/DAG commands,
    protocol); record assignee: `graph.py set-meta <node> --assignee
-   <agentId>`. Never teammates; decline if offered. Agents append their own
-   ledger events.
+   <agentId>`. (teammates: see Rule 7). Agents append their own ledger events.
 6. On `REPORTED`: record the coder's `agentId` and run `graph.py set-meta
    <node> --branch <b> --commit <sha>`; spawn `workflow-reviewer` against
    branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
@@ -105,8 +103,8 @@ Role: lead session / orchestrator.
    after its node merges; sweep its worktree. At recycle points
    (`references/lifecycle.md`), check run spend vs budget; over → finish
    in-flight work, stop fanning out.
-8. Dispute a quick check can't settle → spawn fresh read-only tiebreaker
-   (opus); its verdict arrives as `ADVICE`. Question needs product intent →
+8. Dispute the orchestrator can't settle from artifacts already in context →
+   spawn fresh read-only tiebreaker (roles.md: Tiebreaker); its verdict arrives as `ADVICE`. Question needs product intent →
    bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
 9. Close out: ask `ledger-scribe` for the end-of-run report; confirm all
    worktrees removed, build artifacts cleaned.
