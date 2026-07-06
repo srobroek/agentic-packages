@@ -506,16 +506,15 @@ class Graph:
         if errors:
             raise BuildError("validation failed:\n  - " + "\n  - ".join(errors))
 
-        came, goes = self._project()
+        # came_from / going_to are navigation-only prose; enforcement is carried
+        # entirely by hard_missing / hard_deprecated / hard_exists. Suppress
+        # them from the emitted JSON so the dispatcher only injects gating text.
         out: dict = {}
         for nid, n in self.nodes.items():
             pre: dict = {}
             post: dict = {}
 
             # ----- pre -----
-            cf = came.get(nid, [])
-            if cf:
-                pre["came_from"] = cf
             ctx = self._expand_list(n.context)
             if ctx:
                 pre["context"] = ctx
@@ -533,9 +532,6 @@ class Graph:
             pre["title"] = n.title + " -- before you run this"
 
             # ----- post -----
-            gt = goes.get(nid, [])
-            if gt:
-                post["going_to"] = gt
             if n.postconditions:
                 post["postconditions"] = self._expand_list(n.postconditions)
             pctx = self._expand_list(n.context_post()) if hasattr(n, "context_post") else []
@@ -741,57 +737,11 @@ def build_main_graph() -> Graph:
     g = Graph()
 
     # -- shared fragments -------------------------------------------------
-    # The orchestrator stay-alive review-gate prose appeared verbatim ~10x
-    # across review-*, fix-findings, conduct, and agent-assign.execute. It is
-    # registered once and referenced via $ref so a single edit propagates.
-    g.fragment(
-        "stay-alive",
-        "If spawned as a sub-agent, stay alive after reporting findings and"
-        " wait for the orchestrator's review -- do not end your turn; it may"
-        " SendMessage to ask you to clarify or reassess a finding.",
-    )
-    g.fragment(
-        "stay-alive-spawn",
-        "Spawn the review subagent with an explicit stay-alive instruction:"
-        " 'report your findings and wait for my review -- do not end your turn;"
-        " I may SendMessage to clarify findings.' Triage the findings before"
-        " routing to fix-findings.",
-    )
-
-    # ======================================================================
-    # Phase: bootstrap
-    # ======================================================================
-    g.node(
-        "constitution",
-        title="/speckit.constitution",
-        context=[
-            "The constitution is the durable charter for this project. Light edits only after first feature; major rewrites should be rare and noted in DECISIONS.md.",
-        ],
-        soft=["`.specify/memory/constitution.md` (template will exist; you're filling it in)"],
-        postconditions=["`.specify/memory/constitution.md` (filled in)"],
-        conditional=[
-            "If you started here from an existing project, confirm `.specify/memory/architecture_constitution.md` and `.specify/memory/DECISIONS.md` reflect reality before specifying features.",
-        ],
-    ).hint("(project bootstrap)", direction="from")
+    # (No shared fragments remain after advisory nodes were pruned.)
 
     # ======================================================================
     # Phase: specify / clarify / plan
     # ======================================================================
-    g.node(
-        "specify",
-        title="/speckit.specify",
-        context=[
-            "For minimal scope, prefer `/speckit.tinyspec.classify` -- heavier `/speckit.specify` is overkill for trivial work. For a bug, `/speckit.bugfix.report` is the right entry.",
-            "If re-entered from `/speckit.refine.status` or `/speckit.iterate.apply`, walk briefly through every downstream stage to assess impact rather than restarting from scratch.",
-        ],
-        soft=["`.specify/memory/constitution.md`"],
-        postconditions=["`specs/<feat>/spec.md`"],
-        conditional=[
-            "If the spec is one paragraph long, consider rerouting to `/speckit.tinyspec.classify`.",
-            "If this is a bug rather than a feature, exit to `/speckit.bugfix.report`.",
-        ],
-    ).hint("(project bootstrap)", direction="from")
-
     g.node(
         "clarify",
         title="/speckit.clarify",
@@ -854,25 +804,6 @@ def build_main_graph() -> Graph:
     )
 
     g.node(
-        "critique-critique-template",
-        title="/speckit.critique.critique-template",
-        context=["Internal template helper. Don't call from a feature cycle."],
-        soft=["(none)"],
-    ).hint("(utility -- not invoked directly in the main flow)", direction="from") \
-     .hint("(utility -- not invoked directly)")
-
-    g.node(
-        "security-review",
-        title="/speckit.security-review",
-        context=[
-            "Dedicated security audit. In pre-impl, reviews plan and tasks for security risks. In post-impl, reviews the actual code diff. Run the /security-review skill as a subagent. In pre-impl, runs in parallel with /speckit.critique.run. In post-impl, runs in parallel with /speckit.code-review.",
-            "$ref:stay-alive-spawn",
-        ],
-        soft=["implementation diff present (post-impl path)"],
-        postconditions=["`specs/<feat>/security-review-report.md`"],
-    )
-
-    g.node(
         "analyze",
         title="/speckit.analyze",
         context=[
@@ -906,8 +837,7 @@ def build_main_graph() -> Graph:
         conditional=[
             "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.run`.",
         ],
-    ).hint("(any milestone where committing is appropriate)", direction="from") \
-     .hint("(next phase per workflow)")
+    )
 
     # ======================================================================
     # Phase: implementation (agent-assign) + deprecated implement
@@ -982,7 +912,7 @@ def build_main_graph() -> Graph:
             "Verify against the ACTUAL diff, not the agents' task reports -- a task self-reported as done with no corresponding code change is a phantom completion and must route back to `/speckit.fix-findings`.",
             "Claude turbo-path for Phase 3 QA (dynamic workflows only): post-implementation QA runs as three parallel pairs -- verify-tasks + verify (10/11), code-review + security-review (12/13), sync.analyze + sync.conflicts (15/16); you MAY run all three as one Workflow instead of six manual subagent calls.",
             "If workflows are unavailable or the user declines, run the pairs the normal way per the 50-speckit-workflow steps (identical outputs, not orchestrated).",
-            "`parallel()` the six read-only checks mapped to `speckit-verify-tasks`, `speckit-verify`, the `code-review` and `security-review` skills, `speckit-sync`, `speckit-sync-conflicts`.",
+            "`parallel()` the six read-only checks mapped to `speckit-verify` (mode: tasks), `speckit-verify` (mode: requirements), the `code-review` and `security-review` skills, `speckit-sync` (scope: drift), `speckit-sync` (scope: conflicts).",
             "Each returns structured findings; collect, then run `cleanup` (step 14) on the main thread between the review pair and the sync pair if a finding needs a fix (do NOT auto-fix inside the read-only workflow).",
             "`model`/`effort` default to each agent's definition (verify agents Opus/xhigh; sync agents Sonnet/high) -- do not override unless clearly needed.",
             "Reuse existing `agentType`s; define none. Do NOT touch the DAG nodes -- this is an execution shortcut, not a workflow replacement.",
@@ -1044,51 +974,6 @@ def build_main_graph() -> Graph:
         postconditions=["`specs/<feat>/review-report.md`"],
     )
 
-    # granular review variants -- all share the stay-alive fragment and route
-    # back to review.run + fix-findings (the 5 malformed single-string going_to
-    # entries are split into two real edges each here).
-    g.node(
-        "review-code",
-        title="/speckit.review.code",
-        context=["$ref:stay-alive"],
-        soft=["implementation diff exists"],
-    ).hint("(direct invocation for a focused code review)", direction="from")
-
-    g.node(
-        "review-comments",
-        title="/speckit.review.comments",
-        context=["$ref:stay-alive"],
-        soft=["implementation diff"],
-    ).hint("(direct invocation)", direction="from")
-
-    g.node(
-        "review-errors",
-        title="/speckit.review.errors",
-        context=["$ref:stay-alive"],
-        soft=["implementation diff"],
-    ).hint("(direct invocation)", direction="from")
-
-    g.node(
-        "review-simplify",
-        title="/speckit.review.simplify",
-        context=["$ref:stay-alive"],
-        soft=["implementation diff"],
-    ).hint("(direct invocation)", direction="from")
-
-    g.node(
-        "review-tests",
-        title="/speckit.review.tests",
-        context=["$ref:stay-alive"],
-        soft=["test files in the diff"],
-    ).hint("(direct invocation)", direction="from")
-
-    g.node(
-        "review-types",
-        title="/speckit.review.types",
-        context=["$ref:stay-alive"],
-        soft=["typed source in the diff"],
-    ).hint("(direct invocation)", direction="from")
-
     g.node(
         "qa-run",
         title="/speckit.qa.run",
@@ -1100,59 +985,9 @@ def build_main_graph() -> Graph:
         postconditions=["`specs/<feat>/qa-report.md`"],
     )
 
-    g.node(
-        "qa-qa-template",
-        title="/speckit.qa.qa-template",
-    ).hint("(utility)", direction="from").hint("(utility -- not invoked directly)")
-
-    g.node(
-        "code-review",
-        title="/speckit.code-review",
-        context=[
-            "General-purpose code review: correctness, regressions, security risks, missing tests, performance, maintainability. Complements the spec-aware review.run. Run the /code-review skill as a subagent against the current branch diff. Can run in parallel with /speckit.security-review.",
-            "Spawn the review subagent with an explicit stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to clarify findings.' Triage the findings before routing to fix-findings.",
-        ],
-        soft=["implementation diff present"],
-        postconditions=["`specs/<feat>/code-review-report.md`"],
-    )
-
-    g.node(
-        "fix-findings",
-        title="/speckit.fix-findings",
-        context=[
-            "Automated analyze-fix-reanalyze loop bounded by `max_iterations` (default 10 in our override).",
-            "When you spawn the fixing sub-agent, instruct it to stay alive after reporting: 'apply the fixes, report what you changed, and wait for my review -- do not end your turn; I may SendMessage corrections.'",
-        ],
-        context_post=[
-            "Orchestrator review gate: do NOT dismiss the fixing sub-agent the moment it reports. Review the actual code changes against the original findings first. If a fix is incomplete or introduced new issues, `SendMessage` the specific problems to the SAME agent so it corrects only those with full context. Dismiss only once the fixes pass your review.",
-        ],
-        soft=["`specs/<feat>/review-report.md` or `qa-report.md` with findings"],
-    )
-
-    g.node(
-        "cleanup",
-        title="/speckit.cleanup",
-        context=[
-            "Post-impl hygiene: dead-code removal, unused imports, debug statements. Our override enables aggressive dead-code removal.",
-        ],
-        soft=["implementation diff present"],
-        postconditions=["`specs/<feat>/cleanup-report.md`"],
-    )
-
     # ======================================================================
     # Phase: sync/drift
     # ======================================================================
-    g.node(
-        "sync-analyze",
-        title="/speckit.sync.analyze",
-        context=["Detects drift between specs and implementation. Read-only."],
-        soft=["implementation diff"],
-        postconditions=["`specs/<feat>/sync-report.md`"],
-        conditional=[
-            "If sync.analyze shows the code lacks work the spec calls for (drift, not a scope change), /speckit.converge appends it as tasks.",
-        ],
-    )
-
     g.node(
         "sync-conflicts",
         title="/speckit.sync.conflicts",
@@ -1162,31 +997,6 @@ def build_main_graph() -> Graph:
         hard_missing=["specs/<feat>/sync-report.md"],
         soft=[],
     )
-
-    g.node(
-        "reconcile",
-        title="/speckit.reconcile.run",
-        context=[
-            "After /speckit.checkpoint.commit, refine and iterate are no longer appropriate -- reconcile is the drift-handling tool because it updates the spec to match the as-shipped implementation.",
-        ],
-        soft=["specs/<feat>/sync-report.md"],
-        postconditions=["`specs/<feat>/reconcile-report.md`"],
-    ).hint("(drift detected -- any post-checkpoint phase where spec <-> implementation diverged)", direction="from")
-
-    g.node(
-        "retro-run",
-        title="/speckit.retro.run",
-        context=[
-            "Sprint-style retro: metrics, spec accuracy, improvements. Feeds DECISIONS.md if the team accepts changes.",
-        ],
-        soft=["specs/<feat>/sync-report.md"],
-        postconditions=["`specs/<feat>/retro-report.md`"],
-    )
-
-    g.node(
-        "retro-retro-template",
-        title="/speckit.retro.retro-template",
-    ).hint("(utility)", direction="from").hint("(utility -- not invoked directly)")
 
     g.node(
         "archive",
@@ -1221,16 +1031,6 @@ def build_main_graph() -> Graph:
     ).hint("(any phase before /speckit.checkpoint.commit)", direction="from")
 
     g.node(
-        "refine-diff",
-        title="/speckit.refine.diff",
-        context=[
-            "Generates a structured diff of what refine.update changed so propagate can apply downstream edits.",
-        ],
-        soft=["artefact(s) that just changed"],
-        postconditions=["`specs/<feat>/refine-diff.md`"],
-    )
-
-    g.node(
         "refine-propagate",
         title="/speckit.refine.propagate",
         context=[
@@ -1239,19 +1039,6 @@ def build_main_graph() -> Graph:
         hard_missing=["specs/<feat>/refine-diff.md"],
         soft=[],
         postconditions=["downstream artefacts updated"],
-    )
-
-    g.node(
-        "refine-status",
-        title="/speckit.refine.status",
-        context=[
-            "Final step of the refine loop. After this, re-enter at /speckit.specify and walk briefly through every downstream stage to confirm artefacts still hold up.",
-        ],
-        soft=["(none -- read-only status)"],
-        postconditions=["(no artefact; status printed)"],
-        conditional=[
-            "At each downstream stage you re-enter, confirm the artefact is still valid or update it. Do not skip stages -- an upstream change can invalidate any of them.",
-        ],
     )
 
     # ======================================================================
@@ -1288,29 +1075,9 @@ def build_main_graph() -> Graph:
         ],
     )
 
-    g.node(
-        "roadmap-write",
-        title="/speckit.roadmap.write",
-        context=[
-            "Records / refreshes this feature's entry in the project roadmap so the roadmap reflects the current spec/plan/tasks. Run it after an iteration re-scopes the feature to keep the roadmap entry in sync.",
-        ],
-        soft=["specs/<feat>/spec.md"],
-        postconditions=["the project roadmap entry for `<feat>` updated to match the current spec/plan/tasks"],
-    ).hint("(return -- roadmap synced; resume the iterate re-entry walk at /speckit.specify)")
-
     # ======================================================================
     # Phase: bugfix sub-cycle
     # ======================================================================
-    g.node(
-        "bugfix-report",
-        title="/speckit.bugfix.report",
-        context=[
-            "If the underlying issue is a spec gap (not a bug), exit to /speckit.refine.update instead.",
-        ],
-        soft=["(none)"],
-        postconditions=["`specs/<feat>/bug-<n>.md`"],
-    ).hint("(bug intake -- external signal)", direction="from")
-
     g.node(
         "bugfix-verify",
         title="/speckit.bugfix.verify",
@@ -1331,13 +1098,6 @@ def build_main_graph() -> Graph:
     # Phase: tinyspec sub-cycle
     # ======================================================================
     g.node(
-        "tinyspec-classify",
-        title="/speckit.tinyspec.classify",
-        soft=["(none)"],
-        postconditions=["`specs/<feat>/tinyspec.md` (classification block)"],
-    ).hint("(quick-start entry -- minimal scope feature)", direction="from")
-
-    g.node(
         "tinyspec-tinyspec",
         title="/speckit.tinyspec.tinyspec",
         hard_missing=["specs/<feat>/tinyspec.md"],
@@ -1352,45 +1112,8 @@ def build_main_graph() -> Graph:
     )
 
     # ======================================================================
-    # Phase: github-issues
-    # ======================================================================
-    g.node(
-        "github-issues-import",
-        title="/speckit.github-issues.import",
-        context=[
-            "Imports issues into spec scaffolding so brownfield projects don't lose existing tracker context.",
-        ],
-        soft=["gh CLI authenticated; repo configured in github-issues config"],
-        postconditions=["`specs/<feat>/imported-issues.md`"],
-    ).hint("(new project with existing GitHub issues to ingest)", direction="from")
-
-    g.node(
-        "github-issues-link",
-        title="/speckit.github-issues.link",
-        soft=["specs/<feat>/issue-map.md"],
-    ).hint("(post-/speckit.tasks -- link tasks to issues)", direction="from") \
-     .hint("(return)")
-
-    g.node(
-        "github-issues-sync",
-        title="/speckit.github-issues.sync",
-        soft=["gh CLI authenticated"],
-    ).hint("(mid-cycle -- keep issues in sync with tasks)", direction="from") \
-     .hint("(return -- advisory)")
-
-    # ======================================================================
     # Phase: fleet orchestration
     # ======================================================================
-    g.node(
-        "fleet",
-        title="/speckit.fleet.run",
-        context=[
-            "Human-in-the-loop gates across all SpecKit phases. Our override pins primary=opus / review=sonnet and caps concurrency at 2.",
-        ],
-        soft=["(none)"],
-        postconditions=["`specs/<feat>/fleet-state.md`"],
-    ).hint("(orchestration entry -- running multiple speckit phases in parallel)", direction="from")
-
     g.node(
         "fleet-review",
         title="/speckit.fleet.review",
@@ -1399,115 +1122,26 @@ def build_main_graph() -> Graph:
     ).hint("(downstream gates as defined by fleet config)")
 
     # ======================================================================
-    # Phase: conduct (single-phase executor)
+    # Edges (canonical store; came_from/going_to are projections but not
+    # emitted -- edges remain for validation + documentation only)
     # ======================================================================
-    g.node(
-        "conduct",
-        title="/speckit.conduct.run",
-        context=[
-            "Executes one speckit phase via a sub-agent. Lighter-weight than running a full workflow; use when you want one phase done in isolation.",
-            "Spawn the sub-agent with a stay-alive instruction: 'produce the artefact, report it, and wait for my review -- do not end your turn; I may SendMessage corrections.'",
-        ],
-        context_post=[
-            "Orchestrator review gate: do NOT dismiss the sub-agent the moment it reports. Review the produced artefact(s) first. If they fall short, `SendMessage` the specific issues to the SAME agent so it fixes only those with full context. Dismiss only once the artefact passes your review.",
-        ],
-        soft=["a spec/plan/tasks artefact appropriate to the phase being conducted"],
-        postconditions=["(artefact(s) of the phase that was conducted)"],
-        conditional=[
-            "After conduct completes AND the produced artefact passes your review, the regular DAG resumes -- pick the next node based on which artefact you just produced.",
-        ],
-    ).hint("(any phase -- single-phase executor)", direction="from") \
-     .hint("(return to surrounding phase; conduct does not advance the DAG)")
-
-    # ======================================================================
-    # Phase: status / doctor / worktree advisory + utility
-    # ======================================================================
-    g.node(
-        "status-report-show",
-        title="/speckit.status-report.show",
-        context=["Read-only progress report. Surfaces current feature + which artefacts exist."],
-        soft=["(none; reads .specify/feature.json + spec/plan/task artefacts)"],
-        postconditions=["`specs/spec-status.md` (regenerated each run; gitignored)"],
-        conditional=[
-            "Use the output to pick the next DAG node -- typically the first phase whose artefact is missing.",
-        ],
-    ).hint("(anytime -- advisory)", direction="from").hint("(return to invoker)")
-
-    g.node(
-        "doctor-check",
-        title="/speckit.doctor.check",
-        context=["Pure diagnostic. Does not mutate project state. Safe from any phase."],
-        soft=["(none)"],
-        postconditions=["(no artefact; report printed to stdout)"],
-        conditional=[
-            "If doctor flags missing extensions or stale workflows, run `speckit-upgrade-project` (fish) to refresh `.specify/` and `specify extension update` to refresh extensions.",
-        ],
-    ).hint("(anytime -- advisory health check)", direction="from") \
-     .hint("(return to whatever phase you were in)")
-
-    g.node(
-        "worktree-create",
-        title="/speckit.worktree.create",
-        context=[
-            "Spawns an isolated git worktree so parallel features don't trample each other. Pair with the worktree-isolation pattern in agent-assign.execute when running multiple agents.",
-        ],
-        soft=["(none)"],
-        postconditions=["new git worktree under the configured worktree root"],
-    ).hint("(parallel-work request from any implementation phase)", direction="from")
-
-    g.node(
-        "worktree-list",
-        title="/speckit.worktree.list",
-        soft=["(none)"],
-    ).hint("(anytime -- advisory)", direction="from")
-
-    g.node(
-        "worktree-clean",
-        title="/speckit.worktree.clean",
-        context=["Removes the per-feature worktree. Don't run mid-cycle."],
-        soft=["feature has been archived"],
-    ).hint("(cleanup time, after the feature is archived)", direction="from") \
-     .hint("(terminal)")
-
-    # ======================================================================
-    # Edges (canonical store; came_from/going_to are projections)
-    # ======================================================================
-    # -- bootstrap --
-    g.edge("constitution", "specify", "default", note="proceed to write the spec")
-
     # -- specify / clarify / plan --
-    g.edge("specify", "clarify", "default")
     g.edge("clarify", "plan", "default")
     g.edge("plan", "tasks", "default")
     g.edge("plan", "critique-run", "conditional", note="only if user explicitly requests critique before tasks")
     g.edge("tasks", "checklist", "default", note="requirements-quality gate over spec + plan + tasks")
 
-    # -- pre-impl review (checklist -> critique + security-review -> analyze) --
-    # critique.run is the default forward; security-review runs in parallel
-    # (mandatory -- it cannot be skipped in the parallel gate). The skip path
-    # formerly went to diagram.dependencies (cut) -> re-pointed to analyze.
-    g.edge("checklist", "critique-run", "default", note="parallel with security-review -- review plan/tasks before implementation")
-    g.edge("checklist", "security-review", "mandatory", note="pre-impl -- runs in parallel with critique.run")
-    g.edge("checklist", "analyze", "conditional", note="only if user explicitly skips critique + security-review")
-    # critique.run forward formerly -> diagram.dependencies (cut); now -> analyze.
-    g.edge("critique-run", "analyze", "default", note="after security-review also completes")
+    # -- pre-impl review (checklist -> critique -> analyze) --
+    g.edge("checklist", "critique-run", "default", note="review plan/tasks before implementation")
+    g.edge("checklist", "analyze", "conditional", note="only if user explicitly skips critique")
+    g.edge("critique-run", "analyze", "default")
     g.edge("critique-run", "refine-update", "conditional", note="if critique reveals plan-level rework")
-    # security-review pre-impl forward formerly -> diagram.dependencies (cut);
-    # now -> analyze. Post-impl branches stay conditional.
-    g.edge("security-review", "analyze", "default", note="pre-impl -- after critique also completes")
-    g.edge("security-review", "fix-findings", "conditional", note="post-impl, if security findings")
-    g.edge("security-review", "cleanup", "conditional", note="post-impl, clean, after code-review also completes")
     g.edge("analyze", "taskstoissues", "default")
     g.edge("taskstoissues", "checkpoint-commit", "default", note="lock in the spec/plan/tasks before execution")
 
     # -- checkpoint -> implementation / archive --
-    # checkpoint.commit is a SHARED node for both the mid-cycle and the final
-    # checkpoint. The forward-to-implementation edge is therefore conditional on
-    # this being the mid-cycle checkpoint -- making it 'default' would close a
-    # real cycle (retro.run -> checkpoint.commit -> agent-assign.assign -> ... ->
-    # retro.run) in the primary backbone.
     g.edge("checkpoint-commit", "agent-assign-assign", "conditional", note="after the mid-cycle checkpoint that follows taskstoissues")
-    g.edge("checkpoint-commit", "archive", "conditional", note="after the final checkpoint that follows retro.run")
+    g.edge("checkpoint-commit", "archive", "conditional", note="after the final checkpoint")
 
     # -- agent-assign chain --
     g.edge("agent-assign-assign", "agent-assign-validate", "default")
@@ -1522,98 +1156,46 @@ def build_main_graph() -> Graph:
     g.edge("verify-tasks", "verify", "default")
     g.edge("verify-tasks", "converge", "conditional", note="phantom completions -- append the real implementation work as traceable tasks")
     g.edge("verify", "review-run", "default")
-    g.edge("verify", "bugfix-report", "conditional", note="if verify surfaces gaps that look like bugs rather than spec violations")
     g.edge("verify", "converge", "conditional", note="if verify finds unmet FR/SC that is unbuilt work, not a bug or scope change")
     # converge: implement the appended Convergence tasks via the agent-assign flow.
     g.edge("converge", "agent-assign-assign", "default", note="implement the appended `## Phase N: Convergence` tasks via the agent-assign flow")
     g.edge("converge", "iterate-define", "conditional", note="only if the gap is actually a scope/intent change, not unbuilt work")
-    g.edge("sync-analyze", "converge", "conditional", note="drift: the spec calls for work the code lacks")
 
-    # -- review.run orchestrated variants --
-    g.edge("review-run", "fix-findings", "conditional", note="if findings, after triage")
+    # -- review.run -> qa -> sync -> checkpoint -> archive --
     g.edge("review-run", "qa-run", "default", note="clean")
-    for variant in ("review-code", "review-comments", "review-errors", "review-simplify", "review-tests", "review-types"):
-        # review.run orchestrates each variant; each routes back to review.run
-        # and onward to fix-findings (the 5 malformed combined going_to strings
-        # are split into two real edges here).
-        g.edge("review-run", variant, "optional", note="orchestrated granular review variant")
-        g.edge(variant, "review-run", "conditional", note="re-aggregate after the granular pass")
-        g.edge(variant, "fix-findings", "conditional", note="if findings")
-
-    # -- qa / code-review / fix-findings / cleanup --
-    g.edge("qa-run", "code-review", "default", note="clean -- runs in parallel with security-review")
-    g.edge("qa-run", "security-review", "mandatory", note="post-impl -- runs in parallel with code-review")
-    g.edge("qa-run", "fix-findings", "conditional", note="failed")
-    g.edge("code-review", "cleanup", "default", note="clean, after security-review also completes")
-    g.edge("code-review", "fix-findings", "conditional", note="if findings")
-    g.edge("fix-findings", "fix-findings", "conditional", note="loop -- when review shows the fix is incomplete or regressed")
-    g.edge("fix-findings", "review-run", "conditional", note="loop until clean, after the fixes pass review")
-    g.edge("fix-findings", "verify", "conditional", note="re-verify after substantial fixes")
-    g.edge("cleanup", "sync-analyze", "default", note="proceed to drift check")
-
-    # -- sync/drift -> retro -> checkpoint -> archive --
-    g.edge("sync-analyze", "sync-conflicts", "default")
-    g.edge("sync-conflicts", "retro-run", "default")
-    g.edge("sync-conflicts", "reconcile", "conditional", note="if conflicts need active resolution")
-    g.edge("reconcile", "refine-update", "conditional", note="if the spec needs structured edits to catch up")
-    g.edge("reconcile", "sync-analyze", "conditional", note="to confirm reconciliation closed the drift")
-    g.edge("retro-run", "checkpoint-commit", "default", note="final checkpoint")
+    g.edge("qa-run", "sync-conflicts", "default", note="proceed to conflict check")
+    g.edge("sync-conflicts", "checkpoint-commit", "default", note="final checkpoint")
 
     # -- refine loop --
-    g.edge("refine-update", "refine-diff", "default")
-    g.edge("refine-update", "reconcile", "optional", note="post-checkpoint drift handling")
-    g.edge("refine-diff", "refine-propagate", "default")
-    g.edge("refine-propagate", "refine-status", "default")
-    g.edge("refine-status", "specify", "mandatory", note="MANDATORY re-entry -- walk forward through every downstream stage to assess impact")
+    g.edge("refine-update", "refine-propagate", "default")
 
-    # -- iterate loop + roadmap gate --
+    # -- iterate loop --
     g.edge("iterate-define", "iterate-apply", "default")
-    g.edge("iterate-apply", "specify", "mandatory", note="MANDATORY re-entry -- walk forward through every downstream stage")
-    # Locked roadmap gate: after applying an iteration, re-sync the roadmap.
-    g.edge("iterate-apply", "roadmap-write", "mandatory", note="re-sync the roadmap entry to the iterated spec/plan/tasks")
 
     # -- bugfix sub-cycle --
-    g.edge("verify", "bugfix-report", "optional", note="if a verification failure triages as a bug rather than a spec gap")
-    g.edge("bugfix-report", "bugfix-verify", "default")
     g.edge("bugfix-verify", "bugfix-patch", "default")
     g.edge("bugfix-patch", "verify", "conditional", note="re-verify if the fix touched implementation")
 
     # -- tinyspec sub-cycle --
-    g.edge("specify", "tinyspec-classify", "conditional", note="if spec is one-paragraph and full SDD is overkill")
-    g.edge("tinyspec-classify", "tinyspec-tinyspec", "default")
     g.edge("tinyspec-tinyspec", "tinyspec-implement", "default")
     g.edge("tinyspec-implement", "verify", "conditional", note="short cycle")
 
-    # -- github-issues --
-    g.edge("github-issues-import", "specify", "conditional", note="treat imported issue as feature seed")
-    g.edge("github-issues-import", "plan", "conditional", note="if the issue is well-defined enough to skip specify")
-
     # -- fleet --
-    g.edge("fleet", "fleet-review", "default")
-
-    # -- conduct self-loop --
-    g.edge("conduct", "conduct", "conditional", note="loop -- when review finds issues in the produced artefact")
-
-    # -- worktree family --
-    g.edge("worktree-create", "worktree-list", "optional", note="confirm the worktree was created")
-    g.edge("worktree-list", "worktree-clean", "optional", note="after the feature is archived")
+    g.edge("fleet-review", "checkpoint-commit", "conditional", note="after fleet review completes")
 
     # ======================================================================
     # Phase groupings (documentary only -- do not affect emitted JSON)
     # ======================================================================
-    g.phase("bootstrap", ["constitution"])
-    g.phase("specify", ["specify", "clarify", "plan", "tasks"])
-    g.phase("pre-impl-review", ["checklist", "critique-run", "security-review", "analyze", "taskstoissues", "checkpoint-commit"])
+    g.phase("specify", ["clarify", "plan", "tasks"])
+    g.phase("pre-impl-review", ["checklist", "critique-run", "analyze", "taskstoissues", "checkpoint-commit"])
     g.phase("implement", ["agent-assign-assign", "agent-assign-validate", "agent-assign-execute", "implement", "converge"])
-    g.phase("post-impl-review", ["verify-tasks", "verify", "review-run", "review-code", "review-comments", "review-errors", "review-simplify", "review-tests", "review-types", "qa-run", "code-review", "fix-findings", "cleanup"])
-    g.phase("close-out", ["sync-analyze", "sync-conflicts", "reconcile", "retro-run", "archive"])
-    g.phase("refine", ["refine-update", "refine-diff", "refine-propagate", "refine-status"])
-    g.phase("iterate", ["iterate-define", "iterate-apply", "roadmap-write"])
-    g.phase("bugfix", ["bugfix-report", "bugfix-verify", "bugfix-patch"])
-    g.phase("tinyspec", ["tinyspec-classify", "tinyspec-tinyspec", "tinyspec-implement"])
-    g.phase("github-issues", ["github-issues-import", "github-issues-link", "github-issues-sync"])
-    g.phase("orchestration", ["fleet", "fleet-review", "conduct"])
-    g.phase("utility", ["status-report-show", "doctor-check", "worktree-create", "worktree-list", "worktree-clean", "critique-critique-template", "qa-qa-template", "retro-retro-template"])
+    g.phase("post-impl-review", ["verify-tasks", "verify", "review-run", "qa-run"])
+    g.phase("close-out", ["sync-conflicts", "archive"])
+    g.phase("refine", ["refine-update", "refine-propagate"])
+    g.phase("iterate", ["iterate-define", "iterate-apply"])
+    g.phase("bugfix", ["bugfix-verify", "bugfix-patch"])
+    g.phase("tinyspec", ["tinyspec-tinyspec", "tinyspec-implement"])
+    g.phase("orchestration", ["fleet-review"])
 
     return g
 
