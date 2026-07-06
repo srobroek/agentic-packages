@@ -14,8 +14,8 @@ tags:
   - security
 dependencies:
   apm:
-    - wshobson/agents/plugins/security-scanning#main
-    - wshobson/agents/plugins/security-compliance#main
-    - wshobson/agents/plugins/backend-api-security#main
-    - wshobson/agents/plugins/frontend-mobile-security#main
-    - wshobson/agents/plugins/reverse-engineering#main
+    - wshobson/agents/plugins/security-scanning#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/security-compliance#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/backend-api-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/frontend-mobile-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/reverse-engineering#5cc2549a50fc672230efd0a0307e2fd27ffba792

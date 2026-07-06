@@ -17,8 +17,8 @@ dependencies:
     - srobroek/agentic-packages/packages/debate#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/eli5#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/web-fetch#>=1.1.0 <2.0.0
-    - mattpocock/skills/skills/engineering/to-prd#main
-    - mattpocock/skills/skills/engineering/to-issues#main
-    - mattpocock/skills/skills/engineering/tdd#main
-    - mattpocock/skills/skills/engineering/triage#main
-    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main
+    - mattpocock/skills/skills/engineering/to-prd#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/to-issues#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/tdd#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/triage#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/improve-codebase-architecture#16a2a5cd00b4416f673f4ff38c7971a04dd708e7

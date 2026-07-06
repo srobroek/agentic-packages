@@ -21,12 +21,12 @@ tags:
   - terminal
 dependencies:
   apm:
-    - manaflow-ai/cmux/skills/cmux#main
-    - manaflow-ai/cmux/skills/cmux-workspace#main
-    - manaflow-ai/cmux/skills/cmux-customization#main
-    - manaflow-ai/cmux/skills/cmux-settings#main
-    - manaflow-ai/cmux/skills/cmux-diagnostics#main
-    - manaflow-ai/cmux/skills/cmux-socket-policy#main
-    - manaflow-ai/cmux/skills/cmux-ghostty#main
-    - manaflow-ai/cmux/skills/cmux-keyboard-shortcuts#main
-    - manaflow-ai/cmux/skills/cmux-shared-behavior#main
+    - manaflow-ai/cmux/skills/cmux#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-workspace#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-customization#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-settings#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-diagnostics#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-socket-policy#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-ghostty#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-keyboard-shortcuts#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - manaflow-ai/cmux/skills/cmux-shared-behavior#f0c38b89579f6629caedbc430f8802ca8c64c76b

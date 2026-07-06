@@ -14,4 +14,4 @@ tags:
   - functional
 dependencies:
   apm:
-    - wshobson/agents/plugins/functional-programming#main
+    - wshobson/agents/plugins/functional-programming#5cc2549a50fc672230efd0a0307e2fd27ffba792

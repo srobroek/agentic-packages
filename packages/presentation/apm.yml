@@ -14,7 +14,7 @@ tags:
   - slides
 dependencies:
   apm:
-    - daymade/claude-code-skills/daymade-docs/ppt-creator#main
-    - softaworks/agent-toolkit/skills/marp-slide#main
+    - daymade/claude-code-skills/daymade-docs/ppt-creator#d2d566f596ebf55271e3337ffa16012083d7dfa2
+    - softaworks/agent-toolkit/skills/marp-slide#3027f20f3181758385a1bb8c022d4041dfb4de84
     - >-
-      tristan-mcinnis/pptx-from-layouts-skill/.claude/skills/pptx-from-layouts#main
+      tristan-mcinnis/pptx-from-layouts-skill/.claude/skills/pptx-from-layouts#53b0e750694d807e3510c2017744197c3c5089b0

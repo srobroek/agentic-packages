@@ -14,7 +14,7 @@ tags:
   - governance
 dependencies:
   apm:
-    - wshobson/agents/plugins/protect-mcp#main
-    - wshobson/agents/plugins/signed-audit-trails#main
-    - wshobson/agents/plugins/review-agent-governance#main
-    - wshobson/agents/plugins/block-no-verify#main
+    - wshobson/agents/plugins/protect-mcp#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/signed-audit-trails#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/review-agent-governance#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/block-no-verify#5cc2549a50fc672230efd0a0307e2fd27ffba792

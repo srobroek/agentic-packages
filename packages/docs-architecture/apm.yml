@@ -15,4 +15,4 @@ tags:
   - documentation
 dependencies:
   apm:
-    - wshobson/agents/plugins/documentation-standards#main
+    - wshobson/agents/plugins/documentation-standards#5cc2549a50fc672230efd0a0307e2fd27ffba792
