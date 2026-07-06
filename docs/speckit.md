@@ -30,10 +30,8 @@ Read-only analysts except where noted:
 | --- | --- |
 | `speckit-research` | Pulls current library/API docs (Context7, official sources) tied to a spec decision; returns cited findings. |
 | `speckit-implement-task` | Executes scoped tasks from `tasks.md`, or delegates substantial code work to a coder. |
-| `speckit-verify` | Checks implementation against the spec's functional requirements and success criteria. |
-| `speckit-verify-tasks` | Detects *phantom completions* -- tasks marked done with no real implementation evidence. |
-| `speckit-sync` | Detects drift between specs and implementation. |
-| `speckit-sync-conflicts` | Detects contradictions between specs or against shared contracts. |
+| `speckit-verify` | Checks implementation against FR/SC (mode: requirements) or detects phantom completions (mode: tasks). |
+| `speckit-sync` | Detects drift between specs and implementation (scope: drift) or contradictions between specs (scope: conflicts). |
 
 ## Setting up a SpecKit project
 
