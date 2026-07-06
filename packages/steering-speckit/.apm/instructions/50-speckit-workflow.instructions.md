@@ -33,7 +33,7 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 | 5c | `/speckit.security-review` | parallel with 5b | Security review of plan/tasks |
 | 6 | `/speckit.analyze` | interactive | Risk analysis |
 | 7 | `/speckit.taskstoissues` | auto | Creates GitHub/GitLab issues |
-| 8 | `/speckit.checkpoint.commit` | auto | Snapshot before implementation |
+| 8 | commit + tag (git, no extension) | auto | Snapshot before implementation |
 
 ### Phase 2 — Implementation
 
@@ -47,8 +47,8 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 
 | Step | Command | Mode | Notes |
 |------|---------|------|-------|
-| 10 | `/speckit.verify-tasks` | subagent (mode: tasks) | Phantom completion detection |
-| 11 | `/speckit.verify` | subagent (mode: requirements) | Validate code against spec |
+| 10 | spawn `speckit-verify` agent (mode: tasks) → writes `verify-tasks-report.md` | subagent | Phantom completion detection |
+| 11 | spawn `speckit-verify` agent (mode: requirements) → writes `verify-report.md` | subagent | Validate code against spec |
 | 11b | `/speckit.review.run` | auto | Full review cycle; findings → fix-findings |
 | 11c | `/speckit.qa.run` | auto | QA retest; failures → fix-findings |
 | 12+13 | `/speckit.code-review` + `/speckit.security-review` | parallel subagents | After 11c |
@@ -56,7 +56,7 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 | 15+16 | `/speckit.sync.analyze` (scope: drift) + `/speckit.sync.conflicts` (scope: conflicts) | parallel subagents | |
 | 17 | `/speckit.retro.run` | main thread | |
 | 18 | Documentation update | main thread | |
-| 19 | `/speckit.checkpoint.commit` | auto | |
+| 19 | commit + tag (git, no extension) | auto | Final checkpoint |
 
 ## Scope Change (iterate)
 
@@ -65,7 +65,7 @@ Mandatory once tasks.md exists. Trigger: requirements change or approach won't w
 1. `/speckit.iterate.define` → `pending-iteration.md`; present to user
 2. `/speckit.iterate.apply` → updates spec/plan/tasks
 3. `/speckit.roadmap.write` → re-sync roadmap (mandatory after every iterate)
-4. `/speckit.checkpoint.commit` → resume at the triggering step
+4. commit + tag → resume at the triggering step
 
 ## Gap Closing (converge)
 
@@ -73,7 +73,7 @@ Mandatory once tasks.md exists. Trigger: requirements change or approach won't w
 |-----------|------|
 | Spec is right, code is incomplete | `converge` |
 | Spec/intent must change | `iterate` |
-| Built code has a defect | `bugfix` |
+| Built code has a defect | `bugfix` skill |
 | Review/QA surfaced findings | `fix-findings` |
 
 `/speckit.converge`: appends remaining work as new tasks (append-only). If tasks appended, implement via agent-assign flow. If clean, resume the QA step.
