@@ -9,10 +9,6 @@
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/optimize-steering"
-    },
-    {
-      "git": "srobroek/agentic-packages",
       "path": "packages/audit-steering"
     },
     {

@@ -968,18 +968,6 @@
         }
       ]
     },
-    "packages/optimize-steering": {
-      "release-type": "simple",
-      "component": "optimize-steering",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/orchestrate": {
       "release-type": "simple",
       "component": "orchestrate",
@@ -1019,18 +1007,6 @@
     "packages/presentation": {
       "release-type": "simple",
       "component": "presentation",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/project-hygiene": {
-      "release-type": "simple",
-      "component": "project-hygiene",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

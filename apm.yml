@@ -558,13 +558,6 @@ marketplace:
         - mcp
         - tauri
         - testing
-    - name: optimize-steering
-      source: ./packages/optimize-steering
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - steering
     - name: orchestrate
       source: ./packages/orchestrate
       category: agentic-maintenance
@@ -591,13 +584,6 @@ marketplace:
       tags:
         - bundle
         - slides
-    - name: project-hygiene
-      source: ./packages/project-hygiene
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - hygiene
     - name: project-lifecycle
       source: ./packages/project-lifecycle
       category: project-lifecycle
