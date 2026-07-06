@@ -240,6 +240,36 @@ User-scope support varies by runtime: **fully supported for `claude`, `codex`, a
 
 ---
 
+## Updating and cleaning up after releases
+
+When a release retires or renames packages (see each release's CHANGELOG), refresh installs and prune stale content.
+
+**Global (per machine):**
+
+```bash
+apm update --global --yes    # bare form ONLY — the single-package form
+                             # ("apm update --global <pkg>") plans "1 updated,
+                             # N removed" and prunes every other global package
+```
+
+Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` — never hand-edit installed copies; APM skips locally-modified files on every future install.
+
+**Per project:**
+
+```bash
+apm update --yes                  # re-resolve; prunes retired packages
+apm run audit-agentic-assets      # flags stale or hand-edited installed files
+apm compile                       # refresh AGENTS.md / CLAUDE.md
+```
+
+Then check for stragglers:
+
+1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` — stale references in project-local steering or docs; edit them out.
+2. `ls .claude/skills/` — orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
+3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed — `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
+
+---
+
 ## How bundles work
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
