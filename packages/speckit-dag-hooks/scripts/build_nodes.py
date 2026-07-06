@@ -568,29 +568,12 @@ COMMAND_LABELS: dict = {
     "agent-assign-assign": "/speckit.agent-assign.assign",
     "agent-assign-execute": "/speckit.agent-assign.execute",
     "agent-assign-validate": "/speckit.agent-assign.validate",
-    "archive": "/speckit.archive.run",
-    "bugfix-patch": "/speckit.bugfix.patch",
-    "bugfix-report": "/speckit.bugfix.report",
-    "bugfix-verify": "/speckit.bugfix.verify",
-    "checkpoint-commit": "/speckit.checkpoint.commit",
-    "conduct": "/speckit.conduct.run",
     "critique-critique-template": "/speckit.critique.critique-template",
     "critique-run": "/speckit.critique.run",
-    "doctor-check": "/speckit.doctor.check",
-    "fleet": "/speckit.fleet.run",
-    "fleet-review": "/speckit.fleet.review",
-    "github-issues-import": "/speckit.github-issues.import",
-    "github-issues-link": "/speckit.github-issues.link",
-    "github-issues-sync": "/speckit.github-issues.sync",
     "iterate-apply": "/speckit.iterate.apply",
     "iterate-define": "/speckit.iterate.define",
     "qa-qa-template": "/speckit.qa.qa-template",
     "qa-run": "/speckit.qa.run",
-    "reconcile": "/speckit.reconcile.run",
-    "refine-diff": "/speckit.refine.diff",
-    "refine-propagate": "/speckit.refine.propagate",
-    "refine-status": "/speckit.refine.status",
-    "refine-update": "/speckit.refine.update",
     "retro-retro-template": "/speckit.retro.retro-template",
     "retro-run": "/speckit.retro.run",
     "review-code": "/speckit.review.code",
@@ -607,9 +590,6 @@ COMMAND_LABELS: dict = {
     "tinyspec-classify": "/speckit.tinyspec.classify",
     "tinyspec-implement": "/speckit.tinyspec.implement",
     "tinyspec-tinyspec": "/speckit.tinyspec.tinyspec",
-    "worktree-clean": "/speckit.worktree.clean",
-    "worktree-create": "/speckit.worktree.create",
-    "worktree-list": "/speckit.worktree.list",
 }
 
 
@@ -758,7 +738,7 @@ def build_main_graph() -> Graph:
         title="/speckit.plan",
         context=[
             "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-            "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch.",
+            "If `plan.md` already exists, use `/speckit.iterate.define` to scope a change rather than re-planning from scratch.",
         ],
         hard_exists=["specs/<feat>/plan.md"],
         hard_missing=["specs/<feat>/spec.md"],
@@ -819,24 +799,11 @@ def build_main_graph() -> Graph:
         title="/speckit.taskstoissues",
         context=[
             "Turns tasks into trackable GitHub issues. Keeps the issue map next to the spec for traceability.",
+            "After taskstoissues, commit all spec/plan/tasks/issue-map changes (conventional commit, pre-implementation checkpoint), then proceed to agent-assign.",
         ],
         hard_missing=["specs/<feat>/tasks.md"],
         soft=["gh CLI authenticated for the project repo"],
         postconditions=["gh issues created + `specs/<feat>/issue-map.md`"],
-    )
-
-    g.node(
-        "checkpoint-commit",
-        title="/speckit.checkpoint.commit",
-        context=[
-            "Mid-cycle checkpoints lock in spec/plan/tasks before execution. The final checkpoint locks in the verified, reviewed, retroed feature before archive.",
-        ],
-        hard_missing=["specs/<feat>/spec.md"],
-        soft=["working tree contains changes worth committing"],
-        postconditions=["git commit (+ tag for the final checkpoint)"],
-        conditional=[
-            "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.run`.",
-        ],
     )
 
     # ======================================================================
@@ -875,16 +842,16 @@ def build_main_graph() -> Graph:
             "Per level, `parallel()` one `agent()` per task with `agentType` = the agent in `agent-assignments.yml` and `isolation: 'worktree'`; pass task IDs, spec/plan excerpts, scope, and verification commands in the prompt.",
             "Pipeline each task execute -> its own verify in one stage; emit `specs/<feat>/task-<n>.report.md`. Barrier between dependency levels only.",
             "`model`/`effort` default to each agent's definition; override only at the `agent()` call when a task clearly needs it. All `agentType`s must already exist in `.claude/agents/` -- reuse, do not define new agents.",
-            "Checkpoint after the workflow completes, then continue to `/speckit.verify-tasks`.",
+            "After the workflow completes: (1) commit all task reports (conventional commit), then (2) spawn `speckit-verify` with mode: tasks -- it must write `specs/<feat>/verify-tasks-report.md`. Then spawn `speckit-verify` with mode: requirements -- it must write `specs/<feat>/verify-report.md`. Both agents run in fresh context with Opus/xhigh.",
         ],
         context_post=[
             "Orchestrator review gate: before accepting a task as done, review the ACTUAL code changes (git diff) against the task in `tasks.md` and the `spec.md`, not just the agent's `task-<n>.report.md`. Self-reports describe intent, not necessarily what landed.",
             "Keep each task's sub-agent alive after it reports. If the work falls short, `SendMessage` specific corrections to the SAME agent so it fixes only those issues with full context -- do not silently accept incomplete work or re-delegate from scratch. This holds even when execution ran as a parallel Workflow: review each agent's emitted diff before its worktree is reconciled, and dismiss an agent only once its task passes review.",
-            "Unresolved gaps route forward to `/speckit.verify-tasks` (phantom-completion check) and `/speckit.fix-findings`.",
+            "Unresolved gaps route forward to `/speckit.fix-findings` after the verify agents report.",
         ],
         hard_missing=["specs/<feat>/tasks.md", "specs/<feat>/agent-assignments.yml"],
         soft=["every agent referenced in agent-assignments.yml exists in .claude/agents/ or ~/.claude/agents/"],
-        postconditions=["code changes per task + `specs/<feat>/task-<n>.report.md` per task"],
+        postconditions=["code changes per task + `specs/<feat>/task-<n>.report.md` per task + `specs/<feat>/verify-tasks-report.md` + `specs/<feat>/verify-report.md`"],
     )
 
     g.node(
@@ -902,44 +869,16 @@ def build_main_graph() -> Graph:
      .hint("(this command is blocked at the hook layer; the dispatcher's HARD-DEPRECATED check returns a block decision)")
 
     # ======================================================================
-    # Phase: post-impl verification + review
+    # Phase: post-impl verification (via local speckit-verify agent) + review
     # ======================================================================
-    g.node(
-        "verify-tasks",
-        title="/speckit.verify-tasks",
-        context=[
-            "Catches phantom completions -- tasks marked done with no real implementation. Runs in a fresh context to avoid confirmation bias.",
-            "Verify against the ACTUAL diff, not the agents' task reports -- a task self-reported as done with no corresponding code change is a phantom completion and must route back to `/speckit.fix-findings`.",
-            "Claude turbo-path for Phase 3 QA (dynamic workflows only): post-implementation QA runs as three parallel pairs -- verify-tasks + verify (10/11), code-review + security-review (12/13), sync.analyze + sync.conflicts (15/16); you MAY run all three as one Workflow instead of six manual subagent calls.",
-            "If workflows are unavailable or the user declines, run the pairs the normal way per the 50-speckit-workflow steps (identical outputs, not orchestrated).",
-            "`parallel()` the six read-only checks mapped to `speckit-verify` (mode: tasks), `speckit-verify` (mode: requirements), the `code-review` and `security-review` skills, `speckit-sync` (scope: drift), `speckit-sync` (scope: conflicts).",
-            "Each returns structured findings; collect, then run `cleanup` (step 14) on the main thread between the review pair and the sync pair if a finding needs a fix (do NOT auto-fix inside the read-only workflow).",
-            "`model`/`effort` default to each agent's definition (verify agents Opus/xhigh; sync agents Sonnet/high) -- do not override unless clearly needed.",
-            "Reuse existing `agentType`s; define none. Do NOT touch the DAG nodes -- this is an execution shortcut, not a workflow replacement.",
-        ],
-        hard_missing=["specs/<feat>/tasks.md"],
-        soft=[],
-        postconditions=["`specs/<feat>/verify-tasks-report.md`"],
-        conditional=[
-            "If verify-tasks surfaces phantom completions, /speckit.converge appends the real implementation work as traceable tasks.",
-        ],
-    )
-
-    g.node(
-        "verify",
-        title="/speckit.verify",
-        context=[
-            "Validates implementation against the plan. If the diff doesn't address the plan, route back to agent-assign or refine.update.",
-        ],
-        hard_missing=["specs/<feat>/plan.md"],
-        soft=[],
-        postconditions=["`specs/<feat>/verify-report.md`"],
-        conditional=[
-            "If verify surfaces gaps that look like bugs rather than spec violations, exit to /speckit.bugfix.report.",
-            "If verify finds unmet FR/SC that is unbuilt work (not a bug or scope change), run /speckit.converge to append the missing work as tasks, then implement via agent-assign.",
-        ],
-    )
-
+    # verify-tasks and verify are NOT extension-backed DAG nodes: the dispatcher
+    # cannot hook them via UserPromptExpansion because there is no /speckit.*
+    # command (the extension is dropped). Instead, the workflow YAMLs contain
+    # prompt steps that instruct spawning the local `speckit-verify` agent in
+    # mode: tasks and mode: requirements respectively. The produced report files
+    # (verify-tasks-report.md, verify-report.md) are the enforcement points: the
+    # review-run node carries hard_missing on verify-report.md, and converge
+    # hard_missing on spec.md/plan.md/tasks.md gates its own preconditions.
     g.node(
         "converge",
         title="/speckit.converge",
@@ -948,6 +887,10 @@ def build_main_graph() -> Graph:
             "APPEND-ONLY: never rewrites/renumbers/deletes existing tasks, never edits spec.md/plan.md, never touches application code. If the code already satisfies everything, tasks.md is left byte-for-byte unchanged and the result is reported clean.",
             "Distinct from iterate (scope/intent CHANGE -- edits spec/plan), bugfix (a defect in built code), and fix-findings (fixes review/qa findings). Use converge only when the spec is right but the implementation is incomplete.",
             "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here).",
+            "If the verify agents (mode: tasks or mode: requirements) surfaced defects in built code rather than unbuilt work, use the speckit-bugfix skill's triage→diagnose→scope→fix→verify loop; do NOT use converge for defect fixes.",
+        ],
+        context_post=[
+            "Next: implement the appended Convergence tasks via /speckit.agent-assign.assign → validate → execute. Do NOT use the hard-blocked /speckit.implement.",
         ],
         hard_missing=["specs/<feat>/spec.md", "specs/<feat>/plan.md", "specs/<feat>/tasks.md"],
         soft=["implementation diff present (converge assesses built code)"],
@@ -993,53 +936,11 @@ def build_main_graph() -> Graph:
         title="/speckit.sync.conflicts",
         context=[
             "Surfaces contradictions between specs or between specs and shared interfaces/contracts. Read-only.",
+            "After sync-conflicts, commit all post-implementation artifacts (verify reports, review report, QA report, cleanup, retro) with a conventional commit message. Tag this as the final feature checkpoint.",
         ],
         hard_missing=["specs/<feat>/sync-report.md"],
         soft=[],
-    )
-
-    g.node(
-        "archive",
-        title="/speckit.archive.run",
-        context=[
-            "Terminal step. Moves `specs/<feat>/` to `specs/archived/<feat>/`. Don't archive features with unresolved findings.",
-        ],
-        hard_missing=["specs/<feat>/verify-report.md", "specs/<feat>/review-report.md"],
-        soft=[],
-        postconditions=["`specs/<feat>/` moved to `specs/archived/<feat>/`"],
-    ).hint("(terminal -- feature shipped)")
-
-    # ======================================================================
-    # Phase: refine loop
-    # ======================================================================
-    g.node(
-        "refine-update",
-        title="/speckit.refine.update",
-        context=[
-            "Refine is for INCREMENTAL edits to existing artefacts. If the change is actually a scope pivot, exit refine and run `/speckit.iterate.define` or specify a new feature.",
-            "After `/speckit.checkpoint.commit`, drift handling moves to `/speckit.reconcile.run` instead.",
-        ],
-        hard_missing=["specs/<feat>/spec.md"],
-        soft=[],
-        postconditions=["the targeted artefact(s) updated"],
-        conditional=[
-            "If the change touches more than two phases, this is probably an iterate rather than a refine -- consider exiting the refine loop.",
-        ],
-    ).hint(
-        "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.analyze - /speckit.taskstoissues",
-        direction="from",
-    ).hint("(any phase before /speckit.checkpoint.commit)", direction="from")
-
-    g.node(
-        "refine-propagate",
-        title="/speckit.refine.propagate",
-        context=[
-            "Mechanically pushes the diff into downstream artefacts (plan, tasks, issues). Don't accept blindly -- review propagated edits.",
-        ],
-        hard_missing=["specs/<feat>/refine-diff.md"],
-        soft=[],
-        postconditions=["downstream artefacts updated"],
-    )
+    ).hint("(terminal -- feature shipped after final checkpoint commit)")
 
     # ======================================================================
     # Phase: iterate loop + roadmap gate
@@ -1056,7 +957,7 @@ def build_main_graph() -> Graph:
     ).hint(
         "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.analyze - /speckit.taskstoissues",
         direction="from",
-    ).hint("(any phase before /speckit.checkpoint.commit)", direction="from")
+    ).hint("(any phase before the pre-implementation commit checkpoint)", direction="from")
 
     g.node(
         "iterate-apply",
@@ -1073,25 +974,6 @@ def build_main_graph() -> Graph:
         conditional=[
             "At each downstream stage you re-enter, confirm the artefact is still valid or update it. Do not skip stages.",
         ],
-    )
-
-    # ======================================================================
-    # Phase: bugfix sub-cycle
-    # ======================================================================
-    g.node(
-        "bugfix-verify",
-        title="/speckit.bugfix.verify",
-        context=["Reproduce the bug with a failing test before patching."],
-        hard_missing=["specs/<feat>/bug-*.md"],
-        soft=[],
-    )
-
-    g.node(
-        "bugfix-patch",
-        title="/speckit.bugfix.patch",
-        context=["Apply the fix; rerun the failing test to confirm."],
-        hard_missing=["specs/<feat>/bug-*.md"],
-        soft=[],
     )
 
     # ======================================================================
@@ -1112,16 +994,6 @@ def build_main_graph() -> Graph:
     )
 
     # ======================================================================
-    # Phase: fleet orchestration
-    # ======================================================================
-    g.node(
-        "fleet-review",
-        title="/speckit.fleet.review",
-        hard_missing=["specs/<feat>/fleet-state.md"],
-        soft=[],
-    ).hint("(downstream gates as defined by fleet config)")
-
-    # ======================================================================
     # Edges (canonical store; came_from/going_to are projections but not
     # emitted -- edges remain for validation + documentation only)
     # ======================================================================
@@ -1135,67 +1007,48 @@ def build_main_graph() -> Graph:
     g.edge("checklist", "critique-run", "default", note="review plan/tasks before implementation")
     g.edge("checklist", "analyze", "conditional", note="only if user explicitly skips critique")
     g.edge("critique-run", "analyze", "default")
-    g.edge("critique-run", "refine-update", "conditional", note="if critique reveals plan-level rework")
+    g.edge("critique-run", "iterate-define", "conditional", note="if critique reveals plan-level rework requiring a scope change")
     g.edge("analyze", "taskstoissues", "default")
-    g.edge("taskstoissues", "checkpoint-commit", "default", note="lock in the spec/plan/tasks before execution")
-
-    # -- checkpoint -> implementation / archive --
-    g.edge("checkpoint-commit", "agent-assign-assign", "conditional", note="after the mid-cycle checkpoint that follows taskstoissues")
-    g.edge("checkpoint-commit", "archive", "conditional", note="after the final checkpoint")
+    # checkpoint is now a plain git commit (no extension); taskstoissues → agent-assign directly.
+    g.edge("taskstoissues", "agent-assign-assign", "default", note="commit the spec/plan/tasks snapshot, then begin assignment")
 
     # -- agent-assign chain --
     g.edge("agent-assign-assign", "agent-assign-validate", "default")
     g.edge("agent-assign-validate", "agent-assign-execute", "default")
     g.edge("agent-assign-validate", "agent-assign-assign", "conditional", note="if validation surfaces gaps")
-    g.edge("agent-assign-execute", "verify-tasks", "default", note="confirm every task actually shipped code")
-    g.edge("agent-assign-execute", "verify", "conditional", note="only if user explicitly skips verify-tasks")
+    # verify-tasks and verify are dropped as extensions; spawning the speckit-verify
+    # agent (mode: tasks, then mode: requirements) is instructed inside execute's context.
+    # Enforcement: review-run hard_missing on verify-report.md; converge hard_missing on spec/plan/tasks.
+    g.edge("agent-assign-execute", "review-run", "default", note="after spawning verify agents and confirming both report files exist")
+    g.edge("agent-assign-execute", "converge", "conditional", note="if verify agents surface unbuilt work, append Convergence tasks")
     # deprecated implement redirects to the agent-assign entry point.
     g.edge("implement", "agent-assign-assign", "optional", note="deprecated -- use the agent-assign flow instead")
 
-    # -- post-impl verification --
-    g.edge("verify-tasks", "verify", "default")
-    g.edge("verify-tasks", "converge", "conditional", note="phantom completions -- append the real implementation work as traceable tasks")
-    g.edge("verify", "review-run", "default")
-    g.edge("verify", "converge", "conditional", note="if verify finds unmet FR/SC that is unbuilt work, not a bug or scope change")
     # converge: implement the appended Convergence tasks via the agent-assign flow.
     g.edge("converge", "agent-assign-assign", "default", note="implement the appended `## Phase N: Convergence` tasks via the agent-assign flow")
     g.edge("converge", "iterate-define", "conditional", note="only if the gap is actually a scope/intent change, not unbuilt work")
 
-    # -- review.run -> qa -> sync -> checkpoint -> archive --
+    # -- review.run -> qa -> sync (terminal) --
     g.edge("review-run", "qa-run", "default", note="clean")
     g.edge("qa-run", "sync-conflicts", "default", note="proceed to conflict check")
-    g.edge("sync-conflicts", "checkpoint-commit", "default", note="final checkpoint")
-
-    # -- refine loop --
-    g.edge("refine-update", "refine-propagate", "default")
 
     # -- iterate loop --
     g.edge("iterate-define", "iterate-apply", "default")
 
-    # -- bugfix sub-cycle --
-    g.edge("bugfix-verify", "bugfix-patch", "default")
-    g.edge("bugfix-patch", "verify", "conditional", note="re-verify if the fix touched implementation")
-
     # -- tinyspec sub-cycle --
     g.edge("tinyspec-tinyspec", "tinyspec-implement", "default")
-    g.edge("tinyspec-implement", "verify", "conditional", note="short cycle")
-
-    # -- fleet --
-    g.edge("fleet-review", "checkpoint-commit", "conditional", note="after fleet review completes")
+    g.edge("tinyspec-implement", "review-run", "conditional", note="short cycle: skip full verify, go straight to review")
 
     # ======================================================================
     # Phase groupings (documentary only -- do not affect emitted JSON)
     # ======================================================================
     g.phase("specify", ["clarify", "plan", "tasks"])
-    g.phase("pre-impl-review", ["checklist", "critique-run", "analyze", "taskstoissues", "checkpoint-commit"])
+    g.phase("pre-impl-review", ["checklist", "critique-run", "analyze", "taskstoissues"])
     g.phase("implement", ["agent-assign-assign", "agent-assign-validate", "agent-assign-execute", "implement", "converge"])
-    g.phase("post-impl-review", ["verify-tasks", "verify", "review-run", "qa-run"])
-    g.phase("close-out", ["sync-conflicts", "archive"])
-    g.phase("refine", ["refine-update", "refine-propagate"])
+    g.phase("post-impl-review", ["review-run", "qa-run"])
+    g.phase("close-out", ["sync-conflicts"])
     g.phase("iterate", ["iterate-define", "iterate-apply"])
-    g.phase("bugfix", ["bugfix-verify", "bugfix-patch"])
     g.phase("tinyspec", ["tinyspec-tinyspec", "tinyspec-implement"])
-    g.phase("orchestration", ["fleet-review"])
 
     return g
 

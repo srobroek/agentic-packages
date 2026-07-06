@@ -22,10 +22,10 @@
       "context": [
         "Orchestrator review gate: before accepting a task as done, review the ACTUAL code changes (git diff) against the task in `tasks.md` and the `spec.md`, not just the agent's `task-<n>.report.md`. Self-reports describe intent, not necessarily what landed.",
         "Keep each task's sub-agent alive after it reports. If the work falls short, `SendMessage` specific corrections to the SAME agent so it fixes only those issues with full context -- do not silently accept incomplete work or re-delegate from scratch. This holds even when execution ran as a parallel Workflow: review each agent's emitted diff before its worktree is reconciled, and dismiss an agent only once its task passes review.",
-        "Unresolved gaps route forward to `/speckit.verify-tasks` (phantom-completion check) and `/speckit.fix-findings`."
+        "Unresolved gaps route forward to `/speckit.fix-findings` after the verify agents report."
       ],
       "postconditions": [
-        "code changes per task + `specs/<feat>/task-<n>.report.md` per task"
+        "code changes per task + `specs/<feat>/task-<n>.report.md` per task + `specs/<feat>/verify-tasks-report.md` + `specs/<feat>/verify-report.md`"
       ],
       "title": "/speckit.agent-assign.execute -- what to do next"
     },
@@ -38,7 +38,7 @@
         "Per level, `parallel()` one `agent()` per task with `agentType` = the agent in `agent-assignments.yml` and `isolation: 'worktree'`; pass task IDs, spec/plan excerpts, scope, and verification commands in the prompt.",
         "Pipeline each task execute -> its own verify in one stage; emit `specs/<feat>/task-<n>.report.md`. Barrier between dependency levels only.",
         "`model`/`effort` default to each agent's definition; override only at the `agent()` call when a task clearly needs it. All `agentType`s must already exist in `.claude/agents/` -- reuse, do not define new agents.",
-        "Checkpoint after the workflow completes, then continue to `/speckit.verify-tasks`."
+        "After the workflow completes: (1) commit all task reports (conventional commit), then (2) spawn `speckit-verify` with mode: tasks -- it must write `specs/<feat>/verify-tasks-report.md`. Then spawn `speckit-verify` with mode: requirements -- it must write `specs/<feat>/verify-report.md`. Both agents run in fresh context with Opus/xhigh."
       ],
       "hard_missing": [
         "specs/<feat>/tasks.md",
@@ -86,55 +86,6 @@
       "title": "/speckit.analyze -- before you run this"
     }
   },
-  "archive": {
-    "post": {
-      "postconditions": [
-        "`specs/<feat>/` moved to `specs/archived/<feat>/`"
-      ],
-      "title": "/speckit.archive.run -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Terminal step. Moves `specs/<feat>/` to `specs/archived/<feat>/`. Don't archive features with unresolved findings."
-      ],
-      "hard_missing": [
-        "specs/<feat>/verify-report.md",
-        "specs/<feat>/review-report.md"
-      ],
-      "soft": [],
-      "title": "/speckit.archive.run -- before you run this"
-    }
-  },
-  "bugfix-patch": {
-    "post": {
-      "title": "/speckit.bugfix.patch -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Apply the fix; rerun the failing test to confirm."
-      ],
-      "hard_missing": [
-        "specs/<feat>/bug-*.md"
-      ],
-      "soft": [],
-      "title": "/speckit.bugfix.patch -- before you run this"
-    }
-  },
-  "bugfix-verify": {
-    "post": {
-      "title": "/speckit.bugfix.verify -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Reproduce the bug with a failing test before patching."
-      ],
-      "hard_missing": [
-        "specs/<feat>/bug-*.md"
-      ],
-      "soft": [],
-      "title": "/speckit.bugfix.verify -- before you run this"
-    }
-  },
   "checklist": {
     "post": {
       "postconditions": [
@@ -155,29 +106,6 @@
         "specs/<feat>/clarifications.md"
       ],
       "title": "/speckit.checklist -- before you run this"
-    }
-  },
-  "checkpoint-commit": {
-    "post": {
-      "conditional": [
-        "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.run`."
-      ],
-      "postconditions": [
-        "git commit (+ tag for the final checkpoint)"
-      ],
-      "title": "/speckit.checkpoint.commit -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Mid-cycle checkpoints lock in spec/plan/tasks before execution. The final checkpoint locks in the verified, reviewed, retroed feature before archive."
-      ],
-      "hard_missing": [
-        "specs/<feat>/spec.md"
-      ],
-      "soft": [
-        "working tree contains changes worth committing"
-      ],
-      "title": "/speckit.checkpoint.commit -- before you run this"
     }
   },
   "clarify": {
@@ -203,6 +131,9 @@
       "conditional": [
         "If converge reported a clean result (tasks.md byte-for-byte unchanged, no Convergence phase appended), there is no new work -- resume the Phase 3 QA step you came from instead of re-entering implementation."
       ],
+      "context": [
+        "Next: implement the appended Convergence tasks via /speckit.agent-assign.assign → validate → execute. Do NOT use the hard-blocked /speckit.implement."
+      ],
       "postconditions": [
         "`specs/<feat>/tasks.md` with an appended `## Phase N: Convergence` section (only when gaps were found; unchanged otherwise)"
       ],
@@ -213,7 +144,8 @@
         "Closes the gap between spec/plan/tasks intent and what the code actually implements. Reads spec.md + plan.md + tasks.md (constitution as governing constraints), assesses the present state of the code, and APPENDS each piece of remaining work as a new traceable task under a `## Phase N: Convergence` heading.",
         "APPEND-ONLY: never rewrites/renumbers/deletes existing tasks, never edits spec.md/plan.md, never touches application code. If the code already satisfies everything, tasks.md is left byte-for-byte unchanged and the result is reported clean.",
         "Distinct from iterate (scope/intent CHANGE -- edits spec/plan), bugfix (a defect in built code), and fix-findings (fixes review/qa findings). Use converge only when the spec is right but the implementation is incomplete.",
-        "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here)."
+        "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here).",
+        "If the verify agents (mode: tasks or mode: requirements) surfaced defects in built code rather than unbuilt work, use the speckit-bugfix skill's triage→diagnose→scope→fix→verify loop; do NOT use converge for defect fixes."
       ],
       "hard_missing": [
         "specs/<feat>/spec.md",
@@ -243,18 +175,6 @@
       ],
       "soft": [],
       "title": "/speckit.critique.run -- before you run this"
-    }
-  },
-  "fleet-review": {
-    "post": {
-      "title": "/speckit.fleet.review -- what to do next"
-    },
-    "pre": {
-      "hard_missing": [
-        "specs/<feat>/fleet-state.md"
-      ],
-      "soft": [],
-      "title": "/speckit.fleet.review -- before you run this"
     }
   },
   "implement": {
@@ -325,7 +245,7 @@
     "pre": {
       "context": [
         "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-        "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch."
+        "If `plan.md` already exists, use `/speckit.iterate.define` to scope a change rather than re-planning from scratch."
       ],
       "hard_exists": [
         "specs/<feat>/plan.md"
@@ -357,46 +277,6 @@
       "title": "/speckit.qa.run -- before you run this"
     }
   },
-  "refine-propagate": {
-    "post": {
-      "postconditions": [
-        "downstream artefacts updated"
-      ],
-      "title": "/speckit.refine.propagate -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Mechanically pushes the diff into downstream artefacts (plan, tasks, issues). Don't accept blindly -- review propagated edits."
-      ],
-      "hard_missing": [
-        "specs/<feat>/refine-diff.md"
-      ],
-      "soft": [],
-      "title": "/speckit.refine.propagate -- before you run this"
-    }
-  },
-  "refine-update": {
-    "post": {
-      "conditional": [
-        "If the change touches more than two phases, this is probably an iterate rather than a refine -- consider exiting the refine loop."
-      ],
-      "postconditions": [
-        "the targeted artefact(s) updated"
-      ],
-      "title": "/speckit.refine.update -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Refine is for INCREMENTAL edits to existing artefacts. If the change is actually a scope pivot, exit refine and run `/speckit.iterate.define` or specify a new feature.",
-        "After `/speckit.checkpoint.commit`, drift handling moves to `/speckit.reconcile.run` instead."
-      ],
-      "hard_missing": [
-        "specs/<feat>/spec.md"
-      ],
-      "soft": [],
-      "title": "/speckit.refine.update -- before you run this"
-    }
-  },
   "review-run": {
     "post": {
       "context": [
@@ -425,7 +305,8 @@
     },
     "pre": {
       "context": [
-        "Surfaces contradictions between specs or between specs and shared interfaces/contracts. Read-only."
+        "Surfaces contradictions between specs or between specs and shared interfaces/contracts. Read-only.",
+        "After sync-conflicts, commit all post-implementation artifacts (verify reports, review report, QA report, cleanup, retro) with a conventional commit message. Tag this as the final feature checkpoint."
       ],
       "hard_missing": [
         "specs/<feat>/sync-report.md"
@@ -464,7 +345,8 @@
     },
     "pre": {
       "context": [
-        "Turns tasks into trackable GitHub issues. Keeps the issue map next to the spec for traceability."
+        "Turns tasks into trackable GitHub issues. Keeps the issue map next to the spec for traceability.",
+        "After taskstoissues, commit all spec/plan/tasks/issue-map changes (conventional commit, pre-implementation checkpoint), then proceed to agent-assign."
       ],
       "hard_missing": [
         "specs/<feat>/tasks.md"
@@ -497,56 +379,6 @@
       ],
       "soft": [],
       "title": "/speckit.tinyspec.tinyspec -- before you run this"
-    }
-  },
-  "verify": {
-    "post": {
-      "conditional": [
-        "If verify surfaces gaps that look like bugs rather than spec violations, exit to /speckit.bugfix.report.",
-        "If verify finds unmet FR/SC that is unbuilt work (not a bug or scope change), run /speckit.converge to append the missing work as tasks, then implement via agent-assign."
-      ],
-      "postconditions": [
-        "`specs/<feat>/verify-report.md`"
-      ],
-      "title": "/speckit.verify -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Validates implementation against the plan. If the diff doesn't address the plan, route back to agent-assign or refine.update."
-      ],
-      "hard_missing": [
-        "specs/<feat>/plan.md"
-      ],
-      "soft": [],
-      "title": "/speckit.verify -- before you run this"
-    }
-  },
-  "verify-tasks": {
-    "post": {
-      "conditional": [
-        "If verify-tasks surfaces phantom completions, /speckit.converge appends the real implementation work as traceable tasks."
-      ],
-      "postconditions": [
-        "`specs/<feat>/verify-tasks-report.md`"
-      ],
-      "title": "/speckit.verify-tasks -- what to do next"
-    },
-    "pre": {
-      "context": [
-        "Catches phantom completions -- tasks marked done with no real implementation. Runs in a fresh context to avoid confirmation bias.",
-        "Verify against the ACTUAL diff, not the agents' task reports -- a task self-reported as done with no corresponding code change is a phantom completion and must route back to `/speckit.fix-findings`.",
-        "Claude turbo-path for Phase 3 QA (dynamic workflows only): post-implementation QA runs as three parallel pairs -- verify-tasks + verify (10/11), code-review + security-review (12/13), sync.analyze + sync.conflicts (15/16); you MAY run all three as one Workflow instead of six manual subagent calls.",
-        "If workflows are unavailable or the user declines, run the pairs the normal way per the 50-speckit-workflow steps (identical outputs, not orchestrated).",
-        "`parallel()` the six read-only checks mapped to `speckit-verify` (mode: tasks), `speckit-verify` (mode: requirements), the `code-review` and `security-review` skills, `speckit-sync` (scope: drift), `speckit-sync` (scope: conflicts).",
-        "Each returns structured findings; collect, then run `cleanup` (step 14) on the main thread between the review pair and the sync pair if a finding needs a fix (do NOT auto-fix inside the read-only workflow).",
-        "`model`/`effort` default to each agent's definition (verify agents Opus/xhigh; sync agents Sonnet/high) -- do not override unless clearly needed.",
-        "Reuse existing `agentType`s; define none. Do NOT touch the DAG nodes -- this is an execution shortcut, not a workflow replacement."
-      ],
-      "hard_missing": [
-        "specs/<feat>/tasks.md"
-      ],
-      "soft": [],
-      "title": "/speckit.verify-tasks -- before you run this"
     }
   }
 }
