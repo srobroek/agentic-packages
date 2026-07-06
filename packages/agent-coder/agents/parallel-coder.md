@@ -59,10 +59,12 @@ then query-docs) for library API documentation.
 ## Rules
 
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-MUST Code economy: need → stdlib → light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
+MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions.
 NOT Never commit onto the caller's active branch.
 
 ## Output
+
+Your final message is EXACTLY the sections below — nothing else.
 
 L1 Branch + base ref.
    Commits: SHA + subject, one line each.
