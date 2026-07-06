@@ -138,13 +138,17 @@ CATALOG_URL="https://raw.githubusercontent.com/github/spec-kit/main/extensions/c
 #   writes `specs/spec-status.md` on every run -- gitignored in the scaffold.
 #   Installed via `latest-release:` (newest GitHub release tag resolved at setup
 #   time) rather than the community catalog, which lags behind upstream.
+#
+# verify + verify-tasks are NOT in this list: verification runs via the merged
+# `speckit-verify` local agent (spawned as a prompt step in the workflow YAMLs),
+# which writes the required report files that gate downstream DAG nodes.
 EXTENSIONS=(
   agent-assign
-  archive brownfield bugfix checkpoint cleanup conduct critique diagram doctor
-  fix-findings fleet github-issues iterate onboard optimize qa reconcile
-  refine retro review roadmap security-review
+  cleanup critique
+  fix-findings iterate qa
+  retro review roadmap security-review
   status-report=latest-release:Open-Agent-Tools/spec-kit-status
-  tinyspec verify verify-tasks worktree
+  tinyspec
 )
 
 # Workflow definitions, installed via the `workflow` primitive (since spec-kit

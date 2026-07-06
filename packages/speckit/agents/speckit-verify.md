@@ -20,6 +20,8 @@ x-agentic:
     effort: "xhigh"
     permissions:
       mode: "read-only"
+      allow:
+        - "Write(specs/**)"
 ---
 
 You are a SpecKit verification agent operating in one of two modes based on the spawn prompt.
@@ -30,7 +32,20 @@ You are a SpecKit verification agent operating in one of two modes based on the 
 
 Read "mode: ..." in the spawn prompt to determine which applies. If no mode is given, default to requirements.
 
-## Output (first line always)
+## Output contract (mandatory)
+
+**Writing the report file is required, not optional.** The report is the DAG gate artifact; downstream steps (review-run, sync-conflicts) hard_missing check on it.
+
+- **mode: tasks** — write `$FEATURE_DIR/verify-tasks-report.md` before ending your turn.
+- **mode: requirements** — write `$FEATURE_DIR/verify-report.md` before ending your turn.
+
+Report format: machine-parseable per-item verdict lines:
+```
+ID | VERIFIED|PARTIAL|WEAK|NOT_FOUND | evidence-summary
+```
+followed by human-readable sections (see mode-specific output below). Keep the chat-side summary capped at ~200 words; the file carries the full detail.
+
+First line of output (stdout only):
 
 `VERIFY [mode] SUMMARY — {PASS|FINDINGS}: {one-line verdict}`
 

@@ -14,20 +14,24 @@ inputs:
 
 steps:
   - id: verify-tasks
-    command: speckit.verify-tasks.run
-    integration: "{{ inputs.integration }}"
+    type: prompt
+    prompt: "Spawn the speckit-verify agent with mode: tasks in a fresh context. The agent must write specs/<feature>/verify-tasks-report.md before this step completes. Pass spec ID, path to tasks.md and spec.md, and the implementation branch or changed files."
 
   - id: verify
-    command: speckit.verify.run
-    integration: "{{ inputs.integration }}"
+    type: prompt
+    prompt: "Spawn the speckit-verify agent with mode: requirements in a fresh context. The agent must write specs/<feature>/verify-report.md before this step completes. Pass spec ID, paths to spec.md, plan.md, and tasks.md, and the implementation directories."
 
   - id: review
     command: speckit.review.run
     integration: "{{ inputs.integration }}"
 
+  - id: qa
+    command: speckit.qa.run
+    integration: "{{ inputs.integration }}"
+
   - id: review-findings
     type: gate
-    message: "Review verification and review findings before cleanup and drift analysis."
+    message: "Review verification, review, and QA findings before cleanup and drift analysis."
     options: [approve, reject]
     on_reject: abort
 
@@ -54,5 +58,5 @@ steps:
     on_reject: abort
 
   - id: checkpoint-final
-    command: speckit.checkpoint.commit
-    integration: "{{ inputs.integration }}"
+    type: prompt
+    prompt: "Commit all post-implementation artifacts (verify reports, review report, QA report, cleanup, retro) with a conventional commit message. Tag this as the final feature checkpoint."

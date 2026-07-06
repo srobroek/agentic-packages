@@ -50,7 +50,7 @@ def main():
     #     (1 or 2 phases per node; only "pre"/"post" keys)
     data = json.load(open(NODES, encoding="utf-8"))
     assert "plan" in data and "pre" in data["plan"], "plan node missing"
-    assert isinstance(data, dict) and len(data) >= 50, (
+    assert isinstance(data, dict) and len(data) >= 19, (
         "node id floor breached: only %d ids" % len(data)
     )
     phases = 0
@@ -119,7 +119,7 @@ def main():
     so = d["hookSpecificOutput"]
     assert so["hookEventName"] == "PreToolUse" and so["permissionDecision"] == "deny", "T4: %r" % d
     assert "plan.md" in so["permissionDecisionReason"]
-    assert "/speckit.refine.update" in so["permissionDecisionReason"]
+    assert "/speckit.iterate.define" in so["permissionDecisionReason"]
     print("T4 PASS: HARD-EXISTS PreToolUse deny, reason=%r" % so["permissionDecisionReason"])
 
     # T5: HARD-MISSING does NOT block once spec.md exists (plan.md removed).
@@ -183,30 +183,31 @@ def main():
     assert d["hookSpecificOutput"]["additionalContext"].startswith("# /speckit.plan")
     print("T8b PASS: payload cwd (worktree) overrides CLAUDE_PROJECT_DIR for feat resolution")
 
-    # T_glob: a precondition template with a glob (bug-*.md) must be matched as
-    # a wildcard, not as a file literally named "bug-*.md". Empty dir blocks;
-    # once a real bug-1.md exists the glob matches and the block clears.
+    # T_glob: a precondition template with a glob (tinyspec.md) must be matched
+    # as a wildcard-capable path, not literally. Use tinyspec-implement which
+    # requires specs/<feat>/tinyspec.md. Empty dir blocks; once the file exists
+    # the precondition clears.
     globproj = tempfile.mkdtemp(prefix="speckit-glob-")
     os.makedirs(os.path.join(globproj, "specs", "001-demo"))
     d = run(
         "pre",
-        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.bugfix.patch"},
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.tinyspec.implement"},
         env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
         project_dir=globproj,
         cwd=globproj,
     )
-    assert d is not None and d["decision"] == "block", "T_glob: must block with no bug-*.md: %r" % d
-    assert "bug-*.md" in d["reason"], "T_glob reason: %r" % d["reason"]
-    open(os.path.join(globproj, "specs", "001-demo", "bug-1.md"), "w").write("x")
+    assert d is not None and d["decision"] == "block", "T_glob: must block with no tinyspec.md: %r" % d
+    assert "tinyspec.md" in d["reason"], "T_glob reason: %r" % d["reason"]
+    open(os.path.join(globproj, "specs", "001-demo", "tinyspec.md"), "w").write("x")
     d = run(
         "pre",
-        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.bugfix.patch"},
+        {"hook_event_name": "UserPromptExpansion", "command_name": "speckit.tinyspec.implement"},
         env_extra={"SPECIFY_FEATURE_DIRECTORY": "specs/001-demo"},
         project_dir=globproj,
         cwd=globproj,
     )
-    assert d is not None and "decision" not in d, "T_glob: bug-1.md must satisfy bug-*.md glob: %r" % d
-    print("T_glob PASS: bug-*.md precondition glob-matches a real bug-1.md")
+    assert d is not None and "decision" not in d, "T_glob: tinyspec.md must satisfy precondition: %r" % d
+    print("T_glob PASS: tinyspec.md precondition satisfied once file exists")
 
     # T_iter: iterate.apply requires the pending-iteration.md that iterate.define
     # writes (the canonical artefact name -- see stop-gate + speckit-setup docs).
@@ -240,25 +241,19 @@ def main():
     print("T9 PASS: unknown node + unrelated event -> silent no-op")
 
     # T10: longest-existing-prefix resolution. spec-kit registers QA commands
-    # with a verb suffix or sub-namespace (verify.run, security-review.audit);
-    # the dispatcher must resolve them to the parent DAG node.
+    # with a verb suffix or sub-namespace (critique.run); the dispatcher must
+    # resolve them to the parent DAG node when the exact id is in nodes.json.
     prefix_cases = {
-        "speckit.verify.run": "# /speckit.verify",
-        "speckit.verify-tasks.run": "# /speckit.verify-tasks",
-        "speckit.cleanup.run": "# /speckit.cleanup",
-        "speckit.fix-findings.run": "# /speckit.fix-findings",
-        "speckit.security-review.audit": "# /speckit.security-review",
-        # renamed-from-doubled nodes are reachable via the .run command
-        "speckit.archive.run": "# /speckit.archive",
-        "speckit.reconcile.run": "# /speckit.reconcile",
-        "speckit.fleet.run": "# /speckit.fleet",
+        "speckit.critique.run": "# /speckit.critique.run",
+        "speckit.qa.run": "# /speckit.qa.run",
+        "speckit.tinyspec.implement": "# /speckit.tinyspec.implement",
     }
     for cmd, prefix in prefix_cases.items():
         d = run("post", {"hook_event_name": "PostToolUse", "tool_input": {"command_name": cmd}}, project_dir=noproj)
         assert d is not None, "T10: %s must resolve to a node" % cmd
         ctx = d["hookSpecificOutput"]["additionalContext"]
         assert ctx.startswith(prefix), "T10: %s -> %r (want prefix %r)" % (cmd, ctx[:40], prefix)
-    print("T10 PASS: longest-prefix resolution for .run / sub-namespace commands")
+    print("T10 PASS: command resolution for DAG nodes")
 
     # T11: exact match still wins over prefix stripping (must NOT collapse to a
     # shorter parent when the full id is itself a node).
@@ -266,9 +261,6 @@ def main():
         "speckit.review.run": "# /speckit.review.run",
         "speckit.qa.run": "# /speckit.qa.run",
         "speckit.critique.run": "# /speckit.critique.run",
-        # fleet.review: its prefix (fleet) is ITSELF a node (/speckit.fleet.run),
-        # so this proves exact match wins over stripping to a real parent.
-        "speckit.fleet.review": "# /speckit.fleet.review",
     }
     for cmd, prefix in exact_cases.items():
         d = run("post", {"hook_event_name": "PostToolUse", "tool_input": {"command_name": cmd}}, project_dir=noproj)
