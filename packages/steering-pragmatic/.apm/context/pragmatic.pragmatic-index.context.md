@@ -23,6 +23,6 @@ Output economy:
   "It's not X, it's Y", "game-changer" framing). State findings plainly.
 
 Code comments:
-- Default: none. Comment only a non-obvious why, constraint, invariant, or gotcha.
+- Default: none. Comment only a why, constraint, invariant, or gotcha the code cannot show.
 - Never restate code, narrate steps, or add banners. A stale comment is worse
   than none.

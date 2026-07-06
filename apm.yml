@@ -702,6 +702,13 @@ marketplace:
       tags:
         - steering
         - backend
+    - name: steering-code-economy
+      source: ./packages/steering-code-economy
+      category: steering
+      tags:
+        - steering
+        - code-economy
+        - minimalism
     - name: steering-data
       source: ./packages/steering-data
       category: steering
