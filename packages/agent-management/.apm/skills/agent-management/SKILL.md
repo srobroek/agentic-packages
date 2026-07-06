@@ -1,6 +1,6 @@
 ---
 name: agent-management
-description: Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.
+description: Manage APM-backed agents, skills, hooks, and bundles. Use when a repo has apm.yml and the task is to install, update, compile, or audit agentic assets.
 ---
 
 # Agent Management
@@ -15,7 +15,7 @@ or retrofit path has selected APM as the source of truth.
 - Routes new repositories to `project-setup`.
 - Routes existing repository ingestion to `brownfield-project`.
 - Routes missing capability discovery to `find-tools`.
-- Routes stale or duplicated asset review to `project-hygiene`.
+- Routes stale or duplicated asset review to `audit-steering`.
 
 ## Workflow
 

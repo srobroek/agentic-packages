@@ -25,24 +25,23 @@ MODE  (only for multi-mode agents)
 
 ## Rules
 
-! <hard constraint>
-~ <default>
-− <boundary: what this agent must NOT do → who does it instead>
+MUST <hard constraint>
+DEFAULT <default>
+NOT <boundary: what this agent must NOT do → who does it instead>
 
 ## Output
 
 L1 VERDICT: <ENUM|ENUM|ENUM> — one line why
    <section> — only if non-empty; evidence as path:line
 CAP <N>w clean · <M>w with findings
-! Never reprint code, diffs, file contents, or the caller's claim.
-! Clean result = the L1 line(s) alone.
+MUST Never reprint code, diffs, file contents, or the caller's claim.
 ```
 
 ## Rules for authoring
 
-! Verdict enums in CAPS; every section conditional; cap stated in the contract.
-! Subagents never load steering — inline any rule the agent needs (code
+MUST Verdict enums in CAPS; every section conditional; cap stated in the contract.
+MUST Subagents never load steering — inline any rule the agent needs (code
   economy, comment density come free via SubagentStart inject; task-specific
   rules go in the body).
-! No generic "how to be an agent" prose — the harness covers it.
-~ Worked scenarios: max 1, only when the failure mode is non-obvious.
+NOT No generic "how to be an agent" prose — the harness covers it.
+DEFAULT Worked scenarios: max 1, only when the failure mode is non-obvious.

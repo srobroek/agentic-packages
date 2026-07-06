@@ -15,8 +15,8 @@ import re
 import sys
 from pathlib import Path
 
-# Hedges that make a rule subjective. Only flagged on normative lines (sigil
-# or bullet lines), not in prose sections like OUTPUT examples.
+# Hedges that make a rule subjective. Only flagged on normative lines (keyword
+# lines), not in prose sections like OUTPUT examples.
 HEDGES = re.compile(
     r"\b(when (practical|appropriate|possible|needed|available)|consider|"
     r"generally|usually|normally|if necessary|as needed|try to|ideally|"
@@ -25,8 +25,10 @@ HEDGES = re.compile(
     re.I,
 )
 MODEL_NAMES = re.compile(r"\b(opus|sonnet|haiku|fable|gpt-\d)\b", re.I)
+# Keyword-style normative lines (RFC-2119 convention)
+KEYWORD_LINE = re.compile(r"^\s*(MUST|DEFAULT|ASK|NOT)\s+\S", re.M)
+# Old sigil lines — still accepted but not required
 SIGIL_LINE = re.compile(r"^\s*[!~?−-]\s+\S")
-LEGEND = re.compile(r"^LEGEND:")
 CAPS_ENUM = re.compile(r"\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b")
 FRONTMATTER_KEY = re.compile(r"^(\w[\w-]*):", re.M)
 
@@ -91,9 +93,9 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             if words(desc) > cap:
                 err("E1", f"description {words(desc)}w > {cap}w cap for {kind}")
 
-    # E2 hedges on normative lines
+    # E2 hedges on normative lines (keyword-style: MUST/DEFAULT/ASK/NOT)
     for i, ln in enumerate(lines, 1):
-        if SIGIL_LINE.match(ln) or re.match(r"^\s*[-*]\s+\S", ln):
+        if KEYWORD_LINE.match(ln):
             m = HEDGES.search(ln)
             if m:
                 err("E2", f"line {i}: hedge '{m.group(0)}' — replace with an observable condition")
@@ -106,12 +108,6 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             m = MODEL_NAMES.search(ln)
             if m:
                 err("E3", f"line {i}: model name '{m.group(0)}' in prose — route via steering-subagent-routing")
-
-    # E4 sigil use requires a legend
-    has_sigils = any(SIGIL_LINE.match(l) and l.strip()[0] in "!~?−" for l in lines)
-    has_legend = any(LEGEND.match(l) for l in lines)
-    if has_sigils and not has_legend and kind in ("skill", "context"):
-        err("E4", "sigil rules present but no LEGEND line")
 
     # E5 agent output contract
     if kind == "agent":
@@ -148,7 +144,7 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
     seen: dict[str, int] = {}
     for i, ln in enumerate(lines, 1):
         key = re.sub(r"\W+", " ", ln.lower()).strip()
-        if len(key) > 30 and (SIGIL_LINE.match(ln) or ln.strip().startswith("-")):
+        if len(key) > 30 and (KEYWORD_LINE.match(ln) or SIGIL_LINE.match(ln) or ln.strip().startswith("-")):
             if key in seen:
                 warn("W9", f"line {i} duplicates line {seen[key]}")
             else:

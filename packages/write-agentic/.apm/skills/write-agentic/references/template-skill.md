@@ -11,15 +11,13 @@ description: <≤25 words. What it does + concrete trigger phrases. Third person
 
 # <Title>
 
-LEGEND: ! hard rule · ~ default · ? confirm with user · → then · − anti-trigger
-
 TRIGGER
 + <user phrase or observable repo condition>
 + <…>
-− <near-miss that must NOT trigger> → <where it goes instead>
+- <near-miss that must NOT trigger> → <where it goes instead>
 
 GATES  (only if the skill must stop before acting)
-? <decision only the user can make — one line each>
+ASK <decision only the user can make — one line each>
 
 ## Workflow
 
@@ -29,9 +27,9 @@ GATES  (only if the skill must stop before acting)
 
 ## Rules
 
-! <hard constraint — safety or correctness>
-~ <default — override needs a stated reason>
-− <known failure mode / trap, one line>
+MUST <hard constraint — safety or correctness>
+DEFAULT <default — override needs a stated reason>
+NOT <known failure mode / trap, one line>
 
 OUTPUT  (only if the skill produces a report)
 L1 <verdict/summary line shape>
@@ -39,6 +37,6 @@ L1 <verdict/summary line shape>
 CAP <N>w clean · <M>w with findings
 ```
 
-Checks before lint: every step verifiable · no hedge in a rule line ·
+Checks before lint: every step verifiable · no hedge in a MUST/DEFAULT/NOT line ·
 description has a phrase the user would actually type · scripts own anything
 deterministic (parsing, counting, validation) — prose never re-does script work.

@@ -31,6 +31,3 @@ Order the scripts implement:
 and formatting. Type errors and test failures need manual fixes. Re-run
 `check.sh` after `fix.sh`.
 
-## References
-
-When making API design decisions or choosing between package alternatives, LOAD references/idioms.md.

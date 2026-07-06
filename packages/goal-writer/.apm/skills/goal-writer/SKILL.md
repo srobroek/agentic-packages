@@ -1,6 +1,6 @@
 ---
 name: goal-writer
-description: Turn a vague goal prompt into a structured, actionable goal -- outcomes, concrete results, measurable KPIs, validation, and verifiable exit conditions -- saved as a context doc, then emit a self-sufficient /goal block (goal + work-definition reference + constraints + AND-joined exit conditions) to paste into the /goal command. Use when the user asks to structure a goal, turn a vague goal/objective into an actionable one, make a goal measurable, or prep text for /goal. NOT for setting a /goal condition already written (use /goal directly), PRDs or issues (use to-prd / to-issues), or open-ended planning (use debate).
+description: Turn a vague goal into a structured measurable one with verifiable exit conditions. Use when asked to structure a goal or prep text for /goal.
 ---
 
 # Goal Writer

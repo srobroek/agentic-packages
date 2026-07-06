@@ -31,6 +31,3 @@ Order the scripts implement:
 manual review and fixes; test failures need manual fixes. Re-run `check.sh`
 after `fix.sh`.
 
-## References
-
-When making API design decisions or choosing between crate alternatives, LOAD references/idioms.md.

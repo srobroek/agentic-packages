@@ -1,13 +1,6 @@
 ---
 name: dep-update
-description: >-
-  Research each dependency's current latest version, classify bumps by semver
-  safety, surface CVEs, and produce a cited upgrade plan grouped by severity.
-  Apply only patch and minor bumps interactively — one at a time behind a
-  per-bump confirm. Major bumps are advisory-only and never applied. Use when
-  the user asks to upgrade dependencies, bump versions, check what's outdated,
-  check for stale packages, apply safe bumps, update the lockfile, run dep
-  update, or renovate dependencies.
+description: Classify dependencies by semver safety and produce a cited upgrade plan. Applies patch/minor with per-bump confirm. Use when asked to upgrade dependencies.
 ---
 
 # Dependency Update / Upgrade Advisory
@@ -36,7 +29,7 @@ reproduce a frozen bootstrap; use the project-setup `--refresh` path for that.
 1. Run `scripts/detect.sh [dir]` from the project root. It enumerates
    dependencies and their lockfile-pinned versions as
    `ecosystem<TAB>name<TAB>version` lines and writes a summary to stderr.
-2. Optionally read `.project-setup/answers.toml` (if present) to extract the
+2. If `.project-setup/answers.toml` exists, read it to extract the
    agent-researched baseline pins from `[module.lang-python]` /
    `[module.lang-ts]`. Use stdlib `tomllib` (Python ≥ 3.11) or `tomli`
    (backport). Absent file or section → continue silently with lockfile only.
@@ -152,13 +145,8 @@ available: `<name>`" + install hint. Never install scanners; never imply clean.
 
 ## Binding rules
 
-- **Majors are advisory-only, always.** MAJOR-ADVISORY deps are named,
-  cited, and stopped. They never enter the apply loop, not even behind a
-  confirm. The user must apply them manually.
-- **Rust and Go are advisory-only.** `cargo update` and `go get` are deferred.
-  They appear in the plan; they never enter the apply loop.
-- **No global yes-to-all.** A batch-approve collapses safe and risky bumps.
-  Every bump requires its own `[Y/n]`.
+- **Majors, Rust, and Go are advisory-only.** MAJOR-ADVISORY deps are named, cited, and stopped — never applied. Rust/Go appear in the plan; they never enter the apply loop.
+- **No global yes-to-all.** Every bump requires its own `[Y/n]`.
 - **Never write `.project-setup/answers.toml` or `.project-setup/sources.toml`.**
   Those files are owned by the project-setup runner. This skill is a read-only
   consumer of the runner's outputs.
@@ -191,16 +179,6 @@ to three-part numeric):
 `research.sh` normalizes non-numeric pre-release suffixes and drops pre-release
 candidates from the upgrade offer unless the installed version is also
 pre-release.
-
-## Install hints (for missing optional tools)
-
-- `pip-audit`: `pip install pip-audit` (or run ad hoc with `uvx pip-audit`)
-- `cargo audit`: `cargo install cargo-audit`
-- `govulncheck`: `go install golang.org/x/vuln/cmd/govulncheck@latest`
-- `osv-scanner`: https://google.github.io/osv-scanner/
-- `npm` / `pnpm` / `yarn` / `bun`: install via Node.js / Corepack
-- `uv`: https://docs.astral.sh/uv/getting-started/installation/
-- `tomli` (Python < 3.11): `pip install tomli`
 
 ## Scripts
 
