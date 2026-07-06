@@ -12,7 +12,7 @@ project scaffold.
 ## Scope
 
 - Owns: brownfield classification, source-of-truth preservation, and retrofit plan.
-- Delegates package/drift review to `project-hygiene`.
+- Delegates package/drift review to `audit-steering`.
 - Delegates all package, agent, skill, hook, MCP, connector, CLI, and reusable tool selection to `find-tools`.
 - Delegates concrete APM add/update/remove operations to `agent-management`.
 - Uses `grilling` when repo evidence is not enough to understand the project's purpose, requirements, constraints, or desired agentic workflow.
@@ -63,7 +63,7 @@ project scaffold.
    and `mcp-repomix@srobroek-agentic`.
    Recommend optional MCP-only packages (including `mcp-playwright` and
    `mcp-serena@srobroek-agentic`) only when the repository needs that capability.
-8. Run or apply `project-hygiene` to identify stale assets, missing packages,
+8. Run or apply `audit-steering` to identify stale assets, missing packages,
    duplicate skills, generated-file edits, and bootstrap leakage.
 9. Ask before removing legacy/manual assets. Archive only files that contain
    useful project knowledge; remove generated copies only after confirming APM
