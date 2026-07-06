@@ -20,6 +20,11 @@ if [ -n "$agent_id" ] && [ "$agent_id" != "null" ]; then
   exit 0
 fi
 
+# Frontier session models follow the delegation steering without a per-edit
+# reminder; keep the nudge for smaller tiers only.
+. "$(dirname "$0")/tier-gate.sh"
+tier_gate "$payload" || exit 0
+
 # Extract any path-like strings from tool_input. Covers Claude's Edit/Write/MultiEdit
 # (file_path, edits[].file_path, notebook_path) and Codex's apply_patch (the patch
 # body in tool_input.input/command references files by name).

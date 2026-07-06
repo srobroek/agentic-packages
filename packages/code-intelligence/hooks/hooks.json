@@ -1,17 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Grep|Glob|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/code-discovery-steer.sh",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Bash",
