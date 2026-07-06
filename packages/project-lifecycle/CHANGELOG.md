@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v1.1.2...project-lifecycle--v1.2.0) (2026-07-05)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([5db5309](https://github.com/srobroek/agentic-packages/commit/5db5309dd6106dec5e13cd5c07fc1894ec79e1f8))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v1.1.1...project-lifecycle--v1.1.2) (2026-07-03)
 
 
