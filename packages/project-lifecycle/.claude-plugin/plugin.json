@@ -1,7 +1,7 @@
 {
   "name": "project-lifecycle",
   "version": "1.2.0",
-  "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
+  "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -17,15 +17,7 @@
     },
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/commit-push-merge"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/commit-push-pr"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/quick-commit"
+      "path": "packages/steering-git-workflow"
     },
     {
       "git": "srobroek/agentic-packages",

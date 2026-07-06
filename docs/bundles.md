@@ -13,11 +13,11 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `mcp-codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-memory`, `mcp-codebase-memory`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks | self-contained |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `dependency-quality` | Dependency hygiene bundle | `hooks-package-file-guard`, `hooks-package-investigate`, `hooks-pkg-version-warn`, `dep-audit`, `mcp-package-version` |
+| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit`, `mcp-package-version` |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `docs-architecture` | Documentation and architecture | `documentation-standards`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
@@ -44,11 +44,11 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `lsp-terraform` | Terraform LSP server | external packages |
 | `lsp-typescript` | TypeScript/JavaScript LSP server | external packages |
 | `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
+| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
-| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
+| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `steering-git-workflow`, `verify`, `agent-pr-reviewer` |
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
-| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
+| `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
 | `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
 <!-- END:bundles -->

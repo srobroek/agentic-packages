@@ -1,9 +1,0 @@
-{
-  "name": "hooks-squash-merge",
-  "version": "2.0.0",
-  "description": "Opinionated git policy hook: advise an explicit merge strategy on gh pr merge. Emits a non-blocking advisory (allow + additionalContext) when no strategy flag is present; silent when --squash / -s / --merge / -m / --rebase / -r or --help is provided. Cross-tool (Claude + Codex).",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

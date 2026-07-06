@@ -1,7 +1,7 @@
 {
   "name": "planning-product",
   "version": "1.1.2",
-  "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
+  "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -14,10 +14,6 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/eli5"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/research"
     },
     {
       "git": "srobroek/agentic-packages",

@@ -136,20 +136,6 @@ marketplace:
       tags:
         - bundle
         - graph
-    - name: code-review
-      source: ./packages/code-review
-      category: quality
-      tags:
-        - skill
-        - quality
-        - review
-    - name: codebase-index
-      source: ./packages/codebase-index
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - graph
     - name: codebase-memory
       source: ./packages/codebase-memory
       category: code-intelligence
@@ -164,20 +150,6 @@ marketplace:
         - codex
         - hooks
         - reference
-    - name: commit-push-merge
-      source: ./packages/commit-push-merge
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - git
-    - name: commit-push-pr
-      source: ./packages/commit-push-pr
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - git
     - name: core
       source: ./packages/core
       category: core
@@ -247,13 +219,6 @@ marketplace:
         - skill
         - planning
         - explanation
-    - name: explore
-      source: ./packages/explore
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - navigation
     - name: find-tools
       source: ./packages/find-tools
       category: agentic-maintenance
@@ -316,13 +281,6 @@ marketplace:
         - hooks
         - bash
         - safety
-    - name: hooks-branch-check
-      source: ./packages/hooks-branch-check
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - branch
     - name: hooks-chezmoi-guard
       source: ./packages/hooks-chezmoi-guard
       category: project-lifecycle
@@ -353,20 +311,6 @@ marketplace:
         - hooks
         - git
         - commit
-    - name: hooks-no-ff
-      source: ./packages/hooks-no-ff
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - policy
-    - name: hooks-package-file-guard
-      source: ./packages/hooks-package-file-guard
-      category: project-lifecycle
-      tags:
-        - hooks
-        - dependencies
-        - manifest
     - name: hooks-package-investigate
       source: ./packages/hooks-package-investigate
       category: project-lifecycle
@@ -374,13 +318,6 @@ marketplace:
         - hooks
         - dependencies
         - supply-chain
-    - name: hooks-pkg-version-warn
-      source: ./packages/hooks-pkg-version-warn
-      category: project-lifecycle
-      tags:
-        - hooks
-        - dependencies
-        - versions
     - name: hooks-portability-ci
       source: ./packages/hooks-portability-ci
       category: project-lifecycle
@@ -403,13 +340,6 @@ marketplace:
         - hooks
         - quality
         - lint
-    - name: hooks-squash-merge
-      source: ./packages/hooks-squash-merge
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - policy
     - name: hooks-subagent-worktree
       source: ./packages/hooks-subagent-worktree
       category: project-lifecycle
@@ -419,13 +349,6 @@ marketplace:
         - subagent
         - isolation
         - policy
-    - name: hooks-tool-prefs
-      source: ./packages/hooks-tool-prefs
-      category: project-lifecycle
-      tags:
-        - hooks
-        - tooling
-        - advisory
     - name: hooks-worktree
       source: ./packages/hooks-worktree
       category: project-lifecycle
@@ -688,13 +611,6 @@ marketplace:
         - skill
         - languages
         - python
-    - name: quick-commit
-      source: ./packages/quick-commit
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - git
     - name: release-please
       source: ./packages/release-please
       category: project-lifecycle
@@ -704,13 +620,6 @@ marketplace:
         - release
         - release-please
         - ci-cd
-    - name: research
-      source: ./packages/research
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - research
     - name: resume-cv
       source: ./packages/resume-cv
       category: resume
@@ -819,6 +728,12 @@ marketplace:
       tags:
         - steering
         - frontend
+    - name: steering-git-workflow
+      source: ./packages/steering-git-workflow
+      category: steering
+      tags:
+        - steering
+        - git
     - name: steering-infrastructure
       source: ./packages/steering-infrastructure
       category: steering

@@ -1,7 +1,7 @@
 name: planning-product
 version: 1.1.2
 description: >-
-  Planning and product toolkit: the debate, eli5, research, and web-fetch skills
+  Planning and product toolkit: the debate, eli5, and web-fetch skills
   plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement
   workflows.
 author: Sjors Robroek
@@ -16,7 +16,6 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/debate#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/eli5#>=1.1.0 <2.0.0
-    - srobroek/agentic-packages/packages/research#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/web-fetch#>=1.1.0 <2.0.0
     - mattpocock/skills/skills/engineering/to-prd#main
     - mattpocock/skills/skills/engineering/to-issues#main

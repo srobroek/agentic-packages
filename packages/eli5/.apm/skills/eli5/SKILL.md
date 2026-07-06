@@ -12,8 +12,8 @@ Explain this topic: **$ARGUMENTS**
 Before explaining, ask these questions:
 
 1. **Depth**: How deep? All 5 levels (default), or specific levels?
-2. **Research**: Pair with a research skill?
-   - `research` -- topic changed materially in the last 12 months, or competing schools of thought exist
+2. **Research**: Pair with research?
+   - `web-fetch` -- topic changed materially in the last 12 months
    - `hyperresearch` -- very in-depth research (expensive)
    - none -- explain from existing knowledge (default)
 

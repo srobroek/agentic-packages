@@ -1,8 +1,7 @@
 name: review
 version: 1.1.2
 description: >-
-  Code review and verification toolkit: the code-review and verify skills, the
-  PR reviewer agent, and Hobson comprehensive-review,
+  Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review,
   performance-testing-review, unit-testing, and tdd-workflows plugins.
   Language-specific quality checks live in the language-<lang> bundles.
 author: Sjors Robroek
@@ -15,7 +14,6 @@ tags:
   - review
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/code-review#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/verify#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=1.1.0 <2.0.0
     - wshobson/agents/plugins/comprehensive-review#main
