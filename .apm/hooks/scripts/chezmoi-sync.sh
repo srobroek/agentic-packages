@@ -1,6 +1,12 @@
 #!/bin/bash
-# Sync config file changes to chezmoi
-# Used as a PostToolUse hook for Edit, Write, MultiEdit
+# Advisory chezmoi hook (PostToolUse: Edit, Write, MultiEdit).
+#
+# ADVISORY ONLY -- this hook performs NO git operations and NO `chezmoi add`.
+# It never commits, never pushes, never stages. Its entire job is to tell the
+# AGENT when an edit touches chezmoi-managed state, and to surface what is
+# pending in the chezmoi source repo so the agent can commit/push DELIBERATELY
+# on its own branch. Automatic commit+push used to fight deliberate branch work
+# and `git add -A` could sweep unrelated changes into a commit; both are gone.
 
 # Read JSON from stdin and extract file_path
 INPUT=$(cat)
@@ -125,34 +131,43 @@ is_template() {
     return 1
 }
 
-# Auto-commit and push chezmoi changes
-chezmoi_auto_commit() {
-    local changed_file="$1"
-    local basename
-    basename=$(basename "$changed_file")
+# Read-only: show what is currently uncommitted in the chezmoi source repo, so
+# the agent knows exactly what a deliberate commit would include. NO staging,
+# NO commit, NO push -- `git status` is inspection only. `git -C` avoids any
+# `cd` side effect on the caller.
+chezmoi_pending_advisory() {
+    local repo="$CHEZMOI_SOURCE"
+    # chezmoi source-path points at the source dir; the git repo is its root.
+    git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || return 0
+    local pending
+    pending="$(git -C "$repo" status --short 2>/dev/null)"
+    [ -z "$pending" ] && return 0
+    cat << EOF
+<chezmoi-commit-advisory>
+Your edit changed chezmoi-managed dotfile state. This hook does NOT auto-commit
+or auto-push -- you must handle it deliberately.
 
-    cd "$CHEZMOI_SOURCE/.." 2>/dev/null || return
+CHEZMOI SOURCE REPO: $repo
 
-    # Stage all changes in the chezmoi repo
-    git add -A 2>/dev/null || return
+Uncommitted changes there right now (git status --short):
+$pending
 
-    # Only commit if there are staged changes
-    if ! git diff --cached --quiet 2>/dev/null; then
-        git commit -m "chore(dotfiles): auto-sync $basename" 2>/dev/null
-        if [ $? -eq 0 ]; then
-            echo "✓ Committed chezmoi changes"
-            # Push in background to not block the hook
-            git push 2>/dev/null &
-            echo "✓ Pushing chezmoi changes"
-        fi
-    fi
+ACTION (when your current task is at a commit point):
+  1. cd "$repo"  (or use git -C "$repo")
+  2. Review: git -C "$repo" diff
+  3. Stage ONLY the files you intend (never git add -A -- other unrelated
+     dotfile changes may be pending, as shown above).
+  4. Commit on an appropriate branch, then push deliberately (dgit for github.com).
+Do this yourself; nothing is committed or pushed automatically.
+</chezmoi-commit-advisory>
+EOF
 }
 
 # Main logic
 main() {
-    # Direct edit to chezmoi source -- auto-commit and push
+    # Direct edit to a chezmoi source file -- advise, show pending, do NOT commit.
     if [[ "$FILE" == "$CHEZMOI_SOURCE"* ]] || [[ "$FILE" == "$HOME_DIR/.local/share/chezmoi/"* ]]; then
-        chezmoi_auto_commit "$FILE"
+        chezmoi_pending_advisory
         exit 0
     fi
 
@@ -173,7 +188,7 @@ main() {
     if [ -n "$source_path" ] && [ -f "$source_path" ]; then
         # File is tracked in chezmoi
         if is_template "$source_path"; then
-            # It's a template - tell Claude to edit the template instead
+            # It's a template - editing the applied target is futile.
             cat << EOF
 <chezmoi-template-warning>
 STOP: This file is managed by chezmoi as a template.
@@ -192,12 +207,21 @@ Do NOT continue editing the target file. Edit the template file instead.
 EOF
             exit 0
         else
-            # Regular file - add to chezmoi
-            chezmoi add "$FILE" 2>/dev/null
-            if [ $? -eq 0 ]; then
-                echo "✓ Synced to chezmoi: $FILE"
-                chezmoi_auto_commit "$FILE"
-            fi
+            # Tracked non-template target: the edit landed on the applied copy,
+            # not the source. Advise re-adding into source -- do NOT run it.
+            cat << EOF
+<chezmoi-readd-advisory>
+This file is tracked by chezmoi; you edited the APPLIED target, not the source.
+
+TARGET_FILE: $FILE
+SOURCE_FILE: $source_path
+
+To fold your change back into the source of truth (nothing is done for you):
+  chezmoi re-add "$FILE"      # or edit $source_path directly
+Then review/commit/push the chezmoi source repo deliberately (see below if pending).
+EOF
+            chezmoi_pending_advisory
+            exit 0
         fi
     else
         # File not tracked - suggest adding if it looks like a config
