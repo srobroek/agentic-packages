@@ -1,13 +1,13 @@
 ---
 name: debate
-description: Use for deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path. Agents may suggest this when the user faces a non-trivial decision.
+description: Deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path.
 ---
 
 # Debate
 
 Analyze and debate: **$ARGUMENTS**
 
-Always start by lightly grilling the user to sharpen the topic: what is the decision, proposed approach, boundaries, constraints, and context. Use the `grill-me` skill (ships separately in the `matt-skills` bundle); if `grill-me` is unavailable, ask the topic-sharpening and Phase 0 context questions inline yourself. A well-formed topic makes a better debate.
+Start by running Phase 0 to sharpen the topic (three questions in one call). Use the `grill-me` skill (ships separately in the `matt-skills` bundle); if unavailable, ask the Phase 0 context questions inline. A well-formed topic makes a better debate.
 
 ## Process
 
@@ -71,7 +71,7 @@ Merge the main analysis with the devil's advocate critique:
 - Calibrate confidence: High (75-95%), Medium (40-74%), Low (10-39%)
 - Produce a conditional verdict: "This makes sense IF... It does NOT make sense IF..."
 
-Then offer interactive debate rounds, capped at 3. Each round genuinely updates the assessment. After round 3: "We've explored this from three additional angles. Here's where things stand. Want to continue or call it?"
+Then offer interactive debate rounds, capped at 3. Each round must revise a verdict item or state why it is unchanged. After round 3: "We've explored this from three additional angles. Here's where things stand. Want to continue or call it?"
 
 ### Phase 6: Save
 
@@ -82,11 +82,10 @@ Save the report to `research/debate-<slug>.md` relative to the project root. Onl
 Claude Code only -- other runtimes (Codex, etc.) skip this section and follow
 the Process above.
 
-The prose Process above is the default. If dynamic workflows are enabled (the user included the
-"workflow" keyword, ultracode is on, or they asked for orchestration), the research fan-out and
-devil's advocate become a single Workflow instead of manual subagent launches. Same phases, same
-outputs -- only the orchestration moves into a script. Workflows are a Claude-only feature; where
-they are unavailable, follow the prose Process.
+The prose Process above is the default. When the user asks for orchestration or dynamic workflows,
+the research fan-out and devil's advocate become a single Workflow instead of manual subagent
+launches. Same phases, same outputs — only the orchestration moves into a script. Workflows are a
+Claude-only feature; where unavailable, follow the prose Process.
 
 Shape (author the script inline; do not vendor it):
 
@@ -94,7 +93,7 @@ Shape (author the script inline; do not vendor it):
 - **Phase 2 (research):** `parallel()` one `agent()` per angle.
   - `agentType: 'Explore'` when scope is Full context; `agentType: 'general-purpose'` when Isolated
     (and instruct it NOT to reference local code or history).
-  - `model: 'sonnet'`, `effort: 'medium'` per angle (breadth, not depth).
+  - Per-angle agents: medium-tier model, `effort: 'medium'` (breadth, not depth).
   - Barrier on all angles before synthesis.
 - **Phase 3 synthesis** in the main thread (or one `agent` at `effort: 'high'`).
 - **Phase 4 (devil's advocate):** one `agent()` with `agentType: 'adversarial-challenger'`,

@@ -1,6 +1,6 @@
 ---
 name: eli5
-description: Explain a topic at five depth levels, from metaphor to frontier. Use when the user says "explain X", "ELI5", asks "what is" / "how does" questions, or needs a layered explanation of an unfamiliar concept.
+description: Explain a topic at five depth levels from metaphor to frontier. Use when asked "ELI5", "explain X", "what is X", or "how does X work".
 ---
 
 # ELI5

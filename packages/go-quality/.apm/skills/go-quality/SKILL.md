@@ -30,6 +30,3 @@ Order the scripts implement:
 `fix.sh` is narrower than `check.sh`: it only formats. Lint findings and test
 failures need manual fixes. Re-run `check.sh` after `fix.sh`.
 
-## References
-
-When making API design decisions or choosing between package alternatives, LOAD references/idioms.md.
