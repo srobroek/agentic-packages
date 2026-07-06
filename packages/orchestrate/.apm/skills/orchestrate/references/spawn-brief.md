@@ -1,33 +1,9 @@
 # Writing an agent brief
 
-Every subagent starts with fresh context: it sees only its agent definition, your
-delegation prompt, CLAUDE.md, and git status. So the brief must carry **everything
-the agent needs to act and to participate in the run** — never assume it knows the
-store path, the protocol, or its scope. Keep it terse and complete.
-
-## Every brief must include
-
-1. **Node id** and a one-line task statement.
-2. **Owned scope** — the exact file globs the agent may touch (from the DAG node).
-   State explicitly: stay inside; do not touch files other nodes own.
-3. **Base ref** to work from.
-4. **Absolute store path** (`.orchestration/run-<id>/`) — the shared DAG + ledger,
-   outside every worktree, reachable from inside the worktree.
-5. **The deterministic commands** the agent runs (with the store path filled in):
-   - log: `ledger.py --store <store> add --event <e> --node <node> --actor <self> …`
-   - state: `graph.py --store <store> set-state <node> <state>`
-   - (gatekeeper) `conflict-probe.sh …`
-6. **Protocol pointers**: its lifecycle obligations (`references/lifecycle.md`) —
-   e.g. a coder must stay alive after `REPORTED`. The comms verb grammar itself is
-   **auto-injected** into every subagent by the skill's `SubagentStart` hook
-   (`references/comms-block.md`), so you do not paste it — **except into teammate
-   briefs**, where you must paste `comms-block.md` verbatim (no hook reaches them).
-7. **Role-specific tool guidance** you want it to use (codebase-memory, context7,
-   Playwright, project verify command). Do **not** rely on the agent's model
-   metadata for this — pass it in the brief.
-8. **Escalation rules**: when to raise `BLOCKED kind:design|debug` (a coder never
-   spawns its own advisor/debugger — you broker it), and when to `ASK` for
-   product intent.
+Every subagent starts with fresh context. The brief must carry everything the agent
+needs to act and participate in the run — node id, owned scope, base ref, absolute
+store path, deterministic commands, protocol pointers, tool guidance, and escalation
+rules — templates below.
 
 ## Coder brief — copyable shape
 
@@ -50,9 +26,8 @@ ASSIGN <node>
   ASK:      raise ASK <node> for anything needing product intent not covered here.
 ```
 
-The orchestrator records `--assignee <agentId>` at spawn (before sending the
-brief) and `--branch --commit` once the node is `REPORTED` — see
-`references/lifecycle.md` (Resume).
+The orchestrator records `--assignee <agentId>` at spawn and `--branch --commit` once
+the node is `REPORTED` — see `references/lifecycle.md` (Resume).
 
 ## Persistent-infra brief (once each)
 
@@ -61,21 +36,17 @@ job pointer — they carry their own protocol in their agent definition. Example
 `You are the run gatekeeper. store=<abs>. Integrate approved branches FCFS,
 conflict-guarded; message me MERGED/CONFLICT. Await approved nodes.`
 
-## Reviewer brief (one per code node — you spawn it, not the coder)
+## Reviewer brief (one per code node)
 
 Spawn a `workflow-reviewer`:
 `Review node <node>: branch <b> at worktree <wt> (base <ref>). Scope <globs>.
 Report REVIEW <node> verdict=approve|changes; for changes give a numbered list,
-each` file:line — problem — required action `(one clause each, no essays). Log the
-verdict with --event review. You are kept alive to re-review the delta only.`
-Escalate the reviewer to opus in the brief when the diff is complex or
-security-critical.
+each` file:line — problem — required action `(one clause each). Log verdict with
+--event review. Kept alive to re-review the delta only.`
+Escalate to opus in the brief when the diff is complex or security-critical.
 
-## Advisor / debugger brief (you broker it when a coder raises BLOCKED)
+## Advisor / debugger brief
 
-Spawn a `workflow-advisor` (kind:design) or the catalog's `debugger` agent
-(kind:debug, else `general-purpose` read-only) with the coder's question
-verbatim + the minimal code context from its `BLOCKED`:
-`Answer <node>: <question>. Context: <file:line …>. Reply ADVICE <node> with
-answer / because / refs — one call, read-only.` Relay its `ADVICE` back to the
-coder, then dismiss it.
+Spawn a `workflow-advisor` (kind:design) or `debugger`/`general-purpose` (kind:debug)
+with the coder's question verbatim + the minimal code context from its `BLOCKED`.
+Reply ADVICE back in one call, read-only; relay to the coder, then dismiss.
