@@ -1,6 +1,6 @@
 ---
 name: session-review
-description: Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-a-skill`. Use when the user says wrap up, review this session, what did we learn, or before a handover.
+description: Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-agentic`. Use when the user says wrap up, review this session, what did we learn, or before a handover.
 ---
 
 # Session Review
@@ -27,7 +27,7 @@ not write rules, edit steering files, or persist memory directly.
 - Proposed improvements: list with recommended action:
   - Steering rule or hook gap → run `audit-steering`
   - Steering doc or compiled-instructions update → run `optimize-steering`
-  - New skill idea → run `write-a-skill`
+  - New skill idea → run `write-agentic`
   - APM package or hook install → run `agent-management`
 
 ## Steering

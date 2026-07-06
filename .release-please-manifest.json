@@ -113,5 +113,5 @@
   "packages/verify": "1.1.0",
   "packages/web-fetch": "1.1.0",
   "packages/whats-new": "1.1.0",
-  "packages/write-a-skill": "1.1.0"
+  "packages/write-agentic": "2.0.0"
 }

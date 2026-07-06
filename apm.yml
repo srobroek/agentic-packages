@@ -810,8 +810,8 @@ marketplace:
         - research
         - services
         - release-notes
-    - name: write-a-skill
-      source: ./packages/write-a-skill
+    - name: write-agentic
+      source: ./packages/write-agentic
       category: agentic-maintenance
       tags:
         - skill

@@ -1412,9 +1412,9 @@
         }
       ]
     },
-    "packages/write-a-skill": {
+    "packages/write-agentic": {
       "release-type": "simple",
-      "component": "write-a-skill",
+      "component": "write-agentic",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
