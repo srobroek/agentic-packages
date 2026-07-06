@@ -17,7 +17,7 @@ project scaffold.
 - Delegates all package, agent, skill, hook, MCP, connector, CLI, and reusable
   tool selection to `find-tools`.
 - Delegates concrete APM add/update/remove operations to `agent-management`.
-- Uses `grill-me` when repo evidence is not enough to understand the project's
+- Uses `grilling` when repo evidence is not enough to understand the project's
   purpose, requirements, constraints, or desired agentic workflow.
 
 ## Workflow
@@ -35,7 +35,7 @@ project scaffold.
    Identify users, workflows, critical data, external services, runtime targets,
    release path, and safety/security concerns. Separate current reality from
    aspiration, and record evidence plus confidence.
-3. If purpose or requirements remain unclear, use `grill-me` before recommending
+3. If purpose or requirements remain unclear, use `grilling` before recommending
    packages. Ask one question at a time with a recommended answer. Start with
    the highest-impact unknown blocking tool selection. Prefer repo exploration
    over asking when the answer is discoverable. Stop once project goal, users,

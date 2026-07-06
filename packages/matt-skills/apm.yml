@@ -1,7 +1,7 @@
 name: matt-skills
 version: 1.1.0
 description: >-
-  Bundle of Matt Pocock's engineering and productivity skills: grill-me,
+  Bundle of Matt Pocock's engineering and productivity skills: grilling,
   grill-with-docs, tdd, to-prd, to-issues, triage,
   improve-codebase-architecture, and setup.
 author: Sjors Robroek
@@ -16,7 +16,7 @@ tags:
   - workflows
 dependencies:
   apm:
-    - mattpocock/skills/skills/productivity/grill-me#main
+    - mattpocock/skills/skills/productivity/grilling#main
     - mattpocock/skills/skills/engineering/grill-with-docs#main
     - mattpocock/skills/skills/engineering/improve-codebase-architecture#main
     - mattpocock/skills/skills/engineering/setup-matt-pocock-skills#main

@@ -18,4 +18,3 @@ dependencies:
     - wshobson/agents/plugins/debugging-toolkit#main
     - wshobson/agents/plugins/comprehensive-review#main
     - wshobson/agents/plugins/git-pr-workflows#main
-    - wshobson/agents/plugins/documentation-generation#main
