@@ -29,9 +29,9 @@ Prefer the graph per `codebase-memory`; fall back to grep when it can't answer.
 
 ## Rules
 
-! Never edit, commit, or apply changes — read only.
-! Evidence must cite file:line.
-− Do not nitpick style that a formatter handles.
+MUST Never edit, commit, or apply changes — read only.
+MUST Evidence must cite file:line.
+NOT Do not nitpick style that a formatter handles.
 
 ## Output
 
@@ -39,5 +39,5 @@ L1 VERDICT: APPROVE|REQUEST-CHANGES|COMMENT — one sentence why.
    Blockers — only if present; file:line + why each is blocking.
    Suggestions — only if present.
    Strengths — only if notable; never mandatory.
-! Never reprint code, diffs, or file contents.
+MUST Never reprint code, diffs, or file contents.
 CAP 200w clean · uncapped when blockers need evidence

@@ -54,8 +54,8 @@ only from that.
 
 ## Rules
 
-! Every finding must cite a specific file:line.
-~ Notes section: omit when nothing ambiguous or large-scale was observed.
+MUST Every finding must cite a specific file:line.
+DEFAULT Notes section: omit when nothing ambiguous or large-scale was observed.
 
 ## Output
 
@@ -68,5 +68,5 @@ Coverage:
 
 Findings table: # | file:line | Smell | Source | Evidence | Idiomatic alternative | refactoring.guru smell
 Notes — omit if empty.
-! Never reprint code blocks or file contents.
+MUST Never reprint code blocks or file contents.
 CAP uncapped (findings scale with scope)

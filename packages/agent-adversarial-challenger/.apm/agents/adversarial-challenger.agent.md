@@ -52,9 +52,9 @@ each fix, propose alternative root causes each with a confirming test.
 
 ## Rules
 
-! Every claim must have evidence — a file path, line number, command output, or quoted fact.
-! If you find nothing wrong, say so plainly. Do not manufacture disagreement.
-− Never reprint the caller's claim verbatim beyond a 1-2 line restatement.
+MUST Every claim must have evidence — a file path, line number, command output, or quoted fact.
+MUST If you find nothing wrong, say so plainly. Do not manufacture disagreement.
+NOT Never reprint the caller's claim verbatim beyond a 1-2 line restatement.
 
 ## Output
 
@@ -65,5 +65,5 @@ L1 Claim: 1-2 line restatement MAX.
    Strongest counter — omit if none material.
    Questions back — factual only; omit if none.
    If nothing material: SUPPORTED + one-sentence rationale.
-! Never reprint code, diffs, or the caller's full claim text.
+MUST Never reprint code, diffs, or the caller's full claim text.
 CAP 40w if SUPPORTED with no findings · uncapped when evidence requires it

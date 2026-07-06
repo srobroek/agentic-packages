@@ -7,8 +7,6 @@ description: Author or update skills, steering, or agent definitions using the s
 
 One workflow for three asset kinds. Pick the template, author at source, lint.
 
-LEGEND: ! hard rule · ~ default (override with reason) · ? confirm with user · → then · − anti-trigger
-
 ## Kind → template
 
 | Writing a… | Template | Install shape |
@@ -19,22 +17,21 @@ LEGEND: ! hard rule · ~ default (override with reason) · ? confirm with user �
 
 ## Workflow
 
-1. ! Edit the authoritative source (APM package repo). Never generated runtime
+1. MUST Edit the authoritative source (APM package repo). Never generated runtime
    copies: `.agents/skills`, `.claude/agents`, `.claude/rules`, compiled
    `AGENTS.md`/`CLAUDE.md`.
 2. Gather only what the repo cannot answer: purpose, trigger boundaries and
    non-triggers, install target, script/reference needs, external overlap.
 3. LOAD the matching template and follow it exactly.
 4. Run `scripts/lint.sh <file>` → fix every ERROR; justify or fix WARNs.
-5. Review: triggers concrete · description ≤25 words · no hedges (lint catches
-   the lexicon) · every rule carries `!`/`~`/`?` · output contract has verdict
-   line + word cap (agents) · references one level deep.
+5. Review: triggers concrete · description ≤25 words · no hedges on MUST/DEFAULT/NOT lines
+   (lint catches the lexicon) · output contract has verdict line + word cap (agents) ·
+   references one level deep.
 
 ## Format rules (all kinds)
 
-- ! Sigil legend line once per file; every normative rule starts with a sigil.
-- ! Enums in CAPS (`PASS|PARTIAL|FAIL`); decision tables as `situation → choice`.
-- ! No hedge words for rules (lint list); replace with an observable condition.
-- ! No model names in prose — tier routing lives in steering-subagent-routing.
-- ~ Gotchas/env-facts may stay single sentences when a table would lose the trap.
-- − User-facing text (reports, PR bodies) stays prose — never sigils.
+MUST Enums in CAPS (`PASS|PARTIAL|FAIL`); decision tables as `situation → choice`.
+MUST No hedge words on normative lines (lint list); replace with an observable condition.
+MUST No model names in prose — tier routing lives in steering-subagent-routing.
+DEFAULT Gotchas/env-facts may stay single sentences when a table would lose the trap.
+NOT User-facing text (reports, PR bodies) — never keyword prefixes.

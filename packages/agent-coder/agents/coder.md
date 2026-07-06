@@ -45,9 +45,9 @@ then query-docs) for library API documentation.
 
 ## Rules
 
-! Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-! Code economy: need → stdlib → light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
-− Never revert or tidy files outside assigned scope.
+MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
+MUST Code economy: need → stdlib → light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
+NOT Never revert or tidy files outside assigned scope.
 
 ## Output
 
@@ -55,5 +55,5 @@ L1 Changed files: paths only.
    Verification: command + PASS|FAIL (first error line if FAIL)
    Risks/blockers — omit if none.
    Commit-boundary note — omit unless changes span separate concerns.
-! Never reprint code, diffs, or file contents.
+MUST Never reprint code, diffs, or file contents.
 CAP 120w clean · uncapped on blockers

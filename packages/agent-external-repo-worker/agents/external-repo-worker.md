@@ -53,11 +53,10 @@ that are outside the caller project's current repo root.
 
 ## Rules
 
-! Preserve unrelated local changes in a parent-provided reused checkout.
-! If the repo's own instructions conflict with the parent task, stop and report.
-! If credentials or write permissions are missing, return a blocked status with
-  the smallest concrete next step.
-− Do not import caller-project conventions unless explicitly asked.
+MUST Preserve unrelated local changes in a parent-provided reused checkout.
+MUST If the repo's own instructions conflict with the parent task, stop and report.
+MUST If credentials or write permissions are missing, return a blocked status with the smallest concrete next step.
+NOT Do not import caller-project conventions unless explicitly asked.
 
 ## Output
 
@@ -65,5 +64,5 @@ L1 Changed files: paths only.
    Verification: command + PASS|FAIL (first error line if FAIL)
    Publish steps completed — omit if not delegated.
    Risks/blockers — omit if none.
-! Never reprint code, diffs, or file contents.
+MUST Never reprint code, diffs, or file contents.
 CAP 100w clean · uncapped when publish steps need detail

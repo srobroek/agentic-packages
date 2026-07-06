@@ -22,13 +22,12 @@ NN prefix = load order band: 0x meta/style · 1x toolchain · 2x-3x structure ·
 ```markdown
 # <Topic>
 
-LEGEND: ! hard rule · ~ default · ? confirm with user · → then
-
 <AREA-1>
-! <hard rule>
-~ <default>
+MUST <hard rule>
+DEFAULT <default>
 
-<AREA-2>  (? if ambiguous)
+<AREA-2>
+ASK <confirm with user>
 | situation | choice |
 |---|---|
 | <observable condition> | <decision> |
@@ -36,10 +35,10 @@ LEGEND: ! hard rule · ~ default · ? confirm with user · → then
 
 ## Rules
 
-! Decisions and gotchas only — never explain what a well-known tool is or why
+MUST Decisions and gotchas only — never explain what a well-known tool is or why
   a choice is right. The choice IS the content.
-! One home per fact: if another steering file owns it, delegate with one line
+MUST One home per fact: if another steering file owns it, delegate with one line
   ("see steering-x") — never restate.
-! No hedges: every rule is `!`, `~`, or `?` + an observable condition.
-~ Target ≤50 lines context, ≤6 lines pointer.
-− Rationale paragraphs, aphorisms, scope disclaimers, command catalogs.
+MUST No hedges: every rule uses MUST, DEFAULT, ASK, or NOT + an observable condition.
+DEFAULT Target ≤50 lines context, ≤6 lines pointer.
+NOT Rationale paragraphs, aphorisms, scope disclaimers, command catalogs.

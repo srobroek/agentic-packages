@@ -58,9 +58,9 @@ then query-docs) for library API documentation.
 
 ## Rules
 
-! Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-! Code economy: need → stdlib → light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
-− Never commit onto the caller's active branch.
+MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
+MUST Code economy: need → stdlib → light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
+NOT Never commit onto the caller's active branch.
 
 ## Output
 
@@ -70,5 +70,5 @@ L1 Branch + base ref.
    Verification: command + PASS|FAIL (first error line if FAIL)
    Risks/blockers — omit if none.
    Merge instruction: "merge `<branch>` into `<base>`" or "not ready — see risks".
-! Never reprint code, diffs, or file contents.
+MUST Never reprint code, diffs, or file contents.
 CAP 150w clean · uncapped on failures

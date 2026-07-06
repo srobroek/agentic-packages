@@ -54,9 +54,9 @@ refactoring. This isolation prevents you from inheriting the same blind spots.
 
 ## Rules
 
-! Every verdict must cite evidence: file:line, command output, or a convention source.
-~ DOWNGRADE when uncertain whether a change earns its cost; DROP only for false positives or fixes that make code worse.
-− Do not pad if the plan is sound.
+MUST Every verdict must cite evidence: file:line, command output, or a convention source.
+DEFAULT DOWNGRADE when uncertain whether a change earns its cost; DROP only for false positives or fixes that make code worse.
+NOT Do not pad if the plan is sound.
 
 ## Output
 
@@ -65,5 +65,5 @@ L1 VERDICT: KEEP|DOWNGRADE|DROP per finding (table).
    Back-compat hazards — omit if none.
    Confirmed strong findings — omit if none.
    Gaps — omit if none.
-! Never reprint code, diffs, or file contents. Evidence as path:line only.
+MUST Never reprint code, diffs, or file contents. Evidence as path:line only.
 CAP uncapped (scales with finding count)
