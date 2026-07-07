@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v2.0.0...steering-pragmatic--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* code-economy rule overhaul — OVERRIDE, YAGNI section, hand-roll pricing, haiku routing guard ([#496](https://github.com/srobroek/agentic-packages/issues/496))
+
+### Features
+
+* code-economy rule overhaul — OVERRIDE, YAGNI section, hand-roll pricing, haiku routing guard ([#496](https://github.com/srobroek/agentic-packages/issues/496)) ([954025f](https://github.com/srobroek/agentic-packages/commit/954025fd2514453cf3c5bc1fecd8678be5b75258))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v1.1.0...steering-pragmatic--v2.0.0) (2026-07-07)
 
 

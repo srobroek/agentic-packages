@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.0.0...write-agentic--v3.1.0) (2026-07-07)
+
+
+### Features
+
+* **write-agentic:** add per-file x-lint override mechanism with E9 guard ([#497](https://github.com/srobroek/agentic-packages/issues/497)) ([f5c90b9](https://github.com/srobroek/agentic-packages/commit/f5c90b9e77ae6ba3ea19205e8de57344846ae521))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v2.0.0...write-agentic--v3.0.0) (2026-07-07)
 
 

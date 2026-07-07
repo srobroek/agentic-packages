@@ -1,5 +1,5 @@
 name: agent-coder
-version: 3.0.0
+version: 4.0.0
 description: >-
   Implementation subagents for bounded code changes, tests, and refactors within
   a defined scope. Ships `coder` (edits the caller's tree directly; the parent
