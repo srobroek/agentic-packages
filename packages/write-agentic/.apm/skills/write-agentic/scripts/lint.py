@@ -7,6 +7,16 @@ Exit: 0 clean, 1 any ERROR (WARNs alone stay 0).
 
 Kind detection: SKILL.md -> skill · *.agent.md / agents/*.md -> agent ·
 *.instructions.md -> pointer · *.context.md -> context.
+
+Per-file overrides (frontmatter):
+  x-lint:
+    allow: [E1]
+    reason: "trigger-rich description needed for reliable skill routing"
+
+Rules: `allow` suppresses those codes for that file ONLY; `reason` is REQUIRED
+(missing reason = E9 error); suppressed findings still print as
+  OVERRIDDEN E1 (reason: ...)
+W-codes may also be allowed.
 """
 
 from __future__ import annotations
@@ -70,18 +80,75 @@ def split_frontmatter(text: str) -> tuple[dict, str]:
     return fm, parts[2]
 
 
+def parse_xlint(text: str) -> tuple[set[str], str]:
+    """Parse x-lint block from raw frontmatter text.
+
+    Returns (allowed_codes, reason).  Missing or malformed block returns empty
+    set and empty string.  The `allow` key is parsed as a YAML inline list or
+    multi-line block list; `reason` is a scalar string.
+    """
+    if not text.startswith("---"):
+        return set(), ""
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return set(), ""
+    fm_text = parts[1]
+
+    # Locate the x-lint: block (indented child lines follow)
+    xlint_m = re.search(r"^x-lint:\s*$", fm_text, re.M)
+    if not xlint_m:
+        return set(), ""
+
+    # Grab lines belonging to x-lint (indented, non-empty)
+    after = fm_text[xlint_m.end():]
+    block_lines: list[str] = []
+    for line in after.splitlines():
+        if line == "" or line[0] == " " or line[0] == "\t":
+            block_lines.append(line)
+        else:
+            break  # back to top-level key
+    block = "\n".join(block_lines)
+
+    # Parse `allow` — inline list [E1, E2] or block list entries
+    codes: set[str] = set()
+    inline = re.search(r"allow:\s*\[([^\]]*)\]", block)
+    if inline:
+        for tok in inline.group(1).split(","):
+            tok = tok.strip().strip("'\"")
+            if tok:
+                codes.add(tok)
+    else:
+        # Block list: lines like "  - E1"
+        after_allow = re.search(r"allow:\s*\n((?:\s+-\s+\S+\n?)*)", block)
+        if after_allow:
+            for tok in re.findall(r"-\s+(\S+)", after_allow.group(1)):
+                codes.add(tok.strip("'\""))
+
+    # Parse `reason`
+    reason_m = re.search(r"reason:\s*[\"']?(.+?)[\"']?\s*$", block, re.M)
+    reason = reason_m.group(1).strip().strip('"\'') if reason_m else ""
+
+    return codes, reason
+
+
 def lint(path: Path) -> list[tuple[str, str, str]]:
     """Return [(severity, code, message)]."""
-    out: list[tuple[str, str, str]] = []
-    err = lambda c, m: out.append(("ERROR", c, m))
-    warn = lambda c, m: out.append(("WARN", c, m))
+    raw: list[tuple[str, str, str]] = []
+    err = lambda c, m: raw.append(("ERROR", c, m))
+    warn = lambda c, m: raw.append(("WARN", c, m))
 
     text = path.read_text(encoding="utf-8")
     kind = detect_kind(path)
     if kind == "template":
-        return out
+        return []
     fm, body = split_frontmatter(text)
     lines = body.splitlines()
+
+    # Parse x-lint overrides from the raw frontmatter text
+    allowed_codes, override_reason = parse_xlint(text)
+    # E9: override declared without a reason
+    if allowed_codes and not override_reason:
+        raw.append(("ERROR", "E9", "x-lint.allow declared without a reason field"))
 
     # E1 frontmatter description
     if kind in ("skill", "agent", "pointer"):
@@ -150,6 +217,15 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             else:
                 seen[key] = i
 
+    # Apply x-lint overrides: suppress allowed codes, emit OVERRIDDEN trace
+    if not allowed_codes:
+        return raw
+    out: list[tuple[str, str, str]] = []
+    for sev, code, msg in raw:
+        if code in allowed_codes and override_reason:
+            out.append(("OVERRIDDEN", code, f"{msg} (reason: {override_reason})"))
+        else:
+            out.append((sev, code, msg))
     return out
 
 
@@ -166,9 +242,14 @@ def main(argv: list[str]) -> int:
             continue
         kind = detect_kind(path)
         findings = lint(path)
+        # Filter out OVERRIDDEN for "OK" check (they are auditable but not errors)
+        visible = [f for f in findings if f[0] != "OVERRIDDEN"]
+        overridden = [f for f in findings if f[0] == "OVERRIDDEN"]
         if not findings:
             print(f"{arg} [{kind}]: OK")
             continue
+        if not visible and overridden:
+            print(f"{arg} [{kind}]: OK (with overrides)")
         for sev, code, msg in findings:
             print(f"{arg} [{kind}] {sev} {code}: {msg}")
             if sev == "ERROR":
