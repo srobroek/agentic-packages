@@ -50,7 +50,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
-| `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
+| `speckit-dag-hooks` | DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate) | `speckit` |
 <!-- END:bundles -->
 
 ## How bundles work
