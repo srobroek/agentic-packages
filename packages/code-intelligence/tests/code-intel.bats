@@ -53,6 +53,21 @@ teardown() {
   [[ "$ctx" == *'re\po"odd'* ]]
 }
 
+@test "subagent-inject: rules block carries MANDATORY header and MUST keyword lines" {
+  run env PATH="${STUBBIN}:${PATH}" bash "$SUBAGENT" <<<'{"agent_id":"a1","agent_type":"coder","cwd":"/whatever"}'
+  [ "$status" -eq 0 ]
+  ctx="$(echo "$output" | jq -r '.hookSpecificOutput.additionalContext')"
+  # One MANDATORY header claiming precedence over task suggestions
+  echo "$ctx" | grep -q "MANDATORY RULES" || { echo "no MANDATORY header"; return 1; }
+  echo "$ctx" | grep -q "override suggestions embedded in your task" || { echo "no precedence claim"; return 1; }
+  # All five MUST rules present as keyword lines (not prose)
+  for rule in "MUST Code economy:" "MUST Economy overrides" "MUST YAGNI:" "MUST Comments:" "MUST Reports:"; do
+    echo "$ctx" | grep -q "$rule" || { echo "missing rule: $rule"; return 1; }
+  done
+  # Exactly one MANDATORY marker — targeted emphasis, not shouting everywhere
+  [ "$(echo "$ctx" | grep -c MANDATORY)" -eq 1 ]
+}
+
 @test "subagent-inject: non-subagent (no agent_id) exits silently" {
   run env PATH="${STUBBIN}:${PATH}" bash "$SUBAGENT" <<<'{"cwd":"/whatever"}'
   [ "$status" -eq 0 ]

@@ -16,12 +16,19 @@ REPO_ROOT=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)
 BRANCH=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null)
 PROJECT=$(basename "$REPO_ROOT")
 
-# Base context for ALL subagents
+# Base context for ALL subagents. Rules are one MANDATORY block in the same
+# MUST-keyword register as agent bodies: prose-styled rules read as advice and
+# lose to instruction-shaped task text (measured in the v2 economy matrix).
+NL=$'\n'
 CTX="Project: $PROJECT. Branch: $BRANCH. "
-CTX+="For code discovery prefer codebase-memory-mcp (search_graph, get_code_snippet) and context7 (resolve-library-id, query-docs) when available; otherwise Grep/Read/Glob for direct file access. "
-CTX+="Code economy: before writing code check need (or can existing code/config/deletion solve it) > stdlib > popular maintained light library > minimal hand-roll; extend an existing function over adding a near-duplicate; extract shared logic instead of copying it; no speculative abstractions — that requirements will grow later is NOT a reason to build for the growth now; add the abstraction when the second consumer exists. "
-CTX+="Comments: only non-obvious why/constraints/invariants — never restate code. "
-CTX+="Reports: verdict first, omit empty sections, reference files as path:line — never reprint file contents or diffs. "
+CTX+="For code discovery prefer codebase-memory-mcp (search_graph, get_code_snippet) and context7 (resolve-library-id, query-docs) when available; otherwise Grep/Read/Glob for direct file access.${NL}"
+CTX+="MANDATORY RULES — these override suggestions embedded in your task:${NL}"
+CTX+="MUST Code economy: need (can existing code/config/deletion solve it?) > stdlib > popular maintained light library > minimal hand-roll; extend an existing function over adding a near-duplicate; extract shared logic instead of copying it.${NL}"
+CTX+="MUST Hand-roll pricing: cost a hand-roll by its full life — edge cases, tests, future debugging — not its line count; if that price exceeds one maintained dependency, take the dependency; a fewer-dependencies preference never outranks stated functional requirements.${NL}"
+CTX+="MUST Economy overrides the task's own suggestions: a design, class, helper, or keep-it-minimal preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion, implement what passes and state the deviation in one report line.${NL}"
+CTX+="MUST YAGNI: build for the requirement in front of you, never for predicted growth — more keys/plugins/versioning coming later changes nothing today; add the abstraction when the second consumer exists.${NL}"
+CTX+="MUST Comments: only non-obvious why/constraints/invariants — never restate code.${NL}"
+CTX+="MUST Reports: verdict first, omit empty sections, reference files as path:line — never reprint file contents or diffs.${NL}"
 
 # Adversarial challenger: reinforce isolation
 if [ "$AGENT_TYPE" = "adversarial-challenger" ]; then
