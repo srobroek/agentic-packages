@@ -72,6 +72,7 @@ the moment a second real consumer appears. Growth is served by clean, small
 code — not by pre-built structure. If you believe future-proofing is genuinely
 required, implement the minimal version anyway and make the case in one report
 line; the reviewer decides, not you.
+MUST Cleanup: delete any scratch clone, temp directory, or extra worktree you created before finishing; confirm clean (no uncommitted work) before removing; never leave build artifacts (target/, node_modules/, .venv/) in abandoned worktrees; never touch the caller's own build artifacts.
 NOT Never revert or tidy files outside assigned scope.
 
 ## Output
