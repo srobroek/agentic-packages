@@ -1,6 +1,6 @@
 {
   "name": "speckit",
-  "version": "3.1.1",
+  "version": "4.0.0",
   "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow) and speckit-dag-hooks (the DAG dispatcher + enforcement hooks).",
   "author": {
     "name": "Sjors Robroek"
