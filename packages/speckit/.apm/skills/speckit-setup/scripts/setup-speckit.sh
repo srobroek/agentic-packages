@@ -22,7 +22,7 @@
 #                   /speckit.* exists in every agent the project compiles steering for (e.g.
 #                   "claude,codex"). The primary is always included. DEFAULT: just --integration.
 #   --script        script flavor for `specify init` (default: sh)
-#   --force         pass --force to `specify init` (skip dir-not-empty prompt)
+#   --force         re-run `specify init` even if .specify/ already exists (re-scaffold)
 #
 # WHY auto-detect the primary: `specify extension add` renders an extension's command files
 # ONLY for the integration active at add-time. If `specify init` records the wrong primary
@@ -39,6 +39,7 @@ INTEGRATION=""        # empty => auto-detect (resolve_primary_integration below)
 RENDER_FOR=""         # empty => render for the primary only
 SCRIPT_FLAVOR="sh"
 FORCE=""
+FAILED_EXTENSIONS=""  # accumulates skipped extension names for end-of-step summary
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -163,14 +164,38 @@ WORKFLOWS=(speckit speckit-quality speckit-full)
 need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found on PATH" >&2; exit 1; }; }
 need specify
 
+# Require spec-kit >= 0.12.0: workflows are a first-class primitive (not an extension),
+# --no-git was removed, and specify-cli is published natively on PyPI.
+# Upgrade with: uv tool install specify-cli  (installs/upgrades from PyPI)
+_specify_ver="$(specify --version 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+' | head -n1)"
+_specify_major="${_specify_ver%%.*}"
+_specify_minor="${_specify_ver#*.}"; _specify_minor="${_specify_minor%%.*}"
+_ver_ok=0
+if [ -n "$_specify_major" ] && [ -n "$_specify_minor" ]; then
+  if [ "$_specify_major" -gt 0 ]; then
+    _ver_ok=1   # major >= 1 is fine
+  elif [ "$_specify_major" -eq 0 ] && [ "$_specify_minor" -ge 12 ]; then
+    _ver_ok=1   # 0.12.x or higher 0.x
+  fi
+fi
+if [ "$_ver_ok" -ne 1 ]; then
+  echo "ERROR: specify >= 0.12.0 required (found: ${_specify_ver:-unknown})" >&2
+  echo "       Upgrade with: uv tool install specify-cli" >&2
+  exit 1
+fi
+unset _specify_ver _specify_major _specify_minor _ver_ok
+
 echo "==> 1/6 specify init (.specify/ scaffold) -- integration=$INTEGRATION script=$SCRIPT_FLAVOR"
 if [ -d .specify ] && [ -z "$FORCE" ]; then
   echo "    .specify/ already present -- skipping init (pass --force to re-run)"
 else
+  # Always pass --force so the init is unconditionally non-interactive: on a
+  # fresh git repo .git/ makes the directory non-empty and specify prompts y/N
+  # (default: abort) when stdin is /dev/null. --force skips that check entirely.
   # stdin from /dev/null so the post-init "Agent Folder Security" prompt and any
   # other interactive confirmations resolve to their non-interactive default
   # instead of blocking (or aborting under set -e).
-  specify init --here --integration "$INTEGRATION" --script "$SCRIPT_FLAVOR" $FORCE </dev/null
+  specify init --here --integration "$INTEGRATION" --script "$SCRIPT_FLAVOR" --force </dev/null
 fi
 
 echo "==> 2/6 register community extension catalog"
@@ -229,11 +254,17 @@ for entry in "${EXTENSIONS[@]}"; do
     case "$src" in
       latest-release:*)
         repo="${src#latest-release:}"
-        # Resolve the latest published release tag via the GitHub API (no auth needed
-        # for public repos), then install that tag's source archive. Tracks newest
-        # without pinning a version in this file.
-        tag="$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null \
-                 | grep -m1 '"tag_name"' | sed 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/')"
+        # Resolve the latest published release tag. Prefer `gh api` (authenticated,
+        # no rate-limit risk) with a curl fallback. Both are wrapped so a failure
+        # yields an empty tag rather than aborting the script under set -e -o pipefail.
+        tag=""
+        if command -v gh >/dev/null 2>&1; then
+          tag="$(gh api "repos/${repo}/releases/latest" --jq '.tag_name' 2>/dev/null || true)"
+        fi
+        if [ -z "$tag" ]; then
+          tag="$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null \
+                   | grep -m1 '"tag_name"' | sed 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/' || true)"
+        fi
         if [ -z "$tag" ]; then
           echo "    WARNING: could not resolve latest release of '$repo' for '$ext' -- skipping" >&2
           continue
@@ -246,7 +277,9 @@ for entry in "${EXTENSIONS[@]}"; do
         echo "    + $ext (from $url)"
         ;;
     esac
-    if ! specify extension add "$ext" --from "$url" </dev/null; then
+    # `specify extension add --from` may prompt y/N (default: abort) for the
+    # directory-not-empty check on a fresh git repo -- pipe `y` to confirm.
+    if ! echo y | specify extension add "$ext" --from "$url"; then
       echo "    WARNING: could not install '$ext' from $url -- skipping (publish it or check access)" >&2
       continue
     fi

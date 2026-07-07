@@ -8,6 +8,8 @@ description: Bootstrap SpecKit end-to-end -- scaffold, extensions, workflows, ga
 Automates the one-time SpecKit project bootstrap that otherwise has to be done by hand.
 Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
 
+Requires `specify-cli` >= 0.12.0 (install/upgrade with `uv tool install specify-cli`).
+
 ## When to use
 
 - A repo needs SpecKit but `.specify/` doesn't exist yet.
@@ -18,11 +20,11 @@ Runs `scripts/setup-speckit.sh`, which is idempotent (safe to re-run).
 
 `scripts/setup-speckit.sh` performs seven steps:
 
-1. **`specify init --here`** -- scaffolds `.specify/`. Defaults to `--integration codex --script sh`; override with `--integration` / `--script`.
+1. **`specify init --here --force`** -- scaffolds `.specify/`. Defaults to `--integration codex --script sh`; override with `--integration` / `--script`. `--force` is always passed so init is non-interactive even on a fresh git repo (where `.git/` makes the dir non-empty and the default y/N prompt aborts).
 2. **Register the community catalog** -- `specify extension catalog add --name community --install-allowed <catalog.community.json>`.
-3. **Install + enable 28 required extensions** -- `agent-assign`, `archive`, `brownfield`, `bugfix`, `checkpoint`, `cleanup`, `conduct`, `critique`, `diagram`, `doctor`, `fix-findings`, `fleet`, `github-issues`, `iterate`, `onboard`, `optimize`, `qa`, `reconcile`, `refine`, `retro`, `review`, `roadmap`, `security-review`, `status-report`, `tinyspec`, `verify`, `verify-tasks`, `worktree`. `agent-assign` is mandatory; the DAG hard-blocks `/speckit.implement`. Custom-source installs via `name=<archive-url>` or `name=latest-release:<owner>/<repo>` are best-effort: an unreachable source warns and is skipped rather than aborting setup.
+3. **Install + enable 12 required extensions** -- `agent-assign`, `cleanup`, `critique`, `fix-findings`, `iterate`, `qa`, `retro`, `review`, `roadmap`, `security-review`, `status-report`, `tinyspec`. `agent-assign` is mandatory; the DAG hard-blocks `/speckit.implement`. Custom-source installs via `name=<archive-url>` or `name=latest-release:<owner>/<repo>` are best-effort: an unreachable source warns and is skipped rather than aborting setup.
 4. **Register extension commands** -- forces a (re-)registration for the requested integration via `integration switch` bounce to ensure commands are rendered correctly.
-5. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full` via `specify workflow add` from this package's local `workflows/<id>/` dirs.
+5. **Install workflow definitions** -- `speckit`, `speckit-quality`, `speckit-full` via `specify workflow add` from this package's local `workflows/<id>/` dirs (spec-kit 0.11+ workflows are a first-class primitive, not extensions).
 6. **Provision speckit-gate** -- runs `uvx speckit-gate init --defaults`, merges the project-local `gates-overlay.yaml` (encoding our A2 policy: deprecated implement gate, agent-assign-* chain, verify/verify-tasks spawn-agent gates), then `uvx speckit-gate compile` and `uvx speckit-gate install --harness claude` to merge hooks into `.claude/settings.json`. Guard: skipped with a clear message if `uvx speckit-gate --help` fails (PyPI publish may be pending).
 7. **Ignore status-report artefact** -- appends `specs/**/spec-status.md` to `.gitignore`.
 
