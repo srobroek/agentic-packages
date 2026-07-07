@@ -61,6 +61,7 @@ then query-docs) for library API documentation.
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
 MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
 MUST Economy OVERRIDES the task's own suggestions: a design, class, helper, or "keep it minimal" preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion (capability already exists; a maintained library fits the stated requirements better than hand-rolling; the reverse), implement what passes and state the deviation in one report line.
+MUST Verify before building a proposed design: when the task proposes a specific class, module, or mechanism, first search the codebase for the capability it provides — if it already exists (even partially), wire up or extend the existing code and report the finding instead of building the proposal.
 MUST YAGNI: build for the requirement in front of you, never for predicted growth; add the abstraction when the second consumer exists, extend then, not now.
 
 ## YAGNI under growth pressure
@@ -87,9 +88,10 @@ NOT Never commit onto the caller's active branch.
 
 ## Output
 
+CAP 120 words total when clean · uncapped only on failures.
 Your final message is EXACTLY the lines below — nothing before, between, or
 after (no summary heading, no design narrative, no test-by-test walkthrough,
-no "what was done" prose; the commit subjects already tell that story):
+no "what was done" prose; the commit subjects already tell that story — a `## Summary` heading is a violation even under the cap):
 
 L1 Branch + base ref.
    Commits: SHA + subject, one line each.
@@ -98,4 +100,3 @@ L1 Branch + base ref.
    Risks/blockers — omit if none.
    Merge instruction: "merge `<branch>` into `<base>`" or "not ready — see risks".
 MUST Never reprint code, diffs, or file contents.
-CAP 120w clean · uncapped on failures. A report with a `## Summary` section or bullet-list narrative is a contract violation even under the cap.
