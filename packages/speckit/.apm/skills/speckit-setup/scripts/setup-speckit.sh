@@ -335,7 +335,54 @@ for wf in "${WORKFLOWS[@]}"; do
   specify workflow add "$wf_dir" </dev/null
 done
 
-echo "==> 6/6 ignore generated status-report artefact"
+echo "==> 6/7 provision speckit-gate (gates.yaml-driven enforcement)"
+# speckit-gate is a Python CLI distributed on PyPI and consumed via uvx (no APM
+# dependency). It supersedes speckit-dag-hooks. Guard: skip gracefully when uvx
+# cannot resolve it (publish may be pending) rather than aborting setup.
+if uvx speckit-gate --help >/dev/null 2>&1; then
+  echo "    speckit-gate available -- running init/compile/install"
+  # Init writes gates.yaml from the built-in defaults (--defaults skips the
+  # interactive wizard). Idempotent: re-running overwrites with the same content.
+  uvx speckit-gate init --defaults
+
+  # Merge the project overlay (A2 policy: deprecated implement, agent-assign
+  # chain, verify/verify-tasks spawn-agent gates). Append the overlay's `gates:`
+  # entries to the project's gates.yaml. This is safe because:
+  #   1. init --defaults writes built-in commands only (core preset).
+  #   2. The overlay keys (implement, agent-assign-*, verify, verify-tasks) are
+  #      NOT in the core preset, so there are no collisions on a fresh init.
+  #   3. If gates.yaml already has these keys (re-run) the append creates
+  #      duplicates that speckit-gate compile will reject with a clear error;
+  #      prefer the duplicate-key compile error over silently losing the overlay.
+  OVERLAY="$SCRIPT_DIR/gates-overlay.yaml"
+  if [ -f "$OVERLAY" ]; then
+    GATES_FILE="gates.yaml"
+    if [ -f "$GATES_FILE" ]; then
+      # Extract only the `gates:` block from the overlay and append it.
+      # sed -n '/^gates:/,$ p' preserves the header comment block under gates:.
+      echo "    merging gates-overlay.yaml into $GATES_FILE"
+      printf '\n' >> "$GATES_FILE"
+      sed -n '/^gates:/,$ p' "$OVERLAY" | tail -n +2 >> "$GATES_FILE"
+    else
+      echo "    WARNING: gates.yaml not found after init -- overlay not merged" >&2
+    fi
+  else
+    echo "    WARNING: gates-overlay.yaml not found at $OVERLAY -- skipping overlay merge" >&2
+  fi
+
+  # Compile resolves the merged gates.yaml into the hook dispatch table.
+  uvx speckit-gate compile
+
+  # Install merges the compiled hooks into .claude/settings.json (Claude harness).
+  uvx speckit-gate install --harness claude
+  echo "    speckit-gate: init + overlay + compile + install complete"
+else
+  echo "    SKIP: uvx could not resolve speckit-gate" >&2
+  echo "          Install hint: pip install speckit-gate  OR  wait for PyPI publish" >&2
+  echo "          Re-run setup-speckit.sh once speckit-gate is available to enable gate enforcement." >&2
+fi
+
+echo "==> 7/7 ignore generated status-report artefact"
 # The status-report extension (/speckit.status-report.show) regenerates
 # specs/spec-status.md on every run despite its read-only catalog tag. It is a
 # derived report, not a tracked spec artefact (spec.md/plan.md/tasks.md ARE
@@ -354,7 +401,7 @@ fi
 
 echo ""
 echo "==> SpecKit setup complete."
-echo "    The speckit orchestration layer (agents + DAG hooks) ships in the same"
+echo "    The speckit orchestration layer (agents + gate hooks) ships in the same"
 echo "    package as this script. If steering is not yet compiled, run:"
 echo "      apm compile --target codex,claude --no-constitution"
 echo "    Then start the workflow with /speckit.specify."
