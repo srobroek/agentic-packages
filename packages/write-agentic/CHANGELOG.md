@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v2.0.0...write-agentic--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering
+* **write-agentic:** package renamed write-a-skill -> write-agentic; referencing bundles updated.
+
+### Features
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering ([9cb202d](https://github.com/srobroek/agentic-packages/commit/9cb202d2b76a649dda0489baaeefd61a2e0829e1))
+* **write-agentic:** generalize write-a-skill to all agentic assets, add lint ([ff5df7a](https://github.com/srobroek/agentic-packages/commit/ff5df7a6614906c669eac40f8bc05c0ee55257cd))
+
+
+### Refactors
+
+* **agentic:** replace sigil grammar with MUST/DEFAULT/ASK/NOT keywords throughout ([52a8958](https://github.com/srobroek/agentic-packages/commit/52a895874110733cc0f5f11197366659d3fe6074))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/write-a-skill-v1.0.0...write-a-skill--v1.1.0) (2026-06-27)
 
 

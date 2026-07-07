@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v2.1.1...speckit-dag-hooks--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup
+
+### Features
+
+* **speckit-dag:** cut to 19 nodes, drop verify/verify-tasks/checkpoint/bugfix/refine/fleet/archive ([6d137de](https://github.com/srobroek/agentic-packages/commit/6d137de58a9e3e9cc2e1d109758fcaafc87d2520))
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup ([bb1a623](https://github.com/srobroek/agentic-packages/commit/bb1a62369b9d5b5f4ae23e6234a1f29f6ba8148f))
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes ([dcc2281](https://github.com/srobroek/agentic-packages/commit/dcc22810108e93b5422329fb22e604844a990bd4))
+
+
+### Refactors
+
+* **speckit-dag-hooks:** prune 33 advisory-only nodes; suppress came_from/going_to ([823ada6](https://github.com/srobroek/agentic-packages/commit/823ada6fdd08cd58609ac4522d16503b871cba07))
+
 ## [2.1.1](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v2.1.0...speckit-dag-hooks--v2.1.1) (2026-07-03)
 
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing-v1.0.0...steering-subagent-routing--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes
+
+### Features
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes ([1412eaf](https://github.com/srobroek/agentic-packages/commit/1412eafea2ec018655d73d353337feb918dd27f0))
+
+
+### Refactors
+
+* **steering-subagent-routing:** rewrite agent-routing to table format ([108be05](https://github.com/srobroek/agentic-packages/commit/108be0508da2d4d69f6359afebae650ef064bacf))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing-v0.1.0...steering-subagent-routing-v1.0.0) (2026-06-26)
 
 

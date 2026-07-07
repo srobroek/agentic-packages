@@ -1,5 +1,5 @@
 name: steering-docs-specs
-version: 1.1.0
+version: 2.0.0
 description: >-
   Opinionated documentation and spec conventions: durable docs structure,
   markdown practices, project-doc placement, and the SpecKit spec-workflow

@@ -1,5 +1,5 @@
 name: security
-version: 1.1.0
+version: 2.0.0
 description: >-
   Security toolkit: Hobson security-scanning, security-compliance,
   backend-api-security, frontend-mobile-security, and reverse-engineering
@@ -14,8 +14,13 @@ tags:
   - security
 dependencies:
   apm:
-    - wshobson/agents/plugins/security-scanning#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/security-compliance#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/backend-api-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/frontend-mobile-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/reverse-engineering#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/security-scanning#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/security-compliance#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/backend-api-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/frontend-mobile-security#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/reverse-engineering#5cc2549a50fc672230efd0a0307e2fd27ffba792

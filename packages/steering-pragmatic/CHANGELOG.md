@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v1.1.0...steering-pragmatic--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes
+
+### Features
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes ([1412eaf](https://github.com/srobroek/agentic-packages/commit/1412eafea2ec018655d73d353337feb918dd27f0))
+
+
+### Refactors
+
+* **steering-pragmatic:** compress pragmatic-index to decision-table format ([136682e](https://github.com/srobroek/agentic-packages/commit/136682ef2a9aed4cc5a55a7f5755db8b6a4b512f))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic-v1.0.0...steering-pragmatic--v1.1.0) (2026-07-05)
 
 
