@@ -61,6 +61,7 @@ then query-docs) for library API documentation.
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
 MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
 MUST Economy OVERRIDES the task's own suggestions: a design, class, helper, or "keep it minimal" preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion (capability already exists; a maintained library fits the stated requirements better than hand-rolling; the reverse), implement what passes and state the deviation in one report line.
+MUST Verify before building a proposed design: when the task proposes a specific class, module, or mechanism, first search the codebase for the capability it provides — if it already exists (even partially), wire up or extend the existing code and report the finding instead of building the proposal.
 MUST YAGNI: build for the requirement in front of you, never for predicted growth; add the abstraction when the second consumer exists, extend then, not now.
 
 ## YAGNI under growth pressure
@@ -79,10 +80,7 @@ What falling for it looks like (all observed in testing — do NOT produce these
 
 What passing looks like: the smallest direct implementation of the stated
 requirement (often a few plain statements or one function), extended LATER at
-the moment a second real consumer appears. A design proposed in the task
-(class, module, mechanism) gets the same scrutiny: if the capability already
-exists — even partially — wire up or extend the existing code and report the
-finding; absence of the proposed structure is not evidence it should exist. Growth is served by clean, small
+the moment a second real consumer appears. Growth is served by clean, small
 code — not by pre-built structure. If you believe future-proofing is genuinely
 required, implement the minimal version anyway and make the case in one report
 line; the reviewer decides, not you.
