@@ -1,10 +1,10 @@
 name: session-review
-version: 0.2.0
+version: 1.0.0
 description: >-
   Audit the ending session for corrections, lessons, unresolved TODOs, and
-  follow-up work, then recommend handoffs to `handover`, `audit-steering`,
-  or `write-agentic`. Use when the user says wrap up, review this session,
-  what did we learn, or before a handover.
+  follow-up work, then recommend handoffs to `handover`, `audit-steering`, or
+  `write-agentic`. Use when the user says wrap up, review this session, what did
+  we learn, or before a handover.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

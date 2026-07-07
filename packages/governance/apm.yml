@@ -1,5 +1,5 @@
 name: governance
-version: 1.1.0
+version: 2.0.0
 description: >-
   Agent governance: Hobson MCP protection, signed audit trails, review policy,
   and no-verify blocking workflows.
@@ -14,7 +14,11 @@ tags:
   - governance
 dependencies:
   apm:
-    - wshobson/agents/plugins/protect-mcp#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/signed-audit-trails#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/review-agent-governance#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/block-no-verify#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/protect-mcp#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/signed-audit-trails#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/review-agent-governance#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/block-no-verify#5cc2549a50fc672230efd0a0307e2fd27ffba792

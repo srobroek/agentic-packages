@@ -1,9 +1,9 @@
 name: project-lifecycle
-version: 1.2.0
+version: 2.0.0
 description: >-
   Day-to-day project lifecycle workflows: resume work after interruption
-  (catchup), write handovers, and run verification. Bundles the matching
-  skills, git-workflow steering, and the PR reviewer agent.
+  (catchup), write handovers, and run verification. Bundles the matching skills,
+  git-workflow steering, and the PR reviewer agent.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

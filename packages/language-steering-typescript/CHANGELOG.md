@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v1.0.0...language-steering-typescript--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes
+
+### Features
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes ([1412eaf](https://github.com/srobroek/agentic-packages/commit/1412eafea2ec018655d73d353337feb918dd27f0))
+
+
+### Refactors
+
+* **language-steering-typescript:** compress to choices/gotchas only ([01b5e3e](https://github.com/srobroek/agentic-packages/commit/01b5e3e08a3e7671a67c7def7888eb886630f43b))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript-v0.2.0...language-steering-typescript-v1.0.0) (2026-06-26)
 
 

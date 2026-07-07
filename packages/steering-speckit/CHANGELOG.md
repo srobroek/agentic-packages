@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit--v2.1.0...steering-speckit--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup
+
+### Features
+
+* **speckit:** update verify agent contract, bugfix skill, and workflow steering ([22f9570](https://github.com/srobroek/agentic-packages/commit/22f957056fa1b10603441795caa8ea10912b8e4e))
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup ([bb1a623](https://github.com/srobroek/agentic-packages/commit/bb1a62369b9d5b5f4ae23e6234a1f29f6ba8148f))
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes ([dcc2281](https://github.com/srobroek/agentic-packages/commit/dcc22810108e93b5422329fb22e604844a990bd4))
+
+
+### Refactors
+
+* **steering-speckit:** cut 50-speckit-workflow.instructions.md to 83 lines ([af03303](https://github.com/srobroek/agentic-packages/commit/af03303e042385b8fd2322bee5c87326c85a4f91))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit--v2.0.0...steering-speckit--v2.1.0) (2026-06-29)
 
 

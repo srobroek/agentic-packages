@@ -1,5 +1,5 @@
 name: developer-tools
-version: 1.1.0
+version: 2.0.0
 description: >-
   Everyday developer tooling: Hobson developer-essentials, debugging,
   comprehensive review, git/PR, and documentation-generation workflows.
@@ -14,7 +14,11 @@ tags:
   - tooling
 dependencies:
   apm:
-    - wshobson/agents/plugins/developer-essentials#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/debugging-toolkit#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/comprehensive-review#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/git-pr-workflows#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/developer-essentials#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/debugging-toolkit#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/comprehensive-review#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/git-pr-workflows#5cc2549a50fc672230efd0a0307e2fd27ffba792

@@ -1,5 +1,5 @@
 name: steering-infrastructure
-version: 1.0.0
+version: 2.0.0
 description: >-
   Opinionated infrastructure conventions: platform code, IaC, deployment config,
   CI/CD, environments, and observability. Opt-in steering.

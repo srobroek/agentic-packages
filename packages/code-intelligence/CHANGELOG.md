@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v1.1.3...code-intelligence--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agent-coder:** harden YAGNI rule against growth-bait; tighten parallel-coder output contract
+* **steering:** code-economy to keyword convention; restore dropped ladder steps; exact-output coder contracts
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer
+* the removed packages are no longer published; installs referencing them must update to core >=7 bundles.
+
+### Features
+
+* **code-intelligence:** inject code-economy, comment, and report rules into every subagent ([f7519b6](https://github.com/srobroek/agentic-packages/commit/f7519b69f288f1e821806d4e30a05bb70399563a))
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer ([786988a](https://github.com/srobroek/agentic-packages/commit/786988af6a80f3afe31e8763e1077e4a30e61920))
+* retire 13 nudge/duplicate packages in favor of static steering ([a2fc229](https://github.com/srobroek/agentic-packages/commit/a2fc229311e85435af1ba9ff1c172016f611436e))
+
+
+### Bug Fixes
+
+* **agent-coder:** harden YAGNI rule against growth-bait; tighten parallel-coder output contract ([81fe444](https://github.com/srobroek/agentic-packages/commit/81fe444df97c4817f68afd772cf3d515ee1d3c5e))
+* **agent-coder:** quote-free YAGNI phrasing — embedded quotes broke inject-script JSON ([bbce701](https://github.com/srobroek/agentic-packages/commit/bbce701d7296e46148861807056793ba06770b82))
+* **steering:** code-economy to keyword convention; restore dropped ladder steps; exact-output coder contracts ([30bf4c8](https://github.com/srobroek/agentic-packages/commit/30bf4c8e8f84ad332b0be62767f0b0e427549487))
+
 ## [1.1.3](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v1.1.2...code-intelligence--v1.1.3) (2026-07-05)
 
 

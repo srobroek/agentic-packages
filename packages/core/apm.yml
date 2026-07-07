@@ -1,5 +1,5 @@
 name: core
-version: 1.3.0
+version: 2.0.0
 description: >-
   Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
   and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock
@@ -19,7 +19,11 @@ dependencies:
     - srobroek/agentic-packages/packages/agentic-maintenance#>=1.2.0 <2.0.0
     - srobroek/agentic-packages/packages/resume-session#>=1.2.1 <2.0.0
     - srobroek/agentic-packages/packages/steering-delivery#>=0.2.0 <1.0.0
-    - mattpocock/skills/skills/productivity/grilling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
-    - mattpocock/skills/skills/engineering/grill-with-docs#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
-    - wshobson/agents/plugins/context-management#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/agent-orchestration#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      mattpocock/skills/skills/productivity/grilling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - >-
+      mattpocock/skills/skills/engineering/grill-with-docs#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - >-
+      wshobson/agents/plugins/context-management#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/agent-orchestration#5cc2549a50fc672230efd0a0307e2fd27ffba792

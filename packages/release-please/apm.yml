@@ -1,5 +1,5 @@
 name: release-please
-version: 0.2.0
+version: 1.0.0
 description: >-
   Drive releases with googleapis/release-please. Use for any release, tagging,
   changelog, or version-bump work, and whenever the repo has a

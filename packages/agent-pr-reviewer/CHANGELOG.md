@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v1.1.0...agent-pr-reviewer--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering
+
+### Features
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering ([9cb202d](https://github.com/srobroek/agentic-packages/commit/9cb202d2b76a649dda0489baaeefd61a2e0829e1))
+
+
+### Refactors
+
+* **agentic:** replace sigil grammar with MUST/DEFAULT/ASK/NOT keywords throughout ([52a8958](https://github.com/srobroek/agentic-packages/commit/52a895874110733cc0f5f11197366659d3fe6074))
+* **agents:** add output contracts + slim descriptions for coder, parallel-coder, pr-reviewer, adversarial-challenger, external-repo-worker, bloodhound, refactor-challenger ([193842f](https://github.com/srobroek/agentic-packages/commit/193842f10d79311bd8556334ea2702aabe98e9b8))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer-v1.0.0...agent-pr-reviewer--v1.1.0) (2026-06-27)
 
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/review--v1.1.2...review--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges
+* the removed packages are no longer published; installs referencing them must update to core >=7 bundles.
+
+### Features
+
+* retire 13 nudge/duplicate packages in favor of static steering ([a2fc229](https://github.com/srobroek/agentic-packages/commit/a2fc229311e85435af1ba9ff1c172016f611436e))
+
+
+### Chores
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges ([7b32fc1](https://github.com/srobroek/agentic-packages/commit/7b32fc13d3eb75710e7c40beb2d30672d0d9dc02))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/review--v1.1.1...review--v1.1.2) (2026-07-03)
 
 

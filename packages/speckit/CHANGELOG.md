@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v3.1.1...speckit--v4.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup
+
+### Features
+
+* **speckit:** shrink extension set 28→12, replace verify/checkpoint with native steps ([72673e2](https://github.com/srobroek/agentic-packages/commit/72673e2b6c4757b3e9b36f21c687546fd2f1cd33))
+* **speckit:** update verify agent contract, bugfix skill, and workflow steering ([22f9570](https://github.com/srobroek/agentic-packages/commit/22f957056fa1b10603441795caa8ea10912b8e4e))
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup ([bb1a623](https://github.com/srobroek/agentic-packages/commit/bb1a62369b9d5b5f4ae23e6234a1f29f6ba8148f))
+* **speckit:** Wave 3b — extension set 28→12, verify via local agent, DAG 19 nodes ([dcc2281](https://github.com/srobroek/agentic-packages/commit/dcc22810108e93b5422329fb22e604844a990bd4))
+
+
+### Refactors
+
+* **speckit:** cut speckit-setup SKILL.md to 53 lines ([299bc9b](https://github.com/srobroek/agentic-packages/commit/299bc9ba8be136fd2633045c505401afac9dacab))
+* **speckit:** merge 6 agents to 4 via mode/scope dispatch ([1578676](https://github.com/srobroek/agentic-packages/commit/1578676b19355078eae7ec8a01ff9cc0de2b0b79))
+
 ## [3.1.1](https://github.com/srobroek/agentic-packages/compare/speckit--v3.1.0...speckit--v3.1.1) (2026-06-30)
 
 

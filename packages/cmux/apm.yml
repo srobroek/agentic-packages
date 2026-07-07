@@ -1,5 +1,5 @@
 name: cmux
-version: 0.2.0
+version: 1.0.0
 description: >-
   cmux terminal control bundle: vendored user-facing skills that teach agents to
   drive and configure the cmux macOS terminal via its socket CLI -- topology and
@@ -22,11 +22,19 @@ tags:
 dependencies:
   apm:
     - manaflow-ai/cmux/skills/cmux#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-workspace#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-customization#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-settings#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-diagnostics#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-socket-policy#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-ghostty#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-keyboard-shortcuts#f0c38b89579f6629caedbc430f8802ca8c64c76b
-    - manaflow-ai/cmux/skills/cmux-shared-behavior#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-workspace#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-customization#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-settings#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-diagnostics#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-socket-policy#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-ghostty#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-keyboard-shortcuts#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-shared-behavior#f0c38b89579f6629caedbc430f8802ca8c64c76b

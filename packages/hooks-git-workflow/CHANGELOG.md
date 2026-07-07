@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.3.0...hooks-git-workflow--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer
+
+### Features
+
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer ([786988a](https://github.com/srobroek/agentic-packages/commit/786988af6a80f3afe31e8763e1077e4a30e61920))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.2.0...hooks-git-workflow--v1.3.0) (2026-07-05)
 
 

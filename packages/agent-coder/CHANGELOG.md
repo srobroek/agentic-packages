@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-coder--v2.1.0...agent-coder--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agent-coder:** harden YAGNI rule against growth-bait; tighten parallel-coder output contract
+* **steering:** code-economy to keyword convention; restore dropped ladder steps; exact-output coder contracts
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer
+
+### Features
+
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer ([786988a](https://github.com/srobroek/agentic-packages/commit/786988af6a80f3afe31e8763e1077e4a30e61920))
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering ([9cb202d](https://github.com/srobroek/agentic-packages/commit/9cb202d2b76a649dda0489baaeefd61a2e0829e1))
+
+
+### Bug Fixes
+
+* **agent-coder:** harden YAGNI rule against growth-bait; tighten parallel-coder output contract ([81fe444](https://github.com/srobroek/agentic-packages/commit/81fe444df97c4817f68afd772cf3d515ee1d3c5e))
+* **agent-coder:** quote-free YAGNI phrasing — embedded quotes broke inject-script JSON ([bbce701](https://github.com/srobroek/agentic-packages/commit/bbce701d7296e46148861807056793ba06770b82))
+* **steering:** code-economy to keyword convention; restore dropped ladder steps; exact-output coder contracts ([30bf4c8](https://github.com/srobroek/agentic-packages/commit/30bf4c8e8f84ad332b0be62767f0b0e427549487))
+
+
+### Refactors
+
+* **agentic:** replace sigil grammar with MUST/DEFAULT/ASK/NOT keywords throughout ([52a8958](https://github.com/srobroek/agentic-packages/commit/52a895874110733cc0f5f11197366659d3fe6074))
+* **agents:** add output contracts + slim descriptions for coder, parallel-coder, pr-reviewer, adversarial-challenger, external-repo-worker, bloodhound, refactor-challenger ([193842f](https://github.com/srobroek/agentic-packages/commit/193842f10d79311bd8556334ea2702aabe98e9b8))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/agent-coder--v2.0.0...agent-coder--v2.1.0) (2026-07-05)
 
 

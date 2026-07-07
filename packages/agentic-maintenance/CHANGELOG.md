@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v1.2.0...agentic-maintenance--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering
+* **write-agentic:** package renamed write-a-skill -> write-agentic; referencing bundles updated.
+
+### Features
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering ([9cb202d](https://github.com/srobroek/agentic-packages/commit/9cb202d2b76a649dda0489baaeefd61a2e0829e1))
+* **write-agentic:** generalize write-a-skill to all agentic assets, add lint ([ff5df7a](https://github.com/srobroek/agentic-packages/commit/ff5df7a6614906c669eac40f8bc05c0ee55257cd))
+
+
+### Refactors
+
+* **audit-steering:** absorb project-hygiene + optimize-steering; delete both packages ([2d4426e](https://github.com/srobroek/agentic-packages/commit/2d4426ecd3316c450d09f93eae7f958bf25bf1e2))
+
+
+### Chores
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges ([7b32fc1](https://github.com/srobroek/agentic-packages/commit/7b32fc13d3eb75710e7c40beb2d30672d0d9dc02))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v1.1.2...agentic-maintenance--v1.2.0) (2026-07-05)
 
 

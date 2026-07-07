@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/typescript-quality--v1.1.0...typescript-quality--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering
+
+### Features
+
+* Wave 5 — agent output contracts, fleet de-hedge, keyword convention, audit-steering absorbs project-hygiene + optimize-steering ([9cb202d](https://github.com/srobroek/agentic-packages/commit/9cb202d2b76a649dda0489baaeefd61a2e0829e1))
+
+
+### Bug Fixes
+
+* **skills:** de-hedge and trim descriptions across 17 skill files ([49b5ffa](https://github.com/srobroek/agentic-packages/commit/49b5ffa1555f7f0c8fad6aa4ea6a53dbfaa6873f))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/typescript-quality-v1.0.0...typescript-quality--v1.1.0) (2026-06-27)
 
 

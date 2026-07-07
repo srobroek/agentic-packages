@@ -1,5 +1,5 @@
 name: steering-code-economy
-version: 1.0.0
+version: 2.0.0
 description: >-
   Code economy defaults: prefer deletion, stdlib, and minimal hand-rolled
   solutions over new abstractions. Avoid speculative generality, near-duplicate

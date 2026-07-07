@@ -1,5 +1,5 @@
 name: incident-response
-version: 1.1.0
+version: 2.0.0
 description: >-
   Incident response and production debugging: Hobson error-debugging,
   distributed-debugging, incident-response, error-diagnostics, and
@@ -14,8 +14,13 @@ tags:
   - incident
 dependencies:
   apm:
-    - wshobson/agents/plugins/error-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/distributed-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/incident-response#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/error-diagnostics#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/debugging-toolkit#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/error-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/distributed-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/incident-response#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/error-diagnostics#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/debugging-toolkit#5cc2549a50fc672230efd0a0307e2fd27ffba792
