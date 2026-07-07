@@ -1,6 +1,6 @@
 ---
 name: speckit-setup
-description: Bootstrap a SpecKit project end-to-end -- scaffold .specify/, register the community extension catalog, install and enable all required extensions and workflow definitions. Use when setting up SpecKit in a repo, when /speckit.* commands are missing, or when the user asks to initialize/enable SpecKit.
+description: Bootstrap SpecKit end-to-end -- scaffold, extensions, workflows, gates. Use when setting up SpecKit, when /speckit.* commands are missing, or to initialize/enable SpecKit.
 ---
 
 # SpecKit Setup
