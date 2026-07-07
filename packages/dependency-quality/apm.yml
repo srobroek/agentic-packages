@@ -20,5 +20,5 @@ dependencies:
     - >-
       srobroek/agentic-packages/packages/hooks-package-investigate#>=1.1.1
       <2.0.0
-    - srobroek/agentic-packages/packages/dep-audit#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/dep-audit#>=2.0.0 <3.0.0
     - srobroek/agentic-packages/packages/mcp-package-version#>=1.1.0 <2.0.0
