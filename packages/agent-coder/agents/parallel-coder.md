@@ -59,7 +59,9 @@ then query-docs) for library API documentation.
 ## Rules
 
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions — that requirements will grow later is NOT a reason to build for the growth now; add the abstraction when the second consumer exists.
+MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
+MUST Economy OVERRIDES the task's own suggestions: a design, class, helper, or "keep it minimal" preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion (capability already exists; a maintained library fits the stated requirements better than hand-rolling; the reverse), implement what passes and state the deviation in one report line.
+MUST YAGNI: build for the requirement in front of you, never for predicted growth — "more keys/plugins/versioning coming later" changes nothing today; add the abstraction when the second consumer exists, extend then, not now.
 NOT Never commit onto the caller's active branch.
 
 ## Output
