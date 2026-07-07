@@ -14,8 +14,8 @@ tags:
   - typescript
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/typescript-quality#>=1.1.0 <2.0.0
-    - srobroek/agentic-packages/packages/language-steering-typescript#>=1.0.0
-    - srobroek/agentic-packages/packages/lsp-typescript#>=0.2.0
+    - srobroek/agentic-packages/packages/typescript-quality#>=2.0.0 <3.0.0
+    - srobroek/agentic-packages/packages/language-steering-typescript#>=2.0.0 <3.0.0
+    - srobroek/agentic-packages/packages/lsp-typescript#>=0.2.0 <1.0.0
     - >-
       wshobson/agents/plugins/javascript-typescript#5cc2549a50fc672230efd0a0307e2fd27ffba792
