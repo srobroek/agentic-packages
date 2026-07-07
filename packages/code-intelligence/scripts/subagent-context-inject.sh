@@ -19,7 +19,7 @@ PROJECT=$(basename "$REPO_ROOT")
 # Base context for ALL subagents
 CTX="Project: $PROJECT. Branch: $BRANCH. "
 CTX+="For code discovery prefer codebase-memory-mcp (search_graph, get_code_snippet) and context7 (resolve-library-id, query-docs) when available; otherwise Grep/Read/Glob for direct file access. "
-CTX+="Code economy: before writing code check need (or can existing code/config/deletion solve it) > stdlib > popular maintained light library > minimal hand-roll; extend an existing function over adding a near-duplicate; extract shared logic instead of copying it; no speculative abstractions — "the schema/requirements will grow" is NOT a reason to build for the growth now; add the abstraction when the second consumer exists. "
+CTX+="Code economy: before writing code check need (or can existing code/config/deletion solve it) > stdlib > popular maintained light library > minimal hand-roll; extend an existing function over adding a near-duplicate; extract shared logic instead of copying it; no speculative abstractions — that requirements will grow later is NOT a reason to build for the growth now; add the abstraction when the second consumer exists. "
 CTX+="Comments: only non-obvious why/constraints/invariants — never restate code. "
 CTX+="Reports: verdict first, omit empty sections, reference files as path:line — never reprint file contents or diffs. "
 

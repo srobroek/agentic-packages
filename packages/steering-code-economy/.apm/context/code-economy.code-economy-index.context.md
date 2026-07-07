@@ -11,5 +11,5 @@ Before writing any code, in order:
 
 MUST Extend an existing function that covers most of the need instead of adding a near-duplicate.
 MUST Logic needed twice: extract into a shared function/module/package/crate — never copy.
-NOT Speculative generality (YAGNI) — "this will grow" is not a reason to build for growth now; add the abstraction when the second consumer exists. NOT wrappers around wrappers; drive-by refactors.
+NOT Speculative generality (YAGNI) — that requirements will grow later is not a reason to build for growth now; add the abstraction when the second consumer exists. NOT wrappers around wrappers; drive-by refactors.
 DEFAULT Smallest diff that solves the problem; prefer deleting code over adding it.
