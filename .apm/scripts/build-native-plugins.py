@@ -171,15 +171,26 @@ def _mcp_json(manifest: dict) -> dict | None:
 # --------------------------------------------------------------------------- #
 
 def _unified_hook(pkg_dir: Path) -> Path | None:
-    """Return the claude hook file IFF claude and codex variants are identical.
+    """Return a hook source file suitable for the universal native hooks/hooks.json.
 
-    A universal root `hooks/hooks.json` is routed to EVERY target by `apm
-    install`; if the variants differ it would leak Claude-only hooks into Codex.
-    Only when they are byte-identical is a single native hooks.json safe.
+    Resolution order:
+    1. A bare `hooks.json` in `.apm/hooks/` -- the canonical APM 0.23+ form for
+       hooks that are identical across all targets.  Return it directly.
+    2. Legacy per-target pairs (`*-claude-hooks.json` / `*-codex-hooks.json`):
+       return the claude file only when both variants are byte-identical so that a
+       universal native hooks.json does not leak Claude-only hooks into Codex.
+       When they differ, return None (per-target routing only; no native emit).
+
+    A universal root `hooks/hooks.json` is routed to EVERY target by `apm install`.
     """
     hooks_dir = pkg_dir / ".apm" / "hooks"
     if not hooks_dir.is_dir():
         return None
+    # Canonical form: universal hooks.json (no target token in stem).
+    universal = hooks_dir / "hooks.json"
+    if universal.is_file():
+        return universal
+    # Legacy per-target pairs.
     claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(hooks_dir.glob("claude-hooks.json"))
     codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(hooks_dir.glob("codex-hooks.json"))
     if not claude:
