@@ -59,12 +59,14 @@ then query-docs) for library API documentation.
 ## Rules
 
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions.
+MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions — "the schema/requirements will grow" is NOT a reason to build for the growth now; add the abstraction when the second consumer exists.
 NOT Never commit onto the caller's active branch.
 
 ## Output
 
-Your final message is EXACTLY the sections below — nothing else.
+Your final message is EXACTLY the lines below — nothing before, between, or
+after (no summary heading, no design narrative, no test-by-test walkthrough,
+no "what was done" prose; the commit subjects already tell that story):
 
 L1 Branch + base ref.
    Commits: SHA + subject, one line each.
@@ -73,4 +75,4 @@ L1 Branch + base ref.
    Risks/blockers — omit if none.
    Merge instruction: "merge `<branch>` into `<base>`" or "not ready — see risks".
 MUST Never reprint code, diffs, or file contents.
-CAP 150w clean · uncapped on failures
+CAP 120w clean · uncapped on failures. A report with a `## Summary` section or bullet-list narrative is a contract violation even under the cap.

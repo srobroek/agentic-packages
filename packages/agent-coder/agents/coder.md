@@ -46,7 +46,7 @@ then query-docs) for library API documentation.
 ## Rules
 
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
-MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions.
+MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic; no speculative abstractions — "the schema/requirements will grow" is NOT a reason to build for the growth now; add the abstraction when the second consumer exists.
 NOT Never revert or tidy files outside assigned scope.
 
 ## Output
