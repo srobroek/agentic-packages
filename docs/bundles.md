@@ -11,16 +11,16 @@ In the **Includes** column, each entry is a member package; an entry marked with
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `optimize-steering`, `audit-steering`, `write-a-skill`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
+| `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-index`, `codebase-memory`, `mcp-codebase-memory`, `explore`, `research`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure`, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `code-intelligence` | Codebase understanding toolkit | `codebase-memory`, `mcp-codebase-memory`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks | self-contained |
-| `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `grill-me`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
+| `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `grilling`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `dependency-quality` | Dependency hygiene bundle | `hooks-package-file-guard`, `hooks-package-investigate`, `hooks-pkg-version-warn`, `dep-audit`, `mcp-package-version` |
-| `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^, `documentation-generation`^ |
+| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit`, `mcp-package-version` |
+| `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^ |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
-| `docs-architecture` | Documentation and architecture | `documentation-standards`^, `code-documentation`^, `documentation-generation`^, `c4-architecture`^ |
+| `docs-architecture` | Documentation standards | `documentation-standards`^ |
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^, `frontend-mobile-development`^, `ui-design`^, `accessibility-compliance`^, `brand-landingpage`^ |
 | `governance` | Agent governance | `protect-mcp`^, `signed-audit-trails`^, `review-agent-governance`^, `block-no-verify`^ |
 | `incident-response` | Incident response and production debugging | `error-debugging`^, `distributed-debugging`^, `incident-response`^, `error-diagnostics`^, `debugging-toolkit`^ |
@@ -43,12 +43,12 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `lsp-shell` | Shell LSP server | external packages |
 | `lsp-terraform` | Terraform LSP server | external packages |
 | `lsp-typescript` | TypeScript/JavaScript LSP server | external packages |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grill-me`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
-| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `research`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grilling`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
+| `planning-product` | Planning and product toolkit | `debate`, `eli5`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
-| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `commit-push-merge`, `commit-push-pr`, `quick-commit`, `verify`, `agent-pr-reviewer` |
+| `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `steering-git-workflow`, `verify`, `agent-pr-reviewer` |
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
-| `review` | Code review and verification toolkit | `code-review`, `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
+| `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
 | `speckit-dag-hooks` | Opt-in enforcement hooks for the SpecKit DAG | `speckit` |
 <!-- END:bundles -->
@@ -89,13 +89,13 @@ Bundles also pull in third-party skills and agents (marked `^` in the **Includes
 | [`daymade/claude-code-skills`](https://github.com/daymade/claude-code-skills) | 1 | `ppt-creator` |
 | [`google-labs-code/stitch-skills`](https://github.com/google-labs-code/stitch-skills) | 1 | `stitch-design` |
 | [`manaflow-ai/cmux`](https://github.com/manaflow-ai/cmux) | 9 | `cmux`, `cmux-customization`, `cmux-diagnostics`, `cmux-ghostty`, `cmux-keyboard-shortcuts`, `cmux-settings`, `cmux-shared-behavior`, `cmux-socket-policy`, `cmux-workspace` |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 8 | `grill-me`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 8 | `grill-with-docs`, `grilling`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage` |
 | [`neuro-synapse/network-topology-agent`](https://github.com/neuro-synapse/network-topology-agent) | 1 | `d2-diagram` |
 | [`pbakaus/impeccable`](https://github.com/pbakaus/impeccable) | 1 | `impeccable` |
 | [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit) | 1 | `marp-slide` |
 | [`tristan-mcinnis/pptx-from-layouts-skill`](https://github.com/tristan-mcinnis/pptx-from-layouts-skill) | 1 | `pptx-from-layouts` |
 | [`varunr89/resume-tailoring-skill`](https://github.com/varunr89/resume-tailoring-skill) | 1 | `resume-tailoring` |
-| [`wshobson/agents`](https://github.com/wshobson/agents) | 53 | `accessibility-compliance`, `agent-orchestration`, `arm-cortex-microcontrollers`, `backend-api-security`, `block-no-verify`, `brand-landingpage`, `c4-architecture`, `cicd-automation`, `cloud-infrastructure`, `code-documentation`, `comprehensive-review`, `context-management`, `data-engineering`, `database-cloud-optimization`, `database-design`, `database-migrations`, `debugging-toolkit`, `deployment-strategies`, `deployment-validation`, `developer-essentials`, `distributed-debugging`, `documentation-generation`, `documentation-standards`, `dotnet-contribution`, `error-debugging`, `error-diagnostics`, `frontend-mobile-development`, `frontend-mobile-security`, `functional-programming`, `git-pr-workflows`, `incident-response`, `javascript-typescript`, `julia-development`, `jvm-languages`, `kubernetes-operations`, `llm-application-dev`, `machine-learning-ops`, `observability-monitoring`, `performance-testing-review`, `plugin-eval`, `protect-mcp`, `python-development`, `reverse-engineering`, `review-agent-governance`, `security-compliance`, `security-scanning`, `shell-scripting`, `signed-audit-trails`, `systems-programming`, `tdd-workflows`, `ui-design`, `unit-testing`, `web-scripting` |
+| [`wshobson/agents`](https://github.com/wshobson/agents) | 50 | `accessibility-compliance`, `agent-orchestration`, `arm-cortex-microcontrollers`, `backend-api-security`, `block-no-verify`, `brand-landingpage`, `cicd-automation`, `cloud-infrastructure`, `comprehensive-review`, `context-management`, `data-engineering`, `database-cloud-optimization`, `database-design`, `database-migrations`, `debugging-toolkit`, `deployment-strategies`, `deployment-validation`, `developer-essentials`, `distributed-debugging`, `documentation-standards`, `dotnet-contribution`, `error-debugging`, `error-diagnostics`, `frontend-mobile-development`, `frontend-mobile-security`, `functional-programming`, `git-pr-workflows`, `incident-response`, `javascript-typescript`, `julia-development`, `jvm-languages`, `kubernetes-operations`, `llm-application-dev`, `machine-learning-ops`, `observability-monitoring`, `performance-testing-review`, `plugin-eval`, `protect-mcp`, `python-development`, `reverse-engineering`, `review-agent-governance`, `security-compliance`, `security-scanning`, `shell-scripting`, `signed-audit-trails`, `systems-programming`, `tdd-workflows`, `ui-design`, `unit-testing`, `web-scripting` |
 <!-- END:external-sources -->
 
 ---

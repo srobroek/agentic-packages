@@ -13,4 +13,4 @@ tags:
   - ruby
 dependencies:
   apm:
-    - wshobson/agents/plugins/web-scripting#main
+    - wshobson/agents/plugins/web-scripting#5cc2549a50fc672230efd0a0307e2fd27ffba792

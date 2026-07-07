@@ -6,11 +6,11 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 
 <!-- BEGIN:intro-counts -->
 - **40 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **39 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **30 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
-- **18 steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **20 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **7 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **18 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
+- **12 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
 Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
@@ -237,6 +237,36 @@ User-scope support varies by runtime: **fully supported for `claude`, `codex`, a
 **Recommended global set:** the granular `hooks-*` guard packages (`hooks-bash-safety`, `hooks-git-safety`, `hooks-worktree`, and the opinionated `hooks-no-ff` / `hooks-squash-merge` / `hooks-tool-prefs` / `hooks-branch-check`), `steering-pragmatic`, the bootstrap skills, and the standalone `chezmoi-editor` skill. Pin them in a user-scope `~/.apm/apm.yml` and re-run `apm install --global --frozen` to reproduce the same global layer on any machine.
 
 > **Caveat — symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
+
+---
+
+## Updating and cleaning up after releases
+
+When a release retires or renames packages (see each release's CHANGELOG), refresh installs and prune stale content.
+
+**Global (per machine):**
+
+```bash
+apm update --global --yes    # bare form ONLY — the single-package form
+                             # ("apm update --global <pkg>") plans "1 updated,
+                             # N removed" and prunes every other global package
+```
+
+Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` — never hand-edit installed copies; APM skips locally-modified files on every future install.
+
+**Per project:**
+
+```bash
+apm update --yes                  # re-resolve; prunes retired packages
+apm run audit-agentic-assets      # flags stale or hand-edited installed files
+apm compile                       # refresh AGENTS.md / CLAUDE.md
+```
+
+Then check for stragglers:
+
+1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` — stale references in project-local steering or docs; edit them out.
+2. `ls .claude/skills/` — orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
+3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed — `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
 
 ---
 

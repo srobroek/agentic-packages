@@ -14,6 +14,6 @@ tags:
   - diagrams
 dependencies:
   apm:
-    - Agents365-ai/drawio-skill#main
-    - coleam00/excalidraw-diagram-skill#main
+    - Agents365-ai/drawio-skill#89ff88cb27cd876d9085071d4f73c2502d0492e4
+    - coleam00/excalidraw-diagram-skill#8646fcc9f74f38539c6cdb4c969723336a96ddcd
     - neuro-synapse/network-topology-agent/.claude/skills/d2-diagram#master

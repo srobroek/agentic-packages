@@ -1,7 +1,7 @@
 {
   "name": "dependency-quality",
   "version": "1.1.2",
-  "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
+  "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -9,15 +9,7 @@
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/hooks-package-file-guard"
-    },
-    {
-      "git": "srobroek/agentic-packages",
       "path": "packages/hooks-package-investigate"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/hooks-pkg-version-warn"
     },
     {
       "git": "srobroek/agentic-packages",

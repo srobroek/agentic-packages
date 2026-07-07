@@ -1,14 +1,14 @@
 ---
 name: verify
-description: Run and report a final local verification pass before handoff, commit, push, merge, or PR. Use when the user asks to verify, test everything, check readiness, or prove local changes are safe to hand off.
+description: Run and report a final local verification pass. Use when asked to verify, test everything, check readiness, or prove changes safe to hand off.
 ---
 
 # Verify
 
 ## Preferred Flow
 
-1. Prefer project-native commands when they are obvious (`just verify`,
-   `make verify`, `package.json` scripts, `Makefile`/`justfile` targets,
+1. Prefer project-native commands (`just verify`, `make verify`,
+   `package.json` scripts, `Makefile`/`justfile` targets,
    language-specific quality skills).
 2. Otherwise run `scripts/verify.sh`.
 3. Report what ran, what was skipped, and what failed.

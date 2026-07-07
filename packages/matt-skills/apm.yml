@@ -1,7 +1,7 @@
 name: matt-skills
 version: 1.1.0
 description: >-
-  Bundle of Matt Pocock's engineering and productivity skills: grill-me,
+  Bundle of Matt Pocock's engineering and productivity skills: grilling,
   grill-with-docs, tdd, to-prd, to-issues, triage,
   improve-codebase-architecture, and setup.
 author: Sjors Robroek
@@ -16,11 +16,11 @@ tags:
   - workflows
 dependencies:
   apm:
-    - mattpocock/skills/skills/productivity/grill-me#main
-    - mattpocock/skills/skills/engineering/grill-with-docs#main
-    - mattpocock/skills/skills/engineering/improve-codebase-architecture#main
-    - mattpocock/skills/skills/engineering/setup-matt-pocock-skills#main
-    - mattpocock/skills/skills/engineering/tdd#main
-    - mattpocock/skills/skills/engineering/to-issues#main
-    - mattpocock/skills/skills/engineering/to-prd#main
-    - mattpocock/skills/skills/engineering/triage#main
+    - mattpocock/skills/skills/productivity/grilling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/grill-with-docs#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/improve-codebase-architecture#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/setup-matt-pocock-skills#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/tdd#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/to-issues#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/to-prd#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - mattpocock/skills/skills/engineering/triage#16a2a5cd00b4416f673f4ff38c7971a04dd708e7

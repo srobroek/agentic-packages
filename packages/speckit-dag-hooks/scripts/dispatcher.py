@@ -352,7 +352,7 @@ def _evaluate_block(node, feat, proj_root):
         if _path_present(path):
             return (
                 "Conflicting artefact present: " + path
-                + " -- use /speckit.refine.update to amend instead of"
+                + " -- use /speckit.iterate.define to scope a change instead of"
                 + " re-running this step"
             )
     return ""

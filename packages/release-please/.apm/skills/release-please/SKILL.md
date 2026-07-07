@@ -1,6 +1,6 @@
 ---
 name: release-please
-description: Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases.
+description: Drive releases with googleapis/release-please. Use for any release, tagging, or changelog work, or when the repo has release-please config. Covers setup, publishing, and recovery.
 ---
 
 # release-please
@@ -36,7 +36,7 @@ scripts/detect-release-please.sh          # exit 0 = managed, 1 = not; prints co
 2. release-please opens/updates the release PR, labeled `autorelease: pending`.
 3. **Review and merge the release PR** — do not edit its title or labels by hand.
 4. release-please tags the merge commit, creates the GitHub Release, and flips the
-   label to `autorelease: tagged`. Publishing runs from that (see below).
+   label to `autorelease: tagged`. Publishing runs from that (see `references/publishing.md`).
 
 Force a version with a `Release-As: X.Y.Z` footer on an empty commit. Details and
 the SemVer mapping: `references/git-process.md`.
@@ -49,7 +49,6 @@ the SemVer mapping: `references/git-process.md`.
 - Hand-edit release-PR titles or `.release-please-manifest.json` versions (except
   the documented bootstrap case).
 
-An advisory PreToolUse hook (this package) warns on these; it never blocks.
 
 ## Setup / config
 

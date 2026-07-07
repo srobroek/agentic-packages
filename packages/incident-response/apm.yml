@@ -14,8 +14,8 @@ tags:
   - incident
 dependencies:
   apm:
-    - wshobson/agents/plugins/error-debugging#main
-    - wshobson/agents/plugins/distributed-debugging#main
-    - wshobson/agents/plugins/incident-response#main
-    - wshobson/agents/plugins/error-diagnostics#main
-    - wshobson/agents/plugins/debugging-toolkit#main
+    - wshobson/agents/plugins/error-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/distributed-debugging#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/incident-response#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/error-diagnostics#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/debugging-toolkit#5cc2549a50fc672230efd0a0307e2fd27ffba792

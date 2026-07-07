@@ -1,8 +1,9 @@
 name: docs-architecture
 version: 1.1.0
 description: >-
-  Documentation and architecture: Hobson documentation standards, code
-  documentation, doc generation, and C4 architecture workflows.
+  Documentation standards: Hobson documentation-standards plugin. Heavier
+  C4/doc-generation plugins were retired from bundles; install directly from
+  wshobson/agents per-project if needed.
 author: Sjors Robroek
 license: MIT
 type: hybrid
@@ -14,7 +15,4 @@ tags:
   - documentation
 dependencies:
   apm:
-    - wshobson/agents/plugins/documentation-standards#main
-    - wshobson/agents/plugins/code-documentation#main
-    - wshobson/agents/plugins/documentation-generation#main
-    - wshobson/agents/plugins/c4-architecture#main
+    - wshobson/agents/plugins/documentation-standards#5cc2549a50fc672230efd0a0307e2fd27ffba792

@@ -14,4 +14,4 @@ tags:
   - dotnet
 dependencies:
   apm:
-    - wshobson/agents/plugins/dotnet-contribution#main
+    - wshobson/agents/plugins/dotnet-contribution#5cc2549a50fc672230efd0a0307e2fd27ffba792

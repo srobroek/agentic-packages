@@ -14,4 +14,4 @@ tags:
   - jvm
 dependencies:
   apm:
-    - wshobson/agents/plugins/jvm-languages#main
+    - wshobson/agents/plugins/jvm-languages#5cc2549a50fc672230efd0a0307e2fd27ffba792

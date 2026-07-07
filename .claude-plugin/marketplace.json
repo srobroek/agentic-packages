@@ -128,35 +128,13 @@
     },
     {
       "name": "code-intelligence",
-      "description": "Codebase understanding toolkit: graph/index/search skills (codebase-index, codebase-memory, explore), research and web-fetch, the PR reviewer agent, project-structure steering, and Hobson documentation/architecture plugins.",
+      "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
       "version": "1.1.3",
       "tags": [
         "bundle",
         "graph"
       ],
       "source": "./packages/code-intelligence"
-    },
-    {
-      "name": "code-review",
-      "description": "Review a diff, change set, or PR for bugs, regressions, security risks, and missing tests, reporting findings by severity.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "quality",
-        "review"
-      ],
-      "source": "./packages/code-review"
-    },
-    {
-      "name": "codebase-index",
-      "description": "Rebuild the codebase-memory graph index when it is missing or stale. Requires the codebase-memory-mcp binary; without it, fall back to grep/glob exploration.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "graph"
-      ],
-      "source": "./packages/codebase-index"
     },
     {
       "name": "codebase-memory",
@@ -179,28 +157,6 @@
         "reference"
       ],
       "source": "./packages/codex-hook-contract"
-    },
-    {
-      "name": "commit-push-merge",
-      "description": "Commit local changes when needed, push, and merge a branch after inferring or confirming the target and merge method.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "lifecycle",
-        "git"
-      ],
-      "source": "./packages/commit-push-merge"
-    },
-    {
-      "name": "commit-push-pr",
-      "description": "Commit local changes when needed, push, and open or update a pull request for review.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "lifecycle",
-        "git"
-      ],
-      "source": "./packages/commit-push-pr"
     },
     {
       "name": "core",
@@ -261,7 +217,7 @@
     },
     {
       "name": "dependency-quality",
-      "description": "Dependency hygiene bundle: warns on direct manifest edits, nudges to investigate a dependency before adding it, suggests installing the latest compatible version, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Aggregates independently installable components.",
+      "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
       "version": "1.1.2",
       "tags": [
         "bundle",
@@ -292,7 +248,7 @@
     },
     {
       "name": "docs-architecture",
-      "description": "Documentation and architecture: Hobson documentation standards, code documentation, doc generation, and C4 architecture workflows.",
+      "description": "Documentation standards: Hobson documentation-standards plugin. Heavier C4/doc-generation plugins were retired from bundles; install directly from wshobson/agents per-project if needed.",
       "version": "1.1.0",
       "tags": [
         "bundle",
@@ -310,17 +266,6 @@
         "explanation"
       ],
       "source": "./packages/eli5"
-    },
-    {
-      "name": "explore",
-      "description": "Lightweight read-only codebase orientation: file discovery, path tracing, and \"where is X\" lookups. For structured graph queries, use codebase-memory.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "navigation"
-      ],
-      "source": "./packages/explore"
     },
     {
       "name": "find-tools",
@@ -421,17 +366,6 @@
       "source": "./packages/hooks-bash-safety"
     },
     {
-      "name": "hooks-branch-check",
-      "description": "Branch awareness hook: on prompt submit, warn when work starts on a protected branch (main/master/develop) and surface relevant feature branches/worktrees. Advisory context only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
-      "tags": [
-        "hooks",
-        "git",
-        "branch"
-      ],
-      "source": "./packages/hooks-branch-check"
-    },
-    {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source — the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
       "version": "2.0.1",
@@ -468,7 +402,7 @@
     },
     {
       "name": "hooks-git-workflow",
-      "description": "Opt-in git workflow hooks: BLOCK a git push when unit tests are stale or failing (the hook does not run tests — it reads the edit/test state the tracker records and tells the agent to run them; warns-and-allows when no test command is detectable, bypass with SKIP_TEST_GATE=1), track edit-vs-test state from real test runners only, and warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
+      "description": "Opt-in git workflow hook: warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
       "version": "1.3.0",
       "tags": [
         "hooks",
@@ -476,28 +410,6 @@
         "commit"
       ],
       "source": "./packages/hooks-git-workflow"
-    },
-    {
-      "name": "hooks-no-ff",
-      "description": "Opinionated git policy hook: advise --no-ff on real git merge invocations so feature-branch history is preserved. Emits a non-blocking advisory (allow + additionalContext) when --no-ff is absent; silent on --abort / --continue / --quit / --ff-only / --squash. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
-      "tags": [
-        "hooks",
-        "git",
-        "policy"
-      ],
-      "source": "./packages/hooks-no-ff"
-    },
-    {
-      "name": "hooks-package-file-guard",
-      "description": "Non-blocking PreToolUse hook (Edit/Write/MultiEdit) that warns against editing a dependency manifest directly (go.mod, package.json, Cargo.toml, pyproject.toml, Gemfile, composer.json), steering toward the package manager's add command. Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.1.0",
-      "tags": [
-        "hooks",
-        "dependencies",
-        "manifest"
-      ],
-      "source": "./packages/hooks-package-file-guard"
     },
     {
       "name": "hooks-package-investigate",
@@ -509,17 +421,6 @@
         "supply-chain"
       ],
       "source": "./packages/hooks-package-investigate"
-    },
-    {
-      "name": "hooks-pkg-version-warn",
-      "description": "Advisory PreToolUse:Bash hook that nudges you to install the latest compatible version when running a package install command (pnpm add, npm install, uv add, pip install, go get, gem install, composer require, etc.). Advisory only via additionalContext, never blocks. Self-gates on the leading command token so a substring such as `echo \"pip install ...\"` does not trip it. Cross-tool (Claude + Codex).",
-      "version": "1.1.1",
-      "tags": [
-        "hooks",
-        "dependencies",
-        "versions"
-      ],
-      "source": "./packages/hooks-pkg-version-warn"
     },
     {
       "name": "hooks-portability-ci",
@@ -556,17 +457,6 @@
       "source": "./packages/hooks-quality"
     },
     {
-      "name": "hooks-squash-merge",
-      "description": "Opinionated git policy hook: advise an explicit merge strategy on gh pr merge. Emits a non-blocking advisory (allow + additionalContext) when no strategy flag is present; silent when --squash / -s / --merge / -m / --rebase / -r or --help is provided. Cross-tool (Claude + Codex).",
-      "version": "2.0.0",
-      "tags": [
-        "hooks",
-        "git",
-        "policy"
-      ],
-      "source": "./packages/hooks-squash-merge"
-    },
-    {
       "name": "hooks-subagent-worktree",
       "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder — if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none — and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
       "version": "2.0.0",
@@ -578,17 +468,6 @@
         "policy"
       ],
       "source": "./packages/hooks-subagent-worktree"
-    },
-    {
-      "name": "hooks-tool-prefs",
-      "description": "Opinionated advisory hook: suggest preferred tools over deprecated ones (rg over grep, fd over find, pnpm over npm, uv over pip, mise over nvm/pyenv, just over make). Advisory only, never blocks. Cross-tool (Claude + Codex).",
-      "version": "1.1.1",
-      "tags": [
-        "hooks",
-        "tooling",
-        "advisory"
-      ],
-      "source": "./packages/hooks-tool-prefs"
     },
     {
       "name": "hooks-worktree",
@@ -855,7 +734,7 @@
     },
     {
       "name": "matt-skills",
-      "description": "Bundle of Matt Pocock's engineering and productivity skills: grill-me, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.",
+      "description": "Bundle of Matt Pocock's engineering and productivity skills: grilling, grill-with-docs, tdd, to-prd, to-issues, triage, improve-codebase-architecture, and setup.",
       "version": "1.1.0",
       "tags": [
         "bundle",
@@ -936,17 +815,6 @@
       "source": "./packages/mcp-tauri"
     },
     {
-      "name": "optimize-steering",
-      "description": "Audit and optimize agent-facing markdown (steering docs, skills, agent definitions) for token efficiency and cross-model compliance (rules R1-R7).",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "maintenance",
-        "steering"
-      ],
-      "source": "./packages/optimize-steering"
-    },
-    {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a SubagentStart comms-protocol hook, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
       "version": "0.3.0",
@@ -959,7 +827,7 @@
     },
     {
       "name": "planning-product",
-      "description": "Planning and product toolkit: the debate, eli5, research, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
+      "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
       "version": "1.1.2",
       "tags": [
         "bundle",
@@ -989,19 +857,8 @@
       "source": "./packages/presentation"
     },
     {
-      "name": "project-hygiene",
-      "description": "Audit project-local APM agents, skills, hooks, MCP config, generated steering, and package fit. Use when asked for project hygiene, cleanup, installed agent or skill review, stale generated assets, duplicate tooling, or agentic package drift.",
-      "version": "0.2.0",
-      "tags": [
-        "skill",
-        "maintenance",
-        "hygiene"
-      ],
-      "source": "./packages/project-hygiene"
-    },
-    {
       "name": "project-lifecycle",
-      "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, run verification, and commit/push via local merge, PR, or quick commit. Bundles the matching skills and the PR reviewer agent.",
+      "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
       "version": "1.2.0",
       "tags": [
         "bundle",
@@ -1021,17 +878,6 @@
       "source": "./packages/python-quality"
     },
     {
-      "name": "quick-commit",
-      "description": "Create a deliberate local git commit without pushing or opening a PR, for checkpoints and fast commit-only workflows.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "lifecycle",
-        "git"
-      ],
-      "source": "./packages/quick-commit"
-    },
-    {
       "name": "release-please",
       "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships a warn-only cross-tool advisory hook; it never blocks.",
       "version": "0.2.0",
@@ -1043,17 +889,6 @@
         "ci-cd"
       ],
       "source": "./packages/release-please"
-    },
-    {
-      "name": "research",
-      "description": "Multi-source research synthesis for comparisons, technology evaluations, and tradeoff analysis. Not for single lookups (explore) or URL fetches (web-fetch).",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "research"
-      ],
-      "source": "./packages/research"
     },
     {
       "name": "resume-cv",
@@ -1078,7 +913,7 @@
     },
     {
       "name": "review",
-      "description": "Code review and verification toolkit: the code-review and verify skills, the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
+      "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
       "version": "1.1.2",
       "tags": [
         "bundle",
@@ -1120,7 +955,7 @@
     },
     {
       "name": "session-review",
-      "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, `optimize-steering`, or `write-a-skill`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
+      "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, or `write-agentic`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
       "version": "0.2.0",
       "tags": [
         "skill",
@@ -1186,6 +1021,17 @@
       "source": "./packages/steering-backend"
     },
     {
+      "name": "steering-code-economy",
+      "description": "Code economy defaults: prefer deletion, stdlib, and minimal hand-rolled solutions over new abstractions. Avoid speculative generality, near-duplicate code, and heavyweight dependencies. Always-on steering. Opt-in.",
+      "version": "1.0.0",
+      "tags": [
+        "steering",
+        "code-economy",
+        "minimalism"
+      ],
+      "source": "./packages/steering-code-economy"
+    },
+    {
       "name": "steering-data",
       "description": "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering.",
       "version": "1.0.0",
@@ -1226,6 +1072,16 @@
         "frontend"
       ],
       "source": "./packages/steering-frontend"
+    },
+    {
+      "name": "steering-git-workflow",
+      "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, and pre-push verification. Replaces the retired commit-push-* skills and git nudge hooks.",
+      "version": "1.0.0",
+      "tags": [
+        "steering",
+        "git"
+      ],
+      "source": "./packages/steering-git-workflow"
     },
     {
       "name": "steering-infrastructure",
@@ -1348,15 +1204,15 @@
       "source": "./packages/whats-new"
     },
     {
-      "name": "write-a-skill",
-      "description": "Create or rewrite agent skills with precise triggers, progressive disclosure, references, scripts, and source-of-truth placement.",
-      "version": "1.1.0",
+      "name": "write-agentic",
+      "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
+      "version": "2.0.0",
       "tags": [
         "skill",
         "maintenance",
         "authoring"
       ],
-      "source": "./packages/write-a-skill"
+      "source": "./packages/write-agentic"
     }
   ]
 }

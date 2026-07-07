@@ -200,30 +200,6 @@
         }
       ]
     },
-    "packages/code-review": {
-      "release-type": "simple",
-      "component": "code-review",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/codebase-index": {
-      "release-type": "simple",
-      "component": "codebase-index",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/codebase-memory": {
       "release-type": "simple",
       "component": "codebase-memory",
@@ -239,30 +215,6 @@
     "packages/codex-hook-contract": {
       "release-type": "simple",
       "component": "codex-hook-contract",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/commit-push-merge": {
-      "release-type": "simple",
-      "component": "commit-push-merge",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/commit-push-pr": {
-      "release-type": "simple",
-      "component": "commit-push-pr",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -392,18 +344,6 @@
         }
       ]
     },
-    "packages/explore": {
-      "release-type": "simple",
-      "component": "explore",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/find-tools": {
       "release-type": "simple",
       "component": "find-tools",
@@ -512,18 +452,6 @@
         }
       ]
     },
-    "packages/hooks-branch-check": {
-      "release-type": "simple",
-      "component": "hooks-branch-check",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-chezmoi-guard": {
       "release-type": "simple",
       "component": "hooks-chezmoi-guard",
@@ -572,45 +500,9 @@
         }
       ]
     },
-    "packages/hooks-no-ff": {
-      "release-type": "simple",
-      "component": "hooks-no-ff",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/hooks-package-file-guard": {
-      "release-type": "simple",
-      "component": "hooks-package-file-guard",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-package-investigate": {
       "release-type": "simple",
       "component": "hooks-package-investigate",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/hooks-pkg-version-warn": {
-      "release-type": "simple",
-      "component": "hooks-pkg-version-warn",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -656,33 +548,9 @@
         }
       ]
     },
-    "packages/hooks-squash-merge": {
-      "release-type": "simple",
-      "component": "hooks-squash-merge",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-subagent-worktree": {
       "release-type": "simple",
       "component": "hooks-subagent-worktree",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/hooks-tool-prefs": {
-      "release-type": "simple",
-      "component": "hooks-tool-prefs",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1100,18 +968,6 @@
         }
       ]
     },
-    "packages/optimize-steering": {
-      "release-type": "simple",
-      "component": "optimize-steering",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/orchestrate": {
       "release-type": "simple",
       "component": "orchestrate",
@@ -1160,18 +1016,6 @@
         }
       ]
     },
-    "packages/project-hygiene": {
-      "release-type": "simple",
-      "component": "project-hygiene",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/project-lifecycle": {
       "release-type": "simple",
       "component": "project-lifecycle",
@@ -1196,33 +1040,9 @@
         }
       ]
     },
-    "packages/quick-commit": {
-      "release-type": "simple",
-      "component": "quick-commit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/release-please": {
       "release-type": "simple",
       "component": "release-please",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/research": {
-      "release-type": "simple",
-      "component": "research",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1376,6 +1196,18 @@
         }
       ]
     },
+    "packages/steering-code-economy": {
+      "release-type": "simple",
+      "component": "steering-code-economy",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-data": {
       "release-type": "simple",
       "component": "steering-data",
@@ -1415,6 +1247,18 @@
     "packages/steering-frontend": {
       "release-type": "simple",
       "component": "steering-frontend",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/steering-git-workflow": {
+      "release-type": "simple",
+      "component": "steering-git-workflow",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1556,9 +1400,9 @@
         }
       ]
     },
-    "packages/write-a-skill": {
+    "packages/write-agentic": {
       "release-type": "simple",
-      "component": "write-a-skill",
+      "component": "write-agentic",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

@@ -17,9 +17,9 @@ orchestrator stays lean so its context lasts the whole run.
   of work and **skip the built-in DAG**. Questions the spec agents raise during
   speccing/grilling bubble to you as `ASK` and then to the user.
 - **No framework:** build the default runtime DAG with `graph.py` (below).
-- **Large/uncertain work either way:** delegate a deep planning pass to the
-  read-only `Plan` agent before committing the decomposition; you still own the
-  final graph.
+- **Work spanning >3 tasks with cross-cutting deps, or an unfamiliar subsystem:**
+  delegate a deep planning pass to the read-only `Plan` agent before committing
+  the decomposition; you still own the final graph.
 
 ## Default DAG decomposition
 

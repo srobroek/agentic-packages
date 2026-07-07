@@ -1,0 +1,15 @@
+name: write-agentic
+version: 2.0.0
+description: >-
+  Author or update skills, steering, or agent definitions using standard
+  machine-language templates and a lint script that validates them.
+author: Sjors Robroek
+license: Apache-2.0
+type: skill
+target: all
+includes: auto
+category: agentic-maintenance
+tags:
+  - skill
+  - maintenance
+  - authoring

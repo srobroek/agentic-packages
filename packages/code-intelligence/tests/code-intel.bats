@@ -6,12 +6,10 @@
 setup() {
   SCRIPTS="${BATS_TEST_DIRNAME}/../scripts"
   SUBAGENT="${SCRIPTS}/subagent-context-inject.sh"
-  STEER="${SCRIPTS}/code-discovery-steer.sh"
   REINDEX="${SCRIPTS}/reindex-after-commit.sh"
 
   TESTDIR="$(mktemp -d "${BATS_TMPDIR:-/tmp}/code-intel.XXXXXX")"
 
-  # A private runtime dir for the steer gate.
   RUNTIME="${TESTDIR}/runtime"
   mkdir -p "$RUNTIME"
 
@@ -67,47 +65,6 @@ teardown() {
 }
 
 # ---------------------------------------------------------------------------
-# code-discovery-steer.sh
-# ---------------------------------------------------------------------------
-
-@test "steer: fires once per session then is suppressed" {
-  payload='{"tool_name":"Grep","session_id":"sess-1","tool_input":{"command":"grep foo"}}'
-
-  run env XDG_RUNTIME_DIR="$RUNTIME" bash "$STEER" <<<"$payload"
-  [ "$status" -eq 0 ]
-  echo "$output" | jq . >/dev/null
-  [ -n "$output" ]
-
-  run env XDG_RUNTIME_DIR="$RUNTIME" bash "$STEER" <<<"$payload"
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "steer: gate-uncreatable path does not emit and does not re-fire" {
-  # Point the runtime dir at a path under a regular file so mkdir -p fails.
-  blocker="${TESTDIR}/afile"
-  : >"$blocker"
-  run env XDG_RUNTIME_DIR="$blocker" bash "$STEER" <<<'{"session_id":"s9"}'
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "steer: prune is scoped to the private dir, not all of /tmp" {
-  sibling="${BATS_TMPDIR:-/tmp}/code-discovery-steer-SURVIVOR.$$"
-  : >"$sibling"
-  run env XDG_RUNTIME_DIR="${TESTDIR}/r2" bash "$STEER" <<<'{"session_id":"s2"}'
-  [ "$status" -eq 0 ]
-  [ -f "$sibling" ]
-  rm -f "$sibling"
-}
-
-@test "steer: string-form tool_input does not throw" {
-  run env XDG_RUNTIME_DIR="${TESTDIR}/r3" bash "$STEER" <<<'{"session_id":"s3","tool_input":"grep foo"}'
-  [ "$status" -eq 0 ]
-}
-
-# ---------------------------------------------------------------------------
-# reindex-after-commit.sh -- JSON-arg construction
 # ---------------------------------------------------------------------------
 
 @test "reindex: subagent payload (agent_id present) exits without indexing" {

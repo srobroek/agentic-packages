@@ -15,9 +15,9 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/steering-data#>=1.0.0 <2.0.0
-    - wshobson/agents/plugins/llm-application-dev#main
-    - wshobson/agents/plugins/data-engineering#main
-    - wshobson/agents/plugins/machine-learning-ops#main
-    - wshobson/agents/plugins/database-design#main
-    - wshobson/agents/plugins/database-migrations#main
-    - wshobson/agents/plugins/database-cloud-optimization#main
+    - wshobson/agents/plugins/llm-application-dev#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/data-engineering#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/machine-learning-ops#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/database-design#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/database-migrations#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - wshobson/agents/plugins/database-cloud-optimization#5cc2549a50fc672230efd0a0307e2fd27ffba792

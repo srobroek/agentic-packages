@@ -1,6 +1,6 @@
 ---
 name: secrets-scan
-description: Scan staged changes or the working tree for committed secrets (API keys, tokens, credentials) using gitleaks or trufflehog. Use when the user asks to scan for secrets, check for leaked credentials before committing, audit the diff for keys, or verify nothing sensitive is being committed.
+description: Scan staged changes or working tree for secrets using gitleaks or trufflehog. Use when asked to scan for secrets or check for leaked credentials.
 ---
 
 # Secrets Scan

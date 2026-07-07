@@ -49,15 +49,6 @@ BLOCKED t3
            (b) single-flight dedupe by jti — which is safe here?
   context: src/auth/refresh.rs:40-88; tests/auth/refresh_test.rs
 ```
-The orchestrator spawns a `workflow-advisor`, relays the question, receives its
-answer, then relays it back to the coder:
-```
-to: advisor-t3  summary: "advice: single-flight dedupe"     # advisor → main
-ADVICE t3
-  answer:  Use (b) single-flight keyed by jti.
-  because: refresh runs in multiple worker procs; an in-proc mutex won't serialize them.
-  refs:    guard with the existing jti store.
-```
 ```
 to: coder-t3    summary: "advice on t3: single-flight dedupe"   # main → coder
 ADVICE t3
@@ -99,27 +90,12 @@ to: main   summary: "t3 approved"
 REVIEW t3  verdict: approve  note: both items resolved; delta re-reviewed
 ```
 
-**Handoff to the gatekeeper, then integrate (conflict pushback, then merge)**
+**Handoff to the gatekeeper**
 ```
 to: gatekeeper  summary: "t3 approved, ready to integrate"
 APPROVE t3  branch: coder/t3-auth-middleware  base: main @ 3f9a1c2
 ```
 ```
-to: coder-t3  summary: "t3 conflicts with t5 on routes"
-CONFLICT t3  with: t5  files: src/api/routes.rs
-  need: rebase on updated main, re-verify, push, re-report.
-```
-```
 to: main   summary: "t3 merged"
 MERGED t3  sha: 9c8b7a6  base: main  verify_after_merge: green
 ```
-
-**Question to the human**
-```
-to: main   summary: "human decision needed on t3 scope"
-ASK t3
-  question: Refactor also removes deprecated /auth/legacy. Delete now, or keep behind a flag?
-  waiting:  coder-t3 is idle pending your answer
-```
-The orchestrator surfaces `ASK` to the user, holds `coder-t3`, then forwards the
-answer (`FIX t3 …`) or lets the user message `coder-t3` directly.

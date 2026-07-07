@@ -31,6 +31,3 @@ Order the scripts implement (first available package manager wins):
 auto-fixable lint rules. Type errors need manual fixes. Re-run `check.sh`
 after `fix.sh`.
 
-## References
-
-When making API design decisions or choosing between framework/library alternatives, LOAD references/idioms.md.

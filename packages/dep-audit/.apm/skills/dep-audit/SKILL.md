@@ -1,6 +1,6 @@
 ---
 name: dep-audit
-description: Scan the project's dependencies for known CVEs using each ecosystem's native vulnerability scanner and report findings by severity. Use when the user asks to audit dependencies, check for vulnerable packages, run a CVE scan, or do a supply-chain / dependency security check. Read-only; never auto-fixes.
+description: Scan dependencies for CVEs using each ecosystem's native scanner and report findings by severity. Use when asked to audit dependencies or check for vulnerable packages.
 ---
 
 # Dependency CVE Audit

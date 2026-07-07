@@ -1,6 +1,6 @@
 ---
 name: web-fetch
-description: Retrieve current or URL-specific information from the web with source-aware tool routing. Use when the user asks to fetch, open, browse, cite, verify online, inspect a URL, or answer a question whose facts may have changed.
+description: Retrieve current or URL-specific information from the web with source-aware tool routing. Use when asked to fetch, browse, cite, verify online, or inspect a URL.
 ---
 
 # Web Fetch
@@ -34,10 +34,8 @@ optional: when one is not installed, use the next-best row for that need (CLI,
   bot block, empty shell, client-rendered page, or missing target content.
 - Quote sparingly. Summarize only the parts needed for the user question and
   include source links or file/URL identifiers.
-- Do not use stale model memory for facts that are likely to have changed when
-  fetching is available.
-- Do not dump raw page content, scrape unrelated pages, or broaden a URL task
-  into open-ended research unless the user asks for that.
+- Do not use stale model memory for facts with a version, date, availability, or pricing dependency when fetching is available.
+- Do not dump raw page content, scrape unrelated pages, or broaden a URL task into open-ended research unless the user asks for that.
 
 ## References
 

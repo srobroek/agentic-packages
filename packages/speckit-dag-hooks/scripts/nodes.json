@@ -1,21 +1,12 @@
 {
   "agent-assign-assign": {
     "post": {
-      "going_to": [
-        "/speckit.agent-assign.validate (default)"
-      ],
       "postconditions": [
         "`specs/<feat>/agent-assignments.yml`"
       ],
       "title": "/speckit.agent-assign.assign -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.checkpoint.commit -- after the mid-cycle checkpoint that follows taskstoissues",
-        "/speckit.agent-assign.validate -- if validation surfaces gaps",
-        "/speckit.implement -- deprecated -- use the agent-assign flow instead",
-        "/speckit.converge (default -- implement the appended `## Phase N: Convergence` tasks via the agent-assign flow)"
-      ],
       "context": [
         "Scans `.claude/agents/` and `~/.claude/agents/` and matches tasks to specialised sub-agents. Review the proposed assignments before validate."
       ],
@@ -31,21 +22,14 @@
       "context": [
         "Orchestrator review gate: before accepting a task as done, review the ACTUAL code changes (git diff) against the task in `tasks.md` and the `spec.md`, not just the agent's `task-<n>.report.md`. Self-reports describe intent, not necessarily what landed.",
         "Keep each task's sub-agent alive after it reports. If the work falls short, `SendMessage` specific corrections to the SAME agent so it fixes only those issues with full context -- do not silently accept incomplete work or re-delegate from scratch. This holds even when execution ran as a parallel Workflow: review each agent's emitted diff before its worktree is reconciled, and dismiss an agent only once its task passes review.",
-        "Unresolved gaps route forward to `/speckit.verify-tasks` (phantom-completion check) and `/speckit.fix-findings`."
-      ],
-      "going_to": [
-        "/speckit.verify-tasks (default -- confirm every task actually shipped code)",
-        "/speckit.verify -- only if user explicitly skips verify-tasks"
+        "Unresolved gaps route forward to `/speckit.fix-findings` after the verify agents report."
       ],
       "postconditions": [
-        "code changes per task + `specs/<feat>/task-<n>.report.md` per task"
+        "code changes per task + `specs/<feat>/task-<n>.report.md` per task + `specs/<feat>/verify-tasks-report.md` + `specs/<feat>/verify-report.md`"
       ],
       "title": "/speckit.agent-assign.execute -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.agent-assign.validate (default)"
-      ],
       "context": [
         "Replaces the deprecated `/speckit.implement` with per-task sub-agent execution. Each agent runs in its own context.",
         "Claude turbo-execute (dynamic workflows only): you MAY run per-task execution as one Workflow instead of invoking each agent serially; if workflows are unavailable or the user declines, fall back to serial execution (identical result, slower).",
@@ -54,7 +38,7 @@
         "Per level, `parallel()` one `agent()` per task with `agentType` = the agent in `agent-assignments.yml` and `isolation: 'worktree'`; pass task IDs, spec/plan excerpts, scope, and verification commands in the prompt.",
         "Pipeline each task execute -> its own verify in one stage; emit `specs/<feat>/task-<n>.report.md`. Barrier between dependency levels only.",
         "`model`/`effort` default to each agent's definition; override only at the `agent()` call when a task clearly needs it. All `agentType`s must already exist in `.claude/agents/` -- reuse, do not define new agents.",
-        "Checkpoint after the workflow completes, then continue to `/speckit.verify-tasks`."
+        "After the workflow completes: (1) commit all task reports (conventional commit), then (2) spawn `speckit-verify` with mode: tasks -- it must write `specs/<feat>/verify-tasks-report.md`. Then spawn `speckit-verify` with mode: requirements -- it must write `specs/<feat>/verify-report.md`. Both agents run in fresh context with Opus/xhigh."
       ],
       "hard_missing": [
         "specs/<feat>/tasks.md",
@@ -68,19 +52,12 @@
   },
   "agent-assign-validate": {
     "post": {
-      "going_to": [
-        "/speckit.agent-assign.execute (default)",
-        "/speckit.agent-assign.assign -- if validation surfaces gaps"
-      ],
       "postconditions": [
         "(no artefact -- read-only validation; report printed to stdout)"
       ],
       "title": "/speckit.agent-assign.validate -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.agent-assign.assign (default)"
-      ],
       "context": [
         "Validates that referenced agents actually exist, that every task has an assignment, and that phase ordering is consistent. Failures route back to assign."
       ],
@@ -93,20 +70,12 @@
   },
   "analyze": {
     "post": {
-      "going_to": [
-        "/speckit.taskstoissues (default)"
-      ],
       "postconditions": [
         "`specs/<feat>/analysis.md`"
       ],
       "title": "/speckit.analyze -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.checklist -- only if user explicitly skips critique + security-review",
-        "/speckit.critique.run (default -- after security-review also completes)",
-        "/speckit.security-review (default -- pre-impl -- after critique also completes)"
-      ],
       "context": [
         "Surfaces risks, missing tasks, and over-broad tasks. Output feeds taskstoissues for issue tracking."
       ],
@@ -117,114 +86,14 @@
       "title": "/speckit.analyze -- before you run this"
     }
   },
-  "archive": {
-    "post": {
-      "going_to": [
-        "(terminal -- feature shipped)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/` moved to `specs/archived/<feat>/`"
-      ],
-      "title": "/speckit.archive.run -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.checkpoint.commit -- after the final checkpoint that follows retro.run"
-      ],
-      "context": [
-        "Terminal step. Moves `specs/<feat>/` to `specs/archived/<feat>/`. Don't archive features with unresolved findings."
-      ],
-      "hard_missing": [
-        "specs/<feat>/verify-report.md",
-        "specs/<feat>/review-report.md"
-      ],
-      "soft": [],
-      "title": "/speckit.archive.run -- before you run this"
-    }
-  },
-  "bugfix-patch": {
-    "post": {
-      "going_to": [
-        "/speckit.verify -- re-verify if the fix touched implementation"
-      ],
-      "title": "/speckit.bugfix.patch -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.bugfix.verify (default)"
-      ],
-      "context": [
-        "Apply the fix; rerun the failing test to confirm."
-      ],
-      "hard_missing": [
-        "specs/<feat>/bug-*.md"
-      ],
-      "soft": [],
-      "title": "/speckit.bugfix.patch -- before you run this"
-    }
-  },
-  "bugfix-report": {
-    "post": {
-      "going_to": [
-        "/speckit.bugfix.verify (default)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/bug-<n>.md`"
-      ],
-      "title": "/speckit.bugfix.report -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.verify -- if verify surfaces gaps that look like bugs rather than spec violations",
-        "/speckit.verify -- if a verification failure triages as a bug rather than a spec gap",
-        "(bug intake -- external signal)"
-      ],
-      "context": [
-        "If the underlying issue is a spec gap (not a bug), exit to /speckit.refine.update instead."
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.bugfix.report -- before you run this"
-    }
-  },
-  "bugfix-verify": {
-    "post": {
-      "going_to": [
-        "/speckit.bugfix.patch (default)"
-      ],
-      "title": "/speckit.bugfix.verify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.bugfix.report (default)"
-      ],
-      "context": [
-        "Reproduce the bug with a failing test before patching."
-      ],
-      "hard_missing": [
-        "specs/<feat>/bug-*.md"
-      ],
-      "soft": [],
-      "title": "/speckit.bugfix.verify -- before you run this"
-    }
-  },
   "checklist": {
     "post": {
-      "going_to": [
-        "/speckit.critique.run (default -- parallel with security-review -- review plan/tasks before implementation)",
-        "/speckit.security-review (mandatory -- pre-impl -- runs in parallel with critique.run)",
-        "/speckit.analyze -- only if user explicitly skips critique + security-review"
-      ],
       "postconditions": [
         "`specs/<feat>/checklist.md`"
       ],
       "title": "/speckit.checklist -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.tasks (default -- requirements-quality gate over spec + plan + tasks)"
-      ],
       "context": [
         "Requirements-quality gate (matches upstream spec-kit ordering): validates requirements completeness, clarity, and consistency against the full spec + plan + tasks before the critique/security-review pass."
       ],
@@ -239,53 +108,14 @@
       "title": "/speckit.checklist -- before you run this"
     }
   },
-  "checkpoint-commit": {
-    "post": {
-      "conditional": [
-        "After `checkpoint.commit`, drift handling moves from `/speckit.refine.update` / `/speckit.iterate.define` to `/speckit.reconcile.run`."
-      ],
-      "going_to": [
-        "/speckit.agent-assign.assign -- after the mid-cycle checkpoint that follows taskstoissues",
-        "/speckit.archive.run -- after the final checkpoint that follows retro.run",
-        "(next phase per workflow)"
-      ],
-      "postconditions": [
-        "git commit (+ tag for the final checkpoint)"
-      ],
-      "title": "/speckit.checkpoint.commit -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.taskstoissues (default -- lock in the spec/plan/tasks before execution)",
-        "/speckit.retro.run (default -- final checkpoint)",
-        "(any milestone where committing is appropriate)"
-      ],
-      "context": [
-        "Mid-cycle checkpoints lock in spec/plan/tasks before execution. The final checkpoint locks in the verified, reviewed, retroed feature before archive."
-      ],
-      "hard_missing": [
-        "specs/<feat>/spec.md"
-      ],
-      "soft": [
-        "working tree contains changes worth committing"
-      ],
-      "title": "/speckit.checkpoint.commit -- before you run this"
-    }
-  },
   "clarify": {
     "post": {
-      "going_to": [
-        "/speckit.plan (default)"
-      ],
       "postconditions": [
         "`specs/<feat>/clarifications.md`"
       ],
       "title": "/speckit.clarify -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.specify (default)"
-      ],
       "context": [
         "Use clarification to resolve ambiguities the spec author left open. Skip if the spec is already unambiguous."
       ],
@@ -296,121 +126,13 @@
       "title": "/speckit.clarify -- before you run this"
     }
   },
-  "cleanup": {
-    "post": {
-      "going_to": [
-        "/speckit.sync.analyze (default -- proceed to drift check)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/cleanup-report.md`"
-      ],
-      "title": "/speckit.cleanup -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.security-review -- post-impl, clean, after code-review also completes",
-        "/speckit.code-review (default -- clean, after security-review also completes)"
-      ],
-      "context": [
-        "Post-impl hygiene: dead-code removal, unused imports, debug statements. Our override enables aggressive dead-code removal."
-      ],
-      "soft": [
-        "implementation diff present"
-      ],
-      "title": "/speckit.cleanup -- before you run this"
-    }
-  },
-  "code-review": {
-    "post": {
-      "going_to": [
-        "/speckit.cleanup (default -- clean, after security-review also completes)",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "postconditions": [
-        "`specs/<feat>/code-review-report.md`"
-      ],
-      "title": "/speckit.code-review -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.qa.run (default -- clean -- runs in parallel with security-review)"
-      ],
-      "context": [
-        "General-purpose code review: correctness, regressions, security risks, missing tests, performance, maintainability. Complements the spec-aware review.run. Run the /code-review skill as a subagent against the current branch diff. Can run in parallel with /speckit.security-review.",
-        "Spawn the review subagent with an explicit stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to clarify findings.' Triage the findings before routing to fix-findings."
-      ],
-      "soft": [
-        "implementation diff present"
-      ],
-      "title": "/speckit.code-review -- before you run this"
-    }
-  },
-  "conduct": {
-    "post": {
-      "conditional": [
-        "After conduct completes AND the produced artefact passes your review, the regular DAG resumes -- pick the next node based on which artefact you just produced."
-      ],
-      "context": [
-        "Orchestrator review gate: do NOT dismiss the sub-agent the moment it reports. Review the produced artefact(s) first. If they fall short, `SendMessage` the specific issues to the SAME agent so it fixes only those with full context. Dismiss only once the artefact passes your review."
-      ],
-      "going_to": [
-        "/speckit.conduct.run -- loop -- when review finds issues in the produced artefact",
-        "(return to surrounding phase; conduct does not advance the DAG)"
-      ],
-      "postconditions": [
-        "(artefact(s) of the phase that was conducted)"
-      ],
-      "title": "/speckit.conduct.run -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.conduct.run -- loop -- when review finds issues in the produced artefact",
-        "(any phase -- single-phase executor)"
-      ],
-      "context": [
-        "Executes one speckit phase via a sub-agent. Lighter-weight than running a full workflow; use when you want one phase done in isolation.",
-        "Spawn the sub-agent with a stay-alive instruction: 'produce the artefact, report it, and wait for my review -- do not end your turn; I may SendMessage corrections.'"
-      ],
-      "soft": [
-        "a spec/plan/tasks artefact appropriate to the phase being conducted"
-      ],
-      "title": "/speckit.conduct.run -- before you run this"
-    }
-  },
-  "constitution": {
-    "post": {
-      "conditional": [
-        "If you started here from an existing project, confirm `.specify/memory/architecture_constitution.md` and `.specify/memory/DECISIONS.md` reflect reality before specifying features."
-      ],
-      "going_to": [
-        "/speckit.specify (default -- proceed to write the spec)"
-      ],
-      "postconditions": [
-        "`.specify/memory/constitution.md` (filled in)"
-      ],
-      "title": "/speckit.constitution -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(project bootstrap)"
-      ],
-      "context": [
-        "The constitution is the durable charter for this project. Light edits only after first feature; major rewrites should be rare and noted in DECISIONS.md."
-      ],
-      "soft": [
-        "`.specify/memory/constitution.md` (template will exist; you're filling it in)"
-      ],
-      "title": "/speckit.constitution -- before you run this"
-    }
-  },
   "converge": {
     "post": {
       "conditional": [
         "If converge reported a clean result (tasks.md byte-for-byte unchanged, no Convergence phase appended), there is no new work -- resume the Phase 3 QA step you came from instead of re-entering implementation."
       ],
-      "going_to": [
-        "/speckit.agent-assign.assign (default -- implement the appended `## Phase N: Convergence` tasks via the agent-assign flow)",
-        "/speckit.iterate.define -- only if the gap is actually a scope/intent change, not unbuilt work"
+      "context": [
+        "Next: implement the appended Convergence tasks via /speckit.agent-assign.assign → validate → execute. Do NOT use the hard-blocked /speckit.implement."
       ],
       "postconditions": [
         "`specs/<feat>/tasks.md` with an appended `## Phase N: Convergence` section (only when gaps were found; unchanged otherwise)"
@@ -418,16 +140,12 @@
       "title": "/speckit.converge -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.verify-tasks -- phantom completions -- append the real implementation work as traceable tasks",
-        "/speckit.verify -- if verify finds unmet FR/SC that is unbuilt work, not a bug or scope change",
-        "/speckit.sync.analyze -- drift: the spec calls for work the code lacks"
-      ],
       "context": [
         "Closes the gap between spec/plan/tasks intent and what the code actually implements. Reads spec.md + plan.md + tasks.md (constitution as governing constraints), assesses the present state of the code, and APPENDS each piece of remaining work as a new traceable task under a `## Phase N: Convergence` heading.",
         "APPEND-ONLY: never rewrites/renumbers/deletes existing tasks, never edits spec.md/plan.md, never touches application code. If the code already satisfies everything, tasks.md is left byte-for-byte unchanged and the result is reported clean.",
         "Distinct from iterate (scope/intent CHANGE -- edits spec/plan), bugfix (a defect in built code), and fix-findings (fixes review/qa findings). Use converge only when the spec is right but the implementation is incomplete.",
-        "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here)."
+        "Must run only after implementation has run on the current tasks.md. The appended tasks are then completed via the agent-assign flow (NOT /speckit.implement, which is hard-blocked here).",
+        "If the verify agents (mode: tasks or mode: requirements) surfaced defects in built code rather than unbuilt work, use the speckit-bugfix skill's triage→diagnose→scope→fix→verify loop; do NOT use converge for defect fixes."
       ],
       "hard_missing": [
         "specs/<feat>/spec.md",
@@ -440,42 +158,14 @@
       "title": "/speckit.converge -- before you run this"
     }
   },
-  "critique-critique-template": {
-    "post": {
-      "going_to": [
-        "(utility -- not invoked directly)"
-      ],
-      "title": "/speckit.critique.critique-template -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(utility -- not invoked directly in the main flow)"
-      ],
-      "context": [
-        "Internal template helper. Don't call from a feature cycle."
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.critique.critique-template -- before you run this"
-    }
-  },
   "critique-run": {
     "post": {
-      "going_to": [
-        "/speckit.analyze (default -- after security-review also completes)",
-        "/speckit.refine.update -- if critique reveals plan-level rework"
-      ],
       "postconditions": [
         "`specs/<feat>/critique-report.md`"
       ],
       "title": "/speckit.critique.run -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.plan -- only if user explicitly requests critique before tasks",
-        "/speckit.checklist (default -- parallel with security-review -- review plan/tasks before implementation)"
-      ],
       "context": [
         "Dual-lens review (product strategy + engineering risk). Findings should be triaged into plan-edits vs. defer-to-tasks before moving on. Runs in parallel with `/speckit.security-review`."
       ],
@@ -487,182 +177,14 @@
       "title": "/speckit.critique.run -- before you run this"
     }
   },
-  "doctor-check": {
-    "post": {
-      "conditional": [
-        "If doctor flags missing extensions or stale workflows, run `speckit-upgrade-project` (fish) to refresh `.specify/` and `specify extension update` to refresh extensions."
-      ],
-      "going_to": [
-        "(return to whatever phase you were in)"
-      ],
-      "postconditions": [
-        "(no artefact; report printed to stdout)"
-      ],
-      "title": "/speckit.doctor.check -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(anytime -- advisory health check)"
-      ],
-      "context": [
-        "Pure diagnostic. Does not mutate project state. Safe from any phase."
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.doctor.check -- before you run this"
-    }
-  },
-  "fix-findings": {
-    "post": {
-      "context": [
-        "Orchestrator review gate: do NOT dismiss the fixing sub-agent the moment it reports. Review the actual code changes against the original findings first. If a fix is incomplete or introduced new issues, `SendMessage` the specific problems to the SAME agent so it corrects only those with full context. Dismiss only once the fixes pass your review."
-      ],
-      "going_to": [
-        "/speckit.fix-findings -- loop -- when review shows the fix is incomplete or regressed",
-        "/speckit.review.run -- loop until clean, after the fixes pass review",
-        "/speckit.verify -- re-verify after substantial fixes"
-      ],
-      "title": "/speckit.fix-findings -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.security-review -- post-impl, if security findings",
-        "/speckit.review.run -- if findings, after triage",
-        "/speckit.review.code -- if findings",
-        "/speckit.review.comments -- if findings",
-        "/speckit.review.errors -- if findings",
-        "/speckit.review.simplify -- if findings",
-        "/speckit.review.tests -- if findings",
-        "/speckit.review.types -- if findings",
-        "/speckit.qa.run -- failed",
-        "/speckit.code-review -- if findings",
-        "/speckit.fix-findings -- loop -- when review shows the fix is incomplete or regressed"
-      ],
-      "context": [
-        "Automated analyze-fix-reanalyze loop bounded by `max_iterations` (default 10 in our override).",
-        "When you spawn the fixing sub-agent, instruct it to stay alive after reporting: 'apply the fixes, report what you changed, and wait for my review -- do not end your turn; I may SendMessage corrections.'"
-      ],
-      "soft": [
-        "`specs/<feat>/review-report.md` or `qa-report.md` with findings"
-      ],
-      "title": "/speckit.fix-findings -- before you run this"
-    }
-  },
-  "fleet": {
-    "post": {
-      "going_to": [
-        "/speckit.fleet.review (default)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/fleet-state.md`"
-      ],
-      "title": "/speckit.fleet.run -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(orchestration entry -- running multiple speckit phases in parallel)"
-      ],
-      "context": [
-        "Human-in-the-loop gates across all SpecKit phases. Our override pins primary=opus / review=sonnet and caps concurrency at 2."
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.fleet.run -- before you run this"
-    }
-  },
-  "fleet-review": {
-    "post": {
-      "going_to": [
-        "(downstream gates as defined by fleet config)"
-      ],
-      "title": "/speckit.fleet.review -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.fleet.run (default)"
-      ],
-      "hard_missing": [
-        "specs/<feat>/fleet-state.md"
-      ],
-      "soft": [],
-      "title": "/speckit.fleet.review -- before you run this"
-    }
-  },
-  "github-issues-import": {
-    "post": {
-      "going_to": [
-        "/speckit.specify -- treat imported issue as feature seed",
-        "/speckit.plan -- if the issue is well-defined enough to skip specify"
-      ],
-      "postconditions": [
-        "`specs/<feat>/imported-issues.md`"
-      ],
-      "title": "/speckit.github-issues.import -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(new project with existing GitHub issues to ingest)"
-      ],
-      "context": [
-        "Imports issues into spec scaffolding so brownfield projects don't lose existing tracker context."
-      ],
-      "soft": [
-        "gh CLI authenticated; repo configured in github-issues config"
-      ],
-      "title": "/speckit.github-issues.import -- before you run this"
-    }
-  },
-  "github-issues-link": {
-    "post": {
-      "going_to": [
-        "(return)"
-      ],
-      "title": "/speckit.github-issues.link -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(post-/speckit.tasks -- link tasks to issues)"
-      ],
-      "soft": [
-        "specs/<feat>/issue-map.md"
-      ],
-      "title": "/speckit.github-issues.link -- before you run this"
-    }
-  },
-  "github-issues-sync": {
-    "post": {
-      "going_to": [
-        "(return -- advisory)"
-      ],
-      "title": "/speckit.github-issues.sync -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(mid-cycle -- keep issues in sync with tasks)"
-      ],
-      "soft": [
-        "gh CLI authenticated"
-      ],
-      "title": "/speckit.github-issues.sync -- before you run this"
-    }
-  },
   "implement": {
     "post": {
-      "going_to": [
-        "/speckit.agent-assign.assign -- deprecated -- use the agent-assign flow instead",
-        "(this command is blocked at the hook layer; the dispatcher's HARD-DEPRECATED check returns a block decision)"
-      ],
       "postconditions": [
         "(invocation blocked)"
       ],
       "title": "/speckit.implement -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "(legacy callers -- this command is no longer the implementation path in this project)"
-      ],
       "context": [
         "The agent-assign extension routes each task to a specialised sub-agent instead of running implementation in one generalist context. Benchmarks show meaningful quality gains; we've made it the project default."
       ],
@@ -678,10 +200,6 @@
       "conditional": [
         "At each downstream stage you re-enter, confirm the artefact is still valid or update it. Do not skip stages."
       ],
-      "going_to": [
-        "/speckit.specify (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage)",
-        "/speckit.roadmap.write (mandatory -- re-sync the roadmap entry to the iterated spec/plan/tasks)"
-      ],
       "postconditions": [
         "spec/plan/tasks updated per the iteration",
         "the `/speckit.roadmap.write` entry for this feature is back in sync with the iterated spec/plan/tasks"
@@ -689,9 +207,6 @@
       "title": "/speckit.iterate.apply -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.iterate.define (default)"
-      ],
       "context": [
         "Applies the iteration intent to spec + plan + tasks. After this, re-enter at /speckit.specify (mandatory) and walk forward through every downstream stage."
       ],
@@ -704,20 +219,12 @@
   },
   "iterate-define": {
     "post": {
-      "going_to": [
-        "/speckit.iterate.apply (default)"
-      ],
       "postconditions": [
         "`specs/<feat>/pending-iteration.md`"
       ],
       "title": "/speckit.iterate.define -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.converge -- only if the gap is actually a scope/intent change, not unbuilt work",
-        "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.analyze - /speckit.taskstoissues",
-        "(any phase before /speckit.checkpoint.commit)"
-      ],
       "context": [
         "Iterate is for SCOPE / INTENT pivots -- different from refine, which handles incremental edits. Capture the iteration intent here, then apply."
       ],
@@ -730,23 +237,15 @@
   },
   "plan": {
     "post": {
-      "going_to": [
-        "/speckit.tasks (default)",
-        "/speckit.critique.run -- only if user explicitly requests critique before tasks"
-      ],
       "postconditions": [
         "`specs/<feat>/plan.md`"
       ],
       "title": "/speckit.plan -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.clarify (default)",
-        "/speckit.github-issues.import -- if the issue is well-defined enough to skip specify"
-      ],
       "context": [
         "Full SpecKit projects keep `.specify/` workflow assets separate from durable project docs in `docs/`.",
-        "If `plan.md` already exists, use `/speckit.refine.update` to amend rather than re-planning from scratch."
+        "If `plan.md` already exists, use `/speckit.iterate.define` to scope a change rather than re-planning from scratch."
       ],
       "hard_exists": [
         "specs/<feat>/plan.md"
@@ -760,36 +259,14 @@
       "title": "/speckit.plan -- before you run this"
     }
   },
-  "qa-qa-template": {
-    "post": {
-      "going_to": [
-        "(utility -- not invoked directly)"
-      ],
-      "title": "/speckit.qa.qa-template -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(utility)"
-      ],
-      "title": "/speckit.qa.qa-template -- before you run this"
-    }
-  },
   "qa-run": {
     "post": {
-      "going_to": [
-        "/speckit.code-review (default -- clean -- runs in parallel with security-review)",
-        "/speckit.security-review (mandatory -- post-impl -- runs in parallel with code-review)",
-        "/speckit.fix-findings -- failed"
-      ],
       "postconditions": [
         "`specs/<feat>/qa-report.md`"
       ],
       "title": "/speckit.qa.run -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.review.run (default -- clean)"
-      ],
       "context": [
         "Systematic QA: browser-driven or CLI-based acceptance validation. Heavier than verify; reserved for features that need real-world exercise."
       ],
@@ -800,254 +277,10 @@
       "title": "/speckit.qa.run -- before you run this"
     }
   },
-  "reconcile": {
-    "post": {
-      "going_to": [
-        "/speckit.refine.update -- if the spec needs structured edits to catch up",
-        "/speckit.sync.analyze -- to confirm reconciliation closed the drift"
-      ],
-      "postconditions": [
-        "`specs/<feat>/reconcile-report.md`"
-      ],
-      "title": "/speckit.reconcile.run -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.sync.conflicts -- if conflicts need active resolution",
-        "/speckit.refine.update -- post-checkpoint drift handling",
-        "(drift detected -- any post-checkpoint phase where spec <-> implementation diverged)"
-      ],
-      "context": [
-        "After /speckit.checkpoint.commit, refine and iterate are no longer appropriate -- reconcile is the drift-handling tool because it updates the spec to match the as-shipped implementation."
-      ],
-      "soft": [
-        "specs/<feat>/sync-report.md"
-      ],
-      "title": "/speckit.reconcile.run -- before you run this"
-    }
-  },
-  "refine-diff": {
-    "post": {
-      "going_to": [
-        "/speckit.refine.propagate (default)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/refine-diff.md`"
-      ],
-      "title": "/speckit.refine.diff -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.refine.update (default)"
-      ],
-      "context": [
-        "Generates a structured diff of what refine.update changed so propagate can apply downstream edits."
-      ],
-      "soft": [
-        "artefact(s) that just changed"
-      ],
-      "title": "/speckit.refine.diff -- before you run this"
-    }
-  },
-  "refine-propagate": {
-    "post": {
-      "going_to": [
-        "/speckit.refine.status (default)"
-      ],
-      "postconditions": [
-        "downstream artefacts updated"
-      ],
-      "title": "/speckit.refine.propagate -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.refine.diff (default)"
-      ],
-      "context": [
-        "Mechanically pushes the diff into downstream artefacts (plan, tasks, issues). Don't accept blindly -- review propagated edits."
-      ],
-      "hard_missing": [
-        "specs/<feat>/refine-diff.md"
-      ],
-      "soft": [],
-      "title": "/speckit.refine.propagate -- before you run this"
-    }
-  },
-  "refine-status": {
-    "post": {
-      "conditional": [
-        "At each downstream stage you re-enter, confirm the artefact is still valid or update it. Do not skip stages -- an upstream change can invalidate any of them."
-      ],
-      "going_to": [
-        "/speckit.specify (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage to assess impact)"
-      ],
-      "postconditions": [
-        "(no artefact; status printed)"
-      ],
-      "title": "/speckit.refine.status -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.refine.propagate (default)"
-      ],
-      "context": [
-        "Final step of the refine loop. After this, re-enter at /speckit.specify and walk briefly through every downstream stage to confirm artefacts still hold up."
-      ],
-      "soft": [
-        "(none -- read-only status)"
-      ],
-      "title": "/speckit.refine.status -- before you run this"
-    }
-  },
-  "refine-update": {
-    "post": {
-      "conditional": [
-        "If the change touches more than two phases, this is probably an iterate rather than a refine -- consider exiting the refine loop."
-      ],
-      "going_to": [
-        "/speckit.refine.diff (default)",
-        "/speckit.reconcile.run -- post-checkpoint drift handling"
-      ],
-      "postconditions": [
-        "the targeted artefact(s) updated"
-      ],
-      "title": "/speckit.refine.update -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.critique.run -- if critique reveals plan-level rework",
-        "/speckit.reconcile.run -- if the spec needs structured edits to catch up",
-        "/speckit.specify - /speckit.clarify - /speckit.plan - /speckit.tasks - /speckit.checklist - /speckit.critique.run - /speckit.analyze - /speckit.taskstoissues",
-        "(any phase before /speckit.checkpoint.commit)"
-      ],
-      "context": [
-        "Refine is for INCREMENTAL edits to existing artefacts. If the change is actually a scope pivot, exit refine and run `/speckit.iterate.define` or specify a new feature.",
-        "After `/speckit.checkpoint.commit`, drift handling moves to `/speckit.reconcile.run` instead."
-      ],
-      "hard_missing": [
-        "specs/<feat>/spec.md"
-      ],
-      "soft": [],
-      "title": "/speckit.refine.update -- before you run this"
-    }
-  },
-  "retro-retro-template": {
-    "post": {
-      "going_to": [
-        "(utility -- not invoked directly)"
-      ],
-      "title": "/speckit.retro.retro-template -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(utility)"
-      ],
-      "title": "/speckit.retro.retro-template -- before you run this"
-    }
-  },
-  "retro-run": {
-    "post": {
-      "going_to": [
-        "/speckit.checkpoint.commit (default -- final checkpoint)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/retro-report.md`"
-      ],
-      "title": "/speckit.retro.run -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.sync.conflicts (default)"
-      ],
-      "context": [
-        "Sprint-style retro: metrics, spec accuracy, improvements. Feeds DECISIONS.md if the team accepts changes."
-      ],
-      "soft": [
-        "specs/<feat>/sync-report.md"
-      ],
-      "title": "/speckit.retro.run -- before you run this"
-    }
-  },
-  "review-code": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.code -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation for a focused code review)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "implementation diff exists"
-      ],
-      "title": "/speckit.review.code -- before you run this"
-    }
-  },
-  "review-comments": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.comments -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "implementation diff"
-      ],
-      "title": "/speckit.review.comments -- before you run this"
-    }
-  },
-  "review-errors": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.errors -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "implementation diff"
-      ],
-      "title": "/speckit.review.errors -- before you run this"
-    }
-  },
   "review-run": {
     "post": {
       "context": [
         "Orchestrator review gate: triage the review sub-agents' findings before routing to fix-findings -- keep each reviewer alive and `SendMessage` to clarify ambiguous or low-confidence findings rather than forwarding them wholesale. Dismiss a reviewer only once you have triaged its findings."
-      ],
-      "going_to": [
-        "/speckit.fix-findings -- if findings, after triage",
-        "/speckit.qa.run (default -- clean)",
-        "/speckit.review.code -- orchestrated granular review variant",
-        "/speckit.review.comments -- orchestrated granular review variant",
-        "/speckit.review.errors -- orchestrated granular review variant",
-        "/speckit.review.simplify -- orchestrated granular review variant",
-        "/speckit.review.tests -- orchestrated granular review variant",
-        "/speckit.review.types -- orchestrated granular review variant"
       ],
       "postconditions": [
         "`specs/<feat>/review-report.md`"
@@ -1055,16 +288,6 @@
       "title": "/speckit.review.run -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.verify (default)",
-        "/speckit.review.code -- re-aggregate after the granular pass",
-        "/speckit.review.comments -- re-aggregate after the granular pass",
-        "/speckit.review.errors -- re-aggregate after the granular pass",
-        "/speckit.review.simplify -- re-aggregate after the granular pass",
-        "/speckit.review.tests -- re-aggregate after the granular pass",
-        "/speckit.review.types -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- loop until clean, after the fixes pass review"
-      ],
       "context": [
         "Orchestrates the granular review.{code,comments,tests,errors,types,simplify} variants. Findings feed fix-findings.",
         "Spawn each review sub-agent with a stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to ask you to clarify or reassess a finding.'"
@@ -1076,223 +299,14 @@
       "title": "/speckit.review.run -- before you run this"
     }
   },
-  "review-simplify": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.simplify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "implementation diff"
-      ],
-      "title": "/speckit.review.simplify -- before you run this"
-    }
-  },
-  "review-tests": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.tests -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "test files in the diff"
-      ],
-      "title": "/speckit.review.tests -- before you run this"
-    }
-  },
-  "review-types": {
-    "post": {
-      "going_to": [
-        "/speckit.review.run -- re-aggregate after the granular pass",
-        "/speckit.fix-findings -- if findings"
-      ],
-      "title": "/speckit.review.types -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.review.run -- orchestrated granular review variant",
-        "(direct invocation)"
-      ],
-      "context": [
-        "If spawned as a sub-agent, stay alive after reporting findings and wait for the orchestrator's review -- do not end your turn; it may SendMessage to ask you to clarify or reassess a finding."
-      ],
-      "soft": [
-        "typed source in the diff"
-      ],
-      "title": "/speckit.review.types -- before you run this"
-    }
-  },
-  "roadmap-write": {
-    "post": {
-      "going_to": [
-        "(return -- roadmap synced; resume the iterate re-entry walk at /speckit.specify)"
-      ],
-      "postconditions": [
-        "the project roadmap entry for `<feat>` updated to match the current spec/plan/tasks"
-      ],
-      "title": "/speckit.roadmap.write -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.iterate.apply (mandatory -- re-sync the roadmap entry to the iterated spec/plan/tasks)"
-      ],
-      "context": [
-        "Records / refreshes this feature's entry in the project roadmap so the roadmap reflects the current spec/plan/tasks. Run it after an iteration re-scopes the feature to keep the roadmap entry in sync."
-      ],
-      "soft": [
-        "specs/<feat>/spec.md"
-      ],
-      "title": "/speckit.roadmap.write -- before you run this"
-    }
-  },
-  "security-review": {
-    "post": {
-      "going_to": [
-        "/speckit.analyze (default -- pre-impl -- after critique also completes)",
-        "/speckit.fix-findings -- post-impl, if security findings",
-        "/speckit.cleanup -- post-impl, clean, after code-review also completes"
-      ],
-      "postconditions": [
-        "`specs/<feat>/security-review-report.md`"
-      ],
-      "title": "/speckit.security-review -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.checklist (mandatory -- pre-impl -- runs in parallel with critique.run)",
-        "/speckit.qa.run (mandatory -- post-impl -- runs in parallel with code-review)"
-      ],
-      "context": [
-        "Dedicated security audit. In pre-impl, reviews plan and tasks for security risks. In post-impl, reviews the actual code diff. Run the /security-review skill as a subagent. In pre-impl, runs in parallel with /speckit.critique.run. In post-impl, runs in parallel with /speckit.code-review.",
-        "Spawn the review subagent with an explicit stay-alive instruction: 'report your findings and wait for my review -- do not end your turn; I may SendMessage to clarify findings.' Triage the findings before routing to fix-findings."
-      ],
-      "soft": [
-        "implementation diff present (post-impl path)"
-      ],
-      "title": "/speckit.security-review -- before you run this"
-    }
-  },
-  "specify": {
-    "post": {
-      "conditional": [
-        "If the spec is one paragraph long, consider rerouting to `/speckit.tinyspec.classify`.",
-        "If this is a bug rather than a feature, exit to `/speckit.bugfix.report`."
-      ],
-      "going_to": [
-        "/speckit.clarify (default)",
-        "/speckit.tinyspec.classify -- if spec is one-paragraph and full SDD is overkill"
-      ],
-      "postconditions": [
-        "`specs/<feat>/spec.md`"
-      ],
-      "title": "/speckit.specify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.constitution (default -- proceed to write the spec)",
-        "/speckit.refine.status (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage to assess impact)",
-        "/speckit.iterate.apply (mandatory -- MANDATORY re-entry -- walk forward through every downstream stage)",
-        "/speckit.github-issues.import -- treat imported issue as feature seed",
-        "(project bootstrap)"
-      ],
-      "context": [
-        "For minimal scope, prefer `/speckit.tinyspec.classify` -- heavier `/speckit.specify` is overkill for trivial work. For a bug, `/speckit.bugfix.report` is the right entry.",
-        "If re-entered from `/speckit.refine.status` or `/speckit.iterate.apply`, walk briefly through every downstream stage to assess impact rather than restarting from scratch."
-      ],
-      "soft": [
-        "`.specify/memory/constitution.md`"
-      ],
-      "title": "/speckit.specify -- before you run this"
-    }
-  },
-  "status-report-show": {
-    "post": {
-      "conditional": [
-        "Use the output to pick the next DAG node -- typically the first phase whose artefact is missing."
-      ],
-      "going_to": [
-        "(return to invoker)"
-      ],
-      "postconditions": [
-        "`specs/spec-status.md` (regenerated each run; gitignored)"
-      ],
-      "title": "/speckit.status-report.show -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(anytime -- advisory)"
-      ],
-      "context": [
-        "Read-only progress report. Surfaces current feature + which artefacts exist."
-      ],
-      "soft": [
-        "(none; reads .specify/feature.json + spec/plan/task artefacts)"
-      ],
-      "title": "/speckit.status-report.show -- before you run this"
-    }
-  },
-  "sync-analyze": {
-    "post": {
-      "conditional": [
-        "If sync.analyze shows the code lacks work the spec calls for (drift, not a scope change), /speckit.converge appends it as tasks."
-      ],
-      "going_to": [
-        "/speckit.converge -- drift: the spec calls for work the code lacks",
-        "/speckit.sync.conflicts (default)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/sync-report.md`"
-      ],
-      "title": "/speckit.sync.analyze -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.cleanup (default -- proceed to drift check)",
-        "/speckit.reconcile.run -- to confirm reconciliation closed the drift"
-      ],
-      "context": [
-        "Detects drift between specs and implementation. Read-only."
-      ],
-      "soft": [
-        "implementation diff"
-      ],
-      "title": "/speckit.sync.analyze -- before you run this"
-    }
-  },
   "sync-conflicts": {
     "post": {
-      "going_to": [
-        "/speckit.retro.run (default)",
-        "/speckit.reconcile.run -- if conflicts need active resolution"
-      ],
       "title": "/speckit.sync.conflicts -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.sync.analyze (default)"
-      ],
       "context": [
-        "Surfaces contradictions between specs or between specs and shared interfaces/contracts. Read-only."
+        "Surfaces contradictions between specs or between specs and shared interfaces/contracts. Read-only.",
+        "After sync-conflicts, commit all post-implementation artifacts (verify reports, review report, QA report, cleanup, retro) with a conventional commit message. Tag this as the final feature checkpoint."
       ],
       "hard_missing": [
         "specs/<feat>/sync-report.md"
@@ -1303,18 +317,12 @@
   },
   "tasks": {
     "post": {
-      "going_to": [
-        "/speckit.checklist (default -- requirements-quality gate over spec + plan + tasks)"
-      ],
       "postconditions": [
         "`specs/<feat>/tasks.md`"
       ],
       "title": "/speckit.tasks -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.plan (default)"
-      ],
       "context": [
         "Decomposes the plan into discrete, testable tasks. If `tasks.md` already exists, you're either iterating (use iterate) or refining (use refine.update) -- don't re-author tasks from scratch."
       ],
@@ -1330,20 +338,15 @@
   },
   "taskstoissues": {
     "post": {
-      "going_to": [
-        "/speckit.checkpoint.commit (default -- lock in the spec/plan/tasks before execution)"
-      ],
       "postconditions": [
         "gh issues created + `specs/<feat>/issue-map.md`"
       ],
       "title": "/speckit.taskstoissues -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.analyze (default)"
-      ],
       "context": [
-        "Turns tasks into trackable GitHub issues. Keeps the issue map next to the spec for traceability."
+        "Turns tasks into trackable GitHub issues. Keeps the issue map next to the spec for traceability.",
+        "After taskstoissues, commit all spec/plan/tasks/issue-map changes (conventional commit, pre-implementation checkpoint), then proceed to agent-assign."
       ],
       "hard_missing": [
         "specs/<feat>/tasks.md"
@@ -1354,38 +357,11 @@
       "title": "/speckit.taskstoissues -- before you run this"
     }
   },
-  "tinyspec-classify": {
-    "post": {
-      "going_to": [
-        "/speckit.tinyspec.tinyspec (default)"
-      ],
-      "postconditions": [
-        "`specs/<feat>/tinyspec.md` (classification block)"
-      ],
-      "title": "/speckit.tinyspec.classify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.specify -- if spec is one-paragraph and full SDD is overkill",
-        "(quick-start entry -- minimal scope feature)"
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.tinyspec.classify -- before you run this"
-    }
-  },
   "tinyspec-implement": {
     "post": {
-      "going_to": [
-        "/speckit.verify -- short cycle"
-      ],
       "title": "/speckit.tinyspec.implement -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.tinyspec.tinyspec (default)"
-      ],
       "hard_missing": [
         "specs/<feat>/tinyspec.md"
       ],
@@ -1395,152 +371,14 @@
   },
   "tinyspec-tinyspec": {
     "post": {
-      "going_to": [
-        "/speckit.tinyspec.implement (default)"
-      ],
       "title": "/speckit.tinyspec.tinyspec -- what to do next"
     },
     "pre": {
-      "came_from": [
-        "/speckit.tinyspec.classify (default)"
-      ],
       "hard_missing": [
         "specs/<feat>/tinyspec.md"
       ],
       "soft": [],
       "title": "/speckit.tinyspec.tinyspec -- before you run this"
-    }
-  },
-  "verify": {
-    "post": {
-      "conditional": [
-        "If verify surfaces gaps that look like bugs rather than spec violations, exit to /speckit.bugfix.report.",
-        "If verify finds unmet FR/SC that is unbuilt work (not a bug or scope change), run /speckit.converge to append the missing work as tasks, then implement via agent-assign."
-      ],
-      "going_to": [
-        "/speckit.review.run (default)",
-        "/speckit.bugfix.report -- if verify surfaces gaps that look like bugs rather than spec violations",
-        "/speckit.converge -- if verify finds unmet FR/SC that is unbuilt work, not a bug or scope change",
-        "/speckit.bugfix.report -- if a verification failure triages as a bug rather than a spec gap"
-      ],
-      "postconditions": [
-        "`specs/<feat>/verify-report.md`"
-      ],
-      "title": "/speckit.verify -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.agent-assign.execute -- only if user explicitly skips verify-tasks",
-        "/speckit.verify-tasks (default)",
-        "/speckit.fix-findings -- re-verify after substantial fixes",
-        "/speckit.bugfix.patch -- re-verify if the fix touched implementation",
-        "/speckit.tinyspec.implement -- short cycle"
-      ],
-      "context": [
-        "Validates implementation against the plan. If the diff doesn't address the plan, route back to agent-assign or refine.update."
-      ],
-      "hard_missing": [
-        "specs/<feat>/plan.md"
-      ],
-      "soft": [],
-      "title": "/speckit.verify -- before you run this"
-    }
-  },
-  "verify-tasks": {
-    "post": {
-      "conditional": [
-        "If verify-tasks surfaces phantom completions, /speckit.converge appends the real implementation work as traceable tasks."
-      ],
-      "going_to": [
-        "/speckit.verify (default)",
-        "/speckit.converge -- phantom completions -- append the real implementation work as traceable tasks"
-      ],
-      "postconditions": [
-        "`specs/<feat>/verify-tasks-report.md`"
-      ],
-      "title": "/speckit.verify-tasks -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.agent-assign.execute (default -- confirm every task actually shipped code)"
-      ],
-      "context": [
-        "Catches phantom completions -- tasks marked done with no real implementation. Runs in a fresh context to avoid confirmation bias.",
-        "Verify against the ACTUAL diff, not the agents' task reports -- a task self-reported as done with no corresponding code change is a phantom completion and must route back to `/speckit.fix-findings`.",
-        "Claude turbo-path for Phase 3 QA (dynamic workflows only): post-implementation QA runs as three parallel pairs -- verify-tasks + verify (10/11), code-review + security-review (12/13), sync.analyze + sync.conflicts (15/16); you MAY run all three as one Workflow instead of six manual subagent calls.",
-        "If workflows are unavailable or the user declines, run the pairs the normal way per the 50-speckit-workflow steps (identical outputs, not orchestrated).",
-        "`parallel()` the six read-only checks mapped to `speckit-verify-tasks`, `speckit-verify`, the `code-review` and `security-review` skills, `speckit-sync`, `speckit-sync-conflicts`.",
-        "Each returns structured findings; collect, then run `cleanup` (step 14) on the main thread between the review pair and the sync pair if a finding needs a fix (do NOT auto-fix inside the read-only workflow).",
-        "`model`/`effort` default to each agent's definition (verify agents Opus/xhigh; sync agents Sonnet/high) -- do not override unless clearly needed.",
-        "Reuse existing `agentType`s; define none. Do NOT touch the DAG nodes -- this is an execution shortcut, not a workflow replacement."
-      ],
-      "hard_missing": [
-        "specs/<feat>/tasks.md"
-      ],
-      "soft": [],
-      "title": "/speckit.verify-tasks -- before you run this"
-    }
-  },
-  "worktree-clean": {
-    "post": {
-      "going_to": [
-        "(terminal)"
-      ],
-      "title": "/speckit.worktree.clean -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.worktree.list -- after the feature is archived",
-        "(cleanup time, after the feature is archived)"
-      ],
-      "context": [
-        "Removes the per-feature worktree. Don't run mid-cycle."
-      ],
-      "soft": [
-        "feature has been archived"
-      ],
-      "title": "/speckit.worktree.clean -- before you run this"
-    }
-  },
-  "worktree-create": {
-    "post": {
-      "going_to": [
-        "/speckit.worktree.list -- confirm the worktree was created"
-      ],
-      "postconditions": [
-        "new git worktree under the configured worktree root"
-      ],
-      "title": "/speckit.worktree.create -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "(parallel-work request from any implementation phase)"
-      ],
-      "context": [
-        "Spawns an isolated git worktree so parallel features don't trample each other. Pair with the worktree-isolation pattern in agent-assign.execute when running multiple agents."
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.worktree.create -- before you run this"
-    }
-  },
-  "worktree-list": {
-    "post": {
-      "going_to": [
-        "/speckit.worktree.clean -- after the feature is archived"
-      ],
-      "title": "/speckit.worktree.list -- what to do next"
-    },
-    "pre": {
-      "came_from": [
-        "/speckit.worktree.create -- confirm the worktree was created",
-        "(anytime -- advisory)"
-      ],
-      "soft": [
-        "(none)"
-      ],
-      "title": "/speckit.worktree.list -- before you run this"
     }
   }
 }
