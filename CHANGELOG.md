@@ -1,5 +1,44 @@
 # Changelog
 
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v7.1.0...srobroek-agentic--v8.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove specs/ — project-setup spec archive moved with its extraction
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup
+* **write-agentic:** package renamed write-a-skill -> write-agentic; referencing bundles updated.
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -> grilling
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer
+* **hooks-subagent-worktree:** adopt advisory isolation guard
+* the removed packages are no longer published; installs referencing them must update to core >=7 bundles.
+
+### Features
+
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -&gt; grilling ([942047e](https://github.com/srobroek/agentic-packages/commit/942047e6096485590d68a3fd18f30cb95b31e9e9))
+* **hooks-subagent-worktree:** adopt advisory isolation guard ([67581b1](https://github.com/srobroek/agentic-packages/commit/67581b17d5d9f32e1c5dbcd83cd5635923c5cd94))
+* **hooks:** tier-gate the coder nudge; drop push test-gate and discovery steer ([786988a](https://github.com/srobroek/agentic-packages/commit/786988af6a80f3afe31e8763e1077e4a30e61920))
+* retire 13 nudge/duplicate packages in favor of static steering ([a2fc229](https://github.com/srobroek/agentic-packages/commit/a2fc229311e85435af1ba9ff1c172016f611436e))
+* **speckit:** Wave 3 — cull advisory DAG nodes, merge agents 6→4, compress steering and setup ([bb1a623](https://github.com/srobroek/agentic-packages/commit/bb1a62369b9d5b5f4ae23e6234a1f29f6ba8148f))
+* **write-agentic:** generalize write-a-skill to all agentic assets, add lint ([ff5df7a](https://github.com/srobroek/agentic-packages/commit/ff5df7a6614906c669eac40f8bc05c0ee55257cd))
+
+
+### Bug Fixes
+
+* **agent-coder:** quote-free YAGNI phrasing — embedded quotes broke inject-script JSON ([bbce701](https://github.com/srobroek/agentic-packages/commit/bbce701d7296e46148861807056793ba06770b82))
+* **hooks:** make chezmoi-sync advisory-only (no auto-commit/push) ([#487](https://github.com/srobroek/agentic-packages/issues/487)) ([5a9f2e5](https://github.com/srobroek/agentic-packages/commit/5a9f2e5ce01f7417a7bc0c9f61220f882cf89119))
+* update merged-agent references in build_nodes.py and docs/speckit.md ([d6ae2ea](https://github.com/srobroek/agentic-packages/commit/d6ae2ea12ca008620003f338e0638532cc0e2096))
+
+
+### Documentation
+
+* **readme:** add post-release update and stale-content cleanup guide ([ca1154d](https://github.com/srobroek/agentic-packages/commit/ca1154dd69394074f72ed243f20f0dd8c253dfc3))
+
+
+### Chores
+
+* remove specs/ — project-setup spec archive moved with its extraction ([bc33ab0](https://github.com/srobroek/agentic-packages/commit/bc33ab00498dc2754dd96b4668a4530e43b780bb))
+
 ## [7.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v7.0.0...srobroek-agentic--v7.1.0) (2026-07-05)
 
 

@@ -1,5 +1,5 @@
 name: language-arm-cortex
-version: 1.1.0
+version: 2.0.0
 description: >-
   ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers
   specialists.
@@ -15,4 +15,5 @@ tags:
   - arm
 dependencies:
   apm:
-    - wshobson/agents/plugins/arm-cortex-microcontrollers#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - >-
+      wshobson/agents/plugins/arm-cortex-microcontrollers#5cc2549a50fc672230efd0a0307e2fd27ffba792

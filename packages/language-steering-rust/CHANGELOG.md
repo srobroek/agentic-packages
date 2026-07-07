@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v1.0.0...language-steering-rust--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes
+
+### Features
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes ([1412eaf](https://github.com/srobroek/agentic-packages/commit/1412eafea2ec018655d73d353337feb918dd27f0))
+
+
+### Refactors
+
+* **language-steering-rust:** compress to choices/versions/gotchas only ([1f6daf0](https://github.com/srobroek/agentic-packages/commit/1f6daf0f56ee1edad3d23dcb88a80ffb3bd0112b))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust-v0.5.0...language-steering-rust-v1.0.0) (2026-06-26)
 
 

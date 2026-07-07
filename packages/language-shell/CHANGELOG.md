@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/language-shell--v1.2.0...language-shell--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges
+
+### Chores
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges ([7b32fc1](https://github.com/srobroek/agentic-packages/commit/7b32fc13d3eb75710e7c40beb2d30672d0d9dc02))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/language-shell--v1.1.0...language-shell--v1.2.0) (2026-07-02)
 
 

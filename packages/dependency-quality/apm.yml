@@ -1,10 +1,10 @@
 name: dependency-quality
-version: 1.1.2
+version: 2.0.0
 description: >-
   Dependency hygiene bundle: nudges to investigate a dependency before adding
-  it, audits the lockfile for known CVEs, and registers the package-version
-  MCP server for version discovery. Manifest-edit and latest-version guidance
-  lives in steering-toolchain-defaults.
+  it, audits the lockfile for known CVEs, and registers the package-version MCP
+  server for version discovery. Manifest-edit and latest-version guidance lives
+  in steering-toolchain-defaults.
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle

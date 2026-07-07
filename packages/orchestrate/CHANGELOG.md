@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v0.3.0...orchestrate--v1.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes
+
+### Features
+
+* **steering:** Wave 4 steering rewrites — pragmatic, code-economy, dedup, language compression, orchestrate fixes ([1412eaf](https://github.com/srobroek/agentic-packages/commit/1412eafea2ec018655d73d353337feb918dd27f0))
+
+
+### Refactors
+
+* **orchestrate:** surgical fixes from review pass ([c0fc174](https://github.com/srobroek/agentic-packages/commit/c0fc174b3e9d8fccd7842eaea2e5ea9cf25bcb58))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v0.2.0...orchestrate--v0.3.0) (2026-07-05)
 
 

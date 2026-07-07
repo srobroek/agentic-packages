@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/core--v1.3.0...core--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -> grilling
+
+### Features
+
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -&gt; grilling ([942047e](https://github.com/srobroek/agentic-packages/commit/942047e6096485590d68a3fd18f30cb95b31e9e9))
+* **deps:** sync internal package pins (minor-level dep releases) ([dcd5f1a](https://github.com/srobroek/agentic-packages/commit/dcd5f1ad9ca824446e007b4d7b843069741e08b5))
+
+
+### Chores
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges ([7b32fc1](https://github.com/srobroek/agentic-packages/commit/7b32fc13d3eb75710e7c40beb2d30672d0d9dc02))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/core--v1.2.0...core--v1.3.0) (2026-07-05)
 
 

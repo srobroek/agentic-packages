@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/developer-tools--v1.1.0...developer-tools--v2.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -> grilling
+
+### Features
+
+* **bundles:** drop wshobson c4/code-documentation/documentation-generation; grill-me -&gt; grilling ([942047e](https://github.com/srobroek/agentic-packages/commit/942047e6096485590d68a3fd18f30cb95b31e9e9))
+
+
+### Chores
+
+* pin all external #main refs to SHAs; internal subpath refs to semver ranges ([7b32fc1](https://github.com/srobroek/agentic-packages/commit/7b32fc13d3eb75710e7c40beb2d30672d0d9dc02))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/developer-tools-v1.0.0...developer-tools--v1.1.0) (2026-06-27)
 
 
