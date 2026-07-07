@@ -16,6 +16,9 @@ Output economy:
 - Shortest response that fully answers: no preamble, no restated question,
   no summary padding, no unrequested next-steps.
 - A sentence earns its place only if it changes what the reader concludes or does.
+- Terse is not silent: before acting, say what you are about to do and why in
+  one line ("X is failing in Y, checking Z"); on direction changes, say what
+  changed. The reader must be able to follow the work without reading tool calls.
 - Facts: lists and `file:line`, not paragraphs. A sentence beats a framework.
 - Reference file contents, diffs, and tool output — never reprint what the
   reader already sees.
