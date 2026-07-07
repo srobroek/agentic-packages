@@ -54,6 +54,37 @@ jobs:
           fi
           echo "Changed packages with tests: $have_tests"
 
+  # Lint changed agent-facing markdown (agents, skills, steering) with the
+  # write-agentic linter so fleet-contract regressions (hedges, oversized
+  # descriptions, missing output contracts) can't land silently.
+  agentic-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Lint changed agentic markdown
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # Agent/skill/steering markdown under any package's .apm tree.
+          # Templates are placeholder-full meta-documents; the linter exempts
+          # them by path, but skip them here too to keep output clean.
+          changed_md=$(git diff --name-only "$base" "$head" -- 'packages/*/.apm/**/*.md' \
+            | grep -Ev '/references/template-' || true)
+          if [ -z "$changed_md" ]; then
+            echo "no changed agentic markdown"
+            exit 0
+          fi
+          rc=0
+          for f in $changed_md; do
+            [ -f "$f" ] || continue  # deleted in this PR
+            python3 packages/write-agentic/.apm/skills/write-agentic/scripts/lint.py "$f" || rc=1
+          done
+          exit $rc
+
   test:
     needs: changed
     if: needs.changed.outputs.any == 'true'
@@ -144,7 +175,7 @@ jobs:
   # Passes when the matrix succeeded OR was legitimately skipped (no changed
   # package ships tests); fails only if a real test leg failed or was cancelled.
   tests-gate:
-    needs: [changed, test]
+    needs: [changed, test, agentic-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -152,7 +183,11 @@ jobs:
         run: |
           changed_result="${{ needs.changed.result }}"
           test_result="${{ needs.test.result }}"
-          echo "changed=$changed_result test=$test_result"
+          lint_result="${{ needs.agentic-lint.result }}"
+          echo "changed=$changed_result test=$test_result agentic-lint=$lint_result"
+          if [ "$lint_result" != "success" ]; then
+            echo "::error::agentic-lint did not succeed ($lint_result)"; exit 1
+          fi
           if [ "$changed_result" != "success" ]; then
             echo "::error::change-detection job did not succeed ($changed_result)"; exit 1
           fi
