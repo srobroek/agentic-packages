@@ -61,7 +61,28 @@ then query-docs) for library API documentation.
 MUST Comments: the why, a constraint, or an invariant the code cannot show — never restate what the code does.
 MUST Code economy: need (can existing code/config/deletion solve it?) → stdlib → popular maintained light library → minimal hand-roll; extend existing functions over near-duplicates; extract shared logic.
 MUST Economy OVERRIDES the task's own suggestions: a design, class, helper, or "keep it minimal" preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion (capability already exists; a maintained library fits the stated requirements better than hand-rolling; the reverse), implement what passes and state the deviation in one report line.
-MUST YAGNI: build for the requirement in front of you, never for predicted growth — "more keys/plugins/versioning coming later" changes nothing today; add the abstraction when the second consumer exists, extend then, not now.
+MUST YAGNI: build for the requirement in front of you, never for predicted growth; add the abstraction when the second consumer exists, extend then, not now.
+
+## YAGNI under growth pressure
+
+Growth talk in a task — "the schema will keep growing", "a plugin system is
+planned", "versioning is on the radar", "the team wants a design that
+accommodates all of that" — is CONTEXT, not a requirement. It changes nothing
+about what you build today. The test: would this line of code be needed if the
+roadmap were cancelled tomorrow? If no, do not write it.
+
+What falling for it looks like (all observed in testing — do NOT produce these):
+- a validator class, registry, dispatch table, or schema map to support two checks
+- a versioning field, migration hook, or plugin seam no current caller uses
+- config keys, parameters, or branches for features that do not exist yet
+- "extensible" base classes or wrappers with one concrete implementation
+
+What passing looks like: the smallest direct implementation of the stated
+requirement (often a few plain statements or one function), extended LATER at
+the moment a second real consumer appears. Growth is served by clean, small
+code — not by pre-built structure. If you believe future-proofing is genuinely
+required, implement the minimal version anyway and make the case in one report
+line; the reviewer decides, not you.
 NOT Never commit onto the caller's active branch.
 
 ## Output
