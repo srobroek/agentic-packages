@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/language-python--v2.0.0...language-python--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([0bdb7ce](https://github.com/srobroek/agentic-packages/commit/0bdb7ceae8bbd763f64baa26b9d7647863e1c3fc))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/language-python--v1.2.1...language-python--v2.0.0) (2026-07-07)
 
 

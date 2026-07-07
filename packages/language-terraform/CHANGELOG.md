@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/language-terraform--v2.0.0...language-terraform--v2.0.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([ea6b11c](https://github.com/srobroek/agentic-packages/commit/ea6b11c796f28c33dffe8700b1b675e5f02a5905))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/language-terraform--v1.2.0...language-terraform--v2.0.0) (2026-07-07)
 
 

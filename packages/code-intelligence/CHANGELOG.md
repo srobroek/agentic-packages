@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v2.0.0...code-intelligence--v3.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* code-economy rule overhaul — OVERRIDE, YAGNI section, hand-roll pricing, haiku routing guard ([#496](https://github.com/srobroek/agentic-packages/issues/496))
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* code-economy rule overhaul — OVERRIDE, YAGNI section, hand-roll pricing, haiku routing guard ([#496](https://github.com/srobroek/agentic-packages/issues/496)) ([954025f](https://github.com/srobroek/agentic-packages/commit/954025fd2514453cf3c5bc1fecd8678be5b75258))
+* **deps:** sync internal package pins (major-level dep releases) ([0bdb7ce](https://github.com/srobroek/agentic-packages/commit/0bdb7ceae8bbd763f64baa26b9d7647863e1c3fc))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v1.1.3...code-intelligence--v2.0.0) (2026-07-07)
 
 

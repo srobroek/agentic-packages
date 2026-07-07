@@ -1,5 +1,16 @@
 # Changelog
 
+## [9.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v8.0.0...srobroek-agentic--v9.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493))
+
+### Features
+
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493)) ([8e3414a](https://github.com/srobroek/agentic-packages/commit/8e3414a0f4768b1cc174e00cd6e7c00c57153131))
+
 ## [8.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v7.1.0...srobroek-agentic--v8.0.0) (2026-07-07)
 
 

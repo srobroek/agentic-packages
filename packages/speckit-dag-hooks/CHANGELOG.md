@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v3.0.0...speckit-dag-hooks--v4.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493))
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([0bdb7ce](https://github.com/srobroek/agentic-packages/commit/0bdb7ceae8bbd763f64baa26b9d7647863e1c3fc))
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493)) ([8e3414a](https://github.com/srobroek/agentic-packages/commit/8e3414a0f4768b1cc174e00cd6e7c00c57153131))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v2.1.1...speckit-dag-hooks--v3.0.0) (2026-07-07)
 
 

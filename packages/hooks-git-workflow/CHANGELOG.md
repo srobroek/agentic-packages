@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v2.0.0...hooks-git-workflow--v2.1.0) (2026-07-07)
+
+
+### Features
+
+* **hooks:** stable rule IDs for git-workflow, bash-safety, and git-safety guards ([#494](https://github.com/srobroek/agentic-packages/issues/494)) ([d46a50a](https://github.com/srobroek/agentic-packages/commit/d46a50ab266a706728455e127c906b87d73bba55))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v1.3.0...hooks-git-workflow--v2.0.0) (2026-07-07)
 
 

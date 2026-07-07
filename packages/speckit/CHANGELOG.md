@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v4.0.0...speckit--v5.0.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493))
+
+### Features
+
+* workflow gates via speckit-gate; deprecate speckit-dag-hooks ([#493](https://github.com/srobroek/agentic-packages/issues/493)) ([8e3414a](https://github.com/srobroek/agentic-packages/commit/8e3414a0f4768b1cc174e00cd6e7c00c57153131))
+
+
+### Bug Fixes
+
+* **speckit-setup:** harden init, status-report fetch, and add 0.12.x floor ([#492](https://github.com/srobroek/agentic-packages/issues/492)) ([2b123fe](https://github.com/srobroek/agentic-packages/commit/2b123fef14c9d65254edf400ce4a3e52b1818010))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v3.1.1...speckit--v4.0.0) (2026-07-07)
 
 
