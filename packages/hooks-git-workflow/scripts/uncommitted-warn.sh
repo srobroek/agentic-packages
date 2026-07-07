@@ -30,8 +30,8 @@ fi
 [[ -n "$dirty" || -n "$ahead" ]] || exit 0
 
 message="Unfinished git state before stop:"
-[[ -n "$dirty" ]] && message="$message"$'\n'"$(printf 'Uncommitted changes:\n%s' "$dirty")"
-[[ -n "$ahead" ]] && message="$message"$'\n'"Unpushed work: ${ahead} — commit and push before ending, per the continuous commit/push cadence."
+[[ -n "$dirty" ]] && message="$message"$'\n'"$(printf 'Uncommitted changes (GW-1: commit before ending):\n%s' "$dirty")"
+[[ -n "$ahead" ]] && message="$message"$'\n'"Unpushed work: ${ahead} — commit and push before ending (GW-2: push before ending)."
 if [[ "$stop_active" == "true" ]]; then
   message="$message"$'\n'"(Allowing stop on second attempt.)"
 fi

@@ -1,5 +1,7 @@
 # Git Workflow
 
+LEGEND: Rules carry stable IDs (GW-n) cited by the enforcing hooks.
+
 Branching:
 
 - Never start new work on main/master; create or reuse a feature branch.
@@ -21,3 +23,8 @@ ask about deleting the merged branch.
 
 Changesets (repos using them): add one for behavior/API/breaking changes;
 skip for docs, tests, CI, and no-behavior refactors.
+
+Session cadence (enforced by stop-hook):
+
+MUST GW-1: commit all tracked changes before ending a session.
+MUST GW-2: push all committed work before ending — commits on an unpushed branch may be lost.

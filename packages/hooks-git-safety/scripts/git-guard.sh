@@ -326,7 +326,7 @@ if redirect_target_unverifiable \
   && { match_sub "$reset_hard_pat" || match_sub "$checkout_dd_pat" \
        || { match_sub "$restore_pat" && ! restore_is_staged_only; } \
        || match_sub "$clean_force_pat"; }; then
-  deny "this destructive git op targets another working tree through an unexpanded shell variable or '~' (e.g. -C \"\$DIR\" / --git-dir=\$X / --work-tree=~/...), so the guard cannot verify which tree's uncommitted work it would discard. Re-run with the variable resolved to a literal path (e.g. run \`echo \"\$DIR\"\` first, then pass the actual path) so the target is auditable."
+  deny "blocked by GS-2 (no destructive op via unexpanded variable): this destructive git op targets another working tree through an unexpanded shell variable or '~' (e.g. -C \"\$DIR\" / --git-dir=\$X / --work-tree=~/...), so the guard cannot verify which tree's uncommitted work it would discard. Re-run with the variable resolved to a literal path (e.g. run \`echo \"\$DIR\"\` first, then pass the actual path) so the target is auditable."
 fi
 
 # `--hard` may appear ANYWHERE in the reset invocation, not only immediately
@@ -340,14 +340,14 @@ fi
 # nothing, so it passes silently.
 if match_sub "$reset_hard_pat"; then
   if uncommitted_work_at_risk; then
-    warn "git reset --hard: the working tree has uncommitted changes to tracked files (staged + unstaged) that will be permanently discarded and are NOT in the reflog. Commit or stash them first if you need them. Proceeding."
+    warn "GS-3 (warn: reset --hard discards uncommitted tracked changes): the working tree has uncommitted changes to tracked files (staged + unstaged) that will be permanently discarded and are NOT in the reflog. Commit or stash them first if you need them. Proceeding."
   fi
 fi
 
 # Force push rewrites only REMOTE history (remote-rewritable, not machine-
 # destructive), so it is a non-blocking warn rather than a hard block.
 if match_sub 'push([[:space:]]+[^[:space:]]+)*[[:space:]]+(--force-with-lease|--force|-f)([[:space:]=]|$)'; then
-  warn "git push --force/--force-with-lease: this rewrites the remote branch history and can overwrite commits pushed by others. Verify the remote ref is what you expect before proceeding. Proceeding."
+  warn "GS-4 (warn: force push rewrites remote history): git push --force/--force-with-lease rewrites the remote branch history and can overwrite commits pushed by others. Verify the remote ref is what you expect before proceeding. Proceeding."
 fi
 
 # ---------------------------------------------------------------------------
@@ -360,7 +360,7 @@ fi
 # dirty (or its state is undeterminable); a clean tree loses nothing.
 if match_sub "$checkout_dd_pat"; then
   if uncommitted_work_at_risk; then
-    warn "git checkout -- <path>: discards uncommitted working-tree changes to the named paths (gone for good, not recoverable from the reflog). Proceeding."
+    warn "GS-5 (warn: checkout -- discards uncommitted changes): git checkout -- <path> discards uncommitted working-tree changes to the named paths (gone for good, not recoverable from the reflog). Proceeding."
   fi
 fi
 
@@ -372,7 +372,7 @@ if match_sub "$restore_pat"; then
   # touches the working tree (default, or explicit --worktree) discards
   # uncommitted changes, so warn only when those changes actually exist.
   if ! restore_is_staged_only && uncommitted_work_at_risk; then
-    warn "git restore (working tree): discards uncommitted changes to the named paths (not recoverable from the reflog). Proceeding."
+    warn "GS-5 (warn: restore discards uncommitted changes): git restore (working tree) discards uncommitted changes to the named paths (not recoverable from the reflog). Proceeding."
   fi
 fi
 
@@ -385,7 +385,7 @@ if match_sub "$clean_force_pat"; then
   # delete -> pass silently. Any output (or an undeterminable state) -> warn.
   clean_preview="$(git -C "$cwd" clean -nd 2>/dev/null || printf '%s' "UNDETERMINABLE")"
   if [[ -n "$clean_preview" ]]; then
-    warn "git clean -f: permanently deletes untracked files in the working tree (with -x, also ignored files); they are not recoverable. Proceeding."
+    warn "GS-6 (warn: clean -f deletes untracked files): git clean -f permanently deletes untracked files in the working tree (with -x, also ignored files); they are not recoverable. Proceeding."
   fi
 fi
 

@@ -86,7 +86,7 @@ sx='(([a-z_][a-z0-9_]*=[^[:space:]]*[[:space:]]+)*((sudo|doas|env|time|nice|comm
 
 # The sandbox/approval bypass flag disables the safety envelope itself.
 if [[ "$lowered" =~ --dangerously-bypass-approvals-and-sandbox ]]; then
-  deny "refusing approval/sandbox bypass flag (disables the safety envelope)"
+  deny "blocked by BS-3 (no sandbox-bypass flag): refusing --dangerously-bypass-approvals-and-sandbox (disables the safety envelope)"
 fi
 
 # `rm` with both recursive+force as a BUNDLED single short-flag token, in either
@@ -110,7 +110,7 @@ q="['\"]?"
 # rm -rf / — also // and the literal /* token (`rm -rf /*` wipes everything under
 # root just like `rm -rf /`). Bundled flag, optional LEADING quote, prefix-aware.
 if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}/[/*]*($|[[:space:]]) ]]; then
-  deny "refusing rm -rf / (wipes the root filesystem; unrecoverable)"
+  deny "blocked by BS-4 (no rm -rf on filesystem root): refusing rm -rf / (wipes the root filesystem; unrecoverable)"
 fi
 
 # rm -rf on the home ROOT itself: literal `~` and the un-expanded
@@ -120,12 +120,12 @@ fi
 # whitespace, NOT a deeper path.
 home_t="(~|\\\$home|\\\$\\{home\\})"
 if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}${home_t}(/?($|[[:space:]])) ]]; then
-  deny "refusing rm -rf on the home directory root (unrecoverable). If you meant a subdirectory, pass its explicit path."
+  deny "blocked by BS-4 (no rm -rf on home root): refusing rm -rf on the home directory root (unrecoverable). If you meant a subdirectory, pass its explicit path."
 fi
 
 # mkfs and its filesystem-specific variants (mkfs.ext4, mkfs.xfs, ...).
 if [[ "$lowered" =~ ${cmd}${sx}mkfs(\.[a-z0-9]+)?([[:space:]]|$) ]]; then
-  deny "refusing mkfs (formats a filesystem; destroys all data on it)"
+  deny "blocked by BS-5 (no mkfs): refusing mkfs (formats a filesystem; destroys all data on it)"
 fi
 
 # dd writing to a block device overwrites the raw disk, unrecoverable. But the
@@ -135,7 +135,7 @@ fi
 # real block/char device target.
 if [[ "$lowered" =~ ${cmd}${sx}dd[[:space:]].*of=/dev/ ]] \
   && ! [[ "$lowered" =~ of=/dev/(null|zero|random|urandom|stdout|stdin)([[:space:]]|$) ]]; then
-  deny "refusing dd to a block device (overwrites the raw disk; unrecoverable)"
+  deny "blocked by BS-6 (no dd to block device): refusing dd to a block device (overwrites the raw disk; unrecoverable)"
 fi
 
 # --- WARN: recoverable but high-risk (non-blocking) --------------------------
@@ -144,7 +144,7 @@ fi
 # vendor-sanctioned installer idiom (rustup/uv/nvm) and is fully recoverable, so
 # it is a non-blocking warn — the agent is informed but not stalled.
 if [[ "$lowered" =~ ${cmd}${sx}(curl|wget)[[:space:]].*\|[[:space:]]*(sh|bash)([[:space:]]|$) ]]; then
-  warn "curl/wget piped into a shell executes remote code unverified. Make sure the source URL is trusted (prefer downloading, inspecting, then running). Proceeding."
+  warn "BS-7 (warn on curl|sh pipe): curl/wget piped into a shell executes remote code unverified. Make sure the source URL is trusted (prefer downloading, inspecting, then running). Proceeding."
 fi
 
 # --- WARN: elevated + destructive (non-blocking) -----------------------------
@@ -178,7 +178,7 @@ for clause in $(printf '%s' "$lowered" | tr ';&|' '\n'); do
       continue
     fi
     IFS="$_ifs_save"
-    warn "This runs a destructive/disruptive command with elevated privileges (sudo). Double-check the target is correct and the change is recoverable before proceeding."
+    warn "BS-7 (warn on sudo+destructive): this runs a destructive/disruptive command with elevated privileges (sudo). Double-check the target is correct and the change is recoverable before proceeding."
   fi
 done
 IFS="$_ifs_save"

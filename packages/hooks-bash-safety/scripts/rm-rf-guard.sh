@@ -282,13 +282,13 @@ done <<<"$targets"
 
 case "$worst" in
   deny-crit)
-    decide deny "rm -rf targets a system-critical or home path ('$display_targets'); this is unrecoverable and is blocked."
+    decide deny "blocked by BS-8 (no rm -rf on system-critical path): rm -rf targets a system-critical or home path ('$display_targets'); this is unrecoverable and is blocked."
     ;;
   deny-var)
-    decide deny "rm -rf '$display_targets' contains an unexpanded shell variable (e.g. \$DIR / \${DIR}), so the guard cannot verify which path will be deleted. Re-run with the variable resolved to a literal path (e.g. run \`echo \"\$DIR\"\` first, then pass the actual path) so the deletion target is auditable."
+    decide deny "blocked by BS-9 (no rm -rf with unexpanded variable): rm -rf '$display_targets' contains an unexpanded shell variable (e.g. \$DIR / \${DIR}), so the guard cannot verify which path will be deleted. Re-run with the variable resolved to a literal path (e.g. run \`echo \"\$DIR\"\` first, then pass the actual path) so the deletion target is auditable."
     ;;
   warn)
-    decide warn "rm -rf '$display_targets' is not inside the project's git working tree (it's outside the repo, or the repo root/.git itself), so it is not git-recoverable. Make sure this is the intended target. Proceeding."
+    decide warn "BS-10 (warn on rm -rf outside working tree): rm -rf '$display_targets' is not inside the project's git working tree (it's outside the repo, or the repo root/.git itself), so it is not git-recoverable. Make sure this is the intended target. Proceeding."
     ;;
   *)
     exit 0   # inside the git working tree, or a temp dir — allow silently

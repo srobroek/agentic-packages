@@ -437,3 +437,24 @@ assert_has_context() {
   [ "$status" -eq 0 ]
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecision == "deny"' >/dev/null
 }
+
+# ---------------------------------------------------------------------------
+# Rule-ID citation: guard messages must cite the GS rule that fired.
+# ---------------------------------------------------------------------------
+
+@test "deny message cites a GS rule ID (GS-2)" {
+  # An unexpanded variable in -C fires GS-2; the deny reason must cite it.
+  local r; r="$(new_repo clean)"
+  local out
+  out="$(payload_in "$r" 'git -C "$DIR" reset --hard' | /usr/bin/env bash "$GUARD" 2>/dev/null || true)"
+  printf '%s' "$out" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("GS-[0-9]")' >/dev/null
+}
+
+@test "warn additionalContext cites a GS rule ID (GS-3)" {
+  # reset --hard on a dirty tree fires GS-3; the advisory must cite it.
+  local r; r="$(new_repo dirty)"
+  local out ctx
+  out="$(payload_in "$r" 'git reset --hard' | /usr/bin/env bash "$GUARD" 2>/dev/null || true)"
+  ctx="$(printf '%s' "$out" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
+  printf '%s' "$ctx" | grep -q 'GS-[0-9]'
+}

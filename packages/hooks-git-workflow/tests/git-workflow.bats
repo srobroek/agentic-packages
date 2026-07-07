@@ -37,6 +37,13 @@ setup() {
   printf '%s' "$out" | jq -e '.systemMessage | test("Uncommitted")' >/dev/null
 }
 
+@test "warn: dirty tree message cites GW rule ID" {
+  printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init
+  printf 'v2\n' > "$REPO/f.txt"   # tracked, uncommitted
+  out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
+  printf '%s' "$out" | jq -e '.systemMessage | test("GW-[0-9]")' >/dev/null
+}
+
 @test "warn: clean tree -> no output" {
   printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init
   out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
