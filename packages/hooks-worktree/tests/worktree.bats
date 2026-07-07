@@ -163,6 +163,25 @@ EOF
   rm -rf "$managed_root"
 }
 
+@test "cleanup: refused removal still deletes ignored build artifacts" {
+  WT="${WORK}/wt-artifacts"
+  git -C "$REPO" worktree add -q -b worktree-artifacts "$WT"
+  printf 'target/\n' > "${WT}/.gitignore"
+  git -C "$WT" add .gitignore
+  git -C "$WT" commit -qm "gitignore"
+  mkdir -p "${WT}/target/debug"
+  printf 'bin\n' > "${WT}/target/debug/app"
+  # Lock the worktree so non-force removal is refused.
+  git -C "$REPO" worktree lock "$WT"
+  run bash "$CLEANUP" <<EOF
+{"cwd": "${WT}"}
+EOF
+  [ "$status" -eq 0 ]
+  [ -d "$WT" ]
+  [ ! -d "${WT}/target" ]
+  git -C "$REPO" worktree unlock "$WT" 2>/dev/null || true
+}
+
 @test "cleanup: linked managed worktree branch is deleted" {
   repo_name="$(basename "$REPO")"
   managed_root="/tmp/claude-worktrees/${repo_name}"

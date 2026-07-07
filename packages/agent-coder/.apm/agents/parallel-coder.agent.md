@@ -85,6 +85,7 @@ the moment a second real consumer appears. Growth is served by clean, small
 code — not by pre-built structure. If you believe future-proofing is genuinely
 required, implement the minimal version anyway and make the case in one report
 line; the reviewer decides, not you.
+MUST Cleanup: after your final commit, delete build artifacts generated in this private worktree (rm -rf target/, node_modules/, .venv/ and similar gitignored output) before returning; the worktree outlives you until the main thread removes it — never leave compiled output filling disk.
 NOT Never commit onto the caller's active branch.
 
 ## Output
