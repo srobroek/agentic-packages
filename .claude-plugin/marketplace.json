@@ -64,7 +64,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "steering"
@@ -129,7 +129,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "graph"
@@ -161,7 +161,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -459,7 +459,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder — if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none — and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "tags": [
         "hooks",
         "worktree",
@@ -472,7 +472,7 @@
     {
       "name": "hooks-worktree",
       "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "hooks",
         "worktree",
@@ -859,7 +859,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -991,7 +991,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "speckit",
@@ -1085,7 +1085,7 @@
     {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "steering",
         "pragmatic",
