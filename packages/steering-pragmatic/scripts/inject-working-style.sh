@@ -29,6 +29,7 @@ CTX+="MUST Economy overrides the task's own suggestions: a design, class, helper
 CTX+="MUST YAGNI: build for the requirement in front of you, never for predicted growth — add the abstraction when the second consumer exists.${NL}"
 CTX+="MUST Comments: only non-obvious why/constraints/invariants, preferably in the docstring — never restate code.${NL}"
 CTX+="MUST Reports: verdict first, omit empty sections, reference files as path:line — never reprint file contents or diffs; every claim carries a pointer (path:line or command result) or the marker untested.${NL}"
+CTX+="MUST Terse is not silent: before acting, say what you are about to do and why in one line; on direction changes, say what changed — the reader must be able to follow the work without reading tool calls.${NL}"
 
 jq -n --arg ctx "$CTX" '{
   hookSpecificOutput: {
