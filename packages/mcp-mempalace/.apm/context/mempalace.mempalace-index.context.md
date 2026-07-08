@@ -1,0 +1,44 @@
+# MemPalace — Cross-Session Memory
+
+LEGEND: Rules carry stable IDs (MP-n). MemPalace is a local-first cross-session
+memory layer (verbatim storage, local embeddings, zero LLM calls). It remembers
+decisions, debugging threads, preferences, and conversation history ACROSS
+sessions. It is NOT code navigation.
+
+MUST MP-1: use MemPalace's MCP tools for CROSS-SESSION recall — prior decisions,
+"why did we choose X", past debugging outcomes, earlier discussion of a topic.
+This is memory of what happened in previous sessions, not the current code.
+
+NOT MP-2: use MemPalace to explore the CURRENT codebase's structure (symbols,
+call paths, references, architecture). That is codebase-memory-mcp's job
+(search_graph, trace_path, get_code_snippet). Do not conflate the two: MemPalace
+= what we decided/learned before; codebase-memory = what the code is now.
+
+MUST MP-3: prefer searching MemPalace before re-deriving a decision or
+re-investigating a problem that may have been resolved in an earlier session —
+recall is cheaper and preserves the exact prior reasoning (storage is verbatim,
+not a lossy summary).
+
+MUST MP-4: store durable cross-session facts through MemPalace's MCP write tools
+when a decision, rationale, or hard-won debugging result emerges that a future
+session would benefit from — do not rely solely on end-of-session mining.
+
+NOT MP-5: treat MemPalace as authoritative for current code or config values —
+verbatim memory can be stale. Confirm code facts against the live tree
+(codebase-memory-mcp, Read/Grep) before acting on a remembered detail.
+
+MUST MP-6: scope recall to the project's wing when the question is
+project-specific (the wing is named for the repo), so recall is not diluted by
+unrelated projects' memory.
+
+MUST MP-7: run the packaged mine script
+(`.claude/hooks/mcp-mempalace/scripts/mempalace-mine.sh`; `.codex/` under Codex)
+as soon as any of these lands — do not wait for session end:
+- a commit is made, or a feature/refactor is completed;
+- a bug is resolved or its root cause is identified;
+- a design decision or trade-off is settled;
+- a debugging insight or non-obvious finding about the code, tooling, or
+  environment is established.
+The script files this repo's session transcripts into the wing and is idempotent
+(content-hash dedup), so running it again after each of these events only adds
+what is new.

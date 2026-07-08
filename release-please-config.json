@@ -908,6 +908,18 @@
         }
       ]
     },
+    "packages/mcp-mempalace": {
+      "release-type": "simple",
+      "component": "mcp-mempalace",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/mcp-package-version": {
       "release-type": "simple",
       "component": "mcp-package-version",
