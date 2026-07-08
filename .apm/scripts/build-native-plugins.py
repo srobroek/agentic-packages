@@ -212,10 +212,30 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     native layout).
     """
     cls = pkg["classification"]
-    if cls == "steering":
-        return None
-
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
+
+    # Steering packages have no native rules/instructions component, so they
+    # normally emit no layout. The exception is a steering package that ALSO
+    # ships hooks (a hybrid working-style package): its SubagentStart/etc. hook
+    # is a real native component and must reach Claude /plugin + Codex plugin add,
+    # not just apm install. Emit a hooks-only layout (plugin.json + hooks.json,
+    # no skills/agents/mcp/deps) in that case; otherwise nothing.
+    if cls == "steering":
+        unified = _unified_hook(pkg_dir)
+        if unified is None:
+            return None
+        return {
+            "hooks/hooks.json": unified.read_text(encoding="utf-8"),
+            ".claude-plugin/plugin.json": (
+                json.dumps(
+                    _plugin_manifest(pkg, manifest, defaults, None, False),
+                    indent=2,
+                    ensure_ascii=False,
+                )
+                + "\n"
+            ),
+        }
+
     plan: dict[str, object] = {}
 
     # Skills are REFERENCED in place via a plugin.json `skills` override pointing

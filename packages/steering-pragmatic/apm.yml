@@ -1,13 +1,16 @@
 name: steering-pragmatic
-version: 3.0.0
+version: 4.0.0
 description: >-
   Opinionated pragmatic working style: prioritize accuracy, calibration, and
   decision usefulness over agreeableness. Analytical and direct by default;
-  distinguish facts from assumptions; avoid hype and sycophancy. Always-on
-  steering. Opt-in.
+  distinguish facts from assumptions; avoid hype and sycophancy. Includes code
+  economy defaults (prefer deletion, stdlib, and minimal solutions over new
+  abstractions) and comment discipline. Always-on steering as main-session
+  instructions, plus a SubagentStart hook that injects the same discipline into
+  every subagent in MUST register. Opt-in.
 author: Sjors Robroek
 license: Apache-2.0
-type: instructions
+type: hybrid
 target: all
 includes: auto
 category: steering
@@ -15,3 +18,5 @@ tags:
   - steering
   - pragmatic
   - personality
+  - code-economy
+  - minimalism

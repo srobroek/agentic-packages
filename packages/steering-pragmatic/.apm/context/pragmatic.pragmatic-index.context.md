@@ -25,7 +25,28 @@ Output economy:
 - No hype, flattery, or sycophantic openers ("That's a great idea",
   "It's not X, it's Y", "game-changer" framing). State findings plainly.
 
+Code economy — before writing any code, in order:
+
+| # | Check | Passes when |
+|---|---|---|
+| 0 | Need | existing code, config, or deletion cannot solve it |
+| 1 | Stdlib | no standard-library function does this |
+| 2 | Library | no popular, maintained, light library fits — reject heavyweights for one function |
+| 3 | Hand-roll | smallest implementation that solves the actual problem |
+
+- Price a hand-roll by its full life — edge cases, tests, future debugging — not
+  its line count; if that exceeds one maintained dependency, take the dependency.
+  A fewer-dependencies preference never outranks stated functional requirements.
+- Extend an existing function that covers most of the need instead of adding a
+  near-duplicate. Logic needed twice: extract a shared function — never copy.
+- YAGNI: build for the requirement in front of you, not predicted growth; add the
+  abstraction when the second consumer exists. No wrappers around wrappers, no
+  drive-by refactors. Smallest diff that solves the problem; prefer deleting code.
+
 Code comments:
-- Default: none. Comment only a why, constraint, invariant, or gotcha the code cannot show.
-- Never restate code, narrate steps, or add banners. A stale comment is worse
-  than none.
+- Allowed, but the minimum needed to explain the code. Prefer the docstring
+  (pydoc, JSDoc, doc comment) over inline comments; that is where API intent,
+  params, and contracts belong.
+- Explain a why, constraint, invariant, or gotcha the code cannot show — not a
+  restatement of what the code does.
+- No broad prose, narrated steps, or banners. A stale comment is worse than none.

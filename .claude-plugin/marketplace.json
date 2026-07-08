@@ -129,7 +129,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "tags": [
         "bundle",
         "graph"
@@ -1021,17 +1021,6 @@
       "source": "./packages/steering-backend"
     },
     {
-      "name": "steering-code-economy",
-      "description": "Code economy defaults: prefer deletion, stdlib, and minimal hand-rolled solutions over new abstractions. Avoid speculative generality, near-duplicate code, and heavyweight dependencies. Always-on steering. Opt-in.",
-      "version": "2.0.0",
-      "tags": [
-        "steering",
-        "code-economy",
-        "minimalism"
-      ],
-      "source": "./packages/steering-code-economy"
-    },
-    {
       "name": "steering-data",
       "description": "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering.",
       "version": "1.0.0",
@@ -1095,12 +1084,14 @@
     },
     {
       "name": "steering-pragmatic",
-      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Always-on steering. Opt-in.",
-      "version": "3.0.0",
+      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
+      "version": "4.0.0",
       "tags": [
         "steering",
         "pragmatic",
-        "personality"
+        "personality",
+        "code-economy",
+        "minimalism"
       ],
       "source": "./packages/steering-pragmatic"
     },

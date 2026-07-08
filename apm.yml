@@ -688,13 +688,6 @@ marketplace:
       tags:
         - steering
         - backend
-    - name: steering-code-economy
-      source: ./packages/steering-code-economy
-      category: steering
-      tags:
-        - steering
-        - code-economy
-        - minimalism
     - name: steering-data
       source: ./packages/steering-data
       category: steering
@@ -740,6 +733,8 @@ marketplace:
         - steering
         - pragmatic
         - personality
+        - code-economy
+        - minimalism
     - name: steering-project-structure
       source: ./packages/steering-project-structure
       category: steering
