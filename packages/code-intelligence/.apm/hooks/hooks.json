@@ -1,32 +1,5 @@
 {
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/reindex-after-commit.sh",
-            "if": "Bash(git commit*)",
-            "async": true,
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/codebase-index.sh",
-            "async": true,
-            "statusMessage": "Indexing codebase..."
-          }
-        ]
-      }
-    ],
     "SubagentStart": [
       {
         "hooks": [

@@ -6,7 +6,6 @@
 setup() {
   SCRIPTS="${BATS_TEST_DIRNAME}/../scripts"
   SUBAGENT="${SCRIPTS}/subagent-context-inject.sh"
-  REINDEX="${SCRIPTS}/reindex-after-commit.sh"
 
   TESTDIR="$(mktemp -d "${BATS_TMPDIR:-/tmp}/code-intel.XXXXXX")"
 
@@ -73,28 +72,5 @@ teardown() {
 
 @test "subagent-inject: malformed/empty stdin does not crash" {
   run env PATH="${STUBBIN}:${PATH}" bash "$SUBAGENT" <<<''
-  [ "$status" -eq 0 ]
-}
-
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-
-@test "reindex: subagent payload (agent_id present) exits without indexing" {
-  run env PATH="${STUBBIN}:${PATH}" bash "$REINDEX" <<<'{"agent_id":"sub-1","cwd":"/whatever"}'
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "reindex: jq builds a valid JSON arg for a backslash repo path" {
-  # Mirror the exact idiom the script uses to confirm valid encoding.
-  repo='/tmp/re\po"odd'
-  arg="$(jq -nc --arg p "$repo" '{repo_path:$p,mode:"fast"}')"
-  echo "$arg" | jq . >/dev/null
-  got="$(echo "$arg" | jq -r '.repo_path')"
-  [ "$got" = "$repo" ]
-}
-
-@test "reindex: empty stdin does not crash" {
-  run bash "$REINDEX" <<<''
   [ "$status" -eq 0 ]
 }
