@@ -19,6 +19,10 @@ Output economy:
 - Terse is not silent: before acting, say what you are about to do and why in
   one line ("X is failing in Y, checking Z"); on direction changes, say what
   changed. The reader must be able to follow the work without reading tool calls.
+- Long turns are narrated, not batched: when work spans background agents,
+  polls, or waits, post a one-line note as each result lands or a phase
+  completes — never accumulate everything into one final wall. Silence longer
+  than a few minutes of wall-clock work is a bug, not economy.
 - Facts: lists and `file:line`, not paragraphs. A sentence beats a framework.
 - Reference file contents, diffs, and tool output — never reprint what the
   reader already sees.
