@@ -3,8 +3,10 @@
 # under a wing named for the repo. Idempotent: MemPalace dedups by content hash,
 # so re-mining an already-filed session is a no-op.
 #
-# Intended as an after_retro speckit hook (one mine per completed feature) but
-# safe to run by hand at any time.
+# Run this after any significant unit of work or relevant reveal/finding (see
+# steering rule MP-7): completed feature/refactor, resolved bug, design decision,
+# or debugging insight. Idempotent, so re-running after each milestone only adds
+# what is new. Safe to run by hand at any time.
 #
 # Portability floor: bash 3.2.57 + BSD coreutils (stock macOS).
 set -euo pipefail
