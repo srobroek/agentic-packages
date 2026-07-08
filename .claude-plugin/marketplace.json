@@ -129,7 +129,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "3.1.0",
+      "version": "3.0.0",
       "tags": [
         "bundle",
         "graph"
@@ -1085,7 +1085,7 @@
     {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "4.0.0",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "pragmatic",
