@@ -1,5 +1,21 @@
 # Changelog
 
+## [10.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v9.0.0...srobroek-agentic--v10.0.0) (2026-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-pragmatic:** steering-code-economy is removed; its content now ships in steering-pragmatic 4.0.0. steering-pragmatic is now type: hybrid and registers a SubagentStart hook.
+
+### Features
+
+* **steering-pragmatic:** absorb code-economy + inject working style into subagents ([#501](https://github.com/srobroek/agentic-packages/issues/501)) ([7f0e243](https://github.com/srobroek/agentic-packages/commit/7f0e2438feb9a7e464deb3ec620df73f4c93a9d5))
+
+
+### Bug Fixes
+
+* let release-please own version bumps for pragmatic and code-intelligence ([#502](https://github.com/srobroek/agentic-packages/issues/502)) ([01a2bb7](https://github.com/srobroek/agentic-packages/commit/01a2bb7d01126fe845429232e4d3ee40544288fc))
+
 ## [9.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v8.0.0...srobroek-agentic--v9.0.0) (2026-07-07)
 
 

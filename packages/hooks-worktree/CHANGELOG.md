@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-worktree--v1.1.0...hooks-worktree--v1.2.0) (2026-07-08)
+
+
+### Features
+
+* agents clean up worktrees and build artifacts when they finish ([#498](https://github.com/srobroek/agentic-packages/issues/498)) ([eed91e5](https://github.com/srobroek/agentic-packages/commit/eed91e55e50c6e1cc6559011fc1f8baac2ee00d5))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-worktree-v1.0.1...hooks-worktree--v1.1.0) (2026-06-27)
 
 
