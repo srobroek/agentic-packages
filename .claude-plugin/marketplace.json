@@ -129,7 +129,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "graph"
@@ -161,7 +161,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "baseline"
