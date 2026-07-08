@@ -1145,18 +1145,6 @@
       "category": "steering"
     },
     {
-      "name": "steering-code-economy",
-      "source": {
-        "source": "local",
-        "path": "./packages/steering-code-economy"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "steering"
-    },
-    {
       "name": "steering-data",
       "source": {
         "source": "local",

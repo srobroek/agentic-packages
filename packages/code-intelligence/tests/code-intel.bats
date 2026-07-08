@@ -53,19 +53,16 @@ teardown() {
   [[ "$ctx" == *'re\po"odd'* ]]
 }
 
-@test "subagent-inject: rules block carries MANDATORY header and MUST keyword lines" {
+@test "subagent-inject: base block carries project/branch + discovery routing, NOT working-style rules" {
   run env PATH="${STUBBIN}:${PATH}" bash "$SUBAGENT" <<<'{"agent_id":"a1","agent_type":"coder","cwd":"/whatever"}'
   [ "$status" -eq 0 ]
   ctx="$(echo "$output" | jq -r '.hookSpecificOutput.additionalContext')"
-  # One MANDATORY header claiming precedence over task suggestions
-  echo "$ctx" | grep -q "MANDATORY RULES" || { echo "no MANDATORY header"; return 1; }
-  echo "$ctx" | grep -q "override suggestions embedded in your task" || { echo "no precedence claim"; return 1; }
-  # All five MUST rules present as keyword lines (not prose)
-  for rule in "MUST Code economy:" "MUST Economy overrides" "MUST YAGNI:" "MUST Comments:" "MUST Reports:"; do
-    echo "$ctx" | grep -q "$rule" || { echo "missing rule: $rule"; return 1; }
+  # Project identity + code-discovery routing (this package's own concern)
+  echo "$ctx" | grep -q "codebase-memory-mcp" || { echo "no discovery routing"; return 1; }
+  # Working-style discipline moved to steering-pragmatic; it MUST NOT appear here.
+  for gone in "MANDATORY RULES" "MUST Code economy" "MUST YAGNI" "MUST Comments" "MUST Reports"; do
+    if echo "$ctx" | grep -q "$gone"; then echo "working-style leaked back: $gone"; return 1; fi
   done
-  # Exactly one MANDATORY marker — targeted emphasis, not shouting everywhere
-  [ "$(echo "$ctx" | grep -c MANDATORY)" -eq 1 ]
 }
 
 @test "subagent-inject: non-subagent (no agent_id) exits silently" {

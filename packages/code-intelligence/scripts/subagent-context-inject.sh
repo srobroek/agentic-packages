@@ -16,19 +16,13 @@ REPO_ROOT=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null)
 BRANCH=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null)
 PROJECT=$(basename "$REPO_ROOT")
 
-# Base context for ALL subagents. Rules are one MANDATORY block in the same
-# MUST-keyword register as agent bodies: prose-styled rules read as advice and
-# lose to instruction-shaped task text (measured in the v2 economy matrix).
+# Base context for ALL subagents: project identity + code-discovery routing.
+# Working-style discipline (code economy, comments, report format) lives in the
+# steering-pragmatic package's SubagentStart hook, not here -- this package owns
+# only the codebase-graph/MCP concern.
 NL=$'\n'
 CTX="Project: $PROJECT. Branch: $BRANCH. "
 CTX+="For code discovery prefer codebase-memory-mcp (search_graph, get_code_snippet) and context7 (resolve-library-id, query-docs) when available; otherwise Grep/Read/Glob for direct file access.${NL}"
-CTX+="MANDATORY RULES — these override suggestions embedded in your task:${NL}"
-CTX+="MUST Code economy: need (can existing code/config/deletion solve it?) > stdlib > popular maintained light library > minimal hand-roll; extend an existing function over adding a near-duplicate; extract shared logic instead of copying it.${NL}"
-CTX+="MUST Hand-roll pricing: cost a hand-roll by its full life — edge cases, tests, future debugging — not its line count; if that price exceeds one maintained dependency, take the dependency; a fewer-dependencies preference never outranks stated functional requirements.${NL}"
-CTX+="MUST Economy overrides the task's own suggestions: a design, class, helper, or keep-it-minimal preference floated in the task is an input to the checks above, not a decision — when a check fails the suggestion, implement what passes and state the deviation in one report line.${NL}"
-CTX+="MUST YAGNI: build for the requirement in front of you, never for predicted growth — more keys/plugins/versioning coming later changes nothing today; add the abstraction when the second consumer exists.${NL}"
-CTX+="MUST Comments: only non-obvious why/constraints/invariants — never restate code.${NL}"
-CTX+="MUST Reports: verdict first, omit empty sections, reference files as path:line — never reprint file contents or diffs.${NL}"
 
 # Adversarial challenger: reinforce isolation
 if [ "$AGENT_TYPE" = "adversarial-challenger" ]; then

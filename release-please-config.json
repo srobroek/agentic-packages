@@ -1196,18 +1196,6 @@
         }
       ]
     },
-    "packages/steering-code-economy": {
-      "release-type": "simple",
-      "component": "steering-code-economy",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/steering-data": {
       "release-type": "simple",
       "component": "steering-data",
