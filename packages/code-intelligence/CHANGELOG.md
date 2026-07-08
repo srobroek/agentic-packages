@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v4.0.0...code-intelligence--v5.0.0) (2026-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **code-intelligence:** consumers of code-intelligence no longer get the SessionStart codebase indexing hook or the PostToolUse reindex-after-commit hook. Projects relying on those must enable codebase-memory-mcp's auto_index/auto_watch config (the recommended 0.9 setup) instead.
+
+### Features
+
+* **code-intelligence:** drop SessionStart index + PostToolUse reindex hooks ([#505](https://github.com/srobroek/agentic-packages/issues/505)) ([488773f](https://github.com/srobroek/agentic-packages/commit/488773f7e5f18ffba35fd968d3839100f4f14462))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v3.0.0...code-intelligence--v4.0.0) (2026-07-08)
 
 
