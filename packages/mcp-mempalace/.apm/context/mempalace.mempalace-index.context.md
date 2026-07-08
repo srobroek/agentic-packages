@@ -31,11 +31,14 @@ MUST MP-6: scope recall to the project's wing when the question is
 project-specific (the wing is named for the repo), so recall is not diluted by
 unrelated projects' memory.
 
-MUST MP-7: mine the session into MemPalace after any significant unit of work or
-whenever a relevant reveal/finding emerges — a completed feature or refactor, a
-resolved bug, a design decision, a debugging insight, or a discovery worth
-recalling later. Run the packaged mine script
-(`.claude/hooks/mcp-mempalace/scripts/mempalace-mine.sh`; `.codex/` under Codex),
-which files this repo's session transcripts into the wing. It is idempotent
-(content-hash dedup), so mining again after each milestone only adds what is new.
-Do not wait for session end; mine at the moment the work or finding lands.
+MUST MP-7: run the packaged mine script
+(`.claude/hooks/mcp-mempalace/scripts/mempalace-mine.sh`; `.codex/` under Codex)
+as soon as any of these lands — do not wait for session end:
+- a commit is made, or a feature/refactor is completed;
+- a bug is resolved or its root cause is identified;
+- a design decision or trade-off is settled;
+- a debugging insight or non-obvious finding about the code, tooling, or
+  environment is established.
+The script files this repo's session transcripts into the wing and is idempotent
+(content-hash dedup), so running it again after each of these events only adds
+what is new.
