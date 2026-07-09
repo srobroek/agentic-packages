@@ -1,5 +1,5 @@
 name: code-intelligence
-version: 5.0.0
+version: 6.0.0
 description: >-
   Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR
   reviewer agent, and project-structure steering.
@@ -14,10 +14,6 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/codebase-memory#>=2.0.0 <3.0.0
-    # mcp-codebase-memory (the codebase-memory-mcp SERVER) dropped from this
-    # bundle 2026-07-09: the graph skill above stays, but the MCP server is no
-    # longer wired globally/transitively. Add mcp-codebase-memory as a direct
-    # dependency in a specific repo if that repo actually needs the server.
     - srobroek/agentic-packages/packages/web-fetch#>=2.0.0 <3.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=2.0.0 <3.0.0
     - >-

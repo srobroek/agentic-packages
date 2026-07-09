@@ -1,5 +1,16 @@
 # Changelog
 
+## [11.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v10.1.0...srobroek-agentic--v11.0.0) (2026-07-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* **code-intelligence:** consumers relying on code-intelligence to provide the codebase-memory-mcp server must add mcp-codebase-memory as a direct dependency.
+
+### Features
+
+* **code-intelligence:** drop mcp-codebase-memory from the bundle ([#511](https://github.com/srobroek/agentic-packages/issues/511)) ([be3cade](https://github.com/srobroek/agentic-packages/commit/be3cade83adb974930b6312853c0fe8673294129))
+
 ## [10.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v10.0.0...srobroek-agentic--v10.1.0) (2026-07-08)
 
 

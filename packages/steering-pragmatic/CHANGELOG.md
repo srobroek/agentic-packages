@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.0.0...steering-pragmatic--v4.1.0) (2026-07-09)
+
+
+### Features
+
+* **steering-pragmatic:** long turns are narrated, not batched — phase-completion notes are mandatory ([bd3a355](https://github.com/srobroek/agentic-packages/commit/bd3a3558034a6e8572b189e16eb7a2b8dfd71ff2))
+* **steering-pragmatic:** subagent digest gains the terse-is-not-silent narration MUST ([b4a1d4e](https://github.com/srobroek/agentic-packages/commit/b4a1d4eae8f4fedc7eb339191f2f75ae4864efca))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v3.0.0...steering-pragmatic--v4.0.0) (2026-07-08)
 
 
