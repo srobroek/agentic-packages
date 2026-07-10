@@ -28,6 +28,10 @@ MUST Session cwd in a different worktree than yours → confirm target worktree 
    - **Git-activity overview.** When the repo has more than one worktree, also
      prints a "Worktree git activity" block (most-recently committed first) with
      branch, last-commit time + subject, and a `✎ dirty` mark. Pass `--no-git` to skip.
+   - **Branch label = the branch the session worked on** (from its transcript), not
+     the checkout's branch now. If the worktree has since switched, the row shows
+     `[worked-on → worktree now on current]` — a drift warning that on-disk files no
+     longer match that session. Don't read the second branch as the session's work.
 
 2. **STOP. Present the list and let the user choose.** Show the newest few rows
    including `worktree:` and `↳ left off:` lines, and ask which to resume.

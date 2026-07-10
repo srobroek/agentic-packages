@@ -475,9 +475,19 @@ def main() -> int:
         title = (e["title"] or "(no title)").replace("\n", " ")
         if len(title) > 68:
             title = title[:67] + "…"
-        # Prefer the worktree's current branch; fall back to the transcript's.
-        branch_name = e.get("wt_branch") or e.get("branch") or ""
-        branch = f" [{branch_name}]" if branch_name else ""
+        # Label with the branch the SESSION actually worked on (recorded in the
+        # transcript), not the worktree's branch *now* -- a worktree that has
+        # since switched branches would otherwise mislabel every past session
+        # that ran in it. When the worktree has drifted, note where it is now so
+        # the reader knows the files/branch may no longer match the transcript.
+        recorded = e.get("branch") or ""
+        wt_now = e.get("wt_branch") or ""
+        if recorded and wt_now and recorded != wt_now:
+            branch = f" [{recorded} → worktree now on {wt_now}]"
+        elif recorded or wt_now:
+            branch = f" [{recorded or wt_now}]"
+        else:
+            branch = ""
         lines.append(
             f"{idx:>2}. {e['agent']:<6} {e['session_id'][:8]}  "
             f"{rel_time(e['last_ts']):<10} {abs_time(e['last_ts'])}  "
