@@ -14,15 +14,14 @@ name: Release Please
 # artifacts, so this was a no-op; #401 was the first release that carried them and
 # the first to surface the drift, once the PAT below made the PR checks actually run.)
 #
-# TOKEN: the release PR is authored with RELEASE_TOKEN (a fine-grained PAT),
-# NOT the default GITHUB_TOKEN. GitHub deliberately does not trigger workflows from
-# commits made by GITHUB_TOKEN, so the required PR checks (check-artifacts,
-# tests-gate) would complete as `action_required` 0s no-ops and the release PR would
-# stay permanently BLOCKED. A PAT-authored commit triggers those workflows normally,
-# so the release PR self-satisfies branch protection. If the secret is absent the
-# action falls back to GITHUB_TOKEN and the deadlock returns -- keep the secret set.
-# The same PAT pushes the artifact-sync commit so it, too, triggers the checks.
-# PAT scope (fine-grained, this repo only): Contents RW + Pull requests RW.
+# TOKEN: the release PR is authored with a GitHub App token (RELEASE_APP_CLIENT_ID +
+# RELEASE_APP_PRIVATE_KEY), NOT the default GITHUB_TOKEN. GitHub deliberately does not
+# trigger workflows from commits made by GITHUB_TOKEN, so the required PR checks
+# (check-artifacts, tests-gate) would complete as `action_required` 0s no-ops and the
+# release PR would stay permanently BLOCKED. An App-token-authored commit triggers those
+# workflows normally, so the release PR self-satisfies branch protection.
+# The same token pushes the artifact-sync commit so it, too, triggers the checks.
+# App permissions required (this repo): Contents RW + Pull requests RW.
 
 on:
   push:
@@ -36,22 +35,28 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      # Checkout with the PAT persisted as the push credential, so the artifact
-      # sync below pushes with a token whose commits trigger the required checks.
+      - name: Mint release-app token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b  # v2.0.6
+        with:
+          app-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # Checkout with the App token persisted as the push credential, so the
+      # artifact sync below pushes with a token whose commits trigger the required
+      # checks. (App-authored commits trigger workflows; GITHUB_TOKEN ones don't.)
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@v5
         with:
-          # Fine-grained PAT so the release PR's commits trigger the required PR
-          # checks (a GITHUB_TOKEN-authored commit does not). Falls back to
-          # GITHUB_TOKEN if the secret is unset -- see the header note.
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          # App token so the release PR's commits trigger the required PR checks.
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
