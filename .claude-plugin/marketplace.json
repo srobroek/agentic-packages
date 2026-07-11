@@ -1055,7 +1055,7 @@
     },
     {
       "name": "steering-docs-specs",
-      "description": "Opinionated documentation and spec conventions: durable docs structure, markdown practices, project-doc placement, and the SpecKit spec-workflow conventions. Opt-in steering.",
+      "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the write-docs package. Opt-in steering.",
       "version": "2.0.0",
       "tags": [
         "steering",
@@ -1215,6 +1215,17 @@
         "authoring"
       ],
       "source": "./packages/write-agentic"
+    },
+    {
+      "name": "write-docs",
+      "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter.",
+      "version": "0.1.0",
+      "tags": [
+        "skill",
+        "docs",
+        "writing"
+      ],
+      "source": "./packages/write-docs"
     }
   ]
 }

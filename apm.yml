@@ -812,3 +812,10 @@ marketplace:
         - skill
         - maintenance
         - authoring
+    - name: write-docs
+      source: ./packages/write-docs
+      category: docs
+      tags:
+        - skill
+        - docs
+        - writing
