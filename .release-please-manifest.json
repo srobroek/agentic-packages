@@ -1,5 +1,5 @@
 {
-  ".": "11.0.0",
+  ".": "12.0.0",
   "packages/agent-adversarial-challenger": "3.0.0",
   "packages/agent-coder": "4.0.0",
   "packages/agent-external-repo-worker": "2.0.0",
@@ -14,7 +14,7 @@
   "packages/code-intelligence": "6.0.0",
   "packages/codebase-memory": "2.0.0",
   "packages/codex-hook-contract": "0.2.1",
-  "packages/core": "6.0.0",
+  "packages/core": "7.0.0",
   "packages/data-ai": "2.0.0",
   "packages/debate": "2.0.0",
   "packages/dep-audit": "2.0.0",
@@ -85,7 +85,7 @@
   "packages/python-quality": "2.0.0",
   "packages/release-please": "1.0.0",
   "packages/resume-cv": "1.1.0",
-  "packages/resume-session": "2.0.0",
+  "packages/resume-session": "2.0.1",
   "packages/review": "3.0.0",
   "packages/rust-quality": "2.0.0",
   "packages/secrets-scan": "2.0.0",
@@ -98,11 +98,11 @@
   "packages/steering-backend": "1.0.0",
   "packages/steering-data": "1.0.0",
   "packages/steering-delivery": "1.0.0",
-  "packages/steering-docs-specs": "2.0.0",
+  "packages/steering-docs-specs": "3.0.0",
   "packages/steering-frontend": "2.0.0",
   "packages/steering-git-workflow": "2.1.0",
   "packages/steering-infrastructure": "2.0.0",
-  "packages/steering-pragmatic": "4.1.0",
+  "packages/steering-pragmatic": "4.2.0",
   "packages/steering-project-structure": "1.0.0",
   "packages/steering-speckit": "3.0.0",
   "packages/steering-subagent-routing": "3.0.0",
@@ -113,5 +113,5 @@
   "packages/web-fetch": "2.0.0",
   "packages/whats-new": "2.0.0",
   "packages/write-agentic": "3.1.0",
-  "packages/write-docs": "0.1.0"
+  "packages/write-docs": "1.0.0"
 }

@@ -1,5 +1,16 @@
 # Changelog
 
+## [12.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v11.0.0...srobroek-agentic--v12.0.0) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* docs-specs.project-docs.context.md is removed; installs relying on markdown-wide doc-style steering must add the write-docs package.
+
+### Features
+
+* write-docs skill for slop-free, release-focused documentation ([#522](https://github.com/srobroek/agentic-packages/issues/522)) ([3d874b8](https://github.com/srobroek/agentic-packages/commit/3d874b86d9379322ebaeb4ebea3b9e3f7f4bb30c))
+
 ## [11.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v10.1.0...srobroek-agentic--v11.0.0) (2026-07-09)
 
 

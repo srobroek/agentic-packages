@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v2.0.0...steering-docs-specs--v3.0.0) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* docs-specs.project-docs.context.md is removed; installs relying on markdown-wide doc-style steering must add the write-docs package.
+
+### Features
+
+* **steering:** write for the released, steady-state artifact ([#520](https://github.com/srobroek/agentic-packages/issues/520)) ([1ff9046](https://github.com/srobroek/agentic-packages/commit/1ff904647e620b8084a3219b4824df1d82ec3ff6))
+* write-docs skill for slop-free, release-focused documentation ([#522](https://github.com/srobroek/agentic-packages/issues/522)) ([3d874b8](https://github.com/srobroek/agentic-packages/commit/3d874b86d9379322ebaeb4ebea3b9e3f7f4bb30c))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v1.1.0...steering-docs-specs--v2.0.0) (2026-07-07)
 
 
