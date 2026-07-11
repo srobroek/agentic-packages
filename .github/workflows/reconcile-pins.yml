@@ -38,9 +38,10 @@ name: Reconcile internal pins
 #   - Because the bump type must differ per parent, the PR is REBASE-merged,
 #     not squashed: squashing would collapse the per-severity commits into a
 #     single type and flatten every parent to one bump. See the auto-merge step.
-#   - The PR is authored with PAT_RELEASE_AGENTIC_PACKAGES for the same reason
-#     release-please.yml uses it: GITHUB_TOKEN-authored commits do not trigger
-#     the required PR checks, and the PR would sit blocked forever.
+#   - The PR is authored with a GitHub App token (RELEASE_APP_CLIENT_ID +
+#     RELEASE_APP_PRIVATE_KEY) for the same reason release-please.yml uses it:
+#     GITHUB_TOKEN-authored commits do not trigger the required PR checks, and
+#     the PR would sit blocked forever.
 
 on:
   push:
@@ -63,12 +64,19 @@ jobs:
   reconcile:
     runs-on: ubuntu-latest
     steps:
+      - name: Mint release-app token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b  # v2.0.6
+        with:
+          app-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Checkout main
         uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Reconcile locator ranges against released versions
         id: reconcile
@@ -167,7 +175,7 @@ jobs:
       - name: Push bump branch and open PR
         if: steps.reconcile.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
 
@@ -214,7 +222,7 @@ jobs:
       - name: Auto-merge the reconcile PR once checks pass
         if: steps.reconcile.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.PAT_RELEASE_AGENTIC_PACKAGES || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
 
