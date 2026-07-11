@@ -47,8 +47,9 @@ def default_project() -> str:
 
 
 def encode_project(path: str) -> str:
-    """Claude encodes a project path by replacing every '/' and '.' with '-'."""
-    return re.sub(r"[/.]", "-", path)
+    """Claude encodes a project path by replacing every non-alphanumeric
+    character with '-' (so '/', '.', spaces, and '_' all become '-')."""
+    return re.sub(r"[^a-zA-Z0-9]", "-", path)
 
 
 def parse_ts(value) -> float | None:

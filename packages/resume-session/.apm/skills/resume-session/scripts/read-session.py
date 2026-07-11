@@ -54,7 +54,9 @@ TOOL_RESULT_CHARS = 320  # max chars of a truncated tool result
 
 
 def encode_project(path: str) -> str:
-    return re.sub(r"[/.]", "-", path)
+    # Claude encodes a project path by replacing every non-alphanumeric
+    # character with '-' (so '/', '.', spaces, and '_' all become '-').
+    return re.sub(r"[^a-zA-Z0-9]", "-", path)
 
 
 def worktree_projects(project: str) -> list[str]:

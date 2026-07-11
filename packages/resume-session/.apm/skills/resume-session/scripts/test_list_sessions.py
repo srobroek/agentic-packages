@@ -277,3 +277,22 @@ def test_no_worktrees_flag_scans_only_project(tmp_path, monkeypatch, capsys):
     rc = lst.main()
     assert rc == 0
     assert "No prior sessions" in capsys.readouterr().out
+
+
+# --- encode_project: every non-alphanumeric char maps to '-' -----------------
+# Regression: Claude encodes a project path by replacing every non-alphanumeric
+# character with '-'. Encoding only '/' and '.' missed spaces and underscores, so
+# a repo path like ".../OneDrive - vxsan.com/.../_skill_src/..." resolved to a
+# transcript dir that did not exist and the tool reported "No prior sessions".
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("/repo/main", "-repo-main"),
+        ("/home/u/.config/fish", "-home-u--config-fish"),
+        ("/a/OneDrive - vxsan.com/b", "-a-OneDrive---vxsan-com-b"),
+        ("/a/Finance tracking/_skill_src/x", "-a-Finance-tracking--skill-src-x"),
+    ],
+)
+def test_encode_project_replaces_all_non_alphanumeric(path, expected):
+    assert lst.encode_project(path) == expected
