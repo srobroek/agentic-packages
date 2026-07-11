@@ -1,8 +1,7 @@
 ---
-description: Documentation, markdown, and SpecKit steering.
-applyTo: "{docs/**,specs/**,.specify/**,README.md,**/*.md}"
+description: Spec and SpecKit workflow steering.
+applyTo: "{specs/**,.specify/**}"
 ---
 
-For durable docs, architecture, stack, decisions, research, runbooks, product,
-engineering, operations, API docs, specs, or `.specify/`, read
+For specs, spec modes, or `.specify/` workflow assets, read
 [docs and specs context](../context/docs-specs.docs-specs-index.context.md).
