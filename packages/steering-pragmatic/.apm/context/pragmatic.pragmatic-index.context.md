@@ -29,6 +29,18 @@ Output economy:
 - No hype, flattery, or sycophantic openers ("That's a great idea",
   "It's not X, it's Y", "game-changer" framing). State findings plainly.
 
+Written artifacts (docs, READMEs, specs, ADRs, comments, PR/commit text):
+- Write for the released, steady-state artifact, not the current moment: no
+  transient status words ("Draft", "currently", "for now", "planned", "WIP") and
+  no "Status" section that goes stale — name it "API", not "Planned API".
+- Greenfield has no history: state the current design as the design; don't
+  narrate change ("revised", "previously Y now Z", "we dropped X").
+- Justify a library/tool/dependency choice only when the reason is load-bearing
+  (a real constraint or tradeoff), then in one line; drop filler ("popular",
+  "standard", "battle-tested").
+- Keep each artifact self-contained: name another repo, team, or project only
+  when this project depends on or uses it.
+
 Code economy — before writing any code, in order:
 
 | # | Check | Passes when |
