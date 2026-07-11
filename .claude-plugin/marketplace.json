@@ -161,7 +161,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "6.0.0",
+      "version": "7.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -914,7 +914,7 @@
     {
       "name": "resume-session",
       "description": "Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "skill",
         "lifecycle",
@@ -1056,7 +1056,7 @@
     {
       "name": "steering-docs-specs",
       "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the write-docs package. Opt-in steering.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "docs"
@@ -1096,7 +1096,7 @@
     {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "4.1.0",
+      "version": "4.2.0",
       "tags": [
         "steering",
         "pragmatic",
@@ -1219,7 +1219,7 @@
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "skill",
         "docs",

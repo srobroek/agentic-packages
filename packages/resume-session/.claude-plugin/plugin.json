@@ -1,6 +1,6 @@
 {
   "name": "resume-session",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.",
   "author": {
     "name": "Sjors Robroek"
