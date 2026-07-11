@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.1.0...steering-pragmatic--v4.2.0) (2026-07-11)
+
+
+### Features
+
+* **steering:** write for the released, steady-state artifact ([#520](https://github.com/srobroek/agentic-packages/issues/520)) ([1ff9046](https://github.com/srobroek/agentic-packages/commit/1ff904647e620b8084a3219b4824df1d82ec3ff6))
+
 ## [4.1.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.0.0...steering-pragmatic--v4.1.0) (2026-07-09)
 
 

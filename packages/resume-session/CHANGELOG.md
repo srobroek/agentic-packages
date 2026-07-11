@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/resume-session--v2.0.0...resume-session--v2.0.1) (2026-07-11)
+
+
+### Bug Fixes
+
+* resume-session finds transcripts for paths with spaces or underscores ([#521](https://github.com/srobroek/agentic-packages/issues/521)) ([da17ecd](https://github.com/srobroek/agentic-packages/commit/da17ecd2f3559ad3e7a8319563d671342a20a4a2))
+* **resume-session:** label sessions by branch worked on, warn on worktree drift ([#518](https://github.com/srobroek/agentic-packages/issues/518)) ([1fcec76](https://github.com/srobroek/agentic-packages/commit/1fcec7617b98790487125347a5c2e4f3585a0064))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/resume-session--v1.2.1...resume-session--v2.0.0) (2026-07-07)
 
 
