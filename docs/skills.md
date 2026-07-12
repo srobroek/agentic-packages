@@ -37,7 +37,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 | `web-fetch` | Retrieve current or URL-specific information from the web with source-aware tool routing for fetching, browsing, citing, and verifying online. |
 | `whats-new` | Research what changed in a tool, CLI, library, framework, package, or dependency — or a technology, cloud service, hosted API, platform, or model family (AWS Bedrock, Anthropic/Claude, OpenAI, GCP, Azure, …) — between what is in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, repos, changelogs, release notes, commit logs, and service announcement feeds/APIs via machine endpoints instead of reading rendered pages, then summarizes into a fixed template. |
 | `write-agentic` | Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them. |
-| `write-docs` | Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter. |
+| `write-docs` | Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent. |
 <!-- END:skills -->
 
 ---
