@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/inject-doc-discipline.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
