@@ -49,3 +49,9 @@ uv.lock
 # Internal scratch: decision logs, proposals, audits (not for the public repo)
 reviews/
 .ruff_cache/
+
+# Machine-local tooling state: headroom session cache, per-host MCP config,
+# in-repo git worktrees
+.headroom/
+/.mcp.json
+/.worktrees/
