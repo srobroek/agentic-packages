@@ -1,6 +1,6 @@
 ---
 name: write-docs
-description: Write or review READMEs, docs, PR descriptions, specs, ADRs, and release text. Use when writing, rewriting, reviewing, or de-slopping any documentation.
+description: Invoke before writing or reviewing a README, docs, PR/release text, spec, ADR, or CONTRIBUTING — even when documentation is one step of a larger task.
 ---
 
 # Write Docs
