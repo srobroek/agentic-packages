@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.1.0...srobroek-agentic--v12.1.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* source-guard no longer blocks read-only inspection of managed assets ([#528](https://github.com/srobroek/agentic-packages/issues/528)) ([1fd60c8](https://github.com/srobroek/agentic-packages/commit/1fd60c871fb9fcd7d25264716b40a62c16e3d1b4))
+
 ## [12.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.0.0...srobroek-agentic--v12.1.0) (2026-07-12)
 
 
