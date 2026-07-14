@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/license-picker--v1.0.0...license-picker--v1.1.0) (2026-07-14)
+
+
+### Features
+
+* add license-picker skill and steering-licensing package ([#530](https://github.com/srobroek/agentic-packages/issues/530)) ([9ad3395](https://github.com/srobroek/agentic-packages/commit/9ad33956bede48b2c5676dbb640af8ab13c27fba))
+* **user-journeys:** service-agnostic user-journey lifecycle package ([#532](https://github.com/srobroek/agentic-packages/issues/532)) ([5799976](https://github.com/srobroek/agentic-packages/commit/57999765c239a322883d662545ab1b2739f19792))
+
+
+### Refactors
+
+* fold steering-licensing into license-picker skill ([#531](https://github.com/srobroek/agentic-packages/issues/531)) ([c06d7e2](https://github.com/srobroek/agentic-packages/commit/c06d7e2e4886d98c785d0d28f888072a8f3e0e93))
+
 ## 1.0.0 (2026-07-14)
 
 ### Added
