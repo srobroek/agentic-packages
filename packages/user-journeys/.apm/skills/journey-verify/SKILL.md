@@ -12,7 +12,11 @@ and the target `journey.md` files first.
 
 For a single journey, run inline. For several, spawn one `journey-validator`
 agent per journey (respect profile `exclusive: true` — serialize journeys
-sharing an exclusive profile).
+sharing an exclusive profile). If the `journey-validator` agent type is not
+available in this environment, validate inline, one journey at a time,
+under the same boundaries. Never validate a journey your own context
+authored or amended in this conversation — that is self-review; hand it to
+a validator agent or report that first validation needs a fresh context.
 
 ## 1 — Resolve the driving strategy
 
@@ -74,8 +78,13 @@ intent-evidence sources listed in README.md.
    rationale) with severity P1–P3.
 3. Update run frontmatter `findings:` with assigned ids. Reindex
    (`journeys.py index`).
-4. Commit journeys-dir changes (amendments, run file, index) as
-   `journey(J<id>): validate v<version> — <result>`.
+4. Promotion: a `draft` journey may become `active` only when every step
+   passed AND its Known gaps are all user-confirmed; note the promotion in
+   the run file. Otherwise leave `status` untouched.
+5. Commit journeys-dir changes (amendments, run file, index) as
+   `journey(J<id>): validate v<version> — <result>` — unless the caller or
+   the repo's workflow forbids committing; then leave the changes
+   uncommitted and say so in your report.
 
 ## 7 — Close the loop
 

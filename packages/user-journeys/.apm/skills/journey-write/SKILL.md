@@ -11,7 +11,9 @@ Write or amend journeys per the format spec. The journeys directory's
 and `INDEX.md`. If no journeys directory exists, run `journey-init` first.
 
 Delegate the drafting to the `journey-scribe` agent when working on more
-than one journey; do it inline for a single journey. Elicitation always
+than one journey; do it inline for a single journey. If the
+`journey-scribe` agent type is not available in this environment, draft
+inline under the same boundaries. Elicitation always
 happens HERE, in the main context — subagents cannot question the user.
 The scribe receives the answers and returns open questions; it never
 invents missing information.
@@ -112,6 +114,11 @@ legacy doc; let the user decide.
 
 ## Always
 
+- Never validate as part of authoring: do not invoke journey-verify (or
+  drive the product against the steps) on a journey you just wrote or
+  amended. First validation must come from a fresh context — a validator
+  certifying a document its own context authored is self-review. End by
+  offering journey-verify as the next step instead.
 - End by running lint + index; both must be clean.
 - Report which journeys were created/amended, at which versions, and any
   surface-map or profile updates made to README.md.
