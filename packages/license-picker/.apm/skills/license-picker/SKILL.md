@@ -15,6 +15,8 @@ in their actual constraints, and provides implementation steps.
 - User says "pick a license", "license this", "choose a license"
 - User is setting up a new open-source repo and hasn't selected a license
 - User mentions relicensing or license migration
+- A quick factual question about license mechanics, per-file headers, or CLA
+  setup (skip the interview; LOAD references/framework.md and answer directly)
 
 ## Workflow
 
