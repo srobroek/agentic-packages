@@ -1,0 +1,10 @@
+{
+  "name": "license-picker",
+  "version": "1.0.0",
+  "description": "Interactive license picker — interviews the user, recommends an OSI-approved license, validates against real sources.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "skills": "./.apm/skills"
+}
