@@ -1,13 +1,7 @@
 ---
 name: journey-campaign
 description: >-
-  Multi-journey validation campaign with an autonomous, bounded fix loop:
-  fan out one journey-validator per journey (serializing exclusive
-  interfaces), aggregate and dedupe findings, then per fix-loop policy
-  dispatch fresh coder agents for suspected regressions and re-validate only
-  what failed, repeating until green or a hard stop. Use for "validate all
-  journeys", release readiness, or post-merge sweeps. For one journey or no
-  fix loop, use journey-verify.
+  Multi-journey validation campaign: fan out validators, dedupe findings, dispatch coder agents for regressions, re-validate until green or a hard stop.
 ---
 
 # journey-campaign

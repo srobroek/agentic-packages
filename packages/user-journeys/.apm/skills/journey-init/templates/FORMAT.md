@@ -68,9 +68,11 @@ One paragraph: what the user is trying to accomplish and what "done" means.
 ### Definition of ready
 
 A journey may leave `status: draft` only when all of these hold. Authoring
-skills audit against this list; whatever cannot be satisfied is recorded
-under **Known gaps** as an explicit open question — missing information is
-recorded, never invented.
+skills audit against this list. Whatever cannot be satisfied becomes a
+**Known gaps** entry only after the user explicitly confirms the ambiguity
+is acceptable (record "accepted by user, <date>" on the entry); agents
+never accept a gap on the user's behalf, and missing information is never
+invented. Unconfirmed gaps keep the journey in `draft`.
 
 - [ ] **Goal** names the actor's outcome and an observable definition of
       "done" — not a feature description.

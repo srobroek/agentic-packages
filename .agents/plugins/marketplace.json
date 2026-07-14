@@ -749,6 +749,18 @@
       "category": "languages"
     },
     {
+      "name": "license-picker",
+      "source": {
+        "source": "local",
+        "path": "./packages/license-picker"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "lsp-go",
       "source": {
         "source": "local",
@@ -1311,6 +1323,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "languages"
+    },
+    {
+      "name": "user-journeys",
+      "source": {
+        "source": "local",
+        "path": "./packages/user-journeys"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
     },
     {
       "name": "verify",

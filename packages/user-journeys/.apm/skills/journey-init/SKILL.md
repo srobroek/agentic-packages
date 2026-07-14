@@ -1,12 +1,7 @@
 ---
 name: journey-init
 description: >-
-  Set up a user-journeys directory in a repository: investigate the repo to
-  detect product shape (web, desktop, CLI, TUI, API), drivers, tracker, and
-  change-record conventions; interview the user on preferences; then scaffold
-  the journeys directory (FORMAT.md, README.md config, INDEX.md). Use when a
-  repo has no journeys directory yet, or to re-run configuration. Not for
-  writing journeys (journey-write) or validating them (journey-verify).
+  Set up a user-journeys directory: investigate the repo, interview the user on preferences and interfaces, scaffold the format spec, README config, and index.
 ---
 
 # journey-init

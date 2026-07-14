@@ -1,14 +1,7 @@
 ---
 name: journey-verify
 description: >-
-  Validate one or more user journeys against the running product: drive the
-  product through each journey's steps via the configured interface profile,
-  compare observations against expectations, triage mismatches (correction /
-  intended-change / suspected-regression / product-question / environment),
-  apply intent-gated amendments, write a run file, and report findings via
-  the configured reporter. Use for "verify our journey is still correct".
-  For diff-scoped validation use journey-verify-changed; for many journeys
-  with a fix loop use journey-campaign.
+  Validate user journeys against the running product: drive each step, triage mismatches with intent gating, amend journeys, record runs, report findings.
 ---
 
 # journey-verify

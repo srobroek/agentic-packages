@@ -1,12 +1,7 @@
 ---
 name: journey-write
 description: >-
-  Author or amend a user journey: "we built this feature, write a journey",
-  "we expanded X, update the journey", or migrate an existing test script /
-  flow doc into the journey format. Reads the feature's change record (spec,
-  PR, diff, docs) as authoring input; the journey then owns its content as
-  current truth. Not for validating journeys against the running product
-  (journey-verify) or setting up the journeys directory (journey-init).
+  Author, amend, or migrate user journeys from feature evidence; grills the user on genuine unknowns and audits against the definition-of-ready checklist.
 ---
 
 # journey-write
@@ -32,10 +27,16 @@ span many specs and includes glue no spec contains.
 
 ## Elicitation — the grilling protocol
 
-Draft first, then grill. Never open with a questionnaire: read the
-evidence, produce the best draft it supports, and interrogate the user only
-on the genuine holes — decisions the evidence cannot answer. Asking what
-the repo already answers is noise; asking about real forks is signal.
+Draft first when there is evidence to draft from: read it, produce the
+best draft it supports, and interrogate the user only on the genuine
+holes — decisions the evidence cannot answer. Asking what the repo already
+answers is noise; asking about real forks is signal.
+
+When the repo has little or no relevant evidence (greenfield journey, a
+feature that exists mostly in the user's head), grilling IS the primary
+input: skip the evidence hunt, open with a skeleton draft of your best
+understanding, and grill from there. Gather info first only when it makes
+sense — never stall a journey waiting for documents that don't exist.
 
 Grill with AskUserQuestion, up to 4 questions per round:
 
@@ -54,9 +55,13 @@ Grill with AskUserQuestion, up to 4 questions per round:
 
 **How far:** grill until the FORMAT.md definition-of-ready audit passes,
 capped at 3 rounds by default (the user saying "good enough" ends it
-early). Whatever is still unknown at the cap becomes an explicit **Known
-gaps** open-question entry — missing information is recorded, never
-invented, and never silently dropped.
+early). At the cap, do NOT silently park unknowns: present every remaining
+gap in one final question — provide the missing information, or explicitly
+accept each ambiguity. Only a user-confirmed ambiguity becomes a **Known
+gaps** entry (recorded with "accepted by user, <date>"); an unconfirmed
+gap keeps the journey at `status: draft` with the open questions in your
+report. Missing information is never invented and never accepted on the
+user's behalf.
 
 ## The definition-of-ready audit
 

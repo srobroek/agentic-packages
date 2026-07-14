@@ -1,12 +1,7 @@
 ---
 name: journey-verify-changed
 description: >-
-  Diff-scoped journey validation: determine what changed (a PR, a ref range,
-  or the merge-base with the default branch), map changed files and change
-  descriptions to journey surfaces and steps, then validate only the
-  impacted journeys/steps in changed-only mode. Use for "we patched X,
-  verify the journeys still hold" or "test only the changed functionality".
-  For full validation use journey-verify.
+  Diff-scoped journey validation: map changed files and stated intent to journey surfaces and steps, then validate only the impacted journeys.
 ---
 
 # journey-verify-changed

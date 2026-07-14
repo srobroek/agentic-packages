@@ -1,13 +1,7 @@
 ---
 name: journey-validator
 description: >-
-  Validates ONE user journey against the running product: resolves the
-  interface profile, drives the product through the journey's steps,
-  gathers evidence, triages mismatches with intent gating, writes the run
-  file, applies permitted amendments, and files findings via the configured
-  reporter. Read-only toward product code — never fixes the product. Spawn
-  one per journey from journey-verify or journey-campaign, with the journey
-  path, journeys-dir, mode, and profile in the prompt.
+  Validates one user journey against the running product with evidence, intent-gated triage, run files, and reported findings. Never edits product code.
 model: sonnet
 x-agentic:
   codex:
@@ -61,10 +55,14 @@ normative for everything you write.
 7. **Commit** journeys-dir changes only:
    `journey(J<id>): validate v<version> — <result>`.
 
-## Return value
+## Output contract
 
-Your final message is machine-consumed by the spawning skill. Return a
-compact structured summary: journey id + version validated, commit sha,
-overall result, per-step results, amendments made (with evidence refs),
-finding ids filed (with triage + severity), environment issues hit. No
-prose beyond that.
+Your final message is machine-consumed by the spawning skill, CAP ≤200
+words. First line:
+
+`JOURNEY J<id> v<version> @<sha> — PASS|FAIL|BLOCKED: one-line verdict`
+
+Then compact lists only: per-step results, amendments (with evidence
+refs), finding ids (triage + severity), environment issues. Never reprint
+journey bodies, run files, or evidence — reference `runs/<file>`, finding
+ids, and path:line only.
