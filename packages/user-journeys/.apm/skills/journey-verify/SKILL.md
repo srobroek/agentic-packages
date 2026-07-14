@@ -6,90 +6,51 @@ description: >-
 
 # journey-verify
 
-Validate journeys against reality. `FORMAT.md` in the journeys directory is
-normative for every artifact this skill writes. Read `README.md` (config)
-and the target `journey.md` files first.
+Coordinate validation of one or more journeys. `FORMAT.md` in the journeys
+directory is normative; read it plus `README.md` (config) and the target
+`journey.md` files first.
 
-For a single journey, run inline. For several, spawn one `journey-validator`
-agent per journey (respect profile `exclusive: true` — serialize journeys
-sharing an exclusive profile). If the `journey-validator` agent type is not
-available in this environment, validate inline, one journey at a time,
-under the same boundaries. Never validate a journey your own context
-authored or amended in this conversation — that is self-review; hand it to
-a validator agent or report that first validation needs a fresh context.
+## Who validates
 
-## 1 — Resolve the driving strategy
+Spawn one `journey-validator` agent per journey — the complete validation
+procedure (driving, evidence, triage, intent-gated amendment, run file,
+findings) is owned by that agent's definition, not restated here. Respect
+profile `exclusive: true`: serialize journeys sharing an exclusive profile;
+the rest run in parallel.
 
-From the journey's `interfaces:` pick a profile from README.md. The profile
-gives kind, launch/reset guidance, and doc pointers; you resolve the
-concrete driver from that plus project knowledge (browser automation for
-web, app-driving MCP for desktop, direct invocation for CLI/API). Bindings
-are improvised per run, never stored per step.
+- If the `journey-validator` agent type is unavailable, validate inline one
+  journey at a time: read the agent definition
+  (`.claude/agents/journey-validator.md`, or `agents/journey-validator.md`
+  in this package) and follow it verbatim.
+- Never validate a journey your own context authored or amended in this
+  conversation — that is self-review. Hand it to a validator agent or
+  report that first validation needs a fresh context.
 
-State plainly in the run file which interface was actually driven. If you
-can only reach a lower-fidelity surface than the user's (e.g. API instead
-of UI), say so and classify UI-specific expectations `blocked`, not `pass`.
+## Coordinator duties
 
-## 2 — Preflight
-
-Establish preconditions (P-ids) using profile reset/fixture guidance. A
-precondition you cannot establish makes dependent steps `blocked` — never
-fake state unless the profile explicitly documents stand-ins.
-Record the git commit under validation.
-
-## 3 — Execute steps
-
-In order, for each step: perform **Do**, observe, judge every **Expect**
-and **Expect (negative)**. Capture evidence proportionate to the claim —
-screenshots/snapshots where the driver supports them, command output,
-response bodies. A step with any failed expectation is `fail`; steps
-unreachable after a failure are `blocked`. Continue past failures when
-later steps are independently reachable.
-
-## 4 — Triage every mismatch
-
-Exactly one triage per mismatch (taxonomy in FORMAT.md). For each candidate
-mismatch, search for **intent evidence** before concluding: merged
-PRs/commits since the journey's last amendment, changelog, and the repo's
-intent-evidence sources listed in README.md.
-
-- Evidence found → `intended-change`.
-- Doc wrong about long-standing reality (predates recent changes) →
-  `correction`.
-- No evidence → `suspected-regression`.
-- Doc and reality disagree and neither is clearly right → `product-question`.
-- Harness/fixture/driver at fault → `environment` (run file only).
-
-## 5 — Amend (intent-gated)
-
-- `correction`: fix the journey body. No Δ entry, no version bump.
-- `intended-change`: update the body, bump `version`, add a Δ entry citing
-  the evidence, `by: journey-validator (intent-gated)`.
-- `suspected-regression` / `product-question`: journey unchanged.
-
-## 6 — Record and report
-
-1. Write `runs/<UTC>.md` per the run-file spec: frontmatter with per-step
-   results, body sections for every non-pass step with evidence and triage.
-2. File `suspected-regression` and `product-question` findings through the
-   configured reporter (github-issues via `gh`, or TRACKER.md). Every
-   finding embeds the `journey-finding` block from FORMAT.md and the human
-   sections (Summary / Repro / Expected vs Observed / Evidence / Triage
-   rationale) with severity P1–P3.
-3. Update run frontmatter `findings:` with assigned ids. Reindex
-   (`journeys.py index`).
-4. Promotion: a `draft` journey may become `active` only when every step
-   passed AND its Known gaps are all user-confirmed; note the promotion in
-   the run file. Otherwise leave `status` untouched.
-5. Commit journeys-dir changes (amendments, run file, index) as
+1. **Resolve scope and inputs.** Which journeys; for each, the profile from
+   its `interfaces:` and README.md. Pass each validator: journey path,
+   journeys dir, run mode (`full` or `changed-only(S…)`), profile name, and
+   the repo's commit convention (in fan-out: validators do not commit — you
+   commit once per wave).
+2. **Aggregate.** Collect the validators' structured results. With the
+   local tracker and parallel validators, id assignment is single-writer:
+   have validators return finding payloads and append them to TRACKER.md
+   yourself in one pass (github-issues validators may file directly).
+3. **Promotion.** A `draft` journey may become `active` only when every
+   step passed AND its Known gaps are all user-confirmed; note the
+   promotion in the run file. Otherwise leave `status` untouched.
+4. **Reindex once** per wave: `python3 <journeys-dir>/journeys.py index
+   <journeys-dir>` (the helper lives in the journeys directory), then lint.
+5. **Commit** journeys-dir changes as
    `journey(J<id>): validate v<version> — <result>` — unless the caller or
-   the repo's workflow forbids committing; then leave the changes
-   uncommitted and say so in your report.
+   repo workflow forbids committing; then leave uncommitted and say so.
 
-## 7 — Close the loop
+## Close the loop
 
-Report to the caller: per-journey result, amendments made (with evidence),
-findings filed. Then offer next actions — do not auto-run them when invoked
-directly: consolidation (`journey-consolidate`) if green and the delta log
-has entries; the fix loop per README.md `fix_loop` for regressions
-(`journey-campaign` owns the autonomous loop).
+Report per-journey results, amendments (with evidence), findings filed.
+Then offer next actions — never auto-run them when invoked directly:
+`journey-consolidate` when green with Δ entries or when `runs/` exceeds
+README `runs_keep` (retention is enforced only at consolidation — say so);
+the fix loop per README `fix_loop` for regressions (`journey-campaign`
+owns the autonomous loop).

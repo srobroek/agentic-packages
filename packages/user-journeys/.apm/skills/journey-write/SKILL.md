@@ -40,6 +40,11 @@ input: skip the evidence hunt, open with a skeleton draft of your best
 understanding, and grill from there. Gather info first only when it makes
 sense — never stall a journey waiting for documents that don't exist.
 
+In a headless context with no question channel (e.g. running as a
+subagent), owner-supplied statements from the invocation stand in for
+grilling answers; anything they don't cover goes to your report as an open
+question — the no-unconfirmed-gaps rule still applies, so never guess.
+
 Grill with AskUserQuestion, up to 4 questions per round:
 
 - Each question states a **tension** — why the answer isn't obvious, what
@@ -87,7 +92,7 @@ audit fails stays `status: draft`.
    - Status `draft` until first validated; `version: 1`;
      `last_reviewed:` today.
 3. Lint + reindex:
-   `python3 <journey-init-skill>/scripts/journeys.py lint <dir> && ... index <dir>`.
+   `python3 <journeys-dir>/journeys.py lint <journeys-dir>` then `index`.
 
 ## Amend an existing journey
 

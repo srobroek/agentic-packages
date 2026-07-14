@@ -12,6 +12,8 @@ editor, `git`, and `python3` for the index/lint helper.
   FORMAT.md                     # this spec
   README.md                     # per-project config: reporter, interface
                                 #   profiles, surface map, fix-loop policy
+  journeys.py                   # index/lint/prune helper — travels with the
+                                #   repo; installed by journey-init
   INDEX.md                      # generated routing table — do not hand-edit
   TRACKER.md                    # only when reporter is `local`
   J07-<slug>/
@@ -92,6 +94,11 @@ invented. Unconfirmed gaps keep the journey in `draft`.
 - [ ] Error and edge branches are explicitly scoped: covered in steps,
       or listed under Known gaps as out of scope — never simply absent.
 
+Promotion is event-driven: once the checklist holds, the first validation
+run in which every step passes records `draft` → `active` (the verify
+skill owns this transition); a consolidation checkpoint may also promote
+with the human's blessing. Nothing else changes `status`.
+
 ### Step identity rules
 
 - Step ids are `S<n>` with optional letter suffixes (`S3a`) for insertions.
@@ -135,7 +142,10 @@ handful of recent deltas; the log cannot grow monotonically.
 
 An agent may amend a journey **only** when it can cite intent evidence — a
 merged PR, spec, changelog entry, commit message, or an explicit user
-instruction stating the behavior changed on purpose. The evidence goes in the
+instruction stating the behavior changed on purpose. The evidence must
+itself STATE the behavior change: a commit that claims non-behavioral scope
+("refactor", "cleanup") while its diff changes behavior is not intent
+evidence — it is grounds for suspicion. The evidence goes in the
 Δ entry. With no intent evidence, the journey stays unchanged, the run marks
 the step failing, and a finding is filed as `suspected-regression`. Agents
 never resolve `product-question` findings; those always go to a human.
@@ -165,7 +175,10 @@ Triage: suspected-regression — no intent evidence in merges since v3.
 
 Step result values: `pass | fail | blocked | skipped`. `blocked` means the
 step could not be attempted (environment, missing fixture, prior failure);
-`skipped` means deliberately out of scope for this run's mode.
+`skipped` means deliberately out of scope for this run's mode. A step
+unreachable because an earlier step in the same run failed is `blocked` —
+the defect is recorded once, on the step that owns it; journey-level impact
+shows in the run `result` and the success criteria, never by double-marking.
 
 ## Triage taxonomy
 

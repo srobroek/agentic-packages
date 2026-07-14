@@ -30,7 +30,9 @@ stored; the agent resolves driving strategy from this plus the project docs.
 
 Replace me: how to launch and reset the product, which driver to prefer
 (e.g. Playwright against `pnpm dev` on :5173), where fixtures live, what
-must never be done against this environment.
+must never be done against this environment. State how state/fixture
+leakage into the checkout is PREVENTED (gitignore entry, temp working dir,
+pre-run assertion) — a convention alone is not a guarantee.
 
 ## Surface map
 

@@ -138,7 +138,21 @@ def test_index_lists_latest_run(tmp_path):
     assert journeys.cmd_index(tmp_path) == 0
     index = (tmp_path / "INDEX.md").read_text(encoding="utf-8")
     assert "| [J01](J01-buy-widget/journey.md) | Buy a widget | active | v2 |" in index
-    assert "2026-07-14T09:31Z fail" in index
+    assert "2026-07-14T09:31Z fail (full)" in index
+
+
+def test_index_counts_open_findings_and_shows_mode(tmp_path):
+    make_journey(tmp_path, runs=[GOOD_RUN.replace("mode: full", "mode: changed-only(S1)")])
+    (tmp_path / "TRACKER.md").write_text(
+        "# Journey findings\n\n## JV-0001 — x\n\n<!-- journey-finding\n"
+        "journey: J01\nstep: S2a\ntriage: suspected-regression\nseverity: P2\n-->\n"
+        "status: open\n\n## JV-0002 — y\n\n<!-- journey-finding\n"
+        "journey: J01\nstep: S1\n-->\nstatus: fixed\n",
+        encoding="utf-8",
+    )
+    journeys.cmd_index(tmp_path)
+    index = (tmp_path / "INDEX.md").read_text(encoding="utf-8")
+    assert "fail (changed-only) | 1 |" in index
 
 
 def test_prune_dry_run_then_delete(tmp_path):

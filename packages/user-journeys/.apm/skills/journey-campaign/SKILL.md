@@ -31,7 +31,11 @@ finding ids.
 
 Aggregate. **Dedupe across journeys**: one product defect surfacing in
 several journeys is one finding — file once, reference it from every
-affected run file; do not spam the tracker.
+affected run file; do not spam the tracker. With the local tracker, id
+assignment is single-writer: parallel validators return finding payloads
+and the coordinator appends them to TRACKER.md in one pass (github-issues
+validators may file directly). The coordinator owns the single reindex and
+the single journeys-dir commit per wave.
 
 ## Fix loop
 
@@ -71,6 +75,7 @@ Single campaign report at the end:
 - proposals: consolidation candidates (green journeys with Δ entries),
   coverage gaps, surface-map additions.
 
-Commit journeys-dir changes per journey-verify's convention; never commit
-product-code fixes yourself — coders own their commits per the repo's
-workflow.
+Commit journeys-dir changes per journey-verify's convention. Product-fix
+commits follow the repo's workflow: a coder that commits owns its commit;
+when the coder agent type does not commit, the coordinator commits the fix
+citing the finding id. Never leave an applied fix uncommitted.

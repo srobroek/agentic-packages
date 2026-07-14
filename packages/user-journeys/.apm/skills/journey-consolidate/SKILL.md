@@ -32,9 +32,11 @@ Propose consolidation only for journeys where:
    - delete Δ entries dated on or before the previous `last_reviewed`
      (git retains them),
    - promote `status: draft` → `active` if agreed,
-   - prune runs: `journeys.py prune <dir> --keep <runs_keep> --yes`
-     (dry-run first, show what dies; `runs_keep` from README frontmatter),
-   - reindex: `journeys.py index <dir>`, then lint.
+   - prune runs: `python3 <journeys-dir>/journeys.py prune <journeys-dir>
+     --keep <runs_keep> --yes` (dry-run first, show what dies; `runs_keep`
+     from README frontmatter),
+   - reindex: `python3 <journeys-dir>/journeys.py index <journeys-dir>`,
+     then lint. The helper lives in the journeys directory itself.
 4. Commit: `journey(J<id>): consolidate — last_reviewed <date>`.
 
 ## Report
