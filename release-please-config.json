@@ -800,6 +800,18 @@
         }
       ]
     },
+    "packages/license-picker": {
+      "release-type": "simple",
+      "component": "license-picker",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/lsp-go": {
       "release-type": "simple",
       "component": "lsp-go",
@@ -1355,6 +1367,18 @@
     "packages/typescript-quality": {
       "release-type": "simple",
       "component": "typescript-quality",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/user-journeys": {
+      "release-type": "simple",
+      "component": "user-journeys",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

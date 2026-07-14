@@ -65,6 +65,31 @@ One paragraph: what the user is trying to accomplish and what "done" means.
   Evidence: PR #691, spec-052/FR-004 · by: journey-scribe (intent-gated)
 ````
 
+### Definition of ready
+
+A journey may leave `status: draft` only when all of these hold. Authoring
+skills audit against this list; whatever cannot be satisfied is recorded
+under **Known gaps** as an explicit open question — missing information is
+recorded, never invented.
+
+- [ ] **Goal** names the actor's outcome and an observable definition of
+      "done" — not a feature description.
+- [ ] Every **Expect** is observable and falsifiable. "Works correctly",
+      "handles gracefully", and other unfalsifiable phrasing are defects.
+- [ ] Every **success criterion** has a concrete target: a count, a
+      threshold, a state that either holds or doesn't. Where the user has
+      real KPIs (time-to-complete, error budget, conversion), the SC cites
+      them; where they don't, the SC still picks a checkable proxy.
+- [ ] **Expect (negative)** guards every point where trust depends on
+      something not happening (silent writes, data loss, destructive
+      actions without confirmation, leaking state).
+- [ ] **Preconditions** are sufficient to reach S1 from a clean
+      environment, and each is establishable (or its gap is documented).
+- [ ] `actors`, `surfaces`, and `interfaces` are filled; `trace` links the
+      change records that informed authoring, or is explicitly empty.
+- [ ] Error and edge branches are explicitly scoped: covered in steps,
+      or listed under Known gaps as out of scope — never simply absent.
+
 ### Step identity rules
 
 - Step ids are `S<n>` with optional letter suffixes (`S3a`) for insertions.

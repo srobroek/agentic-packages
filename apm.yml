@@ -472,6 +472,15 @@ marketplace:
         - bundle
         - php
         - ruby
+    - name: license-picker
+      source: ./packages/license-picker
+      category: project-lifecycle
+      tags:
+        - skill
+        - licensing
+        - open-source
+        - interactive
+        - setup
     - name: lsp-go
       source: ./packages/lsp-go
       category: languages
@@ -779,6 +788,14 @@ marketplace:
         - skill
         - languages
         - typescript
+    - name: user-journeys
+      source: ./packages/user-journeys
+      category: quality
+      tags:
+        - journeys
+        - validation
+        - e2e
+        - quality
     - name: verify
       source: ./packages/verify
       category: quality
