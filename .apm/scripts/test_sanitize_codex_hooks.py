@@ -1,0 +1,212 @@
+"""Regression tests for the installed Codex hook sanitizer."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+
+SCRIPT = Path(__file__).with_name("sanitize-codex-hooks.py")
+SPEC = importlib.util.spec_from_file_location("sanitize_codex_hooks", SCRIPT)
+assert SPEC and SPEC.loader
+sanitize_codex_hooks = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(sanitize_codex_hooks)
+
+
+def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
+    hooks_dir = tmp_path / "hooks"
+    keep_command = f"{hooks_dir}/hooks-bash-safety/scripts/guard.sh"
+    config = {
+        "metadata": {"owner": "apm"},
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": "Bash",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": keep_command,
+                            "async": True,
+                            "if": "Bash(git commit*)",
+                        },
+                        {
+                            "type": "prompt",
+                            "prompt": "unsupported",
+                        },
+                        {
+                            "type": "command",
+                            "command": (
+                                f"{hooks_dir}/agent-coder/scripts/reminder.sh"
+                            ),
+                        },
+                    ],
+                }
+            ],
+            "WorktreeCreate": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": (
+                                f"{hooks_dir}/hooks-worktree/scripts/create.sh"
+                            ),
+                        }
+                    ]
+                }
+            ],
+        },
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["metadata"] == {"owner": "apm"}
+    assert set(clean["hooks"]) == {"PreToolUse"}
+    assert clean["hooks"]["PreToolUse"] == [
+        {
+            "matcher": "Bash",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": keep_command,
+                    "timeout": 30,
+                }
+            ],
+        }
+    ]
+    assert counts == {
+        "events_removed": 1,
+        "handlers_removed": 2,
+        "async_converted": 1,
+        "if_removed": 1,
+        "timeouts_added": 1,
+    }
+
+
+def test_sanitize_preserves_valid_timeout() -> None:
+    config = {
+        "hooks": {
+            "Stop": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "/bin/true",
+                            "timeout": 10,
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean == config
+    assert counts["timeouts_added"] == 0
+
+
+def test_prune_removes_only_unreferenced_top_level_entries(
+    tmp_path: Path,
+) -> None:
+    hooks_dir = tmp_path / "hooks"
+    keep_dir = hooks_dir / "hooks-bash-safety" / "scripts"
+    keep_dir.mkdir(parents=True)
+    (keep_dir / "guard.sh").write_text("#!/bin/sh\n", encoding="utf-8")
+    (keep_dir / "helper.sh").write_text("#!/bin/sh\n", encoding="utf-8")
+    stale_dir = hooks_dir / "hooks-worktree" / "scripts"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "create.sh").write_text("#!/bin/sh\n", encoding="utf-8")
+    stale_file = hooks_dir / "legacy-guard.sh"
+    stale_file.write_text("#!/bin/sh\n", encoding="utf-8")
+    referenced_file = hooks_dir / "direct-hook.sh"
+    referenced_file.write_text("#!/bin/sh\n", encoding="utf-8")
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": f"{keep_dir}/guard.sh",
+                        },
+                        {
+                            "type": "command",
+                            "command": str(referenced_file),
+                        },
+                    ]
+                }
+            ]
+        }
+    }
+
+    pending = sanitize_codex_hooks.prune_stale_entries(
+        config,
+        hooks_dir,
+        check=True,
+    )
+    assert [path.name for path in pending] == [
+        "hooks-worktree",
+        "legacy-guard.sh",
+    ]
+    assert stale_dir.is_dir()
+    assert stale_file.is_file()
+
+    removed = sanitize_codex_hooks.prune_stale_entries(config, hooks_dir)
+
+    assert [path.name for path in removed] == [
+        "hooks-worktree",
+        "legacy-guard.sh",
+    ]
+    assert (keep_dir / "helper.sh").is_file()
+    assert referenced_file.is_file()
+    assert not stale_dir.exists()
+    assert not stale_file.exists()
+
+
+def test_cli_reports_pruned_entry_count(tmp_path: Path) -> None:
+    config_path = tmp_path / "hooks.json"
+    hooks_dir = tmp_path / "hooks"
+    keep_script = hooks_dir / "keep" / "scripts" / "guard.sh"
+    keep_script.parent.mkdir(parents=True)
+    keep_script.write_text("#!/bin/sh\n", encoding="utf-8")
+    stale_script = hooks_dir / "legacy.sh"
+    stale_script.write_text("#!/bin/sh\n", encoding="utf-8")
+    config_path.write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "PreToolUse": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": str(keep_script),
+                                    "timeout": 10,
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(config_path),
+            "--prune-stale",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert "stale_entries_removed=1" in result.stdout
+    assert keep_script.is_file()
+    assert not stale_script.exists()

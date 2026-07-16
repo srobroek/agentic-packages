@@ -60,9 +60,10 @@ Role: lead session / orchestrator.
    its `agentId`/name; drive fix rounds via SendMessage to that handle
    (auto-resumes with context + worktree). Never spawn a fresh coder for a
    node under review. Dismiss only on approval + merge.
-7. **SubagentStart hook auto-injects `comms-block.md` into every subagent.
-   Teammates are NOT subagents — the hook never reaches them: paste
-   `comms-block.md` verbatim into each teammate brief.**
+7. **Comms protocol is mandatory.** Claude's skill-scoped `SubagentStart` hook
+   auto-injects `comms-block.md` into subagents. Codex does not run skill
+   frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
+   brief. Teammates are not subagents either; include it in their briefs.
 8. **Persistent infra, addressed on demand, never polled.** Gatekeeper +
    ledger-scribe live the whole run as background subagents, reached by
    SendMessage. State lives in the stores — recycle them to shed context

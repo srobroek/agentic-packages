@@ -204,3 +204,14 @@ commit_event() {
   [ "$status" -ne 127 ]
   [ "$status" -eq 0 ]
 }
+
+@test "edit-advisory: Codex apply_patch command payload is recognized" {
+  patch=$'*** Update File: x.go\n@@\n-package x\n+package changed\n'
+  payload="$(jq -cn --arg patch "$patch" \
+    '{tool_name:"apply_patch", tool_input:{command:$patch}}')"
+  run env -C "$REPO" AGENTIC_QUALITY_LANGS="go" \
+    AGENTIC_QUALITY_ADVISORY_LINES=1 AGENTIC_QUALITY_ADVISORY_COOLDOWN_SECONDS=0 \
+    "$FLOOR_BASH" "$EDIT_ADVISORY" <<<"$payload"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("QUALITY ADVISORY")'
+}

@@ -1,0 +1,10 @@
+{
+  "name": "chezmoi-editor",
+  "version": "1.1.0",
+  "description": "Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "skills": "./.apm/skills"
+}

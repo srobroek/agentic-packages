@@ -9,7 +9,7 @@ x-agentic:
     model: "gpt-5.4-mini"
     reasoning_effort: "medium"
     sandbox_mode: "read-only"
-    approval_policy: "none"
+    approval_policy: "never"
   claude:
     model: "sonnet"
     effort: "medium"

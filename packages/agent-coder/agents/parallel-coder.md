@@ -4,7 +4,7 @@ description: Isolated implementation subagent. Self-commits to its own worktree 
 model: sonnet
 x-agentic:
   codex:
-    model: "gpt-5.3-codex-spark"
+    model: "gpt-5.4"
     reasoning_effort: "high"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"

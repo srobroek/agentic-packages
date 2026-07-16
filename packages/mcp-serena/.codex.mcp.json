@@ -1,0 +1,9 @@
+{
+  "serena": {
+    "command": "bash",
+    "args": [
+      "-lc",
+      "ctx=\"${SERENA_MCP_CONTEXT:-}\"; if [ -z \"$ctx\" ]; then parent=\"$(ps -o args= -p \"$PPID\" 2>/dev/null | tr \"[:upper:]\" \"[:lower:]\")\"; case \"$parent\" in *claude*) ctx=\"claude-code\" ;; *codex*) ctx=\"codex\" ;; *) ctx=\"agent\" ;; esac; fi; exec serena start-mcp-server --context \"$ctx\" --project-from-cwd"
+    ]
+  }
+}

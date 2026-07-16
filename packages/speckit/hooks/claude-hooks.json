@@ -1,0 +1,64 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-context7-reminder.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-close-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-label-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-issue-refs.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-deferred-issues.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-stop-gate.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-task-commit-check.sh",
+            "if": "Bash(git commit*)"
+          }
+        ]
+      }
+    ]
+  }
+}

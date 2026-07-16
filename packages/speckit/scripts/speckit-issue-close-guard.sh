@@ -7,6 +7,13 @@
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
+_advise() {
+  local msg="$1"
+  jq -cn --arg ctx "$msg" \
+    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}' \
+    2>/dev/null || printf '%s\n' "$msg" >&2
+}
+
 # Check for direct issue close commands
 if echo "$COMMAND" | grep -qE '(gh issue close|glab issue close)'; then
   ISSUE_REF=$(echo "$COMMAND" | grep -oE '(gh|glab) issue close [^ ]+' | head -1)
@@ -20,13 +27,11 @@ EOF
     exit 0
   fi
 
-  cat <<EOF >&2
-ISSUE CLOSE WARNING: $ISSUE_REF
+  _advise "ISSUE CLOSE WARNING: $ISSUE_REF
 
 Issues should be closed via PR/MR merge (fixes #N in PR body).
 Only use direct closure when PR-based closure is not possible
-(e.g., no associated code change, cancelled work, duplicate).
-EOF
+(e.g., no associated code change, cancelled work, duplicate)."
   exit 0
 fi
 

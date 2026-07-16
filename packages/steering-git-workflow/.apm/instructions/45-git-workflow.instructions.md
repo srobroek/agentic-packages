@@ -1,6 +1,5 @@
 ---
 description: Always-loaded git workflow policy — branching, shipping, merging.
-applyTo: "**/*"
 ---
 
 For branch discipline, merge-vs-PR choice, merge flags, and pre-push checks,

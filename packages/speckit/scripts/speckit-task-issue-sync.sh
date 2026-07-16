@@ -17,7 +17,7 @@ patch="$(
     if (.tool_input | type) == "string" then
       .tool_input
     else
-      .tool_input.patch // .tool_input.input // .input // empty
+      .tool_input.command // .tool_input.patch // .tool_input.input // .input // empty
     end
   ' 2>/dev/null || true
 )"

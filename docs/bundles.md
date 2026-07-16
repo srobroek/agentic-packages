@@ -73,7 +73,7 @@ APM dependencies are repo-locators, not marketplace shortnames -- `code-review@s
 
 **Composition over duplication.** Skills and agents live as individual packages under `packages/<name>/`. A bundle does not copy their content -- it declares a caret-range dep on them. `core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) rather than depending on leaf packages directly, so most member updates cascade through the sub-bundle without touching core at all.
 
-Each package carries its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root [`apm.yml`](../apm.yml) `marketplace:` block and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`.
+Each package carries its own `apm.yml` and is versioned independently via release-please. The marketplace is hand-authored in the root [`apm.yml`](../apm.yml) `marketplace:` block and generated to `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` by `apm pack`. Codex plugin manifests do not define dependency composition, so install bundles through APM; native Codex installs expose only components owned directly by that package.
 
 ## External sources
 

@@ -5,7 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/notify.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/notify.sh",
+            "timeout": 5
           }
         ]
       }
@@ -16,7 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.sh",
+            "timeout": 10
           },
           {
             "type": "command",
@@ -45,11 +47,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh",
+            "timeout": 10
           }
         ]
       },
@@ -58,26 +57,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/bash-guard.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agentic-source-guard.sh",
+            "timeout": 10
           },
           {
             "type": "command",
             "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/git-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(ls *)|Bash(cat *)|Bash(find *)|Bash(grep *)|Bash(du *)|Bash(df *)|Bash(head *)|Bash(tail *)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/enforce-tool-prefs.sh"
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.sh",
+            "timeout": 10
           },
           {
             "type": "command",
@@ -87,19 +74,8 @@
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/safe-commands.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git merge*)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/no-ff-guard.sh",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "if": "Bash(gh pr merge*)|Bash(*gh pr merge*)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/squash-merge-guard.sh",
-            "timeout": 3
+            "command": "${CLAUDE_PROJECT_DIR}/./scripts/safe-commands.sh",
+            "timeout": 10
           }
         ]
       },
@@ -133,6 +109,7 @@
           {
             "type": "command",
             "command": "echo 'Environment file changed. Run: eval $(direnv export bash) or restart shell.'",
+            "timeout": 5,
             "statusMessage": "Detected .envrc change"
           }
         ]
@@ -157,63 +134,26 @@
         ]
       }
     ],
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-create.sh"
-          }
-        ]
-      }
-    ],
     "SessionEnd": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/./scripts/session-end-prune.sh",
-            "async": true
+            "async": true,
+            "timeout": 30
           }
         ]
       }
     ],
     "SubagentStop": [
       {
-        "matcher": "speckit-implement-task",
-        "hooks": []
-      },
-      {
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/./scripts/agent-metrics.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": []
-      }
-    ],
-    "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-cleanup.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/branch-check.sh"
+            "async": true,
+            "timeout": 10
           }
         ]
       }

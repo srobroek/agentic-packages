@@ -6,11 +6,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/bash-guard.sh"
+            "command": "${PLUGIN_ROOT}/scripts/bash-guard.sh",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/rm-rf-guard.sh"
+            "command": "${PLUGIN_ROOT}/scripts/rm-rf-guard.sh",
+            "timeout": 10
           }
         ]
       }

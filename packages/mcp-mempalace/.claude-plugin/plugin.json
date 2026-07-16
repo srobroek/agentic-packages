@@ -5,5 +5,6 @@
   "author": {
     "name": "Sjors Robroek"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "hooks": "./hooks/claude-hooks.json"
 }

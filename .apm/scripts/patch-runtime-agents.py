@@ -18,8 +18,13 @@ and reasoning effort, not filesystem access or approvals.
 from __future__ import annotations
 
 import argparse
+import json
 import re
+import tomllib
 from pathlib import Path
+
+CODEX_AGENTS_START = "# apm-codex-agents:start"
+CODEX_AGENTS_END = "# apm-codex-agents:end"
 
 
 def split_frontmatter(text: str) -> tuple[str, str]:
@@ -276,7 +281,47 @@ def patch_codex(root: Path, agents: dict[str, dict]) -> int:
         path.write_text(text, encoding="utf-8")
         patched += 1
     print(f"codex: patched {patched} agent(s)")
+    register_codex_agents(root, target_dir)
     return patched
+
+
+def register_codex_agents(root: Path, target_dir: Path) -> None:
+    """Register generated agent config layers in the active Codex config."""
+    config_path = root / ".codex" / "config.toml"
+    if not config_path.is_file():
+        print("codex: .codex/config.toml not found; agent files were not registered")
+        return
+
+    entries: list[str] = []
+    for path in sorted(target_dir.glob("*.toml")):
+        try:
+            parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError) as exc:
+            print(f"codex: cannot register invalid agent {path}: {exc}")
+            continue
+        name = path.stem
+        description = str(parsed.get("description") or f"APM agent: {name}")
+        entries.extend(
+            [
+                f'[agents.{json.dumps(name)}]',
+                f"description = {json.dumps(description)}",
+                f'config_file = {json.dumps(f"agents/{path.name}")}',
+                "",
+            ]
+        )
+
+    block = "\n".join([CODEX_AGENTS_START, *entries, CODEX_AGENTS_END])
+    text = config_path.read_text(encoding="utf-8")
+    pattern = re.compile(
+        rf"\n?{re.escape(CODEX_AGENTS_START)}.*?{re.escape(CODEX_AGENTS_END)}\n?",
+        re.DOTALL,
+    )
+    if pattern.search(text):
+        text = pattern.sub("\n" + block + "\n", text, count=1)
+    else:
+        text = text.rstrip() + "\n\n" + block + "\n"
+    config_path.write_text(text, encoding="utf-8")
+    print(f"codex: registered {len(entries) // 4} agent(s) in {config_path}")
 
 
 def upsert_frontmatter_scalar(frontmatter: str, key: str, value: str) -> str:

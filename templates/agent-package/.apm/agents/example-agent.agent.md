@@ -12,7 +12,7 @@ x-agentic:
     model: "gpt-5.5"
     reasoning_effort: "high"
     sandbox_mode: "workspace-write"   # read-only | workspace-write
-    approval_policy: "on-request"     # none | on-request
+    approval_policy: "on-request"     # never | on-request
   claude:
     model: "sonnet"
     effort: "medium"

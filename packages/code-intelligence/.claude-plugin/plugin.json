@@ -6,6 +6,7 @@
     "name": "Sjors Robroek"
   },
   "license": "Apache-2.0",
+  "hooks": "./hooks/hooks.json",
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",

@@ -72,6 +72,11 @@ run_guard() { run bash "$GUARD" <<<"$1"; }
   [ "$status" -eq 0 ]
 }
 
+@test "read: newline-separated reader commands" {
+  run_guard "$(mk_cmd "$(printf 'ls -la %s\nfind %s -name SKILL.md\n' "$MANAGED_DIR" "$MANAGED_DIR")")"
+  [ "$status" -eq 0 ]
+}
+
 @test "read: find with -name only (no action primary)" {
   run_guard "$(mk_cmd "find $MANAGED_DIR -name SKILL.md")"
   [ "$status" -eq 0 ]

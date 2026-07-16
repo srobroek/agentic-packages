@@ -1,6 +1,5 @@
 ---
 description: Choose subagent worktree isolation deliberately; commit isolated work before finishing.
-applyTo: "**/*"
 ---
 
 # Subagent worktree isolation

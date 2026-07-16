@@ -40,6 +40,7 @@ command -v chezmoi >/dev/null 2>&1 || exit 0
 # because a multi-line command WOULD otherwise bleed into the file_path field.
 file_path=""
 cmd=""
+tool_name="$(printf '%s' "$payload" | jq -r '.tool_name // .tool // empty' 2>/dev/null || true)"
 {
   IFS= read -r file_path || true
   cmd="$(cat)"
@@ -118,6 +119,23 @@ is_chezmoi_managed() {
   ensure_cache || return 1
   grep -qxF "$1" "$CACHE_FILE" 2>/dev/null
 }
+
+# --- Codex apply_patch -------------------------------------------------------
+# Codex sends the full patch in tool_input.command. Parse structured file
+# headers directly; feeding a patch into the shell-command parser silently
+# misses every managed target.
+case "$tool_name" in
+  apply_patch|functions.apply_patch)
+    while IFS= read -r patch_path; do
+      [[ -n "$patch_path" ]] || continue
+      abs_path="$(normalize_path "$patch_path")"
+      if is_chezmoi_managed "$abs_path"; then
+        warn "heads-up: '$patch_path' is chezmoi-managed; a direct edit here will be overwritten on the next 'chezmoi apply'. Edit the source instead: chezmoi edit '$patch_path' (source: chezmoi source-path '$patch_path'). Proceeding."
+      fi
+    done < <(printf '%s\n' "$cmd" | sed -nE 's/^\*\*\* (Update|Add|Delete) File: (.*)$/\2/p')
+    exit 0
+    ;;
+esac
 
 # --- Direct Edit/Write/MultiEdit of a file -------------------------------------
 # Object-form Edit/Write/MultiEdit sets file_path and leaves command empty. A

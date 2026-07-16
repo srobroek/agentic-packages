@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/precommit-gate.sh"
+            "command": "${PLUGIN_ROOT}/scripts/precommit-gate.sh",
+            "timeout": 10
           }
         ]
       }

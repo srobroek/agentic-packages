@@ -12,7 +12,7 @@ isolation: worktree
 tools: Read, Edit, Write, Bash, Grep, Glob
 x-agentic:
   codex:
-    model: "gpt-5.3-codex-spark"
+    model: "gpt-5.4"
     reasoning_effort: "high"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"

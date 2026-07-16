@@ -90,7 +90,7 @@ The enforcement hooks key off `.specify/feature.json` (or the git branch) to res
    - It resolves the `<feat>` placeholder from `$SPECIFY_FEATURE_DIRECTORY`, then `.specify/feature.json`, then the git branch -- so preconditions are feature-aware.
    - Otherwise it injects the node body as `additionalContext` (soft steering -- "you came from X, go to Y next").
 
-**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, `PostToolUse`; Codex wires `UserPromptSubmit`, `PreToolUse`, `PostToolUse`. Pre fires before the skill runs (can deny); post fires after (only steers).
+**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, and `PostToolUse`. The deprecated DAG adapter uses only Codex `UserPromptSubmit`, which can gate an explicit `/speckit.*` prompt before invocation; Codex has no exact skill-completion event. The current `speckit` package separately uses supported Bash, prompt, edit, and stop hooks.
 
 **Mandatory-step enforcement.** Node `pre` blocks phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify-tasks, verify, review, qa, code-review, security-review) mandatory rather than optional.
 
