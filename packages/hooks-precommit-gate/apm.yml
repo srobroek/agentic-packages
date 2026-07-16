@@ -1,5 +1,5 @@
 name: hooks-precommit-gate
-version: 0.5.1
+version: 0.6.0
 description: >-
   PreToolUse advisory (non-blocking) for git commit/push when a repo opts into
   the pre-commit framework. When the repo has .pre-commit-config.yaml but the
