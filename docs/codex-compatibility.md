@@ -47,9 +47,9 @@ below rates functionality when installed through APM, the project source of trut
 | `UserPromptSubmit` | Yes | Both can block or add context. Both ignore matcher for this event; Codex runs command handlers only. | None. |
 | `UserPromptExpansion` | No | Claude intercepts slash-command, skill, and MCP-prompt expansion before expansion. | Parse explicit command text in UserPromptSubmit and put mandatory checks inside the skill workflow. |
 | `MessageDisplay` | No | Claude can transform streamed display batches without changing transcript/model text. | Transform codex exec --json output in an external frontend; there is no in-process TUI equivalent. |
-| `PreToolUse` | Yes | Claude covers more tools and supports allow/deny/ask/defer plus if. Codex covers simple Bash, apply_patch, and MCP; ask, defer, and if are unsupported. | Use sandbox, approvals, Git/CI policy, and script-side filtering for paths Codex does not intercept. |
+| `PreToolUse` | Yes | Claude covers more tools, identifies subagent calls, and supports allow/deny/ask/defer plus if. Codex covers simple Bash, apply_patch, and MCP but does not expose subagent identity; ask, defer, and if are unsupported. | Use sandbox, approvals, Git/CI policy, and script-side filtering for paths Codex does not intercept. |
 | `PermissionRequest` | Yes | Both allow or deny an imminent approval. Codex rejects Claude input rewrites, permission updates, and interrupt controls. | None. |
-| `PostToolUse` | Yes | Claude fires after success. Codex also fires for nonzero Bash exits and has a narrower tool interception set. | Inspect tool_response in the handler and retain external checks for unsupported tools. |
+| `PostToolUse` | Yes | Claude fires after success and identifies subagent calls. Codex also fires for nonzero Bash exits, has a narrower interception set, and does not expose subagent identity on this event. | Inspect tool_response in the handler, use SubagentStart/Stop for agent-scoped behavior, and retain external checks for unsupported tools. |
 | `PostToolUseFailure` | No | Claude has a dedicated failed-tool event with error metadata. Codex only folds nonzero Bash into PostToolUse. | Inspect PostToolUse for supported tools and use process/MCP logging elsewhere. |
 | `PostToolBatch` | No | Claude can gate after a parallel tool batch before the next model call; Codex only has per-tool callbacks. | Accumulate PostToolUse records by turn_id and process at Stop; this cannot gate the immediate post-batch call. |
 | `PermissionDenied` | No | Claude runs after an automatic permission denial and can request a model retry. | Move policy to PreToolUse or PermissionRequest and return a model-visible reason. |
@@ -78,6 +78,7 @@ below rates functionality when installed through APM, the project source of trut
 - `hooks-subagent-worktree`: Codex uses explicit worktree isolation plus APM steering.
 - `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
+- `mcp-repomix`: Codex refreshes cannot reliably suppress subagent Git calls.
 - `speckit-dag-hooks`: `UserPromptExpansion` is approximated with `UserPromptSubmit`.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
 - `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
@@ -113,7 +114,7 @@ plugin manifests do not support every APM component type.
 
 | Package | Status | Codex difference or workaround |
 | --- | --- | --- |
-| `agent-coder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier. |
+| `agent-coder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier on PreToolUse. |
 | `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
 | `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
 | `hooks-chezmoi-guard` | Partial | Bash and apply_patch aliases are covered; other write/shell routes need source-first steering and filesystem policy. |
@@ -137,7 +138,7 @@ plugin manifests do not support every APM component type.
 | `lsp-terraform` | Claude-only | Codex has no native plugin LSP surface; use terraform validate and related CLI checks. |
 | `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
 | `mcp-mempalace` | Partial | Same MCP and context injection, but Codex SessionStart is synchronous because async handlers are skipped. |
-| `mcp-repomix` | Partial | Same MCP; snapshot refresh can miss unsupported shell paths, so run the refresh script explicitly when required. |
+| `mcp-repomix` | Partial | Same MCP; refresh can miss unsupported shell paths, and Codex PostToolUse has no subagent identity for suppressing subagent Git calls. Run the refresh script explicitly when required; extra subagent refreshes remain bounded by clean-tree and HEAD checks. |
 | `orchestrate` | Partial | Skill and APM agents work; Codex ignores skill-frontmatter hooks, so spawn briefs embed the communication protocol. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
