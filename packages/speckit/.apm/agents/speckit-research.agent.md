@@ -1,6 +1,6 @@
 ---
 name: speckit-research
-description: Researches current primary-source library or API documentation for a SpecKit decision and returns concise findings. Use only inside a SpecKit workflow when the parent provides a library, API, or implementation question tied to a spec or task.
+description: Researches primary-source library or API documentation for a bounded decision inside an active SpecKit workflow.
 model: sonnet
 maxTurns: 20
 background: true
@@ -54,6 +54,10 @@ Expect:
 6. Return a recommendation only when the evidence supports one.
 
 ## Output
+
+L1 RESEARCH: COMPLETE|INCONCLUSIVE — one-line evidence verdict.
+CAP 200w clean · 600w with findings.
+MUST Never reprint source documents, code, diffs, or the caller's brief.
 
 Use this shape:
 

@@ -194,10 +194,9 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
     if kind in caps and n_lines > caps[kind]:
         warn("W6", f"{n_lines} non-empty lines > {caps[kind]} target for {kind}")
 
-    # E7 pointer shape
+    # E7 pointer shape. applyTo is optional: APM treats an omitted applyTo as
+    # unconditional and folds the instruction into compiled context files.
     if kind == "pointer":
-        if "applyTo" not in fm:
-            err("E7", "pointer missing applyTo glob")
         if not re.search(r"\]\(\.\./context/.*\.context\.md\)", body):
             err("E7", "pointer does not link a ../context/*.context.md file")
 

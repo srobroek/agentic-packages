@@ -1,14 +1,9 @@
 ---
 name: orchestrate
-description: >-
-  Orchestrate a fleet of subagents across a complex, parallel, or long-running
-  implementation while controlling cost by routing each role to the cheapest
-  capable model. Use when a task needs multiple coordinated agents, parallel
-  worktree implementation, independent code review, safe multi-branch merging, or
-  a durable/reproducible run record. Covers role-to-model routing, persistent vs
-  ephemeral subagents vs Claude agent-teams, worktree isolation, a deterministic
-  task DAG, a forensic ledger, and terse inter-agent messaging. Not for single
-  bounded edits (use `coder`) or one isolated branch (use `parallel-coder`).
+description: Orchestrate coordinated subagents for parallel or long-running implementation with isolated worktrees, independent review, safe merging, and a durable run ledger.
+x-lint:
+  allow: [W6]
+  reason: "the loaded skill must retain its core orchestration protocol while detailed mechanics remain in references"
 hooks:
   SubagentStart:
     - hooks:
