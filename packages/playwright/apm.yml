@@ -15,4 +15,4 @@ tags:
   - browser
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/mcp-playwright#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/mcp-playwright#>=1.2.0 <2.0.0
