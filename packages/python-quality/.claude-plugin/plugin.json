@@ -1,6 +1,6 @@
 {
   "name": "python-quality",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Run Python format, lint, type-check, and test commands with the project toolchain.",
   "author": {
     "name": "Sjors Robroek"

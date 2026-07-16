@@ -1,5 +1,5 @@
 name: lsp-shell
-version: 0.2.0
+version: 0.3.0
 description: >-
   Shell LSP server: registers bash-language-server so agents get hover,
   diagnostics, go-to-definition, and references on Bash/POSIX shell sources.

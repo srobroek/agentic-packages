@@ -1,5 +1,5 @@
 name: goal-writer
-version: 1.0.0
+version: 1.1.0
 description: >-
   Turn a vague goal prompt into a structured, actionable goal -- with outcomes,
   concrete results, measurable KPIs, validation, and verifiable exit conditions

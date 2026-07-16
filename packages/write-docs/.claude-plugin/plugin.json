@@ -1,6 +1,6 @@
 {
   "name": "write-docs",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
   "author": {
     "name": "Sjors Robroek"

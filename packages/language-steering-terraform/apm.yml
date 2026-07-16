@@ -1,5 +1,5 @@
 name: language-steering-terraform
-version: 1.0.0
+version: 1.1.0
 description: >-
   Opt-in opinionated Terraform and HCL defaults: module preference order, remote
   state with locking, version pinning, and plan/validate discipline. Install to

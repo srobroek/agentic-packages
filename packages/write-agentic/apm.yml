@@ -1,5 +1,5 @@
 name: write-agentic
-version: 3.1.0
+version: 3.2.0
 description: >-
   Author or update skills, steering, or agent definitions using standard
   machine-language templates and a lint script that validates them.

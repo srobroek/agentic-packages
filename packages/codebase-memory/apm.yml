@@ -1,5 +1,5 @@
 name: codebase-memory
-version: 2.0.0
+version: 2.1.0
 description: >-
   Structured graph queries against the indexed code graph: trace
   callers/callees, find references, map architecture. Requires the

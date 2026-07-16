@@ -1,5 +1,5 @@
 name: dep-update
-version: 2.0.0
+version: 2.1.0
 description: >-
   Research each dependency's current latest version against installed lockfile
   pins, classify patch/minor/major bumps by safety, surface CVEs via native

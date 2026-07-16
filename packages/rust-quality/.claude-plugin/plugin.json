@@ -1,6 +1,6 @@
 {
   "name": "rust-quality",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Run Rust format, lint, and test checks with the project toolchain.",
   "author": {
     "name": "Sjors Robroek"

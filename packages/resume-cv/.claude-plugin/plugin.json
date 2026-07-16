@@ -1,6 +1,6 @@
 {
   "name": "resume-cv",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "CV / career-resume bundle: focused resume-tailoring and broad career-support workflows. Renamed from `resume` to avoid a namespace collision with `resume-session` (which resumes a prior coding SESSION, not a CV).",
   "author": {
     "name": "Sjors Robroek"

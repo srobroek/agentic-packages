@@ -1,5 +1,5 @@
 name: secrets-scan
-version: 2.0.0
+version: 2.1.0
 description: >-
   Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks
   or trufflehog (whichever is on PATH) over staged changes and blocks the commit

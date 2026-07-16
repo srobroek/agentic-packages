@@ -1,5 +1,5 @@
 name: steering-delivery
-version: 1.0.0
+version: 1.1.0
 description: >-
   Opinionated delivery cadence: work like a developer who commits continuously.
   Commit and push after every meaningful, self-contained step; keep commits

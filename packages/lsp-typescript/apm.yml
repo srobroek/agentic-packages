@@ -1,5 +1,5 @@
 name: lsp-typescript
-version: 0.2.0
+version: 0.3.0
 description: >-
   TypeScript/JavaScript LSP server: registers typescript-language-server so
   agents get hover, diagnostics, go-to-definition, and references on TS/JS

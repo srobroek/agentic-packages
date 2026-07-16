@@ -1,5 +1,5 @@
 name: speckit-dag-hooks
-version: 5.0.0
+version: 5.1.0
 description: >-
   DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate).
   Kept for existing installs; no new features. Opt-in enforcement hooks for the
