@@ -31,6 +31,19 @@ CODEX_UNAVAILABLE_PACKAGES = {
 }
 
 
+def runtime_semantics(value: object) -> object:
+    """Remove APM ownership metadata before comparing runtime behavior."""
+    if isinstance(value, dict):
+        return {
+            key: runtime_semantics(item)
+            for key, item in value.items()
+            if not key.startswith("_apm_")
+        }
+    if isinstance(value, list):
+        return [runtime_semantics(item) for item in value]
+    return value
+
+
 def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
     source_hooks = config.get("hooks", {})
     clean_hooks: dict[str, list[dict]] = {}
@@ -49,7 +62,7 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             continue
 
         clean_groups: list[dict] = []
-        seen_groups: set[str] = set()
+        seen_groups: dict[str, int] = {}
         for group in groups:
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
@@ -76,14 +89,21 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
                 clean_group = dict(group)
                 clean_group["hooks"] = clean_handlers
                 group_key = json.dumps(
-                    clean_group,
+                    runtime_semantics(clean_group),
                     sort_keys=True,
                     separators=(",", ":"),
                 )
                 if group_key in seen_groups:
                     counts["duplicate_groups_removed"] += 1
+                    existing_index = seen_groups[group_key]
+                    existing_group = clean_groups[existing_index]
+                    if (
+                        not existing_group.get("_apm_source")
+                        and clean_group.get("_apm_source")
+                    ):
+                        clean_groups[existing_index] = clean_group
                     continue
-                seen_groups.add(group_key)
+                seen_groups[group_key] = len(clean_groups)
                 clean_groups.append(clean_group)
 
         if clean_groups:
