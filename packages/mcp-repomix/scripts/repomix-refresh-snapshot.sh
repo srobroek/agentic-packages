@@ -19,6 +19,15 @@ json_value() {
 agent_id="$(json_value '.agent_id // empty')"
 [[ -n "$agent_id" && "$agent_id" != "null" ]] && exit 0
 
+tool_command="$(json_value '
+  if (.tool_input | type) == "string" then .tool_input
+  else (.tool_input.command // empty)
+  end')"
+if ! printf '%s' "$tool_command" | grep -Eq \
+  '(^|[;&|][[:space:]]*)git[[:space:]]+(switch[[:space:]]+(-c|--create)|checkout[[:space:]]+(-b|-B)|worktree[[:space:]]+add|merge|pull|rebase)([[:space:]]|$)'; then
+  exit 0
+fi
+
 exit_code="$(json_value '.tool_response.exit_code // .tool_result.exit_code // .result.exit_code // empty')"
 if [[ "$exit_code" =~ ^[0-9]+$ ]] && (( exit_code != 0 )); then
   exit 0

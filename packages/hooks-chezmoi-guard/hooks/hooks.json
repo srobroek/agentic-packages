@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh"
+            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh",
+            "timeout": 10
           }
         ]
       },
@@ -15,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh"
+            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh",
+            "timeout": 10
           }
         ]
       }

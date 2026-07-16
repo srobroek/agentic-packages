@@ -5,10 +5,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/branch-check.sh"
-          },
-          {
-            "type": "command",
             "command": "$(git rev-parse --show-toplevel)/./scripts/apm-outdated-check.sh",
             "timeout": 30
           }
@@ -17,35 +13,12 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Edit|Write|apply_patch",
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/agentic-source-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/bash-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/gh-rate-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/git-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(git merge*)",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/no-ff-guard.sh"
-          },
-          {
-            "type": "command",
-            "if": "Bash(gh pr merge*)|Bash(*gh pr merge*)",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/squash-merge-guard.sh"
+            "command": "$(git rev-parse --show-toplevel)/./scripts/agentic-source-guard.sh",
+            "timeout": 10
           }
         ]
       }
@@ -56,18 +29,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/agentic-source-guard.sh"
+            "command": "$(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.sh",
+            "timeout": 10
           }
         ]
       }

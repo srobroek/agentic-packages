@@ -74,12 +74,11 @@ if [ -n "$ACTIVE_SPEC" ] && [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
 fi
 
 if [ -n "$WARNINGS" ]; then
-  # Warn via stderr but do NOT block -- user may intentionally be stopping
-  cat <<EOF >&2
-SPECKIT STOP CHECK: Open items detected:
+  MESSAGE="SPECKIT STOP CHECK: Open items detected:
 $WARNINGS
-Consider running /handover to save context for next session.
-EOF
+Consider running /handover to save context for next session."
+  jq -cn --arg message "$MESSAGE" \
+    '{continue:true,systemMessage:$message}' 2>/dev/null || printf '%s\n' "$MESSAGE" >&2
 fi
 
 exit 0

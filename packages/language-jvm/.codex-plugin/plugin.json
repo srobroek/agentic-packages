@@ -1,0 +1,9 @@
+{
+  "name": "language-jvm",
+  "version": "2.0.0",
+  "description": "JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

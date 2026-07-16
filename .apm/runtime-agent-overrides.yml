@@ -148,176 +148,176 @@ claude:
 codex:
   agent_overrides:
     angular-architect:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     bash-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     build-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     c-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     cli-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     cpp-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     csharp-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     csharp-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     debugger:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     dependency-manager:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     django-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     django-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     dotnet-core-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     dotnet-framework-4.8-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     dx-optimizer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     electron-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     elixir-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     elixir-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     error-detective:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     fastapi-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     fastapi-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     flutter-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     golang-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     haskell-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     java-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     javascript-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     julia-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     kotlin-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     laravel-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     legacy-modernizer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     mcp-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     nextjs-developer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     node-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     php-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     posix-shell-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     postgres-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     python-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     rails-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     react-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     refactoring-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     ruby-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     rust-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     rust-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     scala-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     spring-boot-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     sql-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     swift-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     symfony-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     tdd-orchestrator:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     temporal-python-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     terraform-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     terraform-specialist:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     terragrunt-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     test-automator:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     tooling-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     typescript-pro:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     vue-expert:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high
     websocket-engineer:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.4
       reasoning_effort: high

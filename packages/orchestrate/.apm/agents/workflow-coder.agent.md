@@ -1,18 +1,12 @@
 ---
 name: workflow-coder
-description: >-
-  Implementation subagent for one DAG node in an `orchestrate` run. Works in
-  its own git worktree; self-commits, pushes a reviewable branch, then stays
-  alive for review/fix rounds until dismissed. Logs every step to the shared
-  ledger. Use `parallel-coder` for an isolated branch with no review loop,
-  `coder` for a direct in-tree edit. Only for use inside an active
-  `orchestrate`-skill run.
+description: Implements one orchestrate DAG node through isolated review rounds.
 model: sonnet
 isolation: worktree
 tools: Read, Edit, Write, Bash, Grep, Glob
 x-agentic:
   codex:
-    model: "gpt-5.3-codex-spark"
+    model: "gpt-5.4"
     reasoning_effort: "high"
     sandbox_mode: "workspace-write"
     approval_policy: "on-request"
@@ -95,3 +89,9 @@ You do not self-dismiss after `REPORTED` — wait to be resumed.
 Blocked by something outside your brief (ambiguous scope, unspecified product
 decision) → send `ASK <node> <question>` to `main`, stay idle; orchestrator
 surfaces it to the user, returns a decision. Never guess product intent.
+
+## Output
+
+L1 STATUS: REPORTED|BLOCKED|ASK — node, branch, verification, and next action.
+CAP 80w for every message to `main`.
+MUST Never reprint code, diffs, file contents, or the caller's brief.

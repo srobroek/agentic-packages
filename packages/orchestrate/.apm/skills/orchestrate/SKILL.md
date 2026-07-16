@@ -1,14 +1,9 @@
 ---
 name: orchestrate
-description: >-
-  Orchestrate a fleet of subagents across a complex, parallel, or long-running
-  implementation while controlling cost by routing each role to the cheapest
-  capable model. Use when a task needs multiple coordinated agents, parallel
-  worktree implementation, independent code review, safe multi-branch merging, or
-  a durable/reproducible run record. Covers role-to-model routing, persistent vs
-  ephemeral subagents vs Claude agent-teams, worktree isolation, a deterministic
-  task DAG, a forensic ledger, and terse inter-agent messaging. Not for single
-  bounded edits (use `coder`) or one isolated branch (use `parallel-coder`).
+description: Orchestrate coordinated subagents for parallel or long-running implementation with isolated worktrees, independent review, safe merging, and a durable run ledger.
+x-lint:
+  allow: [W6]
+  reason: "the loaded skill must retain its core orchestration protocol while detailed mechanics remain in references"
 hooks:
   SubagentStart:
     - hooks:
@@ -60,9 +55,10 @@ Role: lead session / orchestrator.
    its `agentId`/name; drive fix rounds via SendMessage to that handle
    (auto-resumes with context + worktree). Never spawn a fresh coder for a
    node under review. Dismiss only on approval + merge.
-7. **SubagentStart hook auto-injects `comms-block.md` into every subagent.
-   Teammates are NOT subagents — the hook never reaches them: paste
-   `comms-block.md` verbatim into each teammate brief.**
+7. **Comms protocol is mandatory.** Claude's skill-scoped `SubagentStart` hook
+   auto-injects `comms-block.md` into subagents. Codex does not run skill
+   frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
+   brief. Teammates are not subagents either; include it in their briefs.
 8. **Persistent infra, addressed on demand, never polled.** Gatekeeper +
    ledger-scribe live the whole run as background subagents, reached by
    SendMessage. State lives in the stores — recycle them to shed context

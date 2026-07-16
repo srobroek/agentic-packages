@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Generate committed native plugin layout for every native-capable package.
 
-The marketplace `source: ./packages/<name>` entries are consumed by THREE native
-loaders -- Claude `/plugin install`, Codex `plugin add`, and APM `apm install`.
-All three require a native plugin layout (`.claude-plugin/plugin.json` + top-level
-`skills/`/`agents/`/`.mcp.json`/`hooks/hooks.json`), NOT APM's `.apm/` source
-layout. APM's own `apm pack` only writes the catalog + a repo-root plugin.json; it
-never materialises per-package native layout. This generator fills that gap.
+The marketplace `source: ./packages/<name>` entries are consumed by three
+loaders: Claude `/plugin install`, Codex `plugin add`, and APM `apm install`.
+Claude and Codex have distinct required manifests (`.claude-plugin/plugin.json`
+and `.codex-plugin/plugin.json`) and partly different component contracts. APM's
+own `apm pack` only writes the catalogs plus a repo-root plugin.json; it never
+materialises per-package native layout. This generator fills that gap.
 
 It is the native-layout analogue of render-docs.py: driven by the single
 `build_inventory.build_context()` walk, idempotent, and supports `--check` for a
@@ -15,16 +15,17 @@ fresh clone resolves marketplace sources with no build step.
 
 What it emits, per package classification:
 
-* skill  -> `skills/<name>/` (copied from `.apm/skills/<name>/`) + plugin.json
-* agent  -> `agents/<n>.md` (from `.apm/agents/<n>.agent.md`) + plugin.json
-* mcp    -> `.mcp.json` (from the apm.yml `dependencies.mcp` block) + plugin.json
-* bundle -> plugin.json with a `dependencies` array (native plugin bundling)
-* hooks / mixed packages with hooks -> `hooks/hooks.json` ONLY when the package's
-  claude and codex hook variants are byte-identical (otherwise a universal
-  `hooks.json` leaks Claude hooks into the Codex `apm install` -- see the spec).
-  The per-target `.apm/hooks/*-{claude,codex}-hooks.json` files stay authoritative
-  for `apm install`.
-* steering -> nothing (no native plugin component exists for rules/instructions).
+* skill  -> both manifests reference `.apm/skills` in place
+* agent  -> `agents/<n>.md` (Claude native component; Codex users get custom
+  agents through APM because Codex plugin manifests do not define an agent field)
+* mcp    -> Claude `.mcp.json` plus Codex `.codex.mcp.json`, because the runtimes
+  require different wrapper shapes
+* bundle -> Claude manifest with `dependencies`; Codex has no native dependency
+  field, so bundle composition remains an APM-only capability
+* hooks / mixed packages with hooks -> shared `hooks/hooks.json` when variants
+  match, otherwise target-specific hook files referenced by each manifest
+* steering -> metadata-only manifests; native plugins have no rules/instructions
+  component, so APM remains required to deliver the actual steering.
 
 `plugin.json` carries name/version/description/author/license, plus
 `dependencies` for bundles. Component dirs are auto-discovered by all three
@@ -52,8 +53,8 @@ APM_YML = ROOT / "apm.yml"
 
 # Native component dirs/files this generator owns at a package root. Any of these
 # present-but-unexpected is pruned so the tree never drifts from the source.
-_GENERATED_DIRS = ("skills", "agents", "hooks")
-_GENERATED_FILES = (".mcp.json",)
+_GENERATED_DIRS = ("skills", "agents", "hooks", ".claude-plugin", ".codex-plugin")
+_GENERATED_FILES = (".mcp.json", ".codex.mcp.json")
 
 # A first-party dependency reference -> the member package name (for bundles).
 _FIRST_PARTY = re.compile(r"srobroek/agentic-packages/packages/([\w-]+)(?:#(.+))?$")
@@ -81,7 +82,15 @@ def _author_license(root_manifest: dict) -> tuple[dict | None, str | None]:
 # --------------------------------------------------------------------------- #
 
 def _plugin_manifest(
-    pkg: dict, manifest: dict, defaults: tuple, deps: list[dict] | None, has_skills: bool = False
+    pkg: dict,
+    manifest: dict,
+    defaults: tuple,
+    *,
+    target: str,
+    deps: list[dict] | None = None,
+    has_skills: bool = False,
+    has_mcp: bool = False,
+    hook_path: str | None = None,
 ) -> dict:
     author_default, license_default = defaults
     out: dict = {"name": pkg["name"]}
@@ -100,7 +109,11 @@ def _plugin_manifest(
     # any test_*.py the skill ships, which breaks pytest collection).
     if has_skills:
         out["skills"] = "./.apm/skills"
-    if deps:
+    if target == "codex" and has_mcp:
+        out["mcpServers"] = "./.codex.mcp.json"
+    if hook_path:
+        out["hooks"] = hook_path
+    if target == "claude" and deps:
         out["dependencies"] = deps
     return out
 
@@ -138,8 +151,8 @@ def _bundle_dependencies(deps: list[str]) -> list[dict]:
 # mcp -> .mcp.json
 # --------------------------------------------------------------------------- #
 
-def _mcp_json(manifest: dict) -> dict | None:
-    """Build a Claude/Codex `.mcp.json` from the apm.yml `dependencies.mcp` block."""
+def _mcp_servers(manifest: dict) -> dict | None:
+    """Build the common MCP server map from `dependencies.mcp`."""
     servers = (manifest.get("dependencies") or {}).get("mcp") or []
     if not servers:
         return None
@@ -163,41 +176,55 @@ def _mcp_json(manifest: dict) -> dict | None:
         else:
             continue
         out[name] = entry
-    return {"mcpServers": out} if out else None
+    return out or None
 
 
 # --------------------------------------------------------------------------- #
-# hooks: emit hooks/hooks.json only when claude == codex variant
+# hooks: resolve shared or target-specific sources
 # --------------------------------------------------------------------------- #
 
-def _unified_hook(pkg_dir: Path) -> Path | None:
-    """Return a hook source file suitable for the universal native hooks/hooks.json.
+def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
+    """Return `(claude, codex)` hook sources for a package.
 
-    Resolution order:
-    1. A bare `hooks.json` in `.apm/hooks/` -- the canonical APM 0.23+ form for
-       hooks that are identical across all targets.  Return it directly.
-    2. Legacy per-target pairs (`*-claude-hooks.json` / `*-codex-hooks.json`):
-       return the claude file only when both variants are byte-identical so that a
-       universal native hooks.json does not leak Claude-only hooks into Codex.
-       When they differ, return None (per-target routing only; no native emit).
-
-    A universal root `hooks/hooks.json` is routed to EVERY target by `apm install`.
+    A bare `.apm/hooks/hooks.json` is explicitly universal. Legacy target-named
+    variants are resolved independently so a Claude-only event can never leak
+    into the Codex plugin. The caller decides whether matching files can share
+    `hooks/hooks.json` or need separate native files.
     """
     hooks_dir = pkg_dir / ".apm" / "hooks"
     if not hooks_dir.is_dir():
-        return None
-    # Canonical form: universal hooks.json (no target token in stem).
+        return None, None
     universal = hooks_dir / "hooks.json"
     if universal.is_file():
-        return universal
-    # Legacy per-target pairs.
+        return universal, universal
     claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(hooks_dir.glob("claude-hooks.json"))
     codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(hooks_dir.glob("codex-hooks.json"))
-    if not claude:
-        return None
-    if codex and not filecmp.cmp(claude[0], codex[0], shallow=False):
-        return None  # variants differ -> do NOT emit a universal hooks.json
-    return claude[0]
+    return (claude[0] if claude else None, codex[0] if codex else None)
+
+
+def _plan_hooks(pkg_dir: Path, plan: dict[str, object]) -> tuple[str | None, str | None]:
+    """Add native hook files and return manifest paths for Claude and Codex."""
+    claude, codex = _hook_sources(pkg_dir)
+    if claude is None and codex is None:
+        return None, None
+    if (
+        claude is not None
+        and codex is not None
+        and filecmp.cmp(claude, codex, shallow=False)
+    ):
+        path = "./hooks/hooks.json"
+        plan[path.removeprefix("./")] = claude.read_text(encoding="utf-8")
+        return path, path
+
+    claude_path = None
+    codex_path = None
+    if claude is not None:
+        claude_path = "./hooks/claude-hooks.json"
+        plan[claude_path.removeprefix("./")] = claude.read_text(encoding="utf-8")
+    if codex is not None:
+        codex_path = "./hooks/codex-hooks.json"
+        plan[codex_path.removeprefix("./")] = codex.read_text(encoding="utf-8")
+    return claude_path, codex_path
 
 
 # --------------------------------------------------------------------------- #
@@ -214,29 +241,12 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     cls = pkg["classification"]
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
 
-    # Steering packages have no native rules/instructions component, so they
-    # normally emit no layout. The exception is a steering package that ALSO
-    # ships hooks (a hybrid working-style package): its SubagentStart/etc. hook
-    # is a real native component and must reach Claude /plugin + Codex plugin add,
-    # not just apm install. Emit a hooks-only layout (plugin.json + hooks.json,
-    # no skills/agents/mcp/deps) in that case; otherwise nothing.
-    if cls == "steering":
-        unified = _unified_hook(pkg_dir)
-        if unified is None:
-            return None
-        return {
-            "hooks/hooks.json": unified.read_text(encoding="utf-8"),
-            ".claude-plugin/plugin.json": (
-                json.dumps(
-                    _plugin_manifest(pkg, manifest, defaults, None, False),
-                    indent=2,
-                    ensure_ascii=False,
-                )
-                + "\n"
-            ),
-        }
-
     plan: dict[str, object] = {}
+    claude_hook_path, codex_hook_path = _plan_hooks(pkg_dir, plan)
+
+    # Steering has no native rules/instructions component. Pure steering gets
+    # metadata-only manifests so catalog entries remain structurally valid;
+    # hybrid steering packages can additionally expose their hooks.
 
     # Skills are REFERENCED in place via a plugin.json `skills` override pointing
     # at .apm/skills -- NOT copied. All three native loaders (Claude /plugin,
@@ -259,9 +269,14 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
                 plan[f"agents/{f.name}"] = f.read_bytes()
 
     # MCP servers declared in the apm.yml dependencies.mcp block -> .mcp.json.
-    mcp = _mcp_json(manifest)
+    mcp = _mcp_servers(manifest)
     if mcp is not None:
-        plan[".mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
+        plan[".mcp.json"] = (
+            json.dumps({"mcpServers": mcp}, indent=2, ensure_ascii=False) + "\n"
+        )
+        # Codex accepts a direct server map or a wrapped `mcp_servers` object,
+        # but not Claude's camel-case wrapper.
+        plan[".codex.mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
 
     # Native plugin dependencies = this package's first-party apm members. Emit
     # them whenever they exist, independent of doc-classification: a skill-led
@@ -272,17 +287,41 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # packages like sniff.
     deps = _bundle_dependencies(pkg["deps"]) or None
 
-    # Hooks (for hooks-* packages AND mixed packages that ship .apm/hooks).
-    unified = _unified_hook(pkg_dir)
-    if unified is not None:
-        plan["hooks/hooks.json"] = unified.read_text(encoding="utf-8")
-
-    # Every native-capable package gets a manifest. ensure_ascii=False so non-ASCII
+    # Every native-capable package gets both manifests. ensure_ascii=False so non-ASCII
     # (e.g. em-dashes in descriptions) is written as raw UTF-8, matching how
     # `apm pack` writes plugin.json/marketplace.json -- otherwise the CI staleness
     # gate sees drift when apm pack rewrites a manifest this generator also wrote.
     plan[".claude-plugin/plugin.json"] = (
-        json.dumps(_plugin_manifest(pkg, manifest, defaults, deps, has_skills), indent=2, ensure_ascii=False) + "\n"
+        json.dumps(
+            _plugin_manifest(
+                pkg,
+                manifest,
+                defaults,
+                target="claude",
+                deps=deps,
+                has_skills=has_skills,
+                hook_path=claude_hook_path,
+            ),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
+    plan[".codex-plugin/plugin.json"] = (
+        json.dumps(
+            _plugin_manifest(
+                pkg,
+                manifest,
+                defaults,
+                target="codex",
+                has_skills=has_skills,
+                has_mcp=mcp is not None,
+                hook_path=codex_hook_path,
+            ),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n"
     )
     return plan
 
@@ -300,6 +339,7 @@ def _materialize(pkg_dir: Path, plan: dict[str, object], check: bool) -> list[st
     #    (e.g. "agents/coder.md", "hooks/hooks.json") -- both contribute their
     #    top-level segment to the set of dirs that should exist.
     planned_dirs = {rel.split("/", 1)[0] for rel in plan}
+    planned_files = set(plan)
     for d in _GENERATED_DIRS:
         target = pkg_dir / d
         wanted = d in planned_dirs
@@ -308,6 +348,18 @@ def _materialize(pkg_dir: Path, plan: dict[str, object], check: bool) -> list[st
                 stale.append(f"{pkg_dir.name}/{d} (should be removed)")
             else:
                 shutil.rmtree(target)
+        elif target.is_dir():
+            # These directories are fully generator-owned. Remove stale nested
+            # files when a package changes from universal to target-specific
+            # hooks, drops an agent, or stops emitting a manifest component.
+            for nested in sorted(p for p in target.rglob("*") if p.is_file()):
+                rel = nested.relative_to(pkg_dir).as_posix()
+                if rel in planned_files:
+                    continue
+                if check:
+                    stale.append(f"{pkg_dir.name}/{rel} (should be removed)")
+                else:
+                    nested.unlink()
     for f in _GENERATED_FILES:
         target = pkg_dir / f
         if target.exists() and f not in plan:
@@ -376,7 +428,6 @@ def main(argv: list[str] | None = None) -> int:
         manifest = yaml.safe_load((pkg_dir / "apm.yml").read_text(encoding="utf-8")) or {}
         plan = _plan_package(pkg, manifest, defaults)
         if plan is None:
-            # steering: ensure no stray generated native layout exists
             plan = {}
         stale = _materialize(pkg_dir, plan, args.check)
         if stale:

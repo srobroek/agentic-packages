@@ -220,6 +220,58 @@ MUST do something specific and verifiable.
 
 
 # ---------------------------------------------------------------------------
+# Pointer shape
+# ---------------------------------------------------------------------------
+
+class TestPointerShape:
+    def _pointer(self, tmp_path: Path, frontmatter: str) -> Path:
+        context_dir = tmp_path / "context"
+        context_dir.mkdir()
+        (context_dir / "rules.context.md").write_text("# Rules\n", encoding="utf-8")
+        instructions_dir = tmp_path / "instructions"
+        instructions_dir.mkdir()
+        return _write(
+            instructions_dir,
+            "rules.instructions.md",
+            f"""\
+---
+description: Route to the detailed rules.
+{frontmatter}---
+
+Read [rules](../context/rules.context.md).
+""",
+        )
+
+    def test_unconditional_pointer_may_omit_apply_to(self, tmp_path):
+        findings = lint_mod.lint(self._pointer(tmp_path, ""))
+        assert not [f for f in findings if f[0] == "ERROR"]
+
+    def test_scoped_pointer_may_include_apply_to(self, tmp_path):
+        findings = lint_mod.lint(
+            self._pointer(tmp_path, 'applyTo: "**/*.py"\n')
+        )
+        assert not [f for f in findings if f[0] == "ERROR"]
+
+    def test_pointer_still_requires_context_link(self, tmp_path):
+        path = _write(
+            tmp_path,
+            "rules.instructions.md",
+            """\
+---
+description: Route to the detailed rules.
+---
+
+Rules are documented elsewhere.
+""",
+        )
+        findings = lint_mod.lint(path)
+        assert any(
+            severity == "ERROR" and code == "E7"
+            for severity, code, _ in findings
+        )
+
+
+# ---------------------------------------------------------------------------
 # main() exit code with overrides
 # ---------------------------------------------------------------------------
 

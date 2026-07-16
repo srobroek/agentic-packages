@@ -12,6 +12,28 @@ def names(path: Path, suffix: str) -> set[str]:
     return {p.name.removesuffix(suffix) for p in path.glob(f"*{suffix}")}
 
 
+def source_agent_paths(package: Path) -> list[Path]:
+    """Find first-party agent sources in a monorepo or installed package tree."""
+    candidates = list((package / ".apm" / "agents").glob("*.agent.md"))
+    candidates.extend((package / "packages").glob("*/.apm/agents/*.agent.md"))
+    candidates.extend(package.glob("apm_modules/**/.apm/agents/*.agent.md"))
+    return sorted({path.resolve() for path in candidates if path.is_file()})
+
+
+def source_skill_names(package: Path) -> set[str]:
+    """Find first-party skill sources without counting generated runtime copies."""
+    roots = [package / ".apm" / "skills"]
+    roots.extend((package / "packages").glob("*/.apm/skills"))
+    roots.extend(package.glob("apm_modules/**/.apm/skills"))
+    return {
+        path.parent.name
+        for root in roots
+        if root.is_dir()
+        for path in root.glob("*/SKILL.md")
+        if path.is_file()
+    }
+
+
 def package_root(root: Path) -> Path | None:
     candidates = [
         root,
@@ -60,7 +82,7 @@ def parse_scalar_map(frontmatter: str) -> dict:
 
 def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
     metadata: dict[str, dict[str, str]] = {}
-    for path in sorted((package / ".apm" / "agents").glob("*.agent.md")):
+    for path in source_agent_paths(package):
         frontmatter = split_frontmatter(path.read_text(encoding="utf-8"))
         parsed = parse_scalar_map(frontmatter)
         codex = parsed.get("x-agentic", {}).get("codex", {}) if isinstance(parsed.get("x-agentic"), dict) else {}
@@ -76,12 +98,8 @@ def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
 def main() -> int:
     root = Path.cwd()
     package = package_root(root) or root
-    source = names(package / ".apm" / "agents", ".agent.md")
-    skills = {
-        path.name
-        for path in (package / ".apm" / "skills").iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    } if (package / ".apm" / "skills").is_dir() else set()
+    source = {path.name.removesuffix(".agent.md") for path in source_agent_paths(package)}
+    skills = source_skill_names(package)
     codex = names(root / ".codex" / "agents", ".toml")
     claude = names(root / ".claude" / "agents", ".md")
     agent_skills = {
@@ -99,11 +117,14 @@ def main() -> int:
     print(f"- source: {len(source)}")
     print(f"- codex: {len(codex)}")
     print(f"- claude: {len(claude)}")
+    parity_errors: list[str] = []
     if source:
         if missing := sorted(source - codex):
             print("- missing in codex: " + ", ".join(missing))
+            parity_errors.append(f"{len(missing)} source agents missing in codex")
         if missing := sorted(source - claude):
             print("- missing in claude: " + ", ".join(missing))
+            parity_errors.append(f"{len(missing)} source agents missing in claude")
         if extra := sorted(codex - source):
             print("- codex-only: " + ", ".join(extra))
         if extra := sorted(claude - source):
@@ -116,8 +137,10 @@ def main() -> int:
     if skills:
         if missing := sorted(skills - agent_skills):
             print("- missing in .agents/skills: " + ", ".join(missing))
+            parity_errors.append(f"{len(missing)} source skills missing in .agents/skills")
         if missing := sorted(skills - claude_skills):
             print("- missing in .claude/skills: " + ", ".join(missing))
+            parity_errors.append(f"{len(missing)} source skills missing in .claude/skills")
         if extra := sorted(agent_skills - skills):
             print("- .agents/skills-only: " + ", ".join(extra))
         if extra := sorted(claude_skills - skills):
@@ -150,6 +173,10 @@ def main() -> int:
     metadata = source_agent_metadata(package)
     print("\nAgent metadata")
     missing = []
+    if (package / "packages").is_dir() and not source:
+        missing.append("no source agents discovered in package monorepo")
+    if (package / "packages").is_dir() and not skills:
+        missing.append("no source skills discovered in package monorepo")
     for agent, actual in sorted(metadata.items()):
         for key in ("model", "effort", "access", "approval"):
             if not actual.get(key):
@@ -160,7 +187,11 @@ def main() -> int:
         print(f"  - {item}")
     if len(missing) > 30:
         print(f"  - ... {len(missing) - 30} more")
-    if missing:
+    if parity_errors:
+        print("\nParity failures")
+        for error in parity_errors:
+            print(f"- {error}")
+    if missing or parity_errors:
         return 1
     return 0
 

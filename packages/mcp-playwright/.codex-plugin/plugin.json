@@ -1,0 +1,10 @@
+{
+  "name": "mcp-playwright",
+  "version": "1.1.0",
+  "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "mcpServers": "./.codex.mcp.json"
+}

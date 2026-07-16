@@ -1,0 +1,201 @@
+#!/usr/bin/env python3
+"""Normalize installed Codex hooks to the released Codex hook contract."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import tempfile
+from pathlib import Path
+
+
+SUPPORTED_EVENTS = {
+    "SessionStart",
+    "SubagentStart",
+    "PreToolUse",
+    "PermissionRequest",
+    "PostToolUse",
+    "PreCompact",
+    "PostCompact",
+    "UserPromptSubmit",
+    "SubagentStop",
+    "Stop",
+}
+CODEX_UNAVAILABLE_PACKAGES = {
+    "agent-coder",
+    "hooks-subagent-worktree",
+    "hooks-worktree",
+}
+
+
+def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
+    source_hooks = config.get("hooks", {})
+    clean_hooks: dict[str, list[dict]] = {}
+    counts = {
+        "events_removed": 0,
+        "handlers_removed": 0,
+        "duplicate_groups_removed": 0,
+        "async_converted": 0,
+        "if_removed": 0,
+        "timeouts_added": 0,
+    }
+
+    for event, groups in source_hooks.items():
+        if event not in SUPPORTED_EVENTS:
+            counts["events_removed"] += 1
+            continue
+
+        clean_groups: list[dict] = []
+        seen_groups: set[str] = set()
+        for group in groups:
+            clean_handlers: list[dict] = []
+            for handler in group.get("hooks", []):
+                command = handler.get("command", "")
+                if handler.get("type") != "command" or any(
+                    f"/{package}/" in command
+                    for package in CODEX_UNAVAILABLE_PACKAGES
+                ):
+                    counts["handlers_removed"] += 1
+                    continue
+
+                clean_handler = dict(handler)
+                if clean_handler.pop("async", None) is not None:
+                    counts["async_converted"] += 1
+                if clean_handler.pop("if", None) is not None:
+                    counts["if_removed"] += 1
+                timeout = clean_handler.get("timeout")
+                if not isinstance(timeout, (int, float)) or not 0 < timeout <= 60:
+                    clean_handler["timeout"] = 30
+                    counts["timeouts_added"] += 1
+                clean_handlers.append(clean_handler)
+
+            if clean_handlers:
+                clean_group = dict(group)
+                clean_group["hooks"] = clean_handlers
+                group_key = json.dumps(
+                    clean_group,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                if group_key in seen_groups:
+                    counts["duplicate_groups_removed"] += 1
+                    continue
+                seen_groups.add(group_key)
+                clean_groups.append(clean_group)
+
+        if clean_groups:
+            clean_hooks[event] = clean_groups
+
+    clean_config = dict(config)
+    clean_config["hooks"] = clean_hooks
+    return clean_config, counts
+
+
+def referenced_hook_entries(config: dict, hooks_dir: Path) -> set[str]:
+    """Return top-level hook-dir entries referenced by command handlers."""
+    pattern = re.compile(
+        re.escape(str(hooks_dir.expanduser().resolve()))
+        + r"/([^/\s\"']+)"
+    )
+    referenced: set[str] = set()
+    for groups in (config.get("hooks") or {}).values():
+        for group in groups:
+            for handler in group.get("hooks", []):
+                command = handler.get("command")
+                if not isinstance(command, str):
+                    continue
+                referenced.update(pattern.findall(command))
+    return referenced
+
+
+def prune_stale_entries(
+    config: dict,
+    hooks_dir: Path,
+    *,
+    check: bool = False,
+) -> list[Path]:
+    """Remove unreferenced top-level entries from a generated hook directory."""
+    hooks_dir = hooks_dir.expanduser().resolve()
+    if not hooks_dir.is_dir():
+        return []
+
+    referenced = referenced_hook_entries(config, hooks_dir)
+    stale = sorted(
+        (entry for entry in hooks_dir.iterdir() if entry.name not in referenced),
+        key=lambda entry: entry.name,
+    )
+    if check:
+        return stale
+
+    for entry in stale:
+        if entry.is_dir() and not entry.is_symlink():
+            shutil.rmtree(entry)
+        else:
+            entry.unlink()
+    return stale
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "path",
+        nargs="?",
+        type=Path,
+        default=Path.home() / ".codex" / "hooks.json",
+    )
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument(
+        "--prune-stale",
+        action="store_true",
+        help="remove unreferenced entries from the sibling hooks directory",
+    )
+    parser.add_argument(
+        "--hooks-dir",
+        type=Path,
+        help="override the hooks directory used by --prune-stale",
+    )
+    args = parser.parse_args()
+
+    if not args.path.is_file():
+        print(f"Codex hooks sanitizer: {args.path} does not exist")
+        return 0
+
+    original = json.loads(args.path.read_text(encoding="utf-8"))
+    clean, counts = sanitize(original)
+    config_changed = clean != original
+    hooks_dir = args.hooks_dir or args.path.parent / "hooks"
+    stale = (
+        prune_stale_entries(clean, hooks_dir, check=True)
+        if args.prune_stale
+        else []
+    )
+    changed = config_changed or bool(stale)
+
+    if config_changed and not args.check:
+        args.path.parent.mkdir(parents=True, exist_ok=True)
+        fd, temp_name = tempfile.mkstemp(
+            dir=args.path.parent,
+            prefix=f".{args.path.name}.",
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(clean, handle, indent=2)
+                handle.write("\n")
+            os.replace(temp_name, args.path)
+        finally:
+            if os.path.exists(temp_name):
+                os.unlink(temp_name)
+
+    if args.prune_stale and not args.check:
+        prune_stale_entries(clean, hooks_dir)
+    counts["stale_entries_removed"] = len(stale)
+    summary = ", ".join(f"{key}={value}" for key, value in counts.items())
+    print(f"Codex hooks sanitizer: changed={changed}, {summary}")
+    return 1 if args.check and changed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -8,7 +8,7 @@ x-agentic:
     model: "gpt-5.5"
     reasoning_effort: "xhigh"
     sandbox_mode: "read-only"
-    approval_policy: "none"
+    approval_policy: "never"
   claude:
     model: "opus"
     effort: "xhigh"

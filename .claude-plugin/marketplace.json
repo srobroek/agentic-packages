@@ -19,7 +19,7 @@
     },
     {
       "name": "agent-coder",
-      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work).",
+      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Claude also gets a top-level edit reminder; Codex relies on steering because tool-hook payloads do not identify subagent edits.",
       "version": "4.0.0",
       "tags": [
         "agent",
@@ -149,7 +149,7 @@
     },
     {
       "name": "codex-hook-contract",
-      "description": "Reference doc for the Codex CLI hook contract as used by this monorepo's guard hooks. Records what is VERIFIED vs ASSUMED vs UNKNOWN about Codex hook event names, the stdin payload shape (object vs string .tool_input), and how Codex honors a hook decision (permissionDecision vs decision.behavior vs exit codes), with exact tests to verify each open claim. Documentation only -- no scripts.",
+      "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
       "version": "0.2.1",
       "tags": [
         "codex",
@@ -471,7 +471,7 @@
     },
     {
       "name": "hooks-worktree",
-      "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude WorktreeCreate/WorktreeRemove events.",
+      "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events.",
       "version": "1.2.0",
       "tags": [
         "hooks",
@@ -840,7 +840,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a SubagentStart comms-protocol hook, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
+      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
       "version": "1.0.0",
       "tags": [
         "skill",

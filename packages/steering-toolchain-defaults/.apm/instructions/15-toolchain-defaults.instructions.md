@@ -1,6 +1,5 @@
 ---
 description: Always-loaded compact toolchain defaults for project setup and broad workflow.
-applyTo: "**/*"
 ---
 
 Prefer modern CLI tools: rg over grep, fd over find, eza over ls, bat over cat,

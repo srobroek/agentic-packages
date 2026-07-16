@@ -107,13 +107,14 @@ blocked_regex='(^|/)(\.codex/(agents|hooks|plugins|skills)(/|$|[[:space:]])|\.cl
 
 mcp_config_regex='(^|/)(\.codex/config\.toml|\.claude/settings[^/]*\.json|dotfiles/external-managed/codex/config\.toml|dotfiles/dot_claude/private_(managed-)?settings\.json\.tmpl)$'
 
+shell_command="$(printf '%s' "$payload" | jq -r '.tool_input.command? // empty' 2>/dev/null || true)"
+if [ -n "$shell_command" ] && is_read_only_shell_command "$shell_command"; then
+  exit 0
+fi
+
 blocked_hit=""
 while IFS= read -r item; do
   [ -z "$item" ] && continue
-
-  if printf '%s' "$payload" | jq -e '.tool_input.command? == $item' --arg item "$item" >/dev/null 2>&1 && is_read_only_shell_command "$item"; then
-    continue
-  fi
 
   if printf '%s' "$item" | grep -Eq "$blocked_regex"; then
     blocked_hit="$item"

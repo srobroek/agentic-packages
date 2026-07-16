@@ -1,6 +1,5 @@
 ---
 description: Always-loaded pragmatic working style — accuracy and calibration over agreeableness.
-applyTo: "**/*"
 ---
 
 For communication style, epistemic defaults, and how to handle uncertainty,

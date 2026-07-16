@@ -61,6 +61,10 @@ mk_edit() {
   jq -cn --arg fp "$1" '{tool_input: {file_path: $fp}}'
 }
 
+mk_apply_patch() {
+  jq -cn --arg patch "$1" '{tool_name:"apply_patch", tool_input:{command:$patch}}'
+}
+
 # Build a payload where tool_input is a bare STRING (the historical bypass) — a
 # direct write target expressed as just the path string.
 mk_str() {
@@ -89,6 +93,20 @@ run_guard() {
 @test "managed file direct edit -> advisory allow" {
   with_chezmoi
   run_guard "$(mk_edit "$MANAGED_FILE")"
+  [ "$status" -eq 0 ]
+  [ "$decision" = "allow" ]
+  [ -n "$ctx" ]
+}
+
+@test "managed file in Codex apply_patch -> advisory allow" {
+  with_chezmoi
+  patch="*** Begin Patch
+*** Update File: $MANAGED_FILE
+@@
+-old
++new
+*** End Patch"
+  run_guard "$(mk_apply_patch "$patch")"
   [ "$status" -eq 0 ]
   [ "$decision" = "allow" ]
   [ -n "$ctx" ]

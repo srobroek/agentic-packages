@@ -1,6 +1,5 @@
 ---
-description: When and how to use the Tauri MCP server for building, testing, and debugging Tauri v2 apps.
-applyTo: "**/*"
+description: Use Tauri MCP to build, test, debug, and automate Tauri v2 apps.
 ---
 
 This repo uses the Tauri MCP server to build, test, debug, and UI-drive a Tauri

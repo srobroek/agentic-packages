@@ -1,0 +1,152 @@
+# Codex compatibility audit
+
+Audited 2026-07-16 against Toolbox Codex 0.144.5.269 (upstream/npm 0.144.5),
+Claude Code 2.1.211 documentation (local runtime 2.1.198), APM 0.25.0, and
+Homebrew Git 2.54.0. Claude remains the behavioral baseline; Codex output uses
+Codex-native contracts and APM transformations instead of invalid Claude fallbacks.
+
+Primary references:
+
+- <https://learn.chatgpt.com/docs/hooks>
+- <https://learn.chatgpt.com/docs/build-plugins>
+- <https://learn.chatgpt.com/docs/config-file/config-advanced#amazon-bedrock-provider>
+- <https://code.claude.com/docs/en/hooks>
+
+## Package surfaces
+
+| Surface | Claude Code | Codex | Repository delivery |
+| --- | --- | --- | --- |
+| Skills | Native plugin/APM | Native plugin/APM | Both manifests reference `.apm/skills` |
+| Hooks | Native plugin/APM | Native plugin/APM, supported events only | Shared or target-specific generated files |
+| MCP | `.mcp.json` with `mcpServers` | direct map or `mcp_servers` | Separate `.mcp.json` and `.codex.mcp.json` |
+| Agents | Native plugin `agents/*.md` | No plugin agent field | APM generates and registers `.codex/agents/*.toml` |
+| Steering | APM rules | APM-compiled `AGENTS.md` | Native plugins have no instructions component |
+| Bundle dependencies | Claude manifest dependencies | No Codex manifest dependency field | APM composes the full dependency graph |
+
+Every marketplace package has both required manifests. Native-only installation
+is intentionally limited where Codex has no component field; the package matrix
+below rates functionality when installed through APM, the project source of truth.
+
+## Hook runtime differences
+
+- Codex exposes 10 events; current Claude Code exposes 30.
+- Codex executes only `type: "command"`. Claude also supports HTTP, MCP-tool, prompt, and agent handlers where allowed.
+- Codex parses `async: true` but skips the handler. Claude runs asynchronous command hooks and can re-wake later.
+- Codex has no Claude handler-level `if`; filtering must happen in matcher or script code.
+- Codex ignores matchers on `UserPromptSubmit` and `Stop`.
+- Codex Pre/PostToolUse intercept simple Bash, apply_patch, and MCP calls, not all unified shell, WebSearch, or built-in paths.
+- Codex plugin hooks require trust review through `/hooks` after install or definition changes.
+
+## Event parity
+
+| Claude event | Codex | Functionality difference | Codex workaround |
+| --- | --- | --- | --- |
+| `SessionStart` | Yes | Same startup/resume/clear/compact matcher. Claude can persist environment changes; Codex injects developer context only. | None. |
+| `Setup` | No | Claude has separate init and maintenance setup phases; Codex has no setup event. | Run setup in the launcher or CI; use a sentinel-guarded SessionStart only for per-session checks. |
+| `InstructionsLoaded` | No | Claude reports eager and lazy instruction loads; Codex has no instruction-load observability event. | Keep policy in AGENTS.md and use SessionStart or an external watcher for coarse auditing. |
+| `UserPromptSubmit` | Yes | Both can block or add context. Both ignore matcher for this event; Codex runs command handlers only. | None. |
+| `UserPromptExpansion` | No | Claude intercepts slash-command, skill, and MCP-prompt expansion before expansion. | Parse explicit command text in UserPromptSubmit and put mandatory checks inside the skill workflow. |
+| `MessageDisplay` | No | Claude can transform streamed display batches without changing transcript/model text. | Transform codex exec --json output in an external frontend; there is no in-process TUI equivalent. |
+| `PreToolUse` | Yes | Claude covers more tools and supports allow/deny/ask/defer plus if. Codex covers simple Bash, apply_patch, and MCP; ask, defer, and if are unsupported. | Use sandbox, approvals, Git/CI policy, and script-side filtering for paths Codex does not intercept. |
+| `PermissionRequest` | Yes | Both allow or deny an imminent approval. Codex rejects Claude input rewrites, permission updates, and interrupt controls. | None. |
+| `PostToolUse` | Yes | Claude fires after success. Codex also fires for nonzero Bash exits and has a narrower tool interception set. | Inspect tool_response in the handler and retain external checks for unsupported tools. |
+| `PostToolUseFailure` | No | Claude has a dedicated failed-tool event with error metadata. Codex only folds nonzero Bash into PostToolUse. | Inspect PostToolUse for supported tools and use process/MCP logging elsewhere. |
+| `PostToolBatch` | No | Claude can gate after a parallel tool batch before the next model call; Codex only has per-tool callbacks. | Accumulate PostToolUse records by turn_id and process at Stop; this cannot gate the immediate post-batch call. |
+| `PermissionDenied` | No | Claude runs after an automatic permission denial and can request a model retry. | Move policy to PreToolUse or PermissionRequest and return a model-visible reason. |
+| `Notification` | No | Claude exposes typed permission, idle, auth, elicitation, and background notifications. | Use Codex notify configuration, TUI notifications, or a codex exec --json wrapper. |
+| `SubagentStart` | Yes | Both match agent type and inject initial context without blocking creation. Codex is command-handler only. | None. |
+| `SubagentStop` | Yes | Both can continue a completed subagent. Claude additionally exposes background tasks and cron state. | None. |
+| `TaskCreated` | No | Claude can reject task creation atomically; Codex has no task-creation event. | Validate task metadata in the orchestration skill before recording or spawning work. |
+| `TaskCompleted` | No | Claude can veto task completion; Codex has no task-completion boundary. | Gate orchestration state with tests plus SubagentStop or Stop. |
+| `Stop` | Yes | Both are turn-scoped and ignore matchers. Codex continues by creating a synthetic user prompt from the hook reason. | None. |
+| `StopFailure` | No | Claude fires on API failure instead of Stop; Codex has no API-failure lifecycle event. | Inspect codex exec --json terminal/error events and process exit status externally. |
+| `TeammateIdle` | No | Claude can keep an agent-team teammate working instead of idling. | Use SubagentStop as a quality gate and track idle/completion state in the orchestrator. |
+| `ConfigChange` | No | Claude observes and can veto live config changes except managed policy. | Use requirements.toml/filesystem policy and external file monitoring. |
+| `CwdChanged` | No | Claude reacts to directory changes and can update environment/watch paths. | Use direnv or a launcher; checking simple cd commands in PreToolUse is incomplete. |
+| `FileChanged` | No | Claude watches configured files regardless of writer; Codex has no filesystem watcher event. | Use watchexec/entr; PostToolUse:apply_patch covers only intercepted Codex edits. |
+| `WorktreeCreate` | No | Claude can replace default worktree creation and return the created path. | Use an explicit worktree wrapper/skill or Codex subagent worktree isolation. |
+| `WorktreeRemove` | No | Claude receives the path during worktree cleanup. | Use a launcher finally/trap or an explicit cleanup workflow. |
+| `PreCompact` | Yes | Both match manual/auto and can stop before compaction; output contracts differ. | None. |
+| `PostCompact` | Yes | Both run after compaction. Claude supplies the generated summary; Codex supplies only the trigger. | None. |
+| `SessionEnd` | No | Claude runs cleanup on actual session termination; Codex Stop is turn-scoped. | Wrap the process with cleanup and perform orphan cleanup on the next start. |
+| `Elicitation` | No | Claude can accept, decline, cancel, or answer an MCP elicitation before the dialog. | Implement policy or automatic answers in the MCP server/proxy. |
+| `ElicitationResult` | No | Claude can inspect, change, or decline the user response before it reaches MCP. | Validate or transform the response in the MCP server/proxy. |
+
+## Package-specific adaptations
+
+- `agent-coder`: Codex keeps the agents but omits the unreliable top-level edit reminder.
+- `hooks-subagent-worktree`: Codex uses explicit worktree isolation plus APM steering.
+- `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
+- `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
+- `speckit-dag-hooks`: `UserPromptExpansion` is approximated with `UserPromptSubmit`.
+- `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
+- `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
+- `lsp-*`: Claude-only native LSP registration; Codex uses language CLIs and code MCP tools.
+- `mcp-context7`: credential forwarding is runtime-managed with `env_vars` so no secret is persisted.
+
+## Global APM and MCP state
+
+- The durable global manifest contains 51 direct dependencies and is now `target: codex`.
+- The current lock resolves 63 dependency nodes. The Codex-only installer does not install or update Claude packages.
+- The separate Claude sanitizer removes dead hook wiring and orphaned hook directories without changing non-hook settings.
+- The Codex post-APM finalizer installs/updates Codex only, sanitizes Codex hooks, compiles global Codex steering, and patches Codex agents only.
+- Active global MCPs are Context7, Fetcher, MemPalace, Node REPL, 1Password, and OpenAI Developer Docs.
+- Builder MCP is disabled at both AIM plugin contribution points. Asana is absent from durable and live Codex configuration.
+- Context7 forwards `CONTEXT7_API_KEY` at runtime; no secret value is stored in `config.toml`.
+- `apm-hooks.json` remains as APM ownership state; `hooks.json` is the sanitized Codex runtime config.
+
+## Bedrock authentication
+
+- Codex uses the built-in `amazon-bedrock` provider; durable config sets its AWS region only.
+- Durable Codex config does not force an AWS profile; the former `claude-code` profile line remains commented.
+- The Toolbox wrapper owns credential selection at launch. Codex does not store a `credential_process` command in `config.toml`.
+- Toolbox accepts an explicit BYOA profile through `--aws-profile`; without one, its managed fallback profile invokes `codex credential-process`.
+- A profile-unset Toolbox `codex exec` request completed successfully against the active Bedrock provider.
+
+## Package-level differences
+
+Packages omitted from this table have equivalent functionality through APM.
+`Partial` means the package is usable but has the stated Codex gap.
+`Claude-only` means no Codex lifecycle or LSP equivalent exists.
+Native-plugin-only installation can expose fewer components because Codex
+plugin manifests do not support every APM component type.
+
+| Package | Status | Codex difference or workaround |
+| --- | --- | --- |
+| `agent-coder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier. |
+| `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
+| `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
+| `hooks-chezmoi-guard` | Partial | Bash and apply_patch aliases are covered; other write/shell routes need source-first steering and filesystem policy. |
+| `hooks-close-keywords` | Partial | Simple Bash advisory only; use the supplied commit-msg/pre-commit gate for tool-independent coverage. |
+| `hooks-git-safety` | Partial | Simple Bash is covered; use Git protections and compiled steering for complete policy. |
+| `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
+| `hooks-precommit-gate` | Partial | Simple commit/push commands are covered; install real pre-commit hooks for tool-independent enforcement. |
+| `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
+| `hooks-subagent-worktree` | Partial | Codex cannot intercept the Agent tool; APM installs steering and callers pass worktree isolation explicitly. |
+| `hooks-worktree` | Claude-only | Codex has no WorktreeCreate/WorktreeRemove events; use explicit worktree wrappers and cleanup. |
+| `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
+| `language-python` | Partial | All APM members except native pyright LSP integration work; run pyright directly and use code MCP tools. |
+| `language-rust` | Partial | All APM members except native rust-analyzer integration work; use cargo check/clippy and code MCP tools. |
+| `language-shell` | Partial | All APM members except native bash-language-server integration work; use shellcheck and parser checks. |
+| `language-terraform` | Partial | All APM members except native terraform-ls integration work; use terraform validate and related CLI checks. |
+| `language-typescript` | Partial | All APM members except native typescript-language-server integration work; use tsc/eslint and code MCP tools. |
+| `lsp-go` | Claude-only | Codex has no native plugin LSP surface; use Go CLI diagnostics and code MCP tools. |
+| `lsp-python` | Claude-only | Codex has no native plugin LSP surface; run pyright directly and use code MCP tools. |
+| `lsp-rust` | Claude-only | Codex has no native plugin LSP surface; use cargo diagnostics and code MCP tools. |
+| `lsp-shell` | Claude-only | Codex has no native plugin LSP surface; use shellcheck/parser checks. |
+| `lsp-terraform` | Claude-only | Codex has no native plugin LSP surface; use terraform validate and related CLI checks. |
+| `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
+| `mcp-mempalace` | Partial | Same MCP and context injection, but Codex SessionStart is synchronous because async handlers are skipped. |
+| `mcp-repomix` | Partial | Same MCP; snapshot refresh can miss unsupported shell paths, so run the refresh script explicitly when required. |
+| `orchestrate` | Partial | Skill and APM agents work; Codex ignores skill-frontmatter hooks, so spawn briefs embed the communication protocol. |
+| `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
+| `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
+| `speckit` | Partial | Skills, APM agents, and supported hooks work; Claude Skill-tool reminder has no Codex event equivalent. |
+| `speckit-dag-hooks` | Partial | UserPromptExpansion is approximated with UserPromptSubmit; Codex has no post-skill event. |
+
+## Validation
+
+`.apm/scripts/audit-codex-config.py` validates all Codex marketplace manifests,
+component paths, MCP shapes, routed hook events, command-only/synchronous handler
+constraints, explicit timeouts, script paths, and Codex agent approval enums.
+CI runs it after native plugin and documentation regeneration.
