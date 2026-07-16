@@ -172,6 +172,41 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
     assert counts["duplicate_groups_removed"] == 2
 
 
+def test_sanitize_deduplicates_legacy_group_and_keeps_apm_owner() -> None:
+    handler = {
+        "type": "command",
+        "command": "/bin/true",
+        "timeout": 10,
+    }
+    legacy_group = {
+        "matcher": "Bash",
+        "hooks": [handler],
+    }
+    managed_group = {
+        "matcher": "Bash",
+        "hooks": [handler],
+        "_apm_source": "hooks-bash-safety",
+    }
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                legacy_group,
+                managed_group,
+            ],
+            "PostToolUse": [
+                managed_group,
+                legacy_group,
+            ],
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["hooks"]["PreToolUse"] == [managed_group]
+    assert clean["hooks"]["PostToolUse"] == [managed_group]
+    assert counts["duplicate_groups_removed"] == 2
+
+
 def test_prune_removes_only_unreferenced_top_level_entries(
     tmp_path: Path,
 ) -> None:
