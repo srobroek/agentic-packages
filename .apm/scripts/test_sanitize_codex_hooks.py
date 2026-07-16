@@ -79,6 +79,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
     assert counts == {
         "events_removed": 1,
         "handlers_removed": 2,
+        "duplicate_groups_removed": 0,
         "async_converted": 1,
         "if_removed": 1,
         "timeouts_added": 1,
@@ -106,6 +107,69 @@ def test_sanitize_preserves_valid_timeout() -> None:
 
     assert clean == config
     assert counts["timeouts_added"] == 0
+
+
+def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
+    handler = {
+        "type": "command",
+        "command": "/bin/true",
+        "timeout": 10,
+    }
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": "Bash",
+                    "hooks": [handler],
+                },
+                {
+                    "matcher": "Bash",
+                    "hooks": [handler],
+                },
+            ],
+            "Stop": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "/bin/true",
+                            "async": True,
+                        }
+                    ]
+                },
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "/bin/true",
+                            "timeout": 30,
+                        }
+                    ]
+                },
+            ],
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["hooks"]["PreToolUse"] == [
+        {
+            "matcher": "Bash",
+            "hooks": [handler],
+        }
+    ]
+    assert clean["hooks"]["Stop"] == [
+        {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "/bin/true",
+                    "timeout": 30,
+                }
+            ]
+        }
+    ]
+    assert counts["duplicate_groups_removed"] == 2
 
 
 def test_prune_removes_only_unreferenced_top_level_entries(

@@ -34,7 +34,7 @@ below rates functionality when installed through APM, the project source of trut
 - Codex parses `async: true` but skips the handler. Claude runs asynchronous command hooks and can re-wake later.
 - Codex has no Claude handler-level `if`; filtering must happen in matcher or script code.
 - Codex ignores matchers on `UserPromptSubmit` and `Stop`.
-- Codex Pre/PostToolUse currently intercept simple Bash, apply_patch, and MCP calls, not all unified shell, WebSearch, or built-in paths.
+- Codex Pre/PostToolUse intercept simple Bash, apply_patch, and MCP calls, not all unified shell, WebSearch, or built-in paths.
 - Codex plugin hooks require trust review through `/hooks` after install or definition changes.
 
 ## Event parity
@@ -87,7 +87,8 @@ below rates functionality when installed through APM, the project source of trut
 ## Global APM and MCP state
 
 - The durable global manifest contains 51 direct dependencies and is now `target: codex`.
-- The current lock resolves 63 dependency nodes. The prior Claude deployment remains on disk and is not modified by the Codex-only installer.
+- The current lock resolves 63 dependency nodes. The Codex-only installer does not install or update Claude packages.
+- The separate Claude sanitizer removes dead hook wiring and orphaned hook directories without changing non-hook settings.
 - The Codex post-APM finalizer installs/updates Codex only, sanitizes Codex hooks, compiles global Codex steering, and patches Codex agents only.
 - Active global MCPs are Context7, Fetcher, MemPalace, Node REPL, 1Password, and OpenAI Developer Docs.
 - Builder MCP is disabled at both AIM plugin contribution points. Asana is absent from durable and live Codex configuration.
@@ -96,137 +97,52 @@ below rates functionality when installed through APM, the project source of trut
 
 ## Bedrock authentication
 
-- Codex uses the built-in `amazon-bedrock` provider with the Responses wire API.
-- The direct `claude-code` AWS profile is selected explicitly in durable Codex config.
-- That AWS profile obtains temporary credentials through its AWS `credential_process`; Codex does not store or invoke that command from `config.toml`.
-- Toolbox also owns a separate managed fallback profile backed by `codex credential-process` when no BYOA profile is selected.
-- Both explicit-profile and profile-unset Toolbox inference paths were verified successfully.
+- Codex uses the built-in `amazon-bedrock` provider; durable config sets its AWS region only.
+- Durable Codex config does not force an AWS profile; the former `claude-code` profile line remains commented.
+- The Toolbox wrapper owns credential selection at launch. Codex does not store a `credential_process` command in `config.toml`.
+- Toolbox accepts an explicit BYOA profile through `--aws-profile`; without one, its managed fallback profile invokes `codex credential-process`.
+- A profile-unset Toolbox `codex exec` request completed successfully against the active Bedrock provider.
 
-## Package-by-package APM parity
+## Package-level differences
 
-`Full` means equivalent functionality through APM. `Partial` means the package is
-usable but has the stated Codex gap. `Claude-only` means no Codex lifecycle or
-LSP equivalent exists. Native-plugin-only installation can expose fewer components
-than this table; use APM for agents, steering, and dependency composition.
+Packages omitted from this table have equivalent functionality through APM.
+`Partial` means the package is usable but has the stated Codex gap.
+`Claude-only` means no Codex lifecycle or LSP equivalent exists.
+Native-plugin-only installation can expose fewer components because Codex
+plugin manifests do not support every APM component type.
 
-| Package | Parity | Codex difference or workaround |
+| Package | Status | Codex difference or workaround |
 | --- | --- | --- |
-| `agent-adversarial-challenger` | Full | Equivalent through APM-generated Claude Markdown and Codex TOML agent profiles. |
 | `agent-coder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier. |
-| `agent-external-repo-worker` | Full | Equivalent through APM-generated Claude Markdown and Codex TOML agent profiles. |
-| `agent-management` | Full | Same skill workflow and bundled assets through APM. |
-| `agent-pr-reviewer` | Full | Equivalent through APM-generated Claude Markdown and Codex TOML agent profiles. |
-| `agentic-maintenance` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `audit-steering` | Full | Same skill workflow and bundled assets through APM. |
-| `brownfield-project` | Full | Same skill workflow and bundled assets through APM. |
-| `catchup` | Full | Same skill workflow and bundled assets through APM. |
-| `chezmoi-editor` | Full | Same skill workflow and bundled assets through APM. |
-| `cmux` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `code-intelligence` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `codebase-memory` | Full | Skill parity is full; install mcp-codebase-memory separately when graph tools are needed. |
-| `codex-hook-contract` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `core` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `data-ai` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `debate` | Full | Same skill workflow and bundled assets through APM. |
-| `dep-audit` | Full | Same skill workflow and bundled assets through APM. |
-| `dep-update` | Full | Same skill workflow and bundled assets through APM. |
-| `dependency-quality` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `developer-tools` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `diagrams` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `docs-architecture` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `eli5` | Full | Same skill workflow and bundled assets through APM. |
-| `find-tools` | Full | Same skill workflow and bundled assets through APM. |
-| `frontend` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `go-quality` | Full | Same skill workflow and bundled assets through APM. |
-| `goal-writer` | Full | Same skill workflow and bundled assets through APM. |
-| `governance` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `handover` | Full | Same skill workflow and bundled assets through APM. |
-| `headroom` | Full | Same skill workflow and bundled assets through APM. |
 | `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
 | `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
 | `hooks-chezmoi-guard` | Partial | Bash and apply_patch aliases are covered; other write/shell routes need source-first steering and filesystem policy. |
 | `hooks-close-keywords` | Partial | Simple Bash advisory only; use the supplied commit-msg/pre-commit gate for tool-independent coverage. |
 | `hooks-git-safety` | Partial | Simple Bash is covered; use Git protections and compiled steering for complete policy. |
-| `hooks-git-workflow` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
 | `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
-| `hooks-portability-ci` | Full | Same skill workflow and bundled assets through APM. |
 | `hooks-precommit-gate` | Partial | Simple commit/push commands are covered; install real pre-commit hooks for tool-independent enforcement. |
 | `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
 | `hooks-subagent-worktree` | Partial | Codex cannot intercept the Agent tool; APM installs steering and callers pass worktree isolation explicitly. |
 | `hooks-worktree` | Claude-only | Codex has no WorktreeCreate/WorktreeRemove events; use explicit worktree wrappers and cleanup. |
-| `incident-response` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `infrastructure` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `language-arm-cortex` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `language-dotnet` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `language-functional` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
 | `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
-| `language-julia` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `language-jvm` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
 | `language-python` | Partial | All APM members except native pyright LSP integration work; run pyright directly and use code MCP tools. |
 | `language-rust` | Partial | All APM members except native rust-analyzer integration work; use cargo check/clippy and code MCP tools. |
 | `language-shell` | Partial | All APM members except native bash-language-server integration work; use shellcheck and parser checks. |
-| `language-steering-go` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `language-steering-python` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `language-steering-rust` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `language-steering-terraform` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `language-steering-typescript` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
 | `language-terraform` | Partial | All APM members except native terraform-ls integration work; use terraform validate and related CLI checks. |
 | `language-typescript` | Partial | All APM members except native typescript-language-server integration work; use tsc/eslint and code MCP tools. |
-| `language-web-scripting` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `license-picker` | Full | Same skill workflow and bundled assets through APM. |
 | `lsp-go` | Claude-only | Codex has no native plugin LSP surface; use Go CLI diagnostics and code MCP tools. |
 | `lsp-python` | Claude-only | Codex has no native plugin LSP surface; run pyright directly and use code MCP tools. |
 | `lsp-rust` | Claude-only | Codex has no native plugin LSP surface; use cargo diagnostics and code MCP tools. |
 | `lsp-shell` | Claude-only | Codex has no native plugin LSP surface; use shellcheck/parser checks. |
 | `lsp-terraform` | Claude-only | Codex has no native plugin LSP surface; use terraform validate and related CLI checks. |
 | `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
-| `matt-skills` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `mcp-codebase-memory` | Full | Same MCP server through runtime-specific configuration. |
-| `mcp-context7` | Full | Same MCP server. Codex forwards CONTEXT7_API_KEY with env_vars because APM 0.25 does not preserve that field. |
 | `mcp-mempalace` | Partial | Same MCP and context injection, but Codex SessionStart is synchronous because async handlers are skipped. |
-| `mcp-package-version` | Full | Same MCP server through runtime-specific configuration. |
-| `mcp-playwright` | Full | Same MCP server through runtime-specific configuration. |
 | `mcp-repomix` | Partial | Same MCP; snapshot refresh can miss unsupported shell paths, so run the refresh script explicitly when required. |
-| `mcp-serena` | Full | Same MCP server through runtime-specific configuration. |
-| `mcp-tauri` | Full | Same MCP server through runtime-specific configuration. |
 | `orchestrate` | Partial | Skill and APM agents work; Codex ignores skill-frontmatter hooks, so spawn briefs embed the communication protocol. |
-| `planning-product` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `playwright` | Full | Full through APM, which installs the mcp-playwright dependency omitted by a Codex native-only install. |
-| `presentation` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `project-lifecycle` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `python-quality` | Full | Same skill workflow and bundled assets through APM. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
-| `resume-cv` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `resume-session` | Full | Same skill workflow and bundled assets through APM. |
-| `review` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `rust-quality` | Full | Same skill workflow and bundled assets through APM. |
 | `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
-| `security` | Full | APM resolves the same dependency graph; component-specific rows describe remaining gaps. |
-| `session-review` | Full | Same skill workflow and bundled assets through APM. |
-| `sniff` | Full | Skill and agents are equivalent after APM generates and registers Codex TOML agents. |
 | `speckit` | Partial | Skills, APM agents, and supported hooks work; Claude Skill-tool reminder has no Codex event equivalent. |
 | `speckit-dag-hooks` | Partial | UserPromptExpansion is approximated with UserPromptSubmit; Codex has no post-skill event. |
-| `steering-architecture` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-backend` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-data` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-delivery` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-docs-specs` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-frontend` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-git-workflow` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-infrastructure` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-pragmatic` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-project-structure` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-speckit` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-subagent-routing` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-toolchain-defaults` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `steering-tools-scripts` | Full | APM compiles the same source to Claude rules and Codex AGENTS.md. |
-| `typescript-quality` | Full | Same skill workflow and bundled assets through APM. |
-| `user-journeys` | Full | Skills and agents are equivalent after APM generates and registers Codex TOML agents. |
-| `verify` | Full | Same skill workflow and bundled assets through APM. |
-| `web-fetch` | Full | Same skill workflow and bundled assets through APM. |
-| `whats-new` | Full | Same skill workflow and bundled assets through APM. |
-| `write-agentic` | Full | Same skill workflow and bundled assets through APM. |
-| `write-docs` | Full | Same skill workflow and bundled assets through APM. |
 
 ## Validation
 

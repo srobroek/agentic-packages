@@ -55,7 +55,45 @@ CLAUDE_EVENTS = {
     "Elicitation",
     "ElicitationResult",
 }
-APPROVAL_POLICIES = {"untrusted", "on-request", "never"}
+CODEX_DIFFERENCE_PACKAGES = {
+    "agent-coder",
+    "hooks-attribution-guard",
+    "hooks-bash-safety",
+    "hooks-chezmoi-guard",
+    "hooks-close-keywords",
+    "hooks-git-safety",
+    "hooks-package-investigate",
+    "hooks-precommit-gate",
+    "hooks-quality",
+    "hooks-subagent-worktree",
+    "hooks-worktree",
+    "language-go",
+    "language-python",
+    "language-rust",
+    "language-shell",
+    "language-terraform",
+    "language-typescript",
+    "lsp-go",
+    "lsp-python",
+    "lsp-rust",
+    "lsp-shell",
+    "lsp-terraform",
+    "lsp-typescript",
+    "mcp-mempalace",
+    "mcp-repomix",
+    "orchestrate",
+    "release-please",
+    "secrets-scan",
+    "speckit",
+    "speckit-dag-hooks",
+}
+APPROVAL_POLICIES = {
+    "untrusted",
+    "on-failure",
+    "on-request",
+    "granular",
+    "never",
+}
 PLUGIN_SCRIPT_RE = re.compile(r"\$\{PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 PROJECT_SCRIPT_RE = re.compile(
     r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)"
@@ -177,7 +215,7 @@ def main() -> int:
     )
     documented_packages = markdown_table_ids(
         compatibility,
-        "## Package-by-package APM parity",
+        "## Package-level differences",
         "## Validation",
     )
     if len(documented_events) != len(set(documented_events)):
@@ -191,11 +229,17 @@ def main() -> int:
         )
     if len(documented_packages) != len(set(documented_packages)):
         errors.append("Codex compatibility package table contains duplicate rows")
-    if set(documented_packages) != set(catalog_by_name):
-        missing = sorted(set(catalog_by_name) - set(documented_packages))
-        extra = sorted(set(documented_packages) - set(catalog_by_name))
+    unknown_differences = CODEX_DIFFERENCE_PACKAGES - set(catalog_by_name)
+    if unknown_differences:
         errors.append(
-            "Codex compatibility package table drift: "
+            "Codex difference package set contains unknown packages: "
+            f"{sorted(unknown_differences)}"
+        )
+    if set(documented_packages) != CODEX_DIFFERENCE_PACKAGES:
+        missing = sorted(CODEX_DIFFERENCE_PACKAGES - set(documented_packages))
+        extra = sorted(set(documented_packages) - CODEX_DIFFERENCE_PACKAGES)
+        errors.append(
+            "Codex compatibility difference table drift: "
             f"missing={missing}, extra={extra}"
         )
 
@@ -278,7 +322,7 @@ def main() -> int:
         f"{checked_manifests} manifests, {checked_mcp} MCP files, "
         f"{checked_hooks} hook configs, {checked_agents} agents, "
         f"{len(documented_events)} Claude events, "
-        f"{len(documented_packages)} package parity rows"
+        f"{len(documented_packages)} package difference rows"
     )
     if errors:
         for error in errors:

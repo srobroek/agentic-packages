@@ -37,6 +37,7 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
     counts = {
         "events_removed": 0,
         "handlers_removed": 0,
+        "duplicate_groups_removed": 0,
         "async_converted": 0,
         "if_removed": 0,
         "timeouts_added": 0,
@@ -48,6 +49,7 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             continue
 
         clean_groups: list[dict] = []
+        seen_groups: set[str] = set()
         for group in groups:
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
@@ -73,6 +75,15 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             if clean_handlers:
                 clean_group = dict(group)
                 clean_group["hooks"] = clean_handlers
+                group_key = json.dumps(
+                    clean_group,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                if group_key in seen_groups:
+                    counts["duplicate_groups_removed"] += 1
+                    continue
+                seen_groups.add(group_key)
                 clean_groups.append(clean_group)
 
         if clean_groups:
