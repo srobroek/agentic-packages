@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.2.0...steering-pragmatic--v4.3.0) (2026-07-16)
+
+
+### Features
+
+* **codex:** add first-class APM parity across packages ([f0c988b](https://github.com/srobroek/agentic-packages/commit/f0c988b76740f23d2a6017c40fece7a1ea53e631))
+
 ## [4.2.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.1.0...steering-pragmatic--v4.2.0) (2026-07-11)
 
 

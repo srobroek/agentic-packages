@@ -1,5 +1,5 @@
 name: steering-git-workflow
-version: 2.1.0
+version: 2.2.0
 description: >-
   Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge
   flags, and pre-push verification. Replaces the retired commit-push-* skills
