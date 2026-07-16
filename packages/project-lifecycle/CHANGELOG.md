@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v3.1.0...project-lifecycle--v3.2.0) (2026-07-16)
+
+
+### Features
+
+* **codex:** add first-class APM parity across packages ([f0c988b](https://github.com/srobroek/agentic-packages/commit/f0c988b76740f23d2a6017c40fece7a1ea53e631))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v3.0.0...project-lifecycle--v3.1.0) (2026-07-08)
 
 

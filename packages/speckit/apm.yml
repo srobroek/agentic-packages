@@ -1,5 +1,5 @@
 name: speckit
-version: 5.0.0
+version: 5.1.0
 description: >-
   SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt
   into the opinionated layers separately: steering-speckit (the mandatory-gated
