@@ -86,8 +86,8 @@ below rates functionality when installed through APM, the project source of trut
 
 ## Global APM and MCP state
 
-- The durable global manifest contains 51 direct dependencies and is now `target: codex`.
-- The current lock resolves 63 dependency nodes. The Codex-only installer does not install or update Claude packages.
+- The durable global manifest contains 51 direct dependencies and targets `codex,claude`.
+- The current lock resolves 63 dependency nodes. The automated Codex post-sync passes `--target codex`; Claude deployment is refreshed by the separate Claude-layer sync.
 - The separate Claude sanitizer removes dead hook wiring and orphaned hook directories without changing non-hook settings.
 - The Codex post-APM finalizer installs/updates Codex only, sanitizes Codex hooks, compiles global Codex steering, and patches Codex agents only.
 - Active global MCPs are Context7, Fetcher, MemPalace, Node REPL, 1Password, and OpenAI Developer Docs.
