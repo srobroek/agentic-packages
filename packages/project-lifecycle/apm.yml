@@ -14,8 +14,8 @@ tags:
   - lifecycle
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/catchup#>=2.0.0 <3.0.0
-    - srobroek/agentic-packages/packages/handover#>=2.0.0 <3.0.0
-    - srobroek/agentic-packages/packages/steering-git-workflow#>=2.1.0 <3.0.0
-    - srobroek/agentic-packages/packages/verify#>=2.0.0 <3.0.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=2.0.0 <3.0.0
+    - srobroek/agentic-packages/packages/catchup#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/handover#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/steering-git-workflow#>=2.2.0 <3.0.0
+    - srobroek/agentic-packages/packages/verify#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=2.1.0 <3.0.0
