@@ -1,6 +1,6 @@
 {
   "name": "developer-tools",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.",
   "author": {
     "name": "Sjors Robroek"

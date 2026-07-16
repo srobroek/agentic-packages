@@ -1,6 +1,6 @@
 {
   "name": "hooks-precommit-gate",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory — the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

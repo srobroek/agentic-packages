@@ -1,6 +1,6 @@
 {
   "name": "hooks-portability-ci",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
   "author": {
     "name": "Sjors Robroek"
