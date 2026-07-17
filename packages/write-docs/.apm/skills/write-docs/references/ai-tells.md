@@ -12,7 +12,7 @@ Rewrite the fact densely; delete only when the sentence carries no fact.
 
 Vendors patch lexical tells. "Delve" peaked in 2023–24, fell once mocked, and <!-- write-docs:allow E2 -->
 dropped off sharply in 2025 (Wikipedia catalog, above); OpenAI shipped
-instruction-following em-dash suppression with GPT-5.1 in November 2025
+instruction-following em-dash suppression in late-2025 frontier models
 (<https://techcrunch.com/2025/11/14/openai-says-its-fixed-chatgpts-em-dash-problem/>);
 a Washington Post analysis of 328,744 ChatGPT messages found the cliché
 palette rotates each generation
@@ -108,7 +108,7 @@ Treat per-model attributions as snapshots, not durable rules.
 
 | Tell | Fix |
 |---|---|
-| Em-dash density: several dramatic pivots per page | Keep em dashes that mark real asides; most become commas, colons, or two sentences. Suppressible since GPT-5.1 (Nov 2025), so absence proves nothing; density still signals |
+| Em-dash density: several dramatic pivots per page | Keep em dashes that mark real asides; most become commas, colons, or two sentences. Suppressible since late 2025, so absence proves nothing; density still signals |
 | Hyphen-swap: hyphens doing em-dash work at em-dash density | Same fix — a find-and-replace on a tell is still the tell |
 | Curly quotes/apostrophes in a repo that types straight ones | Normalize; they betray pasted chatbot output |
 | Emoji as list markers or in headings | Delete (slop-lint W2) |
