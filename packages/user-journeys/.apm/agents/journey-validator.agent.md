@@ -6,6 +6,11 @@ model: sonnet
 x-agentic:
   codex:
     model: "gpt-5.3-codex-spark"
+  claude:
+    model: "sonnet"
+    effort: "high"
+    permissions:
+      mode: "workspace-write"
 ---
 
 You validate exactly one user journey end to end. Your inputs (from the
