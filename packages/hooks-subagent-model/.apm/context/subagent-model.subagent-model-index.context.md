@@ -5,7 +5,7 @@ LEGEND: Rules carry stable IDs (SM-n) cited by the enforcing hook.
 subagent-model-guard.sh enforces SM-1..SM-2.
 
 MUST SM-1: pass an explicit `model` on every Agent/Task spawn whose `subagent_type` has no pinned model in its own definition (or when `subagent_type` is omitted) — otherwise the spawn silently inherits the parent session's model, which is often an expensive top-tier one.
-MUST SM-2: pick the model by workload when SM-1 requires one — `haiku` for mechanical work (CI watching/shepherding, log triage, batched gh/git operations, file sweeps, formatting), `sonnet` for bounded coding, standard research, PR fix rounds, doc writing, and test authoring, `opus` (or an explicit pass-through of the session's own model name, chosen deliberately) for deep/adversarial research, architecture, cross-cutting synthesis, and judge/verification passes.
+MUST SM-2: pick the model by workload when SM-1 requires one, routing via the tiers defined in steering-subagent-routing — the cheap tier for mechanical work (CI watching/shepherding, log triage, batched gh/git operations, file sweeps, formatting), the mid tier for bounded coding, standard research, PR fix rounds, doc writing, and test authoring, and the top tier (or an explicit pass-through of the session's own model, chosen deliberately) for deep/adversarial research, architecture, cross-cutting synthesis, and judge/verification passes. The hook's deny message carries the concrete tier→model mapping so a blocked caller can self-correct on retry.
 
 The inherit-by-default subagent_type list (agent types with no pinned model:
 `general-purpose`, `Explore`, `Plan`, `claude`, `fork`) is overridable per
