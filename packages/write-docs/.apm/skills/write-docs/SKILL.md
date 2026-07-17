@@ -23,7 +23,9 @@ TRIGGER
 
 Cross-genre: when de-slopping prose, reviewing AI-drafted text, or running an
 adversarial content review, also LOAD references/ai-tells.md (marker catalog
-with rewrite moves).
+with rewrite moves). Check its Last-researched date: if over ~12 months (one
+model generation) old or the tells read dated, tell the user its lexical
+sections need a research refresh before relying on them.
 
 ## Workflow
 
