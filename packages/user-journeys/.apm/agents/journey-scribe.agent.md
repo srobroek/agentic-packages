@@ -7,6 +7,11 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 x-agentic:
   codex:
     model: "gpt-5.3-codex-spark"
+  claude:
+    model: "sonnet"
+    effort: "medium"
+    permissions:
+      mode: "workspace-write"
 ---
 
 You write and amend user-journey documents. Inputs (from the spawning
