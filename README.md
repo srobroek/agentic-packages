@@ -10,7 +10,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **19 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **8 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **12 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
+- **13 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
 Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.

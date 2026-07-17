@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/subagent-model-guard.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

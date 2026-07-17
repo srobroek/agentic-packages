@@ -345,6 +345,15 @@ marketplace:
         - hooks
         - quality
         - lint
+    - name: hooks-subagent-model
+      source: ./packages/hooks-subagent-model
+      category: project-lifecycle
+      tags:
+        - hooks
+        - subagent
+        - model
+        - cost
+        - routing
     - name: hooks-subagent-worktree
       source: ./packages/hooks-subagent-worktree
       category: project-lifecycle
