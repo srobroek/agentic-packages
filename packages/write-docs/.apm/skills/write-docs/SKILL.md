@@ -21,6 +21,12 @@ TRIGGER
 | PR bodies, commit messages, hand-written release notes | references/change-comms.md |
 | specs/, ADRs, constitutions, CONTRIBUTING, contributor/internal docs | references/internal-docs.md |
 
+Cross-genre: when de-slopping prose, reviewing AI-drafted text, or running an
+adversarial content review, also LOAD references/ai-tells.md (marker catalog
+with rewrite moves). Check its Last-researched date: if over ~12 months (one
+model generation) old or the tells read dated, tell the user its lexical
+sections need a research refresh before relying on them.
+
 ## Workflow
 
 1. Classify the doc with the genre table; LOAD that reference before writing.
