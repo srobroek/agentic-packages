@@ -497,6 +497,18 @@
       "category": "quality"
     },
     {
+      "name": "hooks-subagent-model",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-subagent-model"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "hooks-subagent-worktree",
       "source": {
         "source": "local",
