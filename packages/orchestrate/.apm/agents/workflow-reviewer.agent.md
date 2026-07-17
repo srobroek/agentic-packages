@@ -17,7 +17,7 @@ x-agentic:
     approval_policy: "never"
   claude:
     model: "sonnet"
-    effort: "medium"
+    effort: "high"
     permissions:
       mode: "read-only"
 ---

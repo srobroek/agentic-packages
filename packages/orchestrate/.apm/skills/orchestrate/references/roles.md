@@ -8,7 +8,7 @@ starting point, refined by what the catalog actually offers.
 | Role | Agent (default → alternatives) | Model / effort | Persistence | Escalation |
 |---|---|---|---|---|
 | **Orchestrator** | you (lead session) | your session model | whole run | delegate deep planning / disputes |
-| **Researcher** | `Explore` → `general-purpose`, `speckit-research` | **haiku** low/med | ephemeral (reuse for follow-ups) | → sonnet when a single task is synthesis-heavy (see fan-out/fan-in below) |
+| **Researcher** | `Explore` → `general-purpose`, `speckit-research` | **haiku** low | ephemeral (reuse for follow-ups) | → sonnet when a single task is synthesis-heavy (see fan-out/fan-in below) |
 | **Workflow-coder** | `workflow-coder` (bundled) | **sonnet** medium | per node, kept alive across fix rounds | do **not** upgrade the coder — on a reasoning block it raises `BLOCKED` |
 | **Workflow-reviewer** | `workflow-reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **sonnet** medium, read-only | kept alive per node (re-reviews deltas) | → opus for complex or security-critical diffs |
 | **Workflow-advisor** | `workflow-advisor` (bundled) → `adversarial-challenger` | **opus** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
