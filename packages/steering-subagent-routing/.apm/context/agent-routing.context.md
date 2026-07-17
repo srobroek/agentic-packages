@@ -4,13 +4,13 @@ Model routing is applied by the patch-agents finalizer; overrides live in `.apm/
 
 ## Criteria-based routing
 
-| Task type | Claude tier | Codex fallback |
-|-----------|-------------|----------------|
-| review / verify / adversarial / design judgment | opus (fable when available) | gpt-5.5 high |
-| scoped implementation, refactors, tests | sonnet | gpt-5.4 medium |
-| mechanical/bounded transforms, lookups | haiku | gpt-5.4-mini low |
-| orchestration / planning | main session | parent session |
-| explicit coding-agent override | — | gpt-5.4 high |
+| Task type | Claude tier | Claude effort | Codex fallback |
+|-----------|-------------|----------------|----------------|
+| review / verify / adversarial / design judgment | opus (fable when available) | high | gpt-5.5 high |
+| scoped implementation, refactors, tests | sonnet | medium | gpt-5.4 medium |
+| mechanical/bounded transforms, lookups | haiku | low | gpt-5.4-mini low |
+| orchestration / planning | main session | inherit | parent session |
+| explicit coding-agent override | — | — | gpt-5.4 high |
 
 Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
 
