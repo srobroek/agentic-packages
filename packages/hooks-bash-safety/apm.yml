@@ -1,5 +1,5 @@
 name: hooks-bash-safety
-version: 2.1.0
+version: 2.2.0
 description: >-
   Bash safety guards tuned for autonomous agents: hard-block only unrecoverable
   ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass

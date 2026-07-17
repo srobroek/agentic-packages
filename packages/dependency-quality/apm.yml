@@ -1,5 +1,5 @@
 name: dependency-quality
-version: 3.0.0
+version: 3.1.0
 description: >-
   Dependency hygiene bundle: nudges to investigate a dependency before adding
   it, audits the lockfile for known CVEs, and registers the package-version MCP
@@ -20,5 +20,5 @@ dependencies:
     - >-
       srobroek/agentic-packages/packages/hooks-package-investigate#>=1.1.1
       <2.0.0
-    - srobroek/agentic-packages/packages/dep-audit#>=2.0.0 <3.0.0
-    - srobroek/agentic-packages/packages/mcp-package-version#>=1.1.0 <2.0.0
+    - srobroek/agentic-packages/packages/dep-audit#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/mcp-package-version#>=1.2.0 <2.0.0

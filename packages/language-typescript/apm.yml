@@ -1,5 +1,5 @@
 name: language-typescript
-version: 3.0.0
+version: 3.1.0
 description: >-
   TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated
   TS/JS steering, and Hobson's javascript-typescript specialists.
@@ -14,10 +14,10 @@ tags:
   - typescript
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/typescript-quality#>=2.0.0 <3.0.0
+    - srobroek/agentic-packages/packages/typescript-quality#>=2.1.0 <3.0.0
     - >-
       srobroek/agentic-packages/packages/language-steering-typescript#>=2.0.0
       <3.0.0
-    - srobroek/agentic-packages/packages/lsp-typescript#>=0.2.0 <1.0.0
+    - srobroek/agentic-packages/packages/lsp-typescript#>=0.3.0 <1.0.0
     - >-
       wshobson/agents/plugins/javascript-typescript#5cc2549a50fc672230efd0a0307e2fd27ffba792

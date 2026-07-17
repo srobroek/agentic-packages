@@ -1,7 +1,9 @@
 # Write Docs
 
 Condensed doc-writing rules. The write-docs skill owns the full genre
-references and the slop-lint script; use it when available.
+references and the slop-lint script; use it when available. When de-slopping
+prose or reviewing AI-drafted text, load the skill's `references/ai-tells.md`
+— AI-generation markers paired with rewrite moves.
 
 All genres:
 

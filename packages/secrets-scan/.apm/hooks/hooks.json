@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/secrets-precommit-guard.sh",
-            "if": "Bash(git commit *)"
+            "timeout": 10
           }
         ]
       }

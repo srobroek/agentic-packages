@@ -1,6 +1,5 @@
 ---
 description: Project structure and ownership routing for capability-first repos.
-applyTo: "**/*"
 ---
 
 For repository layout, ownership boundaries, shared libraries, contracts, docs,

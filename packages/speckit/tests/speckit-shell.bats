@@ -99,7 +99,7 @@ slug() {
   cd "$TESTDIR"
   patch=$'*** Update File: specs/001-foo/tasks.md\n+- [x] T001 first task\n+- [X] T042 second task\n+- [ ] T099 not done\n'
   run bash "$SCRIPTS/speckit-task-issue-sync.sh" <<EOF
-{"tool_name":"apply_patch","tool_input":$(jq -Rs . <<<"$patch")}
+{"tool_name":"apply_patch","tool_input":{"command":$(jq -Rs . <<<"$patch")}}
 EOF
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("T001")'
@@ -119,7 +119,7 @@ EOF
   cd "$TESTDIR"
   patch=$'*** Update File: tasks.md\n+- [x] T1234 four digit id\n'
   run bash "$SCRIPTS/speckit-task-issue-sync.sh" <<EOF
-{"tool_name":"apply_patch","tool_input":$(jq -Rs . <<<"$patch")}
+{"tool_name":"apply_patch","tool_input":{"command":$(jq -Rs . <<<"$patch")}}
 EOF
   # No valid TNNN-with-boundary match -> early exit, no JSON.
   [ "$status" -eq 0 ]

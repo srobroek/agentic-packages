@@ -21,6 +21,10 @@ TRIGGER
 | PR bodies, commit messages, hand-written release notes | references/change-comms.md |
 | specs/, ADRs, constitutions, CONTRIBUTING, contributor/internal docs | references/internal-docs.md |
 
+Cross-genre: when de-slopping prose, reviewing AI-drafted text, or running an
+adversarial content review, also LOAD references/ai-tells.md (marker catalog
+with rewrite moves).
+
 ## Workflow
 
 1. Classify the doc with the genre table; LOAD that reference before writing.

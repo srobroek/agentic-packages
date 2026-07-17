@@ -61,25 +61,30 @@ pick_bash() {
 }
 FLOOR_BASH="$(pick_bash)"
 
-# Run a command with a wall-clock bound so a script that blocks on stdin (or
-# otherwise hangs) cannot wedge CI. Prefer coreutils `timeout`/`gtimeout` when
-# present; otherwise fall back to a pure-bash watchdog (no perl/coreutils
-# assumption). Returns the command's status, or 124 on timeout.
+# Run a command with a wall-clock bound and explicit stdin file so a script that
+# blocks on stdin (or otherwise hangs) cannot wedge CI. The explicit redirect is
+# required for the pure-bash background fallback: without it, non-interactive
+# bash connects an asynchronous command's stdin to /dev/null. Prefer coreutils
+# `timeout`/`gtimeout` when present; otherwise use the watchdog. Returns the
+# command's status, or 124 on timeout.
 PROBE_TIMEOUT="${PORTABILITY_PROBE_TIMEOUT:-5}"
 run_bounded() {
+  input_file="$1"
+  shift
   if command -v timeout >/dev/null 2>&1; then
-    timeout "$PROBE_TIMEOUT" "$@"
+    timeout "$PROBE_TIMEOUT" "$@" <"$input_file"
     return $?
   fi
   if command -v gtimeout >/dev/null 2>&1; then
-    gtimeout "$PROBE_TIMEOUT" "$@"
+    gtimeout "$PROBE_TIMEOUT" "$@" <"$input_file"
     return $?
   fi
   # Pure-bash watchdog: run the command in the background, sleep-kill it if it
   # outlives the bound. bash 3.2 compatible.
-  "$@" &
+  "$@" <"$input_file" &
   cmd_pid=$!
-  ( sleep "$PROBE_TIMEOUT"; kill -TERM "$cmd_pid" 2>/dev/null ) &
+  ( sleep "$PROBE_TIMEOUT"; kill -TERM "$cmd_pid" 2>/dev/null ) \
+    </dev/null >/dev/null 2>&1 &
   watch_pid=$!
   wait "$cmd_pid" 2>/dev/null
   cmd_st=$?
@@ -134,9 +139,28 @@ if [ "${#scripts[@]}" -eq 0 ]; then
 fi
 
 # Temp file holding the string-form payload fed to each probed script, plus the
-# scratch file for parse-check stderr. Clean both up on any exit.
-probe_in="$(mktemp "${TMPDIR:-/tmp}/portability-probe.XXXXXX")"
-parse_err="$(mktemp "${TMPDIR:-/tmp}/portability-parse.XXXXXX")"
+# scratch file for parse-check stderr. Bats can provide a writable per-test
+# directory even when the host TMPDIR is unavailable to a sandboxed process.
+make_temp() {
+  temp_name="$1"
+  for temp_dir in "${TMPDIR:-}" "${BATS_TEST_TMPDIR:-}" /tmp; do
+    [ -n "$temp_dir" ] || continue
+    temp_path="$(mktemp "${temp_dir%/}/${temp_name}.XXXXXX" 2>/dev/null)" || continue
+    printf '%s' "$temp_path"
+    return 0
+  done
+  return 1
+}
+
+probe_in="$(make_temp portability-probe)" || {
+  printf 'error: unable to create portability probe temp file\n' >&2
+  exit 2
+}
+parse_err="$(make_temp portability-parse)" || {
+  rm -f "$probe_in"
+  printf 'error: unable to create portability parse temp file\n' >&2
+  exit 2
+}
 trap 'rm -f "$probe_in" "$parse_err"' EXIT INT TERM
 
 # --- checks ----------------------------------------------------------------
@@ -218,7 +242,7 @@ check_string_payload() {
   # Feed the payload from a file (closed stdin) and bound the run so a hook that
   # blocks on stdin cannot hang the gate. Capture stderr only.
   printf '%s' '{"tool_input":"echo portability probe"}' > "$probe_in"
-  err="$(run_bounded "$FLOOR_BASH" "$script" <"$probe_in" 2>&1 >/dev/null)"
+  err="$(run_bounded "$probe_in" "$FLOOR_BASH" "$script" 2>&1 >/dev/null)"
   st=$?
   if [ "$st" -eq 124 ]; then
     fail "$script" "string-payload" "timed out (${PROBE_TIMEOUT}s) reading string-form tool_input (blocks on stdin?)"

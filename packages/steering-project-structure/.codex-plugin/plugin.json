@@ -1,0 +1,9 @@
+{
+  "name": "steering-project-structure",
+  "version": "1.1.0",
+  "description": "Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

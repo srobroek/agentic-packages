@@ -7,7 +7,6 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/quality-before-commit.sh",
-            "if": "Bash(git commit*)",
             "timeout": 10
           }
         ]

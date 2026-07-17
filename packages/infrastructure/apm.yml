@@ -1,5 +1,5 @@
 name: infrastructure
-version: 3.0.0
+version: 3.1.0
 description: >-
   Infrastructure and operations toolkit: infrastructure steering plus Hobson
   cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability
@@ -14,7 +14,7 @@ tags:
   - infrastructure
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/steering-infrastructure#>=2.0.0 <3.0.0
+    - srobroek/agentic-packages/packages/steering-infrastructure#>=2.1.0 <3.0.0
     - >-
       wshobson/agents/plugins/cloud-infrastructure#5cc2549a50fc672230efd0a0307e2fd27ffba792
     - >-

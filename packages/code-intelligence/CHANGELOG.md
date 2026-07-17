@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v6.0.0...code-intelligence--v6.1.0) (2026-07-16)
+
+
+### Features
+
+* **codex:** add first-class APM parity across packages ([f0c988b](https://github.com/srobroek/agentic-packages/commit/f0c988b76740f23d2a6017c40fece7a1ea53e631))
+
 ## [6.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v5.0.0...code-intelligence--v6.0.0) (2026-07-09)
 
 

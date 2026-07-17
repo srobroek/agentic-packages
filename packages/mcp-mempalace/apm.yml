@@ -1,5 +1,5 @@
 name: mcp-mempalace
-version: 0.2.0
+version: 0.3.0
 description: >-
   MCP server package for MemPalace, a local-first cross-session memory layer for
   coding agents. Files verbatim conversation/decision history into a vector +

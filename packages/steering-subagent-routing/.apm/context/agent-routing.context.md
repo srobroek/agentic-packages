@@ -10,7 +10,7 @@ Model routing is applied by the patch-agents finalizer; overrides live in `.apm/
 | scoped implementation, refactors, tests | sonnet | gpt-5.4 medium |
 | mechanical/bounded transforms, lookups | haiku | gpt-5.4-mini low |
 | orchestration / planning | main session | parent session |
-| explicit coding-agent override | — | gpt-5.3-codex-spark high |
+| explicit coding-agent override | — | gpt-5.4 high |
 
 Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
 

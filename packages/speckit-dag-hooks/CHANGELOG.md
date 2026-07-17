@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v5.0.0...speckit-dag-hooks--v5.1.0) (2026-07-16)
+
+
+### Features
+
+* **codex:** add first-class APM parity across packages ([f0c988b](https://github.com/srobroek/agentic-packages/commit/f0c988b76740f23d2a6017c40fece7a1ea53e631))
+
 ## [5.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v4.0.0...speckit-dag-hooks--v5.0.0) (2026-07-08)
 
 

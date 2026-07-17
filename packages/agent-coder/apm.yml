@@ -1,10 +1,12 @@
 name: agent-coder
-version: 4.0.0
+version: 4.1.0
 description: >-
   Implementation subagents for bounded code changes, tests, and refactors within
   a defined scope. Ships `coder` (edits the caller's tree directly; the parent
   commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and
-  hands back a reviewable branch — for parallel or staged work).
+  hands back a reviewable branch — for parallel or staged work). Claude also
+  gets a top-level edit reminder; Codex relies on steering because tool-hook
+  payloads do not identify subagent edits.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

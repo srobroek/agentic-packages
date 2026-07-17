@@ -1,0 +1,9 @@
+{
+  "name": "language-go",
+  "version": "3.1.0",
+  "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

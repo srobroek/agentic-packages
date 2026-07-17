@@ -1,6 +1,5 @@
 ---
 description: Cross-cutting design-principle routing for architecture decisions.
-applyTo: "**/*"
 ---
 
 Before adding a special case, a variant, or a copy of an existing module, read

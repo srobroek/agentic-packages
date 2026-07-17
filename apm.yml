@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 12.2.0
+version: 12.3.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -26,14 +26,19 @@ scripts:
   install: apm install --target claude,codex
   patch-agents: python3 .apm/scripts/patch-runtime-agents.py --all
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
+  audit-codex-config: python3 .apm/scripts/audit-codex-config.py
+  sanitize-codex-hooks: python3 .apm/scripts/sanitize-codex-hooks.py
+  test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
   setup: >-
     apm run install && apm compile --target codex,claude --no-constitution &&
-    apm run patch-agents && apm run audit-agentic-assets
+    apm run patch-agents && apm run audit-agentic-assets && apm run
+    audit-codex-config
 compilation:
   strategy: distributed
   source_attribution: true
   exclude:
     - packages/**
+    - templates/**
     - .apm/instructions/70-language-typescript.instructions.md
     - .apm/instructions/71-language-python.instructions.md
     - .apm/instructions/72-language-go.instructions.md

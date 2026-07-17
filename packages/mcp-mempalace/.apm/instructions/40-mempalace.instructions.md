@@ -1,6 +1,5 @@
 ---
 description: When to use MemPalace cross-session memory vs codebase-memory code navigation.
-applyTo: "**/*"
 ---
 
 For when to recall from and store into MemPalace (cross-session memory) versus

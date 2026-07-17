@@ -1,5 +1,22 @@
 # Changelog
 
+## [12.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.2.0...srobroek-agentic--v12.3.0) (2026-07-16)
+
+
+### Features
+
+* **codex:** add first-class APM parity across packages ([f0c988b](https://github.com/srobroek/agentic-packages/commit/f0c988b76740f23d2a6017c40fece7a1ea53e631))
+
+
+### Bug Fixes
+
+* **codex:** deduplicate legacy hook wiring ([c8e74bc](https://github.com/srobroek/agentic-packages/commit/c8e74bccf3aef56512f683b4cc586a8525461200))
+
+
+### Documentation
+
+* **codex:** correct global APM target state ([e07c1ce](https://github.com/srobroek/agentic-packages/commit/e07c1ce3fffcd21b5be0cdc7b1c27b23cbdbe567))
+
 ## [12.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.1.1...srobroek-agentic--v12.2.0) (2026-07-14)
 
 

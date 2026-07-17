@@ -1,5 +1,5 @@
 name: security
-version: 2.0.0
+version: 2.1.0
 description: >-
   Security toolkit: Hobson security-scanning, security-compliance,
   backend-api-security, frontend-mobile-security, and reverse-engineering

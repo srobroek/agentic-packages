@@ -1,18 +1,16 @@
 ---
 name: speckit-sync
-description: >-
-  Detects drift between active SpecKit artifacts and implementation (scope: drift),
-  or detects contradictions between active specs or shared contracts/interfaces
-  (scope: conflicts), or runs both passes sequentially (scope: both). Spawn with
-  "scope: drift" for sync/drift audits, "scope: conflicts" for inter-spec conflict
-  audits, or "scope: both" for a full drift-then-conflicts pass.
+description: "Audits active SpecKit artifacts for implementation drift, inter-spec conflicts, or both; spawn with scope: drift, conflicts, or both."
+x-lint:
+  allow: [W6, W9]
+  reason: "the dual-scope agent keeps each standalone audit contract explicit"
 model: opus
 x-agentic:
   codex:
     model: "gpt-5.5"
     reasoning_effort: "high"
     sandbox_mode: "read-only"
-    approval_policy: "none"
+    approval_policy: "never"
   claude:
     model: "opus"
     effort: "high"
@@ -35,6 +33,9 @@ Read "scope: ..." in the spawn prompt to determine which applies. If no scope is
 `SYNC [scope] SUMMARY — {CLEAN|FINDINGS}: {one-line verdict}`
 
 Then emit only non-empty sections; omit sections with no findings. Clean pass = header line only.
+
+CAP 80w clean · 900w with findings.
+MUST Never reprint source documents, code, diffs, or the caller's brief.
 
 ---
 

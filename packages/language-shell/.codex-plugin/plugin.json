@@ -1,0 +1,9 @@
+{
+  "name": "language-shell",
+  "version": "2.1.0",
+  "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

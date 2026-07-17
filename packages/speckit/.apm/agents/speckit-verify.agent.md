@@ -1,11 +1,9 @@
 ---
 name: speckit-verify
-description: >-
-  Validates implemented code against a target SpecKit spec's FR/SC requirements
-  and acceptance intent (mode: requirements), or detects phantom completions by
-  checking completed tasks against real implementation evidence in fresh context
-  (mode: tasks). Spawn with "mode: requirements" for FR/SC adherence verification
-  or "mode: tasks" after task completion claims to avoid confirmation bias.
+description: "Verifies a SpecKit implementation against requirements or completed tasks; spawn with mode: requirements or tasks to produce the required gate report."
+x-lint:
+  allow: [W6, W9]
+  reason: "the dual-mode gate agent keeps each standalone verification contract explicit"
 model: opus
 effort: xhigh
 memory: user
@@ -14,7 +12,7 @@ x-agentic:
     model: "gpt-5.5"
     reasoning_effort: "xhigh"
     sandbox_mode: "read-only"
-    approval_policy: "none"
+    approval_policy: "never"
   claude:
     model: "opus"
     effort: "xhigh"
@@ -50,6 +48,7 @@ First line of output (stdout only):
 `VERIFY [mode] SUMMARY — {PASS|FINDINGS}: {one-line verdict}`
 
 Then emit only non-empty sections; omit sections with no findings.
+Never reprint source documents, code, diffs, or the caller's brief.
 
 ---
 

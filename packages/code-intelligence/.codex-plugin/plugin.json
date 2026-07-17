@@ -1,0 +1,10 @@
+{
+  "name": "code-intelligence",
+  "version": "6.1.0",
+  "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "hooks": "./hooks/hooks.json"
+}

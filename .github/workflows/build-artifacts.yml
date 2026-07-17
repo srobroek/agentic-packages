@@ -77,10 +77,9 @@ jobs:
 
       - name: Regenerate non-destructive artifacts
         run: |
-          # Native plugin layout FIRST: each package's committed .claude-plugin/
-          # plugin.json + skills/agents/.mcp.json/hooks (the per-package sources the
-          # marketplace points at, loadable by Claude /plugin, Codex plugin add, and
-          # apm install). Then the canonical render pass (marketplace block,
+          # Native plugin layout FIRST: each package's committed Claude and Codex
+          # manifests plus target-specific skills/agents/MCP/hooks components. Then
+          # the canonical render pass (marketplace block,
           # release-please config, README/docs tables) from the shared inventory,
           # then apm pack reads the regenerated marketplace block.
           python3 .apm/scripts/build-native-plugins.py
@@ -92,6 +91,9 @@ jobs:
           # without committing the regenerated nodes.json. The builder is
           # stdlib-only (Python 3.14) and writes nodes.json in place.
           python3 packages/speckit-dag-hooks/scripts/build_nodes.py
+
+      - name: Audit Codex package configuration
+        run: python3 .apm/scripts/audit-codex-config.py
 
       - name: Fail if artifacts are stale
         run: |
