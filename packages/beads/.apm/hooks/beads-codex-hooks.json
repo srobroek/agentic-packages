@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-subagent-reminder.sh",
+            "statusMessage": "Injecting beads work contract...",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
