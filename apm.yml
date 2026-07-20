@@ -723,13 +723,6 @@ marketplace:
         - beads
         - workflow
         - gates
-    - name: speckit-dag-hooks
-      source: ./packages/speckit-dag-hooks
-      category: speckit
-      tags:
-        - bundle
-        - speckit
-        - hooks
     - name: steering-architecture
       source: ./packages/steering-architecture
       category: steering

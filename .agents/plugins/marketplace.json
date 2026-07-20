@@ -1181,18 +1181,6 @@
       "category": "speckit"
     },
     {
-      "name": "speckit-dag-hooks",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit-dag-hooks"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
-    },
-    {
       "name": "steering-architecture",
       "source": {
         "source": "local",

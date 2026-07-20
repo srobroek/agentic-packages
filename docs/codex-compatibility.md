@@ -79,7 +79,6 @@ below rates functionality when installed through APM, the project source of trut
 - `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
 - `mcp-repomix`: Codex refreshes cannot reliably suppress subagent Git calls.
-- `speckit-dag-hooks`: `UserPromptExpansion` is approximated with `UserPromptSubmit`.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
 - `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
 - `lsp-*`: Claude-only native LSP registration; Codex uses language CLIs and code MCP tools.
@@ -143,7 +142,6 @@ plugin manifests do not support every APM component type.
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
 | `speckit` | Partial | Skills, APM agents, and supported hooks work; Claude Skill-tool reminder has no Codex event equivalent. |
-| `speckit-dag-hooks` | Partial | UserPromptExpansion is approximated with UserPromptSubmit; Codex has no post-skill event. |
 
 ## Validation
 
