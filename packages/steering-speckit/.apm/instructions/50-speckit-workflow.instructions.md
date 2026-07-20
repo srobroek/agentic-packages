@@ -27,13 +27,12 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 | 1 | `/speckit.specify` | auto → approval | Creates spec.md |
 | 2 | `/speckit.clarify` | interactive | Incorporate feedback |
 | 3 | `/speckit.plan` | auto → approval | Architecture and approach |
-| 4 | `/speckit.tasks` | auto → approval | Task breakdown with dependencies |
+| 4 | `/speckit.tasks` | auto → approval | Task breakdown as beads under the implement step (tasks.md writes are denied; see speckit-beads steering) |
 | 5 | `/speckit.checklist` | interactive | Requirements-quality gate |
 | 5b | `/speckit.critique.run` | parallel with 5c | Plan + task quality gate |
 | 5c | `/speckit.security-review` | parallel with 5b | Security review of plan/tasks |
 | 6 | `/speckit.analyze` | interactive | Risk analysis |
-| 7 | `/speckit.taskstoissues` | auto | Creates GitHub/GitLab issues |
-| 8 | commit + tag (git, no extension) | auto | Snapshot before implementation |
+| 7 | commit + tag (git, no extension) | auto | Snapshot before implementation; task state lives in beads, not GitHub issues |
 
 ### Phase 2 — Implementation
 
@@ -60,7 +59,7 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 
 ## Scope Change (iterate)
 
-Mandatory once tasks.md exists. Trigger: requirements change or approach won't work.
+Mandatory once task beads exist. Trigger: requirements change or approach won't work.
 
 1. `/speckit.iterate.define` → `pending-iteration.md`; present to user
 2. `/speckit.iterate.apply` → updates spec/plan/tasks

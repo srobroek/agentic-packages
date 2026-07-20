@@ -4,6 +4,7 @@ set -euo pipefail
 [[ -d ".specify" ]] || exit 0
 
 input="$(cat)"
+unchecked=""; checked=""; open_beads=""
 command="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
 
 if ! printf '%s' "$command" | grep -qE 'git commit '; then
@@ -24,7 +25,12 @@ fi
 
 unchecked=""
 checked=""
-if [[ -n "$active_spec" && -f "specs/$active_spec/tasks.md" ]]; then
+beads_mode=false
+if command -v bd >/dev/null 2>&1 && bd where >/dev/null 2>&1; then
+  beads_mode=true
+  open_beads="$(bd query "spec_id=${active_spec}* AND status!=closed" --json 2>/dev/null | jq 'length' 2>/dev/null || true)"; open_beads="${open_beads:-0}"
+elif [[ -n "$active_spec" && -f "specs/$active_spec/tasks.md" ]]; then
+  # Legacy fallback (pre-beads repos): tasks.md checkmarks.
   # `grep -c` prints 0 AND exits 1 on no match. The old `|| echo 0` produced a
   # second 0 ("0\n0"), breaking the later `-gt` test. Use `|| true` so grep's own
   # 0 stands and `set -e` does not abort on the non-match exit; then default.
@@ -39,11 +45,15 @@ if printf '%s' "$last_msg" | grep -qE '#[0-9]+'; then
 fi
 
 context=""
-if [[ -n "$unchecked" && "$unchecked" -gt 0 ]]; then
+if [[ "$beads_mode" == true ]]; then
+  if [[ -n "$open_beads" && "$open_beads" -gt 0 ]]; then
+    context="SPECKIT TASK CHECK: Commit created. Spec $active_spec has $open_beads open beads. Close any this commit completes: bd close <id> --reason \"...\" (reference bead ids like bd-xxxx in the commit message for traceability)."
+  fi
+elif [[ -n "$unchecked" && "$unchecked" -gt 0 ]]; then
   context="SPECKIT TASK CHECK: Commit created. Spec $active_spec has $checked completed / $unchecked remaining tasks. Check if this commit completes any tasks -- mark them [X] in tasks.md."
 fi
 
-if [[ "$has_issue_ref" == false && -n "$active_spec" ]]; then
+if [[ "$beads_mode" != true && "$has_issue_ref" == false && -n "$active_spec" ]]; then
   if [[ -n "$context" ]]; then
     context="$context"$'\n'
   fi
