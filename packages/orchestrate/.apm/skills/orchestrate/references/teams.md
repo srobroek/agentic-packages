@@ -21,8 +21,8 @@ Everything else → subagents.
 - **Experimental, off by default.** Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
   in settings/env. Without it, no team forms. Teams cost significantly more
   tokens (each teammate is a full session).
-- **Small teams only.** 3–5 members, efficient models (sonnet/haiku) — not a
-  uniform opus team.
+- **Small teams only.** 3–5 members on efficient tiers — not a
+  uniform top-tier team (see steering-subagent-routing).
 - **Teammates cannot spawn background subagents** (in-process) — the
   orchestrator-brokered advisor and the persistent gatekeeper/scribe, which rely
   on that, do not work inside a team. Use a team only as a bounded burst for the

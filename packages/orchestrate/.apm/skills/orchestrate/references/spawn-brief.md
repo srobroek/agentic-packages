@@ -50,7 +50,7 @@ Scope <globs>. Report REVIEW <node> verdict=approve|changes; for changes give a
 numbered list, each` file:line — problem — required action `(one clause each).
 Log the verdict as an audit record + bead comment. Kept alive to re-review the
 delta only.`
-Escalate to opus in the brief when the diff is complex or security-critical.
+Escalate the reviewer a tier in the brief when the diff is complex or security-critical.
 
 ## Advisor / debugger brief
 
