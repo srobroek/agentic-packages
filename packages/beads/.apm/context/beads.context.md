@@ -17,26 +17,48 @@ DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
   stays in Claude auto-memory (see mempalace steering).
 
 IDENTITY
-MUST Set `--actor <agent-name>` (or BEADS_ACTOR) on every mutating command when
-  acting as a named subagent; audit trails and claim ownership depend on it.
+MUST Set BEADS_ACTOR (`<harness>/<agent-name>/<session-id>`) on every mutating
+  command when acting as a subagent; audit trails and claim ownership depend
+  on it, and the session id distinguishes dead claims from live ones.
 
 CLAIMING
-MUST Claim before working: `bd update <id> --claim` (atomic; first wins,
-  idempotent for the holder). Never edit an issue another actor holds.
-MUST On refusal ("already assigned"), coordinate with the holder — never
-  `bd unclaim --force` a live claim; `--force` is for abandoned claims only.
-DEFAULT Discover work with `bd ready --json`; release with
-  `bd update <id> --status open` + clearing assignee.
+MUST Claim before working: `bd update <id> --claim` (atomic compare-and-swap;
+  first wins, idempotent for the holder). Never claim via labels — labels are
+  not atomic and bypass anti-steal protection.
+MUST Discover work with `bd ready --unassigned --json`; never pick up an issue
+  assigned to another actor unless the parent explicitly hands you its id.
+MUST On claim refusal ("already assigned"), coordinate with the holder;
+  `bd unclaim --force` only after confirming the holding session is dead
+  (stale heartbeat or gone) — it is the abandoned-claim escape hatch.
+DEFAULT Release with `bd unclaim <id>` (assignee cleared, status open).
 
-STRUCTURE
-| need | mechanism |
-|---|---|
-| workflow state | structured fields (status/priority/type) — never labels |
-| categorical filtering | labels, lowercase-hyphenated, 5–10 core per repo |
-| operational state cache | `bd set-state <id> dim=value --reason`; query `bd state` |
-| machine routing hints | `--metadata` JSON, namespaced keys (`execution_*` convention) |
-| rationale/prose | description + notes, never labels or metadata |
-| requirements linkage | `--spec-id` + `discovered-from` deps |
+FIELD TAXONOMY
+| purpose | mechanism | who writes |
+|---|---|---|
+| lifecycle (open/in_progress/closed) | status — never phase or role | claiming worker |
+| live ownership | assignee via `--claim` | claiming worker |
+| urgency | priority 0–4 | orchestrator/user only |
+| routing queue (agent kind) | label `agent:<name>` | orchestrator/formula only |
+| group dispatch | assignee = pool alias (`claim.pools`) | orchestrator |
+| category/component | labels, lowercase-hyphenated, ≤10 per repo | any agent |
+| operational state cache | `bd set-state <id> dim=value --reason` | owning agent, own bead |
+| execution hints (agent type, model tier, effort, parallel group) | metadata `execution_*` | orchestrator, BEFORE spawn |
+| git anchors (branch, base_sha, pr) | metadata | integrator/orchestrator |
+| scope globs for disjointness | metadata `scope` | orchestrator |
+| dedupe keys (CVE, PR#, file:line) | metadata | finder skills |
+| rationale/prose | description + notes, never labels/metadata | any agent |
+| requirements linkage | `--spec-id` + `discovered-from` deps | creator |
+
+ROUTING
+DEFAULT Pull-queue by kind: workers poll
+  `bd ready --label agent:<kind> --unassigned --json` and `--claim` what they
+  take; labels route by KIND, assignee pins an INSTANCE, pool alias dispatches
+  to a group.
+MUST Orchestrators set routing labels and `execution_*` metadata at creation
+  or pour time — model/effort are fixed at spawn, too late after delegation.
+NOT Labels as locks (assignee owns "taken") or as gate substitutes (no
+  `ci:green`/`pr:merged` labels — gate beads + `bd gate check` own blocking
+  waits; `bd set-state` is for non-blocking dimensions only).
 
 DEPENDENCIES
 DEFAULT `blocks` for ordering; `parent-child` for epics; `discovered-from` for
