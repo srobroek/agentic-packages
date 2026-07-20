@@ -140,6 +140,18 @@
         }
       ]
     },
+    "packages/beads": {
+      "release-type": "simple",
+      "component": "beads",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/brownfield-project": {
       "release-type": "simple",
       "component": "brownfield-project",

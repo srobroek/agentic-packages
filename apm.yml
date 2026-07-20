@@ -107,6 +107,14 @@ marketplace:
         - skill
         - maintenance
         - steering
+    - name: beads
+      source: ./packages/beads
+      category: project-lifecycle
+      tags:
+        - beads
+        - issue-tracking
+        - coordination
+        - multi-agent
     - name: brownfield-project
       source: ./packages/brownfield-project
       category: project-lifecycle
