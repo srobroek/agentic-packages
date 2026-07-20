@@ -82,6 +82,7 @@
   "packages/orchestrate": "1.1.0",
   "packages/planning-product": "3.1.0",
   "packages/playwright": "3.1.0",
+  "packages/pr-shepherd": "0.1.0",
   "packages/presentation": "2.1.0",
   "packages/project-lifecycle": "3.2.0",
   "packages/python-quality": "2.1.0",
