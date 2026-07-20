@@ -44,6 +44,13 @@ DEFAULT `blocks` for ordering; `parent-child` for epics; `discovered-from` for
   affect `bd ready`.
 MUST Model fan-in with an aggregate issue depending on each part, not comments.
 
+FINDINGS
+DEFAULT Any skill or review that ends with findings the session will not act on
+  (audit reports, deferred review items, advisory bumps, failed checks at
+  handoff) files them as beads — `bd create` with `discovered-from` the active
+  bead, one per finding, machine keys (CVE id, PR number, file:line) in
+  metadata so re-runs dedupe instead of re-reporting.
+
 JSON DETERMINISM
 MUST Scripts and hooks parsing bd output set `BD_JSON_ENVELOPE=1` and read
   `.data` / `.error` + `schema_version`; agents reading ad hoc may use bare
