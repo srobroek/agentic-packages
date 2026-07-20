@@ -107,7 +107,7 @@
     },
     {
       "name": "catchup",
-      "description": "Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request.",
+      "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state — after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
       "version": "2.1.0",
       "tags": [
         "skill",
@@ -334,7 +334,7 @@
     },
     {
       "name": "handover",
-      "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.",
+      "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. In beads (bd) repos, flushes task state into beads and keeps the file narrative-only.",
       "version": "2.1.0",
       "tags": [
         "skill",
