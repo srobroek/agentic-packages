@@ -32,7 +32,7 @@ jobs:
       - name: Set up APM
         # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
         # PyYAML comes transitively from apm-cli.
-        run: pip install apm-cli jinja2
+        run: pip install "apm-cli==0.26.0" jinja2
 
       - name: Validate hook JSON
         run: |

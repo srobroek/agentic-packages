@@ -1,5 +1,5 @@
 name: core
-version: 7.1.0
+version: 7.2.0
 description: >-
   Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
   and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock
@@ -14,9 +14,9 @@ tags:
   - baseline
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/project-lifecycle#>=3.2.0 <4.0.0
-    - srobroek/agentic-packages/packages/code-intelligence#>=6.1.0 <7.0.0
-    - srobroek/agentic-packages/packages/agentic-maintenance#>=4.1.0 <5.0.0
+    - srobroek/agentic-packages/packages/project-lifecycle#>=3.3.0 <4.0.0
+    - srobroek/agentic-packages/packages/code-intelligence#>=6.2.0 <7.0.0
+    - srobroek/agentic-packages/packages/agentic-maintenance#>=4.2.0 <5.0.0
     - srobroek/agentic-packages/packages/resume-session#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/steering-delivery#>=1.1.0 <2.0.0
     - >-

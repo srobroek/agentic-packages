@@ -15,6 +15,7 @@
         "critique",
         "decision-review"
       ],
+      "category": "quality",
       "source": "./packages/agent-adversarial-challenger"
     },
     {
@@ -26,6 +27,7 @@
         "engineering",
         "implementation"
       ],
+      "category": "engineering",
       "source": "./packages/agent-coder"
     },
     {
@@ -37,6 +39,7 @@
         "engineering",
         "repos"
       ],
+      "category": "engineering",
       "source": "./packages/agent-external-repo-worker"
     },
     {
@@ -48,6 +51,7 @@
         "maintenance",
         "apm"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agent-management"
     },
     {
@@ -59,16 +63,18 @@
         "quality",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/agent-pr-reviewer"
     },
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "4.1.0",
+      "version": "4.2.0",
       "tags": [
         "bundle",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agentic-maintenance"
     },
     {
@@ -80,6 +86,7 @@
         "maintenance",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/audit-steering"
     },
     {
@@ -91,6 +98,7 @@
         "lifecycle",
         "brownfield"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/brownfield-project"
     },
     {
@@ -102,6 +110,7 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/catchup"
     },
     {
@@ -113,6 +122,7 @@
         "dotfiles",
         "chezmoi"
       ],
+      "category": "dotfiles",
       "source": "./packages/chezmoi-editor"
     },
     {
@@ -124,16 +134,18 @@
         "cmux",
         "terminal"
       ],
+      "category": "developer-tools",
       "source": "./packages/cmux"
     },
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "6.1.0",
+      "version": "6.2.0",
       "tags": [
         "bundle",
         "graph"
       ],
+      "category": "code-intelligence",
       "source": "./packages/code-intelligence"
     },
     {
@@ -145,6 +157,7 @@
         "code-intelligence",
         "graph"
       ],
+      "category": "code-intelligence",
       "source": "./packages/codebase-memory"
     },
     {
@@ -156,26 +169,29 @@
         "hooks",
         "reference"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/codex-hook-contract"
     },
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.1.0",
+      "version": "7.2.0",
       "tags": [
         "bundle",
         "baseline"
       ],
+      "category": "core",
       "source": "./packages/core"
     },
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "data"
       ],
+      "category": "data",
       "source": "./packages/data-ai"
     },
     {
@@ -187,6 +203,7 @@
         "planning",
         "analysis"
       ],
+      "category": "planning-product",
       "source": "./packages/debate"
     },
     {
@@ -200,6 +217,7 @@
         "audit",
         "cve"
       ],
+      "category": "security",
       "source": "./packages/dep-audit"
     },
     {
@@ -213,17 +231,19 @@
         "advisory",
         "cve"
       ],
+      "category": "code-intelligence",
       "source": "./packages/dep-update"
     },
     {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/dependency-quality"
     },
     {
@@ -234,6 +254,7 @@
         "bundle",
         "tooling"
       ],
+      "category": "engineering",
       "source": "./packages/developer-tools"
     },
     {
@@ -244,6 +265,7 @@
         "bundle",
         "diagrams"
       ],
+      "category": "diagrams",
       "source": "./packages/diagrams"
     },
     {
@@ -254,6 +276,7 @@
         "bundle",
         "documentation"
       ],
+      "category": "docs",
       "source": "./packages/docs-architecture"
     },
     {
@@ -265,6 +288,7 @@
         "planning",
         "explanation"
       ],
+      "category": "planning-product",
       "source": "./packages/eli5"
     },
     {
@@ -276,16 +300,18 @@
         "maintenance",
         "discovery"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/find-tools"
     },
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "frontend"
       ],
+      "category": "frontend",
       "source": "./packages/frontend"
     },
     {
@@ -297,6 +323,7 @@
         "languages",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/go-quality"
     },
     {
@@ -308,6 +335,7 @@
         "planning",
         "goals"
       ],
+      "category": "planning-product",
       "source": "./packages/goal-writer"
     },
     {
@@ -318,6 +346,7 @@
         "bundle",
         "governance"
       ],
+      "category": "governance",
       "source": "./packages/governance"
     },
     {
@@ -329,6 +358,7 @@
         "lifecycle",
         "handover"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/handover"
     },
     {
@@ -341,6 +371,7 @@
         "tokens",
         "compression"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/headroom"
     },
     {
@@ -352,6 +383,7 @@
         "git",
         "attribution"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-attribution-guard"
     },
     {
@@ -363,6 +395,7 @@
         "bash",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-bash-safety"
     },
     {
@@ -375,6 +408,7 @@
         "dotfiles",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-chezmoi-guard"
     },
     {
@@ -387,6 +421,7 @@
         "github",
         "issues"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-close-keywords"
     },
     {
@@ -398,6 +433,7 @@
         "git",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-safety"
     },
     {
@@ -409,6 +445,7 @@
         "git",
         "commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-workflow"
     },
     {
@@ -420,6 +457,7 @@
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-package-investigate"
     },
     {
@@ -432,6 +470,7 @@
         "portability",
         "testing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-portability-ci"
     },
     {
@@ -443,6 +482,7 @@
         "git",
         "pre-commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-precommit-gate"
     },
     {
@@ -454,12 +494,13 @@
         "quality",
         "lint"
       ],
+      "category": "quality",
       "source": "./packages/hooks-quality"
     },
     {
       "name": "hooks-subagent-model",
       "description": "Model-routing deny gate for subagent spawns. A PreToolUse:Agent hook DENIES an Agent/Task call when `model` is omitted AND the named subagent_type has no pinned model in its definition (or subagent_type itself is omitted) — the spawn would otherwise silently inherit the parent session's model, often an expensive top-tier one. The deny reason is a tier routing table (cheap tier for mechanical work, mid tier for bounded coding/research, top tier or an explicit session-model pass-through for deep/adversarial work) so the caller's retry succeeds. The deny reason also notes that reasoning effort is NOT enforceable per-call (no `effort` field exists on the Agent tool_input) and points to pinning `effort:` in reusable agent definitions instead. The inherit-by-default type list is overridable per-project via SUBAGENT_MODEL_GUARD_INHERIT_TYPES. Fails open on malformed input. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "subagent",
@@ -467,6 +508,7 @@
         "cost",
         "routing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-model"
     },
     {
@@ -480,6 +522,7 @@
         "isolation",
         "policy"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-worktree"
     },
     {
@@ -491,6 +534,7 @@
         "worktree",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-worktree"
     },
     {
@@ -501,16 +545,18 @@
         "bundle",
         "incident"
       ],
+      "category": "debugging",
       "source": "./packages/incident-response"
     },
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "infrastructure"
       ],
+      "category": "infrastructure",
       "source": "./packages/infrastructure"
     },
     {
@@ -522,6 +568,7 @@
         "embedded",
         "arm"
       ],
+      "category": "languages",
       "source": "./packages/language-arm-cortex"
     },
     {
@@ -532,6 +579,7 @@
         "bundle",
         "dotnet"
       ],
+      "category": "languages",
       "source": "./packages/language-dotnet"
     },
     {
@@ -542,16 +590,18 @@
         "bundle",
         "functional"
       ],
+      "category": "languages",
       "source": "./packages/language-functional"
     },
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-go"
     },
     {
@@ -562,6 +612,7 @@
         "bundle",
         "julia"
       ],
+      "category": "languages",
       "source": "./packages/language-julia"
     },
     {
@@ -572,36 +623,40 @@
         "bundle",
         "jvm"
       ],
+      "category": "languages",
       "source": "./packages/language-jvm"
     },
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-python"
     },
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-rust"
     },
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/language-shell"
     },
     {
@@ -612,6 +667,7 @@
         "steering",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-go"
     },
     {
@@ -622,6 +678,7 @@
         "steering",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-python"
     },
     {
@@ -632,6 +689,7 @@
         "steering",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-rust"
     },
     {
@@ -642,6 +700,7 @@
         "steering",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-terraform"
     },
     {
@@ -652,26 +711,29 @@
         "steering",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-typescript"
     },
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-terraform"
     },
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-typescript"
     },
     {
@@ -683,6 +745,7 @@
         "php",
         "ruby"
       ],
+      "category": "languages",
       "source": "./packages/language-web-scripting"
     },
     {
@@ -696,6 +759,7 @@
         "interactive",
         "setup"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/license-picker"
     },
     {
@@ -706,6 +770,7 @@
         "lsp",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/lsp-go"
     },
     {
@@ -716,6 +781,7 @@
         "lsp",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/lsp-python"
     },
     {
@@ -726,6 +792,7 @@
         "lsp",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/lsp-rust"
     },
     {
@@ -736,6 +803,7 @@
         "lsp",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/lsp-shell"
     },
     {
@@ -746,6 +814,7 @@
         "lsp",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/lsp-terraform"
     },
     {
@@ -756,6 +825,7 @@
         "lsp",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/lsp-typescript"
     },
     {
@@ -767,6 +837,7 @@
         "matt-pocock",
         "workflows"
       ],
+      "category": "planning-product",
       "source": "./packages/matt-skills"
     },
     {
@@ -777,6 +848,7 @@
         "mcp",
         "codebase"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-codebase-memory"
     },
     {
@@ -787,6 +859,7 @@
         "mcp",
         "docs"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-context7"
     },
     {
@@ -798,6 +871,7 @@
         "memory",
         "cross-session"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-mempalace"
     },
     {
@@ -808,6 +882,7 @@
         "mcp",
         "versions"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-package-version"
     },
     {
@@ -818,6 +893,7 @@
         "mcp",
         "browser"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-playwright"
     },
     {
@@ -828,6 +904,7 @@
         "mcp",
         "repomix"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-repomix"
     },
     {
@@ -838,6 +915,7 @@
         "mcp",
         "semantic"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-serena"
     },
     {
@@ -849,6 +927,7 @@
         "tauri",
         "testing"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-tauri"
     },
     {
@@ -860,27 +939,30 @@
         "agent",
         "orchestration"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/orchestrate"
     },
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "planning"
       ],
+      "category": "planning-product",
       "source": "./packages/planning-product"
     },
     {
       "name": "playwright",
       "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "skill",
         "frontend",
         "browser"
       ],
+      "category": "frontend",
       "source": "./packages/playwright"
     },
     {
@@ -891,16 +973,18 @@
         "bundle",
         "slides"
       ],
+      "category": "presentation",
       "source": "./packages/presentation"
     },
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "tags": [
         "bundle",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/project-lifecycle"
     },
     {
@@ -912,6 +996,7 @@
         "languages",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/python-quality"
     },
     {
@@ -925,6 +1010,7 @@
         "release-please",
         "ci-cd"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/release-please"
     },
     {
@@ -935,6 +1021,7 @@
         "bundle",
         "resume"
       ],
+      "category": "resume",
       "source": "./packages/resume-cv"
     },
     {
@@ -946,16 +1033,18 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/resume-session"
     },
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/review"
     },
     {
@@ -967,6 +1056,7 @@
         "languages",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/rust-quality"
     },
     {
@@ -978,6 +1068,7 @@
         "secrets",
         "pre-commit"
       ],
+      "category": "security",
       "source": "./packages/secrets-scan"
     },
     {
@@ -988,6 +1079,7 @@
         "bundle",
         "security"
       ],
+      "category": "security",
       "source": "./packages/security"
     },
     {
@@ -999,6 +1091,7 @@
         "lifecycle",
         "review"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/session-review"
     },
     {
@@ -1013,27 +1106,30 @@
         "code-smells",
         "tech-debt"
       ],
+      "category": "quality",
       "source": "./packages/sniff"
     },
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are provisioned by speckit-gate (PyPI) during setup.",
-      "version": "5.1.0",
+      "version": "5.1.1",
       "tags": [
         "bundle",
         "speckit"
       ],
+      "category": "speckit",
       "source": "./packages/speckit"
     },
     {
       "name": "speckit-dag-hooks",
       "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "tags": [
         "bundle",
         "speckit",
         "hooks"
       ],
+      "category": "speckit",
       "source": "./packages/speckit-dag-hooks"
     },
     {
@@ -1045,6 +1141,7 @@
         "architecture",
         "design"
       ],
+      "category": "steering",
       "source": "./packages/steering-architecture"
     },
     {
@@ -1055,6 +1152,7 @@
         "steering",
         "backend"
       ],
+      "category": "steering",
       "source": "./packages/steering-backend"
     },
     {
@@ -1065,6 +1163,7 @@
         "steering",
         "data"
       ],
+      "category": "steering",
       "source": "./packages/steering-data"
     },
     {
@@ -1077,6 +1176,7 @@
         "commit",
         "workflow"
       ],
+      "category": "steering",
       "source": "./packages/steering-delivery"
     },
     {
@@ -1087,6 +1187,7 @@
         "steering",
         "docs"
       ],
+      "category": "steering",
       "source": "./packages/steering-docs-specs"
     },
     {
@@ -1097,6 +1198,7 @@
         "steering",
         "frontend"
       ],
+      "category": "steering",
       "source": "./packages/steering-frontend"
     },
     {
@@ -1107,6 +1209,7 @@
         "steering",
         "git"
       ],
+      "category": "steering",
       "source": "./packages/steering-git-workflow"
     },
     {
@@ -1117,6 +1220,7 @@
         "steering",
         "infrastructure"
       ],
+      "category": "steering",
       "source": "./packages/steering-infrastructure"
     },
     {
@@ -1130,6 +1234,7 @@
         "code-economy",
         "minimalism"
       ],
+      "category": "steering",
       "source": "./packages/steering-pragmatic"
     },
     {
@@ -1140,6 +1245,7 @@
         "steering",
         "structure"
       ],
+      "category": "steering",
       "source": "./packages/steering-project-structure"
     },
     {
@@ -1150,6 +1256,7 @@
         "steering",
         "speckit"
       ],
+      "category": "steering",
       "source": "./packages/steering-speckit"
     },
     {
@@ -1160,6 +1267,7 @@
         "steering",
         "routing"
       ],
+      "category": "steering",
       "source": "./packages/steering-subagent-routing"
     },
     {
@@ -1170,6 +1278,7 @@
         "steering",
         "toolchain"
       ],
+      "category": "steering",
       "source": "./packages/steering-toolchain-defaults"
     },
     {
@@ -1180,6 +1289,7 @@
         "steering",
         "tooling"
       ],
+      "category": "steering",
       "source": "./packages/steering-tools-scripts"
     },
     {
@@ -1191,18 +1301,20 @@
         "languages",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/typescript-quality"
     },
     {
       "name": "user-journeys",
       "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), the journey format spec and templates, and a deterministic index/lint script.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "tags": [
         "journeys",
         "validation",
         "e2e",
         "quality"
       ],
+      "category": "quality",
       "source": "./packages/user-journeys"
     },
     {
@@ -1214,6 +1326,7 @@
         "quality",
         "verification"
       ],
+      "category": "quality",
       "source": "./packages/verify"
     },
     {
@@ -1225,6 +1338,7 @@
         "code-intelligence",
         "web"
       ],
+      "category": "code-intelligence",
       "source": "./packages/web-fetch"
     },
     {
@@ -1241,6 +1355,7 @@
         "services",
         "release-notes"
       ],
+      "category": "code-intelligence",
       "source": "./packages/whats-new"
     },
     {
@@ -1252,17 +1367,19 @@
         "maintenance",
         "authoring"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/write-agentic"
     },
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "skill",
         "docs",
         "writing"
       ],
+      "category": "docs",
       "source": "./packages/write-docs"
     }
   ]

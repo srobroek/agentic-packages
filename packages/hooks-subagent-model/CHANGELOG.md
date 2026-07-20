@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-model--v0.1.0...hooks-subagent-model--v0.2.0) (2026-07-20)
+
+
+### Features
+
+* **hooks-subagent-model:** deny model-less spawns of inherit-type subagents with routing guidance ([#542](https://github.com/srobroek/agentic-packages/issues/542)) ([26cd426](https://github.com/srobroek/agentic-packages/commit/26cd426e4dff3b0ae0e0d2ccfb8b4e43d11907c3))
+
 ## 0.1.0 (2026-07-17)
 
 ### Features
