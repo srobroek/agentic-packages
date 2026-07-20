@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.3.0...user-journeys--v0.3.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **user-journeys:** let journey-validator follow a canonical driving-mechanics doc ([#544](https://github.com/srobroek/agentic-packages/issues/544)) ([bb7a378](https://github.com/srobroek/agentic-packages/commit/bb7a3781e7c628f69adc04e0fc0dcc765fc90a4b))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.2.0...user-journeys--v0.3.0) (2026-07-16)
 
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [12.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.3.0...srobroek-agentic--v12.4.0) (2026-07-20)
+
+
+### Features
+
+* **hooks-subagent-model:** deny model-less spawns of inherit-type subagents with routing guidance ([#542](https://github.com/srobroek/agentic-packages/issues/542)) ([26cd426](https://github.com/srobroek/agentic-packages/commit/26cd426e4dff3b0ae0e0d2ccfb8b4e43d11907c3))
+
+
+### Bug Fixes
+
+* pin the artifact generator so upstream releases stop breaking CI ([fabed94](https://github.com/srobroek/agentic-packages/commit/fabed94c9969c8e6def4d0f7dd83df0bc37b2fcb))
+
+
+### Documentation
+
+* **codex:** clarify subagent hook parity ([#541](https://github.com/srobroek/agentic-packages/issues/541)) ([22f61df](https://github.com/srobroek/agentic-packages/commit/22f61dfca9a2974ae8bf96e8d670bf99008a21a3))
+
 ## [12.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.2.0...srobroek-agentic--v12.3.0) (2026-07-16)
 
 
