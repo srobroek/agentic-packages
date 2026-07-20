@@ -1040,6 +1040,18 @@
         }
       ]
     },
+    "packages/pr-shepherd": {
+      "release-type": "simple",
+      "component": "pr-shepherd",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/presentation": {
       "release-type": "simple",
       "component": "presentation",

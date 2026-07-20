@@ -989,6 +989,18 @@
       "category": "frontend"
     },
     {
+      "name": "pr-shepherd",
+      "source": {
+        "source": "local",
+        "path": "./packages/pr-shepherd"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "presentation",
       "source": {
         "source": "local",
