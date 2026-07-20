@@ -45,7 +45,7 @@ FIELD TAXONOMY
 | category/component | labels, lowercase-hyphenated, ≤10 per repo | any agent |
 | operational state cache | `bd set-state <id> dim=value --reason` | owning agent, own bead |
 | execution hints (agent type, model tier, effort, parallel group) | metadata `execution_*` | orchestrator, BEFORE spawn |
-| git anchors (branch, base_sha, pr) | metadata | integrator/orchestrator |
+| git anchors (repo, branch, base_sha, worktree, pr, merge_sha) | metadata | worker at claim (branch/worktree); integrator (pr/merge_sha) |
 | scope globs for disjointness | metadata `scope` | orchestrator |
 | dedupe keys (CVE, PR#, file:line) | metadata | finder skills |
 | rationale/prose | description + notes, never labels/metadata | any agent |
