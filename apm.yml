@@ -697,6 +697,14 @@ marketplace:
       tags:
         - bundle
         - speckit
+    - name: speckit-beads
+      source: ./packages/speckit-beads
+      category: speckit
+      tags:
+        - speckit
+        - beads
+        - workflow
+        - gates
     - name: speckit-dag-hooks
       source: ./packages/speckit-dag-hooks
       category: speckit
