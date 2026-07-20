@@ -85,12 +85,6 @@ jobs:
           python3 .apm/scripts/build-native-plugins.py
           python3 .apm/scripts/render-docs.py all
           apm pack
-          # speckit-dag-hooks: nodes.json is a COMPILED ARTEFACT generated from
-          # scripts/build_nodes.py (the authoring source of truth). Regenerate it
-          # here so the staleness diff below fails any PR that edits the builder
-          # without committing the regenerated nodes.json. The builder is
-          # stdlib-only (Python 3.14) and writes nodes.json in place.
-          python3 packages/speckit-dag-hooks/scripts/build_nodes.py
 
       - name: Audit Codex package configuration
         run: python3 .apm/scripts/audit-codex-config.py
