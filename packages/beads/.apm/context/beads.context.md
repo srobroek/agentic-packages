@@ -90,6 +90,10 @@ NOT Routine `bd import` of issues.jsonl — it is upsert-only passive export;
 SESSION CLOSE (when beads were touched)
 MUST File beads for remaining/discovered work before reporting done, close
   finished issues with `--reason`, update in-progress state, then `bd dolt push`.
+MUST Before closing a bead whose work continues elsewhere (PR awaiting CI,
+  follow-up expected), write residual context onto the bead itself
+  (`bd comments add`: approach, tricky spots, what to check first on failure) —
+  the bead is the cross-session handover; PR bodies and handover files are not.
 DEFAULT Git commit/push of code follows delivery steering, not bd's profiles.
 
 SETUP
