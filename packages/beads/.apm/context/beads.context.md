@@ -6,9 +6,15 @@ MUST Use bd for persistent, multi-session, or multi-agent work tracking when
 DEFAULT TaskCreate stays for single-session scratch lists; SpecKit artifacts
   (spec.md/plan.md) stay the source for WHAT to build — beads tracks execution
   state, not requirements.
-NOT `bd remember`/MEMORY.md replacement — MemPalace owns cross-session memory
-  (see mempalace steering).
 NOT `bd edit` — opens $EDITOR and blocks the agent; use `bd update` flags.
+
+MEMORY
+DEFAULT `bd remember "insight" --key <slug>` for repo-scoped durable facts any
+  agent or tool must see (gotchas, conventions, decisions); every memory is
+  injected verbatim via bd prime each session — keep the set ≤30, prune stale
+  keys with `bd forget` during session review.
+DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
+  stays in Claude auto-memory (see mempalace steering).
 
 IDENTITY
 MUST Set `--actor <agent-name>` (or BEADS_ACTOR) on every mutating command when
