@@ -35,9 +35,11 @@ DEFAULT Release with `bd unclaim <id>` (assignee cleared, status open).
 FIELD TAXONOMY
 | purpose | mechanism | who writes |
 |---|---|---|
-| lifecycle (open/in_progress/closed) | status — never phase or role | claiming worker |
-| live ownership | assignee via `--claim` | claiming worker |
+| lifecycle | status (open/in_progress/blocked/deferred/closed) — never phase/role | claiming worker |
+| live ownership | assignee (structured field, atomic via `--claim`) | claiming worker |
 | urgency | priority 0–4 | orchestrator/user only |
+| work kind | type (bug/feature/task/epic/chore) | creator |
+| bounce-back (integrator → author) | fix bead `discovered-from` + `bd dep add <merge> <fix>` + comment; release claim | integrator |
 | routing queue (agent kind) | label `agent:<name>` | orchestrator/formula only |
 | group dispatch | assignee = pool alias (`claim.pools`) | orchestrator |
 | category/component | labels, lowercase-hyphenated, ≤10 per repo | any agent |
