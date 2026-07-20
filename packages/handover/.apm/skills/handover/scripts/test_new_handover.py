@@ -81,6 +81,68 @@ def test_frontmatter_parses_with_pyyaml_if_available():
     assert data["repo_root"] == '/r"quote\ninjected: x'
 
 
+# --- beads layout --------------------------------------------------------------
+
+def test_beads_layout_lists_ids_and_omits_state_sections():
+    content = nh.build_content(
+        project="p", repo_root="/r", worktree="/w", branch="b", task="t",
+        beads=["bd-1", "bd-2"],
+    )
+    fm = _frontmatter(content)
+    assert 'beads: ["bd-1", "bd-2"]' in fm
+    assert "## Active Beads" in content
+    assert "- bd-1:" in content and "- bd-2:" in content
+    assert "bd ready" in content
+    # Task-state sections are bead state, not file content.
+    for omitted in ("## Complete", "## Incomplete", "## Blockers", "## Changed Areas", "## Verification"):
+        assert omitted not in content, f"{omitted} must be omitted in beads layout"
+    # Narrative sections stay.
+    for kept in ("## Summary", "## Decisions", "## Avoid / Do Not Redo", "## Next Session Prompt", "## Runtime State"):
+        assert kept in content
+
+
+def test_no_beads_keeps_full_layout():
+    content = nh.build_content(
+        project="p", repo_root="/r", worktree="/w", branch="b", task="t",
+    )
+    assert "beads:" not in _frontmatter(content)
+    for section in ("## Complete", "## Incomplete", "## Blockers", "## Verification / Commands"):
+        assert section in content
+    assert "## Active Beads" not in content
+
+
+def test_beads_frontmatter_parses_with_pyyaml_if_available():
+    yaml = pytest.importorskip("yaml")
+    content = nh.build_content(
+        project="p", repo_root="/r", worktree="/w", branch="b", task="t",
+        beads=['bd-1"\ninjected: x'],
+    )
+    data = yaml.safe_load(_frontmatter(content))
+    assert data["beads"] == ['bd-1"\ninjected: x']
+
+
+def test_cli_beads_flag_writes_beads_layout(tmp_path, monkeypatch, capsys):
+    out = tmp_path / "handovers"
+    monkeypatch.setattr(sys, "argv", [
+        "new-handover.py",
+        "--out-dir", str(out),
+        "--project", "proj",
+        "--branch", "main",
+        "--task", "task",
+        "--repo-root", str(tmp_path),
+        "--worktree", str(tmp_path),
+        "--cwd", str(tmp_path),
+        "--beads", "bd-7, bd-8,",
+    ])
+    rc = nh.main(sys.argv[1:])
+    assert rc == 0
+    written = list(out.glob("*.md"))
+    assert len(written) == 1
+    text = written[0].read_text(encoding="utf-8")
+    assert 'beads: ["bd-7", "bd-8"]' in text
+    assert "## Active Beads" in text
+
+
 # --- out-dir-is-a-file handling ----------------------------------------------
 
 def test_out_dir_is_a_file_exits_cleanly(tmp_path, monkeypatch, capsys):

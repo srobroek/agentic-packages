@@ -15,25 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-close-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-label-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-issue-refs.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-deferred-issues.sh"
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.sh"
           }
         ]
       }

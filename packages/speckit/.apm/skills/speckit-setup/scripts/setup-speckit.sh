@@ -368,51 +368,47 @@ for wf in "${WORKFLOWS[@]}"; do
   specify workflow add "$wf_dir" </dev/null
 done
 
-echo "==> 6/7 provision speckit-gate (gates.yaml-driven enforcement)"
-# speckit-gate is a Python CLI distributed on PyPI and consumed via uvx (no APM
-# dependency). It supersedes speckit-dag-hooks. Guard: skip gracefully when uvx
-# cannot resolve it (publish may be pending) rather than aborting setup.
-if uvx speckit-gate --help >/dev/null 2>&1; then
-  echo "    speckit-gate available -- running init/compile/install"
-  # Init writes gates.yaml from the built-in defaults (--defaults skips the
-  # interactive wizard). Idempotent: re-running overwrites with the same content.
-  uvx speckit-gate init --defaults
-
-  # Merge the project overlay (A2 policy: deprecated implement, agent-assign
-  # chain, verify/verify-tasks spawn-agent gates). Append the overlay's `gates:`
-  # entries to the project's gates.yaml. This is safe because:
-  #   1. init --defaults writes built-in commands only (core preset).
-  #   2. The overlay keys (implement, agent-assign-*, verify, verify-tasks) are
-  #      NOT in the core preset, so there are no collisions on a fresh init.
-  #   3. If gates.yaml already has these keys (re-run) the append creates
-  #      duplicates that speckit-gate compile will reject with a clear error;
-  #      prefer the duplicate-key compile error over silently losing the overlay.
-  OVERLAY="$SCRIPT_DIR/gates-overlay.yaml"
-  if [ -f "$OVERLAY" ]; then
-    GATES_FILE="gates.yaml"
-    if [ -f "$GATES_FILE" ]; then
-      # Extract only the `gates:` block from the overlay and append it.
-      # sed -n '/^gates:/,$ p' preserves the header comment block under gates:.
-      echo "    merging gates-overlay.yaml into $GATES_FILE"
-      printf '\n' >> "$GATES_FILE"
-      sed -n '/^gates:/,$ p' "$OVERLAY" | tail -n +2 >> "$GATES_FILE"
-    else
-      echo "    WARNING: gates.yaml not found after init -- overlay not merged" >&2
-    fi
+echo "==> 6/7 provision beads workflow (speckit-beads formula)"
+# Workflow state lives in beads (bd). speckit-gate (PyPI, gates.yaml) is
+# retired/archived; the speckit-beads package supplies a bd formula whose
+# poured molecule IS the phase DAG (human gates included). Guard: skip
+# gracefully when bd is absent rather than aborting setup.
+if command -v bd >/dev/null 2>&1; then
+  # Init the beads workspace. --skip-hooks: bd's git hooks set core.hooksPath
+  # and hijack the pre-commit framework; repos that want bd's pre-commit step
+  # add `bd hooks run pre-commit` to .pre-commit-config.yaml instead.
+  if ! bd where >/dev/null 2>&1; then
+    echo "    bd init --skip-hooks"
+    bd init --skip-hooks </dev/null >/dev/null
   else
-    echo "    WARNING: gates-overlay.yaml not found at $OVERLAY -- skipping overlay merge" >&2
+    echo "    beads workspace already present"
   fi
 
-  # Compile resolves the merged gates.yaml into the hook dispatch table.
-  uvx speckit-gate compile
-
-  # Install merges the compiled hooks into .claude/settings.json (Claude harness).
-  uvx speckit-gate install --harness claude
-  echo "    speckit-gate: init + overlay + compile + install complete"
+  # Install the feature-lifecycle formula from the speckit-beads package.
+  # Resolution order mirrors how hook scripts locate their plugin root:
+  # installed plugin dir first, then the monorepo source (dev checkouts).
+  FORMULA_NAME="speckit-feature.formula.toml"
+  FORMULA_SRC=""
+  for cand in \
+    "$HOME/.claude/plugins/agentic-packages-speckit-beads/formulas/$FORMULA_NAME" \
+    "$SCRIPT_DIR/../../../../../speckit-beads/formulas/$FORMULA_NAME"; do
+    if [ -f "$cand" ]; then FORMULA_SRC="$cand"; break; fi
+  done
+  if [ -n "$FORMULA_SRC" ]; then
+    mkdir -p .beads/formulas
+    cp "$FORMULA_SRC" .beads/formulas/
+    if bd formula show speckit-feature >/dev/null 2>&1; then
+      echo "    formula speckit-feature installed and parseable"
+    else
+      echo "    WARNING: formula copied but bd formula show failed -- check bd version (need >= 1.1.0)" >&2
+    fi
+  else
+    echo "    WARNING: speckit-feature formula not found -- install the speckit-beads package, then re-run" >&2
+  fi
 else
-  echo "    SKIP: uvx could not resolve speckit-gate" >&2
-  echo "          Install hint: pip install speckit-gate  OR  wait for PyPI publish" >&2
-  echo "          Re-run setup-speckit.sh once speckit-gate is available to enable gate enforcement." >&2
+  echo "    SKIP: bd (beads) not on PATH" >&2
+  echo "          Install hint: mise use -g aqua:gastownhall/beads@latest" >&2
+  echo "          Re-run setup-speckit.sh once bd is available to enable the workflow molecule." >&2
 fi
 
 echo "==> 7/7 ignore generated status-report artefact"

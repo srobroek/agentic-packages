@@ -1,7 +1,7 @@
 {
   "name": "speckit-dag-hooks",
   "version": "5.2.1",
-  "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
+  "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. MUST NOT be co-installed with speckit-beads: this package's hard_missing preconditions require specs/*/tasks.md to exist, while speckit-beads denies every write to that file — together they deadlock the workflow. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
   "author": {
     "name": "Sjors Robroek"
   },

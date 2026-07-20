@@ -21,8 +21,8 @@ Everything else → subagents.
 - **Experimental, off by default.** Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
   in settings/env. Without it, no team forms. Teams cost significantly more
   tokens (each teammate is a full session).
-- **Small teams only.** 3–5 members, efficient models (sonnet/haiku) — not a
-  uniform opus team.
+- **Small teams only.** 3–5 members on efficient tiers — not a
+  uniform top-tier team (see steering-subagent-routing).
 - **Teammates cannot spawn background subagents** (in-process) — the
   orchestrator-brokered advisor and the persistent gatekeeper/scribe, which rely
   on that, do not work inside a team. Use a team only as a bounded burst for the
@@ -41,4 +41,4 @@ Everything else → subagents.
    them the comms protocol.
 3. Cap the size, keep the burst short, monitor and synthesize.
 4. Shut the teammates down, continue the main run on subagents.
-5. Log the team's outcome to the ledger like any other step.
+5. Log the team's outcome to beads (audit record + comment) like any other step.

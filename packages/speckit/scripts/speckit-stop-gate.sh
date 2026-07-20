@@ -20,51 +20,23 @@ if echo "$CURRENT_BRANCH" | grep -qE '[0-9]{3}-'; then
   ACTIVE_SPEC=$(echo "$CURRENT_BRANCH" | grep -oE '[0-9]{3}-[a-z0-9-]+' | head -1)
 fi
 
-if [ -n "$ACTIVE_SPEC" ] && [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
-  SPEC_ID=$(echo "$ACTIVE_SPEC" | grep -oE '^[0-9]{3}')
-
-  # Check if spec has a GitHub project (HAS_PROJECT)
-  HAS_PROJECT=false
-  if [ -f "specs/$ACTIVE_SPEC/spec.md" ]; then
-    if grep -qE '^\*\*Project\*\*:' "specs/$ACTIVE_SPEC/spec.md" && \
-       ! grep -qE '^\*\*Project\*\*:\s*none' "specs/$ACTIVE_SPEC/spec.md"; then
-      HAS_PROJECT=true
+if [ -n "$ACTIVE_SPEC" ]; then
+  # Task state lives in beads when the repo has a workspace (speckit-beads).
+  if command -v bd >/dev/null 2>&1 && bd where >/dev/null 2>&1; then
+    # bd 1.1.0 query gotchas (verified live): the hyphenated value MUST be
+    # quoted with the wildcard INSIDE the quotes -- unquoted is a parse error
+    # and the {error:...} OBJECT makes bare `jq length` count its keys (2).
+    # BD_JSON_ENVELOPE= pins the array shape against a session-level =1
+    # (which wraps output in {data:[...]}); the jq type-guard maps any
+    # non-array (error object, envelope) to 0.
+    OPEN_BEADS=$(BD_JSON_ENVELOPE='' bd query "spec_id=\"${ACTIVE_SPEC}*\" AND status!=closed" --json 2>/dev/null | jq 'if type=="array" then length else 0 end' 2>/dev/null)
+    if [ -n "$OPEN_BEADS" ] && [ "$OPEN_BEADS" -gt 0 ] 2>/dev/null; then
+      WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $OPEN_BEADS open beads (bd ready to continue)"$'\n'
     fi
-  fi
-
-  if [ "$HAS_PROJECT" = true ]; then
-    # Query GitHub for spec parent issue and its open sub-issues
-    REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null)
-    if [ -n "$REPO" ]; then
-      PARENT_NUM=$(gh issue list -R "$REPO" --state open --label "type:spec" --label "spec:${SPEC_ID}" --json number -q '.[0].number' 2>/dev/null)
-      if [ -n "$PARENT_NUM" ]; then
-        # One query for all sub-issue states; derive open/total locally.
-        SUB_STATES=$(gh api graphql -f query="
-          query {
-            repository(owner: \"$(echo "$REPO" | cut -d/ -f1)\", name: \"$(echo "$REPO" | cut -d/ -f2)\") {
-              issue(number: $PARENT_NUM) {
-                subIssues(first: 50) {
-                  nodes { state }
-                }
-              }
-            }
-          }
-        " --jq '[.data.repository.issue.subIssues.nodes[].state]' 2>/dev/null)
-        if [ -n "$SUB_STATES" ]; then
-          OPEN_SUBS=$(printf '%s' "$SUB_STATES" | jq '[.[] | select(. == "OPEN")] | length' 2>/dev/null)
-          TOTAL_SUBS=$(printf '%s' "$SUB_STATES" | jq 'length' 2>/dev/null)
-          if [ -n "$OPEN_SUBS" ] && [ "$OPEN_SUBS" -gt 0 ] 2>/dev/null; then
-            CLOSED_SUBS=$((TOTAL_SUBS - OPEN_SUBS))
-            WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $OPEN_SUBS open sub-issues ($CLOSED_SUBS closed) on spec parent #${PARENT_NUM}"$'\n'
-          fi
-        fi
-      fi
-    fi
-  else
-    # Fallback: tasks.md checkmarks for non-project specs.
-    # `grep -c` prints 0 AND exits 1 on no match. The old `|| echo 0` produced a
-    # second 0 ("0\n0"), breaking the `-gt` tests below. Use `|| true` so grep's
-    # own 0 stands; then default.
+  elif [ -f "specs/$ACTIVE_SPEC/tasks.md" ]; then
+    # Legacy fallback: tasks.md checkmarks (pre-beads repos).
+    # `grep -c` prints 0 AND exits 1 on no match. Use `|| true` so grep's own 0
+    # stands; then default.
     UNCHECKED=$(grep -c '^\- \[ \]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || true); UNCHECKED=${UNCHECKED:-0}
     CHECKED=$(grep -c '^\- \[X\]\|^\- \[x\]' "specs/$ACTIVE_SPEC/tasks.md" 2>/dev/null || true); CHECKED=${CHECKED:-0}
     if [ "$UNCHECKED" -gt 0 ] && [ "$CHECKED" -gt 0 ]; then

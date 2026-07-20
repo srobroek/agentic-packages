@@ -140,6 +140,18 @@
         }
       ]
     },
+    "packages/beads": {
+      "release-type": "simple",
+      "component": "beads",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/brownfield-project": {
       "release-type": "simple",
       "component": "brownfield-project",
@@ -1040,6 +1052,18 @@
         }
       ]
     },
+    "packages/pr-shepherd": {
+      "release-type": "simple",
+      "component": "pr-shepherd",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/presentation": {
       "release-type": "simple",
       "component": "presentation",
@@ -1187,6 +1211,18 @@
     "packages/speckit": {
       "release-type": "simple",
       "component": "speckit",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/speckit-beads": {
+      "release-type": "simple",
+      "component": "speckit-beads",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

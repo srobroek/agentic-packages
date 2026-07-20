@@ -107,6 +107,14 @@ marketplace:
         - skill
         - maintenance
         - steering
+    - name: beads
+      source: ./packages/beads
+      category: project-lifecycle
+      tags:
+        - beads
+        - issue-tracking
+        - coordination
+        - multi-agent
     - name: brownfield-project
       source: ./packages/brownfield-project
       category: project-lifecycle
@@ -608,6 +616,15 @@ marketplace:
         - skill
         - frontend
         - browser
+    - name: pr-shepherd
+      source: ./packages/pr-shepherd
+      category: project-lifecycle
+      tags:
+        - beads
+        - merge-queue
+        - pull-requests
+        - integration
+        - multi-agent
     - name: presentation
       source: ./packages/presentation
       category: presentation
@@ -698,6 +715,14 @@ marketplace:
       tags:
         - bundle
         - speckit
+    - name: speckit-beads
+      source: ./packages/speckit-beads
+      category: speckit
+      tags:
+        - speckit
+        - beads
+        - workflow
+        - gates
     - name: speckit-dag-hooks
       source: ./packages/speckit-dag-hooks
       category: speckit

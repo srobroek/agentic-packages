@@ -2,7 +2,7 @@
 
 SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. It is delivered as **three opt-in packages** so you can adopt exactly the layer you want:
 
-- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, the `speckit-dag` node store, and the SpecKit workflow guard hooks (issue/PR conventions, commit checks, stop gate).
+- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, the `speckit-dag` node store, and the SpecKit workflow guard hooks (PR-title guidance, commit checks, stop gate).
 - **`steering-speckit`** -- the opinionated mandatory-gated Phase 1/2/3 workflow steering. Opt in to adopt the process.
 - **`speckit-dag-hooks`** -- the enforcement layer: the Python DAG dispatcher + `nodes.json` + hooks that hard-block out-of-order `/speckit.*` calls. Depends on `speckit`.
 
@@ -10,11 +10,15 @@ The pipeline:
 
 ```
 specify -> clarify -> plan -> tasks -> checklist -> critique + security-review
-        -> analyze -> issues -> checkpoint
+        -> analyze -> checkpoint
         -> assign -> validate -> execute (checkpoint per task)
         -> verify-tasks -> verify -> review -> qa -> code-review + security-review
         -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
 ```
+
+In repos with a beads workspace (the `speckit-beads` package), task state lives
+in beads (`bd ready` / `bd update --claim` / `bd close`), not in tasks.md or
+GitHub issues.
 
 Conditional loop-backs branch off this spine: `iterate` (scope/intent change),
 `bugfix` (defect in built code), `fix-findings` (review/QA findings), and

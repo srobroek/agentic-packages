@@ -90,6 +90,19 @@
       "source": "./packages/audit-steering"
     },
     {
+      "name": "beads",
+      "description": "Beads (bd) issue-tracker conventions: the dependency-aware work DAG that agents use for persistent task tracking, atomic work claiming, and multi-agent coordination. Ships steering that scopes beads against SpecKit artifacts (requirements) and TaskCreate (single-session scratch) and fixes conventions for labels vs structured fields vs metadata, actor identity, claim etiquette, JSON envelope determinism, and Dolt sync. Ships a PreToolUse guard denying mutating `gh issue` commands in beads repos (task state lives in bd; issue reads stay allowed). Session-start wiring is native: run `bd setup claude --global` once (SessionStart bd prime injection) and `bd init --skip-hooks` per repo. Requires the bd CLI (gastownhall/beads >= 1.1.0); all surfaces are inert in repos without .beads/.",
+      "version": "0.1.0",
+      "tags": [
+        "beads",
+        "issue-tracking",
+        "coordination",
+        "multi-agent"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/beads"
+    },
+    {
       "name": "brownfield-project",
       "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
       "version": "1.1.0",
@@ -103,7 +116,7 @@
     },
     {
       "name": "catchup",
-      "description": "Resume interrupted project work by locating and following the best handover before doing fresh discovery, after context loss, /clear, or a continue/resume request.",
+      "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state — after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
       "version": "2.1.0",
       "tags": [
         "skill",
@@ -351,7 +364,7 @@
     },
     {
       "name": "handover",
-      "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session.",
+      "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. In beads (bd) repos, flushes task state into beads and keeps the file narrative-only.",
       "version": "2.1.0",
       "tags": [
         "skill",
@@ -932,7 +945,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
+      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (scope disjointness, agent discovery, conflict probe).",
       "version": "1.1.0",
       "tags": [
         "skill",
@@ -964,6 +977,20 @@
       ],
       "category": "frontend",
       "source": "./packages/playwright"
+    },
+    {
+      "name": "pr-shepherd",
+      "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol, and an advisory Stop hook that reminds when the integrator queue is non-empty. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; all parts are inert in repos without .beads/.",
+      "version": "0.1.0",
+      "tags": [
+        "beads",
+        "merge-queue",
+        "pull-requests",
+        "integration",
+        "multi-agent"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/pr-shepherd"
     },
     {
       "name": "presentation",
@@ -1111,7 +1138,7 @@
     },
     {
       "name": "speckit",
-      "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are provisioned by speckit-gate (PyPI) during setup.",
+      "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
       "version": "5.1.1",
       "tags": [
         "bundle",
@@ -1121,8 +1148,21 @@
       "source": "./packages/speckit"
     },
     {
+      "name": "speckit-beads",
+      "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
+      "version": "0.1.0",
+      "tags": [
+        "speckit",
+        "beads",
+        "workflow",
+        "gates"
+      ],
+      "category": "speckit",
+      "source": "./packages/speckit-beads"
+    },
+    {
       "name": "speckit-dag-hooks",
-      "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
+      "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. MUST NOT be co-installed with speckit-beads: this package's hard_missing preconditions require specs/*/tasks.md to exist, while speckit-beads denies every write to that file — together they deadlock the workflow. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
       "version": "5.2.1",
       "tags": [
         "bundle",

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-gh-issue-guard.sh",
+            "statusMessage": "Checking gh issue command against beads policy...",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

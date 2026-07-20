@@ -1,38 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-close-guard.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-issue-label-guard.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-issue-refs.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-deferred-issues.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
@@ -54,13 +21,15 @@
             "timeout": 30
           }
         ]
-      },
+      }
+    ],
+    "PreToolUse": [
       {
-        "matcher": "apply_patch",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-task-issue-sync.sh",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.sh",
             "timeout": 30
           }
         ]
