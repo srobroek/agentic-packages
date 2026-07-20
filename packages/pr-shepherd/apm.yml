@@ -1,5 +1,5 @@
 name: pr-shepherd
-version: 0.3.0
+version: 0.4.0
 description: >-
   Cross-session PR/merge shepherd with beads (bd) as the central state store.
   Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate

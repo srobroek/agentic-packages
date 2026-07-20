@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.3.0...beads--v0.4.0) (2026-07-20)
+
+
+### Features
+
+* **beads:** github mirror conventions — credentials, re-labelling, guard interaction ([#563](https://github.com/srobroek/agentic-packages/issues/563)) ([994b15e](https://github.com/srobroek/agentic-packages/commit/994b15e43d766d09c386f3ca9d8a45449fe3f978))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.2.0...beads--v0.3.0) (2026-07-20)
 
 
