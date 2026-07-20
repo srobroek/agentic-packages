@@ -7,7 +7,7 @@ Use these rules when more than one handover could apply, or when the newest hand
 - Location priority: explicit repo-local untracked-state convention, then `~/.local/state/agentic-tools/handovers/`.
 - Search markdown handover files (`*.md`) only.
 - Filename pattern: `<project-slug>__<branch-or-task-slug>.md`; useful for ranking, but valid frontmatter can still identify a manually named handover.
-- YAML frontmatter with `project`, `repo_root`, `worktree`, `branch`, `task`, and `updated` when available.
+- YAML frontmatter with `project`, `repo_root`, `worktree`, `branch`, `task`, and `updated` when available; `beads` lists active bead IDs in beads repos.
 - Multiple active handovers per project are valid when branch or task slugs differ.
 - Exact repo root or worktree path match.
 - Exact branch name match.
@@ -30,7 +30,9 @@ Use these rules when more than one handover could apply, or when the newest hand
 
 ## No Handover Found
 
-Inspect only enough context to orient the next step:
+In a beads repo (`bd where` exits 0), recover from beads first: `bd list --status in_progress --json`, `bd ready --json`, then `bd show` on the in-progress beads. Report that recovery came from beads without a handover narrative, so Avoid/Do-Not-Redo context may be missing.
+
+Otherwise inspect only enough context to orient the next step:
 
 - `git branch --show-current`
 - `git status --short`
