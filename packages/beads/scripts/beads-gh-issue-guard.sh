@@ -44,11 +44,35 @@ cmd=""
 command -v bd >/dev/null 2>&1 || exit 0
 bd -C "$cwd" where >/dev/null 2>&1 || exit 0
 
-# Match `gh issue <mutating-subcommand>` anchored to command position (start,
-# or after a real ; & | separator) so mentions inside quoted arguments of
-# other commands do not trip the guard.
+# Strip quoted values from a command string, leaving only bare tokens.
+# Copied from packages/hooks-precommit-gate/scripts/precommit-gate.sh (its
+# issues #4/#5 fix): quoted content is replaced by a single space so a
+# `gh issue edit` mentioned inside -m '...' cannot trip the guard.
+# Handles single-quoted (no escapes) and double-quoted (backslash escapes).
+strip_quoted() {
+  printf '%s' "$1" | awk '
+  { s=$0; n=length(s); out=""; i=1
+    while(i<=n){
+      c=substr(s,i,1)
+      if(c=="\x27"){i++;while(i<=n&&substr(s,i,1)!="\x27"){i++};i++;out=out " ";continue}
+      if(c=="\""){i++;while(i<=n){c=substr(s,i,1);if(c=="\""){i++;break}
+        if(c=="\\"){i++;if(i<=n)i++;continue};i++};out=out " ";continue}
+      out=out c;i++
+    }
+    print out
+  }'
+}
+
+# Match `gh issue <mutating-subcommand>` in the QUOTE-STRIPPED command. Anchor
+# is a non-word class (start, whitespace, ; & | subshell-( , backtick) rather
+# than strict command position: this catches command substitution `$(gh ...)`,
+# backticks, subshells, and wrapper prefixes (`time gh ...`, `env FOO=1 gh
+# ...`) for free, while quote-stripping removes the main false-positive source
+# (mentions inside quoted arguments). Residual FP: an UNQUOTED mention like
+# `echo gh issue close 5` -- accepted; deny is agent-facing self-correct.
 MUTATING='(create|close|edit|comment|reopen|delete|transfer|pin|unpin|lock|unlock|develop)'
-printf '%s' "$cmd" | grep -Eq "(^|[;&|][[:space:]]*)gh[[:space:]]+issue[[:space:]]+${MUTATING}([[:space:]]|$)" || exit 0
+stripped="$(strip_quoted "$cmd")"
+printf '%s' "$stripped" | grep -Eq "(^|[[:space:];&|(\`])gh[[:space:]]+issue[[:space:]]+${MUTATING}([[:space:]]|$)" || exit 0
 
 reason="Task state lives in beads here (.beads/ present), not GitHub issues. Instead of gh issue: create work -> bd create \"title\" --spec-id <slug> (deps: bd dep add <later> <earlier>); pick up -> bd ready --unassigned --json + bd update <id> --claim; finish -> bd close <id> --reason \"...\"; discuss -> bd comments add <id> \"...\". If this is genuinely a human-facing GitHub issue (external users/reporting), the user must request it explicitly."
 

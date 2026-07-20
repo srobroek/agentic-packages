@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# speckit-beads-tasks-guard.sh — cross-tool hook with two roles, branched on
-# hook_event_name:
+# speckit-beads-tasks-guard.sh — cross-tool hook with several roles, branched
+# on hook_event_name:
 #
 #   PreToolUse  (Write|Edit|MultiEdit|apply_patch): DENY every write to
 #     specs/*/tasks.md when the repo has an active beads workspace. tasks.md is
@@ -8,6 +8,14 @@
 #     deny reason carries the full replacement workflow so the agent
 #     self-corrects without a human (hook-guard policy: deny is agent-facing,
 #     never "ask").
+#
+#   PreToolUse  (Bash): ADVISORY ONLY — a command string referencing a
+#     specs/*/tasks.md path gets a non-blocking additionalContext note (task
+#     state lives in beads). No redirect parsing; plain substring match.
+#
+#   PreToolUse  (Skill): ADVISORY ONLY — invoking speckit-implement gets a
+#     non-blocking note that /speckit.implement is deprecated in beads repos;
+#     route through the agent-assign chain instead.
 #
 #   PostToolUse (Read): ADVISORY ONLY — when a legacy tasks.md is read, note
 #     that live task state is in beads. Reads are never denied (brownfield
@@ -22,10 +30,10 @@ set -euo pipefail
 payload="$(cat 2>/dev/null || true)"
 [ -n "$payload" ] || exit 0
 
-# Cheap pre-jq bail: every branch below acts only on a tasks.md target, so if
-# the raw payload never mentions tasks.md there is nothing to inspect.
+# Cheap pre-jq bail: every branch below acts on a tasks.md target or a
+# speckit-implement skill invocation; anything else needs no inspection.
 case "$payload" in
-  *tasks.md*) ;;
+  *tasks.md*|*speckit.implement*|*speckit-implement*) ;;
   *) exit 0 ;;
 esac
 
@@ -34,23 +42,29 @@ command -v bd >/dev/null 2>&1 || exit 0
 
 # tool_input may be an object OR a bare string; the naive
 # `.tool_input.command // .tool_input` THROWS on a string (silently bypassing
-# the guard under swallowed stderr), so type-check first. Emit event, tool,
-# file_path on single lines (none contain newlines) and the multi-line
-# command/patch last via $(cat).
+# the guard under swallowed stderr), so type-check first. Single jq pass
+# (repo idiom): emit event, tool, file_path, skill, cwd on single lines (none
+# contain newlines) and the multi-line command/patch last via $(cat).
 event=""
 tool_name=""
 file_path=""
+skill_name=""
+cwd=""
 cmd=""
 {
   IFS= read -r event || true
   IFS= read -r tool_name || true
   IFS= read -r file_path || true
+  IFS= read -r skill_name || true
+  IFS= read -r cwd || true
   cmd="$(cat)"
 } < <(
   printf '%s' "$payload" | jq -j '
     (.hook_event_name // "") + "\n" +
     (.tool_name // .tool // "") + "\n" +
     (if (.tool_input|type)=="object" then (.tool_input.file_path // .tool_input.path // "") else "" end) + "\n" +
+    (if (.tool_input|type)=="object" then (.tool_input.skill // "") else "" end) + "\n" +
+    (.cwd // "") + "\n" +
     (if (.tool_input|type)=="object" then (.tool_input.command // "") else "" end)
   ' 2>/dev/null
 )
@@ -58,7 +72,6 @@ cmd=""
 # Bare-string tool_input (legacy shape) parses to no fields at all -> allow.
 [ -n "$tool_name" ] || exit 0
 
-cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
 [ -n "$cwd" ] && [ "$cwd" != "null" ] && [ -d "$cwd" ] || cwd="$PWD"
 
 # Is $1 a SpecKit tasks file? Matches specs/<feature>/tasks.md at any depth,
@@ -82,10 +95,15 @@ deny() {
   exit 0
 }
 
+# advise <event> <context>: non-blocking additionalContext for either phase.
 advise() {
-  jq -cn --arg ctx "$1" '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$ctx}}' 2>/dev/null || true
+  jq -cn --arg ev "$1" --arg ctx "$2" '{hookSpecificOutput:{hookEventName:$ev,additionalContext:$ctx}}' 2>/dev/null || true
   exit 0
 }
+
+BASH_ADVICE="SPECKIT-BEADS: tasks.md is not authored in beads repos; task state lives in beads: bd ready / bd update <id> --claim / bd close <id> --reason. If reading legacy tasks.md for migration, that's fine."
+
+IMPLEMENT_ADVICE="SPECKIT-BEADS: /speckit.implement is deprecated in beads repos; route through the agent-assign chain instead (/speckit.agent-assign.assign -> validate -> execute), working the molecule steps via bd mol current / bd ready / bd update --claim / bd close."
 
 case "$event" in
   PreToolUse)
@@ -106,6 +124,28 @@ case "$event" in
           fi
         done < <(printf '%s\n' "$cmd" | sed -nE 's/^\*\*\* (Update|Add|Delete) File: (.*)$/\2/p')
         ;;
+      Bash)
+        # Advisory only (user decision): a Bash command touching a
+        # specs/*/tasks.md path may be legitimate (migration reads, greps), so
+        # never deny -- just remind where task state lives. Plain substring
+        # match on the path pattern; no redirect parsing.
+        case "$cmd" in
+          *specs/*/tasks.md*)
+            beads_active || exit 0
+            advise "PreToolUse" "$BASH_ADVICE"
+            ;;
+        esac
+        ;;
+      Skill)
+        # /speckit.implement is deprecated under the beads workflow; advise
+        # the agent-assign route (non-blocking).
+        case "$skill_name $cmd" in
+          *speckit-implement*|*speckit.implement*)
+            beads_active || exit 0
+            advise "PreToolUse" "$IMPLEMENT_ADVICE"
+            ;;
+        esac
+        ;;
     esac
     ;;
   PostToolUse)
@@ -113,7 +153,7 @@ case "$event" in
       Read)
         is_tasks_md "$file_path" || exit 0
         beads_active || exit 0
-        advise "SPECKIT-BEADS: $file_path is a legacy artifact; its checkboxes are not maintained. Live task state is in beads: bd ready (unblocked work), bd query \"spec_id=<NNN-slug>\" --json (all tasks for the spec), bd mol current <molecule-root-id> (workflow position). Use this read only for one-time migration into beads."
+        advise "PostToolUse" "SPECKIT-BEADS: $file_path is a legacy artifact; its checkboxes are not maintained. Live task state is in beads: bd ready (unblocked work), bd query \"spec_id=<NNN-slug>\" --json (all tasks for the spec), bd mol current <molecule-root-id> (workflow position). Use this read only for one-time migration into beads."
         ;;
     esac
     ;;
