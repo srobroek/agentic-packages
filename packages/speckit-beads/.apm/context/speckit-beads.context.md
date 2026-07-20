@@ -8,6 +8,17 @@ MUST Copy `formulas/speckit-feature.formula.toml` from this package into
   `.beads/formulas/` (or `~/.beads/formulas/`), then verify with
   `bd formula show speckit-feature --json`.
 
+SPEC START — RECALL PARKED WORK
+MUST At spec start (/speckit.specify), query parked work — `bd list
+  --status deferred --json` plus open beads labeled deferred (`bd query
+  "label=deferred AND status!=closed" --json`) — and surface the hits to
+  the user for inclusion before writing the spec.
+
+IMPLEMENT ROUTING
+MUST /speckit.implement is deprecated here; route through the
+  agent-assign chain (assign → validate → execute). If it is invoked,
+  stop and work the molecule steps instead.
+
 MOLECULE PER FEATURE
 MUST Pour one molecule per spec dir:
   `bd mol pour speckit-feature --var feature=<NNN-slug>`.

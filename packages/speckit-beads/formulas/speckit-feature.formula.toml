@@ -64,7 +64,7 @@ execution_skill = "speckit.plan"
 id = "checklist"
 title = "checklist {{feature}}"
 type = "task"
-needs = ["plan"]
+needs = ["tasks"]
 description = "Run /speckit.checklist (interactive requirements-quality gate)."
 
 [steps.metadata]
@@ -75,7 +75,7 @@ execution_mode = "interactive"
 id = "tasks"
 title = "tasks {{feature}}"
 type = "task"
-needs = ["checklist"]
+needs = ["plan"]
 description = "Run /speckit.tasks, then create the task breakdown as child beads of the implement step (bd create --parent <implement-id> --spec-id {{feature}}). Never write specs/{{feature}}/tasks.md; the write is denied."
 
 [steps.metadata]
@@ -85,23 +85,21 @@ execution_skill = "speckit.tasks"
 id = "critique"
 title = "critique {{feature}}"
 type = "task"
-needs = ["tasks"]
-description = "Run /speckit.critique.run (optional; skip by closing this step with --reason skipped). Parallel with security-review."
+needs = ["checklist"]
+description = "Run /speckit.critique.run (mandatory plan + task quality gate). Parallel with security-review."
 
 [steps.metadata]
 execution_skill = "speckit.critique.run"
-execution_optional = "true"
 
 [[steps]]
 id = "security-review"
 title = "security review {{feature}}"
 type = "task"
-needs = ["tasks"]
-description = "Run /speckit.security-review (optional; skip by closing this step with --reason skipped). Parallel with critique."
+needs = ["checklist"]
+description = "Run /speckit.security-review (mandatory security review of plan/tasks). Parallel with critique."
 
 [steps.metadata]
 execution_skill = "speckit.security-review"
-execution_optional = "true"
 
 [[steps]]
 id = "analyze"
@@ -211,21 +209,83 @@ description = "Run /speckit.qa.run; failures route through fix-findings."
 execution_skill = "speckit.qa.run"
 
 [[steps]]
+id = "code-review"
+title = "code review {{feature}}"
+type = "task"
+needs = ["qa"]
+description = "Run /speckit.review.code as a subagent. Parallel with security-review-post."
+
+[steps.metadata]
+execution_skill = "speckit.review.code"
+execution_mode = "subagent"
+
+[[steps]]
+id = "security-review-post"
+title = "post-implementation security review {{feature}}"
+type = "task"
+needs = ["qa"]
+description = "Run /speckit.security-review.branch as a subagent. Parallel with code-review."
+
+[steps.metadata]
+execution_skill = "speckit.security-review.branch"
+execution_mode = "subagent"
+
+[[steps]]
 id = "cleanup"
 title = "cleanup {{feature}}"
 type = "task"
-needs = ["qa"]
+needs = ["code-review", "security-review-post"]
 description = "Run /speckit.cleanup (post-implementation quality gate) on the main thread."
 
 [steps.metadata]
 execution_skill = "speckit.cleanup"
 
 [[steps]]
+id = "sync-drift"
+title = "sync drift {{feature}}"
+type = "task"
+needs = ["cleanup"]
+labels = ["agent:speckit-sync"]
+description = "Spawn the speckit-sync agent (scope: drift) to detect spec/implementation drift. Parallel with sync-conflicts."
+
+[steps.metadata]
+execution_agent_type = "speckit-sync"
+execution_agent_scope = "drift"
+execution_mode = "subagent"
+
+[[steps]]
+id = "sync-conflicts"
+title = "sync conflicts {{feature}}"
+type = "task"
+needs = ["cleanup"]
+labels = ["agent:speckit-sync"]
+description = "Spawn the speckit-sync agent (scope: conflicts) to detect inter-spec contradictions. Parallel with sync-drift."
+
+[steps.metadata]
+execution_agent_type = "speckit-sync"
+execution_agent_scope = "conflicts"
+execution_mode = "subagent"
+
+[[steps]]
 id = "retro"
 title = "retro {{feature}}"
 type = "task"
-needs = ["cleanup"]
-description = "Run /speckit.retro.run, then close out the molecule (bd dolt push)."
+needs = ["sync-drift", "sync-conflicts"]
+description = "Run /speckit.retro.run."
 
 [steps.metadata]
 execution_skill = "speckit.retro.run"
+
+[[steps]]
+id = "docs-update"
+title = "documentation update {{feature}}"
+type = "task"
+needs = ["retro"]
+description = "Update user-facing documentation for the shipped feature on the main thread."
+
+[[steps]]
+id = "final-checkpoint"
+title = "final checkpoint {{feature}}"
+type = "task"
+needs = ["docs-update"]
+description = "Final commit + tag (git, no extension), then close out the molecule (bd dolt push)."

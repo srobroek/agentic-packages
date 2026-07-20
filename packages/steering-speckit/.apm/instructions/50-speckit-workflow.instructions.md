@@ -27,20 +27,20 @@ Phases run in order (1 → 2 → 3); parallel pairs run concurrently.
 | 1 | `/speckit.specify` | auto → approval | Creates spec.md |
 | 2 | `/speckit.clarify` | interactive | Incorporate feedback |
 | 3 | `/speckit.plan` | auto → approval | Architecture and approach |
-| 4 | `/speckit.tasks` | auto → approval | Task breakdown as beads under the implement step (tasks.md writes are denied; see speckit-beads steering) |
+| 4 | `/speckit.tasks` | auto → approval | Task breakdown; in beads repos (speckit-beads installed) tasks become beads under the implement step and tasks.md writes are denied — otherwise tasks.md as before |
 | 5 | `/speckit.checklist` | interactive | Requirements-quality gate |
 | 5b | `/speckit.critique.run` | parallel with 5c | Plan + task quality gate |
 | 5c | `/speckit.security-review` | parallel with 5b | Security review of plan/tasks |
 | 6 | `/speckit.analyze` | interactive | Risk analysis |
-| 7 | commit + tag (git, no extension) | auto | Snapshot before implementation; task state lives in beads, not GitHub issues |
+| 7 | commit + tag (git, no extension) | auto | Snapshot before implementation; in beads repos task state lives in beads, not GitHub issues |
 
 ### Phase 2 — Implementation
 
 | Step | Command | Mode |
 |------|---------|------|
-| 9a | `/speckit.agent-assign.assign` | auto → approval |
-| 9b | `/speckit.agent-assign.validate` | auto |
-| 9c | `/speckit.agent-assign.execute` | auto |
+| 8a | `/speckit.agent-assign.assign` | auto → approval |
+| 8b | `/speckit.agent-assign.validate` | auto |
+| 8c | `/speckit.agent-assign.execute` | auto |
 
 ### Phase 3 — Post-implementation quality (all mandatory)
 
