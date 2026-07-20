@@ -69,7 +69,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "4.1.0",
+      "version": "4.2.0",
       "tags": [
         "bundle",
         "steering"
@@ -140,7 +140,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "6.1.0",
+      "version": "6.2.0",
       "tags": [
         "bundle",
         "graph"
@@ -175,7 +175,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.1.0",
+      "version": "7.2.0",
       "tags": [
         "bundle",
         "baseline"
@@ -186,7 +186,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "data"
@@ -237,7 +237,7 @@
     {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "dependencies",
@@ -306,7 +306,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "frontend"
@@ -500,7 +500,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Model-routing deny gate for subagent spawns. A PreToolUse:Agent hook DENIES an Agent/Task call when `model` is omitted AND the named subagent_type has no pinned model in its definition (or subagent_type itself is omitted) — the spawn would otherwise silently inherit the parent session's model, often an expensive top-tier one. The deny reason is a tier routing table (cheap tier for mechanical work, mid tier for bounded coding/research, top tier or an explicit session-model pass-through for deep/adversarial work) so the caller's retry succeeds. The deny reason also notes that reasoning effort is NOT enforceable per-call (no `effort` field exists on the Agent tool_input) and points to pinning `effort:` in reusable agent definitions instead. The inherit-by-default type list is overridable per-project via SUBAGENT_MODEL_GUARD_INHERIT_TYPES. Fails open on malformed input. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "subagent",
@@ -551,7 +551,7 @@
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "infrastructure"
@@ -596,7 +596,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "go"
@@ -629,7 +629,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "python"
@@ -640,7 +640,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "rust"
@@ -651,7 +651,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "shell"
@@ -717,7 +717,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "bundle",
         "terraform"
@@ -728,7 +728,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "typescript"
@@ -945,7 +945,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "planning"
@@ -956,7 +956,7 @@
     {
       "name": "playwright",
       "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "skill",
         "frontend",
@@ -979,7 +979,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -1039,7 +1039,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "review"
@@ -1112,7 +1112,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are provisioned by speckit-gate (PyPI) during setup.",
-      "version": "5.1.0",
+      "version": "5.1.1",
       "tags": [
         "bundle",
         "speckit"
@@ -1123,7 +1123,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "tags": [
         "bundle",
         "speckit",
@@ -1307,7 +1307,7 @@
     {
       "name": "user-journeys",
       "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), the journey format spec and templates, and a deterministic index/lint script.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "tags": [
         "journeys",
         "validation",
@@ -1373,7 +1373,7 @@
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "skill",
         "docs",
