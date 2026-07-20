@@ -25,6 +25,10 @@ agents, pass task-specific instructions to use the project's available tools, su
 as Context7 for library docs, codebase-memory-mcp for graph-aware exploration,
 Playwright for browser verification, or Stitch for design work.
 
+In beads repos (`bd where` succeeds), pass the bead id in the spawn prompt so
+the worker claims it (`bd update <id> --claim`) — an unpassed id leaves the
+bead unclaimed and a parallel worker may take the same work.
+
 ## Repomix refresh
 
 Repomix is a snapshot packer, on-demand, stored as ignored `repomix.xml`.
