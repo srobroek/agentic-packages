@@ -92,7 +92,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) issue-tracker conventions: the dependency-aware work DAG that agents use for persistent task tracking, atomic work claiming, and multi-agent coordination. Ships steering that scopes beads against SpecKit artifacts (requirements) and TaskCreate (single-session scratch) and fixes conventions for labels vs structured fields vs metadata, actor identity, claim etiquette, JSON envelope determinism, and Dolt sync. Ships a PreToolUse guard denying mutating `gh issue` commands in beads repos (task state lives in bd; issue reads stay allowed). Session-start wiring is native: run `bd setup claude --global` once (SessionStart bd prime injection) and `bd init --skip-hooks` per repo. Requires the bd CLI (gastownhall/beads >= 1.1.0); all surfaces are inert in repos without .beads/.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "tags": [
         "beads",
         "issue-tracking",
@@ -188,7 +188,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.6.0",
+      "version": "7.7.0",
       "tags": [
         "bundle",
         "baseline"
@@ -981,7 +981,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol, and an advisory Stop hook that reminds when the integrator queue is non-empty. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; all parts are inert in repos without .beads/.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1150,7 +1150,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tags": [
         "speckit",
         "beads",
