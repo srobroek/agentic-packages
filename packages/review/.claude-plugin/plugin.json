@@ -1,6 +1,6 @@
 {
   "name": "review",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
   "author": {
     "name": "Sjors Robroek"
