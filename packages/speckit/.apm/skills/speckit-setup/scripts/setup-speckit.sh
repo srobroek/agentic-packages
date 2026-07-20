@@ -390,11 +390,15 @@ if command -v bd >/dev/null 2>&1; then
   FORMULA_NAME="speckit-feature.formula.toml"
   FORMULA_SRC=""
   for cand in \
+    "$HOME/.beads/formulas/$FORMULA_NAME" \
+    "$HOME/.apm/apm_modules/srobroek/agentic-packages/packages/speckit-beads/formulas/$FORMULA_NAME" \
     "$HOME/.claude/plugins/agentic-packages-speckit-beads/formulas/$FORMULA_NAME" \
     "$SCRIPT_DIR/../../../../../speckit-beads/formulas/$FORMULA_NAME"; do
     if [ -f "$cand" ]; then FORMULA_SRC="$cand"; break; fi
   done
-  if [ -n "$FORMULA_SRC" ]; then
+  if [ "$FORMULA_SRC" = "$HOME/.beads/formulas/$FORMULA_NAME" ]; then
+    echo "    formula available user-level (~/.beads/formulas) -- no project copy needed"
+  elif [ -n "$FORMULA_SRC" ]; then
     mkdir -p .beads/formulas
     cp "$FORMULA_SRC" .beads/formulas/
     if bd formula show speckit-feature >/dev/null 2>&1; then

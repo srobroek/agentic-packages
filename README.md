@@ -5,7 +5,7 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
 <!-- BEGIN:intro-counts -->
-- **42 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **41 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
 - **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **19 steering packages** -- opt-in opinionated conventions (per domain and per language)
@@ -309,7 +309,7 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 ## SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (six sub-agents + bugfix/setup skills + the DAG node store + workflow guard hooks), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-dag-hooks` (a Python DAG dispatcher + hooks that hard-block out-of-order `/speckit.*` calls on both Claude and Codex).
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (six sub-agents + bugfix/setup skills + workflow guard hooks), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-beads` (a beads formula whose poured molecule is the phase DAG, plus guards keeping task state in beads).
 
 ```
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review

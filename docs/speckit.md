@@ -2,9 +2,9 @@
 
 SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. It is delivered as **three opt-in packages** so you can adopt exactly the layer you want:
 
-- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, the `speckit-dag` node store, and the SpecKit workflow guard hooks (PR-title guidance, commit checks, stop gate).
+- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, and the SpecKit workflow guard hooks (PR-title guidance, commit checks, stop gate).
 - **`steering-speckit`** -- the opinionated mandatory-gated Phase 1/2/3 workflow steering. Opt in to adopt the process.
-- **`speckit-dag-hooks`** -- the enforcement layer: the Python DAG dispatcher + `nodes.json` + hooks that hard-block out-of-order `/speckit.*` calls. Depends on `speckit`.
+- **`speckit-beads`** -- the enforcement layer: a beads (`bd`) formula whose poured molecule IS the phase DAG (human gates included), plus guards that keep task state in beads. Depends on `speckit` and `beads`.
 
 The pipeline:
 
@@ -70,11 +70,11 @@ specify extension catalog add --name community --install-allowed \
 # 4. Install this repo's speckit layers
 apm install speckit@srobroek-agentic --target claude,codex
 apm install steering-speckit@srobroek-agentic        # opt-in: the gated workflow
-apm install speckit-dag-hooks@srobroek-agentic       # opt-in: hard-block enforcement
+apm install speckit-beads@srobroek-agentic           # opt-in: beads-molecule enforcement
 apm compile --target codex,claude --no-constitution
 ```
 
-The enforcement hooks key off `.specify/feature.json` (or the git branch) to resolve the active feature, so a scaffolded `.specify/` directory is a prerequisite for the DAG's precondition checks to work.
+Enforcement keys off the feature molecule: `speckit-setup` runs `bd init --skip-hooks` and installs the `speckit-feature` formula; pouring it (`bd mol pour speckit-feature --var feature=<NNN-slug>`) creates the phase DAG whose dependency edges and human-gate beads do the ordering.
 
 ## Architecture: the how and why
 
@@ -84,15 +84,9 @@ The enforcement hooks key off `.specify/feature.json` (or the git branch) to res
 
 1. **Declarative workflow** -- [`packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md`](../packages/steering-speckit/.apm/instructions/50-speckit-workflow.instructions.md) defines the full Phase 1 (spec, human-gated) -> Phase 2 (implementation) -> Phase 3 (post-implementation QA) DAG and the standing rules: *all steps mandatory, always invoke via the Skill tool, always get approval between phases.*
 
-2. **The DAG node store** -- [`packages/speckit-dag-hooks/scripts/nodes.json`](../packages/speckit-dag-hooks/scripts/nodes.json) is the single hand-authored source for the graph. Each node id holds a `pre` block (legitimate predecessors via `came_from`, plus `hard_missing` / `hard_exists` / `hard_deprecated` preconditions) and a `post` block (default next step via `going_to`, plus `postconditions` and conditional branching). Edges live in this JSON, not in code; the dispatcher reads it at runtime and renders the injected markdown from these structured fields.
+2. **The workflow molecule** -- [`packages/speckit-beads/formulas/speckit-feature.formula.toml`](../packages/speckit-beads/formulas/speckit-feature.formula.toml) is the single hand-authored source for the graph: 26 `[[steps]]` with `needs` edges plus human-gate beads at clarify, analyze, and verify sign-off. Pouring it instantiates real beads; `bd ready` exposes only unblocked steps, so ordering is graph-native rather than hook-enforced.
 
-3. **The hook dispatcher** -- [`packages/speckit-dag-hooks/scripts/dispatcher.py`](../packages/speckit-dag-hooks/scripts/dispatcher.py) (a self-contained Python script, no build step) runs on every `/speckit.*` invocation, wired through [`speckit-claude-hooks.json`](../packages/speckit-dag-hooks/.apm/hooks/speckit-claude-hooks.json) and [`speckit-codex-hooks.json`](../packages/speckit-dag-hooks/.apm/hooks/speckit-codex-hooks.json):
-   - **Pre phase** evaluates hard-block directives from `nodes.json` and **denies** the call if violated:
-     - `HARD-MISSING: specs/<feat>/spec.md` -- blocks if a required artifact is absent (e.g. `plan` before `spec`)
-     - `HARD-EXISTS: <path>` -- blocks if an artifact that shouldn't exist yet does (routes to a refine path)
-     - `HARD-DEPRECATED:` -- blocks unconditionally
-   - It resolves the `<feat>` placeholder from `$SPECIFY_FEATURE_DIRECTORY`, then `.specify/feature.json`, then the git branch -- so preconditions are feature-aware.
-   - Otherwise it injects the node body as `additionalContext` (soft steering -- "you came from X, go to Y next").
+3. **The guard layer** -- [`packages/speckit-beads/scripts/speckit-beads-tasks-guard.sh`](../packages/speckit-beads/scripts/speckit-beads-tasks-guard.sh) keeps state in the molecule: it denies Write/Edit of `specs/*/tasks.md` (the deny reason teaches the `bd create`/`bd dep add`/`bd ready` replacement), advises on Bash mentions of tasks.md and on deprecated `/speckit.implement` invocations, and stays inert in repos without a beads workspace. Human gates are resolved with `bd gate resolve`; `bd gate check` closes gh:pr/gh:run gates.
 
 **Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, and `PostToolUse`. The deprecated DAG adapter uses only Codex `UserPromptSubmit`, which can gate an explicit `/speckit.*` prompt before invocation; Codex has no exact skill-completion event. The current `speckit` package separately uses supported Bash, prompt, edit, and stop hooks.
 
