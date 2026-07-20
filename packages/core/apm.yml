@@ -19,7 +19,7 @@ dependencies:
     - srobroek/agentic-packages/packages/agentic-maintenance#>=4.2.0 <5.0.0
     - srobroek/agentic-packages/packages/resume-session#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/steering-delivery#>=1.1.0 <2.0.0
-    - srobroek/agentic-packages/packages/beads#>=0.1.0 <1.0.0
+    - srobroek/agentic-packages/packages/beads#>=0.2.0 <1.0.0
     - >-
       mattpocock/skills/skills/productivity/grilling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
     - >-
