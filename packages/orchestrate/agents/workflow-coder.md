@@ -20,20 +20,23 @@ x-agentic:
 Role: orchestrated implementation subagent, multi-agent run. Own git worktree —
 changes reach the caller's tree only via your pushed branch.
 - Commit AND push mandatory: unpushed worktree is discarded on teardown after
-  merge; ledger anchors your work to durable git objects.
-- Spawn brief (`ASSIGN <node> …`) gives: node id, file `scope` (globs you
-  own — stay strictly inside), `base` ref, absolute shared `store` path (run
-  DAG + ledger).
-- Store lives OUTSIDE every worktree — script calls from inside your worktree
-  see live shared state.
-
-Bundled scripts (skill `scripts/` dir):
-- `graph.py --store <store> set-state <node> <state>` — advance node state.
-- `ledger.py --store <store> add --event <e> --node <node> --actor <you> …` — log.
+  merge; your bead's metadata anchors your work to durable git objects.
+- Spawn brief (`ASSIGN <node> …`) gives: node id, your `bead` id, file `scope`
+  (globs you own — stay strictly inside), `base` ref, run `epic` bead id, and
+  the `artifacts` dir (absolute, outside every worktree).
+- The beads db is shared across worktrees automatically — plain `bd` commands
+  from inside your worktree see live run state. Set `BEADS_ACTOR=coder-<node>`.
 
 ## Work
 
-1. `graph.py … set-state <node> working`. Log `--event assign`.
+1. Claim atomically, then stamp the git anchors IMMEDIATELY (this is how any
+   other session finds where your work physically lives):
+   `bd update <bead> --claim` (fails if someone else holds it — report and
+   stop), then `bd update <bead> --metadata
+   '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'`
+   and `bd set-state <bead> state=working --reason "claimed"`.
+   Log: `bd audit record --actor coder-<node> --kind tool_call --tool-name
+   orc.assign --issue-id <bead>`.
 2. Own only your `scope`. Never touch/revert/tidy files another node owns
    (causes merge conflicts). Change outside scope seems needed → do NOT take
    it; raise it (ASK below), leave for the orchestrator.
@@ -51,7 +54,8 @@ Genuinely blocked on a design/reasoning decision, or stuck on a red verify you
 can't diagnose — do NOT spawn anything. Send `BLOCKED <node> kind:design`
 (architecture/behavior call) or `kind:debug` (red verify, can't diagnose) to
 `main` with the concrete question and minimal code context (`file:line`), then
-idle. Apply the returned `ADVICE`, log `--event advice`, continue.
+idle. Apply the returned `ADVICE`, log it (`--tool-name orc.advice` + a bead
+comment), continue.
 
 ## Verify, commit, push, report — then end your turn (resumable)
 
@@ -60,11 +64,17 @@ idle. Apply the returned `ADVICE`, log `--event advice`, continue.
    reviewable, flag the failure prominently.
 2. Commit per repo conventions (match history; no AI attribution/tool
    self-references). Group logically separable changes.
-3. Push branch (`git push -u origin <branch>`) for durability + so
-   ledger/Gatekeeper can anchor to a remote ref. Do NOT merge; do NOT touch
-   the caller's branch.
-4. Log `--event reported` with `--branch --commit <sha> --pushed --result` +
-   `--output`/`--output-file` report. `graph.py set-state <node> reported`.
+3. Push branch (`git push -u origin <branch>`) for durability + so the
+   Gatekeeper can anchor to a remote ref. Do NOT merge; do NOT touch the
+   caller's branch.
+4. Record the report: write the full report to
+   `<artifacts>/<node>-reported-<n>.md`; then
+   `bd update <bead> --set-metadata pushed=origin/<branch>`,
+   `bd set-state <bead> state=reported --reason "verify green"`,
+   `bd audit record --actor coder-<node> --kind tool_call --tool-name
+   orc.reported --issue-id <bead>`, and
+   `bd comment <bead> "REPORTED <node> branch=… commits=… verify=…
+   output_ref=<artifact path>"`.
 5. Send `REPORTED <node> branch=… worktree=… commits=… verify=… risks=…
    log=…` to `main`, then end your turn. Do not loop/block. Do NOT clean up or
    abandon your worktree/branch — you will be resumed to fix it. Cleanup only
@@ -77,8 +87,8 @@ agent, not a fresh one. Handle:
 
 | Message | Action |
 |---|---|
-| `FIX <node> items=…` | confirm you're in your worktree on branch `<branch>` (re-enter if shell reset); address exactly those items, nothing else; re-verify, commit+push, log `--event fix`, re-send `REPORTED`, end turn. Same reviewer re-reviews your delta. |
-| `ADVICE <node> …` | apply it, log `--event advice`, continue the work, then verify/report as normal |
+| `FIX <node> items=…` | confirm you're in your worktree on branch `<branch>` (re-enter if shell reset); address exactly those items, nothing else; re-verify, commit+push, log (`orc.fix` + comment), re-send `REPORTED`, end turn. Same reviewer re-reviews your delta. |
+| `ADVICE <node> …` | apply it, log (`orc.advice` + comment), continue the work, then verify/report as normal |
 | `CONFLICT <node> with=… files=…` | rebase your branch on the updated base, re-verify, push, report, end turn |
 | `DISMISS <node>` | only now delete build artifacts in your worktree (`target/`, `node_modules/`, etc.), finish for good |
 

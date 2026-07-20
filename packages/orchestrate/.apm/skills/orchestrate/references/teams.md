@@ -41,4 +41,4 @@ Everything else → subagents.
    them the comms protocol.
 3. Cap the size, keep the burst short, monitor and synthesize.
 4. Shut the teammates down, continue the main run on subagents.
-5. Log the team's outcome to the ledger like any other step.
+5. Log the team's outcome to beads (audit record + comment) like any other step.
