@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.2...speckit--v6.0.0) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire speckit-dag-hooks; formula resolves from user-level ~/.beads/formulas
+
+### Features
+
+* retire speckit-dag-hooks; formula resolves from user-level ~/.beads/formulas ([5607757](https://github.com/srobroek/agentic-packages/commit/5607757b1c6b8c777fc9ace5ebb5306e8b3264d8))
+
 ## [5.1.2](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.1...speckit--v5.1.2) (2026-07-20)
 
 
