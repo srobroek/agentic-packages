@@ -852,7 +852,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (task DAG, forensic ledger, agent discovery, conflict probe).",
+      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (scope disjointness, agent discovery, conflict probe).",
       "version": "1.1.0",
       "tags": [
         "skill",

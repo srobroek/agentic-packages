@@ -33,10 +33,10 @@ SKILL.md Core rules.
 |---|---|---|---|---|
 | Orchestrator | no code | **everything; sole dismisser** | lead session | coordination + deterministic scripts only |
 | Workflow-coder | its `scope` only | **nothing** | own git worktree | commits + pushes its branch; on block → `BLOCKED kind:design\|debug` to `main` |
-| Workflow-reviewer | nothing (read-only) | nothing | reads branch/worktree | logs `review` verdict to the ledger |
+| Workflow-reviewer | nothing (read-only) | nothing | reads branch/worktree | logs `review` verdict as audit record + bead comment |
 | Workflow-advisor | nothing (read-only) | nothing | reads code | one `ADVICE`, then exits |
 | Integration Gatekeeper | integration branch / merges (remote) | nothing | remote-side (`gh`, merge-tree probes) — no worktree | merge + push authority only; never mutates local trees |
-| Ledger Scribe | ledger reads only | nothing | reads store | never in the write path |
+| Ledger Scribe | nothing (read-only) | nothing | reads beads db + artifacts | never in the write path |
 | Researcher | nothing (read-only) | nothing | reads sources/code | returns a terse findings digest |
 | Tiebreaker | nothing (read-only) | nothing | reads the dispute | binding `ADVICE`, logged |
 

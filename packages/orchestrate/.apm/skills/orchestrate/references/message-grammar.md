@@ -21,7 +21,7 @@ This file adds the per-verb field table and a worked example.
 | `ASK` | any → orch | node, question, who is waiting |
 
 Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
-a `file:line` or ledger/node id backing a claim; `open:` a known-unfinished or
+a `file:line` or bead/node id backing a claim; `open:` a known-unfinished or
 deferred item (distinct from `risks:` — hazards for the receiver); every factual
 field is either a pointer or the marker `untested` (see `comms-block.md`).
 
@@ -32,12 +32,15 @@ field is either a pointer or the marker `untested` (see `comms-block.md`).
 to: coder-t3   summary: "assign node t3 auth-token refactor"
 ASSIGN t3
   title:    Refactor auth token validation into middleware
+  bead:     orc-7f3a.3
   scope:    src/auth/**, tests/auth/**
   base:     main @ 3f9a1c2
-  store:    /home/…/.orchestration/run-7f3a/     # DAG + ledger here
+  epic:     orc-7f3a
+  artifacts: /home/…/.orchestration/run-7f3a/artifacts/
   deps:     t1(done), t2(done)
-  commands: state=graph.py …set-state t3 <s>; log=ledger.py …add --node t3 --actor coder-t3 …
-  protocol: on block → BLOCKED to main (don't spawn). green → commit+push, log reported, REPORTED to main, stay alive.
+  commands: claim=bd update orc-7f3a.3 --claim + stamp branch/worktree/base_sha metadata;
+            state=bd set-state orc-7f3a.3 state=<s>; log=bd audit record + bd comment
+  protocol: on block → BLOCKED to main (don't spawn). green → commit+push, state=reported, REPORTED to main, stay alive.
 ```
 
 **Blocked → orchestrator brokers an advisor** (the coder spawns nothing)
