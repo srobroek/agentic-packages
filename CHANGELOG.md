@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.5.1...srobroek-agentic--v13.0.0) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire speckit-dag-hooks; formula resolves from user-level ~/.beads/formulas
+
+### Features
+
+* retire speckit-dag-hooks; formula resolves from user-level ~/.beads/formulas ([5607757](https://github.com/srobroek/agentic-packages/commit/5607757b1c6b8c777fc9ace5ebb5306e8b3264d8))
+
 ## [12.5.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.5.0...srobroek-agentic--v12.5.1) (2026-07-20)
 
 
