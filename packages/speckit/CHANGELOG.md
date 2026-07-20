@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.2](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.1...speckit--v5.1.2) (2026-07-20)
+
+
+### Bug Fixes
+
+* **probes:** unknown is not clean, and count claims for the git user ([13660e9](https://github.com/srobroek/agentic-packages/commit/13660e9f66dcf181b031b24198a6c696c1b2f3c1))
+* **speckit:** quote bd query values and pin JSON shape in hooks ([5cd1d15](https://github.com/srobroek/agentic-packages/commit/5cd1d15c3afb94d6bfeaaeebd573225b4499e2bc))
+
 ## [5.1.1](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.0...speckit--v5.1.1) (2026-07-20)
 
 

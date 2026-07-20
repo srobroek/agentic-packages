@@ -1,5 +1,5 @@
 name: handover
-version: 2.1.0
+version: 2.2.0
 description: >-
   Save a self-contained recovery prompt to the shared handover store when
   pausing work, switching context, preserving unfinished state, or handing off

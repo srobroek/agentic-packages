@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/handover--v2.1.0...handover--v2.2.0) (2026-07-20)
+
+
+### Features
+
+* **handover:** flush task state into beads when a bd workspace is active ([e52f807](https://github.com/srobroek/agentic-packages/commit/e52f8070f5f89d7612a7e0db6bc0b4740dfa17c1))
+* merge beads-aware handover/catchup ([1b4a8df](https://github.com/srobroek/agentic-packages/commit/1b4a8dfb7b787174659d9b8500b94e99616688c5))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/handover--v2.0.0...handover--v2.1.0) (2026-07-16)
 
 

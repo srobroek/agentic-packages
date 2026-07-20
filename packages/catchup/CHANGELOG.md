@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/catchup--v2.1.0...catchup--v2.2.0) (2026-07-20)
+
+
+### Features
+
+* **catchup:** consult live beads state alongside the handover narrative ([bdbbe0d](https://github.com/srobroek/agentic-packages/commit/bdbbe0de08b7946e64c0a6193a115d51e261391e))
+* merge beads-aware handover/catchup ([1b4a8df](https://github.com/srobroek/agentic-packages/commit/1b4a8dfb7b787174659d9b8500b94e99616688c5))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/catchup--v2.0.0...catchup--v2.1.0) (2026-07-16)
 
 

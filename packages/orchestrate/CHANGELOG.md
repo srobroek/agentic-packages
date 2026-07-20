@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v1.1.0...orchestrate--v2.0.0) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** replace graph.py/ledger.py state store with beads (bd)
+
+### Features
+
+* merge beads-only orchestrate refactor ([ef11395](https://github.com/srobroek/agentic-packages/commit/ef11395608ed7e5164cd3da5c44a901956d5b1a8))
+* **orchestrate:** replace graph.py/ledger.py state store with beads (bd) ([3d24b36](https://github.com/srobroek/agentic-packages/commit/3d24b363668d7287e2a4e94868fab7b2489a716b))
+
+
+### Bug Fixes
+
+* **orchestrate,steering-speckit:** tier vocabulary in references and pointer/context split for lint compliance ([5ebbf02](https://github.com/srobroek/agentic-packages/commit/5ebbf02029869f53a3f409d795ad87ce9f960899))
+* **orchestrate:** agent descriptions under cap with output contracts; regenerate marketplace with CI-pinned apm ([4ea3048](https://github.com/srobroek/agentic-packages/commit/4ea3048abfbdeb4c861e7642edef0decd5351440))
+* **probes:** unknown is not clean, and count claims for the git user ([13660e9](https://github.com/srobroek/agentic-packages/commit/13660e9f66dcf181b031b24198a6c696c1b2f3c1))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v1.0.0...orchestrate--v1.1.0) (2026-07-16)
 
 

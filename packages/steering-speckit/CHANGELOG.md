@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit--v3.1.0...steering-speckit--v3.2.0) (2026-07-20)
+
+
+### Features
+
+* **speckit:** replace speckit-gate and gh-issue layer with beads ([640a452](https://github.com/srobroek/agentic-packages/commit/640a452d072c564995945e2a595696f9ec42b4fd))
+
+
+### Bug Fixes
+
+* **orchestrate,steering-speckit:** tier vocabulary in references and pointer/context split for lint compliance ([5ebbf02](https://github.com/srobroek/agentic-packages/commit/5ebbf02029869f53a3f409d795ad87ce9f960899))
+* **speckit-beads:** align formula and steering with the workflow table ([e712f35](https://github.com/srobroek/agentic-packages/commit/e712f35db9b220789c0722a1049b4f0cb84051bb))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/steering-speckit--v3.0.0...steering-speckit--v3.1.0) (2026-07-16)
 
 
