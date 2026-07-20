@@ -85,7 +85,7 @@ jobs:
           git fetch origin "$RELEASE_BRANCH"
           git checkout "$RELEASE_BRANCH"
 
-          python3 -m pip install --quiet apm-cli jinja2
+          python3 -m pip install --quiet "apm-cli==0.26.0" jinja2
           python3 .apm/scripts/build-native-plugins.py
           python3 .apm/scripts/render-docs.py all
           apm pack
