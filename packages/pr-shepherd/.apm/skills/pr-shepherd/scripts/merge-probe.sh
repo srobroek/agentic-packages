@@ -7,7 +7,8 @@
 #
 # Usage:
 #   merge-probe.sh conflicts <base-ref> <branch-ref>
-#       -> prints conflicting paths (one per line); exit 0 clean, 1 conflicts, 2 error
+#       -> prints conflicting paths (one per line); exit 0 clean, 1 conflicts,
+#          2 error/unknown (bad refs, or old git without merge-tree --write-tree)
 #   merge-probe.sh pr <pr-number>
 #       -> prints gh pr view JSON: state, mergeability, review, checks; exit follows gh
 #
@@ -32,11 +33,13 @@ case "$cmd" in
     rc=$?
     set -e
     if [ -z "$out" ]; then
-      # Older git: can't predict; list changed files so the caller can reason.
+      # Older git: cannot predict the merge. Exit 2 (error/unknown), NOT 0 --
+      # 0 would report "clean" for a merge nobody probed. Still list the
+      # branch's changed files so the caller can reason manually.
       mb="$(git merge-base "$base_sha" "$br_sha" 2>/dev/null || echo "$base_sha")"
       git diff --name-only "$mb" "$br_sha"
-      echo "merge-probe: merge-tree unavailable; listed changed files only" >&2
-      exit 0
+      echo "merge-probe: merge-tree unavailable; conflict state UNKNOWN (listed changed files only)" >&2
+      exit 2
     fi
     if [ "$rc" -ne 0 ]; then
       printf '%s\n' "$out" | sed -n '2,/^$/p' | sed '/^$/d' | sort -u

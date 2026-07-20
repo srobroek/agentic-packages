@@ -391,7 +391,7 @@ if command -v bd >/dev/null 2>&1; then
   FORMULA_SRC=""
   for cand in \
     "$HOME/.claude/plugins/agentic-packages-speckit-beads/formulas/$FORMULA_NAME" \
-    "$SCRIPT_DIR/../../../../speckit-beads/formulas/$FORMULA_NAME"; do
+    "$SCRIPT_DIR/../../../../../speckit-beads/formulas/$FORMULA_NAME"; do
     if [ -f "$cand" ]; then FORMULA_SRC="$cand"; break; fi
   done
   if [ -n "$FORMULA_SRC" ]; then
