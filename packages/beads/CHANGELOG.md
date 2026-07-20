@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.2.0...beads--v0.3.0) (2026-07-20)
+
+
+### Features
+
+* **beads:** subagent work-contract reminder and bead-id delegation rule ([88d8062](https://github.com/srobroek/agentic-packages/commit/88d8062a691a93fb0f946c1ab341356a7a847031))
+* subagent beads work-contract reminder and bead-id delegation rule ([81d878b](https://github.com/srobroek/agentic-packages/commit/81d878b7f1602af288055437b9e67ee7632bdcfa))
+
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.1.0...beads--v0.2.0) (2026-07-20)
 
 
