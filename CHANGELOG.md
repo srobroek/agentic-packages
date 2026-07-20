@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.5.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.5.0...srobroek-agentic--v12.5.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **orchestrate:** agent descriptions under cap with output contracts; regenerate marketplace with CI-pinned apm ([4ea3048](https://github.com/srobroek/agentic-packages/commit/4ea3048abfbdeb4c861e7642edef0decd5351440))
+
 ## [12.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.4.0...srobroek-agentic--v12.5.0) (2026-07-20)
 
 

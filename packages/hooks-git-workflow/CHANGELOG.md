@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v2.2.0...hooks-git-workflow--v2.3.0) (2026-07-20)
+
+
+### Features
+
+* **hooks-git-workflow:** warn on claimed beads at stop ([97ceaa5](https://github.com/srobroek/agentic-packages/commit/97ceaa539af8e19abf521862f640efcf312a148e))
+
+
+### Bug Fixes
+
+* **probes:** unknown is not clean, and count claims for the git user ([13660e9](https://github.com/srobroek/agentic-packages/commit/13660e9f66dcf181b031b24198a6c696c1b2f3c1))
+
 ## [2.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v2.1.0...hooks-git-workflow--v2.2.0) (2026-07-16)
 
 
