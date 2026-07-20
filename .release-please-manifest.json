@@ -95,6 +95,7 @@
   "packages/session-review": "1.1.0",
   "packages/sniff": "3.1.0",
   "packages/speckit": "5.1.0",
+  "packages/speckit-beads": "0.1.0",
   "packages/speckit-dag-hooks": "5.1.0",
   "packages/steering-architecture": "2.1.0",
   "packages/steering-backend": "1.1.0",
