@@ -80,12 +80,145 @@ slug() {
 # End-to-end: SSH remote, non-spec branch -> base guidance only, slug works.
 @test "pr-issue-refs.sh: SSH remote end-to-end emits guidance JSON" {
   stub git \
+    '[ "$1" = "-C" ] && shift 2' \
     'case "$1 $2" in' \
     '  "branch --show-current") echo "main";;' \
     '  "remote get-url") echo "git@github.com:owner/repo.git";;' \
     '  *) exit 0;;' \
     'esac'
   run bash "$SCRIPTS/speckit-pr-issue-refs.sh" <<<'{"tool_input":{"command":"gh pr create --fill"}}'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
+}
+
+# --- branch resolution: the hook must read the checkout the COMMAND runs in ---
+#
+# `gh pr create` is routinely run from a linked worktree while the hook itself
+# inherits the main checkout's cwd. Resolving the branch from $PWD stamped PRs
+# with an unrelated lane's spec. These tests pin the payload `.cwd` as the
+# source of truth, and record every `-C` target so a silently-ignored cwd fails
+# rather than passing vacuously.
+
+# A git stub that answers per-checkout and logs the directory it was aimed at.
+stub_git_worktree_aware() {
+  export GITLOG="$TESTDIR/git-calls"
+  : > "$GITLOG"
+  stub git \
+    'if [ "$1" = "-C" ]; then TARGET="$2"; shift 2; else TARGET="$PWD"; fi' \
+    'printf "%s\n" "$TARGET" >> "$GITLOG"' \
+    'case "$1 $2" in' \
+    '  "branch --show-current") cat "$TARGET/.branch" 2>/dev/null || echo "main";;' \
+    '  "remote get-url") echo "git@github.com:owner/repo.git";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub gh 'echo "[]"'
+}
+
+# Build a fake checkout: a branch name and the spec dirs the guard looks for.
+fake_checkout() {
+  local dir="$TESTDIR/$1"; shift
+  mkdir -p "$dir"
+  printf '%s\n' "$1" > "$dir/.branch"; shift
+  for spec in "$@"; do mkdir -p "$dir/specs/$spec"; done
+  printf '%s' "$dir"
+}
+
+@test "pr-issue-refs.sh: spec comes from the payload cwd, not the hook's own \$PWD" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "spec/058-inbox-drop-parent-items" "058-inbox-drop-parent-items")
+  run bash -c "cd '$TESTDIR' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("Spec: 058")'
+  # The worktree -- not the hook's cwd -- must be what git was aimed at.
+  grep -qx "$wt" "$GITLOG"
+}
+
+@test "pr-issue-refs.sh: explicit --head outranks the checkout's branch" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "main" "058-inbox-drop-parent-items")
+  run bash "$SCRIPTS/speckit-pr-issue-refs.sh" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --head spec/058-inbox-drop-parent-items --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("Spec: 058")'
+}
+
+@test "pr-issue-refs.sh: fork-style --head owner:branch keeps only the branch" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "main" "058-inbox-drop-parent-items")
+  run bash "$SCRIPTS/speckit-pr-issue-refs.sh" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --head contributor:058-inbox-drop-parent-items"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("Spec: 058")'
+}
+
+# The regression that started this: `grep -oE '[0-9]{3}'` grabbed the first
+# three digits ANYWHERE, so issue branch fix/1050-... was read as spec "105".
+@test "pr-issue-refs.sh: 4-digit issue branch is not misread as a spec" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "fix/1050-wizard-site-skip-nag" "105-something" "050-something")
+  run bash -c "cd '$wt' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("SPEC CONTEXT") | not'
+}
+
+@test "pr-issue-refs.sh: date-like branch segment is not misread as a spec" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "release/2026-07-cut" "202-something")
+  run bash -c "cd '$wt' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("SPEC CONTEXT") | not'
+}
+
+# Fails closed: a well-formed id for a spec that does not exist is not a spec.
+@test "pr-issue-refs.sh: well-formed id with no matching spec dir is rejected" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "999-not-a-real-spec")
+  run bash -c "cd '$wt' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("SPEC CONTEXT") | not'
+}
+
+# Two dirs sharing a prefix must not break the guard (`[ -d glob ]` would).
+@test "pr-issue-refs.sh: duplicate matching spec dirs do not discard the id" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "058-inbox" "058-inbox" "058-inbox-old")
+  run bash -c "cd '$wt' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("Spec: 058")'
+}
+
+# Cross-repo lanes: the remote must come from the command's checkout too,
+# otherwise the hook queries a different repository's issues.
+@test "pr-issue-refs.sh: remote is read from the payload cwd" {
+  stub_git_worktree_aware
+  wt=$(fake_checkout wt "058-inbox" "058-inbox")
+  run bash -c "cd '$TESTDIR' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$wt","tool_input":{"command":"gh pr create --fill"}}
+EOF
+  [ "$status" -eq 0 ]
+  # Every git invocation was aimed at the worktree; none fell back to $PWD.
+  [ -s "$GITLOG" ]
+  run grep -vx "$wt" "$GITLOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "pr-issue-refs.sh: unreadable payload cwd falls back to \$PWD" {
+  stub_git_worktree_aware
+  run bash -c "cd '$TESTDIR' && bash '$SCRIPTS/speckit-pr-issue-refs.sh'" <<EOF
+{"cwd":"$TESTDIR/does-not-exist","tool_input":{"command":"gh pr create --fill"}}
+EOF
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
 }
