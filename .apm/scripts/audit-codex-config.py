@@ -85,7 +85,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "release-please",
     "secrets-scan",
     "speckit",
-    "speckit-dag-hooks",
 }
 APPROVAL_POLICIES = {
     "untrusted",
