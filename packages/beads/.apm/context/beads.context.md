@@ -87,6 +87,24 @@ MUST End sessions that mutated beads with `bd dolt push` (issue data rides
 NOT Routine `bd import` of issues.jsonl — it is upsert-only passive export;
   `bd dolt pull` is the sync path.
 
+GITHUB MIRROR (only where beads mirror out to GitHub issues)
+MUST Mirror with `bd github push <ids>`, never by hand-creating the issue —
+  the push records the `External:` back-link on the bead, so a hand-made issue
+  leaves the two unlinked. `--dry-run` first.
+DEFAULT Supply credentials per invocation
+  (`GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=<owner/repo> bd github
+  push ...`) rather than `bd config set github.token`, which persists a PAT to
+  disk in the repo's beads config.
+MUST Re-label after every push. bd emits its own label scheme
+  (`priority::medium`, `type::task`); a repo with its own vocabulary
+  (`priority-p2`, `spec:NNN`, component labels) will not match it, so mirrored
+  issues drop out of every existing triage query while looking correctly filed.
+NOT `gh issue edit` for that re-label — the beads gh-issue-guard denies
+  mutating `gh issue` subcommands. Use
+  `gh api -X POST repos/<owner>/<repo>/issues/<n>/labels`, and only on explicit
+  user request: the guard's exemption is the user's to grant, not an
+  orchestrator's to relay on their behalf.
+
 SESSION CLOSE (when beads were touched)
 MUST File beads for remaining/discovered work before reporting done, close
   finished issues with `--reason`, update in-progress state, then `bd dolt push`.
