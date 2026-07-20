@@ -3,7 +3,8 @@ version: 2.1.0
 description: >-
   Save a self-contained recovery prompt to the shared handover store when
   pausing work, switching context, preserving unfinished state, or handing off
-  to another session.
+  to another session. In beads (bd) repos, flushes task state into beads and
+  keeps the file narrative-only.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill

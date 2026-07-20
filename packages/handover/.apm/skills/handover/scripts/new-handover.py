@@ -81,19 +81,64 @@ def _yaml_scalar(value: str) -> str:
     return json.dumps(str(value))
 
 
-def build_content(*, project: str, repo_root: str, worktree: str, branch: str, task: str) -> str:
+def build_content(
+    *,
+    project: str,
+    repo_root: str,
+    worktree: str,
+    branch: str,
+    task: str,
+    beads: list[str] | None = None,
+) -> str:
     updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    return f"""---
+    # json.dumps of a list of strings is a valid YAML flow sequence, with the
+    # same injection-safety argument as _yaml_scalar.
+    beads_line = f"beads: {json.dumps([str(b) for b in beads])}\n" if beads else ""
+    frontmatter = f"""---
 project: {_yaml_scalar(project)}
 repo_root: {_yaml_scalar(repo_root)}
 worktree: {_yaml_scalar(worktree)}
 branch: {_yaml_scalar(branch)}
 task: {_yaml_scalar(task)}
-updated: {_yaml_scalar(updated)}
+{beads_line}updated: {_yaml_scalar(updated)}
 ---
 
 # Handover: {project} / {task or branch}
+"""
+    if beads:
+        bead_items = "\n".join(f"- {b}: TODO where work stopped" for b in beads)
+        return frontmatter + f"""
+## Summary
 
+- TODO
+
+## Read First
+
+- TODO
+
+## Active Beads
+
+{bead_items}
+
+Task state lives in beads: run `bd ready` and `bd list --status in_progress`.
+
+## Decisions
+
+- TODO
+
+## Runtime State
+
+None known
+
+## Avoid / Do Not Redo
+
+None
+
+## Next Session Prompt
+
+TODO: Continue from this handover. Run `bd show` on the active beads and fresh git status, then proceed with the next concrete step.
+"""
+    return frontmatter + """
 ## Summary
 
 - TODO
@@ -192,6 +237,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--task", help="Task/spec/issue id for frontmatter and filename")
     parser.add_argument("--repo-root", help="Repo root for frontmatter")
     parser.add_argument("--worktree", help="Worktree path for frontmatter")
+    parser.add_argument(
+        "--beads",
+        help="Comma-separated active bead IDs; switches the body to the narrative-only beads layout",
+    )
     return parser.parse_args(argv)
 
 
@@ -206,6 +255,8 @@ def main(argv: list[str]) -> int:
     repo_root = args.repo_root or discovered["repo_root"]
     worktree = args.worktree or discovered["worktree"]
 
+    beads = [b.strip() for b in (args.beads or "").split(",") if b.strip()]
+
     filename = f"{slug(project)}__{slug(task)}.md"
     path = args.out_dir.expanduser() / filename
     content = build_content(
@@ -214,6 +265,7 @@ def main(argv: list[str]) -> int:
         worktree=worktree,
         branch=branch,
         task=task,
+        beads=beads or None,
     )
     try:
         write_private(path, content)
