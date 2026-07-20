@@ -9,6 +9,15 @@
             "command": "${PLUGIN_ROOT}/scripts/speckit-context7-reminder.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.sh"
+          }
+        ]
       }
     ],
     "Stop": [

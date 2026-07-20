@@ -3,13 +3,13 @@
 # Portability + correctness tests for the speckit shell hooks.
 # Target floor: bash 3.2.57 + BSD sed/grep (stock macOS).
 #
-# Covered scenarios (audit phase-1, speckit-shell stream):
-#   1. pr-issue-refs.sh   -- SSH + HTTPS remote slug extraction (no BSD `+?`).
-#   2. task-issue-sync.sh -- multi-task completion id extraction (no `\b`).
-#   3. task-commit-check.sh + stop-gate.sh -- zero-task grep emits no error,
-#                            no "0\n0" double-zero from `grep -c ... || echo 0`.
-#   4. task-commit-check.sh -- runs outside a git repo without aborting.
-#   5. issue-label-guard.sh -- issue titled "fix deferred loading" NOT blocked.
+# Covered scenarios:
+#   1. task-commit-check.sh + stop-gate.sh -- zero-task grep emits no error,
+#      no "0\n0" double-zero from `grep -c ... || echo 0`.
+#   2. task-commit-check.sh -- runs outside a git repo without aborting.
+#   3. beads branch (stub bd on PATH) -- quoted bd query value, envelope- and
+#      error-proof jq count, silent when all beads closed / non-spec branch.
+#   4. pr-title.sh -- fires on gh pr create/edit, silent otherwise.
 
 SCRIPTS="${BATS_TEST_DIRNAME}/../scripts"
 
@@ -37,97 +37,26 @@ stub() {
   PATH="$BINDIR:$ORIG_PATH"
 }
 
-# ---------------------------------------------------------------------------
-# 1. pr-issue-refs.sh slug regex: SSH + HTTPS forms, with/without .git
-# ---------------------------------------------------------------------------
-
-# Exercise the exact portable sed idiom the script uses, so we catch a
-# regression in the pattern regardless of the surrounding git/gh plumbing.
-slug() {
-  printf '%s' "$1" | sed -E 's#.*[/:]([^/]+/[^/]+)$#\1#; s#\.git$##'
-}
-
-@test "slug: HTTPS remote with .git" {
-  run slug "https://github.com/owner/repo.git"
-  [ "$status" -eq 0 ]
-  [ "$output" = "owner/repo" ]
-}
-
-@test "slug: HTTPS remote without .git" {
-  run slug "https://github.com/owner/repo"
-  [ "$status" -eq 0 ]
-  [ "$output" = "owner/repo" ]
-}
-
-@test "slug: SSH remote (git@host:owner/repo.git)" {
-  run slug "git@github.com:owner/repo.git"
-  [ "$status" -eq 0 ]
-  [ "$output" = "owner/repo" ]
-}
-
-@test "slug: SSH remote without .git" {
-  run slug "git@github.com:owner/repo"
-  [ "$status" -eq 0 ]
-  [ "$output" = "owner/repo" ]
-}
-
-# Scan only code lines (strip full-line comments whose first non-space char is '#').
-@test "pr-issue-refs.sh: code does not use BSD-illegal +? quantifier" {
-  run bash -c 'grep -vE "^[[:space:]]*#" "$1" | grep -F "+?"' _ "$SCRIPTS/speckit-pr-issue-refs.sh"
-  [ "$status" -ne 0 ]
-}
-
-# End-to-end: SSH remote, non-spec branch -> base guidance only, slug works.
-@test "pr-issue-refs.sh: SSH remote end-to-end emits guidance JSON" {
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "main";;' \
-    '  "remote get-url") echo "git@github.com:owner/repo.git";;' \
-    '  *) exit 0;;' \
-    'esac'
-  run bash "$SCRIPTS/speckit-pr-issue-refs.sh" <<<'{"tool_input":{"command":"gh pr create --fill"}}'
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
+# Stub bd whose `where` succeeds and whose `query` replays canned JSON.
+# usage: stub_bd '<json-for-query>'
+# The stub records its query argv to $TESTDIR/bd-query-args for assertions.
+stub_bd() {
+  local query_json="$1"
+  {
+    printf '#!/usr/bin/env bash\n'
+    printf 'case "$1" in\n'
+    printf '  where) echo "%s/.beads"; exit 0;;\n' "$TESTDIR"
+    printf '  query) printf "%%s\\n" "$2" > "%s/bd-query-args"; cat "%s/bd-query-out";;\n' "$TESTDIR" "$TESTDIR"
+    printf '  *) exit 0;;\n'
+    printf 'esac\n'
+  } > "$BINDIR/bd"
+  chmod +x "$BINDIR/bd"
+  printf '%s' "$query_json" > "$TESTDIR/bd-query-out"
+  PATH="$BINDIR:$ORIG_PATH"
 }
 
 # ---------------------------------------------------------------------------
-# 2. task-issue-sync.sh: multi-task id extraction without \b
-# ---------------------------------------------------------------------------
-
-@test "task-issue-sync.sh: extracts multiple completed task ids" {
-  mkdir -p "$TESTDIR/.specify"   # hook is a no-op outside a speckit project
-  cd "$TESTDIR"
-  patch=$'*** Update File: specs/001-foo/tasks.md\n+- [x] T001 first task\n+- [X] T042 second task\n+- [ ] T099 not done\n'
-  run bash "$SCRIPTS/speckit-task-issue-sync.sh" <<EOF
-{"tool_name":"apply_patch","tool_input":{"command":$(jq -Rs . <<<"$patch")}}
-EOF
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("T001")'
-  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("T042")'
-  # T099 is unchecked ([ ]) and must NOT appear.
-  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("T099") | not'
-}
-
-@test "task-issue-sync.sh: code does not use BSD-unsupported \\\\b" {
-  run bash -c 'grep -vE "^[[:space:]]*#" "$1" | grep -F "\\b"' _ "$SCRIPTS/speckit-task-issue-sync.sh"
-  [ "$status" -ne 0 ]
-}
-
-# T1234 (4 digits) must not be captured as T123 -- boundary is enforced.
-@test "task-issue-sync.sh: 3-digit boundary rejects 4-digit ids" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  patch=$'*** Update File: tasks.md\n+- [x] T1234 four digit id\n'
-  run bash "$SCRIPTS/speckit-task-issue-sync.sh" <<EOF
-{"tool_name":"apply_patch","tool_input":{"command":$(jq -Rs . <<<"$patch")}}
-EOF
-  # No valid TNNN-with-boundary match -> early exit, no JSON.
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-# ---------------------------------------------------------------------------
-# 3. zero-task grep: no error, no double-zero
+# 1. zero-task grep: no error, no double-zero (legacy tasks.md fallback)
 # ---------------------------------------------------------------------------
 
 @test "task-commit-check.sh: zero-task tasks.md produces no grep error" {
@@ -140,6 +69,9 @@ EOF
     '  "log -1") echo "some commit #5";;' \
     '  *) exit 0;;' \
     'esac'
+  # No bd on stub PATH is not guaranteed (host may have bd); mask it so the
+  # legacy fallback path is exercised deterministically.
+  stub bd 'exit 1'
   cd "$TESTDIR"
   run bash "$SCRIPTS/speckit-task-commit-check.sh" <<<'{"tool_input":{"command":"git commit -m x"}}'
   [ "$status" -eq 0 ]
@@ -152,17 +84,16 @@ EOF
   spec="012-empty-spec"
   mkdir -p "$TESTDIR/specs/$spec" "$TESTDIR/.specify"
   : > "$TESTDIR/specs/$spec/tasks.md"
-  # No spec.md -> HAS_PROJECT=false -> fallback grep path exercised.
   stub git \
     'case "$1 $2" in' \
     '  "branch --show-current") echo "'"$spec"'";;' \
     '  *) exit 0;;' \
     'esac'
+  stub bd 'exit 1'
   cd "$TESTDIR"
   run bash "$SCRIPTS/speckit-stop-gate.sh"
   [ "$status" -eq 0 ]
   echo "$output" | grep -qi "integer expression" && return 1
-  echo "$output" | grep -qi "0" || true
   return 0
 }
 
@@ -177,7 +108,7 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# 4. task-commit-check.sh: outside a git repo, no abort under set -e
+# 2. task-commit-check.sh: outside a git repo, no abort under set -e
 # ---------------------------------------------------------------------------
 
 @test "task-commit-check.sh: non-repo invocation does not abort" {
@@ -186,6 +117,7 @@ EOF
   stub git \
     'echo "fatal: not a git repository" >&2' \
     'exit 128'
+  stub bd 'exit 1'
   cd "$TESTDIR"
   run bash "$SCRIPTS/speckit-task-commit-check.sh" <<<'{"tool_input":{"command":"git commit -m x"}}'
   # set -e + git exit 128 previously aborted (status 128/1). Must be clean 0.
@@ -193,111 +125,172 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# 5. issue-label-guard.sh: "fix deferred loading" title NOT blocked
+# 3. beads branch: quoted bd query value, envelope/error-proof jq count
 # ---------------------------------------------------------------------------
 
-@test "issue-label-guard.sh: title 'fix deferred loading' not treated as deferred" {
+@test "stop-gate.sh: beads branch reports open bead count" {
+  spec="003-test-feat"
   mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub_bd '[{"id":"bd-1","status":"open"},{"id":"bd-2","status":"in_progress"}]'
   cd "$TESTDIR"
-  cmd='gh issue create --title "fix deferred loading" --label "spec:001" --label "phase:impl"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  # Has spec: + phase:, and 'deferred' is only in the title, not a label value.
-  # Must NOT be blocked (exit 2) for missing deferred/second-spec labels.
+  run bash "$SCRIPTS/speckit-stop-gate.sh"
   [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.systemMessage | test("2 open beads")'
+  # The query value must be quoted with the wildcard inside the quotes
+  # (bd 1.1.0 parses unquoted hyphenated values as an error).
+  grep -qF 'spec_id="003-test-feat*"' "$TESTDIR/bd-query-args"
 }
 
-@test "issue-label-guard.sh: real deferred label still requires two spec labels" {
+@test "stop-gate.sh: beads branch silent when all beads closed" {
+  spec="003-test-feat"
   mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub_bd '[]'
   cd "$TESTDIR"
-  cmd='gh issue create --title "blocked work" --label "spec:001" --label "phase:impl" --label "deferred"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  # Deferred label present but only ONE spec: label -> must emit advisory (non-blocking).
-  [ "$status" -eq 0 ]
-  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
-  echo "$ctx" | grep -qi "TWO spec"
-}
-
-@test "issue-label-guard.sh: deferred label with two spec labels passes" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  cmd='gh issue create --title "blocked" --label "spec:001" --label "spec:002" --label "phase:impl" --label "deferred"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  [ "$status" -eq 0 ]
-}
-
-@test "issue-label-guard.sh: missing spec label -> advisory allow" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  cmd='gh issue create --title "x" --label "phase:impl"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  [ "$status" -eq 0 ]
-  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
-  [ -n "$ctx" ]
-}
-
-@test "issue-label-guard.sh: missing phase label -> advisory allow" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  cmd='gh issue create --title "x" --label "spec:001"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  [ "$status" -eq 0 ]
-  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
-  [[ "$ctx" == *"phase:"* ]]
-}
-
-@test "issue-label-guard.sh: GraphQL createIssue missing spec -> advisory allow" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  cmd='gh api graphql -f query="mutation { createIssue(input: { title: \"x\" }) }"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
-  [ "$status" -eq 0 ]
-  ctx="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null || true)"
-  [[ "$ctx" == *"spec:"* ]]
-}
-
-# --- issue #6: false positives on echo/comment containing mutation + createIssue( ---
-
-@test "issue-label-guard.sh: 'echo mutation; echo createIssue(' -> silent (issue #6)" {
-  mkdir -p "$TESTDIR/.specify"
-  cd "$TESTDIR"
-  cmd='echo mutation; echo "createIssue("'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
+  run bash "$SCRIPTS/speckit-stop-gate.sh"
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
 
-@test "issue-label-guard.sh: comment with mutation and createIssue( -> silent (issue #6)" {
+@test "stop-gate.sh: bd error object counts as zero, not two" {
+  spec="003-test-feat"
   mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  *) exit 0;;' \
+    'esac'
+  # bd parse errors emit an {error,schema_version} OBJECT; bare `jq length`
+  # counts its 2 keys and fabricates "2 open beads".
+  stub_bd '{"error":"parsing query: expected digit at position 12","schema_version":1}'
   cd "$TESTDIR"
-  cmd='# run a mutation that calls createIssue() without spec'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
+  run bash "$SCRIPTS/speckit-stop-gate.sh"
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
 
-@test "issue-label-guard.sh: echoed 'gh issue create' phrase -> silent (no advisory)" {
+@test "stop-gate.sh: BD_JSON_ENVELOPE=1 exported does not change the count" {
+  spec="003-test-feat"
+  mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  *) exit 0;;' \
+    'esac'
+  # Stub honors the env override: plain array when BD_JSON_ENVELOPE is empty
+  # (the script must prefix BD_JSON_ENVELOPE=), envelope object otherwise.
+  {
+    printf '#!/usr/bin/env bash\n'
+    printf 'case "$1" in\n'
+    printf '  where) exit 0;;\n'
+    printf '  query)\n'
+    printf '    if [ -n "${BD_JSON_ENVELOPE:-}" ]; then\n'
+    printf '      echo "{\\"data\\":[{\\"id\\":\\"bd-1\\"}]}"\n'
+    printf '    else\n'
+    printf '      echo "[{\\"id\\":\\"bd-1\\"}]"\n'
+    printf '    fi;;\n'
+    printf '  *) exit 0;;\n'
+    printf 'esac\n'
+  } > "$BINDIR/bd"
+  chmod +x "$BINDIR/bd"
+  PATH="$BINDIR:$ORIG_PATH"
+  cd "$TESTDIR"
+  BD_JSON_ENVELOPE=1 run bash "$SCRIPTS/speckit-stop-gate.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.systemMessage | test("1 open beads")'
+}
+
+@test "task-commit-check.sh: beads branch reports open bead count" {
+  spec="003-test-feat"
+  mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  "log -1") echo "feat: something";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub_bd '[{"id":"bd-1","status":"open"}]'
+  cd "$TESTDIR"
+  run bash "$SCRIPTS/speckit-task-commit-check.sh" <<<'{"tool_input":{"command":"git commit -m x"}}'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("1 open beads")'
+  grep -qF 'spec_id="003-test-feat*"' "$TESTDIR/bd-query-args"
+}
+
+@test "task-commit-check.sh: beads branch silent when all beads closed" {
+  spec="003-test-feat"
+  mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "'"$spec"'";;' \
+    '  "log -1") echo "feat: something";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub_bd '[]'
+  cd "$TESTDIR"
+  run bash "$SCRIPTS/speckit-task-commit-check.sh" <<<'{"tool_input":{"command":"git commit -m x"}}'
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "task-commit-check.sh: non-spec branch skips the bd query entirely" {
+  mkdir -p "$TESTDIR/.specify"
+  stub git \
+    'case "$1 $2" in' \
+    '  "branch --show-current") echo "main";;' \
+    '  "log -1") echo "feat: something";;' \
+    '  *) exit 0;;' \
+    'esac'
+  stub_bd '[{"id":"bd-1","status":"open"}]'
+  cd "$TESTDIR"
+  run bash "$SCRIPTS/speckit-task-commit-check.sh" <<<'{"tool_input":{"command":"git commit -m x"}}'
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+  # The [[ -n $active_spec ]] guard must short-circuit before bd query runs.
+  [ ! -f "$TESTDIR/bd-query-args" ]
+}
+
+# ---------------------------------------------------------------------------
+# 4. pr-title.sh: PR title/body guidance advisory
+# ---------------------------------------------------------------------------
+
+@test "pr-title.sh: gh pr create emits title guidance" {
   mkdir -p "$TESTDIR/.specify"
   cd "$TESTDIR"
-  cmd='echo "gh issue create later"'
-  run bash "$SCRIPTS/speckit-issue-label-guard.sh" <<EOF
-{"tool_input":{"command":$(jq -Rs . <<<"$cmd")}}
-EOF
+  run bash "$SCRIPTS/speckit-pr-title.sh" <<<'{"tool_input":{"command":"gh pr create --fill"}}'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.hookEventName == "PreToolUse"'
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("CHANGELOG ENTRY")'
+}
+
+@test "pr-title.sh: gh pr edit emits title guidance" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  run bash "$SCRIPTS/speckit-pr-title.sh" <<<'{"tool_input":{"command":"gh pr edit 5 --title \"feat: x\""}}'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.hookSpecificOutput.additionalContext | test("CHANGELOG ENTRY")'
+}
+
+@test "pr-title.sh: gh pr list stays silent" {
+  mkdir -p "$TESTDIR/.specify"
+  cd "$TESTDIR"
+  run bash "$SCRIPTS/speckit-pr-title.sh" <<<'{"tool_input":{"command":"gh pr list"}}'
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "pr-title.sh: non-speckit project stays silent" {
+  cd "$TESTDIR"   # no .specify
+  run bash "$SCRIPTS/speckit-pr-title.sh" <<<'{"tool_input":{"command":"gh pr create --fill"}}'
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }

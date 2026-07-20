@@ -23,7 +23,13 @@ fi
 if [ -n "$ACTIVE_SPEC" ]; then
   # Task state lives in beads when the repo has a workspace (speckit-beads).
   if command -v bd >/dev/null 2>&1 && bd where >/dev/null 2>&1; then
-    OPEN_BEADS=$(bd query "spec_id=${ACTIVE_SPEC}* AND status!=closed" --json 2>/dev/null | jq 'length' 2>/dev/null)
+    # bd 1.1.0 query gotchas (verified live): the hyphenated value MUST be
+    # quoted with the wildcard INSIDE the quotes -- unquoted is a parse error
+    # and the {error:...} OBJECT makes bare `jq length` count its keys (2).
+    # BD_JSON_ENVELOPE= pins the array shape against a session-level =1
+    # (which wraps output in {data:[...]}); the jq type-guard maps any
+    # non-array (error object, envelope) to 0.
+    OPEN_BEADS=$(BD_JSON_ENVELOPE='' bd query "spec_id=\"${ACTIVE_SPEC}*\" AND status!=closed" --json 2>/dev/null | jq 'if type=="array" then length else 0 end' 2>/dev/null)
     if [ -n "$OPEN_BEADS" ] && [ "$OPEN_BEADS" -gt 0 ] 2>/dev/null; then
       WARNINGS="${WARNINGS}- Spec $ACTIVE_SPEC: $OPEN_BEADS open beads (bd ready to continue)"$'\n'
     fi

@@ -4,7 +4,6 @@ set -euo pipefail
 [[ -d ".specify" ]] || exit 0
 
 input="$(cat)"
-unchecked=""; checked=""; open_beads=""
 command="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
 
 if ! printf '%s' "$command" | grep -qE 'git commit '; then
@@ -25,10 +24,16 @@ fi
 
 unchecked=""
 checked=""
+open_beads=""
 beads_mode=false
-if command -v bd >/dev/null 2>&1 && bd where >/dev/null 2>&1; then
+if [[ -n "$active_spec" ]] && command -v bd >/dev/null 2>&1 && bd where >/dev/null 2>&1; then
   beads_mode=true
-  open_beads="$(bd query "spec_id=${active_spec}* AND status!=closed" --json 2>/dev/null | jq 'length' 2>/dev/null || true)"; open_beads="${open_beads:-0}"
+  # bd 1.1.0 query gotchas (verified live): quote the hyphenated value with
+  # the wildcard INSIDE the quotes (unquoted = parse error whose {error:...}
+  # object makes bare `jq length` count keys). BD_JSON_ENVELOPE= pins the
+  # array shape against a session-level =1; the jq type-guard maps any
+  # non-array to 0.
+  open_beads="$(BD_JSON_ENVELOPE='' bd query "spec_id=\"${active_spec}*\" AND status!=closed" --json 2>/dev/null | jq 'if type=="array" then length else 0 end' 2>/dev/null || true)"; open_beads="${open_beads:-0}"
 elif [[ -n "$active_spec" && -f "specs/$active_spec/tasks.md" ]]; then
   # Legacy fallback (pre-beads repos): tasks.md checkmarks.
   # `grep -c` prints 0 AND exits 1 on no match. The old `|| echo 0` produced a
