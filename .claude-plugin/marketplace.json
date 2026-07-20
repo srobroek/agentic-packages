@@ -175,7 +175,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.2.0",
+      "version": "7.3.0",
       "tags": [
         "bundle",
         "baseline"
@@ -306,7 +306,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "tags": [
         "bundle",
         "frontend"
@@ -865,7 +865,7 @@
     {
       "name": "mcp-mempalace",
       "description": "MCP server package for MemPalace, a local-first cross-session memory layer for coding agents. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships the mempalace-mcp stdio server, a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace (cross-session memory) against codebase-memory (current code structure). Complements code intelligence; it is not code navigation.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "mcp",
         "memory",
@@ -1123,7 +1123,7 @@
     {
       "name": "speckit-dag-hooks",
       "description": "DEPRECATED — superseded by speckit-gate (github.com/srobroek/speckit-gate). Kept for existing installs; no new features. Opt-in enforcement hooks for the SpecKit DAG: hard-block out-of-order or precondition-violating /speckit.* commands via the speckit-dag dispatcher. Opinionated mandatory-gating -- requires the speckit package (which ships the dispatcher) to be installed.",
-      "version": "5.2.0",
+      "version": "5.2.1",
       "tags": [
         "bundle",
         "speckit",
