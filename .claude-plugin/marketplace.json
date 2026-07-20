@@ -15,6 +15,7 @@
         "critique",
         "decision-review"
       ],
+      "category": "quality",
       "source": "./packages/agent-adversarial-challenger"
     },
     {
@@ -26,6 +27,7 @@
         "engineering",
         "implementation"
       ],
+      "category": "engineering",
       "source": "./packages/agent-coder"
     },
     {
@@ -37,6 +39,7 @@
         "engineering",
         "repos"
       ],
+      "category": "engineering",
       "source": "./packages/agent-external-repo-worker"
     },
     {
@@ -48,6 +51,7 @@
         "maintenance",
         "apm"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agent-management"
     },
     {
@@ -59,6 +63,7 @@
         "quality",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/agent-pr-reviewer"
     },
     {
@@ -69,6 +74,7 @@
         "bundle",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agentic-maintenance"
     },
     {
@@ -80,6 +86,7 @@
         "maintenance",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/audit-steering"
     },
     {
@@ -92,6 +99,7 @@
         "coordination",
         "multi-agent"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/beads"
     },
     {
@@ -103,6 +111,7 @@
         "lifecycle",
         "brownfield"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/brownfield-project"
     },
     {
@@ -114,6 +123,7 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/catchup"
     },
     {
@@ -125,6 +135,7 @@
         "dotfiles",
         "chezmoi"
       ],
+      "category": "dotfiles",
       "source": "./packages/chezmoi-editor"
     },
     {
@@ -136,6 +147,7 @@
         "cmux",
         "terminal"
       ],
+      "category": "developer-tools",
       "source": "./packages/cmux"
     },
     {
@@ -146,6 +158,7 @@
         "bundle",
         "graph"
       ],
+      "category": "code-intelligence",
       "source": "./packages/code-intelligence"
     },
     {
@@ -157,6 +170,7 @@
         "code-intelligence",
         "graph"
       ],
+      "category": "code-intelligence",
       "source": "./packages/codebase-memory"
     },
     {
@@ -168,6 +182,7 @@
         "hooks",
         "reference"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/codex-hook-contract"
     },
     {
@@ -178,6 +193,7 @@
         "bundle",
         "baseline"
       ],
+      "category": "core",
       "source": "./packages/core"
     },
     {
@@ -188,6 +204,7 @@
         "bundle",
         "data"
       ],
+      "category": "data",
       "source": "./packages/data-ai"
     },
     {
@@ -199,6 +216,7 @@
         "planning",
         "analysis"
       ],
+      "category": "planning-product",
       "source": "./packages/debate"
     },
     {
@@ -212,6 +230,7 @@
         "audit",
         "cve"
       ],
+      "category": "security",
       "source": "./packages/dep-audit"
     },
     {
@@ -225,6 +244,7 @@
         "advisory",
         "cve"
       ],
+      "category": "code-intelligence",
       "source": "./packages/dep-update"
     },
     {
@@ -236,6 +256,7 @@
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/dependency-quality"
     },
     {
@@ -246,6 +267,7 @@
         "bundle",
         "tooling"
       ],
+      "category": "engineering",
       "source": "./packages/developer-tools"
     },
     {
@@ -256,6 +278,7 @@
         "bundle",
         "diagrams"
       ],
+      "category": "diagrams",
       "source": "./packages/diagrams"
     },
     {
@@ -266,6 +289,7 @@
         "bundle",
         "documentation"
       ],
+      "category": "docs",
       "source": "./packages/docs-architecture"
     },
     {
@@ -277,6 +301,7 @@
         "planning",
         "explanation"
       ],
+      "category": "planning-product",
       "source": "./packages/eli5"
     },
     {
@@ -288,6 +313,7 @@
         "maintenance",
         "discovery"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/find-tools"
     },
     {
@@ -298,6 +324,7 @@
         "bundle",
         "frontend"
       ],
+      "category": "frontend",
       "source": "./packages/frontend"
     },
     {
@@ -309,6 +336,7 @@
         "languages",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/go-quality"
     },
     {
@@ -320,6 +348,7 @@
         "planning",
         "goals"
       ],
+      "category": "planning-product",
       "source": "./packages/goal-writer"
     },
     {
@@ -330,6 +359,7 @@
         "bundle",
         "governance"
       ],
+      "category": "governance",
       "source": "./packages/governance"
     },
     {
@@ -341,6 +371,7 @@
         "lifecycle",
         "handover"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/handover"
     },
     {
@@ -353,6 +384,7 @@
         "tokens",
         "compression"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/headroom"
     },
     {
@@ -364,6 +396,7 @@
         "git",
         "attribution"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-attribution-guard"
     },
     {
@@ -375,6 +408,7 @@
         "bash",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-bash-safety"
     },
     {
@@ -387,6 +421,7 @@
         "dotfiles",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-chezmoi-guard"
     },
     {
@@ -399,6 +434,7 @@
         "github",
         "issues"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-close-keywords"
     },
     {
@@ -410,6 +446,7 @@
         "git",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-safety"
     },
     {
@@ -421,6 +458,7 @@
         "git",
         "commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-workflow"
     },
     {
@@ -432,6 +470,7 @@
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-package-investigate"
     },
     {
@@ -444,6 +483,7 @@
         "portability",
         "testing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-portability-ci"
     },
     {
@@ -455,6 +495,7 @@
         "git",
         "pre-commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-precommit-gate"
     },
     {
@@ -466,6 +507,7 @@
         "quality",
         "lint"
       ],
+      "category": "quality",
       "source": "./packages/hooks-quality"
     },
     {
@@ -479,6 +521,7 @@
         "cost",
         "routing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-model"
     },
     {
@@ -492,6 +535,7 @@
         "isolation",
         "policy"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-worktree"
     },
     {
@@ -503,6 +547,7 @@
         "worktree",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-worktree"
     },
     {
@@ -513,6 +558,7 @@
         "bundle",
         "incident"
       ],
+      "category": "debugging",
       "source": "./packages/incident-response"
     },
     {
@@ -523,6 +569,7 @@
         "bundle",
         "infrastructure"
       ],
+      "category": "infrastructure",
       "source": "./packages/infrastructure"
     },
     {
@@ -534,6 +581,7 @@
         "embedded",
         "arm"
       ],
+      "category": "languages",
       "source": "./packages/language-arm-cortex"
     },
     {
@@ -544,6 +592,7 @@
         "bundle",
         "dotnet"
       ],
+      "category": "languages",
       "source": "./packages/language-dotnet"
     },
     {
@@ -554,6 +603,7 @@
         "bundle",
         "functional"
       ],
+      "category": "languages",
       "source": "./packages/language-functional"
     },
     {
@@ -564,6 +614,7 @@
         "bundle",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-go"
     },
     {
@@ -574,6 +625,7 @@
         "bundle",
         "julia"
       ],
+      "category": "languages",
       "source": "./packages/language-julia"
     },
     {
@@ -584,6 +636,7 @@
         "bundle",
         "jvm"
       ],
+      "category": "languages",
       "source": "./packages/language-jvm"
     },
     {
@@ -594,6 +647,7 @@
         "bundle",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-python"
     },
     {
@@ -604,6 +658,7 @@
         "bundle",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-rust"
     },
     {
@@ -614,6 +669,7 @@
         "bundle",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/language-shell"
     },
     {
@@ -624,6 +680,7 @@
         "steering",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-go"
     },
     {
@@ -634,6 +691,7 @@
         "steering",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-python"
     },
     {
@@ -644,6 +702,7 @@
         "steering",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-rust"
     },
     {
@@ -654,6 +713,7 @@
         "steering",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-terraform"
     },
     {
@@ -664,6 +724,7 @@
         "steering",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-typescript"
     },
     {
@@ -674,6 +735,7 @@
         "bundle",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-terraform"
     },
     {
@@ -684,6 +746,7 @@
         "bundle",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-typescript"
     },
     {
@@ -695,6 +758,7 @@
         "php",
         "ruby"
       ],
+      "category": "languages",
       "source": "./packages/language-web-scripting"
     },
     {
@@ -708,6 +772,7 @@
         "interactive",
         "setup"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/license-picker"
     },
     {
@@ -718,6 +783,7 @@
         "lsp",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/lsp-go"
     },
     {
@@ -728,6 +794,7 @@
         "lsp",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/lsp-python"
     },
     {
@@ -738,6 +805,7 @@
         "lsp",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/lsp-rust"
     },
     {
@@ -748,6 +816,7 @@
         "lsp",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/lsp-shell"
     },
     {
@@ -758,6 +827,7 @@
         "lsp",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/lsp-terraform"
     },
     {
@@ -768,6 +838,7 @@
         "lsp",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/lsp-typescript"
     },
     {
@@ -779,6 +850,7 @@
         "matt-pocock",
         "workflows"
       ],
+      "category": "planning-product",
       "source": "./packages/matt-skills"
     },
     {
@@ -789,6 +861,7 @@
         "mcp",
         "codebase"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-codebase-memory"
     },
     {
@@ -799,6 +872,7 @@
         "mcp",
         "docs"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-context7"
     },
     {
@@ -810,6 +884,7 @@
         "memory",
         "cross-session"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-mempalace"
     },
     {
@@ -820,6 +895,7 @@
         "mcp",
         "versions"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-package-version"
     },
     {
@@ -830,6 +906,7 @@
         "mcp",
         "browser"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-playwright"
     },
     {
@@ -840,6 +917,7 @@
         "mcp",
         "repomix"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-repomix"
     },
     {
@@ -850,6 +928,7 @@
         "mcp",
         "semantic"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-serena"
     },
     {
@@ -861,6 +940,7 @@
         "tauri",
         "testing"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-tauri"
     },
     {
@@ -872,6 +952,7 @@
         "agent",
         "orchestration"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/orchestrate"
     },
     {
@@ -882,6 +963,7 @@
         "bundle",
         "planning"
       ],
+      "category": "planning-product",
       "source": "./packages/planning-product"
     },
     {
@@ -893,6 +975,7 @@
         "frontend",
         "browser"
       ],
+      "category": "frontend",
       "source": "./packages/playwright"
     },
     {
@@ -906,6 +989,7 @@
         "integration",
         "multi-agent"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/pr-shepherd"
     },
     {
@@ -916,6 +1000,7 @@
         "bundle",
         "slides"
       ],
+      "category": "presentation",
       "source": "./packages/presentation"
     },
     {
@@ -926,6 +1011,7 @@
         "bundle",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/project-lifecycle"
     },
     {
@@ -937,6 +1023,7 @@
         "languages",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/python-quality"
     },
     {
@@ -950,6 +1037,7 @@
         "release-please",
         "ci-cd"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/release-please"
     },
     {
@@ -960,6 +1048,7 @@
         "bundle",
         "resume"
       ],
+      "category": "resume",
       "source": "./packages/resume-cv"
     },
     {
@@ -971,6 +1060,7 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/resume-session"
     },
     {
@@ -981,6 +1071,7 @@
         "bundle",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/review"
     },
     {
@@ -992,6 +1083,7 @@
         "languages",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/rust-quality"
     },
     {
@@ -1003,6 +1095,7 @@
         "secrets",
         "pre-commit"
       ],
+      "category": "security",
       "source": "./packages/secrets-scan"
     },
     {
@@ -1013,6 +1106,7 @@
         "bundle",
         "security"
       ],
+      "category": "security",
       "source": "./packages/security"
     },
     {
@@ -1024,6 +1118,7 @@
         "lifecycle",
         "review"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/session-review"
     },
     {
@@ -1038,6 +1133,7 @@
         "code-smells",
         "tech-debt"
       ],
+      "category": "quality",
       "source": "./packages/sniff"
     },
     {
@@ -1048,6 +1144,7 @@
         "bundle",
         "speckit"
       ],
+      "category": "speckit",
       "source": "./packages/speckit"
     },
     {
@@ -1060,6 +1157,7 @@
         "workflow",
         "gates"
       ],
+      "category": "speckit",
       "source": "./packages/speckit-beads"
     },
     {
@@ -1071,6 +1169,7 @@
         "speckit",
         "hooks"
       ],
+      "category": "speckit",
       "source": "./packages/speckit-dag-hooks"
     },
     {
@@ -1082,6 +1181,7 @@
         "architecture",
         "design"
       ],
+      "category": "steering",
       "source": "./packages/steering-architecture"
     },
     {
@@ -1092,6 +1192,7 @@
         "steering",
         "backend"
       ],
+      "category": "steering",
       "source": "./packages/steering-backend"
     },
     {
@@ -1102,6 +1203,7 @@
         "steering",
         "data"
       ],
+      "category": "steering",
       "source": "./packages/steering-data"
     },
     {
@@ -1114,6 +1216,7 @@
         "commit",
         "workflow"
       ],
+      "category": "steering",
       "source": "./packages/steering-delivery"
     },
     {
@@ -1124,6 +1227,7 @@
         "steering",
         "docs"
       ],
+      "category": "steering",
       "source": "./packages/steering-docs-specs"
     },
     {
@@ -1134,6 +1238,7 @@
         "steering",
         "frontend"
       ],
+      "category": "steering",
       "source": "./packages/steering-frontend"
     },
     {
@@ -1144,6 +1249,7 @@
         "steering",
         "git"
       ],
+      "category": "steering",
       "source": "./packages/steering-git-workflow"
     },
     {
@@ -1154,6 +1260,7 @@
         "steering",
         "infrastructure"
       ],
+      "category": "steering",
       "source": "./packages/steering-infrastructure"
     },
     {
@@ -1167,6 +1274,7 @@
         "code-economy",
         "minimalism"
       ],
+      "category": "steering",
       "source": "./packages/steering-pragmatic"
     },
     {
@@ -1177,6 +1285,7 @@
         "steering",
         "structure"
       ],
+      "category": "steering",
       "source": "./packages/steering-project-structure"
     },
     {
@@ -1187,6 +1296,7 @@
         "steering",
         "speckit"
       ],
+      "category": "steering",
       "source": "./packages/steering-speckit"
     },
     {
@@ -1197,6 +1307,7 @@
         "steering",
         "routing"
       ],
+      "category": "steering",
       "source": "./packages/steering-subagent-routing"
     },
     {
@@ -1207,6 +1318,7 @@
         "steering",
         "toolchain"
       ],
+      "category": "steering",
       "source": "./packages/steering-toolchain-defaults"
     },
     {
@@ -1217,6 +1329,7 @@
         "steering",
         "tooling"
       ],
+      "category": "steering",
       "source": "./packages/steering-tools-scripts"
     },
     {
@@ -1228,6 +1341,7 @@
         "languages",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/typescript-quality"
     },
     {
@@ -1240,6 +1354,7 @@
         "e2e",
         "quality"
       ],
+      "category": "quality",
       "source": "./packages/user-journeys"
     },
     {
@@ -1251,6 +1366,7 @@
         "quality",
         "verification"
       ],
+      "category": "quality",
       "source": "./packages/verify"
     },
     {
@@ -1262,6 +1378,7 @@
         "code-intelligence",
         "web"
       ],
+      "category": "code-intelligence",
       "source": "./packages/web-fetch"
     },
     {
@@ -1278,6 +1395,7 @@
         "services",
         "release-notes"
       ],
+      "category": "code-intelligence",
       "source": "./packages/whats-new"
     },
     {
@@ -1289,6 +1407,7 @@
         "maintenance",
         "authoring"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/write-agentic"
     },
     {
@@ -1300,6 +1419,7 @@
         "docs",
         "writing"
       ],
+      "category": "docs",
       "source": "./packages/write-docs"
     }
   ]

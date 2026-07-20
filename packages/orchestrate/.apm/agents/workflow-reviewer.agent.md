@@ -2,8 +2,7 @@
 name: workflow-reviewer
 description: >-
   Independent read-only reviewer in an `orchestrate` run: reviews one node's
-  branch against its scope, reports a REVIEW verdict to the node's bead,
-  re-reviews coder's delta. Never edits.
+  branch, reports a REVIEW verdict to its bead, re-reviews the delta.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 x-agentic:
