@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.4.0...srobroek-agentic--v12.5.0) (2026-07-20)
+
+
+### Features
+
+* **mcp-mempalace:** mine sessions automatically at session end and recall memory on demand ([#550](https://github.com/srobroek/agentic-packages/issues/550)) ([727720a](https://github.com/srobroek/agentic-packages/commit/727720ab0bd0b25210763cb838517e9a696a0b90))
+
 ## [12.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.3.0...srobroek-agentic--v12.4.0) (2026-07-20)
 
 
