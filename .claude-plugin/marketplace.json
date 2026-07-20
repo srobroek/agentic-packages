@@ -1029,7 +1029,7 @@
     },
     {
       "name": "speckit",
-      "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are provisioned by speckit-gate (PyPI) during setup.",
+      "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
       "version": "5.1.0",
       "tags": [
         "bundle",
