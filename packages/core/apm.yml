@@ -1,5 +1,5 @@
 name: core
-version: 7.6.0
+version: 7.7.0
 description: >-
   Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
   and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock
