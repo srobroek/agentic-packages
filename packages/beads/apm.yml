@@ -1,5 +1,5 @@
 name: beads
-version: 0.2.0
+version: 0.3.0
 description: >-
   Beads (bd) issue-tracker conventions: the dependency-aware work DAG that
   agents use for persistent task tracking, atomic work claiming, and multi-agent
