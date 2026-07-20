@@ -31,14 +31,15 @@ MUST MP-6: scope recall to the project's wing when the question is
 project-specific (the wing is named for the repo), so recall is not diluted by
 unrelated projects' memory.
 
-MUST MP-7: run the packaged mine script
-(`.claude/hooks/mcp-mempalace/scripts/mempalace-mine.sh`; `.codex/` under Codex)
-as soon as any of these lands — do not wait for session end:
-- a commit is made, or a feature/refactor is completed;
-- a bug is resolved or its root cause is identified;
-- a design decision or trade-off is settled;
-- a debugging insight or non-obvious finding about the code, tooling, or
-  environment is established.
-The script files this repo's session transcripts into the wing and is idempotent
-(content-hash dedup), so running it again after each of these events only adds
-what is new.
+FACT MP-7: transcript mining is automatic — a SessionEnd hook files each
+completed session into the repo's wing. Do NOT run the mine script mid-session:
+the miner freezes a transcript at first mine (no mtime re-check), so mining a
+still-growing transcript permanently loses everything appended after that
+point. The manual script (`.claude/hooks/mcp-mempalace/scripts/mempalace-mine.sh`;
+`.codex/` under Codex) is for one-time backfill of historical transcripts, run
+when no other session is active in the repo.
+
+MUST MP-8: when a hard-won fact emerges mid-session that must survive even a
+crashed session (root cause, settled decision, environment gotcha), file it
+immediately with the mempalace_add_drawer MCP tool as a short distilled note —
+do not wait for SessionEnd mining, and do not re-run the mine script for this.
