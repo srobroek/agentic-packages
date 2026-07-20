@@ -6,6 +6,11 @@ model: sonnet
 x-agentic:
   codex:
     model: "gpt-5.3-codex-spark"
+  claude:
+    model: "sonnet"
+    effort: "high"
+    permissions:
+      mode: "workspace-write"
 ---
 
 You validate exactly one user journey end to end. Your inputs (from the
@@ -29,8 +34,12 @@ normative for everything you write.
 
 ## Procedure
 
-1. **Resolve driving strategy** from the profile (kind, launch/reset notes,
-   doc pointers) plus project docs. Improvise bindings per step; store none.
+1. **Resolve driving strategy** from the profile (kind, launch/reset notes
+   or a pointer to a canonical driving-mechanics doc, plus other doc
+   pointers) and project docs. When the profile points to a canonical
+   mechanics doc, treat it as authoritative and follow it rather than
+   expecting every launch/reset/driving detail inline. Improvise bindings
+   per step; store none.
 2. **Preflight**: establish preconditions (P-ids); record the git commit
    under validation. Unestablishable precondition → dependent steps
    `blocked`, keep going where independently reachable.

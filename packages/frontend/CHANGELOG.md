@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/frontend--v3.2.0...frontend--v3.3.0) (2026-07-20)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([516509d](https://github.com/srobroek/agentic-packages/commit/516509df50b1a0e2c10be6ccef0154bc5d913e54))
+
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/frontend--v3.1.0...frontend--v3.2.0) (2026-07-20)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([cec3d7c](https://github.com/srobroek/agentic-packages/commit/cec3d7c1026fb6cf532dea73ac02dcea62b01e1c))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/frontend--v3.0.0...frontend--v3.1.0) (2026-07-16)
 
 

@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 12.3.0
+version: 12.5.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -353,6 +353,15 @@ marketplace:
         - hooks
         - quality
         - lint
+    - name: hooks-subagent-model
+      source: ./packages/hooks-subagent-model
+      category: project-lifecycle
+      tags:
+        - hooks
+        - subagent
+        - model
+        - cost
+        - routing
     - name: hooks-subagent-worktree
       source: ./packages/hooks-subagent-worktree
       category: project-lifecycle

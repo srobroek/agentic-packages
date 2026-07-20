@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.0...speckit--v5.1.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* PR guidance names the branch the pull request is actually from ([3bb818b](https://github.com/srobroek/agentic-packages/commit/3bb818b5272f0fbb9c69e48db1edce60e9a4cadd))
+
 ## [5.1.0](https://github.com/srobroek/agentic-packages/compare/speckit--v5.0.0...speckit--v5.1.0) (2026-07-16)
 
 

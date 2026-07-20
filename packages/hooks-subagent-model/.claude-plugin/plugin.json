@@ -1,0 +1,10 @@
+{
+  "name": "hooks-subagent-model",
+  "version": "0.2.0",
+  "description": "Model-routing deny gate for subagent spawns. A PreToolUse:Agent hook DENIES an Agent/Task call when `model` is omitted AND the named subagent_type has no pinned model in its definition (or subagent_type itself is omitted) — the spawn would otherwise silently inherit the parent session's model, often an expensive top-tier one. The deny reason is a tier routing table (cheap tier for mechanical work, mid tier for bounded coding/research, top tier or an explicit session-model pass-through for deep/adversarial work) so the caller's retry succeeds. The deny reason also notes that reasoning effort is NOT enforceable per-call (no `effort` field exists on the Agent tool_input) and points to pinning `effort:` in reusable agent definitions instead. The inherit-by-default type list is overridable per-project via SUBAGENT_MODEL_GUARD_INHERIT_TYPES. Fails open on malformed input. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "hooks": "./hooks/hooks.json"
+}

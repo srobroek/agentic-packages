@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v0.3.0...mcp-mempalace--v0.4.0) (2026-07-20)
+
+
+### Features
+
+* **mcp-mempalace:** mine sessions automatically at session end and recall memory on demand ([#550](https://github.com/srobroek/agentic-packages/issues/550)) ([727720a](https://github.com/srobroek/agentic-packages/commit/727720ab0bd0b25210763cb838517e9a696a0b90))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v0.2.0...mcp-mempalace--v0.3.0) (2026-07-16)
 
 

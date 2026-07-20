@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# Mine this repo's Claude Code / Codex session transcripts into MemPalace, filed
-# under a wing named for the repo. Idempotent: MemPalace dedups by content hash,
-# so re-mining an already-filed session is a no-op.
+# Backfill: mine this repo's historical Claude Code / Codex session transcripts
+# into MemPalace, filed under a wing named for the repo. Idempotent per file:
+# a transcript already filed is skipped on re-run.
 #
-# Run this after any significant unit of work or relevant reveal/finding (see
-# steering rule MP-7): completed feature/refactor, resolved bug, design decision,
-# or debugging insight. Idempotent, so re-running after each milestone only adds
-# what is new. Safe to run by hand at any time.
+# Run this ONCE per repo to ingest pre-existing transcripts, and only when no
+# other session is active in the repo. WARNING — do not run mid-session as a
+# save point: the miner has no mtime re-check for conversations, so a transcript
+# mined while still growing is frozen at that snapshot and everything appended
+# afterwards is never ingested. Ongoing capture is handled automatically by the
+# SessionEnd hook (mempalace-auto-mine.sh), which mines each session's complete
+# transcript when it ends.
 #
 # Portability floor: bash 3.2.57 + BSD coreutils (stock macOS).
 set -euo pipefail

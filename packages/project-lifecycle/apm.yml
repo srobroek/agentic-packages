@@ -1,5 +1,5 @@
 name: project-lifecycle
-version: 3.2.0
+version: 3.3.0
 description: >-
   Day-to-day project lifecycle workflows: resume work after interruption
   (catchup), write handovers, and run verification. Bundles the matching skills,

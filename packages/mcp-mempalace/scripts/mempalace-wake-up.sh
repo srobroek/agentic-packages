@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
-# SessionStart hook: inject MemPalace wake-up context (relevant prior
-# cross-session memory) into the session as additionalContext.
+# SessionStart hook: inject a tiny MemPalace index (what memory exists for
+# this repo + how to recall it) as additionalContext.
+#
+# Deliberately NOT the `mempalace wake-up` L1 dump: at session start there is
+# no query yet, so any content selection is unranked — L1's "importance"
+# scoring is a constant for mined drawers, making the dump effectively the
+# first N drawers by filing order (verbatim transcript noise). Injecting that
+# costs ~800 tokens and buries the useful signal. Instead we inject a compact
+# pointer: which wing this repo maps to, how much memory it holds, and an
+# instruction to recall on demand with a real query (MCP mempalace_search /
+# CLI `mempalace search`), where semantic + BM25 ranking actually works.
 #
 # Portability floor: bash 3.2.57 + BSD coreutils (stock macOS).
 # Never blocks a session start; any failure exits 0 with no output.
@@ -9,24 +18,35 @@ set -euo pipefail
 # mempalace is optional tooling — if it isn't installed, stay silent.
 command -v mempalace >/dev/null 2>&1 || exit 0
 
-# Scope wake-up to this repo's wing (basename of the git repo root, matching
-# how the mining script derives the wing). Fall back to a global wake-up when
-# not inside a git repo.
+# Scope to this repo's wing (basename of the git repo root, matching how the
+# mining script derives the wing). Outside a git repo there is no wing to
+# point at, so inject nothing.
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -n "$repo_root" ]; then
-  wing="$(basename "$repo_root")"
-  ctx="$(mempalace wake-up --wing "$wing" 2>/dev/null || true)"
-else
-  ctx="$(mempalace wake-up 2>/dev/null || true)"
-fi
+[ -n "$repo_root" ] || exit 0
+wing="$(basename "$repo_root")"
 
-# No palace / no content yet -> nothing useful to inject. mempalace prints an
-# "L1 — No palace found" line for empty stores; suppress that noise so an
-# unseeded project adds zero tokens.
-[ -n "$ctx" ] || exit 0
-case "$ctx" in
-  *"No palace found"*) exit 0 ;;
-esac
+# Pull this wing's room/drawer counts from `mempalace status`. The status
+# output is grouped as "WING: <name>" followed by indented "ROOM: ..." lines;
+# extract just this wing's block.
+status="$(mempalace status 2>/dev/null || true)"
+[ -n "$status" ] || exit 0
+
+wing_block="$(printf '%s\n' "$status" | awk -v wing="$wing" '
+  /WING:/ { in_wing = ($2 == wing) ; next }
+  in_wing && /ROOM:/ { sub(/^[[:space:]]+/, ""); print "  " $0 }
+')"
+
+# No memory for this wing yet -> inject nothing (an unseeded project adds
+# zero tokens).
+[ -n "$wing_block" ] || exit 0
+
+ctx="## MemPalace — cross-session memory available for this repo (wing: $wing)
+$wing_block
+Recall on demand with a specific query — do not guess from memory of prior
+sessions when the palace can answer: use the mempalace_search MCP tool (or
+\`mempalace search \"<query>\" --wing $wing\`) for prior decisions, debugging
+outcomes, and gotchas from earlier sessions. Memory is verbatim history —
+verify code/config facts against the live tree before acting on them."
 
 jq -n --arg ctx "$ctx" '{
   hookSpecificOutput: {

@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.2.1](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v5.2.0...speckit-dag-hooks--v5.2.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([22cc47f](https://github.com/srobroek/agentic-packages/commit/22cc47f16b884a1c4a0a446deec0bd4ec2c8b519))
+
+## [5.2.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v5.1.0...speckit-dag-hooks--v5.2.0) (2026-07-20)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([cec3d7c](https://github.com/srobroek/agentic-packages/commit/cec3d7c1026fb6cf532dea73ac02dcea62b01e1c))
+
 ## [5.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-dag-hooks--v5.0.0...speckit-dag-hooks--v5.1.0) (2026-07-16)
 
 
