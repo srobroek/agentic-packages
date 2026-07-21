@@ -775,6 +775,14 @@ marketplace:
         - release
         - release-please
         - ci-cd
+    - name: release-queue-watch
+      source: ./packages/release-queue-watch
+      category: project-lifecycle
+      tags:
+        - github
+        - pull-requests
+        - ci
+        - monitoring
     - name: resume-cv
       source: ./packages/resume-cv
       category: resume

@@ -1245,6 +1245,19 @@
       "source": "./packages/release-please"
     },
     {
+      "name": "release-queue-watch",
+      "description": "Watches open GitHub pull-request checks with the native gh interval watcher, rediscovering new PRs between passes without mutating repository state.",
+      "version": "0.1.0",
+      "tags": [
+        "github",
+        "pull-requests",
+        "ci",
+        "monitoring"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/release-queue-watch"
+    },
+    {
       "name": "resume-cv",
       "description": "CV / career-resume bundle: focused resume-tailoring and broad career-support workflows. Renamed from `resume` to avoid a namespace collision with `resume-session` (which resumes a prior coding SESSION, not a CV).",
       "version": "1.2.0",

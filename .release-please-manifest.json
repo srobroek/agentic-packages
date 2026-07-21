@@ -105,6 +105,7 @@
   "packages/project-lifecycle": "4.1.0",
   "packages/python-quality": "2.1.0",
   "packages/release-please": "1.1.0",
+  "packages/release-queue-watch": "0.1.0",
   "packages/resume-cv": "1.2.0",
   "packages/resume-session": "2.1.0",
   "packages/review": "4.1.0",
