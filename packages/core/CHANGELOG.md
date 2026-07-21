@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/core--v7.7.0...core--v8.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* make semantic code intelligence the core default
+
+### Features
+
+* make semantic code intelligence the core default ([accf483](https://github.com/srobroek/agentic-packages/commit/accf483fb8856e1b61f0c95d9b428c30b544f049))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d404fa5](https://github.com/srobroek/agentic-packages/commit/d404fa56d5d41c2b65af02525335cc91574b19d0))
+
 ## [7.7.0](https://github.com/srobroek/agentic-packages/compare/core--v7.6.0...core--v7.7.0) (2026-07-20)
 
 

@@ -1,8 +1,8 @@
 name: dependency-quality
-version: 3.2.0
+version: 4.0.0
 description: >-
-  Dependency hygiene bundle: nudges to investigate a dependency before adding
-  it and audits the lockfile for known CVEs. Manifest-edit and latest-version
+  Dependency hygiene bundle: nudges to investigate a dependency before adding it
+  and audits the lockfile for known CVEs. Manifest-edit and latest-version
   guidance lives in steering-toolchain-defaults.
 author: Sjors Robroek
 license: Apache-2.0

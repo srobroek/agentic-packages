@@ -21,7 +21,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Claude also gets a top-level edit reminder; Codex relies on steering because tool-hook payloads do not identify subagent edits.",
-      "version": "4.1.0",
+      "version": "5.0.0",
       "tags": [
         "agent",
         "engineering",
@@ -57,7 +57,7 @@
     {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "2.1.0",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "quality",
@@ -153,7 +153,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "6.2.0",
+      "version": "7.0.0",
       "tags": [
         "bundle",
         "semantic"
@@ -188,7 +188,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.7.0",
+      "version": "8.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -250,7 +250,7 @@
     {
       "name": "dependency-quality",
       "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it and audits the lockfile for known CVEs. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "dependencies",
@@ -319,7 +319,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "3.3.0",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "frontend"
@@ -856,7 +856,7 @@
     {
       "name": "mcp-1mcp",
       "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "mcp",
         "aggregation"
@@ -889,7 +889,7 @@
     {
       "name": "mcp-mempalace",
       "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
-      "version": "0.4.0",
+      "version": "1.0.0",
       "tags": [
         "mcp",
         "memory",
@@ -945,7 +945,7 @@
     {
       "name": "mcp-tauri",
       "description": "Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment.",
-      "version": "1.2.0",
+      "version": "2.0.0",
       "tags": [
         "mcp",
         "tauri",
@@ -957,7 +957,7 @@
     {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (scope disjointness, agent discovery, conflict probe).",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "tags": [
         "skill",
         "agent",
@@ -980,7 +980,7 @@
     {
       "name": "playwright",
       "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
-      "version": "3.2.0",
+      "version": "4.0.0",
       "tags": [
         "skill",
         "frontend",
@@ -992,7 +992,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol, and an advisory Stop hook that reminds when the integrator queue is non-empty. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; all parts are inert in repos without .beads/.",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "tags": [
         "beads",
         "merge-queue",
@@ -1150,7 +1150,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "6.0.0",
+      "version": "7.0.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1161,7 +1161,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "speckit",
         "beads",
