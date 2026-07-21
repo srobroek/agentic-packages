@@ -1,7 +1,7 @@
 {
   "name": "release-queue-watch",
   "version": "0.2.0",
-  "description": "Watches open GitHub pull-request checks with the native gh interval watcher, rediscovering new PRs between passes without mutating repository state.",
+  "description": "Watches the GitHub pull-request queue with debounced native gh polling, reporting new, merged, and failed PRs without mutating repository state.",
   "author": {
     "name": "Sjors Robroek"
   },
