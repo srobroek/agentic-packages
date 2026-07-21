@@ -117,6 +117,7 @@ MUST Before closing a bead whose work continues elsewhere (PR awaiting CI,
   follow-up expected), write residual context onto the bead itself
   (`bd comments add`: approach, tricky spots, what to check first on failure) —
   the bead is the cross-session handover; PR bodies and handover files are not.
+MUST Before closing a bead as landed, or filing one claiming work is missing from main, verify by content per GW-3 (git-workflow steering).
 DEFAULT Git commit/push of code follows delivery steering, not bd's profiles.
 
 SETUP

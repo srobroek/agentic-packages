@@ -21,6 +21,18 @@ failures instead of pushing over them.
 Before merge: destination confirmed, checks green, no uncommitted work left,
 ask about deleting the merged branch.
 
+Verifying work landed:
+
+MUST GW-3: in a squash-merge repo, prove work reached main by CONTENT, not
+ancestry. Invalid: `git merge-base --is-ancestor` and `git branch --merged` — a
+squashed tip is never an ancestor of main; equally invalid is reading a
+non-empty `git merge-tree` as not-landed — a squashed branch keeps its diverged
+merge-from-main history. Valid: `git cat-file -e origin/main:<path>`, a file or
+tree diff against origin/main, or the change's presence in the squash commit.
+When a path is absent from main's tip, an empty `git log origin/main -- <path>`
+proves it never landed; a non-empty log means it landed and was later removed
+or renamed.
+
 Changesets (repos using them): add one for behavior/API/breaking changes;
 skip for docs, tests, CI, and no-behavior refactors.
 
