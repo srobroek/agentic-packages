@@ -170,7 +170,7 @@ Specifically, native install does not deliver:
 - `codex-hook-contract` (reference instructions only);
 - the architecture **context** carried by `language-rust` / `language-typescript`;
 - the always-on **instruction** inside `hooks-subagent-worktree` (the hook itself works; the "declare isolation" guidance is APM-only);
-- the Tauri instruction/context inside `mcp-tauri` (the MCP server works; the steering is APM-only).
+- the Tauri instruction/context inside `mcp-tauri` (the MCP runtime is configured separately; the steering is APM-only).
 
 If you rely on steering, use the **APM CLI flow** for those packages (or for everything). Bundles that aggregate external plugins (e.g. `developer-tools`, `security`, `matt-skills`) likewise resolve their members only through APM.
 

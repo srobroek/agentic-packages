@@ -20,5 +20,5 @@ tags:
   - example
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/codebase-memory#^0.1.2
+    - srobroek/agentic-packages/packages/web-fetch#>=2.1.0 <3.0.0
     - wshobson/agents/plugins/code-documentation#main
