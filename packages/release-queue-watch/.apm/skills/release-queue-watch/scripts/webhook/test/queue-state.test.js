@@ -137,3 +137,32 @@ test("an older head snapshot stays stale when its request starts after synchroni
   assert.equal(current.mergeable, null);
   assert.equal(current.state, "blocked");
 });
+
+test("a close tombstone rejects an older open snapshot at the current generation", () => {
+  const queue = new ReleaseQueueState();
+  queue.applyPullRequestEvent(pull(1));
+  queue.applyPullRequestEvent(
+    pull(1, {
+      deliveryId: "close-before-request",
+      action: "closed",
+      updatedAt: "2026-07-21T01:00:00Z",
+    }),
+  );
+  const requestGeneration = queue.reconciliationGeneration();
+  const staleOpen = pull(1, {
+    deliveryId: undefined,
+    updatedAt: "2026-07-21T00:00:00Z",
+  });
+
+  assert.deepEqual(
+    queue.reconcileRepository("owner/repo", [staleOpen], 2_000, requestGeneration),
+    [],
+  );
+  assert.deepEqual(queue.snapshot(), []);
+  queue.reconcileRepository("owner/repo", [], 3_000, requestGeneration);
+  assert.deepEqual(
+    queue.reconcileRepository("owner/repo", [staleOpen], 4_000, requestGeneration),
+    [],
+  );
+  assert.deepEqual(queue.snapshot(), []);
+});

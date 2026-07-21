@@ -60,7 +60,7 @@ export class ReleaseQueueState {
     this.eventGate = eventGate;
     this.now = now;
     this.items = new Map();
-    this.itemGenerations = new Map();
+    this.itemVersions = new Map();
     this.generation = 0;
   }
 
@@ -84,11 +84,29 @@ export class ReleaseQueueState {
 
     const key = keyFor(event.repository, event.number);
     this.generation += 1;
-    this.itemGenerations.set(key, this.generation);
     if (event.action === "closed") {
+      const current = this.items.get(key);
+      const previousVersion = this.itemVersions.get(key);
+      this.itemVersions.set(key, {
+        generation: this.generation,
+        headSha: event.headSha ?? current?.headSha ?? previousVersion?.headSha ?? "",
+        updatedAt:
+          event.updatedAt ??
+          current?.updatedAt ??
+          previousVersion?.updatedAt ??
+          new Date(event.receivedAt ?? this.now()).toISOString(),
+        closed: true,
+      });
       this.items.delete(key);
     } else {
       this.#upsert(event, event.receivedAt ?? this.now());
+      const current = this.items.get(key);
+      this.itemVersions.set(key, {
+        generation: this.generation,
+        headSha: current.headSha,
+        updatedAt: current.updatedAt,
+        closed: false,
+      });
     }
     return { ...gate, dispatches: this.dispatchAvailable() };
   }
@@ -103,7 +121,14 @@ export class ReleaseQueueState {
     for (const pullRequest of pullRequests) {
       const key = keyFor(repository, pullRequest.number);
       seen.add(key);
-      if ((this.itemGenerations.get(key) ?? 0) > requestGeneration) continue;
+      const version = this.itemVersions.get(key);
+      if ((version?.generation ?? 0) > requestGeneration) continue;
+      if (
+        version?.closed &&
+        (!pullRequest.updatedAt || pullRequest.updatedAt <= version.updatedAt)
+      ) {
+        continue;
+      }
       const current = this.items.get(key);
       if (
         current &&
@@ -113,14 +138,24 @@ export class ReleaseQueueState {
         continue;
       }
       this.#upsert({ ...pullRequest, repository }, observedAt);
-      this.itemGenerations.set(key, requestGeneration);
+      const reconciled = this.items.get(key);
+      this.itemVersions.set(key, {
+        generation: requestGeneration,
+        headSha: reconciled.headSha,
+        updatedAt: reconciled.updatedAt,
+        closed: false,
+      });
     }
-    for (const [key, generation] of this.itemGenerations) {
-      if (!key.startsWith(`${repository}#`) || seen.has(key) || generation > requestGeneration) {
+    for (const [key, version] of this.itemVersions) {
+      if (
+        !key.startsWith(`${repository}#`) ||
+        seen.has(key) ||
+        version.generation > requestGeneration
+      ) {
         continue;
       }
       this.items.delete(key);
-      this.itemGenerations.delete(key);
+      if (!version.closed) this.itemVersions.delete(key);
     }
     return this.dispatchAvailable();
   }
