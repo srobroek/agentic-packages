@@ -368,7 +368,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "10.0.0",
+      "version": "10.1.0",
       "tags": [
         "bundle",
         "baseline"
