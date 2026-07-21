@@ -31,6 +31,8 @@ def install_fake_commands(
     start_unready: bool = False,
     status_hangs: bool = False,
     background_hangs: bool = False,
+    status_ignores_term: bool = False,
+    background_ignores_term: bool = False,
     background_delay: float = 0,
     minimal_path: bool = False,
 ) -> tuple[dict[str, str], Path]:
@@ -51,11 +53,13 @@ def install_fake_commands(
         "case \"$1 $2\" in\n"
         "  'serve --status')\n"
         "    [ \"$FAKE_1MCP_STATUS\" = hang ] && exec sleep 30\n"
+        "    [ \"$FAKE_1MCP_STATUS\" = ignore ] && { trap '' TERM; exec sleep 30; }\n"
         "    [ -f \"$state/ready\" ]; exit $?\n"
         "    ;;\n"
         "  'serve --background')\n"
         "    printf 'background diagnostic\\n' >>\"$state/server.log\"\n"
         "    [ \"$FAKE_1MCP_BACKGROUND\" = hang ] && exec sleep 30\n"
+        "    [ \"$FAKE_1MCP_BACKGROUND\" = ignore ] && { trap '' TERM; exec sleep 30; }\n"
         "    [ \"$FAKE_1MCP_BACKGROUND_DELAY\" = 0 ] || sleep \"$FAKE_1MCP_BACKGROUND_DELAY\"\n"
         "    [ \"$FAKE_1MCP_STARTS\" = unready ] && exit 0\n"
         "    [ \"$FAKE_1MCP_STARTS\" = success ] || exit 1\n"
@@ -79,8 +83,10 @@ def install_fake_commands(
     env["FAKE_1MCP_STARTS"] = (
         "unready" if start_unready else ("success" if start_succeeds else "failure")
     )
-    env["FAKE_1MCP_STATUS"] = "hang" if status_hangs else "return"
-    env["FAKE_1MCP_BACKGROUND"] = "hang" if background_hangs else "return"
+    env["FAKE_1MCP_STATUS"] = "ignore" if status_ignores_term else ("hang" if status_hangs else "return")
+    env["FAKE_1MCP_BACKGROUND"] = (
+        "ignore" if background_ignores_term else ("hang" if background_hangs else "return")
+    )
     env["FAKE_1MCP_BACKGROUND_DELAY"] = str(background_delay)
     env["XDG_CONFIG_HOME"] = str(tmp_path / "config")
     env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "5"
@@ -170,6 +176,13 @@ def write_mkdir_lock(config_home: Path, pid: int, start_identity: str) -> Path:
         encoding="utf-8",
     )
     return lock_dir
+
+
+def write_claim(lock_dir: Path, kind: str, pid: int, start_identity: str) -> Path:
+    claim = lock_dir / f".{kind}.{pid}"
+    claim.mkdir()
+    (claim / "start").write_text(f"{start_identity}\n", encoding="utf-8")
+    return claim
 
 
 def test_launcher_has_no_runtime_signal_path() -> None:
@@ -370,6 +383,45 @@ def test_hung_background_start_is_bounded(tmp_path: Path) -> None:
     assert action_count(actions, "proxy") == 0
 
 
+def test_status_ignoring_term_is_force_stopped_near_deadline(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(
+        tmp_path,
+        status_ignores_term=True,
+        minimal_path=True,
+    )
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    env["ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS"] = "1"
+
+    started = time.monotonic()
+    result = run_launcher(env)
+    elapsed = time.monotonic() - started
+
+    assert result.returncode == 1
+    assert elapsed < 4
+    assert action_count(actions, "serve --background") == 0
+
+
+def test_background_ignoring_term_is_force_stopped_near_deadline(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(
+        tmp_path,
+        background_ignores_term=True,
+        minimal_path=True,
+    )
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    env["ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS"] = "1"
+
+    started = time.monotonic()
+    result = run_launcher(env)
+    elapsed = time.monotonic() - started
+
+    assert result.returncode == 1
+    assert elapsed < 4
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 0
+
+
 def test_launcher_works_without_flock(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path, minimal_path=True)
 
@@ -493,6 +545,77 @@ def test_two_stale_lock_contenders_cannot_steal_new_owner(tmp_path: Path) -> Non
     assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 2
+
+
+def test_orphaned_legacy_takeover_marker_does_not_block_recovery(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+    (lock_dir / ".takeover").mkdir()
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
+
+
+def test_live_takeover_claim_is_preserved(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+    claimant = subprocess.Popen(["sleep", "30"])
+    claim = write_claim(
+        lock_dir,
+        "takeover",
+        claimant.pid,
+        process_start_identity(claimant.pid),
+    )
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 1
+        assert "lock-timeout" in result.stderr
+        assert claimant.poll() is None
+        assert claim.exists()
+        assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
+        assert action_count(actions, "serve --background") == 0
+    finally:
+        claimant.terminate()
+        claimant.wait(timeout=5)
+
+
+def test_owner_publication_after_grace_cannot_race_takeover(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "4"
+    env["ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS"] = "1"
+    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
+    real_mv = (tmp_path / "bin" / "mv").resolve()
+    mv = tmp_path / "bin" / "mv"
+    mv.unlink()
+    mv.write_text(
+        "#!/bin/sh\n"
+        "case \"$2\" in\n"
+        "  */owner) sleep 2 ;;\n"
+        "esac\n"
+        "exec \"$FAKE_REAL_MV\" \"$@\"\n",
+        encoding="utf-8",
+    )
+    mv.chmod(0o755)
+    env["FAKE_REAL_MV"] = str(real_mv)
+    command = launcher_command()
+
+    creator = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
+    time.sleep(0.2)
+    reaper = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
+
+    creator_status = creator.wait(timeout=8)
+    reaper_status = reaper.wait(timeout=8)
+
+    assert (creator_status, reaper_status) == (0, 0)
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 2
+    assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
 
 
 def test_live_mkdir_lock_owner_is_preserved(tmp_path: Path) -> None:
