@@ -73,8 +73,11 @@ def _apm_deps(manifest: dict) -> list[str]:
         if isinstance(dep, str):
             out.append(dep)
         elif isinstance(dep, dict):
-            # object form: prefer git/id locator for naming
-            out.append(str(dep.get("git") or dep.get("id") or dep.get("path") or ""))
+            git = str(dep.get("git") or dep.get("id") or "").rstrip("/")
+            path = str(dep.get("path") or "").strip("/")
+            ref = str(dep.get("ref") or "")
+            locator = "/".join(part for part in (git, path) if part)
+            out.append(f"{locator}#{ref}" if locator and ref else locator)
     return [d for d in out if d]
 
 

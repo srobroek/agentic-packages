@@ -145,8 +145,7 @@ Shared agentic assets are APM-managed. Edit the source in agentic-packages/.apm,
 then reinstall/compile the package. Blocked target: $blocked_hit
 
 If this is truly project-local, document it in apm.yml with:
-  x-agentic:
-    allow_project_local_agentic_assets: true
+  allow_project_local_agentic_assets: true
 MSG
   exit 2
 fi
