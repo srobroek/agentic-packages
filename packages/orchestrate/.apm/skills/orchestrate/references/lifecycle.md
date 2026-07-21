@@ -33,7 +33,7 @@ Blocked coders stay in `working` — `BLOCKED` is a message, not a node state.
 | `reported → in_review` | coder finished; orchestrator spawns a `workflow-reviewer` |
 | `working` (blocked) | coder sends `BLOCKED kind:design\|debug` to orchestrator, idles; orchestrator brokers `workflow-advisor`/debugger, relays `ADVICE` back; coder spawns nothing |
 | `changes_requested → working` | coder applies exactly the `FIX` items; same reviewer re-reviews the delta |
-| `approved → merged` | orchestrator sends `APPROVE`; gatekeeper acquires the merge slot, probes conflicts, merges, stamps `pr`/`merge_sha`, closes the bead |
+| `approved → merged` | orchestrator sends `APPROVE`; for watcher-backed PRs, the first handoff opens/waits and an exact dispatch wakes revalidation; gatekeeper acquires the merge slot, probes conflicts, merges, stamps `merge_sha`, closes the bead |
 | `waiting_human` | agent raised `ASK`; goes idle; orchestrator surfaces the question, forwards the answer or lets the user message the agent directly. Node not yet started → also `bd gate create --type=human --blocks <bead>` |
 | `failed` | unrecoverable; `state:failed` + status `blocked` (never satisfies a dep), logged with the error, surfaced |
 
@@ -60,6 +60,9 @@ agent for the same node — it loses context and its name may be refused.
    verified and released before integration resumes.
 4. Re-spawn only unassigned in-flight beads (truly orphaned); resume
    everything else by messaging the recovered handle.
+5. Restart each GitHub repository watcher with `--slots=1`. Node metadata
+   `queue_dispatch` suppresses replay of a dispatch already handed to the
+   gatekeeper; see `references/queue-watcher.md`.
 
 ## Failure propagation
 
@@ -95,3 +98,4 @@ select and message that agent directly. Never let an agent guess product intent.
 
 Sweep after fan-in, per the global worktree rule. The artifacts dir
 (`.orchestration/run-<id>/`) and the beads database are never swept.
+Stop repository watcher processes before removing run-local process state.

@@ -30,8 +30,9 @@ Role: lead session / orchestrator.
    up one fact needed to route a decision; never edit directly; anything
    bigger is delegated. Your own direct actions (only these): high-level
    decomposition, running `bd` and the bundled scripts (`scope-check.py`,
-   `discover-agents.py`, `conflict-probe.sh`), relaying terse messages. All
-   other work must be delegated.
+   `discover-agents.py`, `conflict-probe.sh`, `resolve-queue-dispatch.py`),
+   starting/stopping the read-only release queue watcher, relaying terse
+   messages. All other work must be delegated.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
@@ -63,6 +64,11 @@ Role: lead session / orchestrator.
    ledger-scribe live the whole run as background subagents, reached by
    SendMessage. State lives in beads — recycle them to shed context
    (`references/lifecycle.md`).
+9. **Queue dispatch is input, never authority.** For GitHub-backed runs, the
+   read-only `release-queue-watch` dependency may wake an already-approved
+   node. The orchestrator validates and assigns; the gatekeeper alone owns
+   `bd merge-slot`, GitHub revalidation, and merge mutations
+   (`references/queue-watcher.md`).
 
 ## Workflow
 
@@ -88,7 +94,12 @@ Role: lead session / orchestrator.
    broad research → fan-out/fan-in in `roles.md`.
 4. Spawn `integration-gatekeeper` + `ledger-scribe` once; hand them the epic
    id + artifacts path.
-5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
+5. GitHub-backed run → LOAD `references/queue-watcher.md`; start one installed
+   `release-queue-watch` runtime per repository with one notification slot and
+   REST reconciliation enabled. Resolve each JSON line with
+   `resolve-queue-dispatch.py`; only an exact approved node match may wake the
+   gatekeeper. Non-GitHub run → skip this step.
+6. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
    background `workflow-coder` subagent (`subagent_type: workflow-coder`,
    `isolation:"worktree"`) with brief per `references/spawn-brief.md` (bead
@@ -96,24 +107,28 @@ Role: lead session / orchestrator.
    bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
    metadata — the resumable record. (teammates: see Rule 7). Agents record
    their own audit events + comments.
-6. On `REPORTED`: set `state:in_review` and spawn `workflow-reviewer` against
+7. On `REPORTED`: set `state:in_review` and spawn `workflow-reviewer` against
    branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
    `agentId` as `FIX` (resumes same coder; never a new one). On `BLOCKED`:
    spawn `workflow-advisor`/debugger, relay `ADVICE` back, dismiss it. Same
    reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
    state=approved`, send `APPROVE <node>` to the gatekeeper — the merge
    handoff trigger.
-7. Gatekeeper merges approved branches FCFS under the exclusive merge slot
+8. Gatekeeper integrates approved branches FCFS under the exclusive merge slot
    (`bd merge-slot acquire`/`release`), conflict-guarded
    (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`
-   + `bd gate check`; pushes conflicts back to coders. Dismiss coder only
-   after its node merges; sweep its worktree. At recycle points
+   + `bd gate check`. A valid queue dispatch wakes the gatekeeper but never
+   bypasses those checks or acquires the slot. Push conflicts back to coders.
+   Dismiss coder only after its node merges; sweep its worktree. At recycle
+   points
    (`references/lifecycle.md`), check run spend vs budget; over → finish
    in-flight work, stop fanning out.
-8. Dispute the orchestrator can't settle from artifacts already in context →
-   spawn fresh read-only tiebreaker (roles.md: Tiebreaker); its verdict arrives as `ADVICE`. Question needs product intent →
-   bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
-9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
+9. Dispute the orchestrator can't settle from artifacts already in context →
+   spawn fresh read-only tiebreaker (roles.md: Tiebreaker); its verdict arrives
+   as `ADVICE`. Question needs product intent → bubble `ASK` to the user, hold
+   the agent. See `references/lifecycle.md`.
+10. Close out: stop every queue watcher, then run the go/no-go gate — `bd dep
+    cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
    --parent <epic> --status in_progress,blocked`); ask `ledger-scribe` for the
    end-of-run report; confirm all worktrees removed, build artifacts cleaned.
@@ -129,7 +144,6 @@ Role: lead session / orchestrator.
 | `references/comms-block.md` | canonical protocol; auto-injected via `SubagentStart`; paste into teammate briefs |
 | `references/beads-store.md` | the state store: epic/node beads, state mapping, git-anchor contract, audit, merge-slot, gates |
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
+| `references/queue-watcher.md` | watcher JSON contract, approved-node resolution, dispatch dedupe, merge-slot boundary |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
-| Scripts | `scope-check.py` · `discover-agents.py` · `conflict-probe.sh` ·
-  `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
-  `_test_*.py` self-tests) |
+| Scripts | `scope-check.py` · `discover-agents.py` · `resolve-queue-dispatch.py` · `conflict-probe.sh` · `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable; `_test_*.py` self-tests) |

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Self-tests for msg-lint.py (stdlib unittest, no deps)."""
+
 import os
 import subprocess
 import sys
@@ -11,14 +12,19 @@ MSG_LINT = os.path.join(HERE, "msg-lint.py")
 
 def lint(body: str):
     proc = subprocess.run(
-        [sys.executable, MSG_LINT], input=body, capture_output=True, text=True,
+        [sys.executable, MSG_LINT],
+        input=body,
+        capture_output=True,
+        text=True,
     )
     return proc.returncode, proc.stdout
 
 
 class MsgLintTest(unittest.TestCase):
     def test_valid_reported_accepted(self):
-        code, out = lint("REPORTED t3\nbranch: coder/t3\ncommits: abc123\nverify: green\n")
+        code, out = lint(
+            "REPORTED t3\nbranch: coder/t3\ncommits: abc123\nverify: green\n"
+        )
         self.assertEqual(code, 0)
         self.assertEqual(out, "")
 
@@ -51,6 +57,19 @@ class MsgLintTest(unittest.TestCase):
     def test_dismiss_has_no_required_fields(self):
         code, out = lint("DISMISS t3\n")
         self.assertEqual(code, 0)
+        self.assertEqual(out, "")
+
+    def test_watcher_approve_handoff_accepted(self):
+        code, out = lint(
+            "APPROVE t3\n"
+            "branch: coder/t3\n"
+            "base: main @ abc123\n"
+            "source: release-queue-watch\n"
+            "pr: 42\n"
+            f"head: {'a' * 40}\n"
+            f"dispatch: owner/repo#42@{'a' * 40}\n"
+        )
+        self.assertEqual(code, 0, out)
         self.assertEqual(out, "")
 
     def test_line1_must_be_exactly_verb_and_node(self):

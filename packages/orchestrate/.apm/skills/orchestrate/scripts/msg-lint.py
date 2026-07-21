@@ -3,7 +3,8 @@
 (stdlib-only).
 
 Validates a SendMessage `message` body against the fixed 11-verb protocol
-(RULE was removed; APPROVE is the orch->gatekeeper merge handoff):
+(RULE was removed; APPROVE is the orch->gatekeeper integration handoff and may
+carry a validated watcher dispatch):
 
     ASSIGN BLOCKED REPORTED REVIEW FIX CONFLICT APPROVE MERGED ASK ADVICE DISMISS
 
@@ -29,6 +30,7 @@ Usage:
     msg-lint.py [--file PATH]        # reads stdin if --file omitted
 Exit codes: 0 clean, 1 one-or-more violations (one line each on stdout), 2 usage error.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,8 +38,17 @@ import re
 import sys
 
 VERBS = {
-    "ASSIGN", "BLOCKED", "REPORTED", "REVIEW", "FIX", "CONFLICT",
-    "APPROVE", "MERGED", "ASK", "ADVICE", "DISMISS",
+    "ASSIGN",
+    "BLOCKED",
+    "REPORTED",
+    "REVIEW",
+    "FIX",
+    "CONFLICT",
+    "APPROVE",
+    "MERGED",
+    "ASK",
+    "ADVICE",
+    "DISMISS",
 }
 
 REQUIRED_FIELDS: dict[str, set[str]] = {
@@ -88,7 +99,7 @@ def lint(body: str) -> list[str]:
     fields: dict[str, str] = {}
     run = 0
     run_start = 0
-    for lineno, line in enumerate(lines[idx + 1:], start=idx + 2):
+    for lineno, line in enumerate(lines[idx + 1 :], start=idx + 2):
         if not line.strip():
             run = 0
             continue
@@ -115,7 +126,9 @@ def lint(body: str) -> list[str]:
             if f in required and f in fields:
                 val = fields[f].strip().lower()
                 if val not in allowed:
-                    violations.append(f"field {f}={fields[f]!r} must be one of {sorted(allowed)}")
+                    violations.append(
+                        f"field {f}={fields[f]!r} must be one of {sorted(allowed)}"
+                    )
 
     return violations
 
@@ -125,7 +138,9 @@ def main(argv=None) -> None:
     p.add_argument("--file")
     args = p.parse_args(argv)
 
-    text = sys.stdin.read() if not args.file else open(args.file, encoding="utf-8").read()
+    text = (
+        sys.stdin.read() if not args.file else open(args.file, encoding="utf-8").read()
+    )
     violations = lint(text)
     for v in violations:
         print(v)
