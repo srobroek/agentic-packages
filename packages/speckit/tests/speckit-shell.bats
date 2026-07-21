@@ -4,8 +4,8 @@
 # Target floor: bash 3.2.57 + BSD sed/grep (stock macOS).
 #
 # Covered scenarios:
-#   1. task-commit-check.sh + stop-gate.sh -- zero-task grep emits no error,
-#      no "0\n0" double-zero from `grep -c ... || echo 0`.
+#   1. task-commit-check.sh -- zero-task grep emits no error and no "0\n0"
+#      double-zero from `grep -c ... || echo 0`.
 #   2. task-commit-check.sh -- runs outside a git repo without aborting.
 #   3. beads branch (stub bd on PATH) -- quoted bd query value, envelope- and
 #      error-proof jq count, silent when all beads closed / non-spec branch.
@@ -80,30 +80,13 @@ stub_bd() {
   [ -z "${output//[[:space:]]/}" ] || echo "$output" | jq -e '.' >/dev/null
 }
 
-@test "stop-gate.sh: zero-task tasks.md produces no grep/integer error" {
-  spec="012-empty-spec"
-  mkdir -p "$TESTDIR/specs/$spec" "$TESTDIR/.specify"
-  : > "$TESTDIR/specs/$spec/tasks.md"
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "'"$spec"'";;' \
-    '  *) exit 0;;' \
-    'esac'
-  stub bd 'exit 1'
-  cd "$TESTDIR"
-  run bash "$SCRIPTS/speckit-stop-gate.sh"
-  [ "$status" -eq 0 ]
-  echo "$output" | grep -qi "integer expression" && return 1
-  return 0
-}
-
 @test "scripts: no 'grep -c ... || echo' double-zero idiom remains in code" {
   run bash -c '
     for f in "$@"; do
       grep -vE "^[[:space:]]*#" "$f" | grep -nE "grep -c.*\|\| *echo" && exit 0
     done
     exit 1
-  ' _ "$SCRIPTS/speckit-task-commit-check.sh" "$SCRIPTS/speckit-stop-gate.sh"
+  ' _ "$SCRIPTS/speckit-task-commit-check.sh"
   [ "$status" -ne 0 ]
 }
 
@@ -127,87 +110,6 @@ stub_bd() {
 # ---------------------------------------------------------------------------
 # 3. beads branch: quoted bd query value, envelope/error-proof jq count
 # ---------------------------------------------------------------------------
-
-@test "stop-gate.sh: beads branch reports open bead count" {
-  spec="003-test-feat"
-  mkdir -p "$TESTDIR/.specify"
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "'"$spec"'";;' \
-    '  *) exit 0;;' \
-    'esac'
-  stub_bd '[{"id":"bd-1","status":"open"},{"id":"bd-2","status":"in_progress"}]'
-  cd "$TESTDIR"
-  run bash "$SCRIPTS/speckit-stop-gate.sh"
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.systemMessage | test("2 open beads")'
-  # The query value must be quoted with the wildcard inside the quotes
-  # (bd 1.1.0 parses unquoted hyphenated values as an error).
-  grep -qF 'spec_id="003-test-feat*"' "$TESTDIR/bd-query-args"
-}
-
-@test "stop-gate.sh: beads branch silent when all beads closed" {
-  spec="003-test-feat"
-  mkdir -p "$TESTDIR/.specify"
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "'"$spec"'";;' \
-    '  *) exit 0;;' \
-    'esac'
-  stub_bd '[]'
-  cd "$TESTDIR"
-  run bash "$SCRIPTS/speckit-stop-gate.sh"
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "stop-gate.sh: bd error object counts as zero, not two" {
-  spec="003-test-feat"
-  mkdir -p "$TESTDIR/.specify"
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "'"$spec"'";;' \
-    '  *) exit 0;;' \
-    'esac'
-  # bd parse errors emit an {error,schema_version} OBJECT; bare `jq length`
-  # counts its 2 keys and fabricates "2 open beads".
-  stub_bd '{"error":"parsing query: expected digit at position 12","schema_version":1}'
-  cd "$TESTDIR"
-  run bash "$SCRIPTS/speckit-stop-gate.sh"
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "stop-gate.sh: BD_JSON_ENVELOPE=1 exported does not change the count" {
-  spec="003-test-feat"
-  mkdir -p "$TESTDIR/.specify"
-  stub git \
-    'case "$1 $2" in' \
-    '  "branch --show-current") echo "'"$spec"'";;' \
-    '  *) exit 0;;' \
-    'esac'
-  # Stub honors the env override: plain array when BD_JSON_ENVELOPE is empty
-  # (the script must prefix BD_JSON_ENVELOPE=), envelope object otherwise.
-  {
-    printf '#!/usr/bin/env bash\n'
-    printf 'case "$1" in\n'
-    printf '  where) exit 0;;\n'
-    printf '  query)\n'
-    printf '    if [ -n "${BD_JSON_ENVELOPE:-}" ]; then\n'
-    printf '      echo "{\\"data\\":[{\\"id\\":\\"bd-1\\"}]}"\n'
-    printf '    else\n'
-    printf '      echo "[{\\"id\\":\\"bd-1\\"}]"\n'
-    printf '    fi;;\n'
-    printf '  *) exit 0;;\n'
-    printf 'esac\n'
-  } > "$BINDIR/bd"
-  chmod +x "$BINDIR/bd"
-  PATH="$BINDIR:$ORIG_PATH"
-  cd "$TESTDIR"
-  BD_JSON_ENVELOPE=1 run bash "$SCRIPTS/speckit-stop-gate.sh"
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.systemMessage | test("1 open beads")'
-}
 
 @test "task-commit-check.sh: beads branch reports open bead count" {
   spec="003-test-feat"
