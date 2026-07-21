@@ -353,6 +353,14 @@ marketplace:
         - hooks
         - quality
         - lint
+    - name: hooks-serena
+      source: ./packages/hooks-serena
+      category: project-lifecycle
+      tags:
+        - hooks
+        - serena
+        - semantic
+        - lifecycle
     - name: hooks-subagent-model
       source: ./packages/hooks-subagent-model
       category: project-lifecycle

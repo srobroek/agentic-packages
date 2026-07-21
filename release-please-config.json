@@ -560,6 +560,18 @@
         }
       ]
     },
+    "packages/hooks-serena": {
+      "release-type": "simple",
+      "component": "hooks-serena",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-subagent-model": {
       "release-type": "simple",
       "component": "hooks-subagent-model",
