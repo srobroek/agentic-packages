@@ -14,7 +14,7 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/web-fetch#>=2.1.0 <3.0.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.0.0 <4.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.0 <4.0.0
     - >-
       srobroek/agentic-packages/packages/steering-project-structure#>=1.0.0
       <2.0.0
