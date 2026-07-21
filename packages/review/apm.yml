@@ -1,5 +1,5 @@
 name: review
-version: 3.2.0
+version: 4.0.0
 description: >-
   Code review and verification toolkit: the verify skill and the PR reviewer
   agent, and Hobson comprehensive-review, performance-testing-review,

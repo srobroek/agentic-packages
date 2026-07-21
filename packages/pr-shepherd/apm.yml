@@ -1,5 +1,5 @@
 name: pr-shepherd
-version: 0.5.1
+version: 0.5.2
 description: >-
   Cross-session PR/merge shepherd with beads (bd) as the central state store.
   Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate
@@ -8,8 +8,8 @@ description: >-
   state, then either a slot-guarded merge or a bounce-back fix bead routed to
   agent:coder that parks the merge bead until fixed. Ships the pr-shepherd
   skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle
-  and bounce-back protocol. Requires the bd CLI (gastownhall/beads >= 1.1.0)
-  and gh; all parts are inert in repos without .beads/.
+  and bounce-back protocol. Requires the bd CLI (gastownhall/beads >= 1.1.0) and
+  gh; all parts are inert in repos without .beads/.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

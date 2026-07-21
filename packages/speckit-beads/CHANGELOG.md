@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v1.2.1...speckit-beads--v2.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([424b28c](https://github.com/srobroek/agentic-packages/commit/424b28c351aa5f7ad6c3463152f09205addd413f))
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v1.2.0...speckit-beads--v1.2.1) (2026-07-21)
 
 

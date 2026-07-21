@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.5.1...pr-shepherd--v0.5.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
 ## [0.5.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.5.0...pr-shepherd--v0.5.1) (2026-07-21)
 
 
