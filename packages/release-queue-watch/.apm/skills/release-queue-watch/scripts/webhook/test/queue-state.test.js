@@ -68,3 +68,42 @@ test("reconciliation blocks changed pull requests and removes closed ones", () =
   assert.deepEqual(queue.snapshot().map((item) => item.number), [2]);
   assert.equal(queue.snapshot()[0].state, "blocked");
 });
+
+test("a synchronized head resets queued and active readiness until reconciliation", () => {
+  const queue = new ReleaseQueueState({ maxMergeSlots: 1 });
+  queue.applyPullRequestEvent(pull(1));
+  queue.applyPullRequestEvent(pull(2));
+  queue.applyPullRequestEvent(pull(3));
+
+  const queuedSynchronize = queue.applyPullRequestEvent(
+    pull(3, {
+      deliveryId: "sync-queued",
+      headSha: "new-queued-sha",
+      checks: undefined,
+      mergeable: undefined,
+      updatedAt: "2026-07-21T00:30:00Z",
+    }),
+  );
+  assert.deepEqual(queuedSynchronize.dispatches, []);
+  const queued = queue.snapshot().find((item) => item.number === 3);
+  assert.equal(queued.state, "blocked");
+  assert.equal(queued.checks, "pending");
+  assert.equal(queued.mergeable, null);
+
+  const activeSynchronize = queue.applyPullRequestEvent(
+    pull(1, {
+      deliveryId: "sync-active",
+      headSha: "new-active-sha",
+      checks: undefined,
+      mergeable: undefined,
+      updatedAt: "2026-07-21T01:00:00Z",
+    }),
+  );
+  assert.deepEqual(activeSynchronize.dispatches.map((item) => item.number), [2]);
+  const active = queue.snapshot().find((item) => item.number === 1);
+  assert.equal(active.state, "blocked");
+  assert.equal(active.checks, "pending");
+  assert.equal(active.mergeable, null);
+  assert.equal(active.activeSince, null);
+  assert.equal(queue.snapshot().find((item) => item.number === 3).state, "blocked");
+});

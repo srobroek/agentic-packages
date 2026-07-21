@@ -44,7 +44,7 @@ test("maps Octokit REST pull, mergeability, and check responses", async () => {
         list: pullsList,
         get: async (args) => {
           calls.push(["get", args]);
-          return { data: { mergeable: true } };
+          return { data: { mergeable: true, mergeable_state: "clean" } };
         },
       },
       checks: { listForRef: checksListForRef },
@@ -96,4 +96,49 @@ test("maps Octokit REST pull, mergeability, and check responses", async () => {
     },
   ]);
   assert.equal(calls.some(([, args]) => args.owner === "owner" && args.repo === "repo"), true);
+});
+
+test("does not claim readiness from passing checks while the merge state is blocked", async () => {
+  const pullsList = () => {};
+  const checksListForRef = () => {};
+  const octokit = {
+    rest: {
+      pulls: {
+        list: pullsList,
+        get: async () => ({ data: { mergeable: true, mergeable_state: "blocked" } }),
+      },
+      checks: { listForRef: checksListForRef },
+      repos: {
+        getCombinedStatusForRef: async () => ({
+          data: { state: "success", total_count: 0 },
+        }),
+      },
+    },
+    paginate: async (method) => {
+      if (method === pullsList) {
+        return [
+          {
+            number: 8,
+            title: "Blocked by a required signal",
+            head: { sha: "def" },
+            base: { ref: "main" },
+            labels: [],
+            draft: false,
+            created_at: "2026-07-20T00:00:00Z",
+            updated_at: "2026-07-21T00:00:00Z",
+          },
+        ];
+      }
+      if (method === checksListForRef) {
+        return [{ status: "completed", conclusion: "success" }];
+      }
+      throw new Error("unexpected paginate method");
+    },
+  };
+
+  const [pullRequest] = await new OctokitRestAdapter({ octokit }).listOpenPullRequests(
+    "owner/repo",
+  );
+  assert.equal(pullRequest.checks, "pass");
+  assert.equal(pullRequest.mergeable, false);
 });

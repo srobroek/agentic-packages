@@ -68,7 +68,7 @@ export class OctokitRestAdapter {
           baseRef: pull.base.ref,
           labels: pull.labels.map((label) => label.name).filter(Boolean),
           draft: pull.draft ?? false,
-          mergeable: detail.mergeable,
+          mergeable: detail.mergeable === true && detail.mergeable_state === "clean",
           checks: combinedChecksState(checkRuns, combinedStatus),
           createdAt: pull.created_at,
           updatedAt: pull.updated_at,

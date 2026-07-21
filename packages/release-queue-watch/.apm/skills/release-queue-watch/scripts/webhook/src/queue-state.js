@@ -128,6 +128,8 @@ export class ReleaseQueueState {
   #upsert(input, observedAt) {
     const key = keyFor(input.repository, input.number);
     const previous = this.items.get(key);
+    const headChanged =
+      previous !== undefined && input.headSha !== undefined && input.headSha !== previous.headSha;
     const labels = (input.labels ?? previous?.labels ?? []).map((label) =>
       typeof label === "string" ? label : label.name,
     );
@@ -140,13 +142,13 @@ export class ReleaseQueueState {
       labels,
       priority: input.priority ?? priorityFromLabels(labels),
       draft: input.draft ?? previous?.draft ?? false,
-      mergeable: input.mergeable ?? previous?.mergeable ?? null,
-      checks: input.checks ?? previous?.checks ?? "pending",
+      mergeable: input.mergeable ?? (headChanged ? null : previous?.mergeable) ?? null,
+      checks: input.checks ?? (headChanged ? "pending" : previous?.checks) ?? "pending",
       createdAt:
         input.createdAt ?? previous?.createdAt ?? new Date(observedAt).toISOString(),
       updatedAt: input.updatedAt ?? new Date(observedAt).toISOString(),
-      state: previous?.state ?? "blocked",
-      activeSince: previous?.activeSince ?? null,
+      state: headChanged ? "blocked" : (previous?.state ?? "blocked"),
+      activeSince: headChanged ? null : (previous?.activeSince ?? null),
     };
 
     if (!isEligible(item)) {

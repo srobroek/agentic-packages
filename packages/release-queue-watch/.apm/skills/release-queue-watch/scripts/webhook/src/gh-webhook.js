@@ -59,6 +59,8 @@ export function buildForwardArgs({ repository, organization, events, secret, url
   if (!secret) throw new Error("secret is required");
   if (!url) throw new Error("url is required");
   const scope = repository ? `--repo=${repository}` : `--org=${organization}`;
+  // cli/gh-webhook v0.2.0 accepts its signing secret only as an argument, so this
+  // development transport is restricted to a trusted single-user process boundary.
   return [
     "webhook",
     "forward",

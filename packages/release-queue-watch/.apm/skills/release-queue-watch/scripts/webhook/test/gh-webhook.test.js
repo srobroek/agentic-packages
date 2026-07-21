@@ -33,7 +33,7 @@ test("provisions cli/gh-webhook in the isolated data directory", async () => {
   ]);
 });
 
-test("builds a signed repository forward command without Smee", () => {
+test("passes the secret through the only supported single-user argv boundary", () => {
   const args = buildForwardArgs({
     repository: "owner/repo",
     events: ["pull_request", "check_run"],

@@ -24,6 +24,7 @@ TRIGGER
 MUST Keep the runtime read-only: never merge, rebase, close, push, or modify Beads.
 MUST Accept webhook state only after `@octokit/webhooks` verifies the signature.
 MUST Debounce equivalent events for 30 seconds and reject repeated delivery IDs.
+MUST Run the development forwarder only on a trusted single-user host; `cli/gh-webhook` v0.2.0 exposes its required `--secret` value in the child argument list.
 DEFAULT Use one merge slot unless the user supplies another positive integer.
 NOT Use Smee; `cli/gh-webhook` is the local development transport.
 NOT Treat webhook delivery as complete state; Octokit REST reconciliation remains active.

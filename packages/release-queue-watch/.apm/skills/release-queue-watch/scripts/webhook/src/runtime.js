@@ -123,7 +123,40 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
     }),
   );
 
-  let stopped = false;
+  let reconcilerStopped = false;
+  let forwarderStopped = false;
+  let receiverClosed = false;
+  let stopInFlight;
+  const stop = async () => {
+    const errors = [];
+    if (!reconcilerStopped) {
+      try {
+        reconciler.stop();
+        reconcilerStopped = true;
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (!forwarderStopped) {
+      try {
+        await forwarder.stop();
+        forwarderStopped = true;
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (!receiverClosed) {
+      try {
+        await receiver.close();
+        receiverClosed = true;
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "release queue shutdown did not complete");
+    }
+  };
   return {
     adapter,
     forwarder,
@@ -131,12 +164,12 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
     receiver,
     reconciler,
     secretPath: secretRecord.path,
-    async stop() {
-      if (stopped) return;
-      stopped = true;
-      reconciler.stop();
-      await forwarder.stop();
-      await receiver.close();
+    stop() {
+      if (reconcilerStopped && forwarderStopped && receiverClosed) return Promise.resolve();
+      stopInFlight ??= stop().finally(() => {
+        stopInFlight = undefined;
+      });
+      return stopInFlight;
     },
   };
 }
@@ -159,19 +192,38 @@ export async function main(argv = process.argv.slice(2)) {
     return;
   }
   const runtime = await startReleaseQueueRuntime(options);
-  let stopping = false;
+  let stopRequested = false;
   const stop = async () => {
-    if (stopping) return;
-    stopping = true;
-    await runtime.stop();
-  };
-  process.once("SIGINT", () => void stop());
-  process.once("SIGTERM", () => void stop());
-  const exit = await runtime.forwarder.exit;
-  if (!stopping) {
-    await stop();
-    if (exit.code !== 0) {
-      throw new Error(`gh webhook forward exited with code ${exit.code} signal ${exit.signal}`);
+    stopRequested = true;
+    try {
+      await runtime.stop();
+    } catch (firstError) {
+      try {
+        await runtime.stop();
+      } catch (retryError) {
+        throw new AggregateError([firstError, retryError], "release queue shutdown failed twice");
+      }
     }
+  };
+  const stopAfterSignal = () => {
+    void stop().catch((error) => {
+      process.exitCode = 1;
+      process.stderr.write(`${error.stack ?? error.message}\n`);
+    });
+  };
+  process.once("SIGINT", stopAfterSignal);
+  process.once("SIGTERM", stopAfterSignal);
+  let exit;
+  let exitError;
+  try {
+    exit = await runtime.forwarder.exit;
+  } catch (error) {
+    exitError = error;
+  }
+  const forwarderExitedUnexpectedly = !stopRequested;
+  await stop();
+  if (exitError) throw exitError;
+  if (forwarderExitedUnexpectedly && exit.code !== 0) {
+    throw new Error(`gh webhook forward exited with code ${exit.code} signal ${exit.signal}`);
   }
 }

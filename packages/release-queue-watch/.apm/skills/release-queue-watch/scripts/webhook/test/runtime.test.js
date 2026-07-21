@@ -77,3 +77,37 @@ test("starts the signed receiver before forwarding and shuts down cleanly", asyn
   assert.match(calls[0].secret, /^[a-f0-9]{64}$/);
   await runtime.stop();
 });
+
+test("retries failed forwarder cleanup without leaking the receiver", async (t) => {
+  const stateDir = await mkdtemp(join(tmpdir(), "release-queue-runtime-retry-"));
+  t.after(() => rm(stateDir, { recursive: true, force: true }));
+  let stopCalls = 0;
+  const runtime = await startReleaseQueueRuntime(
+    {
+      repository: "owner/repo",
+      host: "127.0.0.1",
+      port: 0,
+      maxMergeSlots: 1,
+      pollIntervalMs: 60_000,
+      stateDir,
+    },
+    {
+      readToken: async () => "token",
+      adapter: { listOpenPullRequests: async () => [] },
+      startForwarder: async () => ({
+        exit: new Promise(() => {}),
+        stop: async () => {
+          stopCalls += 1;
+          if (stopCalls === 1) throw new Error("transient forwarder stop failure");
+        },
+      }),
+      logger: { log() {}, error() {} },
+    },
+  );
+  const healthUrl = runtime.receiver.url.replace("/webhooks/github", "/healthz");
+
+  await assert.rejects(runtime.stop(), /shutdown did not complete/);
+  await assert.rejects(fetch(healthUrl));
+  await runtime.stop();
+  assert.equal(stopCalls, 2);
+});
