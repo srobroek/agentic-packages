@@ -24,8 +24,11 @@ SUPPORTED_EVENTS = {
     "SubagentStop",
     "Stop",
 }
+OBSOLETE_COMMAND_SUFFIXES = {
+    "/agent-coder/scripts/coder-delegation-reminder.sh",
+}
 CODEX_UNAVAILABLE_PACKAGES = {
-    "agent-coder",
+    "hooks-subagent-model",
     "hooks-subagent-worktree",
     "hooks-worktree",
 }
@@ -93,9 +96,14 @@ def sanitize(
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
                 command = handler.get("command", "")
+                command_token = command.strip().split()[0] if command.strip() else ""
                 if (
                     handler.get("type") != "command"
                     or handler_is_stale(handler, working_dir)
+                    or any(
+                        command_token.endswith(suffix)
+                        for suffix in OBSOLETE_COMMAND_SUFFIXES
+                    )
                     or any(
                         f"/{package}/" in command
                         for package in CODEX_UNAVAILABLE_PACKAGES

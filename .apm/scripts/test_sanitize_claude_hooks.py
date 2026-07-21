@@ -36,12 +36,21 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
         "agent-coder",
         "coder-delegation-reminder.sh",
     )
+    future_agent_coder_hook = _make_script(
+        hooks_dir,
+        "agent-coder",
+        "future-legitimate-hook.sh",
+    )
     events = {
         "PreToolUse": [
             {"matcher": "Bash", "hooks": [{"type": "command", "command": str(live)}]},
             {
                 "matcher": "Edit",
                 "hooks": [{"type": "command", "command": str(obsolete)}],
+            },
+            {
+                "matcher": "Stop",
+                "hooks": [{"type": "command", "command": str(future_agent_coder_hook)}],
             },
             {
                 "matcher": "Bash",
@@ -71,7 +80,8 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     ]
     assert str(live) in commands
     assert "echo hi" in commands
-    assert not any("agent-coder" in c for c in commands)
+    assert str(obsolete) not in commands
+    assert str(future_agent_coder_hook) in commands
     assert not any("dead-pkg" in c for c in commands)
 
 

@@ -31,7 +31,9 @@ import tempfile
 from pathlib import Path
 
 
-CLAUDE_RETIRED_HOOK_PACKAGES = {"agent-coder"}
+OBSOLETE_COMMAND_SUFFIXES = {
+    "/agent-coder/scripts/coder-delegation-reminder.sh",
+}
 
 
 def runtime_semantics(value: object) -> object:
@@ -69,9 +71,8 @@ def handler_is_stale(handler: dict) -> bool:
     command = handler.get("command")
     if not isinstance(command, str):
         return False
-    if any(
-        f"/{package}/" in command for package in CLAUDE_RETIRED_HOOK_PACKAGES
-    ):
+    token = command.strip().split()[0] if command.strip() else ""
+    if any(token.endswith(suffix) for suffix in OBSOLETE_COMMAND_SUFFIXES):
         return True
     script = command_script_path(command)
     return script is not None and not script.is_file()
