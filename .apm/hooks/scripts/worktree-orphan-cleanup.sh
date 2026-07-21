@@ -54,7 +54,7 @@ for base in "$WORKTREE_BASE" "/private$WORKTREE_BASE"; do
 
         # .NET
         if [ -d "$worktree/bin" ] && [ -d "$worktree/obj" ]; then
-            rm -r "$worktree/bin" "$worktree/obj" 2>/dev/null
+            rm -r -- "${worktree:?}/bin" "${worktree:?}/obj" 2>/dev/null
         fi
 
         # Java/Kotlin (Gradle)
