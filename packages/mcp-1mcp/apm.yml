@@ -22,7 +22,143 @@ dependencies:
         - >-
           command -v 1mcp >/dev/null 2>&1 || { echo
           1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; };
-          1mcp serve --background >/dev/null || { ready=0; for i in 1 2 3 4 5 6
-          7 8 9 10; do 1mcp serve --status >/dev/null 2>&1 && { ready=1; break;
-          }; sleep 1; done; [ "$ready" -eq 1 ] || { 1mcp serve --status >&2;
-          exit 1; }; }; exec 1mcp proxy
+          runtime_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/1mcp"; pid_file="$runtime_dir/server.pid";
+          lock_dir="$runtime_dir/launcher.lock.d"; wait_seconds="${ONE_MCP_LAUNCHER_WAIT_SECONDS:-10}";
+          case "$wait_seconds" in ''|*[!0-9]*) wait_seconds=10 ;; esac;
+          owner_grace="${ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS:-2}"; case "$owner_grace"
+          in ''|*[!0-9]*) owner_grace=2 ;; esac;
+          kill_grace="${ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS:-1}"; case "$kill_grace"
+          in ''|*[!0-9]*) kill_grace=1 ;; esac; mkdir -p "$runtime_dir" || exit 1;
+          deadline=$(($(date +%s) + wait_seconds)); remaining() {
+          remaining_seconds=$((deadline - $(date +%s)));
+          [ "$remaining_seconds" -gt 0 ]; }; cancel_bounded() {
+          [ -z "${bounded_timer:-}" ] || kill -KILL "$bounded_timer" 2>/dev/null || :;
+          [ -z "${bounded_target:-}" ] || kill -TERM "$bounded_target" 2>/dev/null || :;
+          [ -z "${bounded_target:-}" ] || kill -KILL "$bounded_target" 2>/dev/null || :;
+          [ -z "${bounded_timer:-}" ] || wait "$bounded_timer" 2>/dev/null || :;
+          [ -z "${bounded_child:-}" ] || wait "$bounded_child" 2>/dev/null || :;
+          bounded_timer=; bounded_child=; bounded_target=; }; run_bounded() {
+          remaining || return 124;
+          if command -v timeout >/dev/null 2>&1; then timeout -k "$kill_grace"
+          "$remaining_seconds" "$@";
+          return $?; elif command -v gtimeout >/dev/null 2>&1; then
+          gtimeout -k "$kill_grace" "$remaining_seconds" "$@"; return $?; fi;
+          if command -v setsid >/dev/null 2>&1; then setsid "$@" & bounded_child=$!;
+          bounded_target=-$bounded_child; else set -m; "$@" & bounded_child=$!;
+          set +m; bounded_target=-$bounded_child; fi;
+          (sleep "$remaining_seconds"; kill -TERM "$bounded_target" 2>/dev/null;
+          sleep "$kill_grace"; kill -KILL "$bounded_target" 2>/dev/null) &
+          bounded_timer=$!; wait "$bounded_child"; bounded_status=$?;
+          kill -TERM "$bounded_timer" 2>/dev/null || :; wait "$bounded_timer" 2>/dev/null || :;
+          bounded_child=; bounded_timer=; bounded_target=; return "$bounded_status"; };
+          ready() { run_bounded 1mcp serve --status >/dev/null 2>&1; }; wait_ready() {
+          while remaining; do ready && return 0; sleep 1; done; return 1; };
+          process_start() { target_pid=$1;
+          if [ -r "/proc/$target_pid/stat" ]; then start=$(sed 's/.*) //'
+          "/proc/$target_pid/stat" | awk '{print $20}'); [ -n "$start" ] && {
+          printf 'linux:%s\n' "$start"; return 0; }; fi; start=$(ps -p "$target_pid"
+          -o lstart= 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//');
+          [ -n "$start" ] && printf 'ps:%s\n' "$start"; }; read_owner() {
+          owner_pid=$(sed -n 's/^pid=//p' "$lock_dir/owner" 2>/dev/null | sed -n '1p');
+          owner_start=$(sed -n 's/^start=//p' "$lock_dir/owner" 2>/dev/null | sed -n '1p');
+          [ -n "$owner_pid" ] && [ -n "$owner_start" ]; }; claim_is_live() {
+          claim_path=$1; claim_name=${claim_path##*/}; claim_rest=${claim_name#.*.};
+          claim_pid=${claim_rest%%.*}; claim_start=$(sed -n '1p'
+          "$claim_path/start" 2>/dev/null); [ -n "$claim_start" ] &&
+          [ "$(process_start "$claim_pid")" = "$claim_start" ]; }; has_live_claim() {
+          claim_kind=$1; for claim_path in "$lock_dir/.$claim_kind."*; do
+          [ -d "$claim_path" ] && claim_is_live "$claim_path" && return 0; done; return 1;
+          }; remove_claim() { claim_path=$1; rm -f "$claim_path/start";
+          rmdir "$claim_path" 2>/dev/null || :; }; create_claim() { claim_kind=$1;
+          claim_token=$(printf '%s\n' "$own_start" | cksum) || return 1;
+          claim_token=${claim_token%% *}; claim_sequence=0; while :; do
+          claim_path="$lock_dir/.$claim_kind.$$.$claim_token.$claim_sequence";
+          mkdir "$claim_path" 2>/dev/null && break; [ -e "$claim_path" ] || return 1;
+          claim_sequence=$((claim_sequence + 1)); done;
+          claim_tmp="$claim_path/start.$$"; printf '%s\n' "$own_start" >"$claim_tmp" &&
+          mv "$claim_tmp" "$claim_path/start" || { rm -f "$claim_tmp";
+          rmdir "$claim_path" 2>/dev/null || :; return 1; }; }; write_owner() {
+          own_start=$(process_start $$); [ -n "$own_start" ] || return 1;
+          create_claim publish || return 1; publish_claim=$claim_path;
+          if has_live_claim takeover; then remove_claim "$publish_claim"; return 2; fi;
+          owner_tmp="$lock_dir/owner.$$"; printf 'pid=%s\nstart=%s\n' $$ "$own_start"
+          >"$owner_tmp" && mv "$owner_tmp" "$lock_dir/owner"; owner_status=$?;
+          rm -f "$owner_tmp"; remove_claim "$publish_claim";
+          return "$owner_status"; }; establish_owner() { write_owner; owner_status=$?;
+          [ "$owner_status" -eq 0 ] && return 0; if [ "$owner_status" -eq 2 ]; then
+          lock_kind=; wait_ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2;
+          exit 1; fi; rm -f "$lock_dir/owner.$$"; rmdir "$lock_dir" 2>/dev/null || :;
+          exit 1; }; owns_lock() {
+          read_owner && [ "$owner_pid" = $$ ] && [ "$owner_start" = "$own_start" ]; };
+          lock_snapshot() { if [ -d "$lock_dir" ]; then dir_id=$(stat -c '%d:%i'
+          "$lock_dir" 2>/dev/null || stat -f '%d:%i' "$lock_dir" 2>/dev/null) || return 1;
+          if [ -f "$lock_dir/owner" ]; then owner_record=$(<"$lock_dir/owner");
+          else owner_record='<missing>'; fi; printf '%s|%s\n' "$dir_id" "$owner_record";
+          fi; }; takeover_lock() { observed_snapshot=$1; own_start=$(process_start $$);
+          [ -n "$own_start" ] || return 1; create_claim takeover || return 1;
+          takeover_claim=$claim_path; if has_live_claim publish; then
+          remove_claim "$takeover_claim";
+          return 1; fi; takeover_winner=; for claim_path in "$lock_dir/.takeover."*;
+          do if [ -d "$claim_path" ] && claim_is_live "$claim_path"; then
+          claim_name=${claim_path##*/}; claim_rest=${claim_name#.*.};
+          claim_pid=${claim_rest%%.*}; [ -z "$takeover_winner" ] ||
+          [ "$claim_pid" -ge "$takeover_winner" ] || takeover_winner=$claim_pid;
+          [ -n "$takeover_winner" ] || takeover_winner=$claim_pid; fi; done;
+          if [ "$takeover_winner" != $$ ] || has_live_claim publish ||
+          [ "$(lock_snapshot)" != "$observed_snapshot" ]; then
+          remove_claim "$takeover_claim"; return 1; fi;
+          stale_lock="$lock_dir.stale.$(date +%s).$$"; mv "$lock_dir" "$stale_lock"
+          2>/dev/null || { remove_claim "$takeover_claim"; return 1; };
+          retry_lock=1;
+          echo "quarantined stale 1mcp launcher lock: $stale_lock" >&2; };
+          release_lock() { if [ "${lock_kind:-}" = flock ]; then flock -u 9;
+          elif [ "${lock_kind:-}" = mkdir ] && owns_lock; then rm -f "$lock_dir/owner";
+          rmdir "$lock_dir" 2>/dev/null || :; fi; lock_kind=; }; on_signal() {
+          signal_status=$1; cancel_bounded; release_lock; trap - EXIT INT TERM;
+          exit "$signal_status"; };
+          finish_proxy() { release_lock; trap - EXIT INT TERM; exec 1mcp proxy; };
+          ready && exec 1mcp proxy; remaining || { echo 1mcp-launcher-timeout >&2; exit 1; };
+          if command -v flock >/dev/null 2>&1; then
+          exec 9>"$runtime_dir/launcher.lock"; flock -w "$remaining_seconds" 9 || {
+          ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2; exit 1; };
+          lock_kind=flock; else if mkdir "$lock_dir" 2>/dev/null; then
+          lock_kind=mkdir; establish_owner; else retried=0; while
+          remaining; do ready && exec 1mcp proxy; now=$(date +%s);
+          if [ ! -d "$lock_dir" ]; then retry_lock=1; break; fi; if read_owner;
+          then incomplete_snapshot=; current_start=$(process_start "$owner_pid");
+          if [ "$current_start" != "$owner_start" ]; then observed=$(lock_snapshot);
+          if [ -n "$observed" ] && [ "$(lock_snapshot)" = "$observed" ] && read_owner &&
+          [ "$current_start" != "$owner_start" ] && takeover_lock "$observed";
+          then break; fi; fi; else observed=$(lock_snapshot); if
+          [ "$observed" != "${incomplete_snapshot:-}" ]; then incomplete_snapshot=$observed;
+          incomplete_since=$now; elif [ $((now - incomplete_since)) -ge "$owner_grace" ] &&
+          [ "$(lock_snapshot)" = "$observed" ] && ! read_owner && takeover_lock "$observed";
+          then break; fi; fi; sleep 1; done; if [ "${retry_lock:-0}" -eq 1 ] &&
+          [ "$retried" -eq 0 ]; then retried=1; mkdir "$lock_dir" 2>/dev/null && {
+          lock_kind=mkdir; establish_owner; }; fi;
+          [ "${lock_kind:-}" = mkdir ] || {
+          ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2; exit 1; };
+          fi; fi; trap release_lock EXIT; trap 'on_signal 130' INT;
+          trap 'on_signal 143' TERM; ready && finish_proxy; if [ -f "$pid_file" ]; then
+          pid=$(sed -n 's/.*"pid"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p'
+          "$pid_file" | sed -n '1p'); is_runtime=1; case "$pid" in ''|*[!0-9]*|"$$") ;;
+          *) if [ -r "/proc/$pid/cmdline" ]; then runtime_binary=0; runtime_serve=0;
+          runtime_bootstrap=0; while IFS= read -r arg; do case "$arg" in
+          1mcp|*/1mcp|*/1mcp/*|*@1mcp/agent/*) runtime_binary=1 ;;
+          serve) runtime_serve=1 ;; --background-bootstrap) runtime_bootstrap=1 ;;
+          esac; done < <(tr '\0' '\n' <"/proc/$pid/cmdline");
+          [ "$runtime_binary" -eq 1 ] && [ "$runtime_serve" -eq 1 ] &&
+          [ "$runtime_bootstrap" -eq 1 ] && is_runtime=0; else process_comm=$(ps -p "$pid"
+          -o comm= 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//');
+          case "${process_comm##*/}" in sh|bash|zsh|fish) ;; *) process_args=$(ps -ww
+          -p "$pid" -o args= 2>/dev/null || :); case " $process_args " in
+          *1mcp*' serve '*--background-bootstrap*) is_runtime=0 ;; esac ;; esac; fi ;; esac;
+          if [ "$is_runtime" -eq 0 ]; then
+          wait_ready && finish_proxy; echo '1mcp runtime is alive but unhealthy; operator intervention required'
+          >&2; run_bounded 1mcp serve --status >&2; exit 1; else stale="$pid_file.stale.$(date +%s).$$";
+          mv "$pid_file" "$stale" || exit 1; echo "quarantined stale 1mcp PID state: $stale"
+          >&2; fi; fi; run_bounded 1mcp serve --background || { wait_ready && finish_proxy;
+          echo '1mcp startup failed; serve --status follows' >&2;
+          run_bounded 1mcp serve --status >&2;
+          exit 1; }; wait_ready || { echo '1mcp startup timed out; serve --status follows' >&2;
+          run_bounded 1mcp serve --status >&2; exit 1; }; finish_proxy
