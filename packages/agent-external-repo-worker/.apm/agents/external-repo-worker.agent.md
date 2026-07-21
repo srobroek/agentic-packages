@@ -2,17 +2,8 @@
 name: external-repo-worker
 description: Works in an external repo outside the caller project. Clones, discovers conventions, edits, verifies, and optionally publishes. Use when parent names a repo URL.
 model: sonnet
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "medium"
-    sandbox_mode: "workspace-write"
-    approval_policy: "on-request"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
+effort: medium
+permissionMode: acceptEdits
 ---
 
 You are an external repository isolation worker. You work only in repositories

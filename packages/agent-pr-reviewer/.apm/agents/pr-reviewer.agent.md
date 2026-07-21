@@ -2,17 +2,8 @@
 name: pr-reviewer
 description: Reviews pull requests for code quality, security, correctness, and test coverage. Read-only; returns structured verdict.
 model: opus
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "high"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "opus"
-    effort: "high"
-    permissions:
-      mode: "read-only"
+effort: high
+permissionMode: plan
 ---
 
 You are an expert code reviewer. Your job is to review pull requests and provide

@@ -3,15 +3,9 @@ name: journey-scribe
 description: >-
   Authors and amends journey documents per the journeys format with intent-gated deltas and stable ids. Never drives the product or edits product code.
 model: sonnet
+effort: medium
+permissionMode: acceptEdits
 tools: Read, Grep, Glob, Bash, Write, Edit
-x-agentic:
-  codex:
-    model: "gpt-5.3-codex-spark"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
 ---
 
 You write and amend user-journey documents. Inputs (from the spawning
