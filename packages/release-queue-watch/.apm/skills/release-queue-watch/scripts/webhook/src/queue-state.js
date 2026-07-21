@@ -60,6 +60,12 @@ export class ReleaseQueueState {
     this.eventGate = eventGate;
     this.now = now;
     this.items = new Map();
+    this.itemGenerations = new Map();
+    this.generation = 0;
+  }
+
+  reconciliationGeneration() {
+    return this.generation;
   }
 
   applyPullRequestEvent(event) {
@@ -76,22 +82,45 @@ export class ReleaseQueueState {
     });
     if (!gate.accepted) return { ...gate, dispatches: [] };
 
+    const key = keyFor(event.repository, event.number);
+    this.generation += 1;
+    this.itemGenerations.set(key, this.generation);
     if (event.action === "closed") {
-      this.items.delete(keyFor(event.repository, event.number));
+      this.items.delete(key);
     } else {
       this.#upsert(event, event.receivedAt ?? this.now());
     }
     return { ...gate, dispatches: this.dispatchAvailable() };
   }
 
-  reconcileRepository(repository, pullRequests, observedAt = this.now()) {
+  reconcileRepository(
+    repository,
+    pullRequests,
+    observedAt = this.now(),
+    requestGeneration = this.reconciliationGeneration(),
+  ) {
     const seen = new Set();
     for (const pullRequest of pullRequests) {
-      seen.add(keyFor(repository, pullRequest.number));
+      const key = keyFor(repository, pullRequest.number);
+      seen.add(key);
+      if ((this.itemGenerations.get(key) ?? 0) > requestGeneration) continue;
+      const current = this.items.get(key);
+      if (
+        current &&
+        pullRequest.headSha !== current.headSha &&
+        (!pullRequest.updatedAt || pullRequest.updatedAt <= current.updatedAt)
+      ) {
+        continue;
+      }
       this.#upsert({ ...pullRequest, repository }, observedAt);
+      this.itemGenerations.set(key, requestGeneration);
     }
-    for (const [key, item] of this.items) {
-      if (item.repository === repository && !seen.has(key)) this.items.delete(key);
+    for (const [key, generation] of this.itemGenerations) {
+      if (!key.startsWith(`${repository}#`) || seen.has(key) || generation > requestGeneration) {
+        continue;
+      }
+      this.items.delete(key);
+      this.itemGenerations.delete(key);
     }
     return this.dispatchAvailable();
   }

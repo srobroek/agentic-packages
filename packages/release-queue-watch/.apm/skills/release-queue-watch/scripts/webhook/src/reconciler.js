@@ -17,20 +17,33 @@ export class PollingReconciler {
     this.onDispatch = onDispatch;
     this.onError = onError;
     this.inFlight = new Map();
+    this.rerun = new Set();
     this.requestTimers = new Map();
     this.timer = null;
+    this.stopped = false;
   }
 
   async reconcileRepository(repository) {
     if (this.inFlight.has(repository)) return this.inFlight.get(repository);
+    const requestGeneration = this.queue.reconciliationGeneration();
     const operation = this.adapter
       .listOpenPullRequests(repository)
       .then((pullRequests) => {
-        const dispatches = this.queue.reconcileRepository(repository, pullRequests);
+        const dispatches = this.queue.reconcileRepository(
+          repository,
+          pullRequests,
+          undefined,
+          requestGeneration,
+        );
         for (const dispatch of dispatches) this.onDispatch(dispatch);
         return dispatches;
       })
-      .finally(() => this.inFlight.delete(repository));
+      .finally(() => {
+        this.inFlight.delete(repository);
+        if (!this.stopped && this.rerun.delete(repository)) {
+          this.reconcileRepository(repository).catch((error) => this.onError(error, repository));
+        }
+      });
     this.inFlight.set(repository, operation);
     return operation;
   }
@@ -48,10 +61,14 @@ export class PollingReconciler {
   }
 
   request(repository) {
-    if (!this.repositories.has(repository)) return;
+    if (this.stopped || !this.repositories.has(repository)) return;
     clearTimeout(this.requestTimers.get(repository));
     const timer = setTimeout(() => {
       this.requestTimers.delete(repository);
+      if (this.inFlight.has(repository)) {
+        this.rerun.add(repository);
+        return;
+      }
       this.reconcileRepository(repository).catch((error) => this.onError(error, repository));
     }, this.webhookDebounceMs);
     timer.unref?.();
@@ -60,14 +77,17 @@ export class PollingReconciler {
 
   start() {
     if (this.timer) return;
+    this.stopped = false;
     this.timer = setInterval(() => void this.reconcileAll(), this.intervalMs);
     this.timer.unref?.();
   }
 
   stop() {
+    this.stopped = true;
     clearInterval(this.timer);
     this.timer = null;
     for (const timer of this.requestTimers.values()) clearTimeout(timer);
     this.requestTimers.clear();
+    this.rerun.clear();
   }
 }

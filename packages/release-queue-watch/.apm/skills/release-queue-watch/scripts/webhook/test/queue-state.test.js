@@ -107,3 +107,33 @@ test("a synchronized head resets queued and active readiness until reconciliatio
   assert.equal(active.activeSince, null);
   assert.equal(queue.snapshot().find((item) => item.number === 3).state, "blocked");
 });
+
+test("an older head snapshot stays stale when its request starts after synchronize", () => {
+  const queue = new ReleaseQueueState();
+  queue.applyPullRequestEvent(pull(1));
+  queue.applyPullRequestEvent(
+    pull(1, {
+      deliveryId: "sync-before-request",
+      headSha: "new-sha",
+      checks: undefined,
+      mergeable: undefined,
+      updatedAt: "2026-07-21T02:00:00Z",
+    }),
+  );
+  const requestGeneration = queue.reconciliationGeneration();
+
+  assert.deepEqual(
+    queue.reconcileRepository(
+      "owner/repo",
+      [pull(1, { deliveryId: undefined, updatedAt: "2026-07-21T00:00:00Z" })],
+      2_000,
+      requestGeneration,
+    ),
+    [],
+  );
+  const [current] = queue.snapshot();
+  assert.equal(current.headSha, "new-sha");
+  assert.equal(current.checks, "pending");
+  assert.equal(current.mergeable, null);
+  assert.equal(current.state, "blocked");
+});
