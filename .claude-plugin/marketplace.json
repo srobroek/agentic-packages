@@ -117,7 +117,7 @@
     {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "tags": [
         "skill",
         "maintenance",
@@ -1447,7 +1447,7 @@
     {
       "name": "steering-global-bootstrap",
       "description": "User-scope bootstrap steering that keeps reusable agentic assets in APM packages and limits chezmoi to session profiles and dotfile management. Install globally; project behavior remains project-local.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "steering",
         "bootstrap",
