@@ -19,6 +19,9 @@ SPEC.loader.exec_module(sanitize_codex_hooks)
 def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
     hooks_dir = tmp_path / "hooks"
     keep_command = f"{hooks_dir}/hooks-bash-safety/scripts/guard.sh"
+    keep_script = Path(keep_command)
+    keep_script.parent.mkdir(parents=True)
+    keep_script.write_text("#!/bin/sh\n", encoding="utf-8")
     config = {
         "metadata": {"owner": "apm"},
         "hooks": {
@@ -107,6 +110,29 @@ def test_sanitize_preserves_valid_timeout() -> None:
 
     assert clean == config
     assert counts["timeouts_added"] == 0
+
+
+def test_sanitize_drops_missing_absolute_script() -> None:
+    config = {
+        "hooks": {
+            "Stop": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "/definitely/missing/hook.sh",
+                            "timeout": 10,
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["hooks"] == {}
+    assert counts["handlers_removed"] == 1
 
 
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:

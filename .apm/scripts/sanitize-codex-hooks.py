@@ -44,6 +44,26 @@ def runtime_semantics(value: object) -> object:
     return value
 
 
+def command_script_path(command: str) -> Path | None:
+    """Return an absolute or home-relative hook script path, if present."""
+    token = command.strip().split()[0] if command.strip() else ""
+    if token.startswith("~"):
+        return Path(token).expanduser()
+    if token.startswith("/"):
+        return Path(token)
+    return None
+
+
+def handler_is_stale(handler: dict) -> bool:
+    if handler.get("type") != "command":
+        return False
+    command = handler.get("command")
+    if not isinstance(command, str):
+        return False
+    script = command_script_path(command)
+    return script is not None and not script.is_file()
+
+
 def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
     source_hooks = config.get("hooks", {})
     clean_hooks: dict[str, list[dict]] = {}
@@ -67,9 +87,13 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
                 command = handler.get("command", "")
-                if handler.get("type") != "command" or any(
-                    f"/{package}/" in command
-                    for package in CODEX_UNAVAILABLE_PACKAGES
+                if (
+                    handler.get("type") != "command"
+                    or handler_is_stale(handler)
+                    or any(
+                        f"/{package}/" in command
+                        for package in CODEX_UNAVAILABLE_PACKAGES
+                    )
                 ):
                     counts["handlers_removed"] += 1
                     continue
