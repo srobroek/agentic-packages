@@ -20,6 +20,10 @@ IDENTITY
 MUST Set BEADS_ACTOR (`<harness>/<agent-name>/<session-id>`) on every mutating
   command when acting as a subagent; audit trails and claim ownership depend
   on it, and the session id distinguishes dead claims from live ones.
+DEFAULT Treat BD_ACTOR as a legacy compatibility variable only for Beads
+  1.1.0's `prepare-commit-msg` identity trailer; when that product hook is
+  enabled, export the same value in BEADS_ACTOR and BD_ACTOR until the hook
+  accepts BEADS_ACTOR. Never use BD_ACTOR as the policy authority.
 
 CLAIMING
 MUST Claim before working: `bd update <id> --claim` (atomic compare-and-swap;
@@ -67,6 +71,13 @@ DEFAULT `blocks` for ordering; `parent-child` for epics; `discovered-from` for
   follow-up work found mid-task; non-blocking types (`related`, `tracks`) never
   affect `bd ready`.
 MUST Model fan-in with an aggregate issue depending on each part, not comments.
+
+WORKFLOWS
+DEFAULT Read only the relevant workflow contract:
+- [Lifecycle and gates](beads.lifecycle.context.md)
+- [Semantic audit and reporting](beads.audit.context.md)
+- [Formulas, molecules, bonds, and wisps](beads.composition.context.md)
+- [Swarms and merge slots](beads.coordination.context.md)
 
 FINDINGS
 DEFAULT Any skill or review that ends with findings the session will not act on

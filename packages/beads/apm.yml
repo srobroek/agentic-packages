@@ -2,7 +2,8 @@ name: beads
 version: 0.4.1
 description: >-
   Organization policy for Beads (bd): persistent task scope, atomic claims,
-  field and metadata conventions, actor identity, JSON envelopes, and
+  field and metadata conventions, actor identity, lifecycle, gates, audit,
+  formulas, molecules, wisps, swarms, merge slots, JSON envelopes, and
   authority-aware Dolt sync. Ships a PreToolUse guard denying mutating `gh
   issue` commands in beads repos and a concise dual-runtime subagent claim and
   handoff contract. The bd CLI owns `bd init`, `bd setup`, native Claude and
