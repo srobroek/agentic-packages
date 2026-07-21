@@ -74,7 +74,7 @@ below rates functionality when installed through APM, the project source of trut
 
 ## Package-specific adaptations
 
-- `agent-coder`: Codex keeps the agents but omits the unreliable top-level edit reminder.
+- `agent-coder`: both runtimes install the agents without per-edit delegation reminders.
 - `hooks-subagent-worktree`: Codex uses explicit worktree isolation plus APM steering.
 - `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
