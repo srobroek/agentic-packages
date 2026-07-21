@@ -31,6 +31,30 @@
       "source": "./packages/agent-coder"
     },
     {
+      "name": "agent-coder-high",
+      "description": "Escalated coding agent for complex bounded implementation and debugging.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-coder-high"
+    },
+    {
+      "name": "agent-explorer",
+      "description": "Read-only exploration agent for bounded code and configuration discovery.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "code-intelligence",
+      "source": "./packages/agent-explorer"
+    },
+    {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
       "version": "2.1.0",
@@ -41,6 +65,54 @@
       ],
       "category": "engineering",
       "source": "./packages/agent-external-repo-worker"
+    },
+    {
+      "name": "agent-luna-high",
+      "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-high"
+    },
+    {
+      "name": "agent-luna-low",
+      "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-low"
+    },
+    {
+      "name": "agent-luna-medium",
+      "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-medium"
+    },
+    {
+      "name": "agent-luna-xhigh",
+      "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-xhigh"
     },
     {
       "name": "agent-management",
@@ -55,6 +127,18 @@
       "source": "./packages/agent-management"
     },
     {
+      "name": "agent-operator",
+      "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-operator"
+    },
+    {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
       "version": "3.0.0",
@@ -65,6 +149,102 @@
       ],
       "category": "quality",
       "source": "./packages/agent-pr-reviewer"
+    },
+    {
+      "name": "agent-reasoner",
+      "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "planning-product",
+      "source": "./packages/agent-reasoner"
+    },
+    {
+      "name": "agent-reviewer-high",
+      "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-reviewer-high"
+    },
+    {
+      "name": "agent-reviewer-low",
+      "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-reviewer-low"
+    },
+    {
+      "name": "agent-sol-high",
+      "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-high"
+    },
+    {
+      "name": "agent-sol-low",
+      "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-sol-low"
+    },
+    {
+      "name": "agent-sol-medium",
+      "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-medium"
+    },
+    {
+      "name": "agent-sol-xhigh",
+      "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-xhigh"
+    },
+    {
+      "name": "agent-worker",
+      "description": "Bounded implementation worker for changes without a more specific coding role.",
+      "version": "0.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-worker"
     },
     {
       "name": "agentic-maintenance",

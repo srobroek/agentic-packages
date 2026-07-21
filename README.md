@@ -7,7 +7,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 <!-- BEGIN:intro-counts -->
 - **41 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
 - **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
-- **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
+- **19 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **19 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **9 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 - **14 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
@@ -149,10 +149,11 @@ codex plugin add core@srobroek-agentic  # install a plugin
 Entries resolve to the same `./packages/<name>` native layout; an installed plugin is cached under `$CODEX_HOME/plugins/cache/`.
 
 Codex plugin hooks are not trusted automatically. Review new or changed plugin
-hooks with `/hooks`. Codex plugins do not define native agent or dependency
-components, so agent-only packages and dependency bundles require the APM flow
-to generate `.codex/agents/*.toml` and resolve members. MCP packages use a
-Codex-specific direct server map rather than Claude's `mcpServers` wrapper.
+hooks with `/hooks`. APM deploys agents from hybrid packages to both Claude and
+Codex: Claude receives Markdown and Codex receives TOML. Raw and semantic Codex
+profiles are separate `agent-*` packages rather than one all-agents bundle.
+Dependency bundles still require the APM flow to resolve members. MCP packages use a Codex-specific
+direct server map rather than Claude's `mcpServers` wrapper.
 
 ### ⚠️ Steering packages do NOT work via native `/plugin` install
 
@@ -209,18 +210,19 @@ apm install --target claude,codex
 apm compile --target codex,claude --no-constitution
 ```
 
-Then, **as an optional post-deploy step**, patch agent metadata that APM's generic conversion drops:
+Then audit the installed runtime assets:
 
 ```bash
-apm run patch-agentic-tools   # apply tuned model / effort / sandbox / approval to deployed agents
+apm run inject-agent-models # restore package-owned Codex model settings
 apm run audit-agentic-tools   # report runtime parity + agent metadata completeness
 ```
 
-A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires all four steps as `apm run setup-agentic-tools`.
+A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires installation, compilation, and audit as `apm run setup-agentic-tools`.
 
-> **Why patch?** `apm install` deploys primitives (skills, agents, hooks, MCP) and `apm compile` turns instructions into the root context files each runtime reads -- agents are **fully functional after these two steps**. APM preserves a Claude agent's top-level `model:`, but its generic conversion does not map the cross-tool `x-agentic` block: a Codex agent falls back to Codex defaults (no tuned model / reasoning-effort / sandbox / approval), and a Claude agent's `effort` / `permissions.mode` are not applied. `patch-agentic-tools` restores those fields on the already-deployed `.claude/agents/*.md` and `.codex/agents/*.toml`. Skip it if the runtime defaults are fine; run it to get the tuned profiles.
->
-> Target one runtime by narrowing `--target` (for example `apm compile --target claude --no-constitution` for Claude-only); `--target codex,claude` compiles both in a single pass, and `patch-agentic-tools` patches whichever runtime dirs are present.
+> Each agent-bearing package owns `.apm/agent-models.yml`. APM currently drops
+> model metadata while producing Codex TOML, so the consuming project's trusted
+> `post-install` and `post-update` lifecycle hooks run the shared injector after
+> deployment.
 
 ---
 
@@ -309,7 +311,7 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 ## SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (six sub-agents + bugfix/setup skills + workflow guard hooks), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-beads` (a beads formula whose poured molecule is the phase DAG, plus guards keeping task state in beads).
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (bugfix/setup skills, workflow guard hooks, and its task agents), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-beads` (a beads formula whose poured molecule is the phase DAG, plus guards keeping task state in beads). APM transforms the bundled agents for both Claude and Codex.
 
 ```
 specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
@@ -362,7 +364,7 @@ manifest starter. Copy the matching `<type>-package/` into
 fill in the content; [`templates/README.md`](templates/README.md) documents the
 canonical layout and the per-type gotchas. Then:
 
-1. Create `packages/<name>/apm.yml` (`type:` one of `skill | agent | instructions | hooks | hybrid`; `target: all`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Use `type: hooks` for a package whose only primitive is hooks (APM derives deployment from the `.apm/hooks/` layout regardless; `type:` is the catalog label).
+1. Create `packages/<name>/apm.yml` (`type:` one of `skill | instructions | hooks | hybrid`; explicit `target`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Agent packages use `type: hybrid`; use `target: all` for portable task agents and `target: codex` for Codex-only raw/semantic profiles. Add `.apm/agent-models.yml` beside every agent source so post-deploy injection can restore the Codex model and reasoning effort. Use `type: hooks` for a package whose only primitive is hooks.
 2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** — `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** — an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
 3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
 
@@ -372,9 +374,6 @@ Gotchas worth knowing:
 - **Root `apm.yml` uses `targets:` (a list), not `target: all`.** `apm pack` (0.17.x) rejects the `all` scalar; the list form (`targets: [claude, codex]`) matches the marketplace `outputs:` block and is what pack/compile both accept.
 - **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge — so a bundle that depends on a new package must land **after** that package is released.
 
-**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): `apm install` -> `apm compile` -> `patch-agentic-tools` -> `audit-agentic-tools`. The two finalizers are this repo's `.apm/scripts/`:
-
-- `patch-runtime-agents.py` -- maps each agent's cross-tool `x-agentic` block to native Codex `.toml` and Claude `.md` fields that APM's generic conversion drops (model, reasoning-effort, sandbox, approval/permission). Required because agents are functional but un-tuned without it.
-- `audit-agentic-assets.py` -- reports agent/skill runtime parity (source vs `.claude`/`.codex`) and flags agents missing `x-agentic` fields. Complements `apm audit` (which only scans hidden Unicode and lockfile drift).
+**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and fail loudly when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
 
 License: Apache-2.0 (see [`LICENSE`](LICENSE)). Bundles that only aggregate third-party MIT-licensed packages retain their upstream MIT license, declared per package in `apm.yml`.

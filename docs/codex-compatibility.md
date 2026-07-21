@@ -1,12 +1,15 @@
 # Codex compatibility audit
 
-Audited 2026-07-16 against Toolbox Codex 0.144.5.269 (upstream/npm 0.144.5),
-Claude Code 2.1.211 documentation (local runtime 2.1.198), APM 0.25.0, and
+Audited 2026-07-21 against Toolbox Codex 0.144.5.269 (upstream/npm 0.144.5),
+Claude Code 2.1.211 documentation (local runtime 2.1.198), APM 0.26.0, and
 Homebrew Git 2.54.0. Claude remains the behavioral baseline; Codex output uses
 Codex-native contracts and APM transformations instead of invalid Claude fallbacks.
 
 Primary references:
 
+- <https://microsoft.github.io/apm/concepts/primitives-and-targets/>
+- <https://microsoft.github.io/apm/reference/targets-matrix/>
+- <https://github.com/microsoft/apm/issues/2108>
 - <https://learn.chatgpt.com/docs/hooks>
 - <https://learn.chatgpt.com/docs/build-plugins>
 - <https://learn.chatgpt.com/docs/config-file/config-advanced#amazon-bedrock-provider>
@@ -19,13 +22,34 @@ Primary references:
 | Skills | Native plugin/APM | Native plugin/APM | Both manifests reference `.apm/skills` |
 | Hooks | Native plugin/APM | Native plugin/APM, supported events only | Shared or target-specific generated files |
 | MCP | `.mcp.json` with `mcpServers` | direct map or `mcp_servers` | Separate `.mcp.json` and `.codex.mcp.json` |
-| Agents | Native plugin `agents/*.md` | No plugin agent field | APM generates and registers `.codex/agents/*.toml` |
+| Agents | Native plugin `agents/*.md` | APM-generated `.codex/agents/*.toml` | Portable task agents remain in hybrid packages; raw/semantic profiles use one Codex-targeted package per agent |
 | Steering | APM rules | APM-compiled `AGENTS.md` | Native plugins have no instructions component |
 | Bundle dependencies | Claude manifest dependencies | No Codex manifest dependency field | APM composes the full dependency graph |
 
 Every marketplace package has both required manifests. Native-only installation
 is intentionally limited where Codex has no component field; the package matrix
 below rates functionality when installed through APM, the project source of truth.
+
+Hybrid packages can contain agents for both Claude and Codex. A verified APM
+0.26.0 install transformed an agent bundled with a skill into
+`.claude/agents/<name>.md` for Claude and `.codex/agents/<name>.toml` for Codex,
+while deploying the skill to both runtimes. Agent extraction is therefore not
+required for Codex compatibility. Package-level `target` still does not prevent
+a caller from explicitly forcing a direct package install with the opposite
+`--target`.
+
+APM's Codex transformer currently serializes only `name`, `description`, and
+`developer_instructions`; it drops model metadata. Each agent-bearing package
+therefore distributes `.apm/agent-models.yml`, and the shared
+`.apm/scripts/inject-agent-models.py` restores `model` and
+`model_reasoning_effort` after installation. APM lifecycle discovery is limited
+to admin policy, user configuration, and the consuming project's root
+`apm.yml`; lifecycle blocks inside dependencies do not run. The project template
+provides trusted `post-install` and `post-update` triggers plus a strict explicit
+setup step.
+The supported install, update, and setup scripts first assert the lifecycle
+trust status and fail before the APM operation when the current lifecycle
+subtree has not been trusted.
 
 ## Hook runtime differences
 
@@ -74,7 +98,7 @@ below rates functionality when installed through APM, the project source of trut
 
 ## Package-specific adaptations
 
-- `agent-coder`: both runtimes install the agents without per-edit delegation reminders.
+- `agent-coder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
 - `hooks-subagent-worktree`: Codex uses explicit worktree isolation plus APM steering.
 - `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
@@ -89,7 +113,7 @@ below rates functionality when installed through APM, the project source of trut
 - The durable global manifest contains 51 direct dependencies and targets `codex,claude`.
 - The current lock resolves 63 dependency nodes. The automated Codex post-sync passes `--target codex`; Claude deployment is refreshed by the separate Claude-layer sync.
 - The separate Claude sanitizer removes dead hook wiring and orphaned hook directories without changing non-hook settings.
-- The Codex post-APM finalizer installs/updates Codex only, sanitizes Codex hooks, compiles global Codex steering, and patches Codex agents only.
+- Codex agent model settings come from package-local `.apm/agent-models.yml` files and are restored by the post-deploy injector.
 - Active global MCPs are Context7, Fetcher, MemPalace, Node REPL, 1Password, and OpenAI Developer Docs.
 - Builder MCP is disabled at both AIM plugin contribution points. Asana is absent from durable and live Codex configuration.
 - Context7 forwards `CONTEXT7_API_KEY` at runtime; no secret value is stored in `config.toml`.
@@ -138,14 +162,14 @@ plugin manifests do not support every APM component type.
 | `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
 | `mcp-mempalace` | Partial | Same MCP and context injection, but Codex SessionStart is synchronous because async handlers are skipped. |
 | `mcp-repomix` | Partial | Same MCP; refresh can miss unsupported shell paths, and Codex PostToolUse has no subagent identity for suppressing subagent Git calls. Run the refresh script explicitly when required; extra subagent refreshes remain bounded by clean-tree and HEAD checks. |
-| `orchestrate` | Partial | Skill and APM agents work; Codex ignores skill-frontmatter hooks, so spawn briefs embed the communication protocol. |
+| `orchestrate` | Partial | Skill works; native Codex role profiles receive task-specific spawn briefs because APM agents are Claude-only and Codex ignores skill-frontmatter hooks. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
-| `speckit` | Partial | Skills, APM agents, and supported hooks work; Claude Skill-tool reminder has no Codex event equivalent. |
+| `speckit` | Partial | Skills and supported hooks work; native Codex role profiles receive the SpecKit task protocol, and Claude Skill-tool reminder has no Codex event equivalent. |
 
 ## Validation
 
 `.apm/scripts/audit-codex-config.py` validates all Codex marketplace manifests,
 component paths, MCP shapes, routed hook events, command-only/synchronous handler
-constraints, explicit timeouts, script paths, and Codex agent approval enums.
+constraints, explicit timeouts, and script paths.
 CI runs it after native plugin and documentation regeneration.

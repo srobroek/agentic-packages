@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Codex-specific package manifests, hooks, MCP files, and agents."""
+"""Validate Codex-specific package manifests, hooks, and MCP files."""
 
 from __future__ import annotations
 
@@ -86,13 +86,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "secrets-scan",
     "speckit",
 }
-APPROVAL_POLICIES = {
-    "untrusted",
-    "on-failure",
-    "on-request",
-    "granular",
-    "never",
-}
 PLUGIN_SCRIPT_RE = re.compile(r"\$\{PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 PROJECT_SCRIPT_RE = re.compile(
     r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)"
@@ -171,7 +164,6 @@ def main() -> int:
     checked_manifests = 0
     checked_mcp = 0
     checked_hooks = 0
-    checked_agents = 0
 
     catalog_by_name = {
         str(entry["name"]): entry
@@ -305,21 +297,10 @@ def main() -> int:
                         validate_hook_command(path, handler.get("command"))
                     )
 
-    for path in sorted((ROOT / "packages").glob("*/.apm/agents/*.agent.md")):
-        checked_agents += 1
-        text = path.read_text(encoding="utf-8")
-        if not text.startswith("---\n") or "\n---" not in text[4:]:
-            continue
-        frontmatter = yaml.safe_load(text.split("\n---", 1)[0][4:]) or {}
-        codex = ((frontmatter.get("x-agentic") or {}).get("codex") or {})
-        policy = codex.get("approval_policy")
-        if isinstance(policy, str) and policy not in APPROVAL_POLICIES:
-            errors.append(f"{path}: invalid Codex approval_policy {policy!r}")
-
     print(
         "Codex config audit: "
         f"{checked_manifests} manifests, {checked_mcp} MCP files, "
-        f"{checked_hooks} hook configs, {checked_agents} agents, "
+        f"{checked_hooks} hook configs, "
         f"{len(documented_events)} Claude events, "
         f"{len(documented_packages)} package difference rows"
     )

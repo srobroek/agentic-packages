@@ -16,8 +16,8 @@ fresh clone resolves marketplace sources with no build step.
 What it emits, per package classification:
 
 * skill  -> both manifests reference `.apm/skills` in place
-* agent  -> `agents/<n>.md` (Claude native component; Codex users get custom
-  agents through APM because Codex plugin manifests do not define an agent field)
+* agent  -> `agents/<n>.md` (native agent discovery; APM additionally converts
+  target-matched `.apm/agents/*.agent.md` sources for Claude or Codex)
 * mcp    -> Claude `.mcp.json` plus Codex `.codex.mcp.json`, because the runtimes
   require different wrapper shapes
 * bundle -> Claude manifest with `dependencies`; Codex has no native dependency
@@ -122,7 +122,7 @@ def _plugin_manifest(
 # bundle dependencies
 # --------------------------------------------------------------------------- #
 
-def _bundle_dependencies(deps: list[str]) -> list[dict]:
+def _bundle_dependencies(deps: list[object], *, target: str) -> list[dict]:
     """Map a bundle's first-party apm deps to native plugin `dependencies`.
 
     Only first-party members (this repo's own packages) are emitted -- they
@@ -139,7 +139,16 @@ def _bundle_dependencies(deps: list[str]) -> list[dict]:
     """
     out: list[dict] = []
     for dep in deps:
-        m = _FIRST_PARTY.search(dep)
+        if isinstance(dep, dict):
+            targets = {str(value) for value in dep.get("targets") or []}
+            if targets and target not in targets:
+                continue
+            git = str(dep.get("git") or dep.get("id") or "").rstrip("/")
+            path = str(dep.get("path") or "").strip("/")
+            locator = "/".join(part for part in (git, path) if part)
+        else:
+            locator = str(dep)
+        m = _FIRST_PARTY.search(locator)
         if m:
             out.append(
                 {"git": "srobroek/agentic-packages", "path": f"packages/{m.group(1)}"}
@@ -285,12 +294,12 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # the common case but not the only one. _bundle_dependencies returns [] (->
     # None) when there are no first-party deps, so this is a no-op for standalone
     # packages like sniff.
-    deps = _bundle_dependencies(pkg["deps"]) or None
+    raw_deps = (manifest.get("dependencies") or {}).get("apm") or []
+    deps = _bundle_dependencies(raw_deps, target="claude") or None
 
-    # Every native-capable package gets both manifests. ensure_ascii=False so non-ASCII
-    # (e.g. em-dashes in descriptions) is written as raw UTF-8, matching how
-    # `apm pack` writes plugin.json/marketplace.json -- otherwise the CI staleness
-    # gate sees drift when apm pack rewrites a manifest this generator also wrote.
+    # Marketplace generation currently emits every catalog package for both
+    # outputs. Target-specific packages therefore retain an opposite-runtime
+    # metadata manifest, while APM's target filter controls primitive delivery.
     plan[".claude-plugin/plugin.json"] = (
         json.dumps(
             _plugin_manifest(

@@ -8,10 +8,29 @@ dependencies:
     - git@github.com:srobroek/agentic-packages.git
 
 scripts:
-  install-agentic-tools: "apm install --target claude,codex"
-  patch-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/patch-runtime-agents.py --all"
+  require-lifecycle-trust: >-
+    bash -o pipefail -c 'apm lifecycle test post-install | tee /dev/stderr |
+    grep -q "Trust status: \[trusted\]"'
+  install-agentic-tools: "apm run require-lifecycle-trust && apm install --target claude,codex"
+  update-agentic-tools: "apm run require-lifecycle-trust && apm update --yes && apm compile --target codex,claude --no-constitution && apm run inject-agent-models && apm run audit-agentic-tools"
+  inject-agent-models: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
+  check-agent-models: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py --check"
   audit-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/audit-agentic-assets.py"
-  setup-agentic-tools: "apm run install-agentic-tools && apm compile --target codex,claude --no-constitution && apm run patch-agentic-tools && apm run audit-agentic-tools"
+  setup-agentic-tools: "apm run install-agentic-tools && apm compile --target codex,claude --no-constitution && apm run inject-agent-models && apm run audit-agentic-tools"
+
+# APM discovers lifecycle hooks only from the consuming project's apm.yml.
+# Run `apm lifecycle trust` once after reviewing this block.
+lifecycle:
+  post-install:
+    - type: command
+      description: Inject package-owned model settings into generated Codex agents
+      bash: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
+      timeoutSec: 30
+  post-update:
+    - type: command
+      description: Re-inject package-owned model settings after agent updates
+      bash: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
+      timeoutSec: 30
 
 compilation:
   strategy: distributed
