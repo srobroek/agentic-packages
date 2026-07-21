@@ -16,7 +16,7 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/audit-steering#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/write-agentic#>=3.2.0 <4.0.0
-    - srobroek/agentic-packages/packages/agent-coder#>=5.0.0 <6.0.0
+    - srobroek/agentic-packages/packages/agent-coder#>=6.0.0 <7.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.0.0 <4.0.0
     - >-
       wshobson/agents/plugins/documentation-standards#5cc2549a50fc672230efd0a0307e2fd27ffba792
