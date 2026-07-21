@@ -82,8 +82,14 @@ MUST Scripts and hooks parsing bd output set `BD_JSON_ENVELOPE=1` and read
 DEFAULT Non-interactive contexts export `BD_NO_PAGER=1 BD_NON_INTERACTIVE=1`.
 
 SYNC
-MUST End sessions that mutated beads with `bd dolt push` (issue data rides
-  `refs/dolt/data`, NOT git commits; `git push` alone syncs nothing).
+MUST Run `bd dolt pull` or `bd dolt push` only when the active user,
+  repository, or orchestrator instructions grant external-sync authority;
+  `git pull` and `git push` do not synchronize `refs/dolt/data`.
+DEFAULT Single-machine local orchestration performs no routine pull and uses
+  one authorized push at orchestrator handoff when durable bead state changed.
+DEFAULT Cross-machine or team orchestration uses one authorized pull before
+  claims or fan-out and one authorized push after durable updates; conservative
+  profiles report the exact pending command instead of running it.
 NOT Routine `bd import` of issues.jsonl — it is upsert-only passive export;
   `bd dolt pull` is the sync path.
 
@@ -112,15 +118,26 @@ DEFAULT Treat the mismatch as an upstream gap rather than per-issue toil: it
 
 SESSION CLOSE (when beads were touched)
 MUST File beads for remaining/discovered work before reporting done, close
-  finished issues with `--reason`, update in-progress state, then `bd dolt push`.
+  finished issues with `--reason`, and update in-progress state.
 MUST Before closing a bead whose work continues elsewhere (PR awaiting CI,
   follow-up expected), write residual context onto the bead itself
   (`bd comments add`: approach, tricky spots, what to check first on failure) —
   the bead is the cross-session handover; PR bodies and handover files are not.
 DEFAULT Git commit/push of code follows delivery steering, not bd's profiles.
+DEFAULT Synchronize bead state at the authority-aware boundary defined under
+  SYNC; otherwise report the pending `bd dolt pull` or `bd dolt push` command.
 
 SETUP
-MUST Wire hooks natively, once, globally: `bd setup claude --global` (hook
-  only) and `bd setup codex --global`; per repo, `bd init` only.
-NOT Per-project `bd setup claude` — it appends a managed CLAUDE.md block that
-  duplicates this steering and fights `apm compile`.
+MUST Let the bd CLI own initialization and generated integration: bootstrap
+  with `bd init --init-if-missing`, then verify with `bd where`, `bd setup
+  claude --check`, `bd setup codex --check`, and `bd hooks list`.
+MUST Repair an existing project's runtime integration with product commands:
+  `bd setup claude --project` and `bd setup codex`.
+MUST Use `bd hooks install --beads` only when the active project chose the
+  product Git-hook bundle.
+NOT Copies of product lifecycle hooks, managed instruction blocks, skill, or
+  Git-hook shims in APM.
+DEFAULT Project setup follows the repository's Beads version; global setup is
+  for repositories that do not install project integration, not redundancy.
+NOT `bd preflight` as an application quality gate — Beads 1.1.0 hard-codes
+  checks for the Beads Go repository; use repository-owned quality commands.
