@@ -5,8 +5,8 @@ The script is read-only. It validates the watcher contract, matches an exact
 repository/PR/head tuple in a supplied `bd list --json` snapshot, and emits one
 normalized JSON result for the orchestrator.
 
-Exit codes: 0 resolved/duplicate/control record, 1 invalid input, 2 no unique
-approved node.
+Exit codes: 0 resolved/replay/duplicate/control record, 1 invalid input, 2 no
+unique approved node.
 """
 
 from __future__ import annotations
@@ -110,6 +110,47 @@ def _labels(node: dict[str, Any]) -> set[str]:
     return {label for label in labels if isinstance(label, str)}
 
 
+def _delivery_state(metadata: dict[str, Any], dispatch_key: str) -> str:
+    if metadata.get("queue_dispatch_ack") == dispatch_key:
+        return "ack"
+    if metadata.get("queue_dispatch_sent") == dispatch_key:
+        return "sent"
+    if metadata.get("queue_dispatch_pending") == dispatch_key:
+        return "pending"
+    return "untracked"
+
+
+def _handoff_result(
+    node: dict[str, Any],
+    metadata: dict[str, Any],
+    repository: str,
+    number: int,
+    head_sha: str,
+    dispatch_key: str,
+    status: str,
+    priority: int | None = None,
+) -> dict[str, Any]:
+    if not isinstance(node.get("id"), str) or not node["id"]:
+        raise ResolutionError("approved node is missing its id")
+    for field in ("branch", "base_sha"):
+        if not isinstance(metadata.get(field), str) or not metadata[field]:
+            raise ResolutionError(f"approved node is missing metadata.{field}")
+    result = {
+        "status": status,
+        "deliveryState": _delivery_state(metadata, dispatch_key),
+        "node": node["id"],
+        "dispatchKey": dispatch_key,
+        "repository": repository,
+        "number": number,
+        "headSha": head_sha,
+        "branch": metadata["branch"],
+        "baseSha": metadata["base_sha"],
+    }
+    if priority is not None:
+        result["priority"] = priority
+    return result
+
+
 def resolve(record: Any, nodes_value: Any) -> dict[str, Any]:
     pull_request = validate_record(record)
     if pull_request is None:
@@ -151,35 +192,97 @@ def resolve(record: Any, nodes_value: Any) -> dict[str, Any]:
         )
     node = candidates[0]
     metadata = node["metadata"]
-    if not isinstance(node.get("id"), str) or not node["id"]:
-        raise ResolutionError("approved node is missing its id")
-    for field in ("branch", "base_sha"):
-        if not isinstance(metadata.get(field), str) or not metadata[field]:
-            raise ResolutionError(f"approved node is missing metadata.{field}")
     dispatch_key = f"{repository}#{number}@{head_sha}"
-    status = (
-        "duplicate" if metadata.get("queue_dispatch") == dispatch_key else "resolved"
+    persisted_key = metadata.get("queue_dispatch")
+    if metadata.get("queue_dispatch_ack") == dispatch_key:
+        status = "duplicate"
+    elif persisted_key == dispatch_key:
+        status = "replay"
+    else:
+        status = "resolved"
+    result = _handoff_result(
+        node,
+        metadata,
+        repository,
+        number,
+        head_sha,
+        dispatch_key,
+        status,
+        pull_request["priority"],
     )
-    return {
-        "status": status,
-        "node": node["id"],
-        "dispatchKey": dispatch_key,
-        "repository": repository,
-        "number": number,
-        "headSha": head_sha,
-        "priority": pull_request["priority"],
-        "branch": metadata["branch"],
-        "baseSha": metadata["base_sha"],
-    }
+    if status == "resolved":
+        result["deliveryState"] = None
+    return result
+
+
+def replay_unacknowledged(nodes_value: Any) -> list[dict[str, Any]]:
+    """Reconstruct approved handoffs whose current dispatch lacks an ack."""
+    nodes = _unwrap(nodes_value)
+    if not isinstance(nodes, list):
+        raise ContractError("nodes snapshot must be a JSON array")
+    handoffs: list[dict[str, Any]] = []
+    for node in nodes:
+        if not isinstance(node, dict) or node.get("status") != "in_progress":
+            continue
+        if "state:approved" not in _labels(node):
+            continue
+        metadata = node.get("metadata")
+        if not isinstance(metadata, dict):
+            continue
+        dispatch_key = metadata.get("queue_dispatch")
+        if not isinstance(dispatch_key, str) or not dispatch_key:
+            continue
+        if metadata.get("queue_dispatch_ack") == dispatch_key:
+            continue
+        repository = metadata.get("repo")
+        head_sha = metadata.get("head_sha")
+        try:
+            number = int(metadata.get("pr"))
+        except (TypeError, ValueError) as error:
+            raise ResolutionError("queued node has invalid metadata.pr") from error
+        if number < 1:
+            raise ResolutionError("queued node has invalid metadata.pr")
+        if not isinstance(repository, str) or not REPOSITORY_RE.fullmatch(repository):
+            raise ResolutionError("queued node has invalid metadata.repo")
+        if not isinstance(head_sha, str) or not HEAD_SHA_RE.fullmatch(head_sha):
+            raise ResolutionError("queued node has invalid metadata.head_sha")
+        if dispatch_key != f"{repository}#{number}@{head_sha}":
+            raise ResolutionError(
+                "queued node dispatch key does not match its identity"
+            )
+        handoffs.append(
+            _handoff_result(
+                node,
+                metadata,
+                repository,
+                number,
+                head_sha,
+                dispatch_key,
+                "replay",
+            )
+        )
+    return sorted(handoffs, key=lambda handoff: handoff["node"])
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--nodes-file", required=True, help="bd list --json snapshot")
+    parser.add_argument(
+        "--replay-unacknowledged",
+        action="store_true",
+        help="emit approved dispatches that lack a matching ack",
+    )
     args = parser.parse_args(argv)
     try:
-        record = json.load(sys.stdin)
-        result = resolve(record, _read_json(args.nodes_file))
+        nodes = _read_json(args.nodes_file)
+        if args.replay_unacknowledged:
+            result = {
+                "status": "replay",
+                "dispatches": replay_unacknowledged(nodes),
+            }
+        else:
+            record = json.load(sys.stdin)
+            result = resolve(record, nodes)
     except json.JSONDecodeError as error:
         print(f"invalid watcher JSON: {error}", file=sys.stderr)
         return 1

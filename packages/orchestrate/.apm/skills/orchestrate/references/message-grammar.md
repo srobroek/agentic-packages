@@ -15,7 +15,7 @@ This file adds the per-verb field table and a worked example.
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
 | `CONFLICT` | gatekeeper → coder | node, with(node), files, required action |
-| `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups also carry source, PR, head, dispatch key |
+| `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups also carry source, repo, PR, head, dispatch key |
 | `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, question, who is waiting |
@@ -108,6 +108,7 @@ APPROVE t3
 branch: coder/t3-auth-middleware
 base: main @ 3f9a1c2
 source: release-queue-watch
+repo: owner/repo
 pr: 42
 head: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 dispatch: owner/repo#42@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

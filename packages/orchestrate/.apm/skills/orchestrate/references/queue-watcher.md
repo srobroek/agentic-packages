@@ -68,22 +68,51 @@ the watcher, not authorization to merge.
    `scripts/resolve-queue-dispatch.py --nodes-file <snapshot>`. The resolver is
    read-only and requires exactly one `state:approved` node whose metadata
    matches `repo`, `pr`, and `head_sha`.
-3. `status=resolved` → stamp `queue_dispatch=<identity-key>` on that node, log
-   `orc.approve`, then send the persistent gatekeeper:
+3. `status=resolved` → atomically stamp `queue_dispatch=<identity-key>` and
+   `queue_dispatch_pending=<identity-key>` on that node, then log `orc.approve`
+   and send the persistent gatekeeper:
 
    ```text
    APPROVE <node>
    branch: <metadata.branch>
    base: <metadata.base_sha>
    source: release-queue-watch
+   repo: <repository>
    pr: <number>
    head: <headSha>
    dispatch: <identity-key>
    ```
 
-4. `status=duplicate` or `status=ignored` → do not send another message.
-   Invalid, stale, unmatched, or ambiguous records → log `orc.note`, request a
-   fresh node snapshot, and assign no agent.
+4. After SendMessage accepts the handoff, set
+   `queue_dispatch_sent=<identity-key>`. A crash before that update leaves the
+   pending marker, which is safe to replay.
+5. `status=replay` → resend the same handoff for a `pending`, `sent`, or
+   unrecognized unacknowledged state. `status=duplicate` means the gatekeeper
+   durably acknowledged the exact key; do not send it again.
+6. `status=ignored` → send nothing. Invalid, stale, unmatched, or ambiguous
+   records → log `orc.note`, request a fresh node snapshot, and assign no agent.
+
+- On receipt, the gatekeeper verifies the repository, PR, head, dispatch key,
+  and matching pending or sent marker.
+- It stamps `queue_dispatch_ack=<identity-key>` before revalidation. Pending,
+  sent, and ack are separate monotonic receipts; a late sent update cannot erase
+  an earlier acknowledgment.
+- Ack records durable receipt, not merge permission. Startup resumes approved,
+  acknowledged dispatches that have not merged.
+- Pending GitHub revalidation after ack parks the node on its existing gate.
+  Gate resolution resumes it without returning ownership to the watcher.
+
+On orchestrator start or resume, run the resolver against the approved-node
+snapshot before consuming new watcher lines:
+
+```text
+resolve-queue-dispatch.py --nodes-file <snapshot> --replay-unacknowledged
+```
+
+Resend every returned handoff from its persisted repository, PR, head, branch,
+base, and dispatch key. This scan does not depend on the watcher repeating an
+event. An invalid persisted identity stops replay and requires an `orc.note`
+instead of a guessed handoff.
 
 Never create a coder, reviewer, or node from an unmatched pull request. Product
 policy enters the run through its bead DAG; the watcher only wakes the
@@ -93,9 +122,10 @@ gatekeeper for a node the orchestrator already approved.
 
 When the gatekeeper first opens a PR, it stamps `repo`, `pr`, and `head_sha` on
 the node and releases any held merge slot while CI waits. On a watcher-backed
-`APPROVE`, it verifies the dispatch PR/head against that metadata, checks the
-GitHub gate, then acquires `bd merge-slot` before the conflict probe and merge.
-It releases the slot on wait, conflict, failure, or success.
+`APPROVE`, it verifies the dispatch repository/PR/head against that metadata,
+acknowledges the exact dispatch, checks the GitHub gate, then acquires
+`bd merge-slot` before the conflict probe and merge. It releases the slot on
+wait, conflict, failure, or success.
 
 REST reconciliation belongs to the watcher and remains enabled so missed
 webhooks can produce a later dispatch. The GitHub gate and conflict probe remain

@@ -27,8 +27,9 @@ On (re)start (you may be recycled at any quiescent point — see
 filter label `state:approved`), each node's `branch`/`pushed` metadata, and
 `bd merge-slot check` — a slot held by `gatekeeper` means a previous
 incarnation crashed mid-merge; verify the remote state, then release. Never
-rely on remembering earlier merges. For opened PRs, recover `repo`, `pr`,
-`head_sha`, and the accepted `queue_dispatch` key from node metadata.
+rely on remembering earlier merges. Recover opened PRs' `repo`, `pr`, `head_sha`
+and `queue_dispatch*` receipts. Resume approved, unmerged nodes whose ack matches
+their dispatch; acknowledgment records durable receipt, not integration.
 
 Your shared context: the run epic bead id. Every node bead carries its git
 anchors in metadata (`branch`, `pushed`, `base_sha` — stamped by the coder).
@@ -48,7 +49,8 @@ Tools:
   `bd gate check` evaluates and closes resolved gates. Use gates instead of
   polling loops.
 - `release-queue-watch` never runs in this agent. The orchestrator validates
-  its JSON and sends a matching `APPROVE` with `pr`, `head`, and `dispatch`.
+  its JSON and sends a matching `APPROVE` with `repo`, `pr`, `head`, and
+  `dispatch`.
 
 ## Merge policy
 
@@ -67,11 +69,17 @@ Tools:
      `--set-metadata repo=<owner/repo> --set-metadata pr=<n>
      --set-metadata head_sha=<sha>`. Release the slot while waiting. Failing CI
      → push the failure back to the coder via the orchestrator; do not merge red.
-  4. Watcher-backed wake-up → require `pr` and `head` to equal the node metadata
-     and `dispatch` to equal its stamped `queue_dispatch`. Run `bd gate check`,
-     re-read the PR/head/check state, then acquire the merge slot and repeat the
-     conflict probe. Any mismatch, pending check, or failure → release/no-op and
-     report to the orchestrator. Never accept watcher priority/readiness alone.
+  4. Watcher-backed wake-up → require `repo`, `pr`, and `head` to equal the node
+     metadata and `dispatch` to equal `queue_dispatch`. Require a matching
+     `queue_dispatch_pending` or `queue_dispatch_sent` receipt, then stamp
+     `queue_dispatch_ack=<dispatch>`. A matching existing ack is an idempotent
+     redelivery. Run `bd gate check`, re-read the PR/head/check state, acquire
+     the merge slot, and repeat the conflict probe. Identity mismatch before
+     acknowledgment → no-op and report. A pending check after acknowledgment →
+     release the slot, create or retain the GitHub gate, and resume when it
+     resolves; the acknowledged node remains gatekeeper-owned. Failure → release
+     and report to the orchestrator. Never accept watcher priority/readiness
+     alone.
   5. Merge, stamp `merge_sha`, then `bd merge-slot release`.
 - After a clean merge, the base advances; re-probe any other in-flight approved
   branch against the new base before merging it (an earlier-merged sibling may

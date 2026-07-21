@@ -61,10 +61,71 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(result["node"], "orc-run.1")
         self.assertEqual(result["dispatchKey"], f"owner/repo#42@{'a' * 40}")
 
-    def test_marks_persisted_dispatch_as_duplicate(self):
+    def test_marks_acknowledged_dispatch_as_duplicate(self):
         key = f"owner/repo#42@{'a' * 40}"
-        result = MODULE.resolve(dispatch(), [node(queue_dispatch=key)])
+        result = MODULE.resolve(
+            dispatch(), [node(queue_dispatch=key, queue_dispatch_ack=key)]
+        )
         self.assertEqual(result["status"], "duplicate")
+
+    def test_replays_unacknowledged_dispatch_after_crash(self):
+        key = f"owner/repo#42@{'a' * 40}"
+        initial = MODULE.resolve(dispatch(), [node()])
+        pending_after_pre_send_crash = MODULE.resolve(
+            dispatch(), [node(queue_dispatch=key, queue_dispatch_pending=key)]
+        )
+        sent_before_ack_crash = MODULE.resolve(
+            dispatch(),
+            [
+                node(
+                    queue_dispatch=key,
+                    queue_dispatch_pending=key,
+                    queue_dispatch_sent=key,
+                )
+            ],
+        )
+        acknowledged = MODULE.resolve(
+            dispatch(),
+            [
+                node(
+                    queue_dispatch=key,
+                    queue_dispatch_pending=key,
+                    queue_dispatch_sent=key,
+                    queue_dispatch_ack=key,
+                )
+            ],
+        )
+
+        self.assertEqual(initial["status"], "resolved")
+        self.assertEqual(pending_after_pre_send_crash["status"], "replay")
+        self.assertEqual(pending_after_pre_send_crash["deliveryState"], "pending")
+        self.assertEqual(sent_before_ack_crash["status"], "replay")
+        self.assertEqual(sent_before_ack_crash["deliveryState"], "sent")
+        self.assertEqual(acknowledged["status"], "duplicate")
+
+    def test_resume_scan_reconstructs_only_unacknowledged_handoffs(self):
+        key = f"owner/repo#42@{'a' * 40}"
+        pending = node("orc-run.2", queue_dispatch=key, queue_dispatch_pending=key)
+        sent = node(
+            "orc-run.1",
+            queue_dispatch=key,
+            queue_dispatch_pending=key,
+            queue_dispatch_sent=key,
+        )
+        acknowledged = node(
+            "orc-run.3",
+            queue_dispatch=key,
+            queue_dispatch_pending=key,
+            queue_dispatch_sent=key,
+            queue_dispatch_ack=key,
+        )
+
+        result = MODULE.replay_unacknowledged([pending, acknowledged, sent, node()])
+
+        self.assertEqual([item["node"] for item in result], ["orc-run.1", "orc-run.2"])
+        self.assertEqual(
+            [item["deliveryState"] for item in result], ["sent", "pending"]
+        )
 
     def test_rejects_stale_head(self):
         with self.assertRaisesRegex(MODULE.ResolutionError, "found 0"):
@@ -99,6 +160,30 @@ class ResolveQueueDispatchTest(unittest.TestCase):
             )
         self.assertEqual(process.returncode, 0, process.stderr)
         self.assertEqual(json.loads(process.stdout)["status"], "resolved")
+
+    def test_cli_replays_without_watcher_input(self):
+        key = f"owner/repo#42@{'a' * 40}"
+        with tempfile.TemporaryDirectory() as directory:
+            nodes_path = os.path.join(directory, "nodes.json")
+            with open(nodes_path, "w", encoding="utf-8") as handle:
+                json.dump(
+                    [node(queue_dispatch=key, queue_dispatch_pending=key)], handle
+                )
+            process = subprocess.run(
+                [
+                    sys.executable,
+                    RESOLVER,
+                    "--nodes-file",
+                    nodes_path,
+                    "--replay-unacknowledged",
+                ],
+                capture_output=True,
+                text=True,
+            )
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(
+            json.loads(process.stdout)["dispatches"][0]["status"], "replay"
+        )
 
 
 if __name__ == "__main__":

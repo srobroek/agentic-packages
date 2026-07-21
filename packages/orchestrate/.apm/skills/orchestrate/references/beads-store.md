@@ -85,15 +85,20 @@ the work physically lives. Stamp each applicable transition:
 | Claim (immediately after `--claim`) | coder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
 | Report (after push) | coder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
 | PR open/head refresh | gatekeeper | `--set-metadata repo=<owner/repo> --set-metadata pr=<n> --set-metadata head_sha=<sha>` |
-| Queue dispatch accepted | orchestrator | `--set-metadata queue_dispatch=<repo#pr@head>` (durable dedupe key) |
+| Queue dispatch accepted | orchestrator | atomically set `queue_dispatch=<repo#pr@head>` and `queue_dispatch_pending=<same key>`; after SendMessage succeeds, set `queue_dispatch_sent=<same key>` |
+| Queue dispatch received | gatekeeper | verify the exact key and set `queue_dispatch_ack=<same key>` before revalidation; startup resumes acknowledged approved nodes |
 | Merge | gatekeeper | `bd update <bead> --set-metadata merge_sha=<sha>` |
 
-Add a `repo` key when the node's work lands in a different repository than the
-run epic's; watcher-backed PRs require it even in the primary repository.
-`--metadata` merges with existing keys (verified on bd 1.1.0), so
-stamps never clobber `node`/`scope`. `worktree` is an ephemeral pointer, valid
-while the node is in flight; `branch`/`pushed`/`pr`/`head_sha`/`queue_dispatch`/
-`merge_sha` are durable anchors that survive worktree teardown.
+- Add `repo` when work lands outside the epic repository. Watcher-backed PRs
+  require it even in the primary repository.
+- `--metadata` merges with existing keys (verified on bd 1.1.0), so stamps do
+  not clobber `node` or `scope`.
+- `worktree` is ephemeral. `branch`, `pushed`, `pr`, `head_sha`, and the
+  `queue_dispatch*` receipts survive worktree teardown.
+- Pending and sent receipts are replayable. Only an ack matching the current
+  dispatch suppresses a repeated handoff.
+- Separate receipt keys make each transition monotonic. Concurrent sent and ack
+  writes cannot regress delivery state.
 
 ## Ready front + scope disjointness
 
@@ -156,7 +161,7 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 | one node's story | `bd show <bead> --json` + `bd comments <bead>` |
 | audit trail | filter `.beads/interactions.jsonl` by `issue_id`/`actor` (append-only JSONL; jq or stdlib) |
 | dep structure / impact | `bd dep tree <bead>`, `bd graph` |
-| open waits | `bd gate list`, `bd merge-slot check`; accepted queue key = node metadata `queue_dispatch` |
+| open waits | `bd gate list`, `bd merge-slot check`; queue delivery = node metadata `queue_dispatch` plus pending/sent/ack receipts |
 | resume after crash | in-flight = `bd list --label orc-node --parent <epic> --status in_progress --json`; agent handle = bead `assignee`, location = metadata `worktree`/`branch` |
 | close-out gate | `bd dep cycles` clean AND `bd list --label orc-node --parent <epic> --status in_progress,blocked --json` empty (blocked = surfaced `failed` nodes) |
 
