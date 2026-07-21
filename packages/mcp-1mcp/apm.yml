@@ -25,10 +25,26 @@ dependencies:
           runtime_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/1mcp"; pid_file="$runtime_dir/server.pid";
           lock_dir="$runtime_dir/launcher.lock.d"; wait_seconds="${ONE_MCP_LAUNCHER_WAIT_SECONDS:-10}";
           case "$wait_seconds" in ''|*[!0-9]*) wait_seconds=10 ;; esac;
-          mkdir -p "$runtime_dir" || exit 1; deadline=$(($(date +%s) + wait_seconds));
-          ready() { 1mcp serve --status >/dev/null 2>&1; }; wait_ready() {
-          while [ "$(date +%s)" -lt "$deadline" ]; do ready && return 0;
-          sleep 1; done; ready; }; process_start() { target_pid=$1;
+          owner_grace="${ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS:-2}"; case "$owner_grace"
+          in ''|*[!0-9]*) owner_grace=2 ;; esac; mkdir -p "$runtime_dir" || exit 1;
+          deadline=$(($(date +%s) + wait_seconds)); remaining() {
+          remaining_seconds=$((deadline - $(date +%s)));
+          [ "$remaining_seconds" -gt 0 ]; }; cancel_bounded() {
+          [ -z "${bounded_timer:-}" ] || kill -TERM "$bounded_timer" 2>/dev/null || :;
+          [ -z "${bounded_child:-}" ] || kill -TERM "$bounded_child" 2>/dev/null || :;
+          [ -z "${bounded_timer:-}" ] || wait "$bounded_timer" 2>/dev/null || :;
+          [ -z "${bounded_child:-}" ] || wait "$bounded_child" 2>/dev/null || :;
+          bounded_timer=; bounded_child=; }; run_bounded() { remaining || return 124;
+          if command -v timeout >/dev/null 2>&1; then timeout "$remaining_seconds" "$@";
+          return $?; elif command -v gtimeout >/dev/null 2>&1; then
+          gtimeout "$remaining_seconds" "$@"; return $?; fi; "$@" & bounded_child=$!;
+          (sleep "$remaining_seconds"; kill -TERM "$bounded_child" 2>/dev/null) &
+          bounded_timer=$!; wait "$bounded_child"; bounded_status=$?;
+          kill -TERM "$bounded_timer" 2>/dev/null || :; wait "$bounded_timer" 2>/dev/null || :;
+          bounded_child=; bounded_timer=; return "$bounded_status"; };
+          ready() { run_bounded 1mcp serve --status >/dev/null 2>&1; }; wait_ready() {
+          while remaining; do ready && return 0; sleep 1; done; return 1; };
+          process_start() { target_pid=$1;
           if [ -r "/proc/$target_pid/stat" ]; then start=$(sed 's/.*) //'
           "/proc/$target_pid/stat" | awk '{print $20}'); [ -n "$start" ] && {
           printf 'linux:%s\n' "$start"; return 0; }; fi; start=$(ps -p "$target_pid"
@@ -41,23 +57,42 @@ dependencies:
           owner_tmp="$lock_dir/owner.$$"; printf 'pid=%s\nstart=%s\n' $$ "$own_start"
           >"$owner_tmp" && mv "$owner_tmp" "$lock_dir/owner"; }; owns_lock() {
           read_owner && [ "$owner_pid" = $$ ] && [ "$owner_start" = "$own_start" ]; };
+          lock_snapshot() { if [ -d "$lock_dir" ]; then dir_id=$(stat -c '%d:%i'
+          "$lock_dir" 2>/dev/null || stat -f '%d:%i' "$lock_dir" 2>/dev/null) || return 1;
+          if [ -f "$lock_dir/owner" ]; then owner_record=$(<"$lock_dir/owner");
+          else owner_record='<missing>'; fi; printf '%s|%s\n' "$dir_id" "$owner_record";
+          fi; }; takeover_lock() { observed_snapshot=$1;
+          mkdir "$lock_dir/.takeover" 2>/dev/null || return 1;
+          if [ "$(lock_snapshot)" != "$observed_snapshot" ]; then
+          rmdir "$lock_dir/.takeover" 2>/dev/null || :; return 1; fi;
+          stale_lock="$lock_dir.stale.$(date +%s).$$"; mv "$lock_dir" "$stale_lock"
+          2>/dev/null || { rmdir "$lock_dir/.takeover" 2>/dev/null || :; return 1; };
+          retry_lock=1;
+          echo "quarantined stale 1mcp launcher lock: $stale_lock" >&2; };
           release_lock() { if [ "${lock_kind:-}" = flock ]; then flock -u 9;
           elif [ "${lock_kind:-}" = mkdir ] && owns_lock; then rm -f "$lock_dir/owner";
           rmdir "$lock_dir" 2>/dev/null || :; fi; lock_kind=; }; on_signal() {
-          signal_status=$1; release_lock; trap - EXIT INT TERM; exit "$signal_status"; };
+          signal_status=$1; cancel_bounded; release_lock; trap - EXIT INT TERM;
+          exit "$signal_status"; };
           finish_proxy() { release_lock; trap - EXIT INT TERM; exec 1mcp proxy; };
-          ready && exec 1mcp proxy; if command -v flock >/dev/null 2>&1; then
-          exec 9>"$runtime_dir/launcher.lock"; flock -w "$wait_seconds" 9 || {
+          ready && exec 1mcp proxy; remaining || { echo 1mcp-launcher-timeout >&2; exit 1; };
+          if command -v flock >/dev/null 2>&1; then
+          exec 9>"$runtime_dir/launcher.lock"; flock -w "$remaining_seconds" 9 || {
           ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2; exit 1; };
           lock_kind=flock; else if mkdir "$lock_dir" 2>/dev/null; then
           lock_kind=mkdir; write_owner || { rm -f "$lock_dir/owner.$$";
           rmdir "$lock_dir" 2>/dev/null || :; exit 1; }; else retried=0; while
-          [ "$(date +%s)" -lt "$deadline" ]; do ready && exec 1mcp proxy;
+          remaining; do ready && exec 1mcp proxy; now=$(date +%s);
           if [ ! -d "$lock_dir" ]; then retry_lock=1; break; fi; if read_owner;
-          then current_start=$(process_start "$owner_pid"); if [ "$current_start" != "$owner_start" ];
-          then stale_lock="$lock_dir.stale.$(date +%s).$$"; mv "$lock_dir" "$stale_lock"
-          2>/dev/null && { retry_lock=1; echo "quarantined stale 1mcp launcher lock: $stale_lock" >&2;
-          break; }; fi; fi; sleep 1; done; if [ "${retry_lock:-0}" -eq 1 ] &&
+          then incomplete_snapshot=; current_start=$(process_start "$owner_pid");
+          if [ "$current_start" != "$owner_start" ]; then observed=$(lock_snapshot);
+          if [ -n "$observed" ] && [ "$(lock_snapshot)" = "$observed" ] && read_owner &&
+          [ "$current_start" != "$owner_start" ] && takeover_lock "$observed";
+          then break; fi; fi; else observed=$(lock_snapshot); if
+          [ "$observed" != "${incomplete_snapshot:-}" ]; then incomplete_snapshot=$observed;
+          incomplete_since=$now; elif [ $((now - incomplete_since)) -ge "$owner_grace" ] &&
+          [ "$(lock_snapshot)" = "$observed" ] && ! read_owner && takeover_lock "$observed";
+          then break; fi; fi; sleep 1; done; if [ "${retry_lock:-0}" -eq 1 ] &&
           [ "$retried" -eq 0 ]; then retried=1; mkdir "$lock_dir" 2>/dev/null && {
           lock_kind=mkdir; write_owner || { rm -f "$lock_dir/owner.$$";
           rmdir "$lock_dir" 2>/dev/null || :; exit 1; }; }; fi;
@@ -66,14 +101,24 @@ dependencies:
           fi; fi; trap release_lock EXIT; trap 'on_signal 130' INT;
           trap 'on_signal 143' TERM; ready && finish_proxy; if [ -f "$pid_file" ]; then
           pid=$(sed -n 's/.*"pid"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p'
-          "$pid_file" | sed -n '1p'); identity=; case "$pid" in ''|*[!0-9]*) identity=invalid ;;
-          *) if [ -r "/proc/$pid/cmdline" ]; then identity=$(tr '\0' ' '
-          <"/proc/$pid/cmdline"); else identity=$(ps -p "$pid" -o args= 2>/dev/null || :);
-          fi ;; esac; case "$identity" in *1mcp*' serve '*--background-bootstrap*)
+          "$pid_file" | sed -n '1p'); is_runtime=1; case "$pid" in ''|*[!0-9]*|"$$") ;;
+          *) if [ -r "/proc/$pid/cmdline" ]; then runtime_binary=0; runtime_serve=0;
+          runtime_bootstrap=0; while IFS= read -r arg; do case "$arg" in
+          1mcp|*/1mcp|*/1mcp/*|*@1mcp/agent/*) runtime_binary=1 ;;
+          serve) runtime_serve=1 ;; --background-bootstrap) runtime_bootstrap=1 ;;
+          esac; done < <(tr '\0' '\n' <"/proc/$pid/cmdline");
+          [ "$runtime_binary" -eq 1 ] && [ "$runtime_serve" -eq 1 ] &&
+          [ "$runtime_bootstrap" -eq 1 ] && is_runtime=0; else process_comm=$(ps -p "$pid"
+          -o comm= 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//');
+          case "${process_comm##*/}" in sh|bash|zsh|fish) ;; *) process_args=$(ps -ww
+          -p "$pid" -o args= 2>/dev/null || :); case " $process_args " in
+          *1mcp*' serve '*--background-bootstrap*) is_runtime=0 ;; esac ;; esac; fi ;; esac;
+          if [ "$is_runtime" -eq 0 ]; then
           wait_ready && finish_proxy; echo '1mcp runtime is alive but unhealthy; operator intervention required'
-          >&2; 1mcp serve --status >&2; exit 1 ;; *) stale="$pid_file.stale.$(date +%s).$$";
+          >&2; run_bounded 1mcp serve --status >&2; exit 1; else stale="$pid_file.stale.$(date +%s).$$";
           mv "$pid_file" "$stale" || exit 1; echo "quarantined stale 1mcp PID state: $stale"
-          >&2 ;; esac; fi; 1mcp serve --background || { wait_ready && finish_proxy;
-          echo '1mcp startup failed; serve --status follows' >&2; 1mcp serve --status >&2;
+          >&2; fi; fi; run_bounded 1mcp serve --background || { wait_ready && finish_proxy;
+          echo '1mcp startup failed; serve --status follows' >&2;
+          run_bounded 1mcp serve --status >&2;
           exit 1; }; wait_ready || { echo '1mcp startup timed out; serve --status follows' >&2;
-          1mcp serve --status >&2; exit 1; }; finish_proxy
+          run_bounded 1mcp serve --status >&2; exit 1; }; finish_proxy
