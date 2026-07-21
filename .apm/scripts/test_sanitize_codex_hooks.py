@@ -38,9 +38,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         },
                         {
                             "type": "command",
-                            "command": (
-                                f"{hooks_dir}/agent-coder/scripts/reminder.sh"
-                            ),
+                            "command": (f"{hooks_dir}/agent-coder/scripts/reminder.sh"),
                         },
                     ],
                 }
@@ -107,6 +105,29 @@ def test_sanitize_preserves_valid_timeout() -> None:
 
     assert clean == config
     assert counts["timeouts_added"] == 0
+
+
+def test_sanitize_preserves_current_codex_tool_matchers() -> None:
+    handler = {
+        "type": "command",
+        "command": "/bin/true",
+        "timeout": 10,
+    }
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {"matcher": "Bash", "hooks": [handler]},
+                {"matcher": "apply_patch", "hooks": [handler]},
+                {"matcher": "Agent", "hooks": [handler]},
+                {"matcher": "mcp__server__local_function", "hooks": [handler]},
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean == config
+    assert counts["handlers_removed"] == 0
 
 
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:

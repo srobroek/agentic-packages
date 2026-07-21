@@ -31,9 +31,18 @@ def _make_script(hooks_dir: Path, package: str, name: str) -> Path:
 def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     hooks_dir = tmp_path / "hooks"
     live = _make_script(hooks_dir, "live-pkg", "real.sh")
+    obsolete = _make_script(
+        hooks_dir,
+        "agent-coder",
+        "coder-delegation-reminder.sh",
+    )
     events = {
         "PreToolUse": [
             {"matcher": "Bash", "hooks": [{"type": "command", "command": str(live)}]},
+            {
+                "matcher": "Edit",
+                "hooks": [{"type": "command", "command": str(obsolete)}],
+            },
             {
                 "matcher": "Bash",
                 "hooks": [
@@ -52,7 +61,7 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
 
     removed = sanitize_claude_hooks.clean_events(events)
 
-    assert removed == 2
+    assert removed == 3
     assert "Stop" not in events  # emptied event is deleted
     commands = [
         handler["command"]
@@ -62,6 +71,7 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     ]
     assert str(live) in commands
     assert "echo hi" in commands
+    assert not any("agent-coder" in c for c in commands)
     assert not any("dead-pkg" in c for c in commands)
 
 

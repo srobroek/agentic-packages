@@ -42,7 +42,6 @@ import importlib.util
 import json
 import re
 import shutil
-import sys
 from pathlib import Path
 
 import yaml
@@ -81,6 +80,7 @@ def _author_license(root_manifest: dict) -> tuple[dict | None, str | None]:
 # plugin.json
 # --------------------------------------------------------------------------- #
 
+
 def _plugin_manifest(
     pkg: dict,
     manifest: dict,
@@ -99,7 +99,9 @@ def _plugin_manifest(
     if pkg.get("description"):
         out["description"] = pkg["description"]
     author = manifest.get("author")
-    author = {"name": str(author)} if isinstance(author, str) else (author or author_default)
+    author = (
+        {"name": str(author)} if isinstance(author, str) else (author or author_default)
+    )
     if author:
         out["author"] = author
     lic = manifest.get("license") or license_default
@@ -121,6 +123,7 @@ def _plugin_manifest(
 # --------------------------------------------------------------------------- #
 # bundle dependencies
 # --------------------------------------------------------------------------- #
+
 
 def _bundle_dependencies(deps: list[str]) -> list[dict]:
     """Map a bundle's first-party apm deps to native plugin `dependencies`.
@@ -150,6 +153,7 @@ def _bundle_dependencies(deps: list[str]) -> list[dict]:
 # --------------------------------------------------------------------------- #
 # mcp -> .mcp.json
 # --------------------------------------------------------------------------- #
+
 
 def _mcp_servers(manifest: dict) -> dict | None:
     """Build the common MCP server map from `dependencies.mcp`."""
@@ -183,6 +187,7 @@ def _mcp_servers(manifest: dict) -> dict | None:
 # hooks: resolve shared or target-specific sources
 # --------------------------------------------------------------------------- #
 
+
 def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
     """Return `(claude, codex)` hook sources for a package.
 
@@ -197,14 +202,26 @@ def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
     universal = hooks_dir / "hooks.json"
     if universal.is_file():
         return universal, universal
-    claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(hooks_dir.glob("claude-hooks.json"))
-    codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(hooks_dir.glob("codex-hooks.json"))
+    claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(
+        hooks_dir.glob("claude-hooks.json")
+    )
+    codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(
+        hooks_dir.glob("codex-hooks.json")
+    )
     return (claude[0] if claude else None, codex[0] if codex else None)
 
 
-def _plan_hooks(pkg_dir: Path, plan: dict[str, object]) -> tuple[str | None, str | None]:
+def _plan_hooks(
+    pkg_dir: Path,
+    plan: dict[str, object],
+    targets: set[str],
+) -> tuple[str | None, str | None]:
     """Add native hook files and return manifest paths for Claude and Codex."""
     claude, codex = _hook_sources(pkg_dir)
+    if "claude" not in targets:
+        claude = None
+    if "codex" not in targets:
+        codex = None
     if claude is None and codex is None:
         return None, None
     if (
@@ -231,18 +248,21 @@ def _plan_hooks(pkg_dir: Path, plan: dict[str, object]) -> tuple[str | None, str
 # planning: compute the desired native tree for one package
 # --------------------------------------------------------------------------- #
 
-def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, object] | None:
+
+def _plan_package(
+    pkg: dict, manifest: dict, defaults: tuple
+) -> dict[str, object] | None:
     """Return {relpath: content} for the native files a package should have.
 
     Content is bytes for copied files, str for generated JSON. Directory copies
     are represented as (src_dir, "<dir-copy>"). Returns None for steering (no
     native layout).
     """
-    cls = pkg["classification"]
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
+    targets = set(pkg.get("targets") or ("claude", "codex"))
 
     plan: dict[str, object] = {}
-    claude_hook_path, codex_hook_path = _plan_hooks(pkg_dir, plan)
+    claude_hook_path, codex_hook_path = _plan_hooks(pkg_dir, plan, targets)
 
     # Steering has no native rules/instructions component. Pure steering gets
     # metadata-only manifests so catalog entries remain structurally valid;
@@ -261,19 +281,20 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # override into .apm/ does not load (verified). Agents are .md only (no test
     # files), so copying carries no pytest-collision risk.
     agents_src = pkg_dir / ".apm" / "agents"
-    if agents_src.is_dir():
+    if "claude" in targets and agents_src.is_dir():
         for f in sorted(agents_src.glob("*.agent.md")):
-            plan[f"agents/{f.name[:-len('.agent.md')]}.md"] = f.read_bytes()
+            plan[f"agents/{f.name[: -len('.agent.md')]}.md"] = f.read_bytes()
         for f in sorted(agents_src.glob("*.md")):
             if not f.name.endswith(".agent.md"):
                 plan[f"agents/{f.name}"] = f.read_bytes()
 
     # MCP servers declared in the apm.yml dependencies.mcp block -> .mcp.json.
     mcp = _mcp_servers(manifest)
-    if mcp is not None:
+    if mcp is not None and "claude" in targets:
         plan[".mcp.json"] = (
             json.dumps({"mcpServers": mcp}, indent=2, ensure_ascii=False) + "\n"
         )
+    if mcp is not None and "codex" in targets:
         # Codex accepts a direct server map or a wrapped `mcp_servers` object,
         # but not Claude's camel-case wrapper.
         plan[".codex.mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
@@ -287,48 +308,52 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # packages like sniff.
     deps = _bundle_dependencies(pkg["deps"]) or None
 
-    # Every native-capable package gets both manifests. ensure_ascii=False so non-ASCII
-    # (e.g. em-dashes in descriptions) is written as raw UTF-8, matching how
+    # Each native-capable package gets the manifests named by its target metadata.
+    # ensure_ascii=False writes non-ASCII (e.g. em dashes in descriptions) as raw
+    # UTF-8, matching how
     # `apm pack` writes plugin.json/marketplace.json -- otherwise the CI staleness
     # gate sees drift when apm pack rewrites a manifest this generator also wrote.
-    plan[".claude-plugin/plugin.json"] = (
-        json.dumps(
-            _plugin_manifest(
-                pkg,
-                manifest,
-                defaults,
-                target="claude",
-                deps=deps,
-                has_skills=has_skills,
-                hook_path=claude_hook_path,
-            ),
-            indent=2,
-            ensure_ascii=False,
+    if "claude" in targets:
+        plan[".claude-plugin/plugin.json"] = (
+            json.dumps(
+                _plugin_manifest(
+                    pkg,
+                    manifest,
+                    defaults,
+                    target="claude",
+                    deps=deps,
+                    has_skills=has_skills,
+                    hook_path=claude_hook_path,
+                ),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
         )
-        + "\n"
-    )
-    plan[".codex-plugin/plugin.json"] = (
-        json.dumps(
-            _plugin_manifest(
-                pkg,
-                manifest,
-                defaults,
-                target="codex",
-                has_skills=has_skills,
-                has_mcp=mcp is not None,
-                hook_path=codex_hook_path,
-            ),
-            indent=2,
-            ensure_ascii=False,
+    if "codex" in targets:
+        plan[".codex-plugin/plugin.json"] = (
+            json.dumps(
+                _plugin_manifest(
+                    pkg,
+                    manifest,
+                    defaults,
+                    target="codex",
+                    has_skills=has_skills,
+                    has_mcp=mcp is not None,
+                    hook_path=codex_hook_path,
+                ),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
         )
-        + "\n"
-    )
     return plan
 
 
 # --------------------------------------------------------------------------- #
 # apply / check
 # --------------------------------------------------------------------------- #
+
 
 def _materialize(pkg_dir: Path, plan: dict[str, object], check: bool) -> list[str]:
     """Write (or diff) the planned native files. Returns list of stale relpaths."""
@@ -391,7 +416,11 @@ def _sync_dir(src: Path, dst: Path, rel: str, pkg: str, check: bool) -> list[str
     """Mirror src -> dst exactly (content + membership). Returns stale relpaths."""
     stale: list[str] = []
     src_files = {p.relative_to(src) for p in src.rglob("*") if p.is_file()}
-    dst_files = {p.relative_to(dst) for p in dst.rglob("*") if p.is_file()} if dst.exists() else set()
+    dst_files = (
+        {p.relative_to(dst) for p in dst.rglob("*") if p.is_file()}
+        if dst.exists()
+        else set()
+    )
 
     for r in sorted(src_files):
         s, d = src / r, dst / r
@@ -413,7 +442,9 @@ def _sync_dir(src: Path, dst: Path, rel: str, pkg: str, check: bool) -> list[str
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="Diff vs committed; exit 1 on drift.")
+    parser.add_argument(
+        "--check", action="store_true", help="Diff vs committed; exit 1 on drift."
+    )
     args = parser.parse_args(argv)
 
     inv = _load_inventory()
@@ -425,7 +456,9 @@ def main(argv: list[str] | None = None) -> int:
     n_written = 0
     for pkg in ctx["packages"]:
         pkg_dir = PACKAGES_DIR / pkg["dirname"]
-        manifest = yaml.safe_load((pkg_dir / "apm.yml").read_text(encoding="utf-8")) or {}
+        manifest = (
+            yaml.safe_load((pkg_dir / "apm.yml").read_text(encoding="utf-8")) or {}
+        )
         plan = _plan_package(pkg, manifest, defaults)
         if plan is None:
             plan = {}

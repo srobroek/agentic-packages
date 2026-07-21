@@ -30,6 +30,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+OBSOLETE_PACKAGES = {"agent-coder"}
+
 
 def command_script_path(command: str) -> Path | None:
     """Return the script path of a command handler, or None if not path-like.
@@ -53,6 +55,8 @@ def handler_is_stale(handler: dict) -> bool:
     command = handler.get("command")
     if not isinstance(command, str):
         return False
+    if any(f"/{package}/" in command for package in OBSOLETE_PACKAGES):
+        return True
     script = command_script_path(command)
     return script is not None and not script.is_file()
 

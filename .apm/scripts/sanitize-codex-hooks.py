@@ -24,11 +24,14 @@ SUPPORTED_EVENTS = {
     "SubagentStop",
     "Stop",
 }
-CODEX_UNAVAILABLE_PACKAGES = {
+OBSOLETE_PACKAGES = {
     "agent-coder",
+}
+CODEX_EXCLUDED_PACKAGES = {
     "hooks-subagent-worktree",
     "hooks-worktree",
 }
+CODEX_UNAVAILABLE_PACKAGES = OBSOLETE_PACKAGES | CODEX_EXCLUDED_PACKAGES
 
 
 def runtime_semantics(value: object) -> object:
@@ -68,8 +71,7 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             for handler in group.get("hooks", []):
                 command = handler.get("command", "")
                 if handler.get("type") != "command" or any(
-                    f"/{package}/" in command
-                    for package in CODEX_UNAVAILABLE_PACKAGES
+                    f"/{package}/" in command for package in CODEX_UNAVAILABLE_PACKAGES
                 ):
                     counts["handlers_removed"] += 1
                     continue
@@ -97,9 +99,8 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
                     counts["duplicate_groups_removed"] += 1
                     existing_index = seen_groups[group_key]
                     existing_group = clean_groups[existing_index]
-                    if (
-                        not existing_group.get("_apm_source")
-                        and clean_group.get("_apm_source")
+                    if not existing_group.get("_apm_source") and clean_group.get(
+                        "_apm_source"
                     ):
                         clean_groups[existing_index] = clean_group
                     continue
@@ -117,8 +118,7 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
 def referenced_hook_entries(config: dict, hooks_dir: Path) -> set[str]:
     """Return top-level hook-dir entries referenced by command handlers."""
     pattern = re.compile(
-        re.escape(str(hooks_dir.expanduser().resolve()))
-        + r"/([^/\s\"']+)"
+        re.escape(str(hooks_dir.expanduser().resolve())) + r"/([^/\s\"']+)"
     )
     referenced: set[str] = set()
     for groups in (config.get("hooks") or {}).values():
@@ -188,9 +188,7 @@ def main() -> int:
     config_changed = clean != original
     hooks_dir = args.hooks_dir or args.path.parent / "hooks"
     stale = (
-        prune_stale_entries(clean, hooks_dir, check=True)
-        if args.prune_stale
-        else []
+        prune_stale_entries(clean, hooks_dir, check=True) if args.prune_stale else []
     )
     changed = config_changed or bool(stale)
 

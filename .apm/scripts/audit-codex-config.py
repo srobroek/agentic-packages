@@ -86,6 +86,43 @@ CODEX_DIFFERENCE_PACKAGES = {
     "secrets-scan",
     "speckit",
 }
+SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
+HOOK_MANIFEST_CLASSIFICATION = {
+    "packages/beads/.apm/hooks/beads-claude-hooks.json": "target-specific compatibility",
+    "packages/beads/.apm/hooks/beads-codex-hooks.json": "target-specific compatibility",
+    "packages/code-intelligence/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-attribution-guard/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-bash-safety/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-chezmoi-guard/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-close-keywords/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-git-safety/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-git-workflow/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-package-investigate/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-precommit-gate/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-model/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
+    "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
+    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
+    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
+    "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
+    "packages/pr-shepherd/.apm/hooks/hooks.json": "native-required",
+    "packages/release-please/.apm/hooks/hooks.json": "native-required",
+    "packages/secrets-scan/.apm/hooks/hooks.json": "native-required",
+    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
+    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
+    "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
+    "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
+    "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
+    "packages/write-docs/.apm/hooks/hooks.json": "native-required",
+}
+OBSOLETE_HOOK_MANIFESTS = {
+    "packages/agent-coder/.apm/hooks/agent-coder-claude-hooks.json",
+}
+COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
+    "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",
+    "packages/pr-shepherd/.apm/hooks/pr-shepherd-codex-hooks.json",
+}
 APPROVAL_POLICIES = {
     "untrusted",
     "on-failure",
@@ -146,15 +183,11 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
         return errors
 
     if "git rev-parse" in command:
-        errors.append(
-            f"{path}: plugin hook startup must not discover the Git root"
-        )
+        errors.append(f"{path}: plugin hook startup must not discover the Git root")
     plugin_root = path.parents[2]
     script_refs = PLUGIN_SCRIPT_RE.findall(command)
     if "/scripts/" in command and not script_refs:
-        errors.append(
-            f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT"
-        )
+        errors.append(f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT")
     for rel in script_refs:
         target = plugin_root / rel
         if not target.is_file():
@@ -178,6 +211,19 @@ def main() -> int:
         for entry in catalog_entries
         if isinstance(entry, dict) and entry.get("name")
     }
+    package_targets: dict[str, str] = {}
+    for manifest_path in sorted((ROOT / "packages").glob("*/apm.yml")):
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+        name = str(manifest.get("name") or manifest_path.parent.name)
+        target = str(manifest.get("target") or "all")
+        package_targets[name] = target
+        if target not in SUPPORTED_PACKAGE_TARGETS:
+            errors.append(f"{manifest_path}: unsupported target {target!r}")
+    codex_catalog_by_name = {
+        name: entry
+        for name, entry in catalog_by_name.items()
+        if package_targets.get(name, "all") in {"all", "codex"}
+    }
     marketplace_by_name = {
         str(entry["name"]): entry
         for entry in marketplace_entries
@@ -187,12 +233,12 @@ def main() -> int:
         errors.append("apm.yml marketplace contains missing or duplicate package names")
     if len(marketplace_by_name) != len(marketplace_entries):
         errors.append("Codex marketplace contains missing or duplicate plugin names")
-    for name in sorted(catalog_by_name.keys() - marketplace_by_name.keys()):
+    for name in sorted(codex_catalog_by_name.keys() - marketplace_by_name.keys()):
         errors.append(f"{name}: missing from Codex marketplace")
-    for name in sorted(marketplace_by_name.keys() - catalog_by_name.keys()):
+    for name in sorted(marketplace_by_name.keys() - codex_catalog_by_name.keys()):
         errors.append(f"{name}: not declared in apm.yml marketplace")
-    for name in sorted(catalog_by_name.keys() & marketplace_by_name.keys()):
-        expected = catalog_by_name[name].get("source")
+    for name in sorted(codex_catalog_by_name.keys() & marketplace_by_name.keys()):
+        expected = codex_catalog_by_name[name].get("source")
         actual_source = marketplace_by_name[name].get("source")
         actual = (
             actual_source.get("path")
@@ -223,8 +269,7 @@ def main() -> int:
         missing = sorted(CLAUDE_EVENTS - set(documented_events))
         extra = sorted(set(documented_events) - CLAUDE_EVENTS)
         errors.append(
-            "Codex compatibility event table drift: "
-            f"missing={missing}, extra={extra}"
+            f"Codex compatibility event table drift: missing={missing}, extra={extra}"
         )
     if len(documented_packages) != len(set(documented_packages)):
         errors.append("Codex compatibility package table contains duplicate rows")
@@ -267,13 +312,17 @@ def main() -> int:
                     continue
                 target = plugin_root / component.removeprefix("./")
                 if not target.exists():
-                    errors.append(f"{manifest_path}: missing {field} target {component}")
+                    errors.append(
+                        f"{manifest_path}: missing {field} target {component}"
+                    )
         mcp_path = manifest.get("mcpServers")
         if isinstance(mcp_path, str):
             checked_mcp += 1
             mcp = load_json(plugin_root / mcp_path.removeprefix("./"))
             if "mcpServers" in mcp:
-                errors.append(f"{manifest_path}: Codex MCP file uses Claude mcpServers wrapper")
+                errors.append(
+                    f"{manifest_path}: Codex MCP file uses Claude mcpServers wrapper"
+                )
             servers = mcp.get("mcp_servers", mcp)
             if not isinstance(servers, dict) or not servers:
                 errors.append(f"{manifest_path}: Codex MCP server map is empty")
@@ -295,15 +344,30 @@ def main() -> int:
                     if handler.get("async") is True:
                         errors.append(f"{path}: Codex skips asynchronous command hooks")
                     if "if" in handler:
-                        errors.append(f"{path}: Codex does not define Claude's hook if field")
+                        errors.append(
+                            f"{path}: Codex does not define Claude's hook if field"
+                        )
                     timeout = handler.get("timeout")
                     if not isinstance(timeout, (int, float)) or not (0 < timeout <= 60):
                         errors.append(
                             f"{path}: Codex hook timeout must be explicitly bounded to 1-60s"
                         )
-                    errors.extend(
-                        validate_hook_command(path, handler.get("command"))
-                    )
+                    errors.extend(validate_hook_command(path, handler.get("command")))
+
+    actual_hook_manifests = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "packages").glob("*/.apm/hooks/*.json")
+    }
+    expected_hook_manifests = set(HOOK_MANIFEST_CLASSIFICATION)
+    if actual_hook_manifests != expected_hook_manifests:
+        errors.append(
+            "hook manifest inventory drift: "
+            f"missing={sorted(expected_hook_manifests - actual_hook_manifests)}, "
+            f"unclassified={sorted(actual_hook_manifests - expected_hook_manifests)}"
+        )
+    for rel in sorted(OBSOLETE_HOOK_MANIFESTS | COLLAPSED_DUPLICATE_HOOK_MANIFESTS):
+        if (ROOT / rel).exists():
+            errors.append(f"{rel}: retired hook manifest must stay removed")
 
     for path in sorted((ROOT / "packages").glob("*/.apm/agents/*.agent.md")):
         checked_agents += 1
@@ -311,7 +375,7 @@ def main() -> int:
         if not text.startswith("---\n") or "\n---" not in text[4:]:
             continue
         frontmatter = yaml.safe_load(text.split("\n---", 1)[0][4:]) or {}
-        codex = ((frontmatter.get("x-agentic") or {}).get("codex") or {})
+        codex = (frontmatter.get("x-agentic") or {}).get("codex") or {}
         policy = codex.get("approval_policy")
         if isinstance(policy, str) and policy not in APPROVAL_POLICIES:
             errors.append(f"{path}: invalid Codex approval_policy {policy!r}")
