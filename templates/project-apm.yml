@@ -9,8 +9,9 @@ dependencies:
 
 scripts:
   require-lifecycle-trust: >-
-    bash -o pipefail -c 'apm lifecycle test post-install | tee /dev/stderr |
-    grep -q "Trust status: \[trusted\]"'
+    bash -c 'output="$(apm lifecycle test post-install)";
+    printf "%s\n" "$output" >&2;
+    [[ "$output" == *"Trust status: [trusted]"* ]]'
   install-agentic-tools: "apm run require-lifecycle-trust && apm install --target claude,codex"
   update-agentic-tools: "apm run require-lifecycle-trust && apm update --yes && apm compile --target codex,claude --no-constitution && apm run inject-agent-models && apm run audit-agentic-tools"
   inject-agent-models: "python3 apm_modules/srobroek/agentic-packages/packages/agent-management/.apm/scripts/inject-agent-models.py"
