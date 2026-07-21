@@ -1,0 +1,6 @@
+version: 1
+agents:
+  luna-medium:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: medium

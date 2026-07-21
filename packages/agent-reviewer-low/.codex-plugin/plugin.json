@@ -1,0 +1,9 @@
+{
+  "name": "agent-reviewer-low",
+  "version": "0.1.0",
+  "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}
