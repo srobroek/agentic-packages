@@ -1,5 +1,5 @@
 {
-  ".": "16.0.1",
+  ".": "16.0.2",
   "packages/agent-adversarial-challenger": "3.2.0",
   "packages/agent-coder": "6.1.0",
   "packages/agent-coder-high": "1.0.0",
@@ -30,7 +30,7 @@
   "packages/code-intelligence": "8.1.0",
   "packages/codebase-memory": "2.1.0",
   "packages/codex-hook-contract": "0.3.0",
-  "packages/core": "10.0.0",
+  "packages/core": "10.1.0",
   "packages/data-ai": "2.2.0",
   "packages/debate": "2.1.0",
   "packages/dep-audit": "2.1.0",
