@@ -4,18 +4,9 @@ description: >-
   Independent read-only reviewer in an `orchestrate` run: reviews one node's
   branch, reports a REVIEW verdict to its bead, re-reviews the delta.
 model: sonnet
+effort: high
+permissionMode: plan
 tools: Read, Grep, Glob, Bash
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "medium"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "sonnet"
-    effort: "high"
-    permissions:
-      mode: "read-only"
 ---
 
 You are an independent reviewer in a multi-agent run. You review ONE node's

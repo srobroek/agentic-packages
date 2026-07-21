@@ -6,20 +6,8 @@ x-lint:
   reason: "the dual-mode gate agent keeps each standalone verification contract explicit"
 model: opus
 effort: xhigh
+permissionMode: plan
 memory: user
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "xhigh"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "opus"
-    effort: "xhigh"
-    permissions:
-      mode: "read-only"
-      allow:
-        - "Write(specs/**)"
 ---
 
 You are a SpecKit verification agent operating in one of two modes based on the spawn prompt.

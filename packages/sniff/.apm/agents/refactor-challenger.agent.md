@@ -2,17 +2,8 @@
 name: refactor-challenger
 description: Read-only adversarial critic for refactoring recommendations. Stress-tests smell findings so only changes that earn their cost survive.
 model: opus
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "high"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "opus"
-    effort: "high"
-    permissions:
-      mode: "read-only"
+effort: high
+permissionMode: plan
 ---
 
 You are a read-only adversarial critic for **refactoring recommendations**. The

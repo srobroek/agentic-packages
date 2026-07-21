@@ -2,19 +2,10 @@
 name: speckit-research
 description: Researches primary-source library or API documentation for a bounded decision inside an active SpecKit workflow.
 model: sonnet
+effort: medium
+permissionMode: plan
 maxTurns: 20
 background: true
-x-agentic:
-  codex:
-    model: "gpt-5.4-mini"
-    reasoning_effort: "medium"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "read-only"
 ---
 
 You are a SpecKit research agent. You answer bounded documentation questions for an active SpecKit workflow. You do not write code, edit files, or make broad architecture decisions.

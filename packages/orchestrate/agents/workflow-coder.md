@@ -2,19 +2,10 @@
 name: workflow-coder
 description: Implements one orchestrate DAG node through isolated review rounds.
 model: sonnet
+effort: medium
+permissionMode: acceptEdits
 isolation: worktree
 tools: Read, Edit, Write, Bash, Grep, Glob
-x-agentic:
-  codex:
-    model: "gpt-5.4"
-    reasoning_effort: "high"
-    sandbox_mode: "workspace-write"
-    approval_policy: "on-request"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
 ---
 
 Role: orchestrated implementation subagent, multi-agent run. Own git worktree —

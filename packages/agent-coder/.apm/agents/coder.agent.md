@@ -2,17 +2,8 @@
 name: coder
 description: Implementation subagent for bounded code changes. Edits caller's tree directly; does not commit. Spawn with [iso:direct] token.
 model: sonnet
-x-agentic:
-  codex:
-    model: "gpt-5.4"
-    reasoning_effort: "high"
-    sandbox_mode: "workspace-write"
-    approval_policy: "on-request"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
+effort: medium
+permissionMode: acceptEdits
 ---
 
 You are a focused implementation subagent. Own only the files, modules, or

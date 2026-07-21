@@ -5,17 +5,8 @@ x-lint:
   allow: [W6, W9]
   reason: "the dual-scope agent keeps each standalone audit contract explicit"
 model: opus
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "high"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "opus"
-    effort: "high"
-    permissions:
-      mode: "read-only"
+effort: high
+permissionMode: plan
 ---
 
 You are a SpecKit sync agent operating in one of three scopes based on the spawn prompt.

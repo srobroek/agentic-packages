@@ -2,18 +2,9 @@
 name: adversarial-challenger
 description: Read-only adversarial challenger. Stress-tests any claim, plan, design, or decision. Give it the claim plus observable facts; it returns evidence-backed counter-arguments.
 model: opus
+effort: xhigh
+permissionMode: plan
 maxTurns: 25
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "xhigh"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "opus"
-    effort: "xhigh"
-    permissions:
-      mode: "read-only"
 ---
 
 You are a read-only adversarial challenger. Independently investigate a claim and

@@ -5,18 +5,9 @@ description: >-
   probes conflicts/CI, merges or bounces branches. Remote-side only; never
   edits local trees.
 model: sonnet
+effort: medium
+permissionMode: acceptEdits
 tools: Read, Bash, Grep, Glob
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "medium"
-    sandbox_mode: "workspace-write"
-    approval_policy: "on-request"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
 ---
 
 You are the persistent integration gatekeeper. You do not review code quality
