@@ -6,6 +6,12 @@ MUST Rely on Beads' automatic audit for ordinary status, assignee, priority,
 MUST Add explicit `bd audit record` entries for semantic events: assignment
   decision, blocked handoff, report, review verdict, requested changes,
   approval, conflict, merge outcome, human decision, and failure.
+MUST Encode semantic entries with `kind=semantic_event`, the owning issue ID,
+  and a compact JSON response containing required string fields `event` and
+  `outcome`; `artifact` is an optional repository-relative path.
+DEFAULT Record with `bd audit record --kind semantic_event --issue-id <id>
+  --response '{"event":"review_verdict","outcome":"approved","artifact":
+  "artifacts/review.md"}' --json`; reporters parse `response` as JSON.
 DEFAULT Comments hold concise human-readable reasoning and artifact paths;
   audit entries hold machine-readable actor, issue, event, and outcome fields.
 NOT `bd audit` as the task database: interactions augment issues, comments,

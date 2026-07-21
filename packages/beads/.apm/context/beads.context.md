@@ -1,11 +1,10 @@
 # Beads (bd)
 
 SCOPE
-MUST Use bd for persistent, multi-session, or multi-agent work tracking when
-  the repo has `.beads/` (`bd where` succeeds).
-DEFAULT TaskCreate stays for single-session scratch lists; SpecKit artifacts
-  (spec.md/plan.md) stay the source for WHAT to build — beads tracks execution
-  state, not requirements.
+MUST Use bd for all task tracking when the repo has `.beads/` (`bd where`
+  succeeds); do not use TaskCreate or markdown task lists.
+DEFAULT SpecKit artifacts (spec.md/plan.md) stay the source for WHAT to build;
+  beads tracks execution state, not requirements.
 NOT `bd edit` — opens $EDITOR and blocks the agent; use `bd update` flags.
 
 MEMORY

@@ -7,8 +7,11 @@ MUST Run `bd swarm validate <root> --json` after graph construction, after each
   structural change, during recovery, and before close-out.
 MUST Stop on `swarmable=false`; inspect warnings because external dependencies,
   disconnected nodes, multiple endpoints, and empty graphs may remain warnings.
-MUST Use `bd ready` for dispatch; `bd swarm status <root> --json` is a coarse
-  progress view that omits external blockers, gates, deferral, and custom state.
+MUST Dispatch epic work with `bd ready --parent <epic> --unassigned --json`
+  and molecule work with `bd ready --mol <molecule> --unassigned --json`; never
+  dispatch from an unscoped repository-wide ready query.
+DEFAULT `bd swarm status <root> --json` is a coarse progress view that omits
+  external blockers, gates, deferral, and custom state.
 DEFAULT Create a swarm marker with `bd swarm create` only when durable
   coordinator discovery through `bd swarm list`, coordinator replacement, or
   an external scheduler requires a discoverable coordination handle.

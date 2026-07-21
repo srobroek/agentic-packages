@@ -10,8 +10,6 @@ EXECUTION SHAPES
 | deliberately frozen compiled template ID | persisted proto; otherwise cook formula source inline |
 | fixed child hierarchy owned by one workflow | formula `children` |
 | reusable child workflow with its own lifecycle | bond a formula or molecule |
-| SpecKit feature | persistent molecule from a repository formula owned by the SpecKit package |
-| project bootstrap | persistent molecule from a repository formula owned by the setup package |
 | shared campaign or dependency update | persistent molecule; bond independent durable arms |
 | local health check, patrol, or single-coordinator release | wisp; promote findings and squash only when the outcome matters |
 DEFAULT Store repository workflows under `.beads/formulas/`; user formulas are
