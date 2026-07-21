@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.1.0...agent-management--v1.1.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **agent-management:** distribute agent model injector ([#582](https://github.com/srobroek/agentic-packages/issues/582)) ([cd63272](https://github.com/srobroek/agentic-packages/commit/cd6327260d47012962795206f0be3a1bcd4b3475))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.0.0...agent-management--v1.1.0) (2026-07-16)
 
 

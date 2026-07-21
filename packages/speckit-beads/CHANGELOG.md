@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v3.0.0...speckit-beads--v3.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([649d3cc](https://github.com/srobroek/agentic-packages/commit/649d3ccf623c6cc25ab036cef1b17a614cd50a5e))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v2.0.0...speckit-beads--v3.0.0) (2026-07-21)
 
 

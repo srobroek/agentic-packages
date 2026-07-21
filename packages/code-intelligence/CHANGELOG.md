@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.0.0...code-intelligence--v8.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([649d3cc](https://github.com/srobroek/agentic-packages/commit/649d3ccf623c6cc25ab036cef1b17a614cd50a5e))
+
 ## [8.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v7.0.0...code-intelligence--v8.0.0) (2026-07-21)
 
 
