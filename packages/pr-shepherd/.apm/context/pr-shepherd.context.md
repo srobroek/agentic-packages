@@ -2,8 +2,9 @@
 
 MERGE BEADS
 MUST Before `gh pr create`, create exactly one open merge task labeled
-  `pr:merge` and `agent:integrator`; store branch, repo, origin_actor, and
-  tracked/closing bead ids, then stamp pr/base/head immediately after creation.
+  `pr:merge` and `agent:integrator`; store `branch`, `repo`, `origin_actor`,
+  `tracks_beads`, and `closes_beads` metadata, then stamp pr/base/head
+  immediately after creation.
   The PR body carries the exact `Merge-Bead` id; dedupe on repo+PR.
 MUST For every `Closes-Bead: <work>` add `bd dep add <work> <merge-bead>`.
   One work bead may depend on many PR merge beads; one merge bead may block

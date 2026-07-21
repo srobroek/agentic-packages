@@ -15,8 +15,36 @@ from typing import Any
 
 CONTROL = {";", "&&", "||", "|", "&", "(", ")"}
 SHELLS = {"bash", "sh", "zsh", "dash", "fish", "ksh"}
-WRAPPERS = {"command", "env", "nohup", "time"}
+WRAPPERS = {"command", "env", "nohup", "sudo", "time"}
 COMMAND_KEYWORDS = {"if", "then", "elif", "else", "while", "until", "do", "!", "{"}
+
+WRAPPER_OPTIONS_WITH_VALUE = {
+    "env": {"-u", "--unset", "-C", "--chdir", "--argv0"},
+    "nohup": set(),
+    "sudo": {
+        "-u",
+        "--user",
+        "-g",
+        "--group",
+        "-h",
+        "--host",
+        "-p",
+        "--prompt",
+        "-C",
+        "--close-from",
+        "-D",
+        "--chdir",
+        "-R",
+        "--chroot",
+        "-T",
+        "--command-timeout",
+        "-r",
+        "--role",
+        "-t",
+        "--type",
+    },
+    "time": {"-f", "--format", "-o", "--output"},
+}
 
 
 def deny(reason: str) -> None:
@@ -71,6 +99,63 @@ def shell_tokens(command: str) -> list[str]:
     return normalized
 
 
+def unwrap_command(tokens: list[str], index: int) -> int | None:
+    """Return the executable token after command wrappers and their options."""
+    while index < len(tokens):
+        token = tokens[index]
+        if "=" in token and not token.startswith("=") and not token.startswith("-"):
+            index += 1
+            continue
+        wrapper = os.path.basename(token)
+        if wrapper not in WRAPPERS:
+            return index
+        index += 1
+        if wrapper == "command":
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                if "v" in option[1:] or "V" in option[1:]:
+                    return None
+                index += 1
+            continue
+        options_with_value = WRAPPER_OPTIONS_WITH_VALUE[wrapper]
+        while index < len(tokens):
+            option = tokens[index]
+            if option == "--":
+                index += 1
+                break
+            if wrapper == "env" and "=" in option and not option.startswith("-"):
+                index += 1
+                continue
+            if not option.startswith("-") or option == "-":
+                break
+            name = option.split("=", 1)[0]
+            index += 1
+            if name in options_with_value and "=" not in option:
+                index += 1
+        continue
+    return None
+
+
+def gh_create_arguments(tokens: list[str], index: int) -> tuple[list[str], int] | None:
+    """Normalize a gh PR create invocation, including gh global repo options."""
+    cursor = index + 1
+    while cursor < len(tokens) and tokens[cursor] not in CONTROL:
+        option = tokens[cursor]
+        if option in {"-R", "--repo", "--hostname"}:
+            cursor += 2
+            continue
+        if option.startswith("--repo=") or option.startswith("--hostname="):
+            cursor += 1
+            continue
+        break
+    if tokens[cursor : cursor + 2] != ["pr", "create"]:
+        return None
+    end = cursor + 2
+    while end < len(tokens) and tokens[end] not in CONTROL:
+        end += 1
+    return [tokens[index], "pr", "create", *tokens[cursor + 2 : end]], end
+
+
 def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
     if depth > 4:
         raise ValueError("nested shell command depth exceeds policy limit")
@@ -88,14 +173,13 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
         if not command_start:
             index += 1
             continue
-        if "=" in token and not token.startswith("="):
+        executable = unwrap_command(tokens, index)
+        if executable is None:
+            command_start = False
             index += 1
             continue
-
-        basename = os.path.basename(token)
-        if basename in WRAPPERS:
-            index += 1
-            continue
+        index = executable
+        basename = os.path.basename(tokens[index])
         if basename in SHELLS:
             option_index = index + 1
             while option_index < len(tokens) and tokens[option_index] not in CONTROL:
@@ -110,11 +194,9 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
             command_start = False
             index = option_index + 2
             continue
-        if basename == "gh" and tokens[index + 1 : index + 3] == ["pr", "create"]:
-            end = index + 3
-            while end < len(tokens) and tokens[end] not in CONTROL:
-                end += 1
-            found.append(tokens[index:end])
+        if basename == "gh" and (parsed := gh_create_arguments(tokens, index)):
+            invocation, end = parsed
+            found.append(invocation)
             command_start = False
             index = end
             continue
@@ -216,10 +298,24 @@ def validate(invocation: list[str], cwd: Path) -> str | None:
     merge_record = bead_record(cwd, merge_id)
     if merge_record is None:
         return f"Merge-Bead '{merge_id}' is not resolvable from this repository."
-    if merge_record.get("status") == "closed" or "pr:merge" not in merge_record.get(
-        "labels", []
+    labels = set(merge_record.get("labels", []))
+    if merge_record.get("status") != "open" or not {
+        "pr:merge",
+        "agent:integrator",
+    }.issubset(labels):
+        return (
+            f"Merge-Bead '{merge_id}' must be open and labeled pr:merge "
+            "and agent:integrator."
+        )
+    metadata = merge_record.get("metadata")
+    required_metadata = {"branch", "repo", "origin_actor"}
+    if not isinstance(metadata, dict) or any(
+        not metadata.get(name) for name in required_metadata
     ):
-        return f"Merge-Bead '{merge_id}' must be open and labeled pr:merge."
+        return (
+            f"Merge-Bead '{merge_id}' must have branch, repo, and origin_actor "
+            "metadata before PR creation."
+        )
     for bead_id in tracks:
         if bead_record(cwd, bead_id) is None:
             return f"Tracks-Bead '{bead_id}' is not resolvable from this repository."
@@ -243,6 +339,13 @@ def validate(invocation: list[str], cwd: Path) -> str | None:
                 f"Closes-Bead '{bead_id}' must already depend on Merge-Bead "
                 f"'{merge_id}' before PR creation."
             )
+    if set(metadata.get("tracks_beads", [])) != set(tracks) or set(
+        metadata.get("closes_beads", [])
+    ) != set(closes):
+        return (
+            f"Merge-Bead '{merge_id}' tracked/closing metadata must match the "
+            "PR body trailers."
+        )
     return None
 
 

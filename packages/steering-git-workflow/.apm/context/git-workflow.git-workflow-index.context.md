@@ -21,9 +21,9 @@ Shipping (choose one, confirm if ambiguous):
 Beads linkage (when `bd where` succeeds):
 
 - Before PR creation, create one open task bead labeled `pr:merge` and
-  `agent:integrator`, with branch/repo/origin metadata. For every closing work
-  bead, add `bd dep add <work-bead> <merge-bead>` before approval freezes the
-  graph.
+  `agent:integrator`, with `branch`, `repo`, `origin_actor`, `tracks_beads`,
+  and `closes_beads` metadata. For every closing work bead, add `bd dep add
+  <work-bead> <merge-bead>` before approval freezes the graph.
 - Add a final `## Beads` section with one `Tracks-Bead: <id>` line for each
   work bead represented by the PR, exactly one `Merge-Bead: <id>`, and
   `Closes-Bead: <id>` for each predeclared completion edge. Tracking alone

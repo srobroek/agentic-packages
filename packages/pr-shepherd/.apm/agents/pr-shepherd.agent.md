@@ -20,7 +20,7 @@ the same pass; document nothing outside bead comments.
 ## Task
 
 1. Gate: `bd where` and `gh` available, else report and stop. Export
-   `BEADS_ACTOR="claude/pr-shepherd/<session-id>"`, `BD_NO_PAGER=1
+   `BEADS_ACTOR="pr-shepherd/<runtime>/<session-id>"`, `BD_NO_PAGER=1
    BD_NON_INTERACTIVE=1`.
 2. Load `pr:merge` beads; their PR bodies must name the exact merge bead and
    metadata must contain repo+PR anchors. Ignore drafts for merge processing

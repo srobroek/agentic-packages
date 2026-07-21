@@ -19,7 +19,7 @@ TRIGGER
 ## Workflow
 
 1. Gate: `bd where` and `command -v gh` both succeed, else report which is
-   missing and stop. Export `BEADS_ACTOR="claude/pr-shepherd/<session-id>"`,
+   missing and stop. Export `BEADS_ACTOR="pr-shepherd/<runtime>/<session-id>"`,
    `BD_NO_PAGER=1 BD_NON_INTERACTIVE=1`.
 2. Load durable PR nodes with `bd list --label pr:merge --status all --json`.
    Each open node must have repo+PR metadata and its PR body must name that
