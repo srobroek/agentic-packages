@@ -1049,7 +1049,7 @@
     {
       "name": "mcp-1mcp",
       "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "mcp",
         "aggregation"
