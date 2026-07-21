@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.0.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.2...srobroek-agentic--v16.0.3) (2026-07-21)
+
+
+### Bug Fixes
+
+* sanitize stale hooks and harden 1MCP startup ([#586](https://github.com/srobroek/agentic-packages/issues/586)) ([b7c2e8f](https://github.com/srobroek/agentic-packages/commit/b7c2e8f7bfb5c7592c0b991c235e64a4d90882a4))
+
 ## [16.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.1...srobroek-agentic--v16.0.2) (2026-07-21)
 
 
