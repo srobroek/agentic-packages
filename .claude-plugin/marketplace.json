@@ -1445,6 +1445,19 @@
       "source": "./packages/steering-git-workflow"
     },
     {
+      "name": "steering-global-bootstrap",
+      "description": "User-scope bootstrap steering that keeps reusable agentic assets in APM packages and limits chezmoi to session profiles and dotfile management. Install globally; project behavior remains project-local.",
+      "version": "1.0.0",
+      "tags": [
+        "steering",
+        "bootstrap",
+        "global",
+        "apm"
+      ],
+      "category": "steering",
+      "source": "./packages/steering-global-bootstrap"
+    },
+    {
       "name": "steering-infrastructure",
       "description": "Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering.",
       "version": "2.1.0",

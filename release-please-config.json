@@ -1520,6 +1520,18 @@
         }
       ]
     },
+    "packages/steering-global-bootstrap": {
+      "release-type": "simple",
+      "component": "steering-global-bootstrap",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-infrastructure": {
       "release-type": "simple",
       "component": "steering-infrastructure",
