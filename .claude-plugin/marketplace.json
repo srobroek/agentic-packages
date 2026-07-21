@@ -1247,7 +1247,7 @@
     {
       "name": "release-queue-watch",
       "description": "Watches open GitHub pull-request checks with the native gh interval watcher, rediscovering new PRs between passes without mutating repository state.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "tags": [
         "github",
         "pull-requests",
