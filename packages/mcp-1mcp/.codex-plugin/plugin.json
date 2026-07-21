@@ -1,0 +1,10 @@
+{
+  "name": "mcp-1mcp",
+  "version": "0.1.0",
+  "description": "Connects clients to the shared machine-managed 1MCP runtime.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "mcpServers": "./.codex.mcp.json"
+}

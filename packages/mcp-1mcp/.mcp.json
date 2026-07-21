@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "1mcp": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        "command -v 1mcp >/dev/null 2>&1 || { echo 1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; }; 1mcp serve --background >/dev/null || { 1mcp serve --status >&2; exit 1; }; exec 1mcp proxy"
+      ]
+    }
+  }
+}

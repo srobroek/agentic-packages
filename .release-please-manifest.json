@@ -72,6 +72,7 @@
   "packages/lsp-terraform": "0.3.0",
   "packages/lsp-typescript": "0.3.0",
   "packages/matt-skills": "2.1.0",
+  "packages/mcp-1mcp": "0.1.0",
   "packages/mcp-codebase-memory": "1.2.0",
   "packages/mcp-context7": "1.2.0",
   "packages/mcp-mempalace": "0.4.0",

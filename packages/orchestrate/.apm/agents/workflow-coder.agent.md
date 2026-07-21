@@ -42,9 +42,9 @@ changes reach the caller's tree only via your pushed branch.
    it; raise it (ASK below), leave for the orchestrator.
 3. Prefer existing project patterns / local helper APIs. Minimal, behavioral
    changes only. Add/update focused tests for behavior you change.
-4. Code discovery: graph via `codebase-memory` (search_graph, trace_path,
-   get_code_snippet); fallback grep. Library API docs: context7. Follow any
-   task-specific tool guidance from the orchestrator.
+4. Code discovery: Serena for semantic symbols, references, and edits; `rg` for
+   exact text and paths; direct inspection when semantic tools cannot answer.
+   Library API docs: context7. Follow task-specific orchestrator guidance.
 5. Keep working notes in `<worktree>/.scratch.md`; cite it as `log:` in your
    `REPORTED` — don't paste it inline.
 

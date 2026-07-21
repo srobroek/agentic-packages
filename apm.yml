@@ -546,6 +546,12 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
+    - name: mcp-1mcp
+      source: ./packages/mcp-1mcp
+      category: mcp
+      tags:
+        - mcp
+        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp

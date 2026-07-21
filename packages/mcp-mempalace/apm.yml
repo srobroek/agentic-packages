@@ -9,9 +9,9 @@ description: >-
   demand via mempalace_search with a real query), a SessionEnd hook that
   automatically mines each completed session's transcript into the repo's wing
   (with FTS5 self-heal), a one-time backfill script for historical transcripts,
-  and steering that scopes MemPalace (cross-session memory) against
-  codebase-memory (current code structure). Complements code intelligence; it is
-  not code navigation.
+  and steering that scopes MemPalace to cross-session memory rather than current
+  code structure. Complements semantic code intelligence; it is not code
+  navigation.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

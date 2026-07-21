@@ -35,10 +35,10 @@ Prefer existing project patterns and local helper APIs. Keep changes minimal and
 behavioral. Add or update focused tests when the task changes behavior or fixes a
 bug.
 
-For code discovery: prefer the graph per `codebase-memory` (search_graph,
-trace_path, get_code_snippet); fall back to grep when it can't answer. Use
-repomix (pack_codebase, grep_repomix_output) and context7 (resolve-library-id
-then query-docs) for library API documentation.
+For code discovery, use Serena for semantic symbols, references, and edits; use
+`rg` for exact text and paths; fall back to direct file inspection when semantic
+tools cannot answer. Use repomix for bounded bulk context and context7 for
+library API documentation.
 
 ## Verify, then commit
 

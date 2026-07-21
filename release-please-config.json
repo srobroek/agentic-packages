@@ -920,6 +920,18 @@
         }
       ]
     },
+    "packages/mcp-1mcp": {
+      "release-type": "simple",
+      "component": "mcp-1mcp",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/mcp-codebase-memory": {
       "release-type": "simple",
       "component": "mcp-codebase-memory",

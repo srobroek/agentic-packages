@@ -192,8 +192,8 @@ apm install code-review@srobroek-agentic
 # A single agent
 apm install agent-pr-reviewer@srobroek-agentic
 
-# An MCP server package
-apm install mcp-context7@srobroek-agentic
+# A shared MCP aggregation package
+apm install mcp-1mcp@srobroek-agentic
 ```
 
 `--target` is **optional** -- plain `apm install` and `apm compile` auto-detect which runtimes to deploy for from what's already in your project (`.claude/`, `.codex/`, etc.). Only pass `--target` when you want to force a specific set, e.g. on a fresh project that doesn't have those dirs yet:

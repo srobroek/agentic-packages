@@ -79,11 +79,11 @@ Expect:
 
 ### MCP Tool Use
 
-- Use `codebase-memory-mcp` to verify required functions, types, routes, public APIs, and call paths exist and connect as expected.
+- Use Serena to verify required functions, types, references, routes, and public APIs exist and connect as expected; use `rg` for exact text and paths.
 - Use `repomix` for broad context when a requirement spans multiple packages or workflows.
 - Use `playwright` only for UI/browser requirements, visible workflow assertions, persisted outputs, or interaction states named by the spec.
 - Use GitHub tooling only for issue/PR evidence when the spec process is issue-backed or the parent asks for it.
-- If an MCP tool cannot prove a requirement, mark the evidence inconclusive or verify through direct file/runtime checks.
+- If a semantic tool cannot prove a requirement, mark the evidence inconclusive or verify through direct file/runtime checks.
 
 ### Workflow
 
@@ -147,10 +147,10 @@ Expect:
 
 ### MCP Tool Use
 
-- Use `codebase-memory-mcp` to find functions, types, routes, config keys, and references named or implied by completed tasks.
+- Use Serena to find functions, types, routes, and references named or implied by completed tasks; use `rg` for config keys and exact text.
 - Use `repomix` when completed tasks span several files or need broad usage/reference checks.
 - Use GitHub tooling when the authoritative completion source is closed issues or when the parent provides issue references.
-- Do not accept MCP search hits as completion by themselves; run the verification cascade and cite concrete evidence.
+- Do not accept semantic search hits as completion by themselves; run the verification cascade and cite concrete evidence.
 
 ### Data Source
 
