@@ -99,8 +99,7 @@ subtree has not been trusted.
 ## Package-specific adaptations
 
 - `agent-coder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
-- `hooks-subagent-worktree`: Codex uses explicit worktree isolation plus APM steering.
-- `hooks-worktree`: Claude-only lifecycle hooks; Codex uses explicit wrappers.
+- `worktrunk-writer`: both runtimes consume parent-created Worktrunk leases; Codex unified shell paths remain outside complete hook interception.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
 - `mcp-repomix`: Codex refreshes cannot reliably suppress subagent Git calls.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
@@ -146,8 +145,6 @@ plugin manifests do not support every APM component type.
 | `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
 | `hooks-precommit-gate` | Partial | Simple commit/push commands are covered; install real pre-commit hooks for tool-independent enforcement. |
 | `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
-| `hooks-subagent-worktree` | Partial | Codex cannot intercept the Agent tool; APM installs steering and callers pass worktree isolation explicitly. |
-| `hooks-worktree` | Claude-only | Codex has no WorktreeCreate/WorktreeRemove events; use explicit worktree wrappers and cleanup. |
 | `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
 | `language-python` | Partial | All APM members except native pyright LSP integration work; run pyright directly and use code MCP tools. |
 | `language-rust` | Partial | All APM members except native rust-analyzer integration work; use cargo check/clippy and code MCP tools. |
@@ -166,6 +163,7 @@ plugin manifests do not support every APM component type.
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
 | `speckit` | Partial | Skills and supported hooks work; native Codex role profiles receive the SpecKit task protocol, and Claude Skill-tool reminder has no Codex event equivalent. |
+| `worktrunk-writer` | Partial | Preparation, explicit lease validation, inventory, and apply_patch/simple Bash hooks work; unified shell paths still require sandbox policy and explicit validation. |
 
 ## Validation
 

@@ -65,8 +65,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "hooks-package-investigate",
     "hooks-precommit-gate",
     "hooks-quality",
-    "hooks-subagent-worktree",
-    "hooks-worktree",
     "language-go",
     "language-python",
     "language-rust",
@@ -85,6 +83,7 @@ CODEX_DIFFERENCE_PACKAGES = {
     "release-please",
     "secrets-scan",
     "speckit",
+    "worktrunk-writer",
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
 HOOK_MANIFEST_CLASSIFICATION = {
@@ -115,6 +114,8 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/write-docs/.apm/hooks/hooks.json": "native-required",
+    "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-claude-hooks.json": "target-specific compatibility",
+    "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-codex-hooks.json": "target-specific compatibility",
 }
 OBSOLETE_HOOK_MANIFESTS = {
     "packages/agent-coder/.apm/hooks/agent-coder-claude-hooks.json",

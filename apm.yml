@@ -479,22 +479,6 @@ marketplace:
         - model
         - cost
         - routing
-    - name: hooks-subagent-worktree
-      source: ./packages/hooks-subagent-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - subagent
-        - isolation
-        - policy
-    - name: hooks-worktree
-      source: ./packages/hooks-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - lifecycle
     - name: incident-response
       source: ./packages/incident-response
       category: debugging
@@ -985,6 +969,16 @@ marketplace:
         - research
         - services
         - release-notes
+    - name: worktrunk-writer
+      source: ./packages/worktrunk-writer
+      category: project-lifecycle
+      tags:
+        - skill
+        - hooks
+        - worktrunk
+        - worktree
+        - agents
+        - lifecycle
     - name: write-agentic
       source: ./packages/write-agentic
       category: agentic-maintenance

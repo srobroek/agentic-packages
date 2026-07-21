@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/worktrunk-writer.py hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

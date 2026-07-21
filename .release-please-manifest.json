@@ -135,6 +135,7 @@
   "packages/verify": "2.1.0",
   "packages/web-fetch": "2.1.0",
   "packages/whats-new": "2.1.0",
+  "packages/worktrunk-writer": "1.0.0",
   "packages/write-agentic": "3.2.0",
   "packages/write-docs": "1.2.1"
 }
