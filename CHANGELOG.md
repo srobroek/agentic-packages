@@ -1,5 +1,16 @@
 # Changelog
 
+## [16.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v15.0.0...srobroek-agentic--v16.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Replace patch-agentic-tools with the trusted install-agentic-tools, update-agentic-tools, or setup-agentic-tools wrappers. Review the lifecycle block and run apm lifecycle trust before using those commands.
+
+### Features
+
+* require trusted lifecycle hooks for agent model injection ([8fa1e37](https://github.com/srobroek/agentic-packages/commit/8fa1e374e9cd10dfbf7b0bcc4142d6997620e0fb))
+
 ## [15.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v14.0.0...srobroek-agentic--v15.0.0) (2026-07-21)
 
 

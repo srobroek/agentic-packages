@@ -1,5 +1,5 @@
 name: agent-explorer
-version: 0.1.0
+version: 1.0.0
 description: Read-only exploration agent for bounded code and configuration discovery.
 author: Sjors Robroek
 license: Apache-2.0
@@ -7,4 +7,7 @@ type: hybrid
 target: codex
 includes: auto
 category: code-intelligence
-tags: [agent, codex, routing]
+tags:
+  - agent
+  - codex
+  - routing

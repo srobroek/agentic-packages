@@ -1,10 +1,15 @@
 name: agent-reviewer-high
-version: 0.1.0
-description: Adversarial read-only reviewer for security-sensitive and broad-impact changes.
+version: 1.0.0
+description: >-
+  Adversarial read-only reviewer for security-sensitive and broad-impact
+  changes.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: codex
 includes: auto
 category: quality
-tags: [agent, codex, routing]
+tags:
+  - agent
+  - codex
+  - routing
