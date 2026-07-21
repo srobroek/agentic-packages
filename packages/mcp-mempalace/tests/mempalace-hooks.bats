@@ -100,8 +100,10 @@ _transcript() {
 
 _wait_calls() {
   # Detached worker is async; poll briefly for the stub call log.
+  expected="${1:-1}"
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    [ -s "$CALLS" ] && return 0
+    count="$(grep -c -- "--mode convos" "$CALLS" 2>/dev/null || true)"
+    [ "$count" -ge "$expected" ] && return 0
     sleep 0.25
   done
   return 1
@@ -150,7 +152,7 @@ EOF
   jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
   printf '{"type":"user"}\n' >> "$T"
   jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
-  _wait_calls
+  _wait_calls 2
   wing="$(basename "$REPO")"
   # both line-count-suffixed names were staged at some point; at minimum the
   # names differ, so the grown transcript is not skipped as already-mined

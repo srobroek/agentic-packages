@@ -869,6 +869,18 @@
       "category": "planning-product"
     },
     {
+      "name": "mcp-1mcp",
+      "source": {
+        "source": "local",
+        "path": "./packages/mcp-1mcp"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "mcp"
+    },
+    {
       "name": "mcp-codebase-memory",
       "source": {
         "source": "local",

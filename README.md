@@ -9,7 +9,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **4 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **19 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **8 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **9 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 - **13 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
@@ -170,7 +170,7 @@ Specifically, native install does not deliver:
 - `codex-hook-contract` (reference instructions only);
 - the architecture **context** carried by `language-rust` / `language-typescript`;
 - the always-on **instruction** inside `hooks-subagent-worktree` (the hook itself works; the "declare isolation" guidance is APM-only);
-- the Tauri instruction/context inside `mcp-tauri` (the MCP server works; the steering is APM-only).
+- the Tauri instruction/context inside `mcp-tauri` (the MCP runtime is configured separately; the steering is APM-only).
 
 If you rely on steering, use the **APM CLI flow** for those packages (or for everything). Bundles that aggregate external plugins (e.g. `developer-tools`, `security`, `matt-skills`) likewise resolve their members only through APM.
 
@@ -192,8 +192,8 @@ apm install code-review@srobroek-agentic
 # A single agent
 apm install agent-pr-reviewer@srobroek-agentic
 
-# An MCP server package
-apm install mcp-context7@srobroek-agentic
+# A shared MCP aggregation package
+apm install mcp-1mcp@srobroek-agentic
 ```
 
 `--target` is **optional** -- plain `apm install` and `apm compile` auto-detect which runtimes to deploy for from what's already in your project (`.claude/`, `.codex/`, etc.). Only pass `--target` when you want to force a specific set, e.g. on a fresh project that doesn't have those dirs yet:

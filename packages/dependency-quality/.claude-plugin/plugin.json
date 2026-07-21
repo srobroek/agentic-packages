@@ -1,7 +1,7 @@
 {
   "name": "dependency-quality",
   "version": "3.2.0",
-  "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
+  "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it and audits the lockfile for known CVEs. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -14,10 +14,6 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/dep-audit"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/mcp-package-version"
     }
   ]
 }

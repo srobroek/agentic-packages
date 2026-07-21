@@ -148,7 +148,7 @@ marketplace:
       category: code-intelligence
       tags:
         - bundle
-        - graph
+        - semantic
     - name: codebase-memory
       source: ./packages/codebase-memory
       category: code-intelligence
@@ -546,6 +546,12 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
+    - name: mcp-1mcp
+      source: ./packages/mcp-1mcp
+      category: mcp
+      tags:
+        - mcp
+        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp

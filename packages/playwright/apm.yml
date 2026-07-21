@@ -1,8 +1,8 @@
 name: playwright
 version: 3.2.0
 description: >-
-  Automate browser tasks through a Playwright MCP server: navigate, click, fill
-  forms, and extract page data.
+  Automate browser tasks with Playwright: navigate, click, fill forms, and
+  extract page data through the available browser tooling.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
@@ -13,6 +13,3 @@ tags:
   - skill
   - frontend
   - browser
-dependencies:
-  apm:
-    - srobroek/agentic-packages/packages/mcp-playwright#>=1.2.0 <2.0.0

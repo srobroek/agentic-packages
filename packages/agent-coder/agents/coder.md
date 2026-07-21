@@ -38,10 +38,10 @@ Structure your work so the main thread can commit continuously in atomic units.
 Sequence changes into self-contained steps; call out natural commit boundaries
 (which files belong together, a suggested message per unit) in your final report.
 
-For code discovery: prefer the graph per `codebase-memory` (search_graph,
-trace_path, get_code_snippet); fall back to grep when it can't answer. Use
-repomix (pack_codebase, grep_repomix_output) and context7 (resolve-library-id
-then query-docs) for library API documentation.
+For code discovery, use Serena for semantic symbols, references, and edits; use
+`rg` for exact text and paths; fall back to direct file inspection when semantic
+tools cannot answer. Use repomix for bounded bulk context and context7 for
+library API documentation.
 
 ## Rules
 

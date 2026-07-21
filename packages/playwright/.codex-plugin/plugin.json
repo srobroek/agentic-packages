@@ -1,7 +1,7 @@
 {
   "name": "playwright",
   "version": "3.2.0",
-  "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
+  "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
   "author": {
     "name": "Sjors Robroek"
   },

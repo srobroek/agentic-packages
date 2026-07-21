@@ -152,11 +152,11 @@
     },
     {
       "name": "code-intelligence",
-      "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
+      "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
       "version": "6.2.0",
       "tags": [
         "bundle",
-        "graph"
+        "semantic"
       ],
       "category": "code-intelligence",
       "source": "./packages/code-intelligence"
@@ -249,7 +249,7 @@
     },
     {
       "name": "dependency-quality",
-      "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
+      "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it and audits the lockfile for known CVEs. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
       "version": "3.2.0",
       "tags": [
         "bundle",
@@ -854,6 +854,17 @@
       "source": "./packages/matt-skills"
     },
     {
+      "name": "mcp-1mcp",
+      "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
+      "version": "0.1.0",
+      "tags": [
+        "mcp",
+        "aggregation"
+      ],
+      "category": "mcp",
+      "source": "./packages/mcp-1mcp"
+    },
+    {
       "name": "mcp-codebase-memory",
       "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).",
       "version": "1.2.0",
@@ -877,7 +888,7 @@
     },
     {
       "name": "mcp-mempalace",
-      "description": "MCP server package for MemPalace, a local-first cross-session memory layer for coding agents. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships the mempalace-mcp stdio server, a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace (cross-session memory) against codebase-memory (current code structure). Complements code intelligence; it is not code navigation.",
+      "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
       "version": "0.4.0",
       "tags": [
         "mcp",
@@ -933,7 +944,7 @@
     },
     {
       "name": "mcp-tauri",
-      "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
+      "description": "Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment.",
       "version": "1.2.0",
       "tags": [
         "mcp",
@@ -968,7 +979,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
+      "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
       "version": "3.2.0",
       "tags": [
         "skill",

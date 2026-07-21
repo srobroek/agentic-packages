@@ -26,19 +26,22 @@ A package ships universal `.apm/hooks/hooks.json` only when behavior is genuinel
 
 ## MCP server packages
 
-Pre-wired Model Context Protocol servers. Installing one adds the server's tools to your runtime's MCP config -- no manual server setup.
+MCP-related runtime and integration packages. Pure server packages add a direct
+runtime registration; integration packages retain hooks and steering while
+expecting the MCP runtime to be configured separately by the environment.
 
 <!-- BEGIN:mcp -->
 | MCP Package | Description |
 | --- | --- |
+| `mcp-1mcp` | MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy. |
 | `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
 | `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
-| `mcp-mempalace` | MCP server package for MemPalace, a local-first cross-session memory layer for coding agents. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships the mempalace-mcp stdio server, a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace (cross-session memory) against codebase-memory (current code structure). Complements code intelligence; it is not code navigation. |
+| `mcp-mempalace` | MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment. |
 | `mcp-package-version` | MCP server for package version discovery |
 | `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
 | `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
-| `mcp-tauri` | MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup. |
+| `mcp-tauri` | Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment. |
 <!-- END:mcp -->
 
 ---

@@ -40,7 +40,7 @@ Expect:
 ## MCP Tool Use
 
 - Use `context7` to resolve library IDs and query current API documentation.
-- Use `codebase-memory-mcp` only to understand which libraries, frameworks, or symbols the SpecKit question actually touches.
+- Use Serena only to identify which libraries, frameworks, or symbols the SpecKit question actually touches; use `rg` for exact text and paths.
 - Use `fetcher` or `github` for official docs, release notes, changelogs, repository source, or issues when Context7 is insufficient.
 - If sources disagree or a tool has no coverage, report the uncertainty instead of smoothing it over.
 
