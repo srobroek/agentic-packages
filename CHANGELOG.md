@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.1...srobroek-agentic--v16.0.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* make lifecycle trust checks reliable ([#585](https://github.com/srobroek/agentic-packages/issues/585)) ([6d7f4af](https://github.com/srobroek/agentic-packages/commit/6d7f4af411e0ce2286094c74891296be28b6f71c))
+
 ## [16.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.0...srobroek-agentic--v16.0.1) (2026-07-21)
 
 
