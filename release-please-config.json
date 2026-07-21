@@ -1316,6 +1316,18 @@
         }
       ]
     },
+    "packages/release-queue-watch": {
+      "release-type": "simple",
+      "component": "release-queue-watch",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/resume-cv": {
       "release-type": "simple",
       "component": "resume-cv",
