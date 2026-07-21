@@ -1,6 +1,6 @@
 {
   "name": "agent-sol-xhigh",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
   "author": {
     "name": "Sjors Robroek"

@@ -8,7 +8,7 @@
     {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "agent",
         "adversarial",
@@ -21,7 +21,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
-      "version": "6.0.0",
+      "version": "6.1.0",
       "tags": [
         "agent",
         "engineering",
@@ -33,7 +33,7 @@
     {
       "name": "agent-coder-high",
       "description": "Escalated coding agent for complex bounded implementation and debugging.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -45,7 +45,7 @@
     {
       "name": "agent-explorer",
       "description": "Read-only exploration agent for bounded code and configuration discovery.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -57,7 +57,7 @@
     {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "agent",
         "engineering",
@@ -69,7 +69,7 @@
     {
       "name": "agent-luna-high",
       "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -81,7 +81,7 @@
     {
       "name": "agent-luna-low",
       "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -93,7 +93,7 @@
     {
       "name": "agent-luna-medium",
       "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -105,7 +105,7 @@
     {
       "name": "agent-luna-xhigh",
       "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -129,7 +129,7 @@
     {
       "name": "agent-operator",
       "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -141,7 +141,7 @@
     {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "tags": [
         "agent",
         "quality",
@@ -153,7 +153,7 @@
     {
       "name": "agent-reasoner",
       "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -165,7 +165,7 @@
     {
       "name": "agent-reviewer-high",
       "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -177,7 +177,7 @@
     {
       "name": "agent-reviewer-low",
       "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -189,7 +189,7 @@
     {
       "name": "agent-sol-high",
       "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -201,7 +201,7 @@
     {
       "name": "agent-sol-low",
       "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -213,7 +213,7 @@
     {
       "name": "agent-sol-medium",
       "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -225,7 +225,7 @@
     {
       "name": "agent-sol-xhigh",
       "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -237,7 +237,7 @@
     {
       "name": "agent-worker",
       "description": "Bounded implementation worker for changes without a more specific coding role.",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "tags": [
         "agent",
         "codex",
@@ -249,7 +249,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "tags": [
         "bundle",
         "steering"
@@ -368,7 +368,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "8.0.0",
+      "version": "9.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -1150,7 +1150,7 @@
     {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (scope disjointness, agent discovery, conflict probe).",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "tags": [
         "skill",
         "agent",
@@ -1185,7 +1185,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; all parts are inert in repos without .beads/.",
-      "version": "0.5.2",
+      "version": "0.6.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1328,7 +1328,7 @@
     {
       "name": "sniff",
       "description": "Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code across 21 languages and formats, maps each finding to refactoring.guru smells, patterns, and techniques, stress-tests every recommendation with a built-in adversarial pragmatism critic, and produces a prioritized refactoring plan (impact, value, cost, severity, backwards-compatibility). Drives each language toolchain's own linters and analyzers (opportunistic, never required) with a guided first-run installer. Advisory by default; applies low-risk refactors only on explicit approval behind a verification re-run. Standalone: no APM dependencies.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "skill",
         "agent",
@@ -1343,7 +1343,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "8.0.0",
+      "version": "8.1.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1354,7 +1354,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "tags": [
         "speckit",
         "beads",
@@ -1539,7 +1539,7 @@
     {
       "name": "user-journeys",
       "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), the journey format spec and templates, and a deterministic index/lint script.",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "tags": [
         "journeys",
         "validation",

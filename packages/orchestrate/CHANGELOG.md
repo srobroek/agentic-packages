@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.0.0...orchestrate--v3.1.0) (2026-07-21)
+
+
+### Features
+
+* **agents:** preserve model routing in workflow packages ([df86afc](https://github.com/srobroek/agentic-packages/commit/df86afc45f5c6da979e939aba1ed7f5fe2fcbc6a))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v2.0.0...orchestrate--v3.0.0) (2026-07-21)
 
 

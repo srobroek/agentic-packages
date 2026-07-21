@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.5.2...pr-shepherd--v0.6.0) (2026-07-21)
+
+
+### Features
+
+* **agents:** preserve model routing in workflow packages ([df86afc](https://github.com/srobroek/agentic-packages/commit/df86afc45f5c6da979e939aba1ed7f5fe2fcbc6a))
+
 ## [0.5.2](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.5.1...pr-shepherd--v0.5.2) (2026-07-21)
 
 

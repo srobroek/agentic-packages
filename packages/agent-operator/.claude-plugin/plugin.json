@@ -1,6 +1,6 @@
 {
   "name": "agent-operator",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
   "author": {
     "name": "Sjors Robroek"
