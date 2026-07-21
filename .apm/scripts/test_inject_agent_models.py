@@ -6,11 +6,23 @@ from pathlib import Path
 import pytest
 
 
-SCRIPT = Path(__file__).with_name("inject-agent-models.py")
+ROOT_COPY = Path(__file__).with_name("inject-agent-models.py")
+SCRIPT = (
+    Path(__file__).parents[2]
+    / "packages"
+    / "agent-management"
+    / ".apm"
+    / "scripts"
+    / "inject-agent-models.py"
+)
 SPEC = importlib.util.spec_from_file_location("inject_agent_models", SCRIPT)
 assert SPEC and SPEC.loader
 injector = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(injector)
+
+
+def test_root_copy_matches_distributed_package_copy() -> None:
+    assert ROOT_COPY.read_bytes() == SCRIPT.read_bytes()
 
 
 def write_mapping(path: Path, model: str = "gpt-5.6-luna") -> None:
