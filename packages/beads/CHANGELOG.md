@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/srobroek/agentic-packages/compare/beads--v0.4.0...beads--v0.4.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **beads:** hand-correcting mirrored issue labels does not stick ([#566](https://github.com/srobroek/agentic-packages/issues/566)) ([7818094](https://github.com/srobroek/agentic-packages/commit/7818094e5cde5dfe25437cadcaa31e698befeee2))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.3.0...beads--v0.4.0) (2026-07-20)
 
 

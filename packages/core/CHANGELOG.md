@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.7.0](https://github.com/srobroek/agentic-packages/compare/core--v7.6.0...core--v7.7.0) (2026-07-20)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([df10eb4](https://github.com/srobroek/agentic-packages/commit/df10eb45b8a8306bed96ef925d1d5ca7d5d6d2c6))
+
 ## [7.6.0](https://github.com/srobroek/agentic-packages/compare/core--v7.5.0...core--v7.6.0) (2026-07-20)
 
 
