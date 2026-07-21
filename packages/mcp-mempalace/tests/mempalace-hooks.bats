@@ -28,9 +28,19 @@ setup() {
   # Stub mempalace on PATH: records invocations, emits canned status.
   BIN="$(mktemp -d "${BATS_TEST_TMPDIR}/bin.XXXXXX")"
   CALLS="$BIN/calls.log"
+  STAGED="$BIN/staged.log"
+  MINE_GATE="$BIN/mine.gate"
   cat > "$BIN/mempalace" <<EOF
 #!/usr/bin/env bash
+if [ "\$1" = "mine" ] && [ -d "\$2" ]; then
+  for staged in "\$2"/*.jsonl; do
+    [ -e "\$staged" ] && basename "\$staged" >> "$STAGED"
+  done
+fi
 echo "\$@" >> "$CALLS"
+if [ "\$1" = "mine" ]; then
+  while [ -e "$MINE_GATE" ]; do sleep 0.05; done
+fi
 if [ "\$1" = "status" ]; then
   wing="\$(basename "$REPO")"
   printf '  WING: %s\n    ROOM: technical  12 drawers\n    ROOM: decisions  3 drawers\n' "\$wing"
@@ -39,6 +49,10 @@ exit 0
 EOF
   chmod +x "$BIN/mempalace"
   export PATH="$BIN:$PATH"
+}
+
+teardown() {
+  rm -f "${MINE_GATE:-}"
 }
 
 # --- parse ------------------------------------------------------------------
@@ -170,17 +184,15 @@ EOF
 
 @test "auto-mine: resumed session (grown transcript) stages under a new name" {
   T="$(_transcript)"
+  touch "$MINE_GATE"
   jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
+  _wait_calls
   printf '{"type":"user"}\n' >> "$T"
   jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
   _wait_calls 2
-  wing="$(basename "$REPO")"
-  # both line-count-suffixed names were staged at some point; at minimum the
-  # names differ, so the grown transcript is not skipped as already-mined
-  run ls "$HOME/.mempalace/auto-mine/staging/$wing/"
-  # (files may already be deleted by the successful mine — assert via call log)
-  c="$(grep -c -- "--mode convos" "$CALLS")"
-  [ "$c" -ge 2 ]
+  rm "$MINE_GATE"
+  grep -Fxq 'session-abc.2.jsonl' "$STAGED"
+  grep -Fxq 'session-abc.3.jsonl' "$STAGED"
 }
 
 @test "auto-mine: no transcript_path on stdin -> exits 0, no mine" {
