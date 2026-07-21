@@ -31,9 +31,11 @@ Your shared context: the run epic bead id. Every node bead carries its git
 anchors in metadata (`branch`, `pushed`, `base_sha` — stamped by the coder).
 Tools:
 
+- `bd merge-slot create` — create the run slot once with a stable holder such
+  as `run-<id>-gatekeeper`.
 - `bd merge-slot acquire` / `release` — exclusive integration lock. Acquire
-  before touching the base; release immediately after the merge (or failure).
-  Held → `--wait` queues you; the waiters queue is the FCFS order.
+  without `--wait`; if held, report the holder and retry after release. Release
+  on every path, including conflict, CI wait, and failure.
 - `conflict-probe.sh conflicts <base> <branch>` — predicts conflicts WITHOUT
   mutating any tree (git merge-tree). Exit 1 + paths = conflicts.
 - `conflict-probe.sh pairwise <base> <a> <b>` — do two branches touch
@@ -47,9 +49,9 @@ Tools:
 
 ## Merge policy
 
-- **Order is first-come-first-served**, never pre-computed: you cannot predict
-  which coders finish when. Integrate approved nodes in the order they become ready;
-  under contention the merge-slot waiters queue IS the order.
+- **Order is not FIFO**: you cannot predict which coders finish or acquire the
+  slot first. Integrate an approved node only after successful acquisition;
+  under contention report the holder, defer, and retry.
 - Per approved node's branch:
   1. `bd merge-slot acquire` (create the slot once with `bd merge-slot create`
      if missing).
@@ -65,7 +67,7 @@ Tools:
      '{"pr":<n>,"merge_sha":"<sha>"}'`, then `bd merge-slot release`.
 - After a clean merge, the base advances; re-probe any other in-flight approved
   branch against the new base before merging it (an earlier-merged sibling may
-  now conflict). This is how you serialize FCFS safely.
+  now conflict). This is how you serialize integrations safely.
 - Open/merge PRs per repo convention. Never force-push shared branches. If a
   push touches CI workflow files and is rejected for missing scope, report it
   up rather than working around it.

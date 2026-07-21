@@ -6,7 +6,7 @@ description: >-
   model. Run state (task DAG, claims, audit trail, merge coordination) lives in
   beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus
   bundled agents (workflow-coder, workflow-reviewer, workflow-advisor,
-  integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart
+  integration-gatekeeper, audit-reporter), a Claude skill-scoped SubagentStart
   comms hook, explicit Codex spawn-brief protocol, and deterministic scripts
   (scope disjointness, agent discovery, conflict probe).
 author: Sjors Robroek

@@ -36,15 +36,16 @@ contract in `references/beads-store.md`.
 
 ## Persistent-infra brief (once each)
 
-Give the **gatekeeper** and **scribe** only the epic bead id, the artifacts path,
-and their job pointer — they carry their own protocol in their agent definition.
+Give the **gatekeeper** only the epic bead id, the artifacts path, and its job
+pointer. Invoke the audit reporter separately when a report is needed.
 Example: `You are the run gatekeeper. epic=<bead-id>. Integrate approved branches
-FCFS under the merge slot, conflict-guarded; message me MERGED/CONFLICT. Await
+under the merge slot without waiting; if held, report the holder, defer, and
+retry. Order follows successful acquisition, not FIFO. Message me MERGED/CONFLICT. Await
 approved nodes.`
 
 ## Reviewer brief (one per code node)
 
-Spawn a `workflow-reviewer`:
+Spawn a `workflow-reviewer` in a separately prepared Worktrunk worktree:
 `Review node <node> (bead <bead-id>): branch <b> at worktree <wt> (base <ref>).
 Scope <globs>. Report REVIEW <node> verdict=approve|changes; for changes give a
 numbered list, each` file:line — problem — required action `(one clause each).
@@ -55,5 +56,6 @@ Escalate the reviewer a tier in the brief when the diff is complex or security-c
 ## Advisor / debugger brief
 
 Spawn a `workflow-advisor` (kind:design) or `debugger`/`general-purpose` (kind:debug)
+in a separately prepared Worktrunk worktree whenever it will invoke tools;
 with the coder's question verbatim + the minimal code context from its `BLOCKED`.
 Reply ADVICE back in one call, read-only; relay to the coder, then dismiss.
