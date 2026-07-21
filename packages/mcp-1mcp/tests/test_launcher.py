@@ -27,6 +27,7 @@ def install_fake_commands(
     *,
     initially_ready: bool = False,
     start_succeeds: bool = True,
+    start_unready: bool = False,
     minimal_path: bool = False,
 ) -> tuple[dict[str, str], Path]:
     bin_dir = tmp_path / "bin"
@@ -47,6 +48,7 @@ def install_fake_commands(
         "  'serve --status') [ -f \"$state/ready\" ]; exit $? ;;\n"
         "  'serve --background')\n"
         "    printf 'background diagnostic\\n' >>\"$state/server.log\"\n"
+        "    [ \"$FAKE_1MCP_STARTS\" = unready ] && exit 0\n"
         "    [ \"$FAKE_1MCP_STARTS\" = success ] || exit 1\n"
         "    touch \"$state/ready\"\n"
         "    exit 0\n"
@@ -55,12 +57,7 @@ def install_fake_commands(
         "    [ \"$FAKE_1MCP_STARTS\" = hold ] || exit 2\n"
         "    sleep 30\n"
         "    ;;\n"
-        "  'serve --stop')\n"
-        "    pid=$(sed -n 's/.*\"pid\"[[:space:]]*:[[:space:]]*\\([0-9][0-9]*\\).*/\\1/p' \"$XDG_CONFIG_HOME/1mcp/server.pid\")\n"
-        "    [ -n \"$pid\" ] && kill \"$pid\" 2>/dev/null || :\n"
-        "    rm -f \"$XDG_CONFIG_HOME/1mcp/server.pid\" \"$state/ready\"\n"
-        "    exit 0\n"
-        "    ;;\n"
+        "  'serve --stop') exit 99 ;;\n"
         "  'proxy ') exit 0 ;;\n"
         "esac\n"
         "exit 2\n",
@@ -70,11 +67,25 @@ def install_fake_commands(
 
     env = dict(os.environ)
     env["FAKE_1MCP_STATE"] = str(state_dir)
-    env["FAKE_1MCP_STARTS"] = "success" if start_succeeds else "failure"
+    env["FAKE_1MCP_STARTS"] = (
+        "unready" if start_unready else ("success" if start_succeeds else "failure")
+    )
     env["XDG_CONFIG_HOME"] = str(tmp_path / "config")
     env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
     if minimal_path:
-        for command in ("date", "mkdir", "mv", "ps", "rm", "rmdir", "sed", "sleep", "touch", "tr"):
+        for command in (
+            "awk",
+            "date",
+            "mkdir",
+            "mv",
+            "ps",
+            "rm",
+            "rmdir",
+            "sed",
+            "sleep",
+            "touch",
+            "tr",
+        ):
             target = subprocess.run(
                 ["bash", "-lc", f"command -v {command}"],
                 capture_output=True,
@@ -121,6 +132,37 @@ def write_pid_file(config_home: Path, pid: int) -> Path:
         encoding="utf-8",
     )
     return pid_file
+
+
+def process_start_identity(pid: int) -> str:
+    proc_stat = Path(f"/proc/{pid}/stat")
+    if proc_stat.is_file():
+        after_comm = proc_stat.read_text(encoding="utf-8").rsplit(") ", 1)[1]
+        return f"linux:{after_comm.split()[19]}"
+    result = subprocess.run(
+        ["ps", "-p", str(pid), "-o", "lstart="],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return f"ps:{result.stdout.strip()}"
+
+
+def write_mkdir_lock(config_home: Path, pid: int, start_identity: str) -> Path:
+    lock_dir = config_home / "1mcp" / "launcher.lock.d"
+    lock_dir.mkdir(parents=True)
+    (lock_dir / "owner").write_text(
+        f"pid={pid}\nstart={start_identity}\n",
+        encoding="utf-8",
+    )
+    return lock_dir
+
+
+def test_launcher_has_no_runtime_signal_path() -> None:
+    command = launcher_command()
+
+    assert "serve --stop" not in command
+    assert " kill " not in command
 
 
 def test_ready_runtime_connects_without_starting(tmp_path: Path) -> None:
@@ -179,7 +221,7 @@ def test_empty_scope_starts_and_connects(tmp_path: Path) -> None:
     assert action_count(actions, "proxy") == 1
 
 
-def test_genuine_unhealthy_runtime_is_recovered_at_most_once(tmp_path: Path) -> None:
+def test_genuine_unhealthy_runtime_is_not_signalled(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
     genuine = subprocess.Popen(
         [str(tmp_path / "bin" / "1mcp"), "serve", "--background-bootstrap"],
@@ -191,15 +233,36 @@ def test_genuine_unhealthy_runtime_is_recovered_at_most_once(tmp_path: Path) -> 
         time.sleep(0.05)
         result = run_launcher(env)
 
-        assert result.returncode == 0, result.stderr
-        assert action_count(actions, "serve --stop") == 1
-        assert action_count(actions, "serve --background") == 1
-        assert genuine.wait(timeout=5) != 0
-        assert not pid_file.exists()
+        assert result.returncode == 1
+        assert "operator intervention" in result.stderr
+        assert action_count(actions, "serve --stop") == 0
+        assert action_count(actions, "serve --background") == 0
+        assert genuine.poll() is None
+        assert pid_file.exists()
     finally:
         if genuine.poll() is None:
             genuine.terminate()
             genuine.wait(timeout=5)
+
+
+def test_spoofed_1mcp_process_is_never_signalled(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    spoof = subprocess.Popen(
+        ["bash", "-c", "exec -a '1mcp serve --background-bootstrap' sleep 30"],
+    )
+    pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), spoof.pid)
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 1
+        assert action_count(actions, "serve --stop") == 0
+        assert action_count(actions, "serve --background") == 0
+        assert spoof.poll() is None
+        assert pid_file.exists()
+    finally:
+        spoof.terminate()
+        spoof.wait(timeout=5)
 
 
 def test_start_failure_is_bounded_and_preserves_diagnostics(tmp_path: Path) -> None:
@@ -224,3 +287,62 @@ def test_launcher_works_without_flock(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 1
+
+
+def test_stale_mkdir_lock_is_quarantined_and_retried_once(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert not lock_dir.exists()
+    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
+    assert action_count(actions, "serve --background") == 1
+
+
+def test_live_mkdir_lock_owner_is_preserved(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    owner = subprocess.Popen(["sleep", "30"])
+    lock_dir = write_mkdir_lock(
+        Path(env["XDG_CONFIG_HOME"]),
+        owner.pid,
+        process_start_identity(owner.pid),
+    )
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 1
+        assert "lock-timeout" in result.stderr
+        assert owner.poll() is None
+        assert lock_dir.exists()
+        assert action_count(actions, "serve --background") == 0
+    finally:
+        owner.terminate()
+        owner.wait(timeout=5)
+
+
+def test_term_exits_without_continuing_startup(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, start_unready=True, minimal_path=True)
+    launcher = subprocess.Popen(
+        ["/bin/bash", "-c", launcher_command()],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    deadline = time.monotonic() + 3
+    while (
+        action_count(actions, "serve --background") == 0
+        and time.monotonic() < deadline
+    ):
+        time.sleep(0.01)
+
+    launcher.terminate()
+    _, stderr = launcher.communicate(timeout=5)
+
+    assert launcher.returncode == 143, stderr
+    assert action_count(actions, "proxy") == 0
+    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
+    assert not lock_dir.exists()
