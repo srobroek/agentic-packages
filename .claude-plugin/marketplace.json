@@ -1247,7 +1247,7 @@
     {
       "name": "release-queue-watch",
       "description": "Runs a signed local GitHub webhook receiver with agent-owned PR priority and merge-slot state plus Octokit REST reconciliation.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "tags": [
         "github",
         "pull-requests",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.2.0...srobroek-agentic--v16.3.0) (2026-07-21)
+
+
+### Features
+
+* watch pull request queues with signed GitHub webhooks ([#598](https://github.com/srobroek/agentic-packages/issues/598)) ([0896546](https://github.com/srobroek/agentic-packages/commit/08965468317167fa7df6674b61fc906b47ad0ed5))
+
 ## [16.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.1.0...srobroek-agentic--v16.2.0) (2026-07-21)
 
 
