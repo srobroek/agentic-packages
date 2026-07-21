@@ -62,22 +62,28 @@ dependencies:
           owner_pid=$(sed -n 's/^pid=//p' "$lock_dir/owner" 2>/dev/null | sed -n '1p');
           owner_start=$(sed -n 's/^start=//p' "$lock_dir/owner" 2>/dev/null | sed -n '1p');
           [ -n "$owner_pid" ] && [ -n "$owner_start" ]; }; claim_is_live() {
-          claim_path=$1; claim_pid=${claim_path##*.}; claim_start=$(sed -n '1p'
+          claim_path=$1; claim_name=${claim_path##*/}; claim_rest=${claim_name#.*.};
+          claim_pid=${claim_rest%%.*}; claim_start=$(sed -n '1p'
           "$claim_path/start" 2>/dev/null); [ -n "$claim_start" ] &&
           [ "$(process_start "$claim_pid")" = "$claim_start" ]; }; has_live_claim() {
           claim_kind=$1; for claim_path in "$lock_dir/.$claim_kind."*; do
           [ -d "$claim_path" ] && claim_is_live "$claim_path" && return 0; done; return 1;
           }; remove_claim() { claim_path=$1; rm -f "$claim_path/start";
           rmdir "$claim_path" 2>/dev/null || :; }; create_claim() { claim_kind=$1;
-          claim_path="$lock_dir/.$claim_kind.$$"; mkdir "$claim_path" 2>/dev/null || return 1;
+          claim_token=$(printf '%s\n' "$own_start" | cksum) || return 1;
+          claim_token=${claim_token%% *}; claim_sequence=0; while :; do
+          claim_path="$lock_dir/.$claim_kind.$$.$claim_token.$claim_sequence";
+          mkdir "$claim_path" 2>/dev/null && break; [ -e "$claim_path" ] || return 1;
+          claim_sequence=$((claim_sequence + 1)); done;
           claim_tmp="$claim_path/start.$$"; printf '%s\n' "$own_start" >"$claim_tmp" &&
           mv "$claim_tmp" "$claim_path/start" || { rm -f "$claim_tmp";
           rmdir "$claim_path" 2>/dev/null || :; return 1; }; }; write_owner() {
           own_start=$(process_start $$); [ -n "$own_start" ] || return 1;
-          has_live_claim takeover && return 2; create_claim publish || return 1;
+          create_claim publish || return 1; publish_claim=$claim_path;
+          if has_live_claim takeover; then remove_claim "$publish_claim"; return 2; fi;
           owner_tmp="$lock_dir/owner.$$"; printf 'pid=%s\nstart=%s\n' $$ "$own_start"
           >"$owner_tmp" && mv "$owner_tmp" "$lock_dir/owner"; owner_status=$?;
-          rm -f "$owner_tmp"; remove_claim "$lock_dir/.publish.$$";
+          rm -f "$owner_tmp"; remove_claim "$publish_claim";
           return "$owner_status"; }; establish_owner() { write_owner; owner_status=$?;
           [ "$owner_status" -eq 0 ] && return 0; if [ "$owner_status" -eq 2 ]; then
           lock_kind=; wait_ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2;
@@ -90,17 +96,19 @@ dependencies:
           else owner_record='<missing>'; fi; printf '%s|%s\n' "$dir_id" "$owner_record";
           fi; }; takeover_lock() { observed_snapshot=$1; own_start=$(process_start $$);
           [ -n "$own_start" ] || return 1; create_claim takeover || return 1;
-          if has_live_claim publish; then remove_claim "$lock_dir/.takeover.$$";
+          takeover_claim=$claim_path; if has_live_claim publish; then
+          remove_claim "$takeover_claim";
           return 1; fi; takeover_winner=; for claim_path in "$lock_dir/.takeover."*;
           do if [ -d "$claim_path" ] && claim_is_live "$claim_path"; then
-          claim_pid=${claim_path##*.}; [ -z "$takeover_winner" ] ||
+          claim_name=${claim_path##*/}; claim_rest=${claim_name#.*.};
+          claim_pid=${claim_rest%%.*}; [ -z "$takeover_winner" ] ||
           [ "$claim_pid" -ge "$takeover_winner" ] || takeover_winner=$claim_pid;
           [ -n "$takeover_winner" ] || takeover_winner=$claim_pid; fi; done;
           if [ "$takeover_winner" != $$ ] || has_live_claim publish ||
           [ "$(lock_snapshot)" != "$observed_snapshot" ]; then
-          remove_claim "$lock_dir/.takeover.$$"; return 1; fi;
+          remove_claim "$takeover_claim"; return 1; fi;
           stale_lock="$lock_dir.stale.$(date +%s).$$"; mv "$lock_dir" "$stale_lock"
-          2>/dev/null || { remove_claim "$lock_dir/.takeover.$$"; return 1; };
+          2>/dev/null || { remove_claim "$takeover_claim"; return 1; };
           retry_lock=1;
           echo "quarantined stale 1mcp launcher lock: $stale_lock" >&2; };
           release_lock() { if [ "${lock_kind:-}" = flock ]; then flock -u 9;

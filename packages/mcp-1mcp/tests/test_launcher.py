@@ -94,6 +94,7 @@ def install_fake_commands(
     if minimal_path:
         for command in (
             "awk",
+            "cksum",
             "date",
             "mkdir",
             "mv",
@@ -183,6 +184,24 @@ def write_claim(lock_dir: Path, kind: str, pid: int, start_identity: str) -> Pat
     claim.mkdir()
     (claim / "start").write_text(f"{start_identity}\n", encoding="utf-8")
     return claim
+
+
+def run_with_same_pid_orphan_claim(
+    env: dict[str, str], lock_dir: Path, kind: str
+) -> subprocess.CompletedProcess[str]:
+    env["FAKE_ORPHAN_CLAIM_LOCK"] = str(lock_dir)
+    prefix = (
+        f'claim="$FAKE_ORPHAN_CLAIM_LOCK/.{kind}.$$"; '
+        'mkdir "$claim"; '
+        "printf 'linux:old-incarnation\\n' >\"$claim/start\"; "
+    )
+    return subprocess.run(
+        ["/bin/bash", "-c", prefix + launcher_command()],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def test_launcher_has_no_runtime_signal_path() -> None:
@@ -559,6 +578,32 @@ def test_orphaned_legacy_takeover_marker_does_not_block_recovery(tmp_path: Path)
     assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
 
 
+def test_orphaned_takeover_claim_from_reused_pid_does_not_block_recovery(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+
+    result = run_with_same_pid_orphan_claim(env, lock_dir, "takeover")
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
+
+
+def test_orphaned_publish_claim_from_reused_pid_does_not_block_recovery(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+
+    result = run_with_same_pid_orphan_claim(env, lock_dir, "publish")
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
+
+
 def test_live_takeover_claim_is_preserved(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path, minimal_path=True)
     env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
@@ -616,6 +661,72 @@ def test_owner_publication_after_grace_cannot_race_takeover(tmp_path: Path) -> N
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 2
     assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
+
+
+def test_delayed_publish_claim_yields_to_takeover_before_owner_publication(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, minimal_path=True)
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "5"
+    env["ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS"] = "1"
+    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
+    barrier = tmp_path / "claim-race"
+
+    real_mkdir = (tmp_path / "bin" / "mkdir").resolve()
+    mkdir = tmp_path / "bin" / "mkdir"
+    mkdir.unlink()
+    mkdir.write_text(
+        "#!/bin/sh\n"
+        "case \"$1\" in\n"
+        "  \"$FAKE_CLAIM_LOCK\"/.publish.*)\n"
+        "    while [ ! -f \"$FAKE_CLAIM_BARRIER.reaper-final\" ]; do sleep 0.01; done\n"
+        "    \"$FAKE_REAL_MKDIR\" \"$@\" || exit $?\n"
+        "    touch \"$FAKE_CLAIM_BARRIER.publish-created\"\n"
+        "    exit 0\n"
+        "    ;;\n"
+        "esac\n"
+        "exec \"$FAKE_REAL_MKDIR\" \"$@\"\n",
+        encoding="utf-8",
+    )
+    mkdir.chmod(0o755)
+
+    real_mv = (tmp_path / "bin" / "mv").resolve()
+    mv = tmp_path / "bin" / "mv"
+    mv.unlink()
+    mv.write_text(
+        "#!/bin/sh\n"
+        "if [ \"$1\" = \"$FAKE_CLAIM_LOCK\" ]; then\n"
+        "  touch \"$FAKE_CLAIM_BARRIER.reaper-final\"\n"
+        "  while [ ! -f \"$FAKE_CLAIM_BARRIER.publish-created\" ]; do sleep 0.01; done\n"
+        "  sleep 0.2\n"
+        "fi\n"
+        "if [ \"$2\" = \"$FAKE_CLAIM_LOCK/owner\" ]; then\n"
+        "  for claim in \"$FAKE_CLAIM_LOCK\"/.takeover.*; do\n"
+        "    [ -d \"$claim\" ] && touch \"$FAKE_CLAIM_BARRIER.violation\"\n"
+        "  done\n"
+        "fi\n"
+        "exec \"$FAKE_REAL_MV\" \"$@\"\n",
+        encoding="utf-8",
+    )
+    mv.chmod(0o755)
+    env["FAKE_CLAIM_LOCK"] = str(lock_dir)
+    env["FAKE_CLAIM_BARRIER"] = str(barrier)
+    env["FAKE_REAL_MKDIR"] = str(real_mkdir)
+    env["FAKE_REAL_MV"] = str(real_mv)
+    command = launcher_command()
+
+    creator = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
+    time.sleep(0.2)
+    reaper = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
+
+    creator_status = creator.wait(timeout=10)
+    reaper_status = reaper.wait(timeout=10)
+
+    assert (creator_status, reaper_status) == (0, 0)
+    assert not Path(f"{barrier}.violation").exists()
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 2
+    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
 
 
 def test_live_mkdir_lock_owner_is_preserved(tmp_path: Path) -> None:
