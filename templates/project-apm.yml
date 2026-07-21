@@ -13,8 +13,8 @@ scripts:
     grep -q "Trust status: \[trusted\]"'
   install-agentic-tools: "apm run require-lifecycle-trust && apm install --target claude,codex"
   update-agentic-tools: "apm run require-lifecycle-trust && apm update --yes && apm compile --target codex,claude --no-constitution && apm run inject-agent-models && apm run audit-agentic-tools"
-  inject-agent-models: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
-  check-agent-models: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py --check"
+  inject-agent-models: "python3 apm_modules/srobroek/agentic-packages/packages/agent-management/.apm/scripts/inject-agent-models.py"
+  check-agent-models: "python3 apm_modules/srobroek/agentic-packages/packages/agent-management/.apm/scripts/inject-agent-models.py --check"
   audit-agentic-tools: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/audit-agentic-assets.py"
   setup-agentic-tools: "apm run install-agentic-tools && apm compile --target codex,claude --no-constitution && apm run inject-agent-models && apm run audit-agentic-tools"
 
@@ -24,12 +24,12 @@ lifecycle:
   post-install:
     - type: command
       description: Inject package-owned model settings into generated Codex agents
-      bash: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
+      bash: "python3 apm_modules/srobroek/agentic-packages/packages/agent-management/.apm/scripts/inject-agent-models.py"
       timeoutSec: 30
   post-update:
     - type: command
       description: Re-inject package-owned model settings after agent updates
-      bash: "python3 apm_modules/srobroek/agentic-packages/.apm/scripts/inject-agent-models.py"
+      bash: "python3 apm_modules/srobroek/agentic-packages/packages/agent-management/.apm/scripts/inject-agent-models.py"
       timeoutSec: 30
 
 compilation:
