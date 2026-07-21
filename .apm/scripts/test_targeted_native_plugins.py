@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 def _load(name: str, filename: str):
@@ -204,3 +205,23 @@ def test_claude_target_hook_is_omitted_from_codex_outputs_and_audit(
     assert ".claude-plugin/plugin.json" in plan
     assert not any("codex" in path for path in plan)
     assert audit_codex_config.codex_hook_sources() == []
+
+
+def test_every_repository_pack_path_runs_the_post_pack_filter() -> None:
+    root = Path(__file__).resolve().parents[2]
+    manifest = yaml.safe_load((root / "apm.yml").read_text(encoding="utf-8"))
+    scripts = manifest["scripts"]
+
+    assert scripts["build-marketplace"] == (
+        "apm pack && python3 .apm/scripts/build-marketplace-block.py"
+    )
+    assert scripts["build-artifacts"].endswith("apm run build-marketplace")
+    assert "apm pack" not in scripts["build-artifacts"]
+
+    for relative in (
+        ".github/workflows/build-artifacts.yml",
+        ".github/workflows/release-please.yml",
+    ):
+        workflow = (root / relative).read_text(encoding="utf-8")
+        assert workflow.count("apm run build-marketplace") == 1
+        assert "apm pack" not in workflow

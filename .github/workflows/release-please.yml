@@ -88,7 +88,7 @@ jobs:
           python3 -m pip install --quiet "apm-cli==0.26.0" jinja2
           python3 .apm/scripts/build-native-plugins.py
           python3 .apm/scripts/render-docs.py all
-          apm pack
+          apm run build-marketplace
 
           if git diff --quiet; then
             echo "Generated artifacts already in sync; nothing to amend."

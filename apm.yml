@@ -15,7 +15,8 @@ scripts:
   check-release-please: python3 .apm/scripts/build-release-please.py --check
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
-  build-marketplace: apm pack
+  build-marketplace: >-
+    apm pack && python3 .apm/scripts/build-marketplace-block.py
   inject-agent-models: python3 .apm/scripts/inject-agent-models.py
   check-agent-models: python3 .apm/scripts/inject-agent-models.py --check
   build-native-plugins: python3 .apm/scripts/build-native-plugins.py
@@ -24,7 +25,7 @@ scripts:
   check-docs: python3 .apm/scripts/render-docs.py all --check
   build-artifacts: >-
     python3 .apm/scripts/build-native-plugins.py && python3
-    .apm/scripts/render-docs.py all && apm pack
+    .apm/scripts/render-docs.py all && apm run build-marketplace
   install: apm install --target claude,codex
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
   audit-codex-config: python3 .apm/scripts/audit-codex-config.py
