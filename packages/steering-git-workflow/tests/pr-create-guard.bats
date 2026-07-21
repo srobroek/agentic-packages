@@ -47,7 +47,9 @@ setup() {
   for command in \
     'gh pr create -d --body y' \
     'gh pr create --draft=true --body y' \
-    'gh pr create -d=true --body y'; do
+    'gh pr create -d=true --body y' \
+    'gh pr create --draft=1 --body y' \
+    'gh pr create -d=t --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
     run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
@@ -161,6 +163,11 @@ setup() {
     'env -i gh pr create --body y' \
     "env -S 'gh pr create --body y'" \
     "env -S'gh pr create --body y'" \
+    "timeout 5 env -S'gh pr create --body y'" \
+    "sudo env -S'gh pr create --body y'" \
+    "command env -S'gh pr create --body y'" \
+    "nice env -S'gh pr create --body y'" \
+    "env -i env -S'gh pr create --body y'" \
     'command -- gh pr create --body y' \
     'exec gh pr create --body y' \
     'timeout 5 gh pr create --body y' \

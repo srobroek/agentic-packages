@@ -120,6 +120,16 @@ def unwrap_command(tokens: list[str], index: int) -> int | None:
                     return None
                 index += 1
             continue
+        if (
+            wrapper == "env"
+            and index < len(tokens)
+            and (
+                tokens[index] in {"-S", "--split-string"}
+                or tokens[index].startswith("-S")
+                or tokens[index].startswith("--split-string=")
+            )
+        ):
+            return index - 1
         options_with_value = WRAPPER_OPTIONS_WITH_VALUE[wrapper]
         while index < len(tokens):
             option = tokens[index]
@@ -234,6 +244,12 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
             index += 1
             continue
         index = executable
+        if split := env_split_invocation(tokens, index, depth):
+            nested, end = split
+            found.extend(nested)
+            command_start = False
+            index = end
+            continue
         basename = os.path.basename(tokens[index])
         if basename in SHELLS:
             option_index = index + 1
@@ -272,11 +288,12 @@ def argument(invocation: list[str], long: str, short: str) -> str | None:
 
 def draft_enabled(invocation: list[str]) -> bool:
     enabled = False
+    true_values = {"1", "t", "true", "yes", "y", "on"}
     for token in invocation[3:]:
         if token in {"--draft", "-d"}:
             enabled = True
         if token.startswith("--draft=") or token.startswith("-d="):
-            enabled = token.split("=", 1)[1].lower() == "true"
+            enabled = token.split("=", 1)[1].lower() in true_values
     return enabled
 
 
