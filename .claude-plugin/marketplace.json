@@ -117,7 +117,7 @@
     {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "skill",
         "maintenance",
@@ -249,7 +249,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "6.0.0",
+      "version": "6.1.0",
       "tags": [
         "bundle",
         "steering"
@@ -333,7 +333,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "8.0.0",
+      "version": "8.1.0",
       "tags": [
         "bundle",
         "semantic"
@@ -368,7 +368,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "9.0.0",
+      "version": "10.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -1210,7 +1210,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -1270,7 +1270,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "tags": [
         "bundle",
         "review"
@@ -1354,7 +1354,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "tags": [
         "speckit",
         "beads",
