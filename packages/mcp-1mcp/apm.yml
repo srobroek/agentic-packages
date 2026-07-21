@@ -1,5 +1,5 @@
 name: mcp-1mcp
-version: 0.1.0
+version: 1.0.0
 description: >-
   MCP client package for the shared 1MCP runtime. Starts the machine-managed
   background runtime when needed and connects clients through its proxy.
@@ -21,5 +21,6 @@ dependencies:
         - '-lc'
         - >-
           command -v 1mcp >/dev/null 2>&1 || { echo
-          1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; }; 1mcp serve --background
-          >/dev/null || { 1mcp serve --status >&2; exit 1; }; exec 1mcp proxy
+          1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; };
+          1mcp serve --background >/dev/null || { 1mcp serve --status >&2; exit
+          1; }; exec 1mcp proxy
