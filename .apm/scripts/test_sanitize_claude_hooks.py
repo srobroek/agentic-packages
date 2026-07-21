@@ -76,6 +76,44 @@ def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
     assert events == {}
 
 
+def test_retired_agent_coder_hook_is_removed_even_if_script_exists(
+    tmp_path: Path,
+) -> None:
+    retired = _make_script(
+        tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh"
+    )
+    events = {
+        "PreToolUse": [
+            {"hooks": [{"type": "command", "command": str(retired)}]}
+        ]
+    }
+
+    assert sanitize_claude_hooks.clean_events(events) == 1
+    assert events == {}
+
+
+def test_deduplicate_groups_keeps_apm_owned_copy() -> None:
+    handler = {"type": "command", "command": "serena-hooks remind"}
+    legacy = {"matcher": "*", "hooks": [handler]}
+    managed = {
+        "matcher": "*",
+        "hooks": [handler],
+        "_apm_source": "hooks-serena",
+    }
+    events = {
+        "PreToolUse": [legacy, managed],
+        "SessionStart": [managed, legacy],
+    }
+
+    removed = sanitize_claude_hooks.deduplicate_groups(events)
+
+    assert removed == 2
+    assert events == {
+        "PreToolUse": [managed],
+        "SessionStart": [managed],
+    }
+
+
 def test_prune_stale_removes_unreferenced_hook_dirs(tmp_path: Path) -> None:
     hooks_dir = tmp_path / "hooks"
     live = _make_script(hooks_dir, "live-pkg", "real.sh")
