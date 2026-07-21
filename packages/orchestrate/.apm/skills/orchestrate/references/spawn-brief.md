@@ -39,8 +39,10 @@ contract in `references/beads-store.md`.
 Give the **gatekeeper** and **scribe** only the epic bead id, the artifacts path,
 and their job pointer — they carry their own protocol in their agent definition.
 Example: `You are the run gatekeeper. epic=<bead-id>. Integrate approved branches
-FCFS under the merge slot, conflict-guarded; message me MERGED/CONFLICT. Await
-approved nodes.`
+FCFS under the merge slot, conflict-guarded; message me MERGED/CONFLICT. Initial
+APPROVE opens and parks GitHub PR waits. An APPROVE with
+source=release-queue-watch wakes exact PR/head revalidation; the watcher never
+owns the merge slot. Await approved nodes.`
 
 ## Reviewer brief (one per code node)
 

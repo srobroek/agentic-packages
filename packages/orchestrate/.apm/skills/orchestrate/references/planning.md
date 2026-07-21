@@ -53,6 +53,11 @@ merge slot (`bd merge-slot acquire`; waiters queue = FCFS order), conflict-guard
 by the gatekeeper (`conflict-probe.sh`). The graph expresses *dependencies* (what
 must happen before what), not *integration sequence*.
 
+For GitHub-backed runs, `release-queue-watch` priority affects which eligible
+PR readiness hint arrives first. It does not rewrite the DAG or reserve the
+merge slot. The orchestrator admits only an exact existing approved node, and
+the gatekeeper's slot waiters remain the integration order after admission.
+
 ## Scope hygiene
 
 Good scopes are the single most important planning decision:

@@ -7,10 +7,14 @@ description: >-
   beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus
   bundled agents (workflow-coder, workflow-reviewer, workflow-advisor,
   integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart
-  comms hook, explicit Codex spawn-brief protocol, and deterministic scripts
-  (scope disjointness, agent discovery, conflict probe).
+  comms hook, explicit Codex spawn-brief protocol, a read-only event-driven PR
+  queue handoff, and deterministic scripts (scope disjointness, agent discovery,
+  dispatch resolution, conflict probe).
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/release-queue-watch#>=0.3.0 <1.0.0
