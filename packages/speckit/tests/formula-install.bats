@@ -72,6 +72,6 @@ assert_source() {
 @test "speckit owns formulas and speckit-beads depends one-way on speckit" {
   run grep -F 'srobroek/agentic-packages/packages/speckit-beads#' "$SPECKIT_MANIFEST"
   [ "$status" -ne 0 ]
-  run grep -F 'srobroek/agentic-packages/packages/speckit#>=6.0.0 <7.0.0' "$BEADS_MANIFEST"
+  run grep -F 'srobroek/agentic-packages/packages/speckit#>=8.1.0 <9.0.0' "$BEADS_MANIFEST"
   [ "$status" -eq 0 ]
 }
