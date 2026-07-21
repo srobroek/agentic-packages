@@ -122,6 +122,7 @@
   "packages/steering-docs-specs": "3.1.0",
   "packages/steering-frontend": "2.1.0",
   "packages/steering-git-workflow": "2.2.0",
+  "packages/steering-global-bootstrap": "1.0.0",
   "packages/steering-infrastructure": "2.1.0",
   "packages/steering-pragmatic": "4.3.0",
   "packages/steering-project-structure": "1.1.0",

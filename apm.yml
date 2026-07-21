@@ -890,6 +890,14 @@ marketplace:
       tags:
         - steering
         - git
+    - name: steering-global-bootstrap
+      source: ./packages/steering-global-bootstrap
+      category: steering
+      tags:
+        - steering
+        - bootstrap
+        - global
+        - apm
     - name: steering-infrastructure
       source: ./packages/steering-infrastructure
       category: steering
