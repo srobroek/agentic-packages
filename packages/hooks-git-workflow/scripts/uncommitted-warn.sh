@@ -12,7 +12,7 @@ dirty="$(git status --porcelain 2>/dev/null | grep -v '^\?' | head -5 || true)"
 # ephemeral orchestration branch, so stay silent until tracking is configured.
 # Best-effort and quiet: any git failure leaves $ahead empty.
 ahead=""
-if branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"; then
+if git symbolic-ref --quiet --short HEAD >/dev/null 2>&1; then
   if upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"; then
     n="$(git rev-list --count "${upstream}..HEAD" 2>/dev/null || echo 0)"
     if [[ "$n" =~ ^[0-9]+$ && "$n" -gt 0 ]]; then
