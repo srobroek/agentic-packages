@@ -135,6 +135,44 @@ def test_sanitize_drops_missing_absolute_script() -> None:
     assert counts["handlers_removed"] == 1
 
 
+def test_sanitize_resolves_relative_script_from_config_workspace(
+    tmp_path: Path,
+) -> None:
+    live = tmp_path / ".codex" / "hooks" / "live.sh"
+    live.parent.mkdir(parents=True)
+    live.write_text("#!/bin/sh\n", encoding="utf-8")
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": ".codex/hooks/live.sh",
+                        }
+                    ]
+                },
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": ".codex/hooks/missing.sh",
+                        }
+                    ]
+                },
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config, tmp_path)
+
+    assert len(clean["hooks"]["PreToolUse"]) == 1
+    assert clean["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == (
+        ".codex/hooks/live.sh"
+    )
+    assert counts["handlers_removed"] == 1
+
+
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
     handler = {
         "type": "command",
