@@ -1,0 +1,9 @@
+{
+  "name": "agent-luna-xhigh",
+  "version": "0.1.0",
+  "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

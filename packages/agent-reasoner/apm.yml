@@ -1,0 +1,10 @@
+name: agent-reasoner
+version: 0.1.0
+description: Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: codex
+includes: auto
+category: planning-product
+tags: [agent, codex, routing]

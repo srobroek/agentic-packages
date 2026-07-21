@@ -1,0 +1,10 @@
+name: agent-reviewer-low
+version: 0.1.0
+description: Mechanical read-only reviewer for tiny changes with explicit criteria.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: codex
+includes: auto
+category: quality
+tags: [agent, codex, routing]

@@ -1,0 +1,9 @@
+{
+  "name": "agent-explorer",
+  "version": "0.1.0",
+  "description": "Read-only exploration agent for bounded code and configuration discovery.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}
