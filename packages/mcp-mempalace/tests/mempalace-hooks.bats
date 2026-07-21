@@ -119,8 +119,9 @@ _transcript() {
 }
 
 _wait_calls() {
+  local expected="${1:-1}"
+  local count
   # Detached worker is async; poll briefly for the stub call log.
-  expected="${1:-1}"
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
     count="$(grep -c -- "--mode convos" "$CALLS" 2>/dev/null || true)"
     [ "$count" -ge "$expected" ] && return 0
