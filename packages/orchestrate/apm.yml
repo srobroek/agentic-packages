@@ -14,3 +14,7 @@ license: Apache-2.0
 type: hybrid
 target: all
 includes: auto
+dependencies:
+  apm:
+    - srobroek/agentic-packages/packages/beads#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/worktrunk-writer#>=1.0.0 <2.0.0
