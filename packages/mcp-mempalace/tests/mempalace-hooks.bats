@@ -90,6 +90,26 @@ EOF
   [ -z "$output" ]
 }
 
+@test "wake-up: drains stdin before the missing-dependency gate" {
+  rm "$BIN/mempalace"
+  run /bin/bash -o pipefail -c '
+    dd if=/dev/zero bs=1048576 count=8 2>/dev/null |
+      (cd "$1" && PATH=/usr/bin:/bin /bin/bash "$2")
+  ' _ "$REPO" "$WAKE"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "wake-up: drains stdin before the non-repo gate" {
+  DIR="$(mktemp -d "${BATS_TEST_TMPDIR}/nongit.XXXXXX")"
+  run /bin/bash -o pipefail -c '
+    dd if=/dev/zero bs=1048576 count=8 2>/dev/null |
+      (cd "$1" && PATH="$2:/usr/bin:/bin" /bin/bash "$3")
+  ' _ "$DIR" "$BIN" "$WAKE"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 # --- auto-mine --------------------------------------------------------------
 
 _transcript() {

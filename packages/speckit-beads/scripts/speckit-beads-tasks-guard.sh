@@ -17,10 +17,6 @@
 #     non-blocking note that /speckit.implement is deprecated in beads repos;
 #     route through the agent-assign chain instead.
 #
-#   PostToolUse (Read): ADVISORY ONLY — when a legacy tasks.md is read, note
-#     that live task state is in beads. Reads are never denied (brownfield
-#     migration needs them).
-#
 # Self-gating (never rely on the "if" matcher): exits 0 silently when the
 # payload is empty, jq or bd is missing, the target path is not
 # specs/*/tasks.md, or the repo has no active beads workspace (bd where fails).
@@ -145,15 +141,6 @@ case "$event" in
             advise "PreToolUse" "$IMPLEMENT_ADVICE"
             ;;
         esac
-        ;;
-    esac
-    ;;
-  PostToolUse)
-    case "$tool_name" in
-      Read)
-        is_tasks_md "$file_path" || exit 0
-        beads_active || exit 0
-        advise "PostToolUse" "SPECKIT-BEADS: $file_path is a legacy artifact; its checkboxes are not maintained. Live task state is in beads: bd ready (unblocked work), bd query \"spec_id=<NNN-slug>\" --json (all tasks for the spec), bd mol current <molecule-root-id> (workflow position). Use this read only for one-time migration into beads."
         ;;
     esac
     ;;
