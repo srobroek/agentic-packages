@@ -60,6 +60,13 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(result["status"], "resolved")
         self.assertEqual(result["node"], "orc-run.1")
         self.assertEqual(result["dispatchKey"], f"owner/repo#42@{'a' * 40}")
+        self.assertEqual(
+            result["requiredMetadata"],
+            {
+                "queue_dispatch": f"owner/repo#42@{'a' * 40}",
+                "queue_dispatch_pending": f"owner/repo#42@{'a' * 40}",
+            },
+        )
 
     def test_marks_acknowledged_dispatch_as_duplicate(self):
         key = f"owner/repo#42@{'a' * 40}"
@@ -99,9 +106,30 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(initial["status"], "resolved")
         self.assertEqual(pending_after_pre_send_crash["status"], "replay")
         self.assertEqual(pending_after_pre_send_crash["deliveryState"], "pending")
+        self.assertEqual(pending_after_pre_send_crash["requiredMetadata"], {})
         self.assertEqual(sent_before_ack_crash["status"], "replay")
         self.assertEqual(sent_before_ack_crash["deliveryState"], "sent")
         self.assertEqual(acknowledged["status"], "duplicate")
+
+    def test_untracked_migration_is_normalized_before_gatekeeper_handoff(self):
+        key = f"owner/repo#42@{'a' * 40}"
+        migration_node = node(queue_dispatch=key)
+
+        reconstructed = MODULE.replay_unacknowledged([migration_node])[0]
+        migration_node["metadata"].update(reconstructed["requiredMetadata"])
+        normalized = MODULE.resolve(dispatch(), [migration_node])
+
+        self.assertEqual(reconstructed["deliveryState"], "untracked")
+        self.assertEqual(
+            reconstructed["requiredMetadata"], {"queue_dispatch_pending": key}
+        )
+        self.assertEqual(normalized["status"], "replay")
+        self.assertEqual(normalized["deliveryState"], "pending")
+        self.assertEqual(normalized["requiredMetadata"], {})
+        self.assertEqual(
+            migration_node["metadata"]["queue_dispatch_pending"],
+            normalized["dispatchKey"],
+        )
 
     def test_resume_scan_reconstructs_only_unacknowledged_handoffs(self):
         key = f"owner/repo#42@{'a' * 40}"

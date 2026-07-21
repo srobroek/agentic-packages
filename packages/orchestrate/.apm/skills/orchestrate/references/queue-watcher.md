@@ -68,9 +68,12 @@ the watcher, not authorization to merge.
    `scripts/resolve-queue-dispatch.py --nodes-file <snapshot>`. The resolver is
    read-only and requires exactly one `state:approved` node whose metadata
    matches `repo`, `pr`, and `head_sha`.
-3. `status=resolved` → atomically stamp `queue_dispatch=<identity-key>` and
-   `queue_dispatch_pending=<identity-key>` on that node, then log `orc.approve`
-   and send the persistent gatekeeper:
+3. Apply the resolver's `requiredMetadata` to the node in one `bd update` before
+   SendMessage; never write its fields in separate calls. For
+   `status=resolved`, this atomically stamps
+   `queue_dispatch=<identity-key>` and
+   `queue_dispatch_pending=<identity-key>`. Then log `orc.approve` and send the
+   persistent gatekeeper:
 
    ```text
    APPROVE <node>
@@ -86,9 +89,11 @@ the watcher, not authorization to merge.
 4. After SendMessage accepts the handoff, set
    `queue_dispatch_sent=<identity-key>`. A crash before that update leaves the
    pending marker, which is safe to replay.
-5. `status=replay` → resend the same handoff for a `pending`, `sent`, or
-   unrecognized unacknowledged state. `status=duplicate` means the gatekeeper
-   durably acknowledged the exact key; do not send it again.
+5. `status=replay` with `deliveryState=untracked` → atomically apply the emitted
+   `requiredMetadata` pending receipt, refresh the node, and require
+   `deliveryState=pending` before SendMessage. Pending or sent replays need no
+   new stamp. `status=duplicate` means the gatekeeper durably acknowledged the
+   exact key; do not send it again.
 6. `status=ignored` → send nothing. Invalid, stale, unmatched, or ambiguous
    records → log `orc.note`, request a fresh node snapshot, and assign no agent.
 
@@ -109,10 +114,11 @@ snapshot before consuming new watcher lines:
 resolve-queue-dispatch.py --nodes-file <snapshot> --replay-unacknowledged
 ```
 
-Resend every returned handoff from its persisted repository, PR, head, branch,
-base, and dispatch key. This scan does not depend on the watcher repeating an
-event. An invalid persisted identity stops replay and requires an `orc.note`
-instead of a guessed handoff.
+For each returned handoff, apply non-empty `requiredMetadata` and rerun the
+replay scan before sending. Resend only pending or sent deliveries using the
+persisted repository, PR, head, branch, base, and dispatch key. This scan does
+not depend on the watcher repeating an event. An invalid persisted identity
+stops replay and requires an `orc.note` instead of a guessed handoff.
 
 Never create a coder, reviewer, or node from an unmatched pull request. Product
 policy enters the run through its bead DAG; the watcher only wakes the

@@ -135,9 +135,20 @@ def _handoff_result(
     for field in ("branch", "base_sha"):
         if not isinstance(metadata.get(field), str) or not metadata[field]:
             raise ResolutionError(f"approved node is missing metadata.{field}")
+    delivery_state = _delivery_state(metadata, dispatch_key)
+    required_metadata: dict[str, str] = {}
+    if status == "resolved":
+        delivery_state = None
+        required_metadata = {
+            "queue_dispatch": dispatch_key,
+            "queue_dispatch_pending": dispatch_key,
+        }
+    elif status == "replay" and delivery_state == "untracked":
+        required_metadata = {"queue_dispatch_pending": dispatch_key}
     result = {
         "status": status,
-        "deliveryState": _delivery_state(metadata, dispatch_key),
+        "deliveryState": delivery_state,
+        "requiredMetadata": required_metadata,
         "node": node["id"],
         "dispatchKey": dispatch_key,
         "repository": repository,
@@ -200,7 +211,7 @@ def resolve(record: Any, nodes_value: Any) -> dict[str, Any]:
         status = "replay"
     else:
         status = "resolved"
-    result = _handoff_result(
+    return _handoff_result(
         node,
         metadata,
         repository,
@@ -210,9 +221,6 @@ def resolve(record: Any, nodes_value: Any) -> dict[str, Any]:
         status,
         pull_request["priority"],
     )
-    if status == "resolved":
-        result["deliveryState"] = None
-    return result
 
 
 def replay_unacknowledged(nodes_value: Any) -> list[dict[str, Any]]:

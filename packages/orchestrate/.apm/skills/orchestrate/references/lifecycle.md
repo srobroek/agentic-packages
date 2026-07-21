@@ -63,8 +63,9 @@ agent for the same node — it loses context and its name may be refused.
 5. Restart each GitHub repository watcher with `--slots=1`. Replay every node
    whose `queue_dispatch` does not equal `queue_dispatch_ack`; matching pending
    or sent receipts identify the last completed delivery step. Only a matching
-   ack suppresses orchestrator replay. The gatekeeper resumes acknowledged,
-   approved, unmerged nodes from its startup scan; see
+   ack suppresses orchestrator replay. Normalize a key-only migration record by
+   stamping its pending receipt before SendMessage. The gatekeeper resumes
+   acknowledged, approved, unmerged nodes from its startup scan; see
    `references/queue-watcher.md`.
 
 ## Failure propagation
