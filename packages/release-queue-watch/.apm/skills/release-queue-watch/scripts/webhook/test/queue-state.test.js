@@ -33,6 +33,117 @@ test("deduplicates deliveries and debounces equivalent state", () => {
     queue.applyPullRequestEvent(pull(1, { deliveryId: "retry", receivedAt: 2_000 })).reason,
     "debounced",
   );
+  assert.equal(
+    queue.applyPullRequestEvent(
+      pull(1, {
+        deliveryId: "reopened",
+        receivedAt: 3_000,
+        transition: "opened",
+        webhookAction: "reopened",
+        updatedAt: "2026-07-21T01:00:00Z",
+      }),
+    ).accepted,
+    true,
+  );
+});
+
+test("emits deterministic lifecycle transitions once across webhooks and reconciliation", () => {
+  const lifecycle = [];
+  const queue = new ReleaseQueueState({
+    eventGate: new EventGate({ debounceMs: 30_000 }),
+    onLifecycle: (record) => lifecycle.push(record),
+  });
+  const opened = pull(1, {
+    transition: "opened",
+    webhookAction: "opened",
+  });
+
+  queue.applyPullRequestEvent(opened);
+  queue.applyPullRequestEvent(opened);
+  queue.applyPullRequestEvent(
+    pull(1, {
+      deliveryId: "synchronize-1",
+      receivedAt: 40_000,
+      transition: "updated",
+      webhookAction: "synchronize",
+      headSha: "new-sha-1",
+      checks: undefined,
+      mergeable: undefined,
+      updatedAt: "2026-07-21T01:00:00Z",
+    }),
+  );
+  queue.reconcileRepository("owner/repo", [
+    pull(1, {
+      deliveryId: undefined,
+      headSha: "new-sha-1",
+      checks: "fail",
+      mergeable: false,
+      updatedAt: "2026-07-21T01:00:00Z",
+    }),
+  ]);
+  queue.reconcileRepository("owner/repo", [
+    pull(1, {
+      deliveryId: undefined,
+      headSha: "new-sha-1",
+      checks: "fail",
+      mergeable: false,
+      updatedAt: "2026-07-21T01:00:00Z",
+    }),
+  ]);
+  queue.applyPullRequestEvent(
+    pull(1, {
+      deliveryId: "merged-1",
+      receivedAt: 80_000,
+      action: "closed",
+      transition: "merged",
+      webhookAction: "closed",
+      headSha: "new-sha-1",
+      updatedAt: "2026-07-21T02:00:00Z",
+    }),
+  );
+
+  assert.deepEqual(
+    lifecycle.map((record) => [record.transition, record.source]),
+    [
+      ["opened", "webhook"],
+      ["updated", "webhook"],
+      ["failed", "reconciliation"],
+      ["merged", "webhook"],
+    ],
+  );
+  assert.equal(new Set(lifecycle.map((record) => record.lifecycleKey)).size, 4);
+  assert.equal(lifecycle[0].type, "pr-lifecycle");
+  assert.equal(lifecycle[0].deliveryId, "delivery-1");
+  assert.equal(lifecycle[1].webhookAction, "synchronize");
+  assert.equal(lifecycle[2].reason, "checks-failed");
+  assert.equal(lifecycle[3].pullRequest.state, "closed");
+});
+
+test("reconciliation emits opened and closed fallback records only on state change", () => {
+  const lifecycle = [];
+  const queue = new ReleaseQueueState({
+    onLifecycle: (record) => lifecycle.push(record),
+  });
+
+  queue.reconcileRepository("owner/repo", [pull(2, { deliveryId: undefined })]);
+  queue.applyPullRequestEvent(
+    pull(2, {
+      deliveryId: "opened-after-reconcile",
+      transition: "opened",
+      webhookAction: "opened",
+    }),
+  );
+  queue.reconcileRepository("owner/repo", [pull(2, { deliveryId: undefined })]);
+  queue.reconcileRepository("owner/repo", []);
+  queue.reconcileRepository("owner/repo", []);
+
+  assert.deepEqual(
+    lifecycle.map((record) => [record.transition, record.source, record.reason]),
+    [
+      ["opened", "reconciliation", undefined],
+      ["closed", "reconciliation", "absent-from-open-pulls"],
+    ],
+  );
 });
 
 test("ranks ready pull requests and dispatches when an agent-owned slot frees", () => {

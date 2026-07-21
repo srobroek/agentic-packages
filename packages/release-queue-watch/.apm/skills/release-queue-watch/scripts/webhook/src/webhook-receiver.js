@@ -4,10 +4,20 @@ import { EventGate } from "./event-gate.js";
 
 function pullRequestEvent(id, payload, receivedAt) {
   const pull = payload.pull_request;
+  const transition =
+    payload.action === "closed"
+      ? pull.merged
+        ? "merged"
+        : "closed"
+      : ["opened", "reopened"].includes(payload.action)
+        ? "opened"
+        : "updated";
   return {
     deliveryId: id,
     receivedAt,
     action: payload.action === "closed" ? "closed" : "upsert",
+    transition,
+    webhookAction: payload.action,
     repository: payload.repository.full_name,
     number: pull.number,
     title: pull.title,

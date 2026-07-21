@@ -70,8 +70,11 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
   const logger = dependencies.logger ?? console;
   const secretRecord = await loadOrCreateWebhookSecret(options.stateDir, dependencies.secretOptions);
   const token = await (dependencies.readToken ?? readGhToken)({ env: dependencies.env });
+  const onLifecycle =
+    dependencies.onLifecycle ??
+    ((record) => logger.log(JSON.stringify(record)));
   const queue = dependencies.queue ??
-    new ReleaseQueueState({ maxMergeSlots: options.maxMergeSlots });
+    new ReleaseQueueState({ maxMergeSlots: options.maxMergeSlots, onLifecycle });
   const adapter = dependencies.adapter ?? new OctokitRestAdapter({ token });
   const onDispatch =
     dependencies.onDispatch ??

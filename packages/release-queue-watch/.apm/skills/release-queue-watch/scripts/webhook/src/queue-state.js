@@ -22,6 +22,7 @@ const PRIORITY_LABELS = new Map([
   ["priority::backlog", 4],
   ["priority:backlog", 4],
 ]);
+const MAX_LIFECYCLE_KEYS = 10_000;
 
 function priorityFromLabels(labels) {
   const priorities = labels
@@ -51,16 +52,37 @@ function cloneItem(item) {
   return { ...item, labels: [...item.labels] };
 }
 
+function itemChanged(previous, current) {
+  if (!previous) return true;
+  return [
+    "title",
+    "headSha",
+    "baseRef",
+    "draft",
+    "mergeable",
+    "checks",
+    "updatedAt",
+  ].some((field) => previous[field] !== current[field]) ||
+    JSON.stringify(previous.labels) !== JSON.stringify(current.labels);
+}
+
 export class ReleaseQueueState {
-  constructor({ maxMergeSlots = 1, eventGate = new EventGate(), now = Date.now } = {}) {
+  constructor({
+    maxMergeSlots = 1,
+    eventGate = new EventGate(),
+    now = Date.now,
+    onLifecycle = () => {},
+  } = {}) {
     if (!Number.isInteger(maxMergeSlots) || maxMergeSlots < 1) {
       throw new Error("maxMergeSlots must be a positive integer");
     }
     this.maxMergeSlots = maxMergeSlots;
     this.eventGate = eventGate;
     this.now = now;
+    this.onLifecycle = onLifecycle;
     this.items = new Map();
     this.itemVersions = new Map();
+    this.emittedLifecycleKeys = new Set();
     this.generation = 0;
   }
 
@@ -75,6 +97,7 @@ export class ReleaseQueueState {
         event.repository,
         event.number,
         event.action,
+        event.webhookAction ?? event.transition,
         event.headSha,
         event.updatedAt,
       ].join(":"),
@@ -98,7 +121,13 @@ export class ReleaseQueueState {
         closed: true,
       });
       this.items.delete(key);
+      const closedItem = this.#closedItem(event, current);
+      this.#emitLifecycle(event.transition ?? "closed", "webhook", closedItem, {
+        deliveryId: event.deliveryId,
+        webhookAction: event.webhookAction,
+      });
     } else {
+      const previous = this.items.get(key);
       this.#upsert(event, event.receivedAt ?? this.now());
       const current = this.items.get(key);
       this.itemVersions.set(key, {
@@ -107,6 +136,15 @@ export class ReleaseQueueState {
         updatedAt: current.updatedAt,
         closed: false,
       });
+      this.#emitLifecycle(
+        event.transition ?? (previous ? "updated" : "opened"),
+        "webhook",
+        current,
+        {
+          deliveryId: event.deliveryId,
+          webhookAction: event.webhookAction,
+        },
+      );
     }
     return { ...gate, dispatches: this.dispatchAvailable() };
   }
@@ -145,6 +183,20 @@ export class ReleaseQueueState {
         updatedAt: reconciled.updatedAt,
         closed: false,
       });
+      if (!current) {
+        this.#emitLifecycle("opened", "reconciliation", reconciled);
+        if (reconciled.checks === "fail") {
+          this.#emitLifecycle("failed", "reconciliation", reconciled, {
+            reason: "checks-failed",
+          });
+        }
+      } else if (current.checks !== "fail" && reconciled.checks === "fail") {
+        this.#emitLifecycle("failed", "reconciliation", reconciled, {
+          reason: "checks-failed",
+        });
+      } else if (itemChanged(current, reconciled)) {
+        this.#emitLifecycle("updated", "reconciliation", reconciled);
+      }
     }
     for (const [key, version] of this.itemVersions) {
       if (
@@ -154,7 +206,13 @@ export class ReleaseQueueState {
       ) {
         continue;
       }
+      const current = this.items.get(key);
       this.items.delete(key);
+      if (current) {
+        this.#emitLifecycle("closed", "reconciliation", this.#closedItem({}, current), {
+          reason: "absent-from-open-pulls",
+        });
+      }
       if (!version.closed) this.itemVersions.delete(key);
     }
     return this.dispatchAvailable();
@@ -187,6 +245,56 @@ export class ReleaseQueueState {
 
   snapshot() {
     return [...this.items.values()].sort(compareQueueItems).map(cloneItem);
+  }
+
+  #closedItem(event, current) {
+    const labels = event.labels ?? current?.labels ?? [];
+    return {
+      repository: event.repository ?? current?.repository,
+      number: event.number ?? current?.number,
+      title: event.title ?? current?.title ?? "",
+      headSha: event.headSha ?? current?.headSha ?? "",
+      baseRef: event.baseRef ?? current?.baseRef ?? "main",
+      labels: labels.map((label) => (typeof label === "string" ? label : label.name)),
+      priority: current?.priority ?? priorityFromLabels(labels),
+      draft: event.draft ?? current?.draft ?? false,
+      mergeable: event.mergeable ?? current?.mergeable ?? null,
+      checks: current?.checks ?? "pending",
+      createdAt:
+        event.createdAt ??
+        current?.createdAt ??
+        new Date(event.receivedAt ?? this.now()).toISOString(),
+      updatedAt:
+        event.updatedAt ??
+        current?.updatedAt ??
+        new Date(event.receivedAt ?? this.now()).toISOString(),
+      state: "closed",
+      activeSince: null,
+    };
+  }
+
+  #emitLifecycle(transition, source, item, details = {}) {
+    const pullRequest = cloneItem(item);
+    const lifecycleKey = [
+      pullRequest.repository,
+      pullRequest.number,
+      pullRequest.headSha,
+      transition,
+      pullRequest.updatedAt,
+    ].join("#");
+    if (this.emittedLifecycleKeys.has(lifecycleKey)) return;
+    this.emittedLifecycleKeys.add(lifecycleKey);
+    if (this.emittedLifecycleKeys.size > MAX_LIFECYCLE_KEYS) {
+      this.emittedLifecycleKeys.delete(this.emittedLifecycleKeys.values().next().value);
+    }
+    this.onLifecycle({
+      type: "pr-lifecycle",
+      transition,
+      source,
+      lifecycleKey,
+      pullRequest,
+      ...details,
+    });
   }
 
   #upsert(input, observedAt) {
