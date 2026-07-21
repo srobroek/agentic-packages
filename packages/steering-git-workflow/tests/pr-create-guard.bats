@@ -63,6 +63,22 @@ setup() {
   [[ "$output" == *'must start as drafts'* ]]
 }
 
+@test "uses last draft flag value" {
+  for command in \
+    'gh pr create --draft --draft=false --body y' \
+    'gh pr create -d --draft=false --body y'; do
+    export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
+      '{cwd:$cwd,tool_input:{command:$command}}')"
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+    [[ "$output" == *'must start as drafts'* ]]
+  done
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
+    --arg command 'gh pr create --draft=false --draft --body y' \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [ -z "$output" ]
+}
+
 @test "blocks a Beads PR without a tracking trailer" {
   export FAKE_BD_WHERE=ok
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" \
@@ -144,6 +160,7 @@ setup() {
   for command in \
     'env -i gh pr create --body y' \
     "env -S 'gh pr create --body y'" \
+    "env -S'gh pr create --body y'" \
     'command -- gh pr create --body y' \
     'exec gh pr create --body y' \
     'timeout 5 gh pr create --body y' \

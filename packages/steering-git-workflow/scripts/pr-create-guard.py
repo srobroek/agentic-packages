@@ -160,6 +160,9 @@ def env_split_invocation(
         if option in {"-S", "--split-string"} and cursor + 1 < len(tokens):
             split_command = tokens[cursor + 1]
             cursor += 2
+        elif option.startswith("-S") and len(option) > 2:
+            split_command = option[2:]
+            cursor += 1
         elif option.startswith("--split-string="):
             split_command = option.split("=", 1)[1]
             cursor += 1
@@ -268,12 +271,13 @@ def argument(invocation: list[str], long: str, short: str) -> str | None:
 
 
 def draft_enabled(invocation: list[str]) -> bool:
+    enabled = False
     for token in invocation[3:]:
         if token in {"--draft", "-d"}:
-            return True
+            enabled = True
         if token.startswith("--draft=") or token.startswith("-d="):
-            return token.split("=", 1)[1].lower() == "true"
-    return False
+            enabled = token.split("=", 1)[1].lower() == "true"
+    return enabled
 
 
 def beads_workspace(cwd: Path) -> bool:
