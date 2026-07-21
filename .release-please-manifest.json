@@ -1,5 +1,5 @@
 {
-  ".": "16.0.2",
+  ".": "16.0.3",
   "packages/agent-adversarial-challenger": "3.2.0",
   "packages/agent-coder": "6.1.0",
   "packages/agent-coder-high": "1.0.0",
@@ -88,7 +88,7 @@
   "packages/lsp-terraform": "0.3.0",
   "packages/lsp-typescript": "0.3.0",
   "packages/matt-skills": "2.1.0",
-  "packages/mcp-1mcp": "1.0.0",
+  "packages/mcp-1mcp": "1.0.1",
   "packages/mcp-codebase-memory": "1.2.0",
   "packages/mcp-context7": "1.2.0",
   "packages/mcp-mempalace": "1.0.1",
