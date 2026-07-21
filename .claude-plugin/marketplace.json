@@ -1246,7 +1246,7 @@
     },
     {
       "name": "release-queue-watch",
-      "description": "Watches open GitHub pull-request checks with the native gh interval watcher, rediscovering new PRs between passes without mutating repository state.",
+      "description": "Runs a signed local GitHub webhook receiver with agent-owned PR priority and merge-slot state plus Octokit REST reconciliation.",
       "version": "0.2.0",
       "tags": [
         "github",
