@@ -20,7 +20,7 @@ Shipping (choose one, confirm if ambiguous):
 
 Beads linkage (when `bd where` succeeds):
 
-- Before PR creation, create one open task bead labeled `pr:merge` and
+- Before PR creation, create one open, unassigned task bead labeled `pr:merge` and
   `agent:integrator`, with `branch`, `repo`, `origin_actor`, `tracks_beads`,
   and `closes_beads` metadata. For every closing work bead, add `bd dep add
   <work-bead> <merge-bead>` before approval freezes the graph.

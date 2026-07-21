@@ -15,11 +15,13 @@ from typing import Any
 
 CONTROL = {";", "&&", "||", "|", "&", "(", ")"}
 SHELLS = {"bash", "sh", "zsh", "dash", "fish", "ksh"}
-WRAPPERS = {"command", "env", "nohup", "sudo", "time"}
+WRAPPERS = {"command", "env", "exec", "nice", "nohup", "sudo", "time", "timeout"}
 COMMAND_KEYWORDS = {"if", "then", "elif", "else", "while", "until", "do", "!", "{"}
 
 WRAPPER_OPTIONS_WITH_VALUE = {
     "env": {"-u", "--unset", "-C", "--chdir", "--argv0"},
+    "exec": {"-a"},
+    "nice": {"-n", "--adjustment"},
     "nohup": set(),
     "sudo": {
         "-u",
@@ -44,6 +46,7 @@ WRAPPER_OPTIONS_WITH_VALUE = {
         "--type",
     },
     "time": {"-f", "--format", "-o", "--output"},
+    "timeout": {"-k", "--kill-after", "-s", "--signal"},
 }
 
 
@@ -132,7 +135,47 @@ def unwrap_command(tokens: list[str], index: int) -> int | None:
             index += 1
             if name in options_with_value and "=" not in option:
                 index += 1
+        if wrapper == "timeout" and index < len(tokens):
+            index += 1
         continue
+    return None
+
+
+def env_split_invocation(
+    tokens: list[str], index: int, depth: int
+) -> tuple[list[list[str]], int] | None:
+    """Expand env -S/--split-string into the command it executes."""
+    while index < len(tokens):
+        token = tokens[index]
+        if "=" in token and not token.startswith("=") and not token.startswith("-"):
+            index += 1
+            continue
+        break
+    if index >= len(tokens) or os.path.basename(tokens[index]) != "env":
+        return None
+    cursor = index + 1
+    while cursor < len(tokens) and tokens[cursor] not in CONTROL:
+        option = tokens[cursor]
+        split_command: str | None = None
+        if option in {"-S", "--split-string"} and cursor + 1 < len(tokens):
+            split_command = tokens[cursor + 1]
+            cursor += 2
+        elif option.startswith("--split-string="):
+            split_command = option.split("=", 1)[1]
+            cursor += 1
+        if split_command is not None:
+            end = cursor
+            while end < len(tokens) and tokens[end] not in CONTROL:
+                end += 1
+            if cursor < end:
+                split_command = f"{split_command} {shlex.join(tokens[cursor:end])}"
+            return invocation_spans(split_command, depth + 1), end
+        if option in {"-u", "--unset", "-C", "--chdir", "--argv0"}:
+            cursor += 2
+            continue
+        if option == "--" or not option.startswith("-"):
+            return None
+        cursor += 1
     return None
 
 
@@ -143,6 +186,9 @@ def gh_create_arguments(tokens: list[str], index: int) -> tuple[list[str], int] 
         option = tokens[cursor]
         if option in {"-R", "--repo", "--hostname"}:
             cursor += 2
+            continue
+        if option.startswith("-R") and len(option) > 2:
+            cursor += 1
             continue
         if option.startswith("--repo=") or option.startswith("--hostname="):
             cursor += 1
@@ -172,6 +218,12 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
             continue
         if not command_start:
             index += 1
+            continue
+        if split := env_split_invocation(tokens, index, depth):
+            nested, end = split
+            found.extend(nested)
+            command_start = False
+            index = end
             continue
         executable = unwrap_command(tokens, index)
         if executable is None:
@@ -213,6 +265,15 @@ def argument(invocation: list[str], long: str, short: str) -> str | None:
         if token.startswith(f"{long}=") or token.startswith(f"{short}="):
             return token.split("=", 1)[1]
     return None
+
+
+def draft_enabled(invocation: list[str]) -> bool:
+    for token in invocation[3:]:
+        if token in {"--draft", "-d"}:
+            return True
+        if token.startswith("--draft=") or token.startswith("-d="):
+            return token.split("=", 1)[1].lower() == "true"
+    return False
 
 
 def beads_workspace(cwd: Path) -> bool:
@@ -259,7 +320,7 @@ def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
 
 
 def validate(invocation: list[str], cwd: Path) -> str | None:
-    if "--draft" not in invocation[3:]:
+    if not draft_enabled(invocation):
         return (
             "Agent-authored PRs must start as drafts. Re-run every gh pr create "
             "invocation with --draft; use gh pr ready only after implementation, "
@@ -307,6 +368,8 @@ def validate(invocation: list[str], cwd: Path) -> str | None:
             f"Merge-Bead '{merge_id}' must be open and labeled pr:merge "
             "and agent:integrator."
         )
+    if merge_record.get("assignee"):
+        return f"Merge-Bead '{merge_id}' must be unassigned for PR Shepherd discovery."
     metadata = merge_record.get("metadata")
     required_metadata = {"branch", "repo", "origin_actor"}
     if not isinstance(metadata, dict) or any(

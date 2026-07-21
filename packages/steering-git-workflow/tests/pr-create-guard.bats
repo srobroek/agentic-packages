@@ -15,6 +15,7 @@ setup() {
     '  *" show merge-blocked --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-blocked","status":"blocked","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
     '  *" show merge-unrouted --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-unrouted","status":"open","labels":["pr:merge"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
     '  *" show merge-unanchored --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-unanchored","status":"open","labels":["pr:merge","agent:integrator"],"metadata":{"tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
+    '  *" show merge-assigned --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-assigned","status":"open","assignee":"busy-agent","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
     '  *" show good-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"good-1","status":"open","labels":[],"dependencies":[{"id":"merge-1","dependency_type":"blocks"}]}]'\'' ;;' \
     '  *" show other-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"other-1","status":"open","labels":[],"dependencies":[]}]'\'' ;;' \
     '  *" show "*) exit 1 ;;' \
@@ -40,6 +41,26 @@ setup() {
   run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
   [ "$status" -eq 0 ]
   [ -z "$output" ]
+}
+
+@test "allows native draft flag equivalents outside Beads" {
+  for command in \
+    'gh pr create -d --body y' \
+    'gh pr create --draft=true --body y' \
+    'gh pr create -d=true --body y'; do
+    export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
+      '{cwd:$cwd,tool_input:{command:$command}}')"
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+    [ -z "$output" ]
+  done
+}
+
+@test "blocks an explicitly false draft flag" {
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
+    --arg command 'gh pr create --draft=false --body y' \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [[ "$output" == *'must start as drafts'* ]]
 }
 
 @test "blocks a Beads PR without a tracking trailer" {
@@ -109,6 +130,7 @@ setup() {
 @test "blocks gh repo-global option forms without draft" {
   for command in \
     'gh -R owner/repo pr create --body y' \
+    'gh -Rowner/repo pr create --body y' \
     'gh --repo owner/repo pr create --body y' \
     'gh --repo=owner/repo pr create --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
@@ -121,7 +143,11 @@ setup() {
 @test "blocks wrapped PR creation without draft" {
   for command in \
     'env -i gh pr create --body y' \
+    "env -S 'gh pr create --body y'" \
     'command -- gh pr create --body y' \
+    'exec gh pr create --body y' \
+    'timeout 5 gh pr create --body y' \
+    'nice gh pr create --body y' \
     'sudo gh pr create --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
@@ -243,4 +269,12 @@ setup() {
     '{cwd:$cwd,tool_input:{command:$command}}')"
   run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
   [[ "$output" == *'branch, repo, and origin_actor'* ]]
+}
+
+@test "blocks an assigned merge bead that would starve discovery" {
+  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-assigned\nTracks-Bead: good-1"'
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [[ "$output" == *'must be unassigned'* ]]
 }

@@ -22,8 +22,8 @@ TRIGGER
    missing and stop. Export `BEADS_ACTOR="pr-shepherd/<runtime>/<session-id>"`,
    `BD_NO_PAGER=1 BD_NON_INTERACTIVE=1`.
 2. Load durable PR nodes with `bd list --label pr:merge --status all --json`.
-   Each open node must have repo+PR metadata and its PR body must name that
-   exact `Merge-Bead`. Ignore drafts for merge processing and ignore automated
+   Each open node must remain unassigned, have repo+PR metadata, and its PR
+   body must name that exact `Merge-Bead`. Ignore drafts for merge processing and ignore automated
    release PRs. Missing anchors or body/DAG mismatches are author-contract
    failures, not reasons to scan a bounded GitHub history.
 3. Before creation/approval, authors add `bd dep add <work> <merge-bead>` for
