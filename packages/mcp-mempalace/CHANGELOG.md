@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.0...mcp-mempalace--v1.0.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v0.4.0...mcp-mempalace--v1.0.0) (2026-07-21)
 
 

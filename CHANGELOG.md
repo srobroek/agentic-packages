@@ -1,5 +1,22 @@
 # Changelog
 
+## [15.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v14.0.0...srobroek-agentic--v15.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574))
+
+### Features
+
+* add managed Serena lifecycle hooks ([#576](https://github.com/srobroek/agentic-packages/issues/576)) ([e3d50ab](https://github.com/srobroek/agentic-packages/commit/e3d50ab3d80cabc945370b706ae91cb2eb823ef1))
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574)) ([7637119](https://github.com/srobroek/agentic-packages/commit/76371191da9da679e92c99d3b8b6a6b3817065d7))
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
 ## [14.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v13.0.0...srobroek-agentic--v14.0.0) (2026-07-21)
 
 
