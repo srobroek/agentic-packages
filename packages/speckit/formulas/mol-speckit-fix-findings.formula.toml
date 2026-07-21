@@ -1,0 +1,44 @@
+# Owned and installed by the APM speckit package.
+formula = "mol-speckit-fix-findings"
+description = "Persistent remediation loop for actionable SpecKit review, QA, or security findings"
+type = "workflow"
+
+[vars.feature]
+required = true
+pattern = "^[0-9]{3}-[a-z0-9-]+$"
+
+[vars.source]
+required = true
+
+[[steps]]
+id = "triage"
+title = "triage {{source}} findings for {{feature}}"
+type = "task"
+description = "Record actionable findings, affected requirements, and the verification command before changing code."
+
+[[steps]]
+id = "fix"
+title = "fix {{source}} findings for {{feature}}"
+type = "task"
+needs = ["triage"]
+description = "Run /speckit.fix-findings.run against the triaged findings without changing approved intent."
+
+[steps.metadata]
+execution_skill = "speckit.fix-findings.run"
+
+[[steps]]
+id = "reverify"
+title = "reverify {{source}} findings for {{feature}}"
+type = "task"
+needs = ["fix"]
+description = "Re-run the originating verification and close only when actionable findings are resolved or explicitly deferred by a human."
+
+[[steps]]
+id = "signoff"
+title = "remediation sign-off {{feature}}"
+type = "task"
+needs = ["reverify"]
+description = "Resolve this human gate after approving remediation evidence and any deferred findings."
+
+[steps.gate]
+type = "human"

@@ -23,21 +23,21 @@ steps:
     input:
       args: "{{ inputs.feature_name }}"
 
-  - id: review-spec
-    type: gate
-    message: "Review the generated spec before clarification."
-    options: [approve, reject]
-    on_reject: abort
-
   - id: clarify
     command: speckit.clarify
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.feature_name }}"
 
+  - id: checklist
+    command: speckit.checklist
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
   - id: review-clarify
     type: gate
-    message: "Review the clarified spec before planning."
+    message: "Review the clarified specification and checklist before planning."
     options: [approve, reject]
     on_reject: abort
 
@@ -50,24 +50,6 @@ steps:
   - id: review-plan
     type: gate
     message: "Review the plan before generating tasks."
-    options: [approve, reject]
-    on_reject: abort
-
-  - id: tasks
-    command: speckit.tasks
-    integration: "{{ inputs.integration }}"
-    input:
-      args: "{{ inputs.feature_name }}"
-
-  - id: checklist
-    command: speckit.checklist
-    integration: "{{ inputs.integration }}"
-    input:
-      args: "{{ inputs.feature_name }}"
-
-  - id: review-checklist
-    type: gate
-    message: "Resolve the requirements-quality checklist before critique and security review."
     options: [approve, reject]
     on_reject: abort
 
@@ -85,17 +67,17 @@ steps:
     input:
       args: "{{ inputs.feature_name }}"
 
+  - id: tasks
+    command: speckit.tasks
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.feature_name }}"
+
   - id: analyze
     command: speckit.analyze
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.feature_name }}"
-
-  - id: review-ready
-    type: gate
-    message: "Review critique, security review, and analysis before implementation."
-    options: [approve, reject]
-    on_reject: abort
 
   - id: checkpoint-spec
     type: prompt
@@ -103,12 +85,12 @@ steps:
 
   - id: review-implementation-ready
     type: gate
-    message: "Review checkpoint state before implementation."
+    message: "Review critique, security review, tasks, analysis, and checkpoint evidence before implementation."
     options: [approve, reject]
     on_reject: abort
 
   # Implementation routes through the agent-assign flow, not the deprecated
-  # /speckit.implement (which the speckit-dag-hooks dispatcher hard-blocks).
+  # /speckit.implement command.
   - id: assign
     command: speckit.agent-assign.assign
     integration: "{{ inputs.integration }}"
@@ -129,21 +111,27 @@ steps:
 
   - id: verify-tasks
     type: prompt
-    prompt: "Spawn the speckit-verify agent with mode: tasks in a fresh context. The agent must write specs/<feature>/verify-tasks-report.md before this step completes. Pass spec ID, path to tasks.md and spec.md, and the implementation branch or changed files."
+    prompt: "Confirm every child of the implement bead is closed with bd children <implement-step-id> --json, then spawn the speckit-verify agent with mode: tasks. Pass the spec ID, implementation task beads, spec.md, and changed files. Write verify-tasks-report.md."
 
   - id: verify
     type: prompt
-    prompt: "Spawn the speckit-verify agent with mode: requirements in a fresh context. The agent must write specs/<feature>/verify-report.md before this step completes. Pass spec ID, paths to spec.md, plan.md, and tasks.md, and the implementation directories."
+    prompt: "Spawn the speckit-verify agent with mode: requirements. Pass the spec ID, spec.md, plan.md, implementation task beads, and implementation directories. Write verify-report.md."
 
   - id: review
     command: speckit.review.run
     integration: "{{ inputs.integration }}"
 
-  - id: review-findings
-    type: gate
-    message: "Review verification and review findings before cleanup and drift analysis."
-    options: [approve, reject]
-    on_reject: abort
+  - id: qa
+    command: speckit.qa.run
+    integration: "{{ inputs.integration }}"
+
+  - id: code-review
+    type: prompt
+    prompt: "Run /speckit.review.code as a subagent and bond mol-speckit-fix-findings when actionable findings exist."
+
+  - id: security-review-post
+    type: prompt
+    prompt: "Run /speckit.security-review.branch as a subagent and bond mol-speckit-fix-findings when actionable findings exist."
 
   - id: cleanup
     command: speckit.cleanup.run
@@ -161,12 +149,16 @@ steps:
     command: speckit.retro.run
     integration: "{{ inputs.integration }}"
 
+  - id: docs-update
+    type: prompt
+    prompt: "Update released-artifact documentation for the feature."
+
   - id: review-closeout
     type: gate
-    message: "Review cleanup, drift, conflicts, and retrospective outputs before the final checkpoint."
+    message: "Review verification, review, QA, security review, cleanup, drift, conflicts, retrospective, and documentation before closeout."
     options: [approve, reject]
     on_reject: abort
 
   - id: checkpoint-final
     type: prompt
-    prompt: "Commit all post-implementation artifacts (verify reports, review report, cleanup, retro) with a conventional commit message. Tag this as the final feature checkpoint."
+    prompt: "Commit and tag the final feature artifacts. Close the final step and feature molecule root. Run one bd dolt push only when sync authority is granted; otherwise report the pending command."

@@ -1,0 +1,59 @@
+# Owned and installed by the APM speckit package.
+formula = "mol-speckit-iterate"
+description = "Persistent SpecKit requirement-change workflow bonded to an affected feature step"
+type = "workflow"
+
+[vars.feature]
+required = true
+pattern = "^[0-9]{3}-[a-z0-9-]+$"
+
+[vars.change]
+required = true
+
+[[steps]]
+id = "define"
+title = "define iteration for {{feature}}"
+type = "task"
+description = "Run /speckit.iterate.define for {{change}} and present the impact assessment."
+
+[steps.metadata]
+execution_skill = "speckit.iterate.define"
+execution_mode = "interactive"
+
+[[steps]]
+id = "approve"
+title = "approve iteration for {{feature}}"
+type = "task"
+needs = ["define"]
+description = "Resolve this human gate only after the requirement change and affected completed work are approved."
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "apply"
+title = "apply iteration for {{feature}}"
+type = "task"
+needs = ["approve"]
+description = "Run /speckit.iterate.apply and update the feature task beads instead of tasks.md."
+
+[steps.metadata]
+execution_skill = "speckit.iterate.apply"
+task_store = "beads"
+
+[[steps]]
+id = "roadmap"
+title = "refresh roadmap for {{feature}}"
+type = "task"
+needs = ["apply"]
+description = "Run /speckit.roadmap.write after applying the iteration."
+
+[steps.metadata]
+execution_skill = "speckit.roadmap.write"
+
+[[steps]]
+id = "checkpoint"
+title = "iteration checkpoint for {{feature}}"
+type = "task"
+needs = ["roadmap"]
+description = "Commit the approved iteration artifacts and resume the blocked feature step after this bonded molecule closes."

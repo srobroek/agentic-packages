@@ -1,0 +1,341 @@
+# speckit-feature -- the project-local SpecKit lifecycle molecule.
+#
+# The APM speckit package owns this source. speckit-setup installs it at
+# .beads/formulas/speckit-feature.formula.toml. Pour one persistent molecule
+# per feature and use the molecule root directly for swarm validation/status:
+#   bd mol pour speckit-feature --var feature=<NNN-slug>
+#   bd swarm validate <root-id>
+#   bd swarm status <root-id> --json
+#
+# Authoring constraints verified against bd 1.1.0:
+#   - [steps.gate] is a TOML table.
+#   - Runtime findings are handled by bonded formulas, not step conditions.
+#   - Steps are tasks because epic children cannot depend on task children.
+formula = "speckit-feature"
+description = "Persistent SpecKit feature workflow for {{feature}} with review and approval gates"
+type = "workflow"
+
+[vars.feature]
+required = true
+pattern = "^[0-9]{3}-[a-z0-9-]+$"
+
+[[steps]]
+id = "specify"
+title = "specify {{feature}}"
+type = "task"
+description = "Run /speckit.specify to create specs/{{feature}}/spec.md."
+
+[steps.metadata]
+execution_skill = "speckit.specify"
+
+[[steps]]
+id = "clarify"
+title = "clarify {{feature}}"
+type = "task"
+needs = ["specify"]
+description = "Run /speckit.clarify interactively and encode the answers in spec.md."
+
+[steps.metadata]
+execution_skill = "speckit.clarify"
+execution_mode = "interactive"
+
+[[steps]]
+id = "checklist"
+title = "checklist {{feature}}"
+type = "task"
+needs = ["clarify"]
+description = "Run /speckit.checklist as the requirements-quality check before planning."
+
+[steps.metadata]
+execution_skill = "speckit.checklist"
+execution_mode = "interactive"
+
+[[steps]]
+id = "clarified-spec-approval"
+title = "clarified spec approval {{feature}}"
+type = "task"
+needs = ["checklist"]
+description = "Resolve this human gate only after the clarified specification and checklist are approved."
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "plan"
+title = "plan {{feature}}"
+type = "task"
+needs = ["clarified-spec-approval"]
+description = "Run /speckit.plan to produce plan.md and design artifacts."
+
+[steps.metadata]
+execution_skill = "speckit.plan"
+
+[[steps]]
+id = "plan-approval"
+title = "plan approval {{feature}}"
+type = "task"
+needs = ["plan"]
+description = "Resolve this human gate only after the implementation plan is approved."
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "critique"
+title = "critique {{feature}}"
+type = "task"
+needs = ["plan-approval"]
+description = "Run /speckit.critique.run against the approved plan. Parallel with security-plan-review."
+
+[steps.metadata]
+execution_skill = "speckit.critique.run"
+remediation_formula = "mol-speckit-iterate"
+
+[[steps]]
+id = "security-plan-review"
+title = "security plan review {{feature}}"
+type = "task"
+needs = ["plan-approval"]
+description = "Run /speckit.security-review against the approved plan. Parallel with critique."
+
+[steps.metadata]
+execution_skill = "speckit.security-review"
+remediation_formula = "mol-speckit-iterate"
+
+[[steps]]
+id = "tasks"
+title = "tasks {{feature}}"
+type = "task"
+needs = ["critique", "security-plan-review"]
+description = "Run /speckit.tasks, then create task beads as children of the implement step with spec_id={{feature}}. Never write specs/{{feature}}/tasks.md."
+
+[steps.metadata]
+execution_skill = "speckit.tasks"
+task_store = "beads"
+
+[[steps]]
+id = "analyze"
+title = "analyze {{feature}}"
+type = "task"
+needs = ["tasks"]
+description = "Run /speckit.analyze interactively. Read task state from beads with spec_id={{feature}}, not tasks.md."
+
+[steps.metadata]
+execution_skill = "speckit.analyze"
+execution_mode = "interactive"
+remediation_formula = "mol-speckit-iterate"
+
+[[steps]]
+id = "preimplementation-checkpoint"
+title = "pre-implementation checkpoint {{feature}}"
+type = "task"
+needs = ["analyze"]
+description = "Commit the approved specification, plan, analysis, and task-bead state as the pre-implementation checkpoint."
+
+[steps.metadata]
+execution_mode = "main_thread"
+
+[[steps]]
+id = "implementation-readiness"
+title = "implementation readiness {{feature}}"
+type = "task"
+needs = ["preimplementation-checkpoint"]
+description = "Resolve this human gate only after critique, security review, task decomposition, analysis, and checkpoint evidence are ready."
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "assign"
+title = "agent assign {{feature}}"
+type = "task"
+needs = ["implementation-readiness"]
+description = "Run /speckit.agent-assign.assign to map implementation task beads to agents."
+
+[steps.metadata]
+execution_skill = "speckit.agent-assign.assign"
+
+[[steps]]
+id = "validate"
+title = "validate assignments {{feature}}"
+type = "task"
+needs = ["assign"]
+description = "Run /speckit.agent-assign.validate to confirm every assigned agent exists."
+
+[steps.metadata]
+execution_skill = "speckit.agent-assign.validate"
+
+[[steps]]
+id = "implement"
+title = "implement {{feature}}"
+type = "task"
+needs = ["validate"]
+description = "Run /speckit.agent-assign.execute. Keep this parent open until every implementation child bead is closed."
+
+[steps.metadata]
+execution_skill = "speckit.agent-assign.execute"
+child_completion_required = "true"
+
+[[steps]]
+id = "implementation-complete"
+title = "implementation child completion {{feature}}"
+type = "task"
+needs = ["implement"]
+description = "Inspect bd children for the implement step and the spec_id={{feature}} task set. Close only when every implementation child is closed."
+
+[steps.metadata]
+execution_mode = "coordinator"
+completion_check = "bd children <implement-step-id> --json"
+
+[[steps]]
+id = "verify-tasks"
+title = "verify tasks {{feature}}"
+type = "task"
+needs = ["implementation-complete"]
+labels = ["agent:speckit-verify"]
+description = "Run the speckit-verify agent in tasks mode against implementation child beads and write verify-tasks-report.md."
+
+[steps.metadata]
+execution_agent_type = "speckit-verify"
+execution_agent_mode = "tasks"
+execution_mode = "subagent"
+
+[[steps]]
+id = "verify"
+title = "verify requirements {{feature}}"
+type = "task"
+needs = ["verify-tasks"]
+labels = ["agent:speckit-verify"]
+description = "Run the speckit-verify agent in requirements mode against spec.md and write verify-report.md."
+
+[steps.metadata]
+execution_agent_type = "speckit-verify"
+execution_agent_mode = "requirements"
+execution_mode = "subagent"
+remediation_formula = "mol-speckit-fix-findings"
+
+[[steps]]
+id = "review"
+title = "review {{feature}}"
+type = "task"
+needs = ["verify"]
+description = "Run /speckit.review.run. Bond mol-speckit-fix-findings sequentially when actionable findings exist."
+
+[steps.metadata]
+execution_skill = "speckit.review.run"
+remediation_formula = "mol-speckit-fix-findings"
+remediation_bond_type = "sequential"
+
+[[steps]]
+id = "qa"
+title = "qa {{feature}}"
+type = "task"
+needs = ["review"]
+description = "Run /speckit.qa.run. Bond mol-speckit-fix-findings sequentially when failures exist."
+
+[steps.metadata]
+execution_skill = "speckit.qa.run"
+remediation_formula = "mol-speckit-fix-findings"
+remediation_bond_type = "sequential"
+
+[[steps]]
+id = "code-review"
+title = "code review {{feature}}"
+type = "task"
+needs = ["qa"]
+description = "Run /speckit.review.code as a subagent. Parallel with security-review-post."
+
+[steps.metadata]
+execution_skill = "speckit.review.code"
+execution_mode = "subagent"
+remediation_formula = "mol-speckit-fix-findings"
+
+[[steps]]
+id = "security-review-post"
+title = "post-implementation security review {{feature}}"
+type = "task"
+needs = ["qa"]
+description = "Run /speckit.security-review.branch as a subagent. Parallel with code-review."
+
+[steps.metadata]
+execution_skill = "speckit.security-review.branch"
+execution_mode = "subagent"
+remediation_formula = "mol-speckit-fix-findings"
+
+[[steps]]
+id = "cleanup"
+title = "cleanup {{feature}}"
+type = "task"
+needs = ["code-review", "security-review-post"]
+description = "Run /speckit.cleanup on the main thread after review remediation is complete."
+
+[steps.metadata]
+execution_skill = "speckit.cleanup"
+execution_mode = "main_thread"
+
+[[steps]]
+id = "sync-drift"
+title = "sync drift {{feature}}"
+type = "task"
+needs = ["cleanup"]
+labels = ["agent:speckit-sync"]
+description = "Run the speckit-sync agent with scope=drift. Parallel with sync-conflicts."
+
+[steps.metadata]
+execution_agent_type = "speckit-sync"
+execution_agent_scope = "drift"
+execution_mode = "subagent"
+
+[[steps]]
+id = "sync-conflicts"
+title = "sync conflicts {{feature}}"
+type = "task"
+needs = ["cleanup"]
+labels = ["agent:speckit-sync"]
+description = "Run the speckit-sync agent with scope=conflicts. Parallel with sync-drift."
+
+[steps.metadata]
+execution_agent_type = "speckit-sync"
+execution_agent_scope = "conflicts"
+execution_mode = "subagent"
+
+[[steps]]
+id = "retro"
+title = "retro {{feature}}"
+type = "task"
+needs = ["sync-drift", "sync-conflicts"]
+description = "Run /speckit.retro.run."
+
+[steps.metadata]
+execution_skill = "speckit.retro.run"
+
+[[steps]]
+id = "docs-update"
+title = "documentation update {{feature}}"
+type = "task"
+needs = ["retro"]
+description = "Update released-artifact documentation for the feature."
+
+[steps.metadata]
+execution_mode = "main_thread"
+
+[[steps]]
+id = "closeout-approval"
+title = "closeout approval {{feature}}"
+type = "task"
+needs = ["docs-update"]
+description = "Resolve this human gate after verification, review, QA, security review, cleanup, drift checks, retrospective, and documentation are approved."
+
+[steps.gate]
+type = "human"
+
+[[steps]]
+id = "final-checkpoint"
+title = "final checkpoint {{feature}}"
+type = "task"
+needs = ["closeout-approval"]
+description = "Commit and tag final feature artifacts. Close this step, then close the molecule root. Run one bd dolt push only when the active profile or user grants sync authority; otherwise report the pending command."
+
+[steps.metadata]
+execution_mode = "coordinator"
+terminal_sync = "authority_aware_single_push_after_root_close"
