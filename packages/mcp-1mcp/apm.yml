@@ -22,7 +22,30 @@ dependencies:
         - >-
           command -v 1mcp >/dev/null 2>&1 || { echo
           1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; };
-          1mcp serve --background >/dev/null || { ready=0; for i in 1 2 3 4 5 6
-          7 8 9 10; do 1mcp serve --status >/dev/null 2>&1 && { ready=1; break;
-          }; sleep 1; done; [ "$ready" -eq 1 ] || { 1mcp serve --status >&2;
-          exit 1; }; }; exec 1mcp proxy
+          runtime_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/1mcp"; pid_file="$runtime_dir/server.pid";
+          wait_seconds="${ONE_MCP_LAUNCHER_WAIT_SECONDS:-10}"; case "$wait_seconds" in
+          ''|*[!0-9]*) wait_seconds=10 ;; esac; mkdir -p "$runtime_dir" || exit 1;
+          ready() { 1mcp serve --status >/dev/null 2>&1; }; wait_ready() { i=0;
+          while [ "$i" -lt "$wait_seconds" ]; do ready && return 0; sleep 1;
+          i=$((i + 1)); done; ready; }; release_lock() { if [ "${lock_kind:-}" = flock ];
+          then flock -u 9; elif [ "${lock_kind:-}" = mkdir ]; then rmdir "$runtime_dir/launcher.lock.d";
+          fi; lock_kind=; }; ready && exec 1mcp proxy; if command -v flock >/dev/null 2>&1;
+          then exec 9>"$runtime_dir/launcher.lock"; flock -w "$wait_seconds" 9 || {
+          wait_ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2; exit 1; };
+          lock_kind=flock; else mkdir "$runtime_dir/launcher.lock.d" 2>/dev/null || {
+          wait_ready && exec 1mcp proxy; echo 1mcp-launcher-lock-timeout >&2; exit 1; };
+          lock_kind=mkdir; fi; trap release_lock EXIT INT TERM; ready && { release_lock;
+          trap - EXIT INT TERM; exec 1mcp proxy; }; recovered=0; if [ -f "$pid_file" ];
+          then pid=$(sed -n 's/.*"pid"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p'
+          "$pid_file" | sed -n '1p'); identity=; case "$pid" in ''|*[!0-9]*) identity=invalid ;;
+          *) if [ -r "/proc/$pid/cmdline" ]; then identity=$(tr '\0' ' ' <"/proc/$pid/cmdline");
+          else identity=$(ps -p "$pid" -o args= 2>/dev/null || :); fi ;; esac;
+          case "$identity" in *1mcp*' serve '*--background-bootstrap*) wait_ready && {
+          release_lock; trap - EXIT INT TERM; exec 1mcp proxy; }; 1mcp serve --stop || exit 1;
+          recovered=1 ;; *) stale="$pid_file.stale.$(date +%s).$$"; mv "$pid_file" "$stale" || exit 1;
+          echo "quarantined stale 1mcp PID state: $stale" >&2 ;; esac; fi;
+          1mcp serve --background || { wait_ready && { release_lock; trap - EXIT INT TERM;
+          exec 1mcp proxy; }; echo '1mcp startup failed; serve --status follows' >&2;
+          1mcp serve --status >&2; exit 1; }; wait_ready || {
+          [ "$recovered" -eq 0 ] || echo 1mcp-recovery-exhausted >&2; 1mcp serve --status >&2;
+          exit 1; }; release_lock; trap - EXIT INT TERM; exec 1mcp proxy
