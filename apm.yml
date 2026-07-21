@@ -148,7 +148,7 @@ marketplace:
       category: code-intelligence
       tags:
         - bundle
-        - graph
+        - semantic
     - name: codebase-memory
       source: ./packages/codebase-memory
       category: code-intelligence

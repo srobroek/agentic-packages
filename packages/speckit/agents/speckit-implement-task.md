@@ -1,6 +1,6 @@
 ---
 name: speckit-implement-task
-description: Implements non-code or tightly scoped tasks from a SpecKit tasks.md, or scopes substantial code work for a parent-delegated coder. Use only inside a SpecKit implementation workflow when the parent provides task IDs, spec context, and worktree scope.
+description: Implements bounded SpecKit tasks or returns a coder delegation brief. Use when the parent provides task IDs, spec context, and worktree scope.
 model: sonnet
 x-agentic:
   codex:
