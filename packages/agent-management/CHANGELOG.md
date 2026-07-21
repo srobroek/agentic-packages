@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.1.1...agent-management--v1.2.0) (2026-07-21)
+
+
+### Features
+
+* **agent-management:** compile global root contexts safely ([659b663](https://github.com/srobroek/agentic-packages/commit/659b663f6b5d3f0676348a2dba7e0872b07eb85a))
+
 ## [1.1.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.1.0...agent-management--v1.1.1) (2026-07-21)
 
 
