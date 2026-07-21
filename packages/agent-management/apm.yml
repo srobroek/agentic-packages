@@ -1,5 +1,5 @@
 name: agent-management
-version: 1.1.0
+version: 1.1.1
 description: >-
   Manage APM-backed project agents, skills, hooks, steering, bundles, and
   package dependencies. Use when a repo already has or is about to get apm.yml

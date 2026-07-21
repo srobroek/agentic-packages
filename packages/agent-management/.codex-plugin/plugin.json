@@ -1,6 +1,6 @@
 {
   "name": "agent-management",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
   "author": {
     "name": "Sjors Robroek"

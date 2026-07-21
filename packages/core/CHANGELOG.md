@@ -1,5 +1,16 @@
 # Changelog
 
+## [10.0.0](https://github.com/srobroek/agentic-packages/compare/core--v9.0.0...core--v10.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1c358a4](https://github.com/srobroek/agentic-packages/commit/1c358a48506fd51c3eab78f3c523b540ada12a41))
+
 ## [9.0.0](https://github.com/srobroek/agentic-packages/compare/core--v8.0.0...core--v9.0.0) (2026-07-21)
 
 
