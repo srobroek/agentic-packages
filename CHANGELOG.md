@@ -7,6 +7,11 @@
 
 * **agent-management:** compile global root contexts safely ([659b663](https://github.com/srobroek/agentic-packages/commit/659b663f6b5d3f0676348a2dba7e0872b07eb85a))
 
+
+### Bug Fixes
+
+* **hooks:** remove dead relative command paths ([#589](https://github.com/srobroek/agentic-packages/issues/589)) ([4ce1d9e](https://github.com/srobroek/agentic-packages/commit/4ce1d9e3685e6a5ddc92640311852f9883a669b2))
+
 ## [16.0.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.2...srobroek-agentic--v16.0.3) (2026-07-21)
 
 
