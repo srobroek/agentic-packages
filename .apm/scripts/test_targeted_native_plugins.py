@@ -23,6 +23,7 @@ build_native_plugins = _load("target_build_native_plugins", "build-native-plugin
 build_marketplace_block = _load(
     "target_build_marketplace_block", "build-marketplace-block.py"
 )
+audit_codex_config = _load("target_audit_codex_config", "audit-codex-config.py")
 
 
 def _manifest(path: Path, name: str, target: str) -> None:
@@ -170,3 +171,36 @@ def test_codex_marketplace_filter_removes_non_target_packages(
         {"shared"},
         check=True,
     )
+
+
+def test_claude_target_hook_is_omitted_from_codex_outputs_and_audit(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    packages = tmp_path / "packages"
+    package_dir = packages / "claude-hook"
+    _manifest(package_dir, "claude-hook", "claude")
+    hooks_dir = package_dir / ".apm" / "hooks"
+    hooks_dir.mkdir(parents=True)
+    (hooks_dir / "hooks.json").write_text(
+        '{"hooks":{"PreToolUse":[{"matcher":"Agent","hooks":[]}]}}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(build_native_plugins, "PACKAGES_DIR", packages)
+    monkeypatch.setattr(audit_codex_config, "ROOT", tmp_path)
+    package = {
+        "name": "claude-hook",
+        "dirname": "claude-hook",
+        "version": "1.0.0",
+        "description": "Claude hook",
+        "classification": "hooks",
+        "deps": [],
+        "targets": ["claude"],
+    }
+
+    plan = build_native_plugins._plan_package(package, {}, ({}, "Apache-2.0"))
+
+    assert plan is not None
+    assert ".claude-plugin/plugin.json" in plan
+    assert not any("codex" in path for path in plan)
+    assert audit_codex_config.codex_hook_sources() == []

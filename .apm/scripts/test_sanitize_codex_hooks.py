@@ -38,7 +38,16 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         },
                         {
                             "type": "command",
-                            "command": (f"{hooks_dir}/agent-coder/scripts/reminder.sh"),
+                            "command": (
+                                f"{hooks_dir}/agent-coder/scripts/"
+                                "coder-delegation-reminder.sh"
+                            ),
+                        },
+                        {
+                            "type": "command",
+                            "command": (
+                                f"{hooks_dir}/agent-coder/scripts/future-legitimate-hook.sh"
+                            ),
                         },
                     ],
                 }
@@ -70,7 +79,14 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                     "type": "command",
                     "command": keep_command,
                     "timeout": 30,
-                }
+                },
+                {
+                    "type": "command",
+                    "command": (
+                        f"{hooks_dir}/agent-coder/scripts/future-legitimate-hook.sh"
+                    ),
+                    "timeout": 30,
+                },
             ],
         }
     ]
@@ -80,7 +96,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
         "duplicate_groups_removed": 0,
         "async_converted": 1,
         "if_removed": 1,
-        "timeouts_added": 1,
+        "timeouts_added": 2,
     }
 
 
@@ -128,6 +144,32 @@ def test_sanitize_preserves_current_codex_tool_matchers() -> None:
 
     assert clean == config
     assert counts["handlers_removed"] == 0
+
+
+def test_sanitize_removes_legacy_claude_only_subagent_model_guard() -> None:
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": "Agent",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": (
+                                "/tmp/hooks/hooks-subagent-model/scripts/"
+                                "subagent-model-guard.sh"
+                            ),
+                        }
+                    ],
+                }
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["hooks"] == {}
+    assert counts["handlers_removed"] == 1
 
 
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:

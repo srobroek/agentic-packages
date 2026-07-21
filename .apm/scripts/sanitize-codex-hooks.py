@@ -24,14 +24,15 @@ SUPPORTED_EVENTS = {
     "SubagentStop",
     "Stop",
 }
-OBSOLETE_PACKAGES = {
-    "agent-coder",
+OBSOLETE_COMMAND_SUFFIXES = {
+    "/agent-coder/scripts/coder-delegation-reminder.sh",
 }
 CODEX_EXCLUDED_PACKAGES = {
+    "hooks-subagent-model",
     "hooks-subagent-worktree",
     "hooks-worktree",
 }
-CODEX_UNAVAILABLE_PACKAGES = OBSOLETE_PACKAGES | CODEX_EXCLUDED_PACKAGES
+CODEX_UNAVAILABLE_PACKAGES = CODEX_EXCLUDED_PACKAGES
 
 
 def runtime_semantics(value: object) -> object:
@@ -70,8 +71,17 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
                 command = handler.get("command", "")
-                if handler.get("type") != "command" or any(
-                    f"/{package}/" in command for package in CODEX_UNAVAILABLE_PACKAGES
+                command_token = command.strip().split()[0] if command.strip() else ""
+                if (
+                    handler.get("type") != "command"
+                    or any(
+                        command_token.endswith(suffix)
+                        for suffix in OBSOLETE_COMMAND_SUFFIXES
+                    )
+                    or any(
+                        f"/{package}/" in command
+                        for package in CODEX_UNAVAILABLE_PACKAGES
+                    )
                 ):
                     counts["handlers_removed"] += 1
                     continue

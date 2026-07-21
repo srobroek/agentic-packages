@@ -100,7 +100,7 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-package-investigate/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-precommit-gate/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
-    "packages/hooks-subagent-model/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
     "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
@@ -151,6 +151,10 @@ def markdown_table_ids(text: str, start: str, end: str) -> list[str]:
 def codex_hook_sources() -> list[Path]:
     paths = list((ROOT / ".apm" / "hooks").glob("*-codex-hooks.json"))
     for hooks_dir in (ROOT / "packages").glob("*/.apm/hooks"):
+        manifest_path = hooks_dir.parents[1] / "apm.yml"
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+        if manifest.get("target") == "claude":
+            continue
         universal = hooks_dir / "hooks.json"
         if universal.is_file():
             paths.append(universal)
