@@ -112,6 +112,29 @@ def test_sanitize_preserves_valid_timeout() -> None:
     assert counts["timeouts_added"] == 0
 
 
+def test_sanitize_preserves_current_codex_tool_matchers() -> None:
+    handler = {
+        "type": "command",
+        "command": "/bin/true",
+        "timeout": 10,
+    }
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {"matcher": "Bash", "hooks": [handler]},
+                {"matcher": "apply_patch", "hooks": [handler]},
+                {"matcher": "Agent", "hooks": [handler]},
+                {"matcher": "mcp__server__local_function", "hooks": [handler]},
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean == config
+    assert counts["handlers_removed"] == 0
+
+
 def test_sanitize_drops_missing_absolute_script() -> None:
     config = {
         "hooks": {

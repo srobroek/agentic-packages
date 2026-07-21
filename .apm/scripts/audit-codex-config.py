@@ -86,6 +86,50 @@ CODEX_DIFFERENCE_PACKAGES = {
     "secrets-scan",
     "speckit",
 }
+SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
+HOOK_MANIFEST_CLASSIFICATION = {
+    "packages/beads/.apm/hooks/beads-claude-hooks.json": "target-specific compatibility",
+    "packages/beads/.apm/hooks/beads-codex-hooks.json": "target-specific compatibility",
+    "packages/code-intelligence/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-attribution-guard/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-bash-safety/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-chezmoi-guard/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-close-keywords/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-git-safety/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-git-workflow/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-package-investigate/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-precommit-gate/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-model/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
+    "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
+    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
+    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
+    "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
+    "packages/pr-shepherd/.apm/hooks/hooks.json": "native-required",
+    "packages/release-please/.apm/hooks/hooks.json": "native-required",
+    "packages/secrets-scan/.apm/hooks/hooks.json": "native-required",
+    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
+    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
+    "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
+    "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
+    "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
+    "packages/write-docs/.apm/hooks/hooks.json": "native-required",
+}
+OBSOLETE_HOOK_MANIFESTS = {
+    "packages/agent-coder/.apm/hooks/agent-coder-claude-hooks.json",
+}
+COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
+    "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",
+    "packages/pr-shepherd/.apm/hooks/pr-shepherd-codex-hooks.json",
+}
+APPROVAL_POLICIES = {
+    "untrusted",
+    "on-failure",
+    "on-request",
+    "granular",
+    "never",
+}
 PLUGIN_SCRIPT_RE = re.compile(r"\$\{PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 PROJECT_SCRIPT_RE = re.compile(
     r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)"
@@ -164,6 +208,7 @@ def main() -> int:
     checked_manifests = 0
     checked_mcp = 0
     checked_hooks = 0
+    checked_agents = 0
 
     catalog_by_name = {
         str(entry["name"]): entry
@@ -297,10 +342,36 @@ def main() -> int:
                         validate_hook_command(path, handler.get("command"))
                     )
 
+    actual_hook_manifests = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "packages").glob("*/.apm/hooks/*.json")
+    }
+    expected_hook_manifests = set(HOOK_MANIFEST_CLASSIFICATION)
+    if actual_hook_manifests != expected_hook_manifests:
+        errors.append(
+            "hook manifest inventory drift: "
+            f"missing={sorted(expected_hook_manifests - actual_hook_manifests)}, "
+            f"unclassified={sorted(actual_hook_manifests - expected_hook_manifests)}"
+        )
+    for rel in sorted(OBSOLETE_HOOK_MANIFESTS | COLLAPSED_DUPLICATE_HOOK_MANIFESTS):
+        if (ROOT / rel).exists():
+            errors.append(f"{rel}: retired hook manifest must stay removed")
+
+    for path in sorted((ROOT / "packages").glob("*/.apm/agents/*.agent.md")):
+        checked_agents += 1
+        text = path.read_text(encoding="utf-8")
+        if not text.startswith("---\n") or "\n---" not in text[4:]:
+            continue
+        frontmatter = yaml.safe_load(text.split("\n---", 1)[0][4:]) or {}
+        codex = (frontmatter.get("x-agentic") or {}).get("codex") or {}
+        policy = codex.get("approval_policy")
+        if isinstance(policy, str) and policy not in APPROVAL_POLICIES:
+            errors.append(f"{path}: invalid Codex approval_policy {policy!r}")
+
     print(
         "Codex config audit: "
         f"{checked_manifests} manifests, {checked_mcp} MCP files, "
-        f"{checked_hooks} hook configs, "
+        f"{checked_hooks} hook configs, {checked_agents} agents, "
         f"{len(documented_events)} Claude events, "
         f"{len(documented_packages)} package difference rows"
     )
