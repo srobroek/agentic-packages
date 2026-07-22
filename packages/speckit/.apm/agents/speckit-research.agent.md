@@ -1,6 +1,6 @@
 ---
 name: speckit-research
-description: Researches primary-source library or API documentation for a bounded decision inside an active SpecKit workflow.
+description: Researches primary-source APIs and uses Serena semantic tools when available to bound decisions inside an active SpecKit workflow.
 model: sonnet
 effort: medium
 permissionMode: plan

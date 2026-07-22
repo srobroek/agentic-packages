@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 16.1.0
+version: 16.7.1
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -258,13 +258,6 @@ marketplace:
       tags:
         - bundle
         - semantic
-    - name: codebase-memory
-      source: ./packages/codebase-memory
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - graph
     - name: codex-hook-contract
       source: ./packages/codex-hook-contract
       category: project-lifecycle
@@ -776,6 +769,14 @@ marketplace:
         - release
         - release-please
         - ci-cd
+    - name: release-queue-watch
+      source: ./packages/release-queue-watch
+      category: project-lifecycle
+      tags:
+        - github
+        - pull-requests
+        - ci
+        - monitoring
     - name: resume-cv
       source: ./packages/resume-cv
       category: resume

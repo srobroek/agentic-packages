@@ -214,15 +214,17 @@ Then audit the installed runtime assets:
 
 ```bash
 apm run inject-agent-models # restore package-owned Codex model settings
+apm run check-agent-models  # reject missing mappings and generated drift
 apm run audit-agentic-tools   # report runtime parity + agent metadata completeness
 ```
 
 A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires installation, compilation, and audit as `apm run setup-agentic-tools`.
 
-> Each agent-bearing package owns `.apm/agent-models.yml`. APM currently drops
+> Each agent-bearing package owns `.apm/agent-models.yml`. APM 0.26 drops
 > model metadata while producing Codex TOML, so the consuming project's trusted
 > `post-install` and `post-update` lifecycle hooks run the shared injector after
-> deployment.
+> deployment. The check fails when a source or deployed agent lacks a mapping,
+> when a mapping omits model or reasoning effort, or when generated TOML drifts.
 
 ---
 

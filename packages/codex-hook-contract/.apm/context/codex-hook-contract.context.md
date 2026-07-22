@@ -7,7 +7,7 @@ x-lint:
 # Codex CLI hook contract
 
 This reference tracks the released Codex hook behavior documented at
-<https://learn.chatgpt.com/docs/hooks>. It was refreshed on 2026-07-16 for
+<https://learn.chatgpt.com/docs/hooks>. It was refreshed on 2026-07-22 for
 Codex CLI 0.144.5. Prefer that release documentation over schemas from Codex
 `main`, which may contain unreleased fields.
 
@@ -19,7 +19,7 @@ Codex supports exactly these events:
 | --- | --- |
 | `SessionStart` | `startup`, `resume`, `clear`, or `compact` |
 | `SubagentStart` | subagent type |
-| `PreToolUse` | `Bash`, `apply_patch` (`Edit`/`Write` aliases), or MCP tool |
+| `PreToolUse` | local tool name, including `Bash`, `apply_patch` (`Edit`/`Write` aliases), MCP tools, and `Agent` for `spawn_agent` |
 | `PermissionRequest` | same tool names as `PreToolUse` |
 | `PostToolUse` | same tool names as `PreToolUse` |
 | `PreCompact` | `manual` or `auto` |
@@ -52,8 +52,9 @@ Tool events use:
 }
 ```
 
-`Bash` and `apply_patch` use `tool_input.command`; MCP tools place their
-arguments directly in `tool_input`. `PostToolUse` adds `tool_response`.
+`Bash` and `apply_patch` use `tool_input.command`; MCP and local function tools
+place their arguments directly in `tool_input`. `spawn_agent` matches `Agent`.
+`PostToolUse` adds `tool_response`.
 Compatibility parsers may tolerate a legacy string `tool_input`, but new code
 must implement the documented object shape first.
 
@@ -89,9 +90,9 @@ context through `hookSpecificOutput.additionalContext`. `Stop` and
 
 ## Enforcement limits
 
-`PreToolUse` and `PostToolUse` cover simple Bash calls, `apply_patch`, and MCP
-tools. They do not intercept every unified-exec shell operation, WebSearch, or
-other non-MCP tools. Hooks are guardrails, not a complete security boundary.
+`PreToolUse` and `PostToolUse` cover simple Bash calls, `apply_patch`, MCP
+tools, and local function tools such as `spawn_agent`. They do not intercept
+hosted tools such as WebSearch. Hooks are guardrails, not a complete security boundary.
 Use sandbox permissions, approval policy, managed requirements, and command
 rules for enforcement.
 

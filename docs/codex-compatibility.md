@@ -38,18 +38,20 @@ required for Codex compatibility. Package-level `target` still does not prevent
 a caller from explicitly forcing a direct package install with the opposite
 `--target`.
 
-APM's Codex transformer currently serializes only `name`, `description`, and
-`developer_instructions`; it drops model metadata. Each agent-bearing package
-therefore distributes `.apm/agent-models.yml`, and the shared
-`.apm/scripts/inject-agent-models.py` restores `model` and
-`model_reasoning_effort` after installation. APM lifecycle discovery is limited
-to admin policy, user configuration, and the consuming project's root
-`apm.yml`; lifecycle blocks inside dependencies do not run. The project template
-provides trusted `post-install` and `post-update` triggers plus a strict explicit
-setup step.
-The supported install, update, and setup scripts first assert the lifecycle
-trust status and fail before the APM operation when the current lifecycle
-subtree has not been trusted.
+APM's Codex transformer serializes `name`, `description`, and
+`developer_instructions`; it drops model metadata. Agent-bearing packages and
+consumer lifecycle configuration handle the missing fields:
+
+- Each agent-bearing package distributes `.apm/agent-models.yml`.
+- `.apm/scripts/inject-agent-models.py` restores `model` and
+  `model_reasoning_effort` after installation.
+- Trusted `post-install` and `post-update` triggers run the injector.
+- Setup, install, and update fail before the APM operation when lifecycle trust
+  has not been granted.
+
+APM lifecycle discovery reads admin policy, user configuration, and the
+consuming project's root `apm.yml`; lifecycle blocks inside dependencies do not
+run.
 
 ## Hook runtime differences
 
@@ -58,7 +60,7 @@ subtree has not been trusted.
 - Codex parses `async: true` but skips the handler. Claude runs asynchronous command hooks and can re-wake later.
 - Codex has no Claude handler-level `if`; filtering must happen in matcher or script code.
 - Codex ignores matchers on `UserPromptSubmit` and `Stop`.
-- Codex Pre/PostToolUse intercept simple Bash, apply_patch, and MCP calls, not all unified shell, WebSearch, or built-in paths.
+- Codex Pre/PostToolUse intercept simple Bash, apply_patch, MCP calls, and local function tools. `spawn_agent` matches `Agent`; hosted tools such as WebSearch are not intercepted.
 - Codex plugin hooks require trust review through `/hooks` after install or definition changes.
 
 ## Event parity
@@ -71,9 +73,9 @@ subtree has not been trusted.
 | `UserPromptSubmit` | Yes | Both can block or add context. Both ignore matcher for this event; Codex runs command handlers only. | None. |
 | `UserPromptExpansion` | No | Claude intercepts slash-command, skill, and MCP-prompt expansion before expansion. | Parse explicit command text in UserPromptSubmit and put mandatory checks inside the skill workflow. |
 | `MessageDisplay` | No | Claude can transform streamed display batches without changing transcript/model text. | Transform codex exec --json output in an external frontend; there is no in-process TUI equivalent. |
-| `PreToolUse` | Yes | Claude covers more tools, identifies subagent calls, and supports allow/deny/ask/defer plus if. Codex covers simple Bash, apply_patch, and MCP but does not expose subagent identity; ask, defer, and if are unsupported. | Use sandbox, approvals, Git/CI policy, and script-side filtering for paths Codex does not intercept. |
+| `PreToolUse` | Yes | Claude supports allow/deny/ask/defer plus `if`. Codex covers local function tools as well as Bash, apply_patch, and MCP; `spawn_agent` matches `Agent`, while ask, defer, and `if` are unsupported. | Use `PreToolUse:Agent` for pre-spawn enforcement and sandbox, approvals, Git/CI policy, and script-side filtering for paths Codex does not intercept. |
 | `PermissionRequest` | Yes | Both allow or deny an imminent approval. Codex rejects Claude input rewrites, permission updates, and interrupt controls. | None. |
-| `PostToolUse` | Yes | Claude fires after success and identifies subagent calls. Codex also fires for nonzero Bash exits, has a narrower interception set, and does not expose subagent identity on this event. | Inspect tool_response in the handler, use SubagentStart/Stop for agent-scoped behavior, and retain external checks for unsupported tools. |
+| `PostToolUse` | Yes | Claude fires after success and identifies subagent calls. Codex also fires for nonzero Bash exits and covers local function tools. | Inspect tool_response in the handler, use SubagentStart/Stop for agent-scoped behavior, and retain external checks for hosted tools. |
 | `PostToolUseFailure` | No | Claude has a dedicated failed-tool event with error metadata. Codex only folds nonzero Bash into PostToolUse. | Inspect PostToolUse for supported tools and use process/MCP logging elsewhere. |
 | `PostToolBatch` | No | Claude can gate after a parallel tool batch before the next model call; Codex only has per-tool callbacks. | Accumulate PostToolUse records by turn_id and process at Stop; this cannot gate the immediate post-batch call. |
 | `PermissionDenied` | No | Claude runs after an automatic permission denial and can request a model retry. | Move policy to PreToolUse or PermissionRequest and return a model-visible reason. |

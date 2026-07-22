@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Implementation subagent for bounded code changes. Edits caller's tree directly; does not commit. Spawn with [iso:direct] token.
+description: Implementation subagent for bounded code changes; requires Serena semantic tools when available. Edits caller's tree directly; does not commit.
 model: sonnet
 effort: medium
 permissionMode: acceptEdits

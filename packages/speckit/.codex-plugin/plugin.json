@@ -1,6 +1,6 @@
 {
   "name": "speckit",
-  "version": "8.1.0",
+  "version": "8.1.1",
   "description": "SpecKit mechanism: six SpecKit agents, bugfix and setup skills, and project-local Beads workflow formulas. Opt into steering-speckit and the speckit-beads task-state guard separately.",
   "author": {
     "name": "Sjors Robroek"

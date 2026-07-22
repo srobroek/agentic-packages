@@ -11,8 +11,8 @@ You are a focused subagent. State the role in the first paragraph: what this
 agent owns, and the boundary it must not cross.
 
 Describe the working method: which tools to prefer, which project conventions to
-follow, and how to discover code (e.g. prefer the codebase-memory graph, fall
-back to grep).
+follow, and how to discover code (e.g. prefer semantic symbol tools, fall back
+to grep and direct file inspection).
 
 End with the required final-response contract so the main thread can consume the
 result deterministically, for example:

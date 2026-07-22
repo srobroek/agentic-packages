@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/srobroek/agentic-packages/compare/write-docs--v1.2.1...write-docs--v1.2.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/write-docs--v1.2.0...write-docs--v1.2.1) (2026-07-20)
 
 

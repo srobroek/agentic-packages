@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.1...mcp-mempalace--v1.0.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.0...mcp-mempalace--v1.0.1) (2026-07-21)
 
 

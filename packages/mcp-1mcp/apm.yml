@@ -1,5 +1,5 @@
 name: mcp-1mcp
-version: 1.0.1
+version: 1.0.4
 description: >-
   MCP client package for the shared 1MCP runtime. Starts the machine-managed
   background runtime when needed and connects clients through its proxy.
@@ -20,9 +20,8 @@ dependencies:
       args:
         - '-lc'
         - >-
-          command -v 1mcp >/dev/null 2>&1 || { echo
-          1mcp-not-installed-install-agent-0.34.1-or-later >&2; exit 127; };
-          1mcp serve --background >/dev/null || { ready=0; for i in 1 2 3 4 5 6
-          7 8 9 10; do 1mcp serve --status >/dev/null 2>&1 && { ready=1; break;
-          }; sleep 1; done; [ "$ready" -eq 1 ] || { 1mcp serve --status >&2;
-          exit 1; }; }; exec 1mcp proxy
+          launcher_rel="apm_modules/srobroek/agentic-packages/packages/mcp-1mcp/scripts/launcher.sh";
+          for apm_root in "${APM_HOME:-}" "${HOME}/.apm" "$PWD/.apm"; do [ -n
+          "$apm_root" ] || continue; launcher="$apm_root/$launcher_rel"; [ -r
+          "$launcher" ] && exec bash "$launcher"; done; echo
+          1mcp-apm-launcher-not-found-run-apm-install >&2; exit 1

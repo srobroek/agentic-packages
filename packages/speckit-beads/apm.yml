@@ -1,5 +1,5 @@
 name: speckit-beads
-version: 3.1.0
+version: 3.2.1
 description: >-
   Beads-native SpecKit task-state layer: consumes the formulas shipped by
   speckit, supplies steering that maps one spec dir to one molecule root and
@@ -23,5 +23,5 @@ tags:
   - gates
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/speckit#>=8.1.0 <9.0.0
-    - srobroek/agentic-packages/packages/beads#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/speckit#>=8.1.1 <9.0.0
+    - srobroek/agentic-packages/packages/beads#>=0.5.1 <1.0.0

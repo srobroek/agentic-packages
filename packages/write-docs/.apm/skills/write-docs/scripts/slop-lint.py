@@ -123,6 +123,55 @@ def _allowed(code: str, ln: str, prev: str) -> bool:
     return False
 
 
+def _is_escaped(text: str, index: int) -> bool:
+    backslashes = 0
+    index -= 1
+    while index >= 0 and text[index] == "\\":
+        backslashes += 1
+        index -= 1
+    return backslashes % 2 == 1
+
+
+def _strip_inline_code(line: str) -> str:
+    """Mask complete, unescaped Markdown code spans without shifting text."""
+    masked = list(line)
+    cursor = 0
+    while cursor < len(line):
+        if line[cursor] != "`" or _is_escaped(line, cursor):
+            cursor += 1
+            continue
+
+        opener_end = cursor
+        while opener_end < len(line) and line[opener_end] == "`":
+            opener_end += 1
+        delimiter = line[cursor:opener_end]
+        search_from = opener_end
+        closer = -1
+        while True:
+            candidate = line.find(delimiter, search_from)
+            if candidate < 0:
+                break
+            exact_run = (
+                (candidate == 0 or line[candidate - 1] != "`")
+                and (
+                    candidate + len(delimiter) == len(line)
+                    or line[candidate + len(delimiter)] != "`"
+                )
+            )
+            if exact_run and not _is_escaped(line, candidate):
+                closer = candidate
+                break
+            search_from = candidate + 1
+
+        if closer < 0:
+            cursor = opener_end
+            continue
+        span_end = closer + len(delimiter)
+        masked[cursor:span_end] = " " * (span_end - cursor)
+        cursor = span_end
+    return "".join(masked)
+
+
 def lint(path: Path, genre: str) -> list[tuple[str, str, int, str]]:
     """Return [(severity, code, line, message)]."""
     findings: list[tuple[str, str, int, str]] = []
@@ -142,9 +191,10 @@ def lint(path: Path, genre: str) -> list[tuple[str, str, int, str]]:
 
     for idx, (lineno, ln) in enumerate(visible):
         prev = visible[idx - 1][1] if idx else ""
+        prose = _strip_inline_code(ln)
         # Skip markdown link URLs for E3 would over-permit; scan whole line.
         for sev, code, pattern, label in checks:
-            m = pattern.search(ln)
+            m = pattern.search(prose)
             if m and not _allowed(code, ln, prev):
                 findings.append(
                     (sev, code, lineno, f"{label}: {m.group(0)!r}")

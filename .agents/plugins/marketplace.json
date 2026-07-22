@@ -341,18 +341,6 @@
       "category": "code-intelligence"
     },
     {
-      "name": "codebase-memory",
-      "source": {
-        "source": "local",
-        "path": "./packages/codebase-memory"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "code-intelligence"
-    },
-    {
       "name": "codex-hook-contract",
       "source": {
         "source": "local",
@@ -1173,6 +1161,18 @@
       "source": {
         "source": "local",
         "path": "./packages/release-please"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
+      "name": "release-queue-watch",
+      "source": {
+        "source": "local",
+        "path": "./packages/release-queue-watch"
       },
       "policy": {
         "installation": "AVAILABLE",

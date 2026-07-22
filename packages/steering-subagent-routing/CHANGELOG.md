@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.0...steering-subagent-routing--v3.2.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.1.0...steering-subagent-routing--v3.2.0) (2026-07-20)
 
 

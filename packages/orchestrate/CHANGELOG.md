@@ -1,5 +1,88 @@
 # Changelog
 
+## [3.9.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.8.0...orchestrate--v3.9.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([5600ce6](https://github.com/srobroek/agentic-packages/commit/5600ce62261d5c5313bc25b368b375974c477d18))
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
+## [3.8.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.7.0...orchestrate--v3.8.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([6d4aa7a](https://github.com/srobroek/agentic-packages/commit/6d4aa7a37618ef33f7dcc66d16b6fcb6c85535ae))
+
+
+### Bug Fixes
+
+* make agent and watcher metadata safer ([4fd84c6](https://github.com/srobroek/agentic-packages/commit/4fd84c6fce0b64465fcb372eb38b7439e0ef79ac))
+
+## [3.7.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.6.0...orchestrate--v3.7.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([c1720ad](https://github.com/srobroek/agentic-packages/commit/c1720ad12f33be022f89a744192cf6ed8b1380c5))
+* discover packaged workers with validated metadata ([#625](https://github.com/srobroek/agentic-packages/issues/625)) ([0a170b8](https://github.com/srobroek/agentic-packages/commit/0a170b801d417cf912703228344d3eff25a8b36d))
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+
+## [3.6.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.5.0...orchestrate--v3.6.0) (2026-07-22)
+
+
+### Features
+
+* preserve multi-agent decisions across restarts ([#616](https://github.com/srobroek/agentic-packages/issues/616)) ([69aaa25](https://github.com/srobroek/agentic-packages/commit/69aaa252e13c4fe1517a107d0aba748331bc9df3))
+
+
+### Bug Fixes
+
+* apply exact landing safety to orchestrated merges ([#623](https://github.com/srobroek/agentic-packages/issues/623)) ([4931e2f](https://github.com/srobroek/agentic-packages/commit/4931e2f40f12a13a3a10c78fe63ef2040bc41084))
+* **deps:** sync internal package pins (patch-level dep releases) ([e7e4d7a](https://github.com/srobroek/agentic-packages/commit/e7e4d7a99bf6dc911138c1f085fd667873f70f9d))
+
+## [3.5.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.4.0...orchestrate--v3.5.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([94e7d9a](https://github.com/srobroek/agentic-packages/commit/94e7d9a612133939a0c8ebcd975d0a4789855316))
+
+## [3.4.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.3.0...orchestrate--v3.4.0) (2026-07-22)
+
+
+### Features
+
+* coordinate agents with Beads message threads ([#615](https://github.com/srobroek/agentic-packages/issues/615)) ([7f76270](https://github.com/srobroek/agentic-packages/commit/7f76270b70d4d520a96eb782af0bced88620b2f3))
+* **deps:** sync internal package pins (minor-level dep releases) ([f2c6de9](https://github.com/srobroek/agentic-packages/commit/f2c6de9745b359e719d2f57b51e359f0b7f86064))
+* let generic workers claim compatible ready tasks ([#614](https://github.com/srobroek/agentic-packages/issues/614)) ([3f5f47e](https://github.com/srobroek/agentic-packages/commit/3f5f47e60b4538b20f36f9672f71f56178a3e7d7))
+* route code and non-code work to compatible agents ([#609](https://github.com/srobroek/agentic-packages/issues/609)) ([7b8eb51](https://github.com/srobroek/agentic-packages/commit/7b8eb51608119a413fcdd65c929398363eaa8d0c))
+* route writable and research tasks through dedicated agents ([#613](https://github.com/srobroek/agentic-packages/issues/613)) ([7508b28](https://github.com/srobroek/agentic-packages/commit/7508b28e262b92940d90b7cb63acea856ae1edfb))
+
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.2.0...orchestrate--v3.3.0) (2026-07-22)
+
+
+### Features
+
+* connect queue events to shepherd and orchestrator ([#608](https://github.com/srobroek/agentic-packages/issues/608)) ([58e25f8](https://github.com/srobroek/agentic-packages/commit/58e25f865f2c28cfb060f94a9bd1aa0ef6bf9dd5))
+* **deps:** sync internal package pins (minor-level dep releases) ([2b09640](https://github.com/srobroek/agentic-packages/commit/2b0964092bed55576ecac987011f87e0ae20aea5))
+
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.1.0...orchestrate--v3.2.0) (2026-07-22)
+
+
+### Features
+
+* dispatch approved pull requests from signed webhook events ([#601](https://github.com/srobroek/agentic-packages/issues/601)) ([b244cfe](https://github.com/srobroek/agentic-packages/commit/b244cfe0e43f4aa0010ca352e518d18059da3246))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.0.0...orchestrate--v3.1.0) (2026-07-21)
 
 

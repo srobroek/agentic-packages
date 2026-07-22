@@ -16,7 +16,19 @@ agents:
     codex:
       model: gpt-5.6-luna
       reasoning_effort: xhigh
+  workflow-pull-worker:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh
+  workflow-researcher:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: medium
   workflow-reviewer:
     codex:
       model: gpt-5.6-sol
       reasoning_effort: high
+  workflow-worker:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh

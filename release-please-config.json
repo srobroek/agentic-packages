@@ -392,18 +392,6 @@
         }
       ]
     },
-    "packages/codebase-memory": {
-      "release-type": "simple",
-      "component": "codebase-memory",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/codex-hook-contract": {
       "release-type": "simple",
       "component": "codex-hook-contract",
@@ -1307,6 +1295,18 @@
     "packages/release-please": {
       "release-type": "simple",
       "component": "release-please",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/release-queue-watch": {
+      "release-type": "simple",
+      "component": "release-queue-watch",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
