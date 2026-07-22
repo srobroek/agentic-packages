@@ -186,7 +186,7 @@ def _string_list(value: Any, field: str, bead: str) -> list[str]:
 
 
 def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
-    """Defensively verify the result; filtering already happened before claim."""
+    """Verify the result after atomic filters established descendant membership."""
     if not isinstance(issue, dict):
         raise PullWorkerError(
             "beads_json",
@@ -209,14 +209,6 @@ def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
             reconcile_required=True,
             bead=bead,
         )
-    if issue.get("parent") != contract.epic:
-        raise PullWorkerError(
-            "routing_envelope",
-            "claimed issue is outside the requested epic",
-            reconcile_required=True,
-            bead=bead,
-        )
-
     labels = _string_list(issue.get("labels"), "labels", bead)
     label_set = set(labels)
     required_labels = {"orc-node", contract.queue_label}

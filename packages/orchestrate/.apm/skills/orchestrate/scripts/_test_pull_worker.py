@@ -251,40 +251,6 @@ class PullWorkerUnitTest(unittest.TestCase):
 
         self.assertIn("python", str(caught.exception))
 
-    def test_coordinator_requeued_dead_claim_preserves_existing_anchors(self):
-        metadata = issue()["metadata"] | {
-            "branch": "worker/old",
-            "worktree": "/tmp/old-worktree",
-        }
-
-        result = MODULE.run_claim(
-            contract(),
-            runner=lambda *_args, **_kwargs: completed(
-                json.dumps([issue(metadata=metadata)])
-            ),
-        )
-
-        self.assertEqual(result["status"], "CLAIMED")
-        self.assertEqual(metadata["branch"], "worker/old")
-        self.assertEqual(metadata["worktree"], "/tmp/old-worktree")
-
-    def test_stale_assigned_claim_is_not_stolen_even_with_old_anchors(self):
-        metadata = issue()["metadata"] | {
-            "branch": "worker/live",
-            "worktree": "/tmp/live-worktree",
-            "stale_since": "2026-01-01T00:00:00Z",
-        }
-
-        with self.assertRaises(MODULE.PullWorkerError) as caught:
-            MODULE.run_claim(
-                contract(),
-                runner=lambda *_args, **_kwargs: completed(
-                    json.dumps([issue(assignee="worker-live", metadata=metadata)])
-                ),
-            )
-
-        self.assertEqual(caught.exception.kind, "claim_lost")
-
     def test_subprocess_receives_arguments_without_a_shell(self):
         seen = {}
 
@@ -307,6 +273,14 @@ class PullWorkerUnitTest(unittest.TestCase):
         self.assertIn("Only the coordinator may clear and requeue a dead claim", agent)
         self.assertIn("after recording holder-death evidence", agent)
 
+    def test_agent_contract_reports_every_error_and_stop(self):
+        with open(AGENT, encoding="utf-8") as handle:
+            agent = handle.read()
+
+        self.assertIn("Always send a", agent)
+        self.assertIn("status=<ERROR|STOPPED>", agent)
+        self.assertIn("claim=<none|bead|unknown>", agent)
+
 
 STUB = r"""
 #!/usr/bin/env python3
@@ -328,7 +302,8 @@ actor = args[args.index("--actor") + 1]
 parent = args[args.index("--parent") + 1]
 matches = []
 for candidate in state:
-    if candidate.get("parent") != parent:
+    ancestors = candidate.get("ancestors", [])
+    if candidate.get("parent") != parent and parent not in ancestors:
         continue
     if not required_labels.issubset(set(candidate.get("labels", []))):
         continue
@@ -426,6 +401,63 @@ class PullWorkerCliTest(unittest.TestCase):
                 ("orc-run.4", "in_progress", "pull-python-1"),
             ],
         )
+
+    def test_nested_compatible_descendant_is_claimed_and_accepted(self):
+        nested = self.candidate(
+            "orc-run.1.1",
+            1,
+            parent="orc-run.1",
+            ancestors=["orc-run"],
+        )
+
+        process, state = self.run_cli([nested])
+
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(json.loads(process.stdout)["bead"], "orc-run.1.1")
+        self.assertEqual(state[0]["status"], "in_progress")
+        self.assertEqual(state[0]["assignee"], "pull-python-1")
+
+    def test_ambiguous_live_claim_preserves_persisted_owner_state_and_anchors(self):
+        metadata = issue()["metadata"] | {
+            "branch": "worker/live",
+            "worktree": "/tmp/live-worktree",
+            "base_sha": "a" * 40,
+        }
+        live_claim = self.candidate(
+            "orc-run.1",
+            0,
+            status="in_progress",
+            assignee="worker-live",
+            metadata=metadata,
+        )
+
+        process, state = self.run_cli([live_claim])
+
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(json.loads(process.stdout)["status"], "NO_WORK")
+        self.assertEqual(state[0]["status"], "in_progress")
+        self.assertEqual(state[0]["assignee"], "worker-live")
+        self.assertEqual(state[0]["metadata"]["branch"], "worker/live")
+        self.assertEqual(state[0]["metadata"]["worktree"], "/tmp/live-worktree")
+        self.assertEqual(state[0]["metadata"]["base_sha"], "a" * 40)
+
+    def test_requeued_recovery_claim_preserves_persisted_git_anchors(self):
+        metadata = issue()["metadata"] | {
+            "branch": "worker/recovery",
+            "worktree": "/tmp/recovery-worktree",
+            "base_sha": "b" * 40,
+        }
+        recovery = self.candidate("orc-run.1", 1, metadata=metadata)
+
+        process, state = self.run_cli([recovery])
+
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(json.loads(process.stdout)["status"], "CLAIMED")
+        self.assertEqual(state[0]["status"], "in_progress")
+        self.assertEqual(state[0]["assignee"], "pull-python-1")
+        self.assertEqual(state[0]["metadata"]["branch"], "worker/recovery")
+        self.assertEqual(state[0]["metadata"]["worktree"], "/tmp/recovery-worktree")
+        self.assertEqual(state[0]["metadata"]["base_sha"], "b" * 40)
 
     def test_cli_no_work_json_is_deterministic_and_successful(self):
         first, _ = self.run_cli([])

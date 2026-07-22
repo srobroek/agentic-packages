@@ -31,9 +31,11 @@ artifacts directory. Set `BEADS_ACTOR` to that actor before any Beads command.
 2. `NO_WORK` → send `REPORTED queue:<queue> status=NO_WORK claim=none` to
    `main`, then end the activation. Do not create a bead comment, completion,
    branch, artifact, or commit.
-3. `ERROR` or `STOPPED` → do not rerun the mutating command. If the result
-   requires reconciliation, report `BLOCKED queue:<queue> kind:debug` with the
-   error and ask `main` to inspect Beads ownership. End the activation.
+3. `ERROR` or `STOPPED` → do not rerun the mutating command. Always send a
+   terminal `BLOCKED queue:<queue> kind:debug status=<ERROR|STOPPED>
+   reason=<kind/message> claim=<none|bead|unknown> reconcile=<true|false>` to
+   `main`. Use `claim=none` only when the command did not start; otherwise use
+   the returned bead or `unknown`. End the activation after the report.
 4. `CLAIMED` → accept only that bead. Stamp
    `execution_agent=workflow-pull-worker` and `execution_dispatch=generic`,
    set `state=working`, and record `orc.assign` plus a bead comment. A
