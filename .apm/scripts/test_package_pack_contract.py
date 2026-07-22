@@ -13,6 +13,20 @@ import pytest
 ROOT = Path(__file__).parents[2]
 PACKAGES = ("orchestrate", "pr-shepherd", "release-queue-watch", "beads")
 PYTHON_PACKAGES = ("orchestrate", "pr-shepherd")
+PACKABLE_PREFIXES = tuple(
+    f".apm/{directory}/"
+    for directory in (
+        "agents",
+        "commands",
+        "extensions",
+        "hooks",
+        "instructions",
+        "prompts",
+        "rules",
+        "skills",
+        "steering",
+    )
+)
 
 
 def _copy_package(tmp_path: Path, name: str) -> Path:
@@ -40,11 +54,69 @@ def _pack(package: Path) -> str:
     return result.stdout + result.stderr
 
 
+def _manifest_includes(package_name: str) -> tuple[str, ...]:
+    manifest = (ROOT / "packages" / package_name / "apm.yml").read_text(
+        encoding="utf-8"
+    )
+    includes: list[str] = []
+    in_includes = False
+    for line in manifest.splitlines():
+        if line == "includes:":
+            in_includes = True
+            continue
+        if in_includes and line.startswith("  - "):
+            includes.append(line.removeprefix("  - "))
+            continue
+        if in_includes and line and not line.startswith(" "):
+            break
+    return tuple(includes)
+
+
+def _tracked_packable_files(package_name: str) -> tuple[str, ...]:
+    package_prefix = f"packages/{package_name}/"
+    result = subprocess.run(
+        ["git", "ls-files", "--", f"{package_prefix}.apm"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    relative = (
+        path.removeprefix(package_prefix)
+        for path in result.stdout.splitlines()
+    )
+    return tuple(
+        path for path in relative if path.startswith(PACKABLE_PREFIXES)
+    )
+
+
+def _is_covered(path: str, includes: tuple[str, ...]) -> bool:
+    return any(
+        path == include or path.startswith(f"{include.rstrip('/')}/")
+        for include in includes
+    )
+
+
 @pytest.mark.parametrize("package_name", PACKAGES)
 def test_supported_package_target_dry_run_succeeds(tmp_path: Path, package_name: str):
     output = _pack(_copy_package(tmp_path, package_name))
     assert "deprecated" not in output
     assert "Nothing to pack" not in output
+
+
+@pytest.mark.parametrize("package_name", PYTHON_PACKAGES)
+def test_explicit_includes_cover_every_tracked_packable_file(package_name: str):
+    includes = _manifest_includes(package_name)
+    missing = [
+        path
+        for path in _tracked_packable_files(package_name)
+        if not _is_covered(path, includes)
+    ]
+    assert not missing, (
+        f"{package_name}/apm.yml omits tracked packable files:\n  "
+        + "\n  ".join(missing)
+        + "\nAdd each file to includes or include its intentional source directory."
+    )
 
 
 @pytest.mark.parametrize("package_name", PYTHON_PACKAGES)
