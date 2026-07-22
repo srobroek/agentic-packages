@@ -7,6 +7,103 @@ no shared-path bookkeeping. Artifacts (full briefs/reports) are files under
 `<primary>/.orchestration/run-<id>/artifacts/`; bead comments reference them
 by absolute path.
 
+## Coordination and policy carriers
+
+| Carrier | Stores | Authority and lifecycle |
+|---|---|---|
+| Work-bead comment | A choice that affects only that bead and its owned scope | Durable local source of truth. The comment author is the actor. Accepted comments remain; provisional comments name an objective revisit trigger. |
+| `decision` bead | A choice that affects more than one bead, agent, or package, or constrains later work | Durable cross-boundary source of truth. It carries an owner, stable key, design, acceptance/verification, status/disposition, and non-blocking links to every affected bead. |
+| Message wisp | A question, reply, notification, acknowledgement, or other live coordination | Ephemeral coordination only. A material outcome is promoted to a comment or decision bead before action or closure. Acknowledgement or compaction never deletes the promoted source of truth. |
+| Artifact / `output_ref` | A large brief, report, test log, or other inspectable evidence payload | Evidence only. It becomes part of a decision or report when a comment or decision bead cites its absolute path. The file alone is not policy or lifecycle state. |
+
+A material message changes a choice, default, scope, route, ordering,
+acceptance evidence, disposition, or human answer. Handle it in this order:
+
+1. Classify its effect as bead-local or cross-boundary.
+2. Write the local comment or decision bead and any affected-bead links.
+3. Read the durable record back. A decision is effective only after every
+   affected link is visible and non-blocking.
+4. Act from that record and cite it in later comments or reports.
+5. Acknowledge or compact the message only after promotion succeeds.
+
+No promotion means no policy action and no closure based on that message.
+Restart recovery reads comments and decision beads before message wisps or
+artifacts.
+
+## Local decision comments
+
+Set `BEADS_ACTOR` to the choosing actor. Add the following record to the work
+bead, then read it back with `bd comments <bead> --json` before acting:
+
+```text
+LOCAL_DECISION
+owner: <actor>
+scope: <work-bead and owned resource>
+decision: <chosen implementation behavior>
+rationale: <why this choice fits the brief>
+evidence: <file:line, bead id, command result, or searched-none>
+status: <accepted|provisional>
+revisit: <objective trigger; required when provisional>
+```
+
+The comment author and `owner` must match. `accepted` omits `revisit`.
+`provisional` requires a nonempty event, dependency transition, exact evidence
+change, or RFC3339 deadline. `later`, `if needed`, and elapsed time without an
+observable condition are not triggers. Record the operation as `orc.note` in
+the audit trail.
+
+A readable comment is the local source of truth. If the audit write fails
+after the comment succeeds, retry the audit before closing; do not duplicate
+the comment. If the comment write or read-back fails, do not apply the choice.
+
+## Cross-boundary decision beads
+
+Create a first-class decision under the run epic before the choice affects a
+second bead, agent, package, shared contract, ordering rule, or later work:
+
+```text
+type: decision
+decision_key: <stable run-unique policy key>
+decision_owner: <one accountable actor>
+description: <choice and affected scope>
+design: <rationale, known evidence, unknowns, bounds, and alternatives>
+acceptance: <objective verification or acceptance evidence>
+decision_disposition: <proposed|accepted|rejected|superseded|duplicate|conflict>
+status: <open|in_progress|closed>
+```
+
+Use `relates-to` for affected work and `validates` for work that supplies or
+checks acceptance evidence:
+
+```text
+bd dep add <affected-bead> <decision-bead> --type relates-to
+bd dep add <validator-bead> <decision-bead> --type validates
+```
+
+Both edge types are non-blocking. Never use `blocks` for accepted policy or to
+attach an already-running/closed affected bead. Ordering work still uses a
+separate task dependency. An accepted, rejected, duplicate, or superseded
+decision is closed with a disposition-specific reason; closed means resolved,
+not erased.
+
+Before creation and again before action, list all decision beads under the epic
+and compare `decision_key`:
+
+- Same key and same choice: keep the accepted non-superseded canonical bead;
+  mark the other with `bd duplicate <id> --of <canonical>`.
+- Same key and a replacement choice: accept the replacement first, then run
+  `bd supersede <old> --with <new>`. Never rewrite the old design in place.
+- Same key and conflicting accepted choices without an explicit supersession:
+  set the candidates to `decision_disposition=conflict` and stop applying that
+  policy. The owner resolves from existing evidence or enters
+  `waiting_human` when intent is irreducible.
+- A supersession cycle, missing replacement, or duplicate that points at a
+  non-canonical bead is invalid and has no effect.
+
+Create, link, read, then act. If creation succeeds but any link or read-back
+fails, leave the decision `proposed`, record the failed write, and retry from
+Beads state after restart. Never infer success from a message or artifact.
+
 ## Prerequisite (checked once, at run start)
 
 ```
