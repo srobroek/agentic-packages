@@ -61,8 +61,7 @@ def load_mappings(root: Path) -> dict[str, dict[str, str]]:
 
 def agent_source_files(root: Path) -> list[Path]:
     candidates = list(root.glob("packages/*/agents/*.md"))
-    candidates.extend(root.glob("apm_modules/**/agents/*.md"))
-    candidates.extend(root.glob(".apm/apm_modules/**/agents/*.md"))
+    candidates.extend(root.glob(".apm/agents/*.agent.md"))
     return sorted({path.resolve() for path in candidates if path.is_file()})
 
 
