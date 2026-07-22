@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.9.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.8.0...orchestrate--v3.9.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([5600ce6](https://github.com/srobroek/agentic-packages/commit/5600ce62261d5c5313bc25b368b375974c477d18))
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
 ## [3.8.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.7.0...orchestrate--v3.8.0) (2026-07-22)
 
 
