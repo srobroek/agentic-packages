@@ -108,6 +108,14 @@ if (args[0] === "serve" && args[1] === "--status") {
     hold(true);
     return;
   }
+  if (
+    process.env.FAKE_1MCP_STATUS === "hang-once" &&
+    !fs.existsSync(path.join(state, "status-hung-once"))
+  ) {
+    fs.writeFileSync(path.join(state, "status-hung-once"), "");
+    hold(false);
+    return;
+  }
   if (process.env.FAKE_1MCP_STATUS === "error") process.exit(2);
   if (
     process.env.FAKE_1MCP_STATUS === "unreachable" &&
@@ -557,6 +565,18 @@ def test_hung_status_is_bounded_without_starting(tmp_path: Path) -> None:
     assert elapsed < 8
     assert action_count(actions, "serve --background") == 0
     assert action_count(actions, "proxy") == 0
+
+
+def test_transient_outer_status_timeout_is_rechecked_under_lock(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="hang-once")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 1
 
 
 def test_status_error_fails_closed_without_starting(tmp_path: Path) -> None:

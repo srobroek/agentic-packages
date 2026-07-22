@@ -250,13 +250,7 @@ if [[ "$launcher_locked" == 1 ]]; then
   exit $?
 fi
 
-runtime_status
-initial_status=$?
-case "$initial_status" in
-  0) exec "$one_mcp_bin" proxy ;;
-  3 | 4) ;;
-  *) die "1mcp-launcher-status-check-failed-${initial_status}" ;;
-esac
+ready && exec "$one_mcp_bin" proxy
 acquire_and_start || {
   ready && exec "$one_mcp_bin" proxy
   die "1mcp-launcher-lock-or-startup-timeout"
