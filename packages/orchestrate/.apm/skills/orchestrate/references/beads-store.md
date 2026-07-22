@@ -86,23 +86,50 @@ separate task dependency. An accepted, rejected, duplicate, or superseded
 decision is closed with a disposition-specific reason; closed means resolved,
 not erased.
 
-Before creation and again before action, list all decision beads under the epic
-and compare `decision_key`:
+Before creation, after restart, and before action, list every decision under the
+epic with `bd list --type decision --parent <epic> --all --json`. Decisions
+compete only when their nonempty `decision_key` values match.
 
-- Same key and same choice: keep the accepted non-superseded canonical bead;
-  mark the other with `bd duplicate <id> --of <canonical>`.
-- Same key and a replacement choice: accept the replacement first, then run
-  `bd supersede <old> --with <new>`. Never rewrite the old design in place.
-- Same key and conflicting accepted choices without an explicit supersession:
-  set the candidates to `decision_disposition=conflict` and stop applying that
-  policy. The owner resolves from existing evidence or enters
-  `waiting_human` when intent is irreducible.
-- A supersession cycle, missing replacement, or duplicate that points at a
-  non-canonical bead is invalid and has no effect.
+Resolve each competing key deterministically:
 
-Create, link, read, then act. If creation succeeds but any link or read-back
-fails, leave the decision `proposed`, record the failed write, and retry from
-Beads state after restart. Never infer success from a message or artifact.
+1. Read every candidate and its `supersedes` edges. Reject an edge that crosses
+   a `decision_key`, targets a missing bead, or creates a cycle.
+2. When accepted candidates contain a valid explicit `supersedes` chain,
+   canonical is the newest accepted unsuperseded head by `created_at`, then
+   bead ID. Every older candidate in that key becomes `superseded`.
+3. When no explicit supersession exists, canonical is the earliest candidate
+   by `created_at`, then bead ID. Every other candidate becomes `duplicate`.
+4. Read canonical again. Its `decision_disposition` must be `accepted`. Never
+   update canonical while marking noncanonical beads.
+
+Persist every noncanonical disposition as a resumable transaction. Read before
+each command and skip a step whose exact result already exists:
+
+```text
+# Mark the noncanonical bead first.
+bd update <noncanonical> \
+  --set-metadata decision_disposition=<duplicate|superseded> \
+  --set-metadata canonical_decision=<canonical>
+
+# Duplicate: loser points to canonical without blocking it.
+bd dep add <loser> <canonical> --type relates-to
+bd close <loser> --reason "duplicate of <canonical>"
+
+# Superseded: canonical explicitly supersedes the older decision.
+bd dep add <canonical> <older> --type supersedes
+bd close <older> --reason "superseded by <canonical>"
+```
+
+After every write, read both beads back. A noncanonical bead is resolved only
+when its metadata, required edge, closed status, and close reason all match,
+and canonical still has `decision_disposition=accepted`. If metadata, edge, or
+close writes stop partway, record the failure and leave the observed partial
+state. Restart repeats the same keyed reads, completes only missing steps, and
+produces the same result without changing canonical.
+
+An invalid explicit chain remains `decision_disposition=conflict`; no candidate
+is applied until the owner repairs the chain from evidence or enters
+`waiting_human`. Never infer resolution from a message or artifact.
 
 ## Prerequisite (checked once, at run start)
 

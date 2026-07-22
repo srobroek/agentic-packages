@@ -110,30 +110,38 @@ def validate_decision_edges(edge_types: list[str]) -> None:
         raise PolicyError("decision policy has an invalid affected-bead edge")
 
 
-def validate_decision_candidates(candidates: list[dict[str, str]]) -> None:
-    by_key: dict[str, list[dict[str, str]]] = {}
-    for candidate in candidates:
-        by_key.setdefault(candidate["key"], []).append(candidate)
-    for group in by_key.values():
-        accepted = [item for item in group if item["disposition"] == "accepted"]
-        if len(accepted) < 2:
-            continue
-        choices = {item["choice"] for item in accepted}
-        if len(choices) == 1:
-            raise PolicyError("duplicate accepted decision lacks duplicate disposition")
-        ids = {item["id"] for item in accepted}
-        superseding = [
-            item
-            for item in accepted
-            if set(item.get("supersedes", "").split(",")) >= ids - {item["id"]}
-        ]
-        if len(superseding) != 1:
-            raise PolicyError(
-                "conflicting accepted decisions lack one explicit supersession"
-            )
-        replacement = superseding[0]
-        if replacement["id"] in set(replacement.get("supersedes", "").split(",")):
+def choose_canonical(candidates: list[dict]) -> str:
+    keys = {candidate["key"] for candidate in candidates}
+    if len(keys) != 1 or "" in keys:
+        raise PolicyError("candidates must share one nonempty decision_key")
+    by_id = {candidate["id"]: candidate for candidate in candidates}
+    accepted = [
+        candidate for candidate in candidates if candidate["disposition"] == "accepted"
+    ]
+    if not accepted:
+        raise PolicyError("no accepted decision candidate")
+
+    targets: set[str] = set()
+
+    def walk(candidate_id: str, path: set[str]) -> None:
+        if candidate_id in path:
             raise PolicyError("supersession cycle")
+        candidate = by_id[candidate_id]
+        for target in candidate.get("supersedes", []):
+            if target not in by_id or by_id[target]["key"] != candidate["key"]:
+                raise PolicyError("invalid supersedes target")
+            targets.add(target)
+            walk(target, path | {candidate_id})
+
+    for candidate in candidates:
+        walk(candidate["id"], set())
+
+    if targets:
+        heads = [candidate for candidate in accepted if candidate["id"] not in targets]
+        if not heads:
+            raise PolicyError("supersession chain has no accepted head")
+        return max(heads, key=lambda item: (item["created_at"], item["id"]))["id"]
+    return min(accepted, key=lambda item: (item["created_at"], item["id"]))["id"]
 
 
 def section(text: str, heading: str, next_heading: str) -> str:
@@ -221,7 +229,10 @@ class DecisionPolicyContractTest(unittest.TestCase):
         self.assertIn("--type relates-to", decision)
         self.assertIn("--type validates", decision)
         self.assertNotIn("<decision-bead> --type blocks", decision)
-        self.assertIn("supersession cycle", decision)
+        self.assertIn("newest accepted unsuperseded head", decision)
+        self.assertIn("earliest candidate", decision)
+        self.assertIn("canonical_decision", decision)
+        self.assertIn("read both beads back", decision)
 
     def test_waiting_human_state_can_resume_without_polling(self):
         waiting = section(
@@ -277,59 +288,29 @@ class DecisionPolicyContractTest(unittest.TestCase):
                 "rationale: compatibility\nevidence: test\nstatus: provisional\nrevisit: "
             )
 
-    def test_duplicate_and_superseded_conflicts_are_rejected(self):
+    def test_canonical_selection_is_deterministic(self):
+        old = {
+            "id": "d1",
+            "key": "route",
+            "created_at": "2026-07-22T01:00:00Z",
+            "disposition": "accepted",
+            "supersedes": [],
+        }
+        new = {
+            "id": "d2",
+            "key": "route",
+            "created_at": "2026-07-22T02:00:00Z",
+            "disposition": "accepted",
+            "supersedes": [],
+        }
+        self.assertEqual(choose_canonical([new, old]), "d1")
+        self.assertEqual(choose_canonical([new | {"supersedes": ["d1"]}, old]), "d2")
+        self.assertEqual(
+            choose_canonical([old, new | {"created_at": old["created_at"]}]), "d1"
+        )
         with self.assertRaises(PolicyError):
-            validate_decision_candidates(
-                [
-                    {
-                        "id": "d1",
-                        "key": "route",
-                        "choice": "specialist",
-                        "disposition": "accepted",
-                    },
-                    {
-                        "id": "d2",
-                        "key": "route",
-                        "choice": "specialist",
-                        "disposition": "accepted",
-                    },
-                ]
-            )
-        with self.assertRaises(PolicyError):
-            validate_decision_candidates(
-                [
-                    {
-                        "id": "d1",
-                        "key": "route",
-                        "choice": "specialist",
-                        "disposition": "accepted",
-                        "supersedes": "d2",
-                    },
-                    {
-                        "id": "d2",
-                        "key": "route",
-                        "choice": "generic",
-                        "disposition": "accepted",
-                        "supersedes": "d1",
-                    },
-                ]
-            )
-        with self.assertRaises(PolicyError):
-            validate_decision_candidates(
-                [
-                    {
-                        "id": "d1",
-                        "key": "route",
-                        "choice": "specialist",
-                        "disposition": "accepted",
-                    },
-                    {
-                        "id": "d2",
-                        "key": "route",
-                        "choice": "generic",
-                        "disposition": "accepted",
-                    },
-                ]
+            choose_canonical(
+                [old | {"supersedes": ["d2"]}, new | {"supersedes": ["d1"]}]
             )
 
     def test_unsafe_autonomous_default_is_rejected(self):
@@ -423,6 +404,153 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
             "id"
         ]
 
+    def create_decision(self, title: str, epic: str, key: str) -> str:
+        metadata = json.dumps(
+            {
+                "decision_key": key,
+                "decision_owner": "test-orchestrator",
+                "decision_disposition": "accepted",
+            },
+            sort_keys=True,
+        )
+        return self.bd(
+            "create",
+            "--title",
+            title,
+            "--type",
+            "decision",
+            "--parent",
+            epic,
+            "--description",
+            title,
+            "--design",
+            "Evidence-backed test decision.",
+            "--acceptance",
+            "Read-back matches the expected disposition.",
+            "--metadata",
+            metadata,
+        )["id"]
+
+    def decision_candidates(self, epic: str, key: str) -> list[dict]:
+        candidates = []
+        decisions = self.bd("list", "--type", "decision", "--parent", epic, "--all")
+        for decision in decisions:
+            metadata = decision.get("metadata", {})
+            if metadata.get("decision_key") != key:
+                continue
+            shown = self.bd("show", decision["id"])[0]
+            candidates.append(
+                {
+                    "id": shown["id"],
+                    "key": metadata["decision_key"],
+                    "created_at": shown["created_at"],
+                    "disposition": metadata["decision_disposition"],
+                    "supersedes": [
+                        dependency["id"]
+                        for dependency in shown.get("dependencies", [])
+                        if dependency["dependency_type"] == "supersedes"
+                    ],
+                }
+            )
+        return candidates
+
+    def has_edge(self, source: str, target: str, edge_type: str) -> bool:
+        shown = self.bd("show", source)[0]
+        return (target, edge_type) in {
+            (dependency["id"], dependency["dependency_type"])
+            for dependency in shown.get("dependencies", [])
+        }
+
+    def settle_noncanonical(self, loser: str, canonical: str, disposition: str) -> dict:
+        canonical_before = self.bd("show", canonical)[0]
+        self.assertEqual(
+            canonical_before["metadata"]["decision_disposition"], "accepted"
+        )
+        loser_before = self.bd("show", loser)[0]
+        expected_metadata = {
+            "decision_disposition": disposition,
+            "canonical_decision": canonical,
+        }
+        if any(
+            loser_before["metadata"].get(key) != value
+            for key, value in expected_metadata.items()
+        ):
+            self.bd(
+                "update",
+                loser,
+                "--set-metadata",
+                f"decision_disposition={disposition}",
+                "--set-metadata",
+                f"canonical_decision={canonical}",
+            )
+
+        if disposition == "duplicate":
+            source, target, edge_type = loser, canonical, "relates-to"
+            reason = f"duplicate of {canonical}"
+        else:
+            source, target, edge_type = canonical, loser, "supersedes"
+            reason = f"superseded by {canonical}"
+        if not self.has_edge(source, target, edge_type):
+            self.bd("dep", "add", source, target, "--type", edge_type)
+
+        loser_after_links = self.bd("show", loser)[0]
+        if loser_after_links["status"] != "closed":
+            self.bd("close", loser, "--reason", reason)
+
+        loser_after = self.bd("show", loser)[0]
+        canonical_after = self.bd("show", canonical)[0]
+        self.assertEqual(loser_after["status"], "closed")
+        self.assertEqual(loser_after["close_reason"], reason)
+        for key, value in expected_metadata.items():
+            self.assertEqual(loser_after["metadata"][key], value)
+        self.assertTrue(self.has_edge(source, target, edge_type))
+        self.assertEqual(
+            canonical_after["metadata"]["decision_disposition"], "accepted"
+        )
+        self.assertNotIn("canonical_decision", canonical_after["metadata"])
+        return loser_after
+
+    def test_duplicate_disposition_is_durable_and_idempotent(self):
+        epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
+        first = self.create_decision("Decision: first", epic, "shared-route")
+        second = self.create_decision("Decision: second", epic, "shared-route")
+        canonical = choose_canonical(self.decision_candidates(epic, "shared-route"))
+        loser = second if canonical == first else first
+
+        self.bd(
+            "update",
+            loser,
+            "--set-metadata",
+            "decision_disposition=duplicate",
+        )
+        resolved = self.settle_noncanonical(loser, canonical, "duplicate")
+        repeated = self.settle_noncanonical(loser, canonical, "duplicate")
+
+        self.assertEqual(repeated["updated_at"], resolved["updated_at"])
+        self.assertEqual(
+            choose_canonical(self.decision_candidates(epic, "shared-route")),
+            canonical,
+        )
+
+    def test_superseded_disposition_is_durable_and_idempotent(self):
+        epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
+        old = self.create_decision("Decision: old", epic, "shared-contract")
+        replacement = self.create_decision(
+            "Decision: replacement", epic, "shared-contract"
+        )
+        self.bd("dep", "add", replacement, old, "--type", "supersedes")
+        canonical = choose_canonical(self.decision_candidates(epic, "shared-contract"))
+        self.assertEqual(canonical, replacement)
+
+        resolved = self.settle_noncanonical(old, canonical, "superseded")
+        repeated = self.settle_noncanonical(old, canonical, "superseded")
+
+        self.assertEqual(repeated["updated_at"], resolved["updated_at"])
+        self.assertEqual(
+            choose_canonical(self.decision_candidates(epic, "shared-contract")),
+            canonical,
+        )
+
     def test_comment_decision_ambiguity_and_waiting_human_flow(self):
         epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
         work = self.create_task("Affected work", epic)
@@ -467,18 +595,37 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         )["id"]
         self.bd("dep", "add", work, decision, "--type", "relates-to")
         self.bd("dep", "add", validator, decision, "--type", "validates")
-        self.bd("close", decision, "--reason", "accepted and verified")
         validate_decision_edges(["relates-to", "validates"])
 
         ready = {
             item["id"] for item in self.bd("ready", "--parent", epic, "--type", "task")
         }
         self.assertTrue({work, validator, unrelated}.issubset(ready))
+        shown_decision = self.bd("show", decision)[0]
+        self.assertEqual(shown_decision["status"], "open")
+
+        blocking_control = self.create_task("Blocking control", epic)
+        blocker = self.create_task("True blocker", epic)
+        self.bd("dep", "add", blocking_control, blocker, "--type", "blocks")
+        ready_with_blocker = {
+            item["id"] for item in self.bd("ready", "--parent", epic, "--type", "task")
+        }
+        self.assertTrue(
+            {work, validator, unrelated, blocker}.issubset(ready_with_blocker)
+        )
+        self.assertNotIn(blocking_control, ready_with_blocker)
+        self.bd("close", blocker, "--reason", "blocking control released")
+        ready_after_blocker = {
+            item["id"] for item in self.bd("ready", "--parent", epic, "--type", "task")
+        }
+        self.assertIn(blocking_control, ready_after_blocker)
+
         shown_work = self.bd("show", work)[0]
         self.assertIn(
             (decision, "relates-to"),
             {(dep["id"], dep["dependency_type"]) for dep in shown_work["dependencies"]},
         )
+        self.bd("close", decision, "--reason", "accepted and verified")
         shown_decision = self.bd("show", decision)[0]
         self.assertEqual(shown_decision["status"], "closed")
         self.assertEqual(shown_decision["metadata"]["decision_disposition"], "accepted")
