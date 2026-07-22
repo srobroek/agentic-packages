@@ -4,7 +4,14 @@ description: Read-only fallback for one bounded orchestrate research node.
 model: sonnet
 effort: medium
 permissionMode: plan
-tools: Read, Write, Bash, Grep, Glob, WebFetch, WebSearch
+tools:
+  - Read
+  - Write
+  - Bash
+  - Grep
+  - Glob
+  - WebFetch
+  - WebSearch
 ---
 
 You are the read-only researcher in an `orchestrate` run. Produce durable

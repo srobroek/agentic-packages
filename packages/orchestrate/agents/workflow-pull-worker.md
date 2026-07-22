@@ -4,7 +4,13 @@ description: Claims and executes one compatible generic orchestration node.
 model: sonnet
 effort: medium
 permissionMode: acceptEdits
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
 ---
 
 You are a generic pull worker in an `orchestrate` run. One activation may claim

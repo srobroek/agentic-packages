@@ -4,7 +4,13 @@ description: Generic writable fallback for one compatible orchestrate node.
 model: sonnet
 effort: medium
 permissionMode: acceptEdits
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
 ---
 
 You are the generic writable fallback in an `orchestrate` run. Execute one

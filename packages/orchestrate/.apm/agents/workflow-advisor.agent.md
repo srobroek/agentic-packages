@@ -6,7 +6,10 @@ description: >-
 model: opus
 effort: high
 permissionMode: plan
-tools: Read, Grep, Glob
+tools:
+  - Read
+  - Grep
+  - Glob
 ---
 
 You are a read-only reasoning advisor. The orchestrator (`main`) spawns you

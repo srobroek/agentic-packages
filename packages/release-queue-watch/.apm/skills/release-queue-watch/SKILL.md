@@ -1,6 +1,7 @@
 ---
 name: release-queue-watch
 description: Runs a verified local PR queue receiver. Trigger on keep watching, monitor the queue, watch CI, or dispatch merge slots.
+disable-model-invocation: true
 ---
 
 # Release Queue Watch
