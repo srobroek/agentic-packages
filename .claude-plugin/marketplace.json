@@ -21,7 +21,7 @@
     {
       "name": "agent-coder",
       "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
-      "version": "6.1.0",
+      "version": "6.1.1",
       "tags": [
         "agent",
         "engineering",
@@ -141,7 +141,7 @@
     {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "tags": [
         "agent",
         "quality",
@@ -285,7 +285,7 @@
     {
       "name": "brownfield-project",
       "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "skill",
         "lifecycle",
@@ -1070,7 +1070,7 @@
     {
       "name": "mcp-mempalace",
       "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "mcp",
         "memory",
@@ -1115,7 +1115,7 @@
     {
       "name": "mcp-serena",
       "description": "MCP server package for Serena semantic code tools. The launcher resolves the Codex or Claude Code context from the process ancestry and can be overridden with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent mcp_servers declarations should use the shared semantic route instead.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "mcp",
         "semantic"
@@ -1138,7 +1138,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "3.8.0",
+      "version": "3.9.0",
       "tags": [
         "skill",
         "agent",
@@ -1173,7 +1173,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "tags": [
         "beads",
         "merge-queue",
@@ -1344,7 +1344,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "8.1.0",
+      "version": "8.1.1",
       "tags": [
         "bundle",
         "speckit"
@@ -1508,7 +1508,7 @@
     {
       "name": "steering-subagent-routing",
       "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "steering",
         "routing"
