@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.2.0...orchestrate--v3.3.0) (2026-07-22)
+
+
+### Features
+
+* connect queue events to shepherd and orchestrator ([#608](https://github.com/srobroek/agentic-packages/issues/608)) ([58e25f8](https://github.com/srobroek/agentic-packages/commit/58e25f865f2c28cfb060f94a9bd1aa0ef6bf9dd5))
+* **deps:** sync internal package pins (minor-level dep releases) ([2b09640](https://github.com/srobroek/agentic-packages/commit/2b0964092bed55576ecac987011f87e0ae20aea5))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.1.0...orchestrate--v3.2.0) (2026-07-22)
 
 
