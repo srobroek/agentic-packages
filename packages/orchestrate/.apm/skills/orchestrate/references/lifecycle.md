@@ -33,7 +33,7 @@ Blocked coders stay in `working` — `BLOCKED` is a message, not a node state.
 | `reported → in_review` | coder finished; orchestrator spawns a `workflow-reviewer` |
 | `working` (blocked) | coder sends `BLOCKED kind:design\|debug` to orchestrator, idles; orchestrator brokers `workflow-advisor`/debugger, relays `ADVICE` back; coder spawns nothing |
 | `changes_requested → working` | coder applies exactly the `FIX` items; same reviewer re-reviews the delta |
-| `approved → merged` | orchestrator sends `APPROVE`; for watcher-backed PRs, the first handoff opens/waits and an exact dispatch wakes revalidation; gatekeeper acquires the merge slot, probes conflicts, merges, stamps `merge_sha`, closes the bead |
+| `approved → merged` | orchestrator sends `APPROVE`; lifecycle events may wake state revalidation, but only an exact ready dispatch enters the watcher-backed merge path; gatekeeper acquires the merge slot, probes conflicts, merges, stamps `merge_sha`, closes the bead |
 | `waiting_human` | agent raised `ASK`; goes idle; orchestrator surfaces the question, forwards the answer or lets the user message the agent directly. Node not yet started → also `bd gate create --type=human --blocks <bead>` |
 | `failed` | unrecoverable; `state:failed` + status `blocked` (never satisfies a dep), logged with the error, surfaced |
 
@@ -61,11 +61,12 @@ agent for the same node — it loses context and its name may be refused.
 4. Re-spawn only unassigned in-flight beads (truly orphaned); resume
    everything else by messaging the recovered handle.
 5. Restart each GitHub repository watcher with `--slots=1`. Replay every node
-   whose `queue_dispatch` does not equal `queue_dispatch_ack`; matching pending
-   or sent receipts identify the last completed delivery step. Only a matching
-   ack suppresses orchestrator replay. Normalize a key-only migration record by
-   stamping its pending receipt before SendMessage. The gatekeeper resumes
-   acknowledged, approved, unmerged nodes from its startup scan; see
+   whose current `queue_dispatch` or `queue_lifecycle` lacks its matching ack;
+   pending or sent receipts identify the last completed delivery step. Only a
+   matching ack suppresses replay. Normalize key-only migration records before
+   SendMessage. Route records unmatched to the run once through pr-shepherd.
+   The gatekeeper resumes acknowledged, approved, unmerged nodes from its
+   startup scan; see
    `references/queue-watcher.md`.
 
 ## Failure propagation

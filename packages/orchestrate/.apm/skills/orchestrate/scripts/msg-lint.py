@@ -4,7 +4,7 @@
 
 Validates a SendMessage `message` body against the fixed 11-verb protocol
 (RULE was removed; APPROVE is the orch->gatekeeper integration handoff and may
-carry a validated watcher dispatch):
+carry a validated watcher dispatch or lifecycle receipt):
 
     ASSIGN BLOCKED REPORTED REVIEW FIX CONFLICT APPROVE MERGED ASK ADVICE DISMISS
 
@@ -21,7 +21,7 @@ Rules:
         FIX       items
         CONFLICT  with, files
         APPROVE   branch; watcher handoffs also require repo, base, pr, head,
-                  dispatch
+                  plus dispatch or transition+lifecycle
         MERGED    sha, base
         ASK       question
         ADVICE    answer
@@ -78,6 +78,15 @@ POSITIVE_INTEGER_RE = re.compile(r"^[1-9]\d*$")
 HEAD_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 
 WATCHER_APPROVE_FIELDS = {"repo", "base", "pr", "head", "dispatch"}
+WATCHER_LIFECYCLE_FIELDS = {
+    "repo",
+    "base",
+    "pr",
+    "head",
+    "transition",
+    "lifecycle",
+}
+LIFECYCLE_TRANSITIONS = {"opened", "updated", "failed", "merged", "closed"}
 
 MAX_PROSE_RUN = 2  # more than this many consecutive non-labeled lines = smell
 
@@ -161,6 +170,35 @@ def lint(body: str) -> list[str]:
                     violations.append(
                         "field dispatch must equal repo#pr@head for this handoff"
                     )
+
+        if (
+            verb == "APPROVE"
+            and fields.get("source", "").strip().lower()
+            == "release-queue-watch-lifecycle"
+        ):
+            for field in sorted(WATCHER_LIFECYCLE_FIELDS - fields.keys()):
+                violations.append(f"missing field: {field}")
+            for field in sorted(
+                (WATCHER_LIFECYCLE_FIELDS | {"branch"}) & fields.keys()
+            ):
+                if not fields[field].strip():
+                    violations.append(f"empty field: {field}")
+
+            repository = fields.get("repo", "")
+            pull_request = fields.get("pr", "")
+            head_sha = fields.get("head", "")
+            transition = fields.get("transition", "").strip().lower()
+            if repository and not REPOSITORY_RE.fullmatch(repository):
+                violations.append("field repo must be OWNER/REPO")
+            if pull_request and not POSITIVE_INTEGER_RE.fullmatch(pull_request):
+                violations.append("field pr must be a positive integer")
+            if head_sha and not HEAD_SHA_RE.fullmatch(head_sha):
+                violations.append("field head must be a hexadecimal Git object id")
+            if transition and transition not in LIFECYCLE_TRANSITIONS:
+                violations.append(
+                    f"field transition={transition!r} must be one of "
+                    f"{sorted(LIFECYCLE_TRANSITIONS)}"
+                )
 
     return violations
 
