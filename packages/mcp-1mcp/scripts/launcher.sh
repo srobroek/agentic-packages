@@ -2,7 +2,12 @@
 
 set -u
 
-readonly runtime_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/1mcp"
+readonly config_home="${XDG_CONFIG_HOME:-${HOME:+${HOME}/.config}}"
+[[ -n "$config_home" ]] || {
+  printf '1mcp-launcher-needs-home-or-xdg-config-home\n' >&2
+  exit 1
+}
+readonly runtime_dir="${config_home}/1mcp"
 readonly pid_file="${runtime_dir}/server.pid"
 readonly lock_file="${runtime_dir}/launcher.lock"
 readonly wait_seconds="${MCP1_LAUNCHER_WAIT_SECONDS:-${ONE_MCP_LAUNCHER_WAIT_SECONDS:-20}}"
@@ -32,6 +37,8 @@ fi
 is_uint "$kill_grace" || die "1mcp-launcher-invalid-kill-grace"
 is_uint "$async_min_servers" || die "1mcp-launcher-invalid-async-min-servers"
 is_uint "$async_timeout_ms" || die "1mcp-launcher-invalid-async-timeout"
+[[ -z "$supplied_deadline" ]] || is_uint "$supplied_deadline" || die "1mcp-launcher-invalid-deadline"
+[[ "$launcher_locked" == 0 || "$launcher_locked" == 1 ]] || die "1mcp-launcher-invalid-lock-state"
 
 one_mcp_bin="$(command -v 1mcp)" || die "1mcp-not-installed-install-agent-0.34.4-or-later"
 node_bin="$(command -v node)" || die "node-not-installed-required-by-1mcp"
@@ -76,14 +83,24 @@ run_bounded() {
   fi
 }
 
-ready() {
+runtime_status() {
   run_bounded 2 "$one_mcp_bin" serve --status >/dev/null 2>&1
 }
 
+ready() {
+  runtime_status
+}
+
 wait_ready() {
+  local status
   while remaining >/dev/null; do
-    ready && return 0
-    sleep 0.2
+    runtime_status
+    status=$?
+    case "$status" in
+      0) return 0 ;;
+      3 | 4) sleep 0.2 ;;
+      *) return 1 ;;
+    esac
   done
   return 1
 }
@@ -112,7 +129,7 @@ is_runtime_process() {
   if [[ -r "/proc/$pid/cmdline" ]]; then
     while IFS= read -r arg; do
       case "$arg" in
-        1mcp | */1mcp | */1mcp/* | *@1mcp/agent/*) binary=1 ;;
+        1mcp | */1mcp | *@1mcp/agent/*) binary=1 ;;
         serve) serve=1 ;;
         --background-bootstrap) bootstrap=1 ;;
       esac
@@ -128,7 +145,8 @@ is_runtime_process() {
   case "$comm" in sh | bash | zsh | fish) return 1 ;; esac
   args="$(ps -ww -p "$pid" -o args= 2>/dev/null)" || return 1
   [[ " $args " == *" 1mcp "*" serve "*" --background-bootstrap"* ||
-    " $args " == *" @1mcp/agent/"*" serve "*" --background-bootstrap"* ]]
+    " $args " == *"/1mcp "*" serve "*" --background-bootstrap"* ||
+    " $args " == *"/@1mcp/agent/"*" serve "*" --background-bootstrap"* ]]
 }
 
 quarantine_stale_pid() {
@@ -163,8 +181,33 @@ start_runtime() {
 
 ensure_runtime() {
   local pid
+  local status
 
-  ready && return 0
+  runtime_status
+  status=$?
+  case "$status" in
+    0) return 0 ;;
+    3) ;;
+    4)
+      if [[ ! -f "$pid_file" ]]; then
+        printf '1mcp reported an unreachable runtime without PID state; refusing recovery\n' >&2
+        return 1
+      fi
+      pid="$(read_pid 2>/dev/null || :)"
+      if [[ -n "$pid" ]] && is_runtime_process "$pid"; then
+        wait_ready && return 0
+        printf '1mcp runtime is alive but unhealthy; operator intervention required\n' >&2
+        run_bounded 2 "$one_mcp_bin" serve --status >&2 || :
+        return 1
+      fi
+      quarantine_stale_pid || return 1
+      ;;
+    *)
+      printf '1mcp status check failed with exit code %s; refusing to start a duplicate runtime\n' "$status" >&2
+      return 1
+      ;;
+  esac
+
   if [[ -f "$pid_file" ]]; then
     pid="$(read_pid 2>/dev/null || :)"
     if [[ -n "$pid" ]] && is_runtime_process "$pid"; then
@@ -182,7 +225,7 @@ ensure_runtime() {
     run_bounded 2 "$one_mcp_bin" serve --status >&2 || :
     return 1
   }
-  ready
+  wait_ready
 }
 
 acquire_and_start() {
@@ -207,7 +250,13 @@ if [[ "$launcher_locked" == 1 ]]; then
   exit $?
 fi
 
-ready && exec "$one_mcp_bin" proxy
+runtime_status
+initial_status=$?
+case "$initial_status" in
+  0) exec "$one_mcp_bin" proxy ;;
+  3 | 4) ;;
+  *) die "1mcp-launcher-status-check-failed-${initial_status}" ;;
+esac
 acquire_and_start || {
   ready && exec "$one_mcp_bin" proxy
   die "1mcp-launcher-lock-or-startup-timeout"

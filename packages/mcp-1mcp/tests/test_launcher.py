@@ -40,7 +40,7 @@ def test_manifest_delegates_to_inspectable_launcher_script() -> None:
 def test_launcher_stays_small_and_uses_kernel_locks() -> None:
     script = launcher_script().read_text(encoding="utf-8")
 
-    assert len(script.splitlines()) < 220
+    assert len(script.splitlines()) < 275
     assert "flock" in script
     assert "lockf" in script
     assert ".takeover" not in script
@@ -108,7 +108,12 @@ if (args[0] === "serve" && args[1] === "--status") {
     hold(true);
     return;
   }
-  process.exit(fs.existsSync(path.join(state, "ready")) ? 0 : 1);
+  if (process.env.FAKE_1MCP_STATUS === "error") process.exit(2);
+  if (
+    process.env.FAKE_1MCP_STATUS === "unreachable" &&
+    !fs.existsSync(path.join(state, "ready"))
+  ) process.exit(4);
+  process.exit(fs.existsSync(path.join(state, "ready")) ? 0 : 3);
 }
 
 if (args[0] === "serve" && args[1] === "--background") {
@@ -280,6 +285,23 @@ def test_background_launch_resolves_npm_bin_symlink(tmp_path: Path) -> None:
     assert action_count(actions, "serve --background") == 1
 
 
+def test_background_launch_supports_standalone_executable(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    executable = tmp_path / "bin" / "1mcp"
+    entry = executable.resolve()
+    executable.unlink()
+    executable.write_text(
+        f'#!/bin/bash\nexec node "{entry}" "$@"\n',
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+
+
 def test_legacy_launcher_tuning_is_supported_but_not_leaked_to_1mcp(
     tmp_path: Path,
 ) -> None:
@@ -306,6 +328,18 @@ def test_concurrent_launchers_start_once_and_both_connect(tmp_path: Path) -> Non
     assert action_count(actions, "proxy") == 2
 
 
+def test_concurrency_stress_starts_once_and_every_client_connects(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, background_delay=0.5)
+    command = ["bash", str(launcher_script())]
+    clients = [subprocess.Popen(command, env=env) for _ in range(16)]
+
+    assert [client.wait(timeout=10) for client in clients] == [0] * len(clients)
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == len(clients)
+
+
 def test_stale_pid_for_reused_process_is_quarantined_without_signal(
     tmp_path: Path,
 ) -> None:
@@ -323,6 +357,26 @@ def test_stale_pid_for_reused_process_is_quarantined_without_signal(
         assert not pid_file.exists()
         quarantined = list(pid_file.parent.glob("server.pid.stale.*"))
         assert len(quarantined) == 1
+    finally:
+        unrelated.terminate()
+        unrelated.wait(timeout=5)
+
+
+def test_unreachable_reused_pid_is_quarantined_and_recovered(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="unreachable")
+    unrelated = subprocess.Popen(["sleep", "30"])
+    pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), unrelated.pid)
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 0, result.stderr
+        assert unrelated.poll() is None
+        assert action_count(actions, "serve --background") == 1
+        assert not pid_file.exists()
+        assert len(list(pid_file.parent.glob("server.pid.stale.*"))) == 1
     finally:
         unrelated.terminate()
         unrelated.wait(timeout=5)
@@ -370,7 +424,11 @@ def test_launcher_self_pid_is_treated_as_stale(tmp_path: Path) -> None:
 def test_genuine_unhealthy_runtime_is_preserved_and_not_signalled(
     tmp_path: Path,
 ) -> None:
-    env, actions = install_fake_commands(tmp_path, start_behavior="hold")
+    env, actions = install_fake_commands(
+        tmp_path,
+        start_behavior="hold",
+        status_behavior="unreachable",
+    )
     env["MCP1_LAUNCHER_WAIT_SECONDS"] = "2"
     runtime_env = dict(env)
     runtime_env.pop("MCP1_LAUNCHER_WAIT_SECONDS")
@@ -396,12 +454,51 @@ def test_genuine_unhealthy_runtime_is_preserved_and_not_signalled(
         genuine.wait(timeout=5)
 
 
+def test_unreachable_status_without_a_trusted_runtime_fails_closed(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="unreachable")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 1
+    assert "without PID state" in result.stderr
+    assert action_count(actions, "serve --background") == 0
+    assert action_count(actions, "proxy") == 0
+
+
 def test_process_with_runtime_words_in_one_argument_is_not_trusted(
     tmp_path: Path,
 ) -> None:
     env, actions = install_fake_commands(tmp_path)
     spoof = subprocess.Popen(
         ["bash", "-c", "exec -a '1mcp serve --background-bootstrap' sleep 30"],
+    )
+    pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), spoof.pid)
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 0, result.stderr
+        assert spoof.poll() is None
+        assert action_count(actions, "serve --background") == 1
+        assert not pid_file.exists()
+    finally:
+        spoof.terminate()
+        spoof.wait(timeout=5)
+
+
+def test_executable_below_directory_named_1mcp_is_not_trusted(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    spoof = subprocess.Popen(
+        [
+            "bash",
+            "-c",
+            "exec -a /tmp/1mcp/not-the-runtime node -e "
+            "'setInterval(() => {}, 1000)' serve --background-bootstrap",
+        ],
     )
     pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), spoof.pid)
 
@@ -450,16 +547,77 @@ def test_failed_background_start_is_bounded_and_diagnostic(tmp_path: Path) -> No
 
 def test_hung_status_is_bounded_without_starting(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path, status_behavior="hang")
-    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "2"
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "6"
 
     started = time.monotonic()
     result = run_launcher(env)
     elapsed = time.monotonic() - started
 
     assert result.returncode == 1
-    assert elapsed < 4
+    assert elapsed < 8
     assert action_count(actions, "serve --background") == 0
     assert action_count(actions, "proxy") == 0
+
+
+def test_status_error_fails_closed_without_starting(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="error")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 1
+    assert action_count(actions, "serve --background") == 0
+    assert action_count(actions, "proxy") == 0
+
+
+def test_successful_background_launch_waits_for_delayed_readiness(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, start_behavior="unready")
+    process = subprocess.Popen(
+        ["bash", str(launcher_script())],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    wait_for_action(actions, "serve --background")
+    time.sleep(0.3)
+    (tmp_path / "state" / "ready").touch()
+
+    _, stderr = process.communicate(timeout=8)
+
+    assert process.returncode == 0, stderr
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 1
+
+
+def test_repeated_crash_recovery_cycles_start_once_per_cycle(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    config_home = Path(env["XDG_CONFIG_HOME"])
+
+    for cycle in range(4):
+        if cycle:
+            (tmp_path / "state" / "ready").unlink()
+            write_pid_file(config_home, 99_000 + cycle)
+
+        result = run_launcher(env)
+
+        assert result.returncode == 0, result.stderr
+
+    assert action_count(actions, "serve --background") == 4
+    assert action_count(actions, "proxy") == 4
+    assert len(list((config_home / "1mcp").glob("server.pid.stale.*"))) == 3
+
+
+def test_runtime_and_lock_paths_may_contain_spaces(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    env["XDG_CONFIG_HOME"] = str(tmp_path / "config with spaces")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 1
 
 
 def test_hung_background_start_is_bounded(tmp_path: Path) -> None:
@@ -487,6 +645,28 @@ def test_term_releases_kernel_lock_for_next_launcher(tmp_path: Path) -> None:
     wait_for_action(actions, "serve --background")
 
     os.killpg(first.pid, signal.SIGTERM)
+    first.wait(timeout=5)
+    env["FAKE_1MCP_STARTS"] = "success"
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "6"
+
+    second = run_launcher(env)
+
+    assert second.returncode == 0, second.stderr
+    assert action_count(actions, "serve --background") == 2
+    assert action_count(actions, "proxy") == 1
+
+
+def test_kill_releases_kernel_lock_for_next_launcher(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, start_behavior="hang")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "3"
+    first = subprocess.Popen(
+        ["bash", str(launcher_script())],
+        env=env,
+        start_new_session=True,
+    )
+    wait_for_action(actions, "serve --background")
+
+    os.killpg(first.pid, signal.SIGKILL)
     first.wait(timeout=5)
     env["FAKE_1MCP_STARTS"] = "success"
     env["MCP1_LAUNCHER_WAIT_SECONDS"] = "6"
@@ -585,4 +765,27 @@ def test_invalid_tuning_values_fail_before_startup(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "invalid-wait-seconds" in result.stderr
+    assert actions.read_text(encoding="utf-8") == ""
+
+
+def test_invalid_internal_deadline_fails_before_startup(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    env["MCP1_LAUNCHER_DEADLINE_EPOCH"] = "not-a-number"
+
+    result = run_launcher(env)
+
+    assert result.returncode == 1
+    assert "invalid-deadline" in result.stderr
+    assert actions.read_text(encoding="utf-8") == ""
+
+
+def test_missing_home_and_xdg_config_home_fails_actionably(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    env.pop("HOME", None)
+    env.pop("XDG_CONFIG_HOME", None)
+
+    result = run_launcher(env)
+
+    assert result.returncode == 1
+    assert "needs-home-or-xdg-config-home" in result.stderr
     assert actions.read_text(encoding="utf-8") == ""
