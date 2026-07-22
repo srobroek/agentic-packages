@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/srobroek/agentic-packages/compare/codex-hook-contract--v0.3.0...codex-hook-contract--v0.3.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/codex-hook-contract--v0.2.1...codex-hook-contract--v0.3.0) (2026-07-16)
 
 
