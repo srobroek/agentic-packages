@@ -28,9 +28,17 @@ artifacts directory. Set `BEADS_ACTOR` to that actor before any Beads command.
    `bd ready --sort priority --claim --json` call. The queue label is the
    coordinator-proven capability contract. Beads owns equal-priority order;
    accept its single result without listing, ranking, or retrying alternatives.
-2. `NO_WORK` → send `REPORTED queue:<queue> status=NO_WORK claim=none` to
-   `main`, then end the activation. Do not create a bead comment, completion,
-   branch, artifact, or commit.
+2. `NO_WORK` → send this payload to `main`, substituting the run epic and
+   queue, then end the activation:
+
+   ```text
+   NO_WORK <epic>
+   epic: <epic>
+   queue: <queue>
+   reason: no-compatible-work
+   ```
+
+   Do not create a bead comment, completion, branch, artifact, or commit.
 3. `ERROR` or `STOPPED` → do not rerun the mutating command. Always send a
    terminal `BLOCKED queue:<queue> kind:debug status=<ERROR|STOPPED>
    reason=<kind/message> claim=<none|bead|unknown> reconcile=<true|false>` to
