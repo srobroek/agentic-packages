@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.3...mcp-1mcp--v1.0.4) (2026-07-22)
+
+
+### Bug Fixes
+
+* **mcp-1mcp:** support filtered proxy connections ([#626](https://github.com/srobroek/agentic-packages/issues/626)) ([5170e99](https://github.com/srobroek/agentic-packages/commit/5170e998c7648fe68a589941914436f832fa55a1))
+
 ## [1.0.3](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.2...mcp-1mcp--v1.0.3) (2026-07-22)
 
 

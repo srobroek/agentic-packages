@@ -1,5 +1,13 @@
 # Changelog
 
+## [16.6.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.5.0...srobroek-agentic--v16.6.0) (2026-07-22)
+
+
+### Features
+
+* keep agent replies and decisions in Beads ([#622](https://github.com/srobroek/agentic-packages/issues/622)) ([3e5082c](https://github.com/srobroek/agentic-packages/commit/3e5082c1fda4a36ebd67e78ef5ec234666f54a0d))
+* verify pull requests before and after merge ([#612](https://github.com/srobroek/agentic-packages/issues/612)) ([66aaa91](https://github.com/srobroek/agentic-packages/commit/66aaa91bccd7d8694fe65c7f0b645208f4855372))
+
 ## [16.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.4.0...srobroek-agentic--v16.5.0) (2026-07-22)
 
 
