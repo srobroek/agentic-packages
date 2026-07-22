@@ -117,7 +117,7 @@
     {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "tags": [
         "skill",
         "maintenance",
@@ -249,7 +249,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "6.1.0",
+      "version": "6.1.1",
       "tags": [
         "bundle",
         "steering"
@@ -272,7 +272,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "tags": [
         "beads",
         "issue-tracking",
@@ -356,7 +356,7 @@
     {
       "name": "codex-hook-contract",
       "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "tags": [
         "codex",
         "hooks",
@@ -368,7 +368,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "10.1.1",
+      "version": "10.2.0",
       "tags": [
         "bundle",
         "baseline"
@@ -379,7 +379,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "bundle",
         "data"
@@ -499,7 +499,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "tags": [
         "bundle",
         "frontend"
@@ -706,7 +706,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Model-routing deny gate for Claude and Codex subagent spawns. Claude requires an explicit model for inherit-by-default types. Codex requires a named project or global semantic profile that pins model and reasoning effort; project profiles take precedence and incomplete profiles are denied instead of falling through. Denials return tier-based retry guidance. Malformed input fails open.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "tags": [
         "hooks",
         "subagent",
@@ -802,7 +802,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "go"
@@ -846,7 +846,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "rust"
@@ -857,7 +857,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "bundle",
         "shell"
@@ -934,7 +934,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "typescript"
@@ -1150,7 +1150,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "3.6.0",
+      "version": "3.7.0",
       "tags": [
         "skill",
         "agent",
@@ -1185,7 +1185,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1247,7 +1247,7 @@
     {
       "name": "release-queue-watch",
       "description": "Runs a signed local GitHub webhook receiver that emits deterministic PR lifecycle records, tracks agent-owned priority and merge-slot state, and retains Octokit REST reconciliation without mutating GitHub or Beads.",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "tags": [
         "github",
         "pull-requests",
@@ -1367,7 +1367,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "3.1.1",
+      "version": "3.2.0",
       "tags": [
         "speckit",
         "beads",
@@ -1631,7 +1631,7 @@
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "tags": [
         "skill",
         "docs",
