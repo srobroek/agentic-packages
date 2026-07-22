@@ -1,3 +1,5 @@
+import { errorMessage } from "./error-message.js";
+
 const ROUTABLE_STATUSES = new Set(["resolved", "replay"]);
 const QUIET_STATUSES = new Set(["duplicate", "ignored"]);
 
@@ -78,7 +80,7 @@ export class AdvisoryWakeDispatcher {
 			return this.enqueue({
 				type: "malformed-output",
 				source,
-				message: error.message,
+				message: errorMessage(error),
 			});
 		}
 		return this.enqueue(record);
@@ -115,7 +117,7 @@ export class AdvisoryWakeDispatcher {
 			orchestrate = await this.resolveOrchestrate(record);
 		} catch (error) {
 			return this.#fallback("orchestrate-resolution-error", record, {
-				message: error.message,
+				message: errorMessage(error),
 			});
 		}
 		if (!orchestrate || typeof orchestrate.status !== "string") {
@@ -133,7 +135,7 @@ export class AdvisoryWakeDispatcher {
 				payload = wakePayload("orchestrate", orchestrate, record);
 			} catch (error) {
 				return this.#fallback("invalid-orchestrate-result", record, {
-					message: error.message,
+					message: errorMessage(error),
 				});
 			}
 			await this.wakeOrchestrate(payload);
@@ -151,7 +153,7 @@ export class AdvisoryWakeDispatcher {
 			shepherd = await this.resolveShepherd(record);
 		} catch (error) {
 			return this.#fallback("shepherd-resolution-error", record, {
-				message: error.message,
+				message: errorMessage(error),
 			});
 		}
 		if (!shepherd || typeof shepherd.status !== "string") {
@@ -166,7 +168,7 @@ export class AdvisoryWakeDispatcher {
 				payload = wakePayload("pr-shepherd", shepherd, record);
 			} catch (error) {
 				return this.#fallback("invalid-shepherd-result", record, {
-					message: error.message,
+					message: errorMessage(error),
 				});
 			}
 			await this.wakeShepherd(payload);

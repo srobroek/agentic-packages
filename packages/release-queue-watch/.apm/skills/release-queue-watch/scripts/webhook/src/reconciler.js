@@ -97,4 +97,8 @@ export class PollingReconciler {
 		this.requestTimers.clear();
 		this.rerun.clear();
 	}
+
+	async drain() {
+		await Promise.allSettled([...this.inFlight.values()]);
+	}
 }

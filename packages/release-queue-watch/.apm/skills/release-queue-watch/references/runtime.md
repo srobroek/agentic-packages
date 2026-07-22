@@ -85,7 +85,9 @@ Initial REST reconciliation can emit lifecycle and dispatch records before `watc
 `src/wake-dispatcher.js` exports `AdvisoryWakeDispatcher` for supervisors that
 run the watcher and an integrator in the same process. Pass the dispatcher to
 `startReleaseQueueRuntime` as `wakeDispatcher`; the runtime keeps its stdout and
-stderr records unchanged and drains pending wakes during shutdown.
+stderr records unchanged. Shutdown stops new reconciliation, closes the webhook
+receiver, awaits in-flight reconciliation, then drains pending wakes so no
+producer can publish after the final drain.
 
 The dispatcher accepts adapters for the orchestrate and pr-shepherd resolvers.
 It sends a record to the shepherd resolver only when the orchestrate adapter

@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { readGhToken, startGhWebhookForwarder } from "./gh-webhook.js";
+import { errorMessage } from "./error-message.js";
 import { ReleaseQueueState } from "./queue-state.js";
 import { PollingReconciler } from "./reconciler.js";
 import { OctokitRestAdapter } from "./rest-adapter.js";
@@ -81,7 +82,10 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 		logger[error ? "error" : "log"](JSON.stringify(record));
 		void wakeDispatcher?.enqueue(record).catch((wakeError) =>
 			logger.error(
-				JSON.stringify({ type: "wake-error", message: wakeError.message }),
+				JSON.stringify({
+					type: "wake-error",
+					message: errorMessage(wakeError),
+				}),
 			),
 		);
 	};
@@ -149,6 +153,8 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 	} catch (error) {
 		reconciler.stop();
 		await receiver.close();
+		await reconciler.drain();
+		await wakeDispatcher?.drain();
 		throw error;
 	}
 	publish({
@@ -190,7 +196,10 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 				errors.push(error);
 			}
 		}
-		await wakeDispatcher?.drain();
+		if (reconcilerStopped && receiverClosed) {
+			await reconciler.drain();
+			await wakeDispatcher?.drain();
+		}
 		if (errors.length > 0) {
 			throw new AggregateError(
 				errors,

@@ -145,6 +145,122 @@ test("forwards unchanged records to the advisory dispatcher and drains it", asyn
 	assert.equal(drained, true);
 });
 
+test("quiesces producers before the final dispatcher drain", async (t) => {
+	const stateDir = await mkdtemp(
+		join(tmpdir(), "release-queue-runtime-quiesce-"),
+	);
+	t.after(() => rm(stateDir, { recursive: true, force: true }));
+	let adapterCalls = 0;
+	let resolveReconciliation;
+	const pendingReconciliation = new Promise((resolve) => {
+		resolveReconciliation = resolve;
+	});
+	const wakeEvents = [];
+	const runtime = await startReleaseQueueRuntime(
+		{
+			repository: "owner/repo",
+			host: "127.0.0.1",
+			port: 0,
+			maxMergeSlots: 1,
+			pollIntervalMs: 60_000,
+			stateDir,
+		},
+		{
+			readToken: async () => "token",
+			adapter: {
+				listOpenPullRequests: async () => {
+					adapterCalls += 1;
+					return adapterCalls === 1 ? [] : pendingReconciliation;
+				},
+			},
+			startForwarder: async () => ({
+				exit: new Promise(() => {}),
+				stop: async () => ({ code: 0, signal: "SIGINT" }),
+			}),
+			wakeDispatcher: {
+				enqueue: async (record) => wakeEvents.push(`enqueue:${record.type}`),
+				drain: async () => wakeEvents.push("drain"),
+			},
+			logger: { log() {}, error() {} },
+		},
+	);
+	const reconciliation = runtime.reconciler.reconcileRepository("owner/repo");
+	await new Promise((resolve) => setImmediate(resolve));
+	const stopping = runtime.stop();
+	await new Promise((resolve) => setImmediate(resolve));
+	assert.equal(wakeEvents.includes("drain"), false);
+
+	resolveReconciliation([
+		{
+			number: 8,
+			title: "Ready during shutdown",
+			headSha: "head-8",
+			baseRef: "main",
+			labels: [],
+			draft: false,
+			mergeable: true,
+			checks: "pass",
+			checksFingerprint: "attempt-1",
+			createdAt: "2026-07-20T00:00:00Z",
+			updatedAt: "2026-07-21T00:00:00Z",
+		},
+	]);
+	await reconciliation;
+	await stopping;
+	await new Promise((resolve) => setImmediate(resolve));
+
+	assert.deepEqual(wakeEvents.slice(-3), [
+		"enqueue:pr-lifecycle",
+		"enqueue:dispatch",
+		"drain",
+	]);
+	assert.equal(wakeEvents.at(-1), "drain");
+});
+
+test("logs non-Error wake rejection without an unhandled rejection", async (t) => {
+	const stateDir = await mkdtemp(
+		join(tmpdir(), "release-queue-runtime-wake-error-"),
+	);
+	t.after(() => rm(stateDir, { recursive: true, force: true }));
+	const unhandled = [];
+	const onUnhandled = (reason) => unhandled.push(reason);
+	process.on("unhandledRejection", onUnhandled);
+	t.after(() => process.off("unhandledRejection", onUnhandled));
+	const errors = [];
+	const runtime = await startReleaseQueueRuntime(
+		{
+			repository: "owner/repo",
+			host: "127.0.0.1",
+			port: 0,
+			maxMergeSlots: 1,
+			pollIntervalMs: 60_000,
+			stateDir,
+		},
+		{
+			readToken: async () => "token",
+			adapter: { listOpenPullRequests: async () => [] },
+			startForwarder: async () => ({
+				exit: new Promise(() => {}),
+				stop: async () => ({ code: 0, signal: "SIGINT" }),
+			}),
+			wakeDispatcher: {
+				enqueue: async () => Promise.reject(null),
+				drain: async () => {},
+			},
+			logger: {
+				log() {},
+				error: (line) => errors.push(JSON.parse(line)),
+			},
+		},
+	);
+	await new Promise((resolve) => setImmediate(resolve));
+	await runtime.stop();
+	await new Promise((resolve) => setImmediate(resolve));
+
+	assert.deepEqual(unhandled, []);
+	assert.deepEqual(errors, [{ type: "wake-error", message: "null" }]);
+});
+
 test("retries failed forwarder cleanup without leaking the receiver", async (t) => {
 	const stateDir = await mkdtemp(
 		join(tmpdir(), "release-queue-runtime-retry-"),

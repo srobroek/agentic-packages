@@ -190,6 +190,38 @@ test("surfaces malformed output without resolving or waking", async () => {
 	assert.equal(fallbacks.length, 1);
 });
 
+test("normalizes unknown orchestrate resolver failures", async () => {
+	const fallbacks = [];
+	const subject = dispatcher({
+		resolveOrchestrate: async () => {
+			throw null;
+		},
+		onFallback: async (fallback) => fallbacks.push(fallback),
+	});
+
+	const result = await subject.enqueue(dispatch);
+
+	assert.equal(result.reason, "orchestrate-resolution-error");
+	assert.equal(result.message, "null");
+	assert.deepEqual(fallbacks, [result]);
+});
+
+test("normalizes unknown standalone resolver failures", async () => {
+	const fallbacks = [];
+	const subject = dispatcher({
+		resolveShepherd: async () => {
+			throw { code: "standalone-failed" };
+		},
+		onFallback: async (fallback) => fallbacks.push(fallback),
+	});
+
+	const result = await subject.enqueue(dispatch);
+
+	assert.equal(result.reason, "shepherd-resolution-error");
+	assert.equal(result.message, '{"code":"standalone-failed"}');
+	assert.deepEqual(fallbacks, [result]);
+});
+
 test("keeps one wake in flight and preserves input order", async () => {
 	let releaseFirst;
 	let inFlight = 0;
