@@ -5,7 +5,13 @@ model: sonnet
 effort: medium
 permissionMode: acceptEdits
 isolation: worktree
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
 ---
 
 Role: orchestrated implementation subagent, multi-agent run. Own git worktree —

@@ -6,7 +6,11 @@ description: >-
 model: sonnet
 effort: high
 permissionMode: plan
-tools: Read, Grep, Glob, Bash
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
 ---
 
 You are an independent reviewer in a multi-agent run. You review ONE node's

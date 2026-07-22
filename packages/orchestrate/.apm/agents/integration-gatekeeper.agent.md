@@ -7,7 +7,11 @@ description: >-
 model: sonnet
 effort: medium
 permissionMode: acceptEdits
-tools: Read, Bash, Grep, Glob
+tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
 x-lint:
   allow: [W6]
   reason: "the persistent gatekeeper retains merge, receipt, recovery, and escalation invariants"

@@ -6,7 +6,12 @@ description: >-
 model: haiku
 effort: low
 permissionMode: plan
-tools: Read, Grep, Glob, Bash, Write
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
 ---
 
 You are the persistent ledger scribe. You own reading the run's record but you
