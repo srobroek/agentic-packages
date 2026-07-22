@@ -11,7 +11,7 @@ This file adds the per-verb field table and a worked example.
 | `ASSIGN` | orch → coder | node, title, scope, base, store, deps, commands, protocol |
 | `BLOCKED` | coder → orch | node, `kind:design\|debug`, the question + minimal code context |
 | `ADVICE` | advisor → orch → coder | node, answer, rationale, refs (orch relays) |
-| `REPORTED` | coder → orch | node, branch, worktree, commits, verify, risks, log, status |
+| `REPORTED` | coder → orch | node, verify, plus branch+commit(s)/PR for git evidence or `output_ref` for non-git evidence |
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
 | `CONFLICT` | gatekeeper → coder | node, with(node), files, required action |
@@ -19,11 +19,89 @@ This file adds the per-verb field table and a worked example.
 | `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, question, who is waiting |
+| `NO_WORK` | generic worker → orch | run epic, queue activation, `reason:no-compatible-work` |
 
 Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
 a `file:line` or bead/node id backing a claim; `open:` a known-unfinished or
 deferred item (distinct from `risks:` — hazards for the receiver); every factual
 field is either a pointer or the marker `untested` (see `comms-block.md`).
+
+## Durable replies-to threads
+
+`scripts/thread-message.py` uses Beads 1.1.0 message wisps and native
+`replies-to` dependencies. It does not require Gas Town, a daemon, or a poll
+loop. Every success and failure is one JSON envelope on stdout.
+
+Message metadata contains these fields:
+
+| Field | Meaning |
+|---|---|
+| `actor` | sender identity and `BEADS_ACTOR` used for the create |
+| `assignee` | recipient identity; matches the Beads assignee field |
+| `run` | run epic id |
+| `bead` | work bead id under the run epic |
+| `protocol` | `replies-to` |
+
+A root message has one `replies-to` edge to its work bead. A reply has one
+`replies-to` edge to an open message in the same run and work bead. Replies may
+branch. The helper rejects missing, deleted, non-message, wrong-run,
+wrong-bead, self-referential, and cyclic parents.
+
+```text
+python3 scripts/thread-message.py send \
+  --actor orchestrator --assignee coder-t3 --run orc-7f3a --bead orc-7f3a.3 \
+  --subject "Review requested" --body "Read the node report."
+
+python3 scripts/thread-message.py reply \
+  --actor coder-t3 --assignee orchestrator --run orc-7f3a --bead orc-7f3a.3 \
+  --parent orc-wisp-abc --subject "Report ready" --body "See output_ref."
+
+python3 scripts/thread-message.py inbox \
+  --actor coder-t3 --run orc-7f3a --bead orc-7f3a.3
+
+python3 scripts/thread-message.py show --message orc-wisp-abc --thread
+
+python3 scripts/thread-message.py acknowledge --actor coder-t3 --run orc-7f3a \
+  --bead orc-7f3a.3 --message orc-wisp-abc
+```
+
+Inbox discovery uses `bd list --include-infra --type message --assignee
+<actor> --status open`. Normal work lists therefore exclude messages.
+Inbox output keeps validated messages under `messages` and malformed or legacy
+records under `invalid`. One invalid record does not hide valid messages.
+Acknowledgement validates the recipient and message type before closing the
+message. It never closes the linked work bead or a parent message.
+
+Harness notification remains the immediate wake path. Failure to notify does
+not remove the Beads message. The recipient reads its inbox after resume.
+
+Message wisps retain coordination for the active run and may be compacted
+after acknowledgement. They do not store durable decisions. Local decisions
+are actor-attributed work-bead comments. Cross-bead policy, ordering, or
+lifecycle decisions are linked decision beads.
+
+`send` and `reply` are create operations. Each successful retry creates a new
+message. A caller records the returned message id, then checks `inbox` or
+`show` before retrying an ambiguous failure. `acknowledge` is idempotent and
+reports `already_closed:true` for a duplicate acknowledgement.
+
+## Evidence and empty activations
+
+`REPORTED` accepts these evidence shapes:
+
+- Git commit: `branch`, `commit` or `commits`, and `verify`.
+- Git pull request: `branch`, `pr`, and `verify`.
+- Non-git: `output_ref` and `verify`.
+
+A generic activation that loses a claim race or finds no compatible work does
+not claim another bead:
+
+```text
+NO_WORK queue:generic
+epic: orc-7f3a
+queue: agent:generic
+reason: no-compatible-work
+```
 
 ## Worked example — one node (`t3`) end to end
 

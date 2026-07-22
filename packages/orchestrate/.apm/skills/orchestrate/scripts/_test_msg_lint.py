@@ -61,6 +61,52 @@ class MsgLintTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(out, "")
 
+    def test_reported_accepts_commit_pr_and_non_git_evidence(self):
+        messages = (
+            "REPORTED t3\nbranch: coder/t3\ncommit: abc123\nverify: green\n",
+            "REPORTED t3\nbranch: coder/t3\npr: 42\nverify: green\n",
+            "REPORTED t3\noutput_ref: /tmp/report.json\nverify: green\n",
+        )
+        for body in messages:
+            with self.subTest(body=body):
+                code, out = lint(body)
+                self.assertEqual(code, 0, out)
+
+    def test_reported_requires_complete_evidence_shape(self):
+        cases = (
+            (
+                "REPORTED t3\nbranch: coder/t3\nverify: green\n",
+                "requires commit, commits, or pr",
+            ),
+            (
+                "REPORTED t3\ncommit: abc123\nverify: green\n",
+                "requires branch",
+            ),
+            (
+                "REPORTED t3\nverify: green\n",
+                "requires git evidence or non-git output_ref",
+            ),
+        )
+        for body, expected in cases:
+            with self.subTest(body=body):
+                code, out = lint(body)
+                self.assertEqual(code, 1)
+                self.assertIn(expected, out)
+
+    def test_no_work_activation_is_explicit(self):
+        code, out = lint(
+            "NO_WORK queue:generic\nepic: orc-7f3a\n"
+            "queue: agent:generic\nreason: no-compatible-work\n"
+        )
+        self.assertEqual(code, 0, out)
+
+        code, out = lint(
+            "NO_WORK queue:generic\nepic: orc-7f3a\n"
+            "queue: agent:generic\nreason: empty\n"
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("must be one of", out)
+
     def test_missing_field_rejected(self):
         code, out = lint("REPORTED t3\nbranch: coder/t3\ncommits: abc123\n")
         self.assertEqual(code, 1)

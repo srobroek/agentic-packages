@@ -2,11 +2,12 @@
 """orchestrate: lint an inter-agent message body against the comms grammar
 (stdlib-only).
 
-Validates a SendMessage `message` body against the fixed 11-verb protocol
+Validates a SendMessage `message` body against the fixed 12-verb protocol
 (RULE was removed; APPROVE is the orch->gatekeeper integration handoff and may
 carry a validated watcher dispatch or lifecycle receipt):
 
     ASSIGN BLOCKED REPORTED REVIEW FIX CONFLICT APPROVE MERGED ASK ADVICE DISMISS
+    NO_WORK
 
 Rules:
     - line 1 MUST be exactly `VERB <node-id>` (two tokens, nothing else).
@@ -16,7 +17,7 @@ Rules:
       on the label):
         ASSIGN    title, scope, base, store
         BLOCKED   kind(design|debug), need
-        REPORTED  branch, commits, verify
+        REPORTED  verify plus branch+commit(s)/pr or output_ref
         REVIEW    verdict(approve|changes)
         FIX       items
         CONFLICT  with, files
@@ -26,6 +27,7 @@ Rules:
         ASK       question
         ADVICE    answer
         DISMISS   (none)
+        NO_WORK   epic, queue, reason(no-compatible-work)
 
 Usage:
     msg-lint.py [--file PATH]        # reads stdin if --file omitted
@@ -50,12 +52,13 @@ VERBS = {
     "ASK",
     "ADVICE",
     "DISMISS",
+    "NO_WORK",
 }
 
 REQUIRED_FIELDS: dict[str, set[str]] = {
     "ASSIGN": {"title", "scope", "base", "store"},
     "BLOCKED": {"kind", "need"},
-    "REPORTED": {"branch", "commits", "verify"},
+    "REPORTED": {"verify"},
     "REVIEW": {"verdict"},
     "FIX": {"items"},
     "CONFLICT": {"with", "files"},
@@ -64,12 +67,16 @@ REQUIRED_FIELDS: dict[str, set[str]] = {
     "ASK": {"question"},
     "ADVICE": {"answer"},
     "DISMISS": set(),
+    "NO_WORK": {"epic", "queue", "reason"},
 }
 
 ENUM_FIELDS = {
     "kind": {"design", "debug"},
     "verdict": {"approve", "changes"},
+    "reason": {"no-compatible-work"},
 }
+
+REPORTED_GIT_REFS = {"commit", "commits", "pr"}
 
 LINE1_RE = re.compile(r"^(\S+)\s+(\S+)\s*$")
 FIELD_RE = re.compile(r"^\s*([A-Za-z][\w-]*)\s*:\s*(.*)$")
@@ -144,6 +151,30 @@ def lint(body: str) -> list[str]:
                     violations.append(
                         f"field {f}={fields[f]!r} must be one of {sorted(allowed)}"
                     )
+
+        if verb == "REPORTED":
+            has_branch = bool(fields.get("branch", "").strip())
+            git_refs = {
+                field for field in REPORTED_GIT_REFS if fields.get(field, "").strip()
+            }
+            has_output_ref = bool(fields.get("output_ref", "").strip())
+            if has_branch and not git_refs:
+                violations.append(
+                    "REPORTED git evidence requires commit, commits, or pr"
+                )
+            elif git_refs and not has_branch:
+                violations.append("REPORTED git evidence requires branch")
+            elif not has_branch and not git_refs and not has_output_ref:
+                violations.append(
+                    "REPORTED requires git evidence or non-git output_ref"
+                )
+            if "output_ref" in fields and not has_output_ref:
+                violations.append("empty field: output_ref")
+
+        if verb == "NO_WORK":
+            for field in ("queue", "reason"):
+                if field in fields and not fields[field].strip():
+                    violations.append(f"empty field: {field}")
 
         if (
             verb == "APPROVE"
