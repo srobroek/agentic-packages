@@ -1688,6 +1688,18 @@
         }
       ]
     },
+    "packages/worktrunk-writer": {
+      "release-type": "simple",
+      "component": "worktrunk-writer",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/write-agentic": {
       "release-type": "simple",
       "component": "write-agentic",

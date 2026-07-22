@@ -7,153 +7,6 @@ no shared-path bookkeeping. Artifacts (full briefs/reports) are files under
 `<primary>/.orchestration/run-<id>/artifacts/`; bead comments reference them
 by absolute path.
 
-## Coordination and policy carriers
-
-| Carrier | Stores | Authority and lifecycle |
-|---|---|---|
-| Work-bead comment | A choice that affects only that bead and its owned scope | Durable local source of truth. The comment author is the actor. Accepted comments remain; provisional comments name an objective revisit trigger. |
-| `decision` bead | A choice that affects more than one bead, agent, or package, or constrains later work | Durable cross-boundary source of truth. It carries an owner, stable key, design, acceptance/verification, status/disposition, and non-blocking links to every affected bead. |
-| Message wisp | A question, reply, notification, acknowledgement, or other live coordination | Ephemeral coordination only. A material outcome is promoted to a comment or decision bead before action or closure. Acknowledgement or compaction never deletes the promoted source of truth. |
-| Artifact / `output_ref` | A large brief, report, test log, or other inspectable evidence payload | Evidence only. It becomes part of a decision or report when a comment or decision bead cites its absolute path. The file alone is not policy or lifecycle state. |
-
-A material message changes a choice, default, scope, route, ordering,
-acceptance evidence, disposition, or human answer. Handle it in this order:
-
-1. Classify its effect as bead-local or cross-boundary.
-2. Write the local comment or decision bead and any affected-bead links.
-3. Read the durable record back. A decision is effective only after every
-   affected link is visible and non-blocking.
-4. Act from that record and cite it in later comments or reports.
-5. Acknowledge or compact the message only after promotion succeeds.
-
-No promotion means no policy action and no closure based on that message.
-Restart recovery reads comments and decision beads before message wisps or
-artifacts.
-
-## Local decision comments
-
-Set `BEADS_ACTOR` to the choosing actor. Add the following record to the work
-bead, then read it back with `bd comments <bead> --json` before acting:
-
-```text
-LOCAL_DECISION
-owner: <actor>
-scope: <work-bead and owned resource>
-decision: <chosen implementation behavior>
-rationale: <why this choice fits the brief>
-evidence: <file:line, bead id, command result, or searched-none>
-status: <accepted|provisional>
-revisit: <objective trigger; required when provisional>
-```
-
-The comment author and `owner` must match. `accepted` omits `revisit`.
-`provisional` requires a nonempty event, dependency transition, exact evidence
-change, or RFC3339 deadline. `later`, `if needed`, and elapsed time without an
-observable condition are not triggers. Record the operation as `orc.note` in
-the audit trail.
-
-A readable comment is the local source of truth. If the audit write fails
-after the comment succeeds, retry the audit before closing; do not duplicate
-the comment. If the comment write or read-back fails, do not apply the choice.
-
-## Cross-boundary decision beads
-
-Create a first-class decision under the run epic before the choice affects a
-second bead, agent, package, shared contract, ordering rule, or later work:
-
-```text
-type: decision
-decision_key: <stable run-unique policy key>
-decision_owner: <one accountable actor>
-description: <choice and affected scope>
-design: <rationale, known evidence, unknowns, bounds, and alternatives>
-acceptance: <objective verification or acceptance evidence>
-decision_disposition: <proposed|accepted|rejected|superseded|duplicate|conflict>
-status: <open|in_progress|closed>
-```
-
-Use `relates-to` for affected work and `validates` for work that supplies or
-checks acceptance evidence:
-
-```text
-bd dep add <affected-bead> <decision-bead> --type relates-to
-bd dep add <validator-bead> <decision-bead> --type validates
-```
-
-Both edge types are non-blocking. Never use `blocks` for accepted policy or to
-attach an already-running/closed affected bead. Ordering work still uses a
-separate task dependency. An accepted, rejected, duplicate, or superseded
-decision is closed with a disposition-specific reason; closed means resolved,
-not erased.
-
-Before creation, after restart, and before action, list every decision under the
-epic with `bd list --type decision --parent <epic> --all --json`. Decisions
-compete only when their nonempty `decision_key` values match.
-
-Resolve each competing key deterministically:
-
-1. Read every candidate and its `supersedes` edges. Reject an edge that crosses
-   a `decision_key`, targets a missing bead, or creates a cycle.
-2. When accepted candidates contain a valid explicit `supersedes` chain,
-   canonical is the newest accepted unsuperseded head by `created_at`, then
-   bead ID. Every older candidate in that key becomes `superseded`.
-3. When no explicit supersession exists, canonical is the earliest candidate
-   by `created_at`, then bead ID. Every other candidate becomes `duplicate`.
-4. Read canonical again. Its `decision_disposition` must be `accepted`. Never
-   update canonical while marking noncanonical beads.
-
-Persist every noncanonical disposition as a resumable transaction. Read before
-each command and skip a step whose exact result already exists:
-
-```text
-# Mark the noncanonical bead first.
-bd update <noncanonical> \
-  --set-metadata decision_disposition=<duplicate|superseded> \
-  --set-metadata canonical_decision=<canonical>
-
-# Duplicate: loser points to canonical without blocking it.
-bd dep add <loser> <canonical> --type relates-to
-bd close <loser> --reason "duplicate of <canonical>"
-
-# Superseded: canonical explicitly supersedes the older decision.
-bd dep add <canonical> <older> --type supersedes
-bd close <older> --reason "superseded by <canonical>"
-```
-
-After every write, read both beads back. A noncanonical bead is resolved only
-when its metadata, required edge, closed status, and close reason all match,
-and canonical still has `decision_disposition=accepted`. If metadata, edge, or
-close writes stop partway, record the failure and leave the observed partial
-state. Restart repeats the same keyed reads, completes only missing steps, and
-produces the same result without changing canonical.
-
-`bd close` does not replace the close reason of an already-closed bead. When a
-loser is closed with any reason other than the canonical duplicate or
-superseded reason, repair it only after the loser metadata and required edge
-have passed read-back:
-
-```text
-bd label add <loser> decision-repair
-bd label add <loser> non-work
-bd reopen <loser> --reason "repair stale decision close reason"
-bd close <loser> --reason "<duplicate of|superseded by> <canonical>"
-```
-
-- Add both labels before reopening. Generic ready and claim selectors exclude
-  `non-work`.
-- Read back both labels and confirm canonical is still accepted. Run reopen and
-  close consecutively.
-- A restart between those commands recognizes `decision-repair` plus
-  `non-work`, verifies the durable loser metadata and edge, skips reopen, and
-  closes the loser with the canonical reason.
-- Success requires a final read of both beads showing `status=closed`, the
-  canonical close reason, the expected loser disposition and
-  `canonical_decision`, and unchanged canonical metadata.
-
-An invalid explicit chain remains `decision_disposition=conflict`; no candidate
-is applied until the owner repairs the chain from evidence or enters
-`waiting_human`. Never infer resolution from a message or artifact.
-
 ## Prerequisite (checked once, at run start)
 
 ```
@@ -170,7 +23,7 @@ bd info >/dev/null 2>&1 || bd init --stealth --prefix orc
 
 | Object | Beads representation |
 |---|---|
-| Run | one **epic** bead; metadata `run_id`, `primary_branch`, `base_sha`, `artifacts` (abs dir) |
+| Run | one **epic** bead; metadata `run_id`, `primary_branch`, `base_sha`, `artifacts` (abs dir), optional `swarm` handle |
 | DAG node | **task** bead, `--parent <epic>`, label `orc-node`, metadata `node` (short id), `scope` (JSON array of globs) |
 | Node dep | `bd dep add <dependent> <dependency>` (`blocks` type), one per edge |
 | Git anchors | node metadata, stamped per the contract below |
@@ -178,6 +31,8 @@ bd info >/dev/null 2>&1 || bd init --stealth --prefix orc
 ```
 EPIC=$(bd create "orchestrate run-<id>" --type epic --silent \
   --metadata '{"run_id":"run-<id>","primary_branch":"main","base_sha":"<sha>","artifacts":"<abs>/.orchestration/run-<id>/artifacts"}')
+# For multi-node runs, persist the returned handle from `bd swarm create "$EPIC"`
+# as metadata key `swarm`; later status/validation reads that handle.
 T1=$(bd create "t1: <desc>" --parent "$EPIC" --labels orc-node --silent \
   --metadata '{"node":"t1","scope":["src/auth/**"]}')
 bd dep add "$T3" "$T1"        # t3 depends on t1
@@ -225,29 +80,19 @@ Semantics that fall out of the status column:
 ## Git-anchor metadata contract
 
 Every node bead carries git anchors in metadata so any session can find where
-the work physically lives. Stamp each applicable transition:
+the work physically lives. Two stamping points, no exceptions:
 
 | When | Who | Stamp |
 |---|---|---|
 | Claim (immediately after `--claim`) | coder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
 | Report (after push) | coder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
-| PR open/head refresh | gatekeeper | `--set-metadata repo=<owner/repo> --set-metadata pr=<n> --set-metadata head_sha=<sha>` |
-| Queue dispatch accepted | orchestrator | atomically set `queue_dispatch=<repo#pr@head>` and `queue_dispatch_pending=<same key>`; after SendMessage succeeds, set `queue_dispatch_sent=<same key>` |
-| Queue dispatch received | gatekeeper | verify the exact key and set `queue_dispatch_ack=<same key>` before revalidation; startup resumes acknowledged approved nodes |
-| Queue lifecycle accepted | orchestrator | atomically set `queue_lifecycle`, `queue_lifecycle_transition`, `queue_lifecycle_head`, and pending (or immediate ack for non-waking informational events); set sent after SendMessage |
-| Queue lifecycle handled | gatekeeper | revalidate and record the outcome, then set `queue_lifecycle_ack=<same key>`; lifecycle never enters the merge path |
-| Merge | gatekeeper | `bd update <bead> --set-metadata merge_sha=<sha>` |
+| Merge | gatekeeper | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
-- Add `repo` when work lands outside the epic repository. Watcher-backed PRs
-  require it even in the primary repository.
-- `--metadata` merges with existing keys (verified on bd 1.1.0), so stamps do
-  not clobber `node` or `scope`.
-- `worktree` is ephemeral. `branch`, `pushed`, `pr`, `head_sha`, and the
-  `queue_dispatch*` / `queue_lifecycle*` receipts survive worktree teardown.
-- Pending and sent receipts are replayable. Only an ack matching the current
-  dispatch suppresses a repeated handoff.
-- Separate receipt keys make each transition monotonic. Concurrent sent and ack
-  writes cannot regress delivery state.
+Add a `repo` key when the node's work lands in a different repository than the
+run epic's. `--metadata` merges with existing keys (verified on bd 1.1.0), so
+stamps never clobber `node`/`scope`. `worktree` is an ephemeral pointer, valid
+while the node is in flight; `branch`/`pushed`/`pr`/`merge_sha` are the durable
+anchors that survive worktree teardown.
 
 ## Ready front + scope disjointness
 
@@ -287,27 +132,17 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 
 ## Gatekeeper primitives
 
-- **Landing transaction:** orchestrated and standalone integration both invoke
-  pr-shepherd's N7 `landing-contract.sh`. Its persisted per-holder waiter
-  generations enforce FCFS order before atomic `bd merge-slot acquire`; its
-  fenced native holder is released on success, pending, stale, conflict,
-  unknown evidence, merge failure, and trapped process exit. The gatekeeper
-  never bypasses that transaction with `acquire --wait` or an unconditional
-  release.
-- **Restart recovery:** `bd merge-slot check` identifies the native holder.
-  Recover a claim, waiter, or slot only through the N7 evidence-gated recovery
-  commands. Quiet or old state is not proof of death.
+- **Mutual exclusion:** `bd merge-slot create` once per run (idempotent), with
+  a stable holder such as `run-<id>-gatekeeper`. Acquire without `--wait`;
+  contention is advisory, so report the current holder and retry after release.
+  Always release on success, conflict, CI wait, and failure. On restart,
+  `bd merge-slot check` and verify remote state before releasing a slot held by
+  the same stable actor.
 - **Async waits:** `bd gate create --type=gh:pr --blocks <bead> --await-id <pr#>`
   (PR merge) or `--type=gh:run --await-id <run-id>` (CI); `bd gate check`
   evaluates and closes resolved gates. A gated bead stays out of `bd ready`.
-- **Queue wake-up:** `release-queue-watch` emits read-only dispatch and
-  lifecycle records. The orchestrator resolves its nodes first; unmatched
-  records may route once to pr-shepherd. Neither record type acquires or
-  replaces the merge slot; see `references/queue-watcher.md`.
-- `conflict-probe.sh` provides fail-closed planning probes (`conflicts`,
-  `pairwise`, `ci`) and the orchestrated adapters for N7 `check-run`, `land`,
-  and `verify-landed`. A conflict probe exits 2 when it cannot classify state;
-  changed-file output is never a clean-merge fallback.
+- `conflict-probe.sh` is the merge-safety probe primitive (`conflicts`,
+  `pairwise`, `ci`).
 
 ## Reading the run (scribe / resume / close-out)
 
@@ -317,7 +152,7 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 | one node's story | `bd show <bead> --json` + `bd comments <bead>` |
 | audit trail | filter `.beads/interactions.jsonl` by `issue_id`/`actor` (append-only JSONL; jq or stdlib) |
 | dep structure / impact | `bd dep tree <bead>`, `bd graph` |
-| open waits | `bd gate list`, `bd merge-slot check`; queue delivery = node metadata `queue_dispatch` plus pending/sent/ack receipts |
+| open waits | `bd gate list`, `bd merge-slot check` |
 | resume after crash | in-flight = `bd list --label orc-node --parent <epic> --status in_progress --json`; agent handle = bead `assignee`, location = metadata `worktree`/`branch` |
 | close-out gate | `bd dep cycles` clean AND `bd list --label orc-node --parent <epic> --status in_progress,blocked --json` empty (blocked = surfaced `failed` nodes) |
 

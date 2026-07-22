@@ -693,8 +693,8 @@
     },
     {
       "name": "hooks-subagent-model",
-      "description": "Model-routing deny gate for Claude and Codex subagent spawns. Claude requires an explicit model for inherit-by-default types. Codex requires a named project or global semantic profile that pins model and reasoning effort; project profiles take precedence and incomplete profiles are denied instead of falling through. Denials return tier-based retry guidance. Malformed input fails open.",
-      "version": "0.2.1",
+      "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
+      "version": "0.2.0",
       "tags": [
         "hooks",
         "subagent",
@@ -1447,8 +1447,8 @@
     },
     {
       "name": "steering-git-workflow",
-      "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, and pre-push verification. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "2.2.0",
+      "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a dual-runtime PreToolUse blocker for non-draft or unlinked PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
+      "version": "2.3.0",
       "tags": [
         "steering",
         "git"
@@ -1614,6 +1614,20 @@
       ],
       "category": "code-intelligence",
       "source": "./packages/whats-new"
+    },
+    {
+      "name": "worktrunk-writer",
+      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, exposes schema-2 fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
+      "version": "1.0.0",
+      "tags": [
+        "worktrunk",
+        "worktree",
+        "agents",
+        "isolation",
+        "lifecycle"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/worktrunk-writer"
     },
     {
       "name": "write-agentic",

@@ -1,15 +1,17 @@
 name: hooks-subagent-model
-version: 0.2.1
+version: 0.2.0
 description: >-
-  Model-routing deny gate for Claude and Codex subagent spawns. Claude requires
-  an explicit model for inherit-by-default types. Codex requires a named project
-  or global semantic profile that pins model and reasoning effort; project
-  profiles take precedence and incomplete profiles are denied instead of falling
-  through. Denials return tier-based retry guidance. Malformed input fails open.
+  Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn
+  would inherit the parent session model. It allows explicit models and pinned
+  agent types. Denials include routing guidance.
+  SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The
+  hook fails open on malformed input. Reasoning effort stays in reusable agent
+  definitions because Agent calls have no effort field. Codex does not receive
+  this hook.
 author: Sjors Robroek
 license: Apache-2.0
 type: hooks
-target: all
+target: claude
 includes: auto
 category: project-lifecycle
 tags:

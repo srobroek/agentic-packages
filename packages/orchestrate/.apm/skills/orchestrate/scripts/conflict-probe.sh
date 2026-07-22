@@ -3,7 +3,8 @@
 #
 # Predicts whether a branch merges cleanly into a base WITHOUT mutating any tree
 # (git merge-tree), and reports CI status for its PR if one exists. The Gatekeeper
-# reasons about FCFS order and pushback from these facts instead of guessing.
+# leaves merge ordering to successful merge-slot acquisition and pushback from
+# these facts instead of guessing.
 #
 # Sibling: packages/pr-shepherd/.apm/skills/pr-shepherd/scripts/merge-probe.sh
 # carries a trimmed copy of `conflicts`; keep the extraction logic in sync.

@@ -22,6 +22,10 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
     keep_script = Path(keep_command)
     keep_script.parent.mkdir(parents=True)
     keep_script.write_text("#!/bin/sh\n", encoding="utf-8")
+    future_command = f"{hooks_dir}/agent-coder/scripts/future-legitimate-hook.sh"
+    future_script = Path(future_command)
+    future_script.parent.mkdir(parents=True, exist_ok=True)
+    future_script.write_text("#!/bin/sh\n", encoding="utf-8")
     config = {
         "metadata": {"owner": "apm"},
         "hooks": {
@@ -42,8 +46,13 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         {
                             "type": "command",
                             "command": (
-                                f"{hooks_dir}/agent-coder/scripts/reminder.sh"
+                                f"{hooks_dir}/agent-coder/scripts/"
+                                "coder-delegation-reminder.sh"
                             ),
+                        },
+                        {
+                            "type": "command",
+                            "command": future_command,
                         },
                     ],
                 }
@@ -75,7 +84,12 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                     "type": "command",
                     "command": keep_command,
                     "timeout": 30,
-                }
+                },
+                {
+                    "type": "command",
+                    "command": future_command,
+                    "timeout": 30,
+                },
             ],
         }
     ]
@@ -85,7 +99,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
         "duplicate_groups_removed": 0,
         "async_converted": 1,
         "if_removed": 1,
-        "timeouts_added": 1,
+        "timeouts_added": 2,
     }
 
 
@@ -112,6 +126,29 @@ def test_sanitize_preserves_valid_timeout() -> None:
     assert counts["timeouts_added"] == 0
 
 
+def test_sanitize_preserves_current_codex_tool_matchers() -> None:
+    handler = {
+        "type": "command",
+        "command": "/bin/true",
+        "timeout": 10,
+    }
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {"matcher": "Bash", "hooks": [handler]},
+                {"matcher": "apply_patch", "hooks": [handler]},
+                {"matcher": "Agent", "hooks": [handler]},
+                {"matcher": "mcp__server__local_function", "hooks": [handler]},
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean == config
+    assert counts["handlers_removed"] == 0
+
+
 def test_sanitize_drops_missing_absolute_script() -> None:
     config = {
         "hooks": {
@@ -124,6 +161,32 @@ def test_sanitize_drops_missing_absolute_script() -> None:
                             "timeout": 10,
                         }
                     ]
+                }
+            ]
+        }
+    }
+
+    clean, counts = sanitize_codex_hooks.sanitize(config)
+
+    assert clean["hooks"] == {}
+    assert counts["handlers_removed"] == 1
+
+
+def test_sanitize_removes_legacy_claude_only_subagent_model_guard() -> None:
+    config = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": "Agent",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": (
+                                "/tmp/hooks/hooks-subagent-model/scripts/"
+                                "subagent-model-guard.sh"
+                            ),
+                        }
+                    ],
                 }
             ]
         }

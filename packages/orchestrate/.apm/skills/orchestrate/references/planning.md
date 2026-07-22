@@ -105,8 +105,10 @@ kind:design` so the coordinator can repair the route.
 ## Merge order is not encoded
 
 Do not encode merge order in the graph — you cannot predict which coders finish
-when. Approved branches integrate **first-come-first-served** under the exclusive
-merge slot (`bd merge-slot acquire`; waiters queue = FCFS order), conflict-guarded
+when. Approved branches integrate under the exclusive merge slot
+(`bd merge-slot acquire` without `--wait`); a held slot is advisory, so report
+the holder, defer, and retry. Order follows successful acquisition, not a queue
+or FIFO guarantee. Integrations remain conflict-guarded
 by the gatekeeper (`conflict-probe.sh`). The graph expresses *dependencies* (what
 must happen before what), not *integration sequence*.
 

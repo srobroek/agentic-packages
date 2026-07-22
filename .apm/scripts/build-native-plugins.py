@@ -211,9 +211,17 @@ def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
     return (claude[0] if claude else None, codex[0] if codex else None)
 
 
-def _plan_hooks(pkg_dir: Path, plan: dict[str, object]) -> tuple[str | None, str | None]:
+def _plan_hooks(
+    pkg_dir: Path,
+    plan: dict[str, object],
+    targets: set[str],
+) -> tuple[str | None, str | None]:
     """Add native hook files and return manifest paths for Claude and Codex."""
     claude, codex = _hook_sources(pkg_dir)
+    if "claude" not in targets:
+        claude = None
+    if "codex" not in targets:
+        codex = None
     if claude is None and codex is None:
         return None, None
     if (
@@ -249,9 +257,10 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     """
     cls = pkg["classification"]
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
+    targets = set(pkg.get("targets") or ("claude", "codex"))
 
     plan: dict[str, object] = {}
-    claude_hook_path, codex_hook_path = _plan_hooks(pkg_dir, plan)
+    claude_hook_path, codex_hook_path = _plan_hooks(pkg_dir, plan, targets)
 
     # Steering has no native rules/instructions component. Pure steering gets
     # metadata-only manifests so catalog entries remain structurally valid;
@@ -270,7 +279,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # override into .apm/ does not load (verified). Agents are .md only (no test
     # files), so copying carries no pytest-collision risk.
     agents_src = pkg_dir / ".apm" / "agents"
-    if agents_src.is_dir():
+    if "claude" in targets and agents_src.is_dir():
         for f in sorted(agents_src.glob("*.agent.md")):
             plan[f"agents/{f.name[:-len('.agent.md')]}.md"] = f.read_bytes()
         for f in sorted(agents_src.glob("*.md")):
@@ -279,10 +288,11 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
 
     # MCP servers declared in the apm.yml dependencies.mcp block -> .mcp.json.
     mcp = _mcp_servers(manifest)
-    if mcp is not None:
+    if mcp is not None and "claude" in targets:
         plan[".mcp.json"] = (
             json.dumps({"mcpServers": mcp}, indent=2, ensure_ascii=False) + "\n"
         )
+    if mcp is not None and "codex" in targets:
         # Codex accepts a direct server map or a wrapped `mcp_servers` object,
         # but not Claude's camel-case wrapper.
         plan[".codex.mcp.json"] = json.dumps(mcp, indent=2, ensure_ascii=False) + "\n"
@@ -294,44 +304,43 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # the common case but not the only one. _bundle_dependencies returns [] (->
     # None) when there are no first-party deps, so this is a no-op for standalone
     # packages like sniff.
-    raw_deps = (manifest.get("dependencies") or {}).get("apm") or []
+    raw_deps = (manifest.get("dependencies") or {}).get("apm") or pkg["deps"]
     deps = _bundle_dependencies(raw_deps, target="claude") or None
 
-    # Marketplace generation currently emits every catalog package for both
-    # outputs. Target-specific packages therefore retain an opposite-runtime
-    # metadata manifest, while APM's target filter controls primitive delivery.
-    plan[".claude-plugin/plugin.json"] = (
-        json.dumps(
-            _plugin_manifest(
-                pkg,
-                manifest,
-                defaults,
-                target="claude",
-                deps=deps,
-                has_skills=has_skills,
-                hook_path=claude_hook_path,
-            ),
-            indent=2,
-            ensure_ascii=False,
+    if "claude" in targets:
+        plan[".claude-plugin/plugin.json"] = (
+            json.dumps(
+                _plugin_manifest(
+                    pkg,
+                    manifest,
+                    defaults,
+                    target="claude",
+                    deps=deps,
+                    has_skills=has_skills,
+                    hook_path=claude_hook_path,
+                ),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
         )
-        + "\n"
-    )
-    plan[".codex-plugin/plugin.json"] = (
-        json.dumps(
-            _plugin_manifest(
-                pkg,
-                manifest,
-                defaults,
-                target="codex",
-                has_skills=has_skills,
-                has_mcp=mcp is not None,
-                hook_path=codex_hook_path,
-            ),
-            indent=2,
-            ensure_ascii=False,
+    if "codex" in targets:
+        plan[".codex-plugin/plugin.json"] = (
+            json.dumps(
+                _plugin_manifest(
+                    pkg,
+                    manifest,
+                    defaults,
+                    target="codex",
+                    has_skills=has_skills,
+                    has_mcp=mcp is not None,
+                    hook_path=codex_hook_path,
+                ),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
         )
-        + "\n"
-    )
     return plan
 
 
