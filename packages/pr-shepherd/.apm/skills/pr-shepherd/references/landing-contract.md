@@ -71,11 +71,18 @@ also handles a later squash that replaces the intermediate merge commit.
 
 ## Persisted queue and recovery
 
-`bd merge-slot acquire --wait` records a stable holder in `waiters`. The
-contract enqueues once while held, recognizes that receipt after restart, and
-acquires an available slot only when its holder is first (or the queue is
-empty). It removes its own waiter receipt after acquiring and releases on
-success, failure, or signal.
+The contract creates one deterministic bead for each stable holder, links it
+to the slot through `metadata.slot_id`, and labels it `gt:slot-waiter`. Open
+valid records form the queue. Eligibility is the first record by `created_at`,
+then id. Only that holder calls atomic
+`bd merge-slot acquire`; the script never calls `acquire --wait` and never
+rewrites merge-slot waiter metadata.
+
+After acquisition, the contract atomically claims only that holder's record.
+Release closes only the same record after the native slot release succeeds.
+Contention leaves the record open for restart. A concurrent enqueue or holder
+acquisition changes a different record or the native slot, so it cannot be
+erased by waiter cleanup.
 
 Do not delete a quiet receipt. After proving a session dead or a PR cancelled,
 cite the evidence and use the matching recovery command:
@@ -86,7 +93,9 @@ scripts/landing-contract.sh recover-slot <merge-bead> <dead-holder> <evidence-re
 scripts/landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-ref>
 ```
 
-Each command refuses changed ownership and records a comment plus audit event.
+Each command refuses unsafe changed ownership and records a comment plus audit
+event. Waiter recovery derives the same deterministic waiter id and closes only
+that record; it never mutates another queue entry.
 If a process died after GitHub merged, rerunning `land` resumes from the remote
 merge receipt and repeats final-base proof without another merge attempt.
 

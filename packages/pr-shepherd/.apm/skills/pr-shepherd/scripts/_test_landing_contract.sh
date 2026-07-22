@@ -82,6 +82,19 @@ assert_not_contains_file() {
   fi
 }
 
+assert_waiter_status() {
+  local holder="$1"
+  local expected="$2"
+  local message="$3"
+  local digest waiter actual
+
+  digest="$(printf 'slot-1\0%s\0' "$holder" | sha1sum | awk '{print $1}')"
+  waiter="slot-1-waiter-${digest:0:12}"
+  actual="missing"
+  [[ ! -f "$state/waiters/$waiter/status" ]] || actual="$(<"$state/waiters/$waiter/status")"
+  assert_eq "$expected" "$actual" "$message"
+}
+
 new_state stale-run
 scenario=stale-run
 run_contract check-run owner/repo 101 "$EXPECTED_HEAD"
@@ -113,9 +126,10 @@ scenario=slot-contention
 run_contract acquire-slot stable-holder 3 0
 assert_eq 0 "$last_rc" "queued slot acquisition retries"
 assert_contains SLOT_OWNED "$last_output" "queued slot eventually acquires"
-wait_calls="$(grep -c -- '--wait' "$state/bd.log" || true)"
-assert_eq 1 "$wait_calls" "slot waiter is enqueued once"
-assert_file "$state/waiter-cleaned" "acquired waiter is removed from persisted queue"
+waiter_creates="$(grep -c -- '^create Merge-slot waiter:' "$state/bd.log" || true)"
+assert_eq 1 "$waiter_creates" "slot waiter record is created once"
+assert_waiter_status stable-holder in_progress "acquired waiter record is owned"
+assert_not_contains_file "--wait" "$state/bd.log" "native shared waiter queue is never used"
 
 new_state slot-fairness
 scenario=slot-fairness
@@ -130,6 +144,13 @@ if [[ -f "$state/command-ran" ]]; then
   failures=$((failures + 1))
 fi
 
+new_state slot-fairness-tie
+scenario=slot-fairness-tie
+run_contract acquire-slot tie-b 1 0
+assert_eq 75 "$last_rc" "equal-time waiter records use id as the deterministic tie-break"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "higher waiter id cannot bypass the equal-time lower id"
+
 new_state slot-queued-restart
 scenario=slot-queued-restart
 run_contract acquire-slot stable-holder 1 0
@@ -138,9 +159,9 @@ assert_contains "persisted=true" "$last_output" "queued receipt is reported"
 touch "$state/make-available"
 run_contract acquire-slot stable-holder 1 0
 assert_eq 0 "$last_rc" "restart resumes from the durable waiter"
-wait_calls="$(grep -c -- '--wait' "$state/bd.log" || true)"
-assert_eq 1 "$wait_calls" "restart does not enqueue a duplicate waiter"
-assert_file "$state/waiter-cleaned" "resumed waiter is cleaned after acquisition"
+waiter_creates="$(grep -c -- '^create Merge-slot waiter:' "$state/bd.log" || true)"
+assert_eq 1 "$waiter_creates" "restart does not create a duplicate waiter record"
+assert_waiter_status stable-holder in_progress "restart claims its durable waiter record"
 
 new_state slot-restart
 scenario=slot-restart
@@ -158,29 +179,38 @@ assert_file "$state/released" "transaction releases slot after failure"
 new_state slot-cleanup-failure
 scenario=slot-cleanup-failure
 run_contract acquire-slot stable-holder 1 0
-assert_eq 2 "$last_rc" "waiter cleanup failure is surfaced"
-assert_file "$state/released" "cleanup failure releases the newly owned slot"
+assert_eq 2 "$last_rc" "waiter claim failure is surfaced"
+assert_file "$state/released" "claim failure releases the newly owned slot"
+assert_waiter_status stable-holder closed "claim failure trap closes only its waiter record"
 
 new_state slot-cleanup-signal
 scenario=slot-cleanup-signal
 run_contract acquire-slot stable-holder 1 0
-assert_eq 143 "$last_rc" "signal during waiter cleanup is surfaced"
-assert_file "$state/released" "cleanup signal releases the newly owned slot"
+assert_eq 143 "$last_rc" "signal during waiter claim is surfaced"
+assert_file "$state/released" "claim signal releases the newly owned slot"
+assert_waiter_status stable-holder closed "claim signal trap closes only its waiter record"
 
-new_state slot-cleanup-interleave
-scenario=slot-cleanup-interleave
-run_contract acquire-slot stable-holder 1 0
-assert_eq 0 "$last_rc" "waiter cleanup retries across a concurrent queue revision"
-assert_file "$state/concurrent-state-preserved" \
-  "waiter cleanup preserves a concurrently enqueued waiter"
+new_state slot-record-eligibility-interleave
+scenario=slot-record-eligibility-interleave
+run_contract with-slot stable-holder -- touch "$state/command-ran"
+assert_eq 0 "$last_rc" "front waiter acquires across a concurrent later enqueue"
+assert_file "$state/command-ran" "eligible waiter runs its protected command"
+assert_waiter_status stable-holder closed "normal completion closes only the owned waiter"
+assert_waiter_status later-holder open "waiter created before acquire survives completion"
 
-new_state slot-cleanup-stale
-scenario=slot-cleanup-stale
-run_contract acquire-slot stable-holder 1 0
-assert_eq 2 "$last_rc" "continuously stale waiter cleanup fails closed"
-assert_not_contains_file "update slot-1 --metadata" "$state/bd.log" \
-  "stale cleanup never writes an unconfirmed metadata snapshot"
-assert_file "$state/released" "stale cleanup releases the newly owned slot"
+new_state slot-record-holder-race
+scenario=slot-record-holder-race
+run_contract acquire-slot stable-holder 2 0
+assert_eq 75 "$last_rc" "atomic holder race preserves the queued request"
+assert_waiter_status stable-holder open "losing acquisition keeps its waiter open"
+assert_waiter_status successor in_progress "concurrent holder record survives acquisition race"
+
+new_state slot-record-close-interleave
+scenario=slot-record-close-interleave
+run_contract with-slot stable-holder -- touch "$state/command-ran"
+assert_eq 0 "$last_rc" "target close tolerates a concurrent waiter creation"
+assert_waiter_status stable-holder closed "target close is atomic to the owned waiter"
+assert_waiter_status later-holder open "concurrent waiter survives target close"
 
 new_state recover-slot
 scenario=recover-slot
@@ -193,15 +223,23 @@ new_state recover-waiter
 scenario=recover-waiter
 run_contract recover-waiter merge-1 dead-waiter session-registry:dead
 assert_eq 0 "$last_rc" "dead queued waiter recovery succeeds with evidence"
-assert_file "$state/waiter-cleaned" "dead waiter is removed from persisted queue"
+assert_file "$state/waiter-cleaned" "dead waiter record transitions to closed"
+assert_waiter_status dead-waiter closed "dead waiter recovery closes its stable record"
 assert_contains "pr-shepherd.recover-waiter" "$(<"$state/bd.log")" "dead waiter recovery is audited"
+run_contract recover-waiter merge-1 dead-waiter session-registry:dead
+assert_eq 0 "$last_rc" "completed waiter cancellation is restart-idempotent"
+waiter_closes="$(grep -c -- '^close slot-1-waiter-' "$state/bd.log" || true)"
+assert_eq 1 "$waiter_closes" "waiter cancellation closes the target exactly once"
 
 new_state recover-waiter-successor-interleave
 scenario=recover-waiter-successor-interleave
 run_contract recover-waiter merge-1 dead-waiter session-registry:dead
-assert_eq 0 "$last_rc" "waiter recovery retries across a successor slot acquisition"
+assert_eq 0 "$last_rc" "waiter recovery survives a concurrent successor slot acquisition"
 assert_file "$state/concurrent-state-preserved" \
   "waiter recovery preserves successor ownership and its queued waiter"
+assert_waiter_status dead-waiter closed "stale cleanup closes only the stale target"
+assert_waiter_status successor in_progress "successor holder record survives stale cleanup"
+assert_waiter_status concurrent-waiter open "concurrent queued record survives stale cleanup"
 
 new_state recover-claim
 scenario=recover-claim
@@ -421,6 +459,12 @@ PATH="$SYSTEM_PATH" "$PROBE" conflicts refs/heads/not-a-base refs/heads/not-a-br
 probe_rc=$?
 set -e
 assert_eq 2 "$probe_rc" "unknown conflict probe does not become clean"
+
+tests=$((tests + 1))
+if grep -R -F -- "update slot-1 --metadata" "$TMP_ROOT" >/dev/null 2>&1; then
+  printf 'not ok queue isolation: a scenario rewrote shared slot metadata\n' >&2
+  failures=$((failures + 1))
+fi
 
 if [[ $failures -gt 0 ]]; then
   printf 'FAIL: %s assertions, %s failures\n' "$tests" "$failures" >&2

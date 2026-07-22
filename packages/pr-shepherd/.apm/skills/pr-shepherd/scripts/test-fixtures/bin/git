@@ -7,7 +7,7 @@ printf '%s\n' "$*" >>"$FAKE_STATE/git.log"
 
 case "${1:-}" in
   hash-object)
-    printf '1111111111111111111111111111111111111111\n'
+    sha1sum | awk '{print $1}'
     ;;
   fetch | cat-file)
     exit 0

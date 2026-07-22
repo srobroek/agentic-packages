@@ -44,6 +44,9 @@ recovery rules. A fresh session must be able to resume from Beads and GitHub.
 
 MUST Use `landing-contract.sh`; its exact-head guard, persisted FCFS slot
   handling, release discipline, and base proof are mandatory.
+MUST Treat the per-holder waiter bead as the queue receipt. Only the first open
+  record by `created_at`, then id, may attempt atomic slot acquisition; close
+  only the target record on release or evidence-backed recovery.
 MUST Keep PR target `pr_base` distinct from final `landing_base`. GitHub
   `MERGED` does not prove a stacked PR reached the final branch.
 MUST Release every claim not closed this pass. Recover a claim, holder, or

@@ -9,7 +9,7 @@ readonly EXIT_SLOT_QUEUED=75
 readonly QUERY_FOUND=0
 readonly QUERY_ABSENT=1
 readonly QUERY_ERROR=2
-readonly SLOT_CLEANUP_ATTEMPTS=5
+readonly WAITER_LABEL=gt:slot-waiter
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
 
@@ -43,16 +43,6 @@ slot_available() {
   jq -e '.available == true' >/dev/null
 }
 
-slot_first_waiter() {
-  jq -r '.waiters[0] // empty'
-}
-
-slot_has_waiter() {
-  local holder="$1"
-
-  jq -e --arg holder "$holder" 'any(.waiters[]?; . == $holder)' >/dev/null
-}
-
 arm_slot_release() {
   local holder="$1"
   local release_trap
@@ -70,67 +60,133 @@ disarm_slot_release() {
   trap - HUP INT TERM EXIT
 }
 
-remove_slot_waiter() {
-  local holder="$1"
-  local required_holder="${2:-}"
-  local state slot_id actual snapshot confirmed metadata after attempt
+waiter_id() {
+  local slot_id="$1"
+  local holder="$2"
+  local digest
 
-  state="$(slot_state)" || fail "cannot inspect merge slot for waiter cleanup"
-  slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
-  actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
-  [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
-  if [[ -n "$required_holder" && "$actual" != "$required_holder" ]]; then
-    fail "slot holder changed during waiter cleanup"
+  digest="$(printf '%s\0%s\0' "$slot_id" "$holder" | git hash-object --stdin)" \
+    || fail "cannot derive waiter identity"
+  printf '%s-waiter-%s\n' "$slot_id" "${digest:0:12}"
+}
+
+waiter_record_state() {
+  local waiter="$1"
+  local slot_id="$2"
+  local holder="$3"
+  local records count
+
+  records="$(bd list --id "$waiter" --all --json)" || return "$QUERY_ERROR"
+  count="$(printf '%s' "$records" | jq -er 'length')" || return "$QUERY_ERROR"
+  if [[ $count -eq 0 ]]; then
+    return "$QUERY_ABSENT"
   fi
-  if ! printf '%s' "$state" | slot_has_waiter "$holder"; then
+  [[ $count -eq 1 ]] || return "$QUERY_ERROR"
+  printf '%s' "$records" | jq -ce --arg slot "$slot_id" --arg holder "$holder" \
+    '.[0] |
+     select(.metadata.slot_id == $slot and .metadata.holder == $holder) |
+     {id, status, created_at, metadata}' || return "$QUERY_ERROR"
+}
+
+ensure_waiter_record() {
+  local slot_id="$1"
+  local holder="$2"
+  local waiter record query_rc metadata status
+
+  waiter="$(waiter_id "$slot_id" "$holder")"
+  if record="$(waiter_record_state "$waiter" "$slot_id" "$holder")"; then
+    query_rc=$QUERY_FOUND
+  else
+    query_rc=$?
+  fi
+  if [[ $query_rc -eq $QUERY_ERROR ]]; then
+    fail "cannot query durable waiter $waiter"
+  fi
+  if [[ $query_rc -eq $QUERY_ABSENT ]]; then
+    metadata="$(jq -cn --arg slot "$slot_id" --arg holder "$holder" \
+      '{slot_id: $slot, holder: $holder}')"
+    if ! bd create "Merge-slot waiter: $holder" --id "$waiter" \
+      --labels "$WAITER_LABEL" --metadata "$metadata" --silent >/dev/null; then
+      record="$(waiter_record_state "$waiter" "$slot_id" "$holder")" \
+        || fail "cannot create or recover durable waiter $waiter"
+    else
+      record="$(waiter_record_state "$waiter" "$slot_id" "$holder")" \
+        || fail "created waiter $waiter is not queryable"
+    fi
+  fi
+  status="$(printf '%s' "$record" | jq -r '.status')"
+  case "$status" in
+    open | in_progress) ;;
+    closed) fail "durable waiter $waiter is already terminal" ;;
+    *) fail "durable waiter $waiter has invalid status ${status:-empty}" ;;
+  esac
+  printf '%s\n' "$waiter"
+}
+
+first_waiter_record() {
+  local slot_id="$1"
+  local records
+
+  records="$(bd list --label "$WAITER_LABEL" --status open \
+    --metadata-field "slot_id=$slot_id" --limit 0 --json)" \
+    || fail "cannot query merge-slot waiter records"
+  printf '%s' "$records" | jq -r --arg slot "$slot_id" \
+    '[.[] |
+      select(.status == "open" and .metadata.slot_id == $slot and
+        (.id | type) == "string" and (.id | length) > 0 and
+        (.created_at | type) == "string" and (.created_at | length) > 0 and
+        (.metadata.holder | type) == "string" and (.metadata.holder | length) > 0)] |
+     sort_by(.created_at, .id) | .[0] |
+     if . == null then "|" else [(.id // ""), .metadata.holder] | join("|") end'
+}
+
+claim_waiter_record() {
+  local waiter="$1"
+  local slot_id="$2"
+  local holder="$3"
+  local record status
+
+  record="$(waiter_record_state "$waiter" "$slot_id" "$holder")" \
+    || fail "cannot query waiter before claim"
+  status="$(printf '%s' "$record" | jq -r '.status')"
+  if [[ "$status" == "open" ]]; then
+    bd update "$waiter" --claim >/dev/null || fail "cannot claim owned waiter $waiter"
+    record="$(waiter_record_state "$waiter" "$slot_id" "$holder")" \
+      || fail "cannot verify waiter claim"
+    status="$(printf '%s' "$record" | jq -r '.status')"
+  fi
+  [[ "$status" == "in_progress" ]] || fail "waiter $waiter is not owned"
+}
+
+close_waiter_record() {
+  local slot_id="$1"
+  local holder="$2"
+  local require_existing="${3:-true}"
+  local reason="${4:-merge-slot request completed}"
+  local waiter record query_rc status
+
+  waiter="$(waiter_id "$slot_id" "$holder")"
+  if record="$(waiter_record_state "$waiter" "$slot_id" "$holder")"; then
+    query_rc=$QUERY_FOUND
+  else
+    query_rc=$?
+  fi
+  if [[ $query_rc -eq $QUERY_ERROR ]]; then
+    fail "cannot query waiter $waiter for close"
+  fi
+  if [[ $query_rc -eq $QUERY_ABSENT ]]; then
+    [[ "$require_existing" == "false" ]] && return 0
+    fail "waiter $waiter does not exist"
+  fi
+  status="$(printf '%s' "$record" | jq -r '.status')"
+  if [[ "$status" == "closed" ]]; then
     return 0
   fi
-
-  attempt=1
-  while [[ $attempt -le $SLOT_CLEANUP_ATTEMPTS ]]; do
-    snapshot="$(bd show "$slot_id" --json | jq -ce \
-      '.[0] | {revision: (.updated_at // ""), metadata: (.metadata // {})}')" \
-      || fail "cannot inspect merge-slot waiter revision"
-    if ! printf '%s' "$snapshot" | jq -e --arg holder "$holder" \
-      'any(.metadata.waiters[]?; . == $holder)' >/dev/null; then
-      return 0
-    fi
-    metadata="$(printf '%s' "$snapshot" | jq -ce --arg holder "$holder" \
-      --arg required "$required_holder" \
-      '.metadata |
-       if ($required != "" and (.holder // "") != $required)
-       then error("slot holder changed")
-       else .waiters = ((.waiters // []) | map(select(. != $holder)))
-       end')" \
-      || fail "cannot prepare merge-slot waiter cleanup"
-
-    confirmed="$(bd show "$slot_id" --json | jq -ce \
-      '.[0] | {revision: (.updated_at // ""), metadata: (.metadata // {})}')" \
-      || fail "cannot confirm merge-slot waiter revision"
-    if [[ "$snapshot" != "$confirmed" ]]; then
-      attempt=$((attempt + 1))
-      continue
-    fi
-
-    bd update "$slot_id" --metadata "$metadata" >/dev/null \
-      || fail "cannot remove merge-slot waiter"
-    after="$(bd show "$slot_id" --json | jq -ce '.[0].metadata // {}')" \
-      || fail "cannot verify merge-slot waiter cleanup"
-    if printf '%s' "$after" | jq -e --arg holder "$holder" \
-      'any(.waiters[]?; . == $holder)' >/dev/null; then
-      attempt=$((attempt + 1))
-      continue
-    fi
-    printf '%s\n%s\n' "$metadata" "$after" | jq -se \
-      '.[0] as $expected | .[1] as $actual |
-       ($actual | del(.waiters)) == ($expected | del(.waiters)) and
-       all($expected.waiters[]?; . as $waiter |
-         any($actual.waiters[]?; . == $waiter))' >/dev/null \
-      || fail "merge-slot waiter cleanup lost concurrent state"
-    return 0
-  done
-
-  fail "merge-slot waiter cleanup remained stale after $SLOT_CLEANUP_ATTEMPTS attempts"
+  bd close "$waiter" --reason "$reason" >/dev/null || fail "cannot close waiter $waiter"
+  record="$(waiter_record_state "$waiter" "$slot_id" "$holder")" \
+    || fail "cannot verify waiter $waiter close"
+  [[ "$(printf '%s' "$record" | jq -r '.status')" == "closed" ]] \
+    || fail "waiter $waiter close did not persist"
 }
 
 acquire_slot() {
@@ -138,7 +194,7 @@ acquire_slot() {
   local attempts="${2:-3}"
   local interval="${3:-1}"
   local protection="${4:-handoff}"
-  local state actual first_waiter rc attempt queued
+  local state slot_id actual first_waiter first_waiter_id waiter rc attempt
 
   [[ -n "$holder" ]] || fail "slot holder is required"
   [[ "$attempts" =~ ^[1-9][0-9]*$ ]] || fail "attempts must be a positive integer"
@@ -147,7 +203,10 @@ acquire_slot() {
     || fail "slot protection must be handoff or armed"
 
   bd merge-slot create >/dev/null
-  queued=false
+  state="$(slot_state)" || fail "cannot inspect merge slot"
+  slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
+  [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
+  waiter="$(ensure_waiter_record "$slot_id" "$holder")"
   attempt=1
   while [[ $attempt -le $attempts ]]; do
     if [[ $attempt -gt 1 && "$interval" -gt 0 ]]; then
@@ -155,49 +214,42 @@ acquire_slot() {
     fi
     state="$(slot_state)" || fail "cannot inspect merge slot"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot state"
-    first_waiter="$(printf '%s' "$state" | slot_first_waiter)" || fail "invalid merge-slot waiters"
     if [[ "$actual" == "$holder" ]]; then
       arm_slot_release "$holder"
-      remove_slot_waiter "$holder" "$holder"
+      claim_waiter_record "$waiter" "$slot_id" "$holder"
       [[ "$protection" == "armed" ]] || disarm_slot_release
       printf 'SLOT_OWNED holder=%s resumed=true\n' "$holder"
       return 0
     fi
     if printf '%s' "$state" | slot_available; then
-      if [[ -z "$first_waiter" || "$first_waiter" == "$holder" ]]; then
+      first_waiter="$(first_waiter_record "$slot_id")"
+      IFS='|' read -r first_waiter_id first_waiter <<<"$first_waiter"
+      if [[ "$first_waiter_id" == "$waiter" && "$first_waiter" == "$holder" ]]; then
         set +e
         bd merge-slot acquire --holder "$holder" >/dev/null
         rc=$?
         set -e
         if [[ $rc -eq 0 ]]; then
           arm_slot_release "$holder"
-          remove_slot_waiter "$holder" "$holder"
+          claim_waiter_record "$waiter" "$slot_id" "$holder"
           [[ "$protection" == "armed" ]] || disarm_slot_release
           printf 'SLOT_OWNED holder=%s resumed=false\n' "$holder"
           return 0
         fi
         [[ $rc -eq 1 ]] || fail "merge-slot acquire failed with exit $rc"
       fi
-    elif ! printf '%s' "$state" | slot_has_waiter "$holder"; then
-      set +e
-      bd merge-slot acquire --holder "$holder" --wait >/dev/null
-      rc=$?
-      set -e
-      [[ $rc -eq 1 ]] || fail "merge-slot enqueue failed with exit $rc"
-      queued=true
-    else
-      queued=true
     fi
     attempt=$((attempt + 1))
   done
 
-  printf 'SLOT_QUEUED holder=%s attempts=%s persisted=%s\n' "$holder" "$attempts" "$queued"
+  printf 'SLOT_QUEUED holder=%s attempts=%s waiter=%s persisted=true\n' \
+    "$holder" "$attempts" "$waiter"
   return "$EXIT_SLOT_QUEUED"
 }
 
 release_slot() {
   local holder="$1"
-  local state actual
+  local state slot_id actual already_available close_rc
 
   state="$(slot_state)" || {
     printf 'SLOT_RELEASE_UNKNOWN holder=%s\n' "$holder" >&2
@@ -207,19 +259,30 @@ release_slot() {
     printf 'SLOT_RELEASE_INVALID holder=%s\n' "$holder" >&2
     return "$EXIT_UNKNOWN"
   }
-  if printf '%s' "$state" | slot_available; then
-    printf 'SLOT_RELEASED holder=%s already_available=true\n' "$holder"
-    return 0
-  fi
-  if [[ "$actual" != "$holder" ]]; then
-    printf 'SLOT_FOREIGN expected=%s actual=%s\n' "$holder" "${actual:-unknown}" >&2
-    return "$EXIT_FAILED"
-  fi
-  bd merge-slot release --holder "$holder" >/dev/null || {
-    printf 'SLOT_RELEASE_FAILED holder=%s\n' "$holder" >&2
+  slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || {
+    printf 'SLOT_RELEASE_INVALID holder=%s\n' "$holder" >&2
     return "$EXIT_UNKNOWN"
   }
-  printf 'SLOT_RELEASED holder=%s already_available=false\n' "$holder"
+  [[ -n "$slot_id" ]] || return "$EXIT_UNKNOWN"
+  if printf '%s' "$state" | slot_available; then
+    already_available=true
+  elif [[ "$actual" != "$holder" ]]; then
+    printf 'SLOT_FOREIGN expected=%s actual=%s\n' "$holder" "${actual:-unknown}" >&2
+    return "$EXIT_FAILED"
+  elif bd merge-slot release --holder "$holder" >/dev/null; then
+    already_available=false
+  else
+    printf 'SLOT_RELEASE_FAILED holder=%s\n' "$holder" >&2
+    return "$EXIT_UNKNOWN"
+  fi
+  if close_waiter_record "$slot_id" "$holder" false "merge-slot request completed"; then
+    close_rc=0
+  else
+    close_rc=$?
+  fi
+  [[ $close_rc -eq 0 ]] || return "$close_rc"
+  printf 'SLOT_RELEASED holder=%s already_available=%s\n' "$holder" \
+    "$already_available"
 }
 
 run_with_slot() {
@@ -909,7 +972,7 @@ recover_slot() {
   local merge_bead="$1"
   local dead_holder="$2"
   local evidence="$3"
-  local key prepared phase is_new phase_rank state actual
+  local key prepared phase is_new phase_rank state slot_id actual
 
   [[ -n "$evidence" ]] || fail "dead-holder recovery requires an evidence reference"
   key="$(recovery_key slot "$dead_holder" "$evidence")" || fail "cannot derive recovery key"
@@ -918,12 +981,15 @@ recover_slot() {
   phase_rank="$(recovery_phase_rank "$phase")"
   if [[ $phase_rank -lt 2 ]]; then
     state="$(slot_state)" || fail "cannot inspect merge slot"
+    slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
+    [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
     if [[ "$actual" == "$dead_holder" ]]; then
       bd merge-slot release --holder "$dead_holder" >/dev/null || fail "cannot release dead holder"
     elif [[ "$is_new" == "true" ]]; then
       fail "slot holder changed (expected $dead_holder, found ${actual:-none})"
     fi
+    close_waiter_record "$slot_id" "$dead_holder" false "recovered dead slot holder"
   fi
   finish_recovery "$merge_bead" "$key" slot "$dead_holder" "$evidence" "$phase"
   printf 'SLOT_RECOVERED merge=%s holder=%s evidence=%s receipt=%s\n' \
@@ -934,22 +1000,20 @@ recover_waiter() {
   local merge_bead="$1"
   local dead_waiter="$2"
   local evidence="$3"
-  local key prepared phase is_new phase_rank state actual
+  local key prepared phase phase_rank state slot_id actual
 
   [[ -n "$evidence" ]] || fail "dead-waiter recovery requires an evidence reference"
   key="$(recovery_key waiter "$dead_waiter" "$evidence")" || fail "cannot derive recovery key"
   prepared="$(prepare_recovery "$merge_bead" "$key" waiter "$dead_waiter" "$evidence")"
-  IFS='|' read -r phase is_new <<<"$prepared"
+  IFS='|' read -r phase _ <<<"$prepared"
   phase_rank="$(recovery_phase_rank "$phase")"
   if [[ $phase_rank -lt 2 ]]; then
     state="$(slot_state)" || fail "cannot inspect merge slot"
+    slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
+    [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
     [[ "$actual" != "$dead_waiter" ]] || fail "dead waiter currently holds the slot"
-    if printf '%s' "$state" | slot_has_waiter "$dead_waiter"; then
-      remove_slot_waiter "$dead_waiter"
-    elif [[ "$is_new" == "true" ]]; then
-      fail "waiter changed or is no longer queued"
-    fi
+    close_waiter_record "$slot_id" "$dead_waiter" true "recovered dead queued waiter"
   fi
   finish_recovery "$merge_bead" "$key" waiter "$dead_waiter" "$evidence" "$phase"
   printf 'WAITER_RECOVERED merge=%s waiter=%s evidence=%s receipt=%s\n' \

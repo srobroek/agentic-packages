@@ -59,14 +59,16 @@ MUST A stacked PR merged only into `pr_base` remains open with
   `landing_base`; GitHub `MERGED` by itself never closes the bead.
 
 MERGE SLOT
-MUST Use stable holder `pr-shepherd:<repo>#<pr>@<head_sha>`. Persist one waiter
-  while held; when available, only the first waiter may acquire. Remove the
-  holder's waiter receipt after acquisition and release on success, error,
-  signal, and restart recovery.
+MUST Use stable holder `pr-shepherd:<repo>#<pr>@<head_sha>`. Persist one
+  deterministic waiter bead per holder, linked by `metadata.slot_id`. Only the
+  first open valid record by `created_at`, then id, may attempt atomic slot
+  acquisition. Claim that record while holding the slot; close it after release
+  on success, error, signal, and restart recovery.
 
-MUST Never bypass an earlier persisted waiter. Remove a stale holder or waiter
-  only after proving its session dead or its PR cancelled, recording the
-  evidence in a merge-bead comment and audit entry.
+MUST Never bypass an earlier open waiter record or rewrite a shared waiter
+  collection. Close a stale holder's record only after proving its session dead
+  or its PR cancelled, recording the evidence in a merge-bead comment and audit
+  entry.
 
 BOUNCE-BACK
 MUST Compute a deterministic failure key and reconcile the oldest open routed
