@@ -3,7 +3,7 @@
 SCOPE
 MUST Use bd for persistent, multi-session, or multi-agent work tracking when
   the repo has `.beads/` (`bd where` succeeds).
-NOT Track tasks in markdown TODO lists — use bd issues instead.
+NOT Track tasks in markdown task lists — use bd issues instead.
 DEFAULT TaskCreate stays for single-session scratch lists; SpecKit artifacts
   (spec.md/plan.md) stay the source for WHAT to build — beads tracks execution
   state, not requirements.
@@ -31,6 +31,9 @@ IDENTITY
 MUST Set BEADS_ACTOR (`<harness>/<agent-name>/<session-id>`) on every mutating
   command when acting as a subagent; audit trails and claim ownership depend
   on it, and the session id distinguishes dead claims from live ones.
+MUST Keep the exact BEADS_ACTOR value for the full live claim and use it as the
+  actor on messages, comments, and audit events; recovery assigns a new value
+  only after the prior holder is proven dead or releases the claim.
 
 CLAIMING
 MUST Claim before working: `bd update <id> --claim` (atomic compare-and-swap;
@@ -78,6 +81,44 @@ DEFAULT `blocks` for ordering; `parent-child` for epics; `discovered-from` for
   follow-up work found mid-task; non-blocking types (`related`, `tracks`) never
   affect `bd ready`.
 MUST Model fan-in with an aggregate issue depending on each part, not comments.
+
+COORDINATION
+DEFAULT Use native message wisps with non-blocking `replies-to` edges for live
+  threads: a root replies to its work bead; a reply targets an open message in
+  the same run and work context.
+
+MUST Treat harness notification as an advisory wake only; the recipient reads
+  the Beads thread after resume, and a failed wake does not remove the message.
+
+NOT Require Gas Town, a daemon or poll loop, or a replacement routing queue for
+  threaded coordination; harness delivery and existing claim routing stay
+  separate from Beads persistence.
+
+MUST Promote a material message before acting on it or closing work: a choice
+  local to one bead becomes an actor-attributed comment; a choice affecting
+  another bead, agent, package, shared contract, ordering rule, or later work
+  becomes a linked `decision` bead.
+
+MUST Give each decision bead a run-unique `decision_key`, one
+  `decision_owner`, a `decision_disposition`, objective acceptance evidence,
+  and non-blocking `relates-to` links to affected work; use `validates` links
+  for work that supplies or checks the evidence.
+
+NOT Treat message wisps or artifact files as policy; comments and decision
+  beads remain authoritative after acknowledgement, compaction, or restart.
+
+AMBIGUITY
+MUST Record `owner`, `scope`, `evidence`, `unknown`, `default`, `bounds`, and
+  `revisit` before applying an autonomous default; local records are comments,
+  while cross-boundary records use decision metadata `ambiguity_<field>`.
+
+DEFAULT Apply a recorded default only when it is reversible, local to the
+  bead's owned resources, bounded, and compatible with accepted evidence and
+  user intent; otherwise hold for one exact human decision.
+
+MUST Make `revisit` an objective event, evidence change, dependency transition,
+  or RFC3339 deadline; when it fires, the owner re-reads the cited evidence and
+  records resolution before further use of the default.
 
 FINDINGS
 DEFAULT Any skill or review that ends with findings the session will not act on
