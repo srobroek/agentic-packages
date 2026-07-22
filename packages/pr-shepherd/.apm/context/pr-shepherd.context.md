@@ -3,9 +3,10 @@
 MERGE BEADS
 MUST Every PR meant to land gets a merge bead at PR creation: labeled
   `agent:integrator`, metadata `{"pr":N,"branch":"...","base_sha":"...",
-  "repo":"owner/name"}` plus `origin_actor`/`origin_bead` (the authoring
-  actor and its work bead), and a gh:pr gate:
+  "repo":"owner/name"}` plus author `origin_actor`/`origin_bead`, and a gh:pr gate:
   `bd gate create --type=gh:pr --await-id=<N> --blocks <merge-bead>`.
+DEFAULT Generic merge beads are shepherd-owned. A live orchestrate PR carries
+  `integration_owner=orchestrate`; pr-shepherd refuses all duplicates.
 MUST Async waits are gate beads (gh:pr, gh:run) evaluated by `bd gate check`;
   labels, claims, and field taxonomy follow the beads steering — never
   ci:green/pr:merged labels.
@@ -13,15 +14,23 @@ MUST Async waits are gate beads (gh:pr, gh:run) evaluated by `bd gate check`;
 AUTHOR LIFECYCLE
 MUST Authors push branch/PR, write residual context onto their own bead per
   the beads steering (comments: approach, tricky spots, what to check first
-  if CI fails), close it, and exit. Never stay alive waiting for CI or merge
-  — the gate bead plus the shepherd own the wait. This is the resilience
-  contract: any later session resumes from beads alone.
+  if CI fails), close it, and exit. The gate plus shepherd own the wait; any
+  later session resumes from beads alone.
 
 SHEPHERD PASS (stateless — any session, /loop, or cron)
 DEFAULT `bd gate check` → drain `bd ready --label agent:integrator
   --unassigned --json` → per bead: `bd update <id> --claim`, probe (merge-tree
   conflicts, `gh pr view` state/checks/review), then merge, bounce, or
   re-gate + release; comment every probe outcome on the merge bead.
+
+WATCHER WAKE-UP
+MUST Resolve read-only watcher records with `resolve-queue-event.py`; persist
+  pending/sent/ack on the exact bead and revalidate GitHub before every outcome.
+MUST Ack each record before reading the next; restart replays pending/sent.
+  Claim refusal or crash stays unacknowledged and recoverable.
+MUST Orchestrate resolves first; only unmatched records reach pr-shepherd.
+  Never fan one record to both.
+DEFAULT Watcher error/exit → surface, run one gate-check/pass, restart or stop; never add polling beyond REST reconciliation and manual/cron passes.
 
 BOUNCE-BACK (problem the shepherd cannot fix)
 MUST Dedupe first: an open fix bead with the same failure key (check+repo or

@@ -79,3 +79,14 @@ Webhook records include `deliveryId` and `webhookAction`. Reconciliation records
 `lifecycleKey` is deterministic across webhook and REST sources. Treat it as an opaque value: its final fingerprint covers the emitted PR state and the exact observed CI signals, so a new CI attempt gets a new key even when GitHub leaves the PR's `updated_at` timestamp unchanged. The runtime suppresses a repeated key within the process in addition to delivery-id rejection and semantic debounce. Consumers persist the key when they need restart-safe dedupe.
 
 Initial REST reconciliation can emit lifecycle and dispatch records before `watcher-active`. Every record is read-only input: the runtime does not modify GitHub or Beads.
+
+Consumers process the NDJSON stream serially through durable Beads receipts.
+An exact active orchestrate node has routing precedence. Only records unmatched
+to orchestrate may be offered once to pr-shepherd; never fan one record to both
+integrators. Either consumer revalidates GitHub before acting, and only the
+selected integrator may acquire `bd merge-slot`.
+
+Start through `pnpm --silent start` when stdout is machine-consumed. Lifecycle,
+dispatch, and `watcher-active` records use stdout. `webhook-error` and
+`reconcile-error` records use stderr; the process supervisor must parse both
+streams and trigger the documented fallback on an error record or process exit.

@@ -8,8 +8,9 @@ description: >-
   bundled agents (workflow-coder, workflow-reviewer, workflow-advisor,
   integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart
   comms hook, explicit Codex spawn-brief protocol, a read-only event-driven PR
-  queue handoff, and deterministic scripts (scope disjointness, agent discovery,
-  dispatch resolution, conflict probe).
+  queue handoff with deterministic orchestrator/pr-shepherd ownership, and
+  deterministic scripts (scope disjointness, agent discovery, queue-event
+  resolution, conflict probe).
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -18,3 +19,4 @@ includes: auto
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.4.0 <1.0.0
+    - srobroek/agentic-packages/packages/pr-shepherd#>=0.7.0 <1.0.0

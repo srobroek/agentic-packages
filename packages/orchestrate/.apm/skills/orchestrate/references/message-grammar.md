@@ -15,7 +15,7 @@ This file adds the per-verb field table and a worked example.
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
 | `CONFLICT` | gatekeeper → coder | node, with(node), files, required action |
-| `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups also carry source, repo, PR, head, dispatch key |
+| `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
 | `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, question, who is waiting |
@@ -112,6 +112,20 @@ repo: owner/repo
 pr: 42
 head: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 dispatch: owner/repo#42@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+```
+
+A lifecycle wake-up uses the same verb but cannot enter the merge path:
+
+```text
+APPROVE t3
+branch: coder/t3-auth-middleware
+base: main @ 3f9a1c2
+source: release-queue-watch-lifecycle
+repo: owner/repo
+pr: 42
+head: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+transition: failed
+lifecycle: owner/repo#42#failed#opaque
 ```
 ```
 to: main   summary: "t3 merged"
