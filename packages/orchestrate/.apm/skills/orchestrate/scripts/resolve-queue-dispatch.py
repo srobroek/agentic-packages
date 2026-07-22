@@ -179,8 +179,6 @@ def validate_lifecycle_record(record: Any) -> dict[str, Any] | None:
         raise ContractError("failed lifecycle checks must be fail")
     if transition in {"merged", "closed"} and pull_request["state"] != "closed":
         raise ContractError("terminal lifecycle pullRequest.state must be closed")
-    if transition == "merged" and source != "webhook":
-        raise ContractError("merged lifecycle must come from webhook")
     if source == "webhook":
         for field in ("deliveryId", "webhookAction"):
             if not isinstance(record.get(field), str) or not record[field]:
@@ -218,6 +216,45 @@ def _lifecycle_delivery_state(metadata: dict[str, Any], lifecycle_key: str) -> s
     if metadata.get("queue_lifecycle_pending") == lifecycle_key:
         return "pending"
     return "untracked"
+
+
+def _validate_receipt_lineage(
+    metadata: dict[str, Any], prefix: str, event_key: str
+) -> None:
+    current_field = f"{prefix}"
+    current_key = metadata.get(current_field)
+    receipt_fields = (f"{prefix}_pending", f"{prefix}_sent", f"{prefix}_ack")
+    receipts = {field: metadata.get(field) for field in receipt_fields}
+    for field, value in receipts.items():
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ResolutionError(f"{field} must be a non-empty string")
+
+    if current_key == event_key:
+        mismatched = [
+            field
+            for field, value in receipts.items()
+            if value is not None and value != event_key
+        ]
+        if mismatched:
+            raise ResolutionError(
+                f"{current_field} receipt mismatch in {', '.join(mismatched)}"
+            )
+        return
+
+    matching_receipts = [
+        field for field, value in receipts.items() if value == event_key
+    ]
+    if matching_receipts:
+        raise ResolutionError(
+            f"{current_field} does not match receipts in {', '.join(matching_receipts)}"
+        )
+
+    if isinstance(current_key, str) and current_key:
+        current_ack = receipts[f"{prefix}_ack"]
+        if current_ack != current_key:
+            raise ResolutionError(
+                f"cannot replace unacknowledged {current_field} {current_key}"
+            )
 
 
 def _ensure_unique_node_ownership(nodes: list[Any]) -> None:
@@ -392,6 +429,7 @@ def _resolve_lifecycle(lifecycle: dict[str, Any], nodes_value: Any) -> dict[str,
     node = candidates[0]
     metadata = node["metadata"]
     lifecycle_key = lifecycle["lifecycleKey"]
+    _validate_receipt_lineage(metadata, "queue_lifecycle", lifecycle_key)
     if metadata.get("queue_lifecycle_ack") == lifecycle_key:
         status = "duplicate"
     elif metadata.get("queue_lifecycle") == lifecycle_key:
@@ -470,6 +508,7 @@ def resolve(record: Any, nodes_value: Any) -> dict[str, Any]:
     node = candidates[0]
     metadata = node["metadata"]
     dispatch_key = f"{repository}#{number}@{head_sha}"
+    _validate_receipt_lineage(metadata, "queue_dispatch", dispatch_key)
     persisted_key = metadata.get("queue_dispatch")
     if metadata.get("queue_dispatch_ack") == dispatch_key:
         status = "duplicate"
@@ -507,6 +546,7 @@ def replay_unacknowledged(nodes_value: Any) -> list[dict[str, Any]]:
         dispatch_key = metadata.get("queue_dispatch")
         if not isinstance(dispatch_key, str) or not dispatch_key:
             continue
+        _validate_receipt_lineage(metadata, "queue_dispatch", dispatch_key)
         if metadata.get("queue_dispatch_ack") == dispatch_key:
             continue
         repository = metadata.get("repo")
@@ -560,6 +600,7 @@ def replay_unacknowledged_lifecycles(nodes_value: Any) -> list[dict[str, Any]]:
         lifecycle_key = metadata.get("queue_lifecycle")
         if not isinstance(lifecycle_key, str) or not lifecycle_key:
             continue
+        _validate_receipt_lineage(metadata, "queue_lifecycle", lifecycle_key)
         if metadata.get("queue_lifecycle_ack") == lifecycle_key:
             continue
         transition = metadata.get("queue_lifecycle_transition")
