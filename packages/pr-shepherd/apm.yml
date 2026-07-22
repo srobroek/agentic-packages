@@ -37,4 +37,4 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/beads#>=0.5.1 <1.0.0
-    - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.0 <1.0.0
+    - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
