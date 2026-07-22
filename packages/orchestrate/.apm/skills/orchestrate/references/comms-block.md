@@ -27,6 +27,8 @@ Delivery:
 - Every message stores actor, assignee, run, and work-bead identity.
 - A root replies to the work bead. A reply replies to one open message.
 - Acknowledge closes only that message.
+- Inbox/show/thread/ack remain available after work closes; send/reply require
+  an open run and active work bead.
 - Resolved decisions remain comments or decision beads.
 - Send/reply retries create another message after a prior success. Reconcile
   the returned id or inbox before retrying.

@@ -148,13 +148,52 @@ class Beads:
 
 def _metadata(issue: dict[str, Any]) -> dict[str, Any]:
     metadata = issue.get("metadata")
-    if not isinstance(metadata, dict):
+    if metadata is None:
         raise MessageError(
             "invalid_message_metadata",
-            "message metadata must be a JSON object",
+            "message metadata is missing",
+            {"message": issue.get("id", "unknown")},
+        )
+    if not isinstance(metadata, dict):
+        raise MessageError(
+            "invalid_bd_json",
+            "bd returned non-object message metadata",
             {"message": issue.get("id", "unknown")},
         )
     return metadata
+
+
+def _relation_ids(issue: dict[str, Any], field: str, dependency_type: str) -> list[str]:
+    relations = issue.get(field, [])
+    if not isinstance(relations, list) or any(
+        not isinstance(relation, dict) for relation in relations
+    ):
+        raise MessageError(
+            "invalid_bd_json",
+            f"bd returned malformed {field}",
+            {"issue": issue.get("id", "unknown")},
+        )
+
+    ids: list[str] = []
+    for relation in relations:
+        relation_type = relation.get("dependency_type")
+        if relation_type is not None and not isinstance(relation_type, str):
+            raise MessageError(
+                "invalid_bd_json",
+                f"bd returned malformed {field} dependency type",
+                {"issue": issue.get("id", "unknown")},
+            )
+        if relation_type != dependency_type:
+            continue
+        relation_id = relation.get("id")
+        if not isinstance(relation_id, str):
+            raise MessageError(
+                "invalid_bd_json",
+                f"bd returned malformed {field} issue id",
+                {"issue": issue.get("id", "unknown")},
+            )
+        ids.append(relation_id)
+    return ids
 
 
 def _validate_message(
@@ -163,9 +202,18 @@ def _validate_message(
     run: str | None = None,
     bead: str | None = None,
 ) -> dict[str, Any]:
-    message_id = str(issue.get("id", ""))
+    message_id = issue.get("id")
+    if not isinstance(message_id, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed message id")
     _identity(message_id, "message")
-    if issue.get("issue_type") != "message":
+    issue_type = issue.get("issue_type")
+    if not isinstance(issue_type, str):
+        raise MessageError(
+            "invalid_bd_json",
+            "bd returned malformed message type",
+            {"message": message_id},
+        )
+    if issue_type != "message":
         raise MessageError(
             "parent_not_message",
             "the selected issue is not a message",
@@ -173,7 +221,14 @@ def _validate_message(
         )
 
     metadata = _metadata(issue)
-    if metadata.get("protocol") != PROTOCOL:
+    protocol = metadata.get("protocol")
+    if protocol is not None and not isinstance(protocol, str):
+        raise MessageError(
+            "invalid_bd_json",
+            "bd returned malformed message protocol",
+            {"message": message_id},
+        )
+    if protocol != PROTOCOL:
         raise MessageError(
             "invalid_message_protocol",
             "message does not use the replies-to protocol",
@@ -181,22 +236,41 @@ def _validate_message(
         )
 
     for field in ("actor", "assignee", "run", "bead"):
-        value = metadata.get(field)
-        if not isinstance(value, str):
+        if field not in metadata:
             raise MessageError(
                 "invalid_message_metadata",
                 f"message metadata is missing {field}",
                 {"message": message_id, "field": field},
             )
+        value = metadata[field]
+        if not isinstance(value, str):
+            raise MessageError(
+                "invalid_bd_json",
+                f"bd returned malformed message metadata field {field}",
+                {"message": message_id},
+            )
         _identity(value, field)
 
-    if issue.get("assignee") != metadata["assignee"]:
+    issue_assignee = issue.get("assignee")
+    if not isinstance(issue_assignee, str):
+        raise MessageError(
+            "invalid_bd_json",
+            "bd returned malformed message assignee",
+            {"message": message_id},
+        )
+    if issue_assignee != metadata["assignee"]:
         raise MessageError(
             "recipient_mismatch",
             "message assignee does not match its metadata",
             {"message": message_id},
         )
     created_by = issue.get("created_by")
+    if created_by is not None and not isinstance(created_by, str):
+        raise MessageError(
+            "invalid_bd_json",
+            "bd returned malformed message creator",
+            {"message": message_id},
+        )
     if created_by and created_by != metadata["actor"]:
         raise MessageError(
             "actor_mismatch",
@@ -219,19 +293,15 @@ def _validate_message(
 
 
 def _replies_to(issue: dict[str, Any]) -> str:
-    edges = [
-        dependency
-        for dependency in issue.get("dependencies", [])
-        if dependency.get("dependency_type") == PROTOCOL
-    ]
+    parent_ids = _relation_ids(issue, "dependencies", PROTOCOL)
     message_id = str(issue.get("id", ""))
-    if len(edges) != 1:
+    if len(parent_ids) != 1:
         raise MessageError(
             "invalid_parent_count",
             "message must have exactly one replies-to parent",
-            {"message": message_id, "count": len(edges)},
+            {"message": message_id, "count": len(parent_ids)},
         )
-    parent = str(edges[0].get("id", ""))
+    parent = parent_ids[0]
     _identity(parent, "parent")
     if parent == message_id:
         raise MessageError(
@@ -242,35 +312,50 @@ def _replies_to(issue: dict[str, Any]) -> str:
     return parent
 
 
-def _validate_work(client: Beads, run: str, bead: str) -> dict[str, Any]:
+def _validate_work(
+    client: Beads, run: str, bead: str, *, require_active: bool
+) -> dict[str, Any]:
     _identity(run, "run")
     _identity(bead, "bead")
     run_issue = client.show(run)
-    if run_issue.get("issue_type") != "epic":
+    run_type = run_issue.get("issue_type")
+    if not isinstance(run_type, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed run type")
+    if run_type != "epic":
         raise MessageError(
             "invalid_run", "run identity must refer to an epic", {"run": run}
         )
-    if run_issue.get("status") == "closed":
-        raise MessageError("run_closed", "run epic is closed", {"run": run})
+    run_status = run_issue.get("status")
+    if not isinstance(run_status, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed run status")
+    if require_active and run_status != "open":
+        raise MessageError("run_closed", "run epic is not open", {"run": run})
 
     work = client.show(bead)
-    if work.get("issue_type") == "message":
+    work_type = work.get("issue_type")
+    if not isinstance(work_type, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed work type")
+    if work_type == "message":
         raise MessageError(
             "invalid_work_bead", "work bead cannot be a message", {"bead": bead}
         )
-    parent_ids = {
-        dependency.get("id")
-        for dependency in work.get("dependencies", [])
-        if dependency.get("dependency_type") == "parent-child"
-    }
-    if work.get("parent") != run and run not in parent_ids:
+    parent_ids = set(_relation_ids(work, "dependencies", "parent-child"))
+    direct_parent = work.get("parent")
+    if direct_parent is not None and not isinstance(direct_parent, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed work parent")
+    if direct_parent != run and run not in parent_ids:
         raise MessageError(
             "bead_run_mismatch",
             "work bead is not a child of the run epic",
             {"run": run, "bead": bead},
         )
-    if work.get("status") == "closed":
-        raise MessageError("work_bead_closed", "work bead is closed", {"bead": bead})
+    work_status = work.get("status")
+    if not isinstance(work_status, str):
+        raise MessageError("invalid_bd_json", "bd returned malformed work status")
+    if require_active and work_status not in {"open", "in_progress"}:
+        raise MessageError(
+            "work_bead_closed", "work bead is not active", {"bead": bead}
+        )
     return work
 
 
@@ -289,7 +374,12 @@ def _parent_issue(client: Beads, issue: dict[str, Any]) -> dict[str, Any]:
 
 
 def _root_and_work(
-    client: Beads, seed: dict[str, Any], run: str, bead: str
+    client: Beads,
+    seed: dict[str, Any],
+    run: str,
+    bead: str,
+    *,
+    require_active: bool = False,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     visited: set[str] = set()
     current = seed
@@ -313,24 +403,34 @@ def _root_and_work(
                 "thread root does not reply to its declared work bead",
                 {"message": message_id, "parent": parent.get("id")},
             )
-        work = _validate_work(client, run, bead)
+        work = _validate_work(client, run, bead, require_active=require_active)
         return current, work
 
 
 def _message_record(issue: dict[str, Any], parent: str, depth: int) -> dict[str, Any]:
     metadata = _validate_message(issue)
+    text_fields: dict[str, str] = {}
+    for field in ("description", "created_at", "status", "title"):
+        value = issue.get(field, "")
+        if not isinstance(value, str):
+            raise MessageError(
+                "invalid_bd_json",
+                f"bd returned malformed message {field}",
+                {"message": issue["id"]},
+            )
+        text_fields[field] = value
     return {
         "actor": metadata["actor"],
         "assignee": metadata["assignee"],
         "bead": metadata["bead"],
-        "body": issue.get("description", ""),
-        "created_at": issue.get("created_at", ""),
+        "body": text_fields["description"],
+        "created_at": text_fields["created_at"],
         "depth": depth,
         "id": issue["id"],
         "parent": parent,
         "run": metadata["run"],
-        "status": issue.get("status", ""),
-        "subject": issue.get("title", ""),
+        "status": text_fields["status"],
+        "subject": text_fields["title"],
     }
 
 
@@ -367,12 +467,10 @@ def _thread_records(
         visiting.add(message_id)
         records.append(_message_record(issue, parent, depth))
         with_dependents = client.show(message_id, dependents=True)
-        child_ids = {
-            str(dependent.get("id", ""))
-            for dependent in with_dependents.get("dependents", [])
-            if dependent.get("dependency_type") == PROTOCOL
-        }
+        child_ids = set(_relation_ids(with_dependents, "dependents", PROTOCOL))
         children = [client.show(child_id) for child_id in child_ids]
+        for child in children:
+            _message_record(child, message_id, depth + 1)
         children.sort(
             key=lambda child: (child.get("created_at", ""), child.get("id", ""))
         )
@@ -452,7 +550,7 @@ def send(client: Beads, args: argparse.Namespace) -> dict[str, Any]:
     assignee = _identity(args.assignee, "assignee")
     run = _identity(args.run, "run")
     bead = _identity(args.bead, "bead")
-    _validate_work(client, run, bead)
+    _validate_work(client, run, bead, require_active=True)
     message = _create_message(
         client,
         operation="send",
@@ -482,7 +580,7 @@ def reply(client: Beads, args: argparse.Namespace) -> dict[str, Any]:
             ) from exc
         raise
     _validate_message(parent, run=run, bead=bead)
-    _root_and_work(client, parent, run, bead)
+    _root_and_work(client, parent, run, bead, require_active=True)
     if parent.get("status") != "open":
         raise MessageError(
             "message_closed", "cannot reply to a closed message", {"parent": parent_id}
@@ -529,7 +627,11 @@ def inbox(client: Beads, args: argparse.Namespace) -> dict[str, Any]:
     records: list[dict[str, Any]] = []
     invalid: list[dict[str, str]] = []
     for summary in data:
-        message_id = str(summary.get("id", ""))
+        if not isinstance(summary, dict) or not isinstance(summary.get("id"), str):
+            raise MessageError(
+                "invalid_bd_json", "bd list returned a malformed message entry"
+            )
+        message_id = summary["id"]
         try:
             issue = client.show(message_id)
             metadata = _validate_message(issue)
@@ -544,6 +646,8 @@ def inbox(client: Beads, args: argparse.Namespace) -> dict[str, Any]:
             _root_and_work(client, issue, metadata["run"], metadata["bead"])
             records.append(_message_record(issue, _replies_to(issue), 0))
         except MessageError as exc:
+            if exc.code == "invalid_bd_json":
+                raise
             invalid.append({"code": exc.code, "id": message_id})
     records.sort(key=lambda record: (record["created_at"], record["id"]))
     invalid.sort(key=lambda record: record["id"])

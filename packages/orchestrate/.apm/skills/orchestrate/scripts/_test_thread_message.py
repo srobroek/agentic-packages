@@ -87,8 +87,18 @@ class ThreadMessageTest(unittest.TestCase):
             timeout=90,
         )
         payload = json.loads(process.stdout)
+        self.assertNotIn("Traceback", process.stderr)
         self.assertEqual(payload["ok"], process.returncode == 0, process.stderr)
         return process.returncode, payload
+
+    def bd_stub(self, name: str, data) -> str:
+        envelope = json.dumps({"data": data, "schema_version": 1})
+        stub = self.repo / name
+        stub.write_text(
+            f"#!/usr/bin/env python3\nprint({envelope!r})\n", encoding="utf-8"
+        )
+        stub.chmod(0o755)
+        return str(stub)
 
     def run_and_work(self):
         number = next(self.ids)
@@ -209,6 +219,9 @@ class ThreadMessageTest(unittest.TestCase):
         self.assertEqual(code, 0, ack_payload)
         self.assertFalse(ack_payload["data"]["already_closed"])
         self.assertEqual(ack_payload["data"]["work_bead"]["status"], "open")
+        self.assertEqual(self.error_code(self.reply(run, work, root)), "message_closed")
+
+        self.bd("close", work, "--reason", "work complete")
 
         code, duplicate = self.helper(
             "ack",
@@ -223,8 +236,60 @@ class ThreadMessageTest(unittest.TestCase):
         )
         self.assertEqual(code, 0, duplicate)
         self.assertTrue(duplicate["data"]["already_closed"])
-        self.assertEqual(self.bd("show", f"--id={work}")[0]["status"], "open")
-        self.assertEqual(self.error_code(self.reply(run, work, root)), "message_closed")
+        self.assertEqual(duplicate["data"]["work_bead"]["status"], "closed")
+
+        code, thread_payload = self.helper("thread", "--message", reply_id)
+        self.assertEqual(code, 0, thread_payload)
+        self.assertEqual(
+            [message["id"] for message in thread_payload["data"]["thread"]],
+            [root, reply_id],
+        )
+
+        code, inbox_payload = self.helper(
+            "inbox", "--actor", "sender", "--run", run, "--bead", work
+        )
+        self.assertEqual(code, 0, inbox_payload)
+        self.assertEqual(
+            [message["id"] for message in inbox_payload["data"]["messages"]],
+            [reply_id],
+        )
+
+        send_after_close = self.helper(
+            "send",
+            "--actor",
+            "sender",
+            "--assignee",
+            "recipient",
+            "--run",
+            run,
+            "--bead",
+            work,
+            "--subject",
+            "Late root",
+            "--body",
+            "Late root body",
+        )
+        self.assertEqual(self.error_code(send_after_close), "work_bead_closed")
+        self.assertEqual(
+            self.error_code(self.reply(run, work, reply_id, "Late reply")),
+            "work_bead_closed",
+        )
+
+        code, reply_ack = self.helper(
+            "acknowledge",
+            "--actor",
+            "sender",
+            "--run",
+            run,
+            "--bead",
+            work,
+            "--message",
+            reply_id,
+        )
+        self.assertEqual(code, 0, reply_ack)
+        self.assertFalse(reply_ack["data"]["already_closed"])
+        self.assertEqual(reply_ack["data"]["work_bead"]["status"], "closed")
+        self.assertEqual(self.bd("show", f"--id={work}")[0]["status"], "closed")
 
     def test_concurrent_replies_form_deterministic_branches(self):
         run, work = self.run_and_work()
@@ -319,6 +384,47 @@ class ThreadMessageTest(unittest.TestCase):
         code, payload = self.helper("inbox", "--actor", "recipient", bd=str(malformed))
         self.assertEqual(code, 1)
         self.assertEqual(payload["error"]["code"], "invalid_bd_json")
+
+    def test_parseable_malformed_bd_shapes_are_safe(self):
+        list_stub = self.bd_stub("list-shape-bd", [[]])
+        code, payload = self.helper("inbox", "--actor", "recipient", bd=list_stub)
+        self.assertEqual(code, 1)
+        self.assertEqual(payload["error"]["code"], "invalid_bd_json")
+
+        valid_metadata = {
+            "actor": "sender",
+            "assignee": "recipient",
+            "bead": "tm-work-shape",
+            "protocol": "replies-to",
+            "run": "tm-run-shape",
+        }
+        base_message = {
+            "assignee": "recipient",
+            "created_by": "sender",
+            "description": "Body",
+            "id": "tm-wisp-shape",
+            "issue_type": "message",
+            "metadata": valid_metadata,
+            "status": "open",
+            "title": "Subject",
+        }
+        malformed_shapes = (
+            {"metadata": []},
+            {"metadata": {**valid_metadata, "protocol": []}},
+            {"dependencies": {}},
+            {"dependencies": [[]]},
+            {"dependencies": [{"dependency_type": [], "id": "tm-work-shape"}]},
+            {"dependencies": [{"dependency_type": "replies-to", "id": []}]},
+        )
+        for number, malformed_fields in enumerate(malformed_shapes):
+            with self.subTest(malformed_fields=malformed_fields):
+                issue = {**base_message, **malformed_fields}
+                stub = self.bd_stub(f"show-shape-{number}-bd", [issue])
+                code, payload = self.helper(
+                    "show", "--message", "tm-wisp-shape", bd=stub
+                )
+                self.assertEqual(code, 1)
+                self.assertEqual(payload["error"]["code"], "invalid_bd_json")
 
     def test_inbox_quarantines_invalid_message_metadata(self):
         self.bd(

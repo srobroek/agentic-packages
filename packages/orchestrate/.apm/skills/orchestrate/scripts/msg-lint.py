@@ -158,7 +158,12 @@ def lint(body: str) -> list[str]:
                 field for field in REPORTED_GIT_REFS if fields.get(field, "").strip()
             }
             has_output_ref = bool(fields.get("output_ref", "").strip())
-            if has_branch and not git_refs:
+            has_git_evidence = has_branch or bool(git_refs)
+            if has_output_ref and has_git_evidence:
+                violations.append(
+                    "REPORTED must not mix git evidence with non-git output_ref"
+                )
+            elif has_branch and not git_refs:
                 violations.append(
                     "REPORTED git evidence requires commit, commits, or pr"
                 )
@@ -172,7 +177,7 @@ def lint(body: str) -> list[str]:
                 violations.append("empty field: output_ref")
 
         if verb == "NO_WORK":
-            for field in ("queue", "reason"):
+            for field in ("epic", "queue", "reason"):
                 if field in fields and not fields[field].strip():
                     violations.append(f"empty field: {field}")
 

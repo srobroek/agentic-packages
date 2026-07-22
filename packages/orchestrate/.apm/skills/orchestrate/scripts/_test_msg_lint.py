@@ -93,6 +93,14 @@ class MsgLintTest(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIn(expected, out)
 
+    def test_reported_rejects_hybrid_evidence(self):
+        code, out = lint(
+            "REPORTED t3\nbranch: coder/t3\ncommits: abc123\n"
+            "output_ref: /tmp/report.json\nverify: green\n"
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("must not mix git evidence", out)
+
     def test_no_work_activation_is_explicit(self):
         code, out = lint(
             "NO_WORK queue:generic\nepic: orc-7f3a\n"
@@ -106,6 +114,21 @@ class MsgLintTest(unittest.TestCase):
         )
         self.assertEqual(code, 1)
         self.assertIn("must be one of", out)
+
+        fields = {
+            "epic": "orc-7f3a",
+            "queue": "agent:generic",
+            "reason": "no-compatible-work",
+        }
+        for empty_field in fields:
+            with self.subTest(empty_field=empty_field):
+                empty_fields = {**fields, empty_field: ""}
+                body = "NO_WORK queue:generic\n" + "".join(
+                    f"{field}: {value}\n" for field, value in empty_fields.items()
+                )
+                code, out = lint(body)
+                self.assertEqual(code, 1)
+                self.assertIn(f"empty field: {empty_field}", out)
 
     def test_missing_field_rejected(self):
         code, out = lint("REPORTED t3\nbranch: coder/t3\ncommits: abc123\n")

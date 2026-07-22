@@ -65,12 +65,16 @@ python3 scripts/thread-message.py acknowledge --actor coder-t3 --run orc-7f3a \
   --bead orc-7f3a.3 --message orc-wisp-abc
 ```
 
-Inbox discovery uses `bd list --include-infra --type message --assignee
-<actor> --status open`. Normal work lists therefore exclude messages.
-Inbox output keeps validated messages under `messages` and malformed or legacy
-records under `invalid`. One invalid record does not hide valid messages.
-Acknowledgement validates the recipient and message type before closing the
-message. It never closes the linked work bead or a parent message.
+- Inbox discovery uses `bd list --include-infra --type message --assignee
+  <actor> --status open`. Normal work lists exclude messages.
+- Inbox output keeps validated messages under `messages` and malformed or
+  legacy records under `invalid`. One invalid record does not hide valid
+  messages.
+- Acknowledgement validates the recipient and message type before closing the
+  message. It never closes the linked work bead or a parent message.
+- Inbox, show, thread rendering, and acknowledgement remain available after
+  the work bead closes. Send and reply require an open run and an active work
+  bead.
 
 Harness notification remains the immediate wake path. Failure to notify does
 not remove the Beads message. The recipient reads its inbox after resume.
@@ -87,14 +91,14 @@ reports `already_closed:true` for a duplicate acknowledgement.
 
 ## Evidence and empty activations
 
-`REPORTED` accepts these evidence shapes:
+`REPORTED` accepts exactly one of these evidence shapes:
 
 - Git commit: `branch`, `commit` or `commits`, and `verify`.
 - Git pull request: `branch`, `pr`, and `verify`.
 - Non-git: `output_ref` and `verify`.
 
 A generic activation that loses a claim race or finds no compatible work does
-not claim another bead:
+not claim another bead. Its epic, queue, and reason fields are nonempty:
 
 ```text
 NO_WORK queue:generic
