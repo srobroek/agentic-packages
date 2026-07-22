@@ -1,5 +1,17 @@
 # Changelog
 
+## [10.2.0](https://github.com/srobroek/agentic-packages/compare/core--v10.1.1...core--v10.2.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([c1720ad](https://github.com/srobroek/agentic-packages/commit/c1720ad12f33be022f89a744192cf6ed8b1380c5))
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
 ## [10.1.1](https://github.com/srobroek/agentic-packages/compare/core--v10.1.0...core--v10.1.1) (2026-07-22)
 
 

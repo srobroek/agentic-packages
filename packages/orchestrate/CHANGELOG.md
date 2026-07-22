@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.7.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.6.0...orchestrate--v3.7.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([c1720ad](https://github.com/srobroek/agentic-packages/commit/c1720ad12f33be022f89a744192cf6ed8b1380c5))
+* discover packaged workers with validated metadata ([#625](https://github.com/srobroek/agentic-packages/issues/625)) ([0a170b8](https://github.com/srobroek/agentic-packages/commit/0a170b801d417cf912703228344d3eff25a8b36d))
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+
 ## [3.6.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.5.0...orchestrate--v3.6.0) (2026-07-22)
 
 

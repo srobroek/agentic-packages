@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.5.0...release-queue-watch--v0.6.0) (2026-07-22)
+
+
+### Features
+
+* route release queue events to one integration owner ([#624](https://github.com/srobroek/agentic-packages/issues/624)) ([d3afc7f](https://github.com/srobroek/agentic-packages/commit/d3afc7f307e0746a69eefb5e4f71566a5ccdc415))
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.4.0...release-queue-watch--v0.5.0) (2026-07-22)
 
 

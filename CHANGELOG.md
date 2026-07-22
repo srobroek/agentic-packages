@@ -1,5 +1,18 @@
 # Changelog
 
+## [16.7.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.6.0...srobroek-agentic--v16.7.0) (2026-07-22)
+
+
+### Features
+
+* discover packaged workers with validated metadata ([#625](https://github.com/srobroek/agentic-packages/issues/625)) ([0a170b8](https://github.com/srobroek/agentic-packages/commit/0a170b801d417cf912703228344d3eff25a8b36d))
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
 ## [16.6.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.5.0...srobroek-agentic--v16.6.0) (2026-07-22)
 
 
