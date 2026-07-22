@@ -230,10 +230,16 @@ def _validate_receipt_lineage(
             raise ResolutionError(f"{field} must be a non-empty string")
 
     if current_key == event_key:
+        acknowledged_key = receipts[f"{prefix}_ack"]
+        completed_prior_key = (
+            acknowledged_key
+            if isinstance(acknowledged_key, str) and acknowledged_key != event_key
+            else None
+        )
         mismatched = [
             field
             for field, value in receipts.items()
-            if value is not None and value != event_key
+            if value is not None and value != event_key and value != completed_prior_key
         ]
         if mismatched:
             raise ResolutionError(
