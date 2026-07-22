@@ -18,7 +18,7 @@ This file adds the per-verb field table and a worked example.
 | `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
 | `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
-| `ASK` | any → orch | node, question, who is waiting |
+| `ASK` | any → orch | node, one exact nonempty question, impact, waiting actor, resume condition |
 | `NO_WORK` | generic worker → orch | run epic, queue activation, `reason:no-compatible-work` |
 
 Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
@@ -80,9 +80,26 @@ Harness notification remains the immediate wake path. Failure to notify does
 not remove the Beads message. The recipient reads its inbox after resume.
 
 Message wisps retain coordination for the active run and may be compacted
-after acknowledgement. They do not store durable decisions. Local decisions
-are actor-attributed work-bead comments. Cross-bead policy, ordering, or
-lifecycle decisions are linked decision beads.
+after acknowledgement. They do not store durable decisions. The authoritative
+carrier table is in `references/beads-store.md`.
+
+A message is material when its outcome changes a choice, default, scope,
+route, ordering, acceptance evidence, disposition, human answer, or later
+work. Before acting or closing from a material message:
+
+1. Promote a bead-local outcome to an actor-attributed work-bead comment.
+2. Promote a cross-bead, cross-agent, cross-package, shared-contract,
+   ordering, or later-work outcome to a linked `decision` bead.
+3. Read the promoted record and every non-blocking `relates-to`/`validates`
+   link back from Beads.
+4. Cite that durable record in the action or terminal report.
+
+A material message not promoted has no policy effect. Acknowledgement,
+compaction, or a lost harness wake never erases the promoted source of truth.
+An artifact or `output_ref` is evidence only until a comment or decision bead
+cites it. A human answer received in a thread is promoted before the stored
+`waiting_human` resume instruction runs. Late messages for closed work follow
+the late-evidence and follow-up rules in `references/lifecycle.md`.
 
 `send` and `reply` are create operations. Each successful retry creates a new
 message. A caller records the returned message id, then checks `inbox` or

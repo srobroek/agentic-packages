@@ -136,44 +136,108 @@ and git are the source of truth.
 - **Task workers:** never recycle mid-node. Their in-progress reasoning belongs
   to the claimed node. Dismiss after its terminal path.
 
-## Human-in-the-loop
+## Human-in-the-loop and safe autonomy
 
-When an agent needs product intent or a decision outside its brief, it sends
-`ASK <node> <question>` to `main` and idles. The orchestrator records the
-question, sets `waiting_human`, notifies the user, then forwards the answer to
-the same agent. Never let an agent guess product intent.
+An agent may choose a default autonomously only when every condition is true:
+
+- the action and its effects are reversible;
+- the effect is local to one bead and its owned resources;
+- the downside and rollback boundary are explicit and bounded;
+- the choice is compatible with accepted policy and recorded evidence; and
+- the choice preserves user intent rather than selecting or changing it.
+
+Record the ambiguity before applying the default. A cross-boundary choice that
+existing evidence fully resolves uses a decision bead. Cross-boundary
+uncertainty, irreversible action, external mutation, security/financial/legal
+risk, or missing user intent is not an autonomous default. It enters
+`waiting_human` with one exact question and its impact.
+
+The orchestrator adds this comment to the affected bead:
+
+```text
+WAITING_HUMAN
+owner: <actor responsible for resumption>
+scope: <bead and affected resource>
+question: <one exact choice the human must make>
+impact: <what remains stopped and what each answer changes>
+resume: <exact state transition, gate action, and actor to wake>
+```
+
+Every field is nonempty. The question cannot delegate discovery back to the
+human or ask for general approval. The orchestrator records `orc.ask`, runs
+`bd set-state <bead> state=waiting_human --reason "<question summary>"`, and
+keeps status `in_progress`. The resulting `state:waiting_human` label is the
+durable hold. A node that had not started also receives
+`bd gate create --type=human --blocks <bead> --reason "<question>"`.
+
+The orchestrator does not poll the human or the held worker. It continues
+unrelated nodes returned by `bd ready`. On an answer, it promotes any message
+into a work-bead comment or decision bead, resolves the human gate when one
+exists, and follows the stored `resume` instruction. A started node returns to
+`state=working`, status `in_progress`, and the same agent. An unstarted node
+returns to `state=pending`, status `open`, and normal dispatch.
 
 ## Durable ambiguity and autonomous defaults
 
-An ambiguity that changes routing, scope, acceptance evidence, ordering, or an
-external mutation must survive agent context. Record it before applying a
-default:
+Every unresolved choice uses this complete record before action:
 
+```text
+AMBIGUITY
+owner: <one actor accountable for review>
+scope: <work bead and exact resources>
+evidence: <known file:line, bead, command result, or searched-none>
+unknown: <fact or intent that remains unresolved>
+default: <chosen reversible local action>
+bounds: <downside, rollback point, and prohibited effects>
+revisit: <objective event, evidence change, dependency transition, or RFC3339>
 ```
-AMBIGUITY owner=<actor> scope=<node/resources> evidence=<refs-or-searched-none>
-default=<bounded reversible action> revisit=<event, dependency wake, or RFC3339>
-```
 
-Local ambiguity is a comment on the affected bead. Cross-node or contract
-ambiguity is a decision bead under the run epic with metadata keys
-`ambiguity_owner`, `ambiguity_scope`, `ambiguity_evidence`,
-`ambiguity_default`, and `ambiguity_revisit`. Link each affected node with
-`bd dep add <node> <decision> --type relates-to`. Product intent that blocks
-work also creates a human gate and uses `waiting_human`.
+Empty fields are invalid. `revisit` is objective: `later`, `if needed`, and
+elapsed time without a named deadline are invalid. The default cannot exceed
+the autonomy conditions above.
 
-| Situation | Safe default |
+Local ambiguity is a comment on the affected bead. Cross-bead, cross-agent,
+cross-package, shared-contract, ordering, or later-work impact is a decision
+bead under the run epic with metadata keys `ambiguity_owner`,
+`ambiguity_scope`, `ambiguity_evidence`, `ambiguity_unknown`,
+`ambiguity_default`, `ambiguity_bounds`, and `ambiguity_revisit`. Link affected
+and validating work with non-blocking `relates-to` and `validates` edges as
+defined in `references/beads-store.md`.
+
+| Situation | Safe recorded result |
 |---|---|
 | exact assignee conflicts with another route | preserve the assignee; no other worker claims |
-| capability, access, or scope compatibility is unknown | do not dispatch or claim; revisit after catalog or owner evidence |
-| specialist and generic routes both match | choose the specialist |
+| capability, access, or scope compatibility is unknown | do not dispatch or claim; revisit on named catalog or owner evidence |
+| specialist and generic routes both match | choose the compatible specialist |
 | generic queue has several ready beads | atomic priority claim; never cherry-pick |
 | tracked-file versus artifact evidence is unclear | tracked mutation → `git`; read-only result → inspectable artifact |
 | dead-claim evidence is incomplete | keep the claim and anchors |
-| product intent or irreversible external effect is unresolved | `waiting_human`; never infer consent |
+| a local reversible implementation detail lacks evidence | record the bounded default and its evidence-triggered revisit |
+| product intent, cross-boundary uncertainty, or unsafe effect is unresolved | `waiting_human`; never infer consent |
 
-At the recorded trigger, the ambiguity owner re-reads the cited evidence,
-records `RESOLVED` or an updated default/revisit value, and changes routing only
-while the bead is unassigned. Silent adaptation is prohibited.
+## Revisit, conflict, and late evidence
+
+At the recorded trigger, the owner re-reads the cited evidence before any
+further use of the default. A fired trigger makes the default stale until the
+owner adds an `AMBIGUITY_RESOLVED` comment with the prior record id, new
+evidence, disposition, and resulting action. Routing changes only while the
+bead is unassigned.
+
+A local choice that changes gets a new comment referencing the old comment; no
+comment is edited or erased. A cross-boundary change gets a replacement
+decision bead and explicit supersession. Duplicate, conflicting, superseded,
+and partially linked decisions follow the deterministic rules in
+`references/beads-store.md`; chronology alone never selects policy.
+
+Restart recovery reads work-bead comments, decision beads, their dispositions
+and links, and `state:waiting_human` before resuming any agent. Message wisps
+and artifacts supply coordination/evidence only. An unpromoted material
+message is not replay authority.
+
+Late evidence follows the same revisit flow. If the affected bead is closed,
+append the evidence and disposition to that closed bead or its decision bead.
+When behavior must change, create follow-up work with a `discovered-from` link;
+do not reopen the completed bead or rewrite its terminal evidence.
 
 ## Worktree and cleanup
 
