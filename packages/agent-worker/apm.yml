@@ -1,5 +1,5 @@
 name: agent-worker
-version: 1.0.0
+version: 1.1.0
 description: Bounded implementation worker for changes without a more specific coding role.
 author: Sjors Robroek
 license: Apache-2.0

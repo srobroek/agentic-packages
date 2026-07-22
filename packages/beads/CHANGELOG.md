@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.5.1...beads--v0.6.0) (2026-07-22)
+
+
+### Features
+
+* make Codex and Claude APM integration target-aware ([#643](https://github.com/srobroek/agentic-packages/issues/643)) ([83fe64b](https://github.com/srobroek/agentic-packages/commit/83fe64b7bf119cb91aaea3f3d7932b2781a45eee))
+
 ## [0.5.1](https://github.com/srobroek/agentic-packages/compare/beads--v0.5.0...beads--v0.5.1) (2026-07-22)
 
 

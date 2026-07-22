@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.11.1...pr-shepherd--v0.12.0) (2026-07-22)
+
+
+### Features
+
+* make Codex and Claude APM integration target-aware ([#643](https://github.com/srobroek/agentic-packages/issues/643)) ([83fe64b](https://github.com/srobroek/agentic-packages/commit/83fe64b7bf119cb91aaea3f3d7932b2781a45eee))
+
+
+### Bug Fixes
+
+* **pr-shepherd:** normalize empty review decisions ([#644](https://github.com/srobroek/agentic-packages/issues/644)) ([6a7a11b](https://github.com/srobroek/agentic-packages/commit/6a7a11b8f9cd14a6c87843768478c1ac0efc35f9))
+
 ## [0.11.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.11.0...pr-shepherd--v0.11.1) (2026-07-22)
 
 
