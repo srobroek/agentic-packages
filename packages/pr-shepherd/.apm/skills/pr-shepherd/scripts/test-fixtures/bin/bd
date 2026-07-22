@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+: "${FAKE_STATE:?FAKE_STATE is required}"
+: "${FAKE_SCENARIO:?FAKE_SCENARIO is required}"
+printf '%s\n' "$*" >>"$FAKE_STATE/bd.log"
+
+increment() {
+  local file="$1"
+  local count=0
+  if [[ -f "$file" ]]; then
+    read -r count <"$file"
+  fi
+  count=$((count + 1))
+  printf '%s\n' "$count" >"$file"
+  printf '%s\n' "$count"
+}
+
+if [[ "${1:-}" == "merge-slot" && "${2:-}" == "create" ]]; then
+  exit 0
+fi
+
+if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
+  if [[ -f "$FAKE_STATE/acquired" ]]; then
+    holder="$(<"$FAKE_STATE/holder")"
+    if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' "$holder"
+    else
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":["%s"]}\n' \
+        "$holder" "$holder"
+    fi
+    exit 0
+  fi
+  case "$FAKE_SCENARIO" in
+  slot-contention)
+    check_count="$(increment "$FAKE_STATE/check-count")"
+    if [[ "$check_count" -eq 1 ]]; then
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":["stable-holder"]}\n'
+    fi
+    ;;
+  slot-fairness)
+    printf '{"available":true,"holder":null,"id":"slot-1","waiters":["earlier-holder"]}\n'
+    ;;
+  slot-queued-restart)
+    if [[ -f "$FAKE_STATE/make-available" ]]; then
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":["stable-holder"]}\n'
+    elif [[ -f "$FAKE_STATE/queued" ]]; then
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":["stable-holder"]}\n'
+    else
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
+    fi
+    ;;
+  slot-restart | slot-failure | land-restart | land-waiting | land-release-failure)
+    if [[ "$FAKE_SCENARIO" == "slot-restart" ]]; then
+      printf '{"available":false,"holder":"stable-holder","id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    fi
+    ;;
+  recover-slot)
+    printf '{"available":false,"holder":"dead-holder","id":"slot-1","waiters":null}\n'
+    ;;
+  recover-waiter)
+    if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":["dead-waiter"]}\n'
+    fi
+    ;;
+  *)
+    printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    ;;
+  esac
+  exit 0
+fi
+
+if [[ "${1:-}" == "merge-slot" && "${2:-}" == "acquire" ]]; then
+  if [[ ("$FAKE_SCENARIO" == "slot-contention" || "$FAKE_SCENARIO" == "slot-queued-restart") &&
+    "$*" == *"--wait"* ]]; then
+    touch "$FAKE_STATE/queued"
+    exit 1
+  fi
+  previous=""
+  for argument in "$@"; do
+    if [[ "$previous" == "--holder" ]]; then
+      printf '%s\n' "$argument" >"$FAKE_STATE/holder"
+      break
+    fi
+    previous="$argument"
+  done
+  touch "$FAKE_STATE/acquired"
+  exit 0
+fi
+
+if [[ "${1:-}" == "merge-slot" && "${2:-}" == "release" ]]; then
+  if [[ "$FAKE_SCENARIO" == "land-release-failure" ]]; then
+    exit 1
+  fi
+  touch "$FAKE_STATE/released"
+  exit 0
+fi
+
+if [[ "${1:-}" == "ready" ]]; then
+  printf '[{"id":"merge-second"},{"id":"merge-first"}]\n'
+  exit 0
+fi
+
+if [[ "${1:-}" == "list" ]]; then
+  if [[ "$FAKE_SCENARIO" == "duplicate-bounce" || "$FAKE_SCENARIO" == bounce-crash-* ]]; then
+    printf '[{"id":"fix-1","created_at":"2026-01-01T00:00:00Z"}]\n'
+  else
+    printf '[]\n'
+  fi
+  exit 0
+fi
+
+if [[ "${1:-}" == "show" ]]; then
+  if [[ "${2:-}" == "slot-1" ]]; then
+    if [[ "$FAKE_SCENARIO" == "recover-waiter" ]]; then
+      printf '[{"id":"slot-1","metadata":{"waiters":["dead-waiter"]}}]\n'
+    else
+      holder="stable-holder"
+      if [[ -f "$FAKE_STATE/holder" ]]; then
+        holder="$(<"$FAKE_STATE/holder")"
+      fi
+      printf '[{"id":"slot-1","metadata":{"holder":"%s","waiters":["%s"]}}]\n' \
+        "$holder" "$holder"
+    fi
+  elif [[ "$FAKE_SCENARIO" == "recover-claim" ]]; then
+    printf '[{"id":"merge-1","assignee":"dead-actor","dependencies":[]}]\n'
+  else
+    dependency_json='[]'
+    if [[ -f "$FAKE_STATE/dependency" ]]; then
+      dependency_json='[{"id":"fix-1"}]'
+    fi
+    bounce_key=""
+    bounce_fix=""
+    bounce_phase=""
+    [[ ! -f "$FAKE_STATE/bounce-key" ]] || bounce_key="$(<"$FAKE_STATE/bounce-key")"
+    [[ ! -f "$FAKE_STATE/bounce-fix" ]] || bounce_fix="$(<"$FAKE_STATE/bounce-fix")"
+    [[ ! -f "$FAKE_STATE/bounce-phase" ]] || bounce_phase="$(<"$FAKE_STATE/bounce-phase")"
+    printf '[{"id":"merge-1","metadata":{"bounce_key":"%s","bounce_fix":"%s","bounce_phase":"%s"},"dependencies":%s}]\n' \
+      "$bounce_key" "$bounce_fix" "$bounce_phase" "$dependency_json"
+  fi
+  exit 0
+fi
+
+if [[ "${1:-}" == "dep" && "${2:-}" == "add" ]]; then
+  if [[ "$FAKE_SCENARIO" == "bounce-crash-dep" && ! -f "$FAKE_STATE/dep-failed" ]]; then
+    touch "$FAKE_STATE/dep-failed"
+    exit 91
+  fi
+  touch "$FAKE_STATE/dependency"
+  exit 0
+fi
+
+if [[ "${1:-}" == "create" ]]; then
+  touch "$FAKE_STATE/created"
+  printf 'fix-new\n'
+  exit 0
+fi
+
+case "${1:-}" in
+close)
+  if [[ "$FAKE_SCENARIO" == "land-restart" && ! -f "$FAKE_STATE/released" ]]; then
+    printf 'close happened before slot release\n' >&2
+    exit 98
+  fi
+  exit 0
+  ;;
+comment)
+  if [[ "$FAKE_SCENARIO" == "bounce-crash-comment" && ! -f "$FAKE_STATE/comment-failed" ]]; then
+    touch "$FAKE_STATE/comment-failed"
+    exit 92
+  fi
+  exit 0
+  ;;
+update)
+  if [[ "${2:-}" == "slot-1" && "$*" == *"--metadata"* ]]; then
+    touch "$FAKE_STATE/waiter-cleaned"
+    exit 0
+  fi
+  previous=""
+  for argument in "$@"; do
+    if [[ "$previous" == "--set-metadata" ]]; then
+      case "$argument" in
+      bounce_key=*) printf '%s\n' "${argument#bounce_key=}" >"$FAKE_STATE/bounce-key" ;;
+      bounce_fix=*) printf '%s\n' "${argument#bounce_fix=}" >"$FAKE_STATE/bounce-fix" ;;
+      bounce_phase=*) printf '%s\n' "${argument#bounce_phase=}" >"$FAKE_STATE/bounce-phase" ;;
+      esac
+    fi
+    previous="$argument"
+  done
+  exit 0
+  ;;
+audit)
+  exit 0
+  ;;
+esac
+
+printf 'unexpected fake bd invocation: %s\n' "$*" >&2
+exit 99

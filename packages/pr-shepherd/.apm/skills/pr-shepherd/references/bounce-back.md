@@ -1,74 +1,66 @@
 # Bounce-back protocol
 
-When a probe finds a problem the shepherd cannot fix (CI failure, merge
-conflict, changes requested), park the merge bead behind a fix bead and move
-on. The coder closing the fix bead re-readies the merge bead automatically —
-no messaging.
+Bounce a CI failure, conflict, or requested change behind one routed fix bead.
+The fix bead is always unassigned. Its routing label is `agent:coder` or
+`agent:reviewer`.
 
-## 0. Dedupe + correlation first
+## Failure identity
 
-Search open fix beads before filing:
-`bd list --label agent:coder --status open --json`, compare metadata dedupe
-keys:
+Generate `failure_key` with the executable contract:
 
-- CI failure key: failing check name + repo
-- conflict key: sorted conflict file set + repo
-
-On a match, do NOT file a duplicate. Instead:
-`bd dep add <this-merge-bead> <existing-fix-bead>` so this PR also waits on
-it, and comment BOTH beads noting the correlation, e.g. "PR #43 red on same
-check as PR #42 — shared cause suspected".
-
-## 1. File the fix bead (always unassigned)
-
-```
-bd create "Fix <problem> (PR #N)" \
-  --deps discovered-from:<merge-bead> \
-  -l agent:coder \
-  --metadata '{"pr":N,"branch":"<branch>","failure":"ci|conflict|review",
-               "check":"<failing check>","origin_actor":"<actor>",
-               "origin_bead":"<work-bead-id>"}' \
-  -d "<diagnosis>"
+```bash
+scripts/landing-contract.sh failure-key <repo> ci <check-name>
+scripts/landing-contract.sh failure-key <repo> conflict <sorted-path>...
+scripts/landing-contract.sh failure-key <repo> review <review-thread-or-summary-id>
 ```
 
-The description is the handover — fresh coders get no other context (handover
-files are machine-local; PR bodies are not agent context). It must carry:
+Conflict paths must use the sorted order emitted by `merge-probe.sh`. The key
+binds repository, failure kind, and exact detail. The same key deduplicates
+sequential passes. A concurrent creation race keeps the oldest open fix bead
+and closes the later bead as its duplicate.
 
-- the exact error: failing check names + log excerpt
-  (`gh run view <run-id> --log-failed`, cap ~30 lines), the conflict file
-  list, or the review summary
-- a reproduction command: `gh pr checks N`, the failing test invocation, or
-  `git merge-tree --write-tree origin/<base> origin/<branch>`
-- the warm-context pointer: "Read <origin_bead>'s comments/notes first" — the
-  bead trail carries the author's residual context
-- unrelated-failure diagnosis: when the same check is red on the base branch
-  or on sibling PRs, state "failure appears pre-existing on <base>, not
-  introduced by this branch" and label the fix bead with the component when
-  identifiable — this stops a fresh coder bisecting the wrong branch
+## Diagnosis
 
-`origin_actor` / `origin_bead`: take them from the merge bead's metadata when
-the creator recorded them, else from the merge bead's `created_by` and its
-`discovered-from` trail; omit the keys when unknown. Informational only —
-they say whose branch/worktree/context this concerns.
+The fix description contains:
 
-Route review-response fixes that the reviewer owns with `-l agent:reviewer`
-instead; the label is still a queue, never an assignment.
+- failing check names and up to 30 relevant log lines, conflict paths, or the
+  review summary;
+- a reproduction command;
+- `Read <origin_bead>'s comments first` when an origin bead exists;
+- `failure appears pre-existing on <base>, not introduced by this branch`
+  when the same check fails on the landing base;
+- no credentials, full logs, or machine-local handover paths.
 
-## 2. Park the merge bead and release
+Metadata contains `repo`, `pr`, `branch`, `failure`, the check or conflict
+paths, and known `origin_actor`/`origin_bead` pointers. The contract adds
+`failure_key`.
 
+## Park once
+
+Run:
+
+```bash
+scripts/landing-contract.sh ensure-bounce \
+  <merge-bead> <failure-key> <agent:coder|agent:reviewer> \
+  <title> <metadata-json> <description>
 ```
-bd dep add <merge-bead> <fix-bead>   # merge bead leaves bd ready until fixed
-bd comments add <merge-bead> "<what is wrong, what was filed (<fix-bead>), routing>"
-bd update <merge-bead> --assignee "" --status open   # release the claim
-```
 
-## Routing rules
+The command reconciles these durable steps:
 
-- Fix beads are ALWAYS created unassigned with a routing label. Never pin
-  `--assignee`; never guess whether the origin session is alive.
-- Warm-context routing is the orchestrator's optimization: a live orchestrator
-  holding the origin worker may claim the fix bead on its behalf and route it
-  through its own channel. The shepherd's contract ends at filing unassigned.
-- Related but non-blocking observations (a flaky-looking test that passed on
-  retry, warning-level findings) become `related`-linked beads or comments on
-  the merge bead — never blocking deps.
+1. Stamp `bounce_key` and `bounce_phase=preparing` before creation.
+2. Search every non-closed coder/reviewer fix bead with the same key.
+3. Create an unassigned fix bead only when no match exists; reconcile a
+   concurrent duplicate to the oldest bead.
+4. Stamp canonical `bounce_fix` and `bounce_phase=fix_ready`.
+5. Add the blocking dependency once, then stamp `bounce_phase=parked`.
+6. Correlate both beads, then stamp `bounce_phase=commented`.
+7. Release the merge-bead claim and stamp `bounce_phase=complete`.
+
+A repeated invocation reports `BOUNCE_REUSED` without creating another bead or
+dependency. If a write fails or the process dies, rerun the same command: it
+reconciles the canonical bead, dependency, comments, and released claim from
+the last phase. Closing the fix bead re-readies every dependent merge bead.
+
+Warm-context routing belongs to an orchestrator. The standalone contract ends
+after creating or reusing the unassigned fix bead. Non-blocking observations
+remain comments or `related` dependencies.

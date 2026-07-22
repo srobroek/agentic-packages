@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+: "${FAKE_STATE:?FAKE_STATE is required}"
+: "${FAKE_SCENARIO:?FAKE_SCENARIO is required}"
+printf '%s\n' "$*" >>"$FAKE_STATE/gh.log"
+
+case "$FAKE_SCENARIO:${1:-}:${2:-}" in
+stale-run:run:view)
+  printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
+  ;;
+ready-pr:pr:view)
+  printf 'OPEN\tfalse\tMERGEABLE\tAPPROVED\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
+  ;;
+external-approval:pr:view)
+  printf 'OPEN\tfalse\tMERGEABLE\tNONE\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
+  ;;
+changes-requested:pr:view)
+  printf 'OPEN\tfalse\tMERGEABLE\tCHANGES_REQUESTED\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
+  ;;
+verify-content:pr:view | verify-commit:pr:view)
+  printf 'MERGED\t2026-07-22T00:00:00Z\t%s\tstack/base\t%s\thttps://example.test/pr/7\n' \
+    "$EXPECTED_MERGE" "$EXPECTED_HEAD"
+  ;;
+land-restart:pr:view | land-release-failure:pr:view)
+  view_count=0
+  if [[ -f "$FAKE_STATE/view-count" ]]; then
+    read -r view_count <"$FAKE_STATE/view-count"
+  fi
+  view_count=$((view_count + 1))
+  printf '%s\n' "$view_count" >"$FAKE_STATE/view-count"
+  if [[ "$view_count" -eq 1 ]]; then
+    printf 'MERGED\t%s\t%s\n' "$EXPECTED_HEAD" "$EXPECTED_MERGE"
+  else
+    pr_base=main
+    [[ "$FAKE_SCENARIO" != "land-restart" ]] || pr_base=stack/base
+    printf 'MERGED\t2026-07-22T00:00:00Z\t%s\t%s\t%s\thttps://example.test/pr/7\n' \
+      "$EXPECTED_MERGE" "$pr_base" "$EXPECTED_HEAD"
+  fi
+  ;;
+land-head-race:pr:view | land-stack-hold:pr:view)
+  view_count=0
+  if [[ -f "$FAKE_STATE/view-count" ]]; then
+    read -r view_count <"$FAKE_STATE/view-count"
+  fi
+  view_count=$((view_count + 1))
+  printf '%s\n' "$view_count" >"$FAKE_STATE/view-count"
+  pr_base=main
+  [[ "$FAKE_SCENARIO" != "land-stack-hold" ]] || pr_base=stack/base
+  if [[ "$view_count" -eq 1 ]]; then
+    printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+  elif [[ "$view_count" -eq 2 ]]; then
+    printf 'OPEN\tfalse\tMERGEABLE\tAPPROVED\t%s\t%s\tGREEN\n' "$pr_base" "$EXPECTED_HEAD"
+  elif [[ "$view_count" -eq 3 ]]; then
+    printf 'MERGED\t%s\t%s\n' "$EXPECTED_HEAD" "$EXPECTED_MERGE"
+  else
+    printf 'MERGED\t2026-07-22T00:00:00Z\t%s\t%s\t%s\thttps://example.test/pr/7\n' \
+      "$EXPECTED_MERGE" "$pr_base" "$EXPECTED_HEAD"
+  fi
+  ;;
+land-waiting:pr:view)
+  view_count=0
+  if [[ -f "$FAKE_STATE/view-count" ]]; then
+    read -r view_count <"$FAKE_STATE/view-count"
+  fi
+  view_count=$((view_count + 1))
+  printf '%s\n' "$view_count" >"$FAKE_STATE/view-count"
+  if [[ "$view_count" -eq 1 ]]; then
+    printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+  else
+    printf 'OPEN\tfalse\tMERGEABLE\tNONE\tmain\t%s\tPENDING\n' "$EXPECTED_HEAD"
+  fi
+  ;;
+verify-content:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'diverged\n'
+  else
+    exit 99
+  fi
+  ;;
+verify-commit:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'ahead\n'
+  else
+    exit 99
+  fi
+  ;;
+land-restart:api:* | land-release-failure:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'ahead\n'
+  else
+    exit 99
+  fi
+  ;;
+land-stack-hold:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'diverged\n'
+  else
+    exit 99
+  fi
+  ;;
+land-head-race:pr:merge)
+  if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
+    touch "$FAKE_STATE/atomic-head-guard"
+    exit 1
+  fi
+  printf 'missing exact head guard\n' >&2
+  exit 99
+  ;;
+land-stack-hold:pr:merge)
+  if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
+    touch "$FAKE_STATE/atomic-head-guard"
+    exit 0
+  fi
+  printf 'missing exact head guard\n' >&2
+  exit 99
+  ;;
+*)
+  printf 'unexpected fake gh invocation: %s\n' "$*" >&2
+  exit 99
+  ;;
+esac

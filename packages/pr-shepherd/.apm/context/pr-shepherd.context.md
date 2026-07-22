@@ -1,68 +1,90 @@
 # PR Shepherd
 
 MERGE BEADS
-MUST Every PR meant to land gets a merge bead at PR creation: labeled
-  `agent:integrator`, metadata `{"pr":N,"branch":"...","base_sha":"...",
-  "repo":"owner/name"}` plus author `origin_actor`/`origin_bead`, and a gh:pr gate:
-  `bd gate create --type=gh:pr --await-id=<N> --blocks <merge-bead>`.
+MUST Every PR meant to land gets an `agent:integrator` merge bead at PR
+  creation. Metadata records `repo`, `pr`, `branch`, `pr_base`,
+  `landing_base`, `base_sha`, exact reviewed `head_sha`, plus author
+  `origin_actor`/`origin_bead`; a GitHub gate owns asynchronous waiting.
+
+MUST `pr_base` is the PR's current target branch. `landing_base` is the branch
+  on which final content must be proved, normally the default branch. They may
+  differ for stacked PRs.
+
 DEFAULT Generic merge beads are shepherd-owned. A live orchestrate PR carries
   `integration_owner=orchestrate`; pr-shepherd refuses all duplicates.
-MUST Async waits are gate beads (gh:pr, gh:run) evaluated by `bd gate check`;
-  labels, claims, and field taxonomy follow the beads steering — never
-  ci:green/pr:merged labels.
+
+MUST A `gh:run` gate stores its exact `head_sha`. Successful gate resolution
+  is advisory until `landing-contract.sh check-run` confirms the run head.
 
 AUTHOR LIFECYCLE
-MUST Authors push branch/PR, write residual context onto their own bead per
-  the beads steering (comments: approach, tricky spots, what to check first
-  if CI fails), close it, and exit. The gate plus shepherd own the wait; any
-  later session resumes from beads alone.
+MUST Authors push branch/PR, write residual context onto their own bead, close
+  it, and exit. The gate plus shepherd own the wait; a later session resumes
+  from durable Beads and GitHub evidence alone.
 
-SHEPHERD PASS (stateless — any session, /loop, or cron)
-DEFAULT `bd gate check` → drain `bd ready --label agent:integrator
-  --unassigned --json` → per bead: `bd update <id> --claim`, probe (merge-tree
-  conflicts, `gh pr view` state/checks/review), then merge, bounce, or
-  re-gate + release; comment every probe outcome on the merge bead.
+SHEPHERD PASS
+DEFAULT `bd gate check` -> drain `landing-contract.sh ready-ids` -> atomically
+  claim -> validate exact anchors -> call `landing-contract.sh land` -> close,
+  hold, bounce, or re-gate and release. Comment every result.
+
+MUST Standalone passes use approval mode `github`. An orchestrated adapter may
+  use `external` only after a prior independent approval receipt names the
+  exact `head_sha`; requested changes remain a failure in either mode.
 
 WATCHER WAKE-UP
 MUST Resolve read-only watcher records with `resolve-queue-event.py`; persist
   pending/sent/ack on the exact bead and revalidate GitHub before every outcome.
+
 MUST Ack each record before reading the next; restart replays pending/sent.
   Claim refusal or crash stays unacknowledged and recoverable.
+
 MUST Orchestrate resolves first; only unmatched records reach pr-shepherd.
   Never fan one record to both.
-DEFAULT Watcher error/exit → surface, run one gate-check/pass, restart or stop; never add polling beyond REST reconciliation and manual/cron passes.
 
-BOUNCE-BACK (problem the shepherd cannot fix)
-MUST Dedupe first: an open fix bead with the same failure key (check+repo or
-  conflict file set) → `bd dep add <merge-bead> <existing-fix-bead>` +
-  correlation comments on both, no duplicate.
-MUST Otherwise file `bd create` with `discovered-from:<merge-bead>`, label
-  `agent:coder` (or `agent:reviewer`), ALWAYS unassigned; metadata carries
-  pr/branch/failure/check + origin_actor/origin_bead; description carries the
-  exact error, a reproduction command, "read <origin_bead>'s comments first",
-  and — when the same check is red on the base branch — "failure appears
-  pre-existing on <base>, not introduced by this branch".
-MUST Park and release: `bd dep add <merge-bead> <fix-bead>`, comment the merge
-  bead, `bd update <merge-bead> --assignee "" --status open`. The coder
-  closing the fix bead re-readies the merge bead — no messaging.
-DEFAULT Warm-context routing is the orchestrator's optimization: a live
-  orchestrator may claim the fix bead for its origin worker and route it via
-  its own channel; the shepherd's contract ends at filing unassigned.
-DEFAULT Non-blocking observations (flaky-but-passed test, warnings) become
-  `related`-linked beads or comments, never blocking deps.
+DEFAULT Watcher error/exit -> surface, run one gate-check/pass, restart or stop;
+  never add polling beyond REST reconciliation and manual/cron passes.
 
-PICKUP
-DEFAULT Workers poll `bd ready --assignee <me> --json` first (orchestrator may
-  have pinned work), then `bd ready --label agent:<kind> --unassigned --json`;
-  bd prime injection and catchup surface ready work — no messaging needed.
+EXACT LANDING
+MUST The merge transaction re-reads PR state, exact head, PR base, review, and
+  checks under the repository merge slot, probes the live PR base, and invokes
+  `gh pr merge --match-head-commit <head_sha>`.
+
+MUST Persist the GitHub merge receipt (`head_sha`, `merge_sha`, `pr_base`,
+  `landing_base`) before final proof. Close only after the merge slot releases
+  successfully and the exact merge commit is an ancestor of `landing_base`, or
+  every path changed from `base_sha` to `head_sha` has exact Git tree content
+  on its live tip.
+
+MUST A stacked PR merged only into `pr_base` remains open with
+  `landing_state=waiting_base`. A later pass re-proves its content on
+  `landing_base`; GitHub `MERGED` by itself never closes the bead.
 
 MERGE SLOT
-MUST One `bd merge-slot create` per repo (idempotent); `bd merge-slot acquire`
-  (`--wait` when held) before `gh pr merge`, `release` on every exit path —
-  the slot serializes merging across concurrent shepherd sessions.
+MUST Use stable holder `pr-shepherd:<repo>#<pr>@<head_sha>`. Persist one waiter
+  while held; when available, only the first waiter may acquire. Remove the
+  holder's waiter receipt after acquisition and release on success, error,
+  signal, and restart recovery.
+
+MUST Never bypass an earlier persisted waiter. Remove a stale holder or waiter
+  only after proving its session dead or its PR cancelled, recording the
+  evidence in a merge-bead comment and audit entry.
+
+BOUNCE-BACK
+MUST Compute a deterministic failure key and reconcile the oldest open routed
+  fix bead before creating another. The fix is unassigned and labeled
+  `agent:coder` or `agent:reviewer`.
+
+MUST Persist `bounce_key`, canonical `bounce_fix`, and monotonic
+  `bounce_phase` receipts (`preparing`, `fix_ready`, `parked`, `commented`,
+  `complete`). On restart, reconcile bead, dependency, comments, and released
+  claim from the last durable phase; never create a second blocker.
+
+MUST The fix description carries exact diagnosis, reproduction, origin
+  pointers, and whether the same failure exists on the landing base.
+
+DEFAULT Warm-context routing is the orchestrator's optimization. The
+  standalone contract ends after filing or reusing an unassigned fix bead.
 
 DEAD CLAIMS
-MUST Claim refusal means a live holder — skip the bead. Force-release
-  (`bd update <id> --assignee "" --status open`) only after confirming the
-  holder session is dead: its session-id actor shows no bead activity since
-  before your session started and no live session matches it.
+MUST Claim refusal means a live holder and is skipped. Force-release a claim,
+  slot holder, or queued waiter only after session/audit evidence proves it is
+  dead and ownership has not changed.
