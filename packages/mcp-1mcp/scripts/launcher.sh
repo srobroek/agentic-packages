@@ -10,7 +10,7 @@ readonly config_home="${XDG_CONFIG_HOME:-${HOME:+${HOME}/.config}}"
 readonly runtime_dir="${config_home}/1mcp"
 readonly pid_file="${runtime_dir}/server.pid"
 readonly lock_file="${runtime_dir}/launcher.lock"
-readonly wait_seconds="${MCP1_LAUNCHER_WAIT_SECONDS:-${ONE_MCP_LAUNCHER_WAIT_SECONDS:-20}}"
+readonly wait_seconds="${MCP1_LAUNCHER_WAIT_SECONDS:-${ONE_MCP_LAUNCHER_WAIT_SECONDS:-24}}"
 readonly kill_grace="${MCP1_LAUNCHER_KILL_GRACE_SECONDS:-${ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS:-1}}"
 readonly async_min_servers="${MCP1_LAUNCHER_ASYNC_MIN_SERVERS:-${ONE_MCP_LAUNCHER_ASYNC_MIN_SERVERS:-1}}"
 readonly async_timeout_ms="${MCP1_LAUNCHER_ASYNC_TIMEOUT_MS:-${ONE_MCP_LAUNCHER_ASYNC_TIMEOUT_MS:-5000}}"
@@ -84,7 +84,7 @@ run_bounded() {
 }
 
 runtime_status() {
-  run_bounded 2 "$one_mcp_bin" serve --status >/dev/null 2>&1
+  run_bounded 3 "$one_mcp_bin" serve --status >/dev/null 2>&1
 }
 
 ready() {
@@ -173,7 +173,7 @@ start_runtime() {
     *) command=("$one_mcp_bin") ;;
   esac
 
-  run_bounded "$wait_seconds" "${command[@]}" serve --background \
+  run_bounded 5 "${command[@]}" serve --background \
     --enable-async-loading \
     --async-min-servers "$async_min_servers" \
     --async-timeout "$async_timeout_ms" >/dev/null
@@ -201,13 +201,12 @@ ensure_runtime() {
     return 1
   fi
 
-  start_runtime || {
-    ready && return 0
+  start_runtime || :
+  wait_ready || {
     printf '1mcp startup failed; serve --status follows\n' >&2
     run_bounded 2 "$one_mcp_bin" serve --status >&2 || :
     return 1
   }
-  wait_ready
 }
 
 acquire_and_start() {

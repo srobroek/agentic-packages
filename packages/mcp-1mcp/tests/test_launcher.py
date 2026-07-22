@@ -76,6 +76,7 @@ def install_fake_commands(
         """#!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
+const { spawn } = require("child_process");
 const state = process.env.FAKE_1MCP_STATE;
 const args = process.argv.slice(2);
 const leakedLauncherEnv = Object.keys(process.env).filter(
@@ -141,6 +142,22 @@ if (args[0] === "serve" && args[1] === "--background") {
   }
   if (process.env.FAKE_1MCP_STARTS === "ignore") {
     hold(true);
+    return;
+  }
+  if (process.env.FAKE_1MCP_STARTS === "detached") {
+    const readyPath = path.join(state, "ready");
+    const child = spawn(
+      process.execPath,
+      [
+        "-e",
+        "setTimeout(() => require('fs').writeFileSync(process.argv[1], ''), Number(process.argv[2]))",
+        readyPath,
+        String(Number(process.env.FAKE_1MCP_BACKGROUND_DELAY) * 1000),
+      ],
+      {detached: true, stdio: "ignore"}
+    );
+    child.unref();
+    hold(false);
     return;
   }
   sleep(Number(process.env.FAKE_1MCP_BACKGROUND_DELAY) * 1000);
@@ -402,6 +419,7 @@ def test_timed_out_status_with_unrelated_pid_recovers_safely(
     tmp_path: Path,
 ) -> None:
     env, actions = install_fake_commands(tmp_path, status_behavior="hang-stale")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "10"
     unrelated = subprocess.Popen(["sleep", "30"])
     pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), unrelated.pid)
 
@@ -648,6 +666,23 @@ def test_successful_background_launch_waits_for_delayed_readiness(
     _, stderr = process.communicate(timeout=8)
 
     assert process.returncode == 0, stderr
+    assert action_count(actions, "serve --background") == 1
+    assert action_count(actions, "proxy") == 1
+
+
+def test_detached_runtime_can_become_ready_after_background_parent_times_out(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(
+        tmp_path,
+        start_behavior="detached",
+        background_delay=6,
+    )
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "10"
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 1
 
