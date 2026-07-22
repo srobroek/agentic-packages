@@ -88,11 +88,13 @@ wider access to make a route fit.
 **Only the orchestrator spawns or dismisses agents; no worker nests** — even
 where the platform would allow it (flat tree — SKILL.md core rule 5).
 
-Tracked-file work always uses the workflow-coder review and gatekeeper path,
-regardless of whether its task kind is code, docs, or configuration. Artifact,
-comment, and external-state work has the same `REPORTED → in_review → approved`
-sequence, but an Evidence reviewer validates it and the orchestrator closes the
-approved bead without inventing a commit or merge.
+Tracked-file work may use a workflow-coder, specialised worker, or generic pull
+worker. It always runs in an isolated worktree and uses an independent
+workflow-reviewer plus the integration gatekeeper, regardless of whether its
+task kind is code, docs, or configuration. Artifact, comment, and external-state
+work has the same `REPORTED → in_review → approved` sequence, but an Evidence
+reviewer validates it and the orchestrator closes the approved bead without
+inventing a commit or merge.
 
 ## Researcher fan-out / fan-in
 

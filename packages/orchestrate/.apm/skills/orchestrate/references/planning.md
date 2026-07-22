@@ -70,7 +70,10 @@ Apply one route only, in this order:
 1. **Explicit actor:** a bead with an assignee goes only to that actor. Confirm
    its declared task kinds, capabilities, access, and scope are compatible,
    then send the bead-specific brief. An incompatible explicit assignment
-   stays unclaimed until the coordinator corrects it or raises `ASK`.
+   remains pinned and unclaimed. Automatic correction may update only
+   evidence-backed routing-envelope fields; it never changes the assignee. An
+   actor change requires explicit release/requeue or coordinator/human
+   reassignment under the handoff and dead-claim recovery contracts.
 2. **Specialist:** for an unassigned bead, choose the narrowest catalogued
    specialist whose task kinds and capabilities cover the routing envelope.
    Set its actor as assignee before sending the brief.
