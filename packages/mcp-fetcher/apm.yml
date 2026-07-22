@@ -1,5 +1,5 @@
 name: mcp-fetcher
-version: 0.1.0
+version: 0.2.0
 description: >-
   MCP server package for Fetcher, providing direct web-page retrieval for coding
   agents.
@@ -21,4 +21,6 @@ dependencies:
         - '-y'
         - fetcher-mcp
       env:
-        USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36
+        USER_AGENT: >-
+          Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+          Chrome/120 Safari/537.36
