@@ -60,7 +60,10 @@ def load_mappings(root: Path) -> dict[str, dict[str, str]]:
 
 
 def agent_source_files(root: Path) -> list[Path]:
+    # Check both authored package agent trees and the target-specific APM tree;
+    # deployed `.codex/agents` coverage remains enforced by `patch_codex`.
     candidates = list(root.glob("packages/*/agents/*.md"))
+    candidates.extend(root.glob("packages/*/.apm/agents/*.agent.md"))
     candidates.extend(root.glob(".apm/agents/*.agent.md"))
     return sorted({path.resolve() for path in candidates if path.is_file()})
 

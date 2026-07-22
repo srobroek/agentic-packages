@@ -107,6 +107,22 @@ def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
         injector.validate_source_coverage(tmp_path, injector.load_mappings(tmp_path))
 
 
+def test_apm_agent_source_without_mapping_fails(tmp_path: Path) -> None:
+    write_mapping(tmp_path / "packages" / "mapped" / ".apm" / "agent-models.yml")
+    source = tmp_path / "packages" / "unmapped" / ".apm" / "agents" / "reviewer.agent.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        injector.MappingError,
+        match=r"agent source lacks agent-models\.yml entry: .*reviewer\.agent\.md \(reviewer\)",
+    ):
+        injector.validate_source_coverage(tmp_path, injector.load_mappings(tmp_path))
+
+
 def test_all_repository_agent_sources_have_model_mappings() -> None:
     root = Path(__file__).parents[2]
     mappings = injector.load_mappings(root)
