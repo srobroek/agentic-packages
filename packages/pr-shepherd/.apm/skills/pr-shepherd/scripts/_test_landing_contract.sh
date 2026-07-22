@@ -124,8 +124,8 @@ native_holder_for() {
 
   waiter="$(waiter_path "$holder" "$generation")"
   waiter="${waiter##*/}"
-  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" \
-    | sha1sum | awk '{print $1}')"
+  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" |
+    sha1sum | awk '{print $1}')"
   printf 'pr-shepherd:%s\n' "$digest"
 }
 

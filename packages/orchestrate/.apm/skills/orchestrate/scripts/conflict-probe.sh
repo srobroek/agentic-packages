@@ -49,74 +49,74 @@ cmd="${1:-}"
 shift || true
 
 case "$cmd" in
-  conflicts)
-    base="${1:?base ref}"
-    branch="${2:?branch ref}"
-    base_sha="$(git rev-parse --verify "$base^{commit}" 2>/dev/null)" || die "bad base $base"
-    br_sha="$(git rev-parse --verify "$branch^{commit}" 2>/dev/null)" || die "bad branch $branch"
-    # Modern merge-tree predicts the merge without touching the tree.
-    # --name-only output: line 1 = tree OID, then conflicted paths, then a
-    # blank line and informational messages. Exit 1 = conflicts. Any nonzero
-    # result without conflict paths is unknown and must not be reported clean.
-    set +e
-    out="$(git merge-tree --write-tree --name-only "$base_sha" "$br_sha" 2>/dev/null)"
-    rc=$?
-    set -e
-    if [[ $rc -ne 0 ]]; then
-      paths="$(printf '%s\n' "$out" | sed -n '2,/^$/p' | sed '/^$/d' | sort -u)"
-      tree_oid="$(printf '%s\n' "$out" | sed -n '1p')"
-      if [[ "$tree_oid" =~ ^[0-9a-fA-F]{40,64}$ && -n "$paths" ]]; then
-        printf '%s\n' "$paths"
-        exit 1
-      fi
-      die "merge-tree could not classify $base and $branch"
-    fi
-    printf 'clean\n'
-    exit 0
-    ;;
-
-  pairwise)
-    base="${1:?base}"
-    a="${2:?branch a}"
-    b="${3:?branch b}"
-    mba="$(git merge-base "$base" "$a" 2>/dev/null)" || die "cannot find merge base for $base and $a"
-    mbb="$(git merge-base "$base" "$b" 2>/dev/null)" || die "cannot find merge base for $base and $b"
-    fa="$(git diff --name-only "$mba" "$a" | sort -u)" || die "cannot diff $a"
-    fb="$(git diff --name-only "$mbb" "$b" | sort -u)" || die "cannot diff $b"
-    overlap="$(comm -12 <(printf '%s\n' "$fa") <(printf '%s\n' "$fb") || true)"
-    if [[ -n "$overlap" ]]; then
-      printf 'overlap:\n%s\n' "$overlap"
+conflicts)
+  base="${1:?base ref}"
+  branch="${2:?branch ref}"
+  base_sha="$(git rev-parse --verify "$base^{commit}" 2>/dev/null)" || die "bad base $base"
+  br_sha="$(git rev-parse --verify "$branch^{commit}" 2>/dev/null)" || die "bad branch $branch"
+  # Modern merge-tree predicts the merge without touching the tree.
+  # --name-only output: line 1 = tree OID, then conflicted paths, then a
+  # blank line and informational messages. Exit 1 = conflicts. Any nonzero
+  # result without conflict paths is unknown and must not be reported clean.
+  set +e
+  out="$(git merge-tree --write-tree --name-only "$base_sha" "$br_sha" 2>/dev/null)"
+  rc=$?
+  set -e
+  if [[ $rc -ne 0 ]]; then
+    paths="$(printf '%s\n' "$out" | sed -n '2,/^$/p' | sed '/^$/d' | sort -u)"
+    tree_oid="$(printf '%s\n' "$out" | sed -n '1p')"
+    if [[ "$tree_oid" =~ ^[0-9a-fA-F]{40,64}$ && -n "$paths" ]]; then
+      printf '%s\n' "$paths"
       exit 1
     fi
-    printf 'disjoint\n'
-    exit 0
-    ;;
+    die "merge-tree could not classify $base and $branch"
+  fi
+  printf 'clean\n'
+  exit 0
+  ;;
 
-  ci)
-    ref="${1:?pr number or branch}"
-    command -v gh >/dev/null || die "gh not found (needed for ci)"
-    gh pr checks "$ref"
-    ;;
+pairwise)
+  base="${1:?base}"
+  a="${2:?branch a}"
+  b="${3:?branch b}"
+  mba="$(git merge-base "$base" "$a" 2>/dev/null)" || die "cannot find merge base for $base and $a"
+  mbb="$(git merge-base "$base" "$b" 2>/dev/null)" || die "cannot find merge base for $base and $b"
+  fa="$(git diff --name-only "$mba" "$a" | sort -u)" || die "cannot diff $a"
+  fb="$(git diff --name-only "$mbb" "$b" | sort -u)" || die "cannot diff $b"
+  overlap="$(comm -12 <(printf '%s\n' "$fa") <(printf '%s\n' "$fb") || true)"
+  if [[ -n "$overlap" ]]; then
+    printf 'overlap:\n%s\n' "$overlap"
+    exit 1
+  fi
+  printf 'disjoint\n'
+  exit 0
+  ;;
 
-  land)
-    [[ $# -eq 8 ]] || die "land expects 8 arguments"
-    contract="$(landing_contract)"
-    exec "$contract" land "$@" external
-    ;;
+ci)
+  ref="${1:?pr number or branch}"
+  command -v gh >/dev/null || die "gh not found (needed for ci)"
+  gh pr checks "$ref"
+  ;;
 
-  verify-landed)
-    [[ $# -eq 6 ]] || die "verify-landed expects 6 arguments"
-    contract="$(landing_contract)"
-    exec "$contract" verify-landed "$@"
-    ;;
+land)
+  [[ $# -eq 8 ]] || die "land expects 8 arguments"
+  contract="$(landing_contract)"
+  exec "$contract" land "$@" external
+  ;;
 
-  check-run)
-    [[ $# -eq 3 ]] || die "check-run expects 3 arguments"
-    contract="$(landing_contract)"
-    exec "$contract" check-run "$@"
-    ;;
+verify-landed)
+  [[ $# -eq 6 ]] || die "verify-landed expects 6 arguments"
+  contract="$(landing_contract)"
+  exec "$contract" verify-landed "$@"
+  ;;
 
-  *)
-    die "usage: conflicts|pairwise|ci|land|verify-landed|check-run (got '${cmd:-}')"
-    ;;
+check-run)
+  [[ $# -eq 3 ]] || die "check-run expects 3 arguments"
+  contract="$(landing_contract)"
+  exec "$contract" check-run "$@"
+  ;;
+
+*)
+  die "usage: conflicts|pairwise|ci|land|verify-landed|check-run (got '${cmd:-}')"
+  ;;
 esac
