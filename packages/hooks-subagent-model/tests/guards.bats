@@ -28,6 +28,30 @@ run_guard() {
   decision="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null || true)"
 }
 
+write_codex_agent() {
+  root="$1"; name="$2"; model="${3:-}"; effort="${4:-}"
+  mkdir -p "$root/.codex/agents"
+  {
+    printf 'name = "%s"\n' "$name"
+    printf 'description = "Test"\n'
+    [ -z "$model" ] || printf 'model = "%s"\n' "$model"
+    [ -z "$effort" ] || printf 'model_reasoning_effort = "%s"\n' "$effort"
+    printf 'developer_instructions = "Work"\n'
+  } > "$root/.codex/agents/$name.toml"
+}
+
+write_codex_agent_literal() {
+  root="$1"; name="$2"; model="${3:-}"; effort="${4:-}"
+  mkdir -p "$root/.codex/agents"
+  {
+    printf "name = '%s'\n" "$name"
+    printf "description = 'Test'\n"
+    [ -z "$model" ] || printf "model = '%s'\n" "$model"
+    [ -z "$effort" ] || printf "model_reasoning_effort = '%s'\n" "$effort"
+    printf "developer_instructions = 'Work'\n"
+  } > "$root/.codex/agents/$name.toml"
+}
+
 # --- allow: model explicitly set --------------------------------------------
 
 @test "model set + general-purpose -> allow (no output)" {
@@ -52,6 +76,86 @@ run_guard() {
 
 @test "pinned subagent_type (pr-reviewer), no model -> allow (no output)" {
   run_guard '{"tool_name":"Agent","tool_input":{"subagent_type":"pr-reviewer"}}'
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+# --- Codex: semantic profile resolution ------------------------------------
+
+@test "Codex pinned project agent -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  write_codex_agent "$project" workflow-coder gpt-5.6-luna xhigh
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"workflow-coder",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "Codex pinned project agent with TOML literal strings -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  write_codex_agent_literal "$project" workflow-coder gpt-5.6-luna xhigh
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"workflow-coder",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "Codex pinned global agent -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  mkdir -p "$project"
+  write_codex_agent "$global" explorer gpt-5.6-luna medium
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"explorer",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global/.codex"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "Codex pinned global agent with TOML literal strings -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  mkdir -p "$project"
+  write_codex_agent_literal "$global" explorer gpt-5.6-luna medium
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"explorer",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global/.codex"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "Codex incomplete project profile shadows pinned global profile -> deny" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  write_codex_agent "$project" workflow-coder
+  write_codex_agent "$global" workflow-coder gpt-5.6-luna xhigh
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"workflow-coder",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global/.codex"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("shadows lower-precedence")' >/dev/null
+}
+
+@test "Codex unknown agent type -> deny" {
+  project="$BATS_TEST_TMPDIR/project"
+  mkdir -p "$project"
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"mystery",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$BATS_TEST_TMPDIR/empty"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("no project or global custom profile")' >/dev/null
+}
+
+@test "Codex default agent -> deny with semantic routing guidance" {
+  payload='{"tool_name":"Agent","cwd":"/tmp","tool_input":{"task_name":"test"}}'
+  run_guard "$payload" CODEX_HOME="$BATS_TEST_TMPDIR/empty"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("workflow-coder")' >/dev/null
+}
+
+@test "Codex explicit ad-hoc model and effort require opt-in" {
+  payload='{"tool_name":"Agent","cwd":"/tmp","tool_input":{"task_name":"test","model":"gpt-5.6-luna","reasoning_effort":"medium"}}'
+  run_guard "$payload" CODEX_HOME="$BATS_TEST_TMPDIR/empty"
+  [ "$decision" = "deny" ]
+  run_guard "$payload" CODEX_HOME="$BATS_TEST_TMPDIR/empty" SUBAGENT_MODEL_GUARD_ALLOW_AD_HOC=1
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
