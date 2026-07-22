@@ -123,6 +123,15 @@ def _allowed(code: str, ln: str, prev: str) -> bool:
     return False
 
 
+def _strip_inline_code(line: str) -> str:
+    """Mask complete Markdown code spans so identifiers are not prose-linted."""
+    return re.sub(
+        r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)",
+        lambda match: " " * len(match.group(0)),
+        line,
+    )
+
+
 def lint(path: Path, genre: str) -> list[tuple[str, str, int, str]]:
     """Return [(severity, code, line, message)]."""
     findings: list[tuple[str, str, int, str]] = []
@@ -142,9 +151,10 @@ def lint(path: Path, genre: str) -> list[tuple[str, str, int, str]]:
 
     for idx, (lineno, ln) in enumerate(visible):
         prev = visible[idx - 1][1] if idx else ""
+        prose = _strip_inline_code(ln)
         # Skip markdown link URLs for E3 would over-permit; scan whole line.
         for sev, code, pattern, label in checks:
-            m = pattern.search(ln)
+            m = pattern.search(prose)
             if m and not _allowed(code, ln, prev):
                 findings.append(
                     (sev, code, lineno, f"{label}: {m.group(0)!r}")
