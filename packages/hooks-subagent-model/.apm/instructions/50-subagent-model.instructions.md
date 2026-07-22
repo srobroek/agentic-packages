@@ -1,5 +1,5 @@
 ---
-description: Always-loaded subagent model-routing policy — pass an explicit model on every unpinned Agent/Task spawn.
+description: Always-loaded subagent model-routing policy for explicit Claude models and pinned Codex semantic profiles.
 ---
 
 For the model-routing rules enforced by this package's pre-tool hook,

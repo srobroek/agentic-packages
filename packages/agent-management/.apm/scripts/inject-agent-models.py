@@ -15,6 +15,7 @@ import yaml
 
 MAPPING_NAME = "agent-models.yml"
 ALLOWED_CODEX_FIELDS = {"model", "reasoning_effort"}
+AGENT_NAME = re.compile(r"^name:\s*[\"']?([^\"'\s]+)", re.MULTILINE)
 
 
 class MappingError(ValueError):
@@ -58,6 +59,26 @@ def load_mappings(root: Path) -> dict[str, dict[str, str]]:
     return merged
 
 
+def agent_source_files(root: Path) -> list[Path]:
+    candidates = list(root.glob("packages/*/agents/*.md"))
+    candidates.extend(root.glob("apm_modules/**/agents/*.md"))
+    candidates.extend(root.glob(".apm/apm_modules/**/agents/*.md"))
+    return sorted({path.resolve() for path in candidates if path.is_file()})
+
+
+def validate_source_coverage(root: Path, mappings: dict[str, dict[str, str]]) -> None:
+    missing: list[str] = []
+    for path in agent_source_files(root):
+        match = AGENT_NAME.search(path.read_text(encoding="utf-8"))
+        if match is None:
+            raise MappingError(f"agent source has no frontmatter name: {path}")
+        name = match.group(1)
+        if name not in mappings:
+            missing.append(f"agent source lacks {MAPPING_NAME} entry: {path} ({name})")
+    if missing:
+        raise MappingError("\n".join(missing))
+
+
 def set_toml_string(text: str, key: str, value: str) -> str:
     line = f'{key} = "{value}"'
     pattern = re.compile(rf"^{re.escape(key)}\s*=.*$", re.MULTILINE)
@@ -82,10 +103,32 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
     agents_dir = root / ".codex" / "agents"
     errors: list[str] = []
     changed = 0
+    deployed: dict[str, Path] = {}
+    for path in sorted(agents_dir.glob("*.toml")):
+        try:
+            parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+        except tomllib.TOMLDecodeError as exc:
+            errors.append(f"invalid deployed Codex agent {path}: {exc}")
+            continue
+        name = parsed.get("name")
+        if not isinstance(name, str) or not name:
+            errors.append(f"deployed Codex agent has no name: {path}")
+            continue
+        if name in deployed:
+            errors.append(f"duplicate deployed Codex agent name {name}: {deployed[name]} and {path}")
+            continue
+        deployed[name] = path
+
+    for name, path in sorted(deployed.items()):
+        if name not in mappings:
+            errors.append(
+                f"deployed Codex agent lacks {MAPPING_NAME} entry: {path} ({name})"
+            )
+
     for name, mapping in sorted(mappings.items()):
-        path = agents_dir / f"{name}.toml"
-        if not path.is_file():
-            errors.append(f"missing deployed Codex agent: {path}")
+        path = deployed.get(name)
+        if path is None:
+            errors.append(f"missing deployed Codex agent: {agents_dir / f'{name}.toml'}")
             continue
         current = path.read_text(encoding="utf-8")
         desired = expected_text(current, mapping)
@@ -126,6 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         mappings = load_mappings(root)
         if not mappings:
             raise MappingError(f"no {MAPPING_NAME} files found below {root}")
+        validate_source_coverage(root, mappings)
         changed = patch_codex(root, mappings, check=args.check)
     except MappingError as exc:
         print(f"agent model injection failed: {exc}", file=sys.stderr)

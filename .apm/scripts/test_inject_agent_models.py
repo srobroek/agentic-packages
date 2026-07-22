@@ -67,3 +67,47 @@ def test_missing_deployed_agent_fails(tmp_path: Path) -> None:
 
     with pytest.raises(injector.MappingError, match="missing deployed Codex agent"):
         injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=False)
+
+
+def test_deployed_agent_without_mapping_fails(tmp_path: Path) -> None:
+    write_mapping(tmp_path / ".apm" / "agent-models.yml")
+    agents = tmp_path / ".codex" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "coder.toml").write_text(
+        'name = "coder"\ndescription = "Codes"\ndeveloper_instructions = "Work"\n',
+        encoding="utf-8",
+    )
+    stale = agents / "stale-agent.toml"
+    stale.write_text(
+        'name = "stale-agent"\ndescription = "Stale"\n'
+        'developer_instructions = "Work"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        injector.MappingError,
+        match=r"lacks agent-models\.yml entry: .*stale-agent\.toml \(stale-agent\)",
+    ):
+        injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=True)
+
+
+def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
+    write_mapping(tmp_path / "packages" / "mapped" / ".apm" / "agent-models.yml")
+    source = tmp_path / "packages" / "unmapped" / "agents" / "reviewer.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        injector.MappingError,
+        match=r"agent source lacks agent-models\.yml entry: .*reviewer\.md \(reviewer\)",
+    ):
+        injector.validate_source_coverage(tmp_path, injector.load_mappings(tmp_path))
+
+
+def test_all_repository_agent_sources_have_model_mappings() -> None:
+    root = Path(__file__).parents[2]
+    mappings = injector.load_mappings(root)
+    injector.validate_source_coverage(root, mappings)

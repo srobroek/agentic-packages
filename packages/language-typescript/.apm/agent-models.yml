@@ -1,0 +1,10 @@
+version: 1
+agents:
+  javascript-pro:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh
+  typescript-pro:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh
