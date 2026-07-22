@@ -97,6 +97,24 @@ class DiscoverAgentsTest(unittest.TestCase):
         self.assertEqual(len(agents), 1)
         self.assertEqual(agents[0]["description"], "Preferred implementation agent.")
 
+    def test_role_filter_cannot_bypass_higher_precedence_duplicate(self) -> None:
+        self.write(
+            self.first,
+            "preferred.md",
+            definition("duplicate", description="Reviews pull requests."),
+        )
+        self.write(
+            self.second,
+            "fallback.md",
+            definition("duplicate", description="Codes implementation."),
+        )
+
+        agents = discover_agents.collect(
+            [os.fspath(self.first), os.fspath(self.second)], "coder", False
+        )
+
+        self.assertEqual(agents, [])
+
     def test_malformed_duplicate_does_not_hide_valid_lower_precedence_agent(
         self,
     ) -> None:

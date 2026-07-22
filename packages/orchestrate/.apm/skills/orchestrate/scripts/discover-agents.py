@@ -225,10 +225,10 @@ def collect(
             name = str(metadata["name"])
             if name in seen_names:  # higher-precedence scope already won
                 continue
+            seen_names.add(name)
             desc = str(metadata["description"])
             if role and not _role_match(role, name, desc):
                 continue
-            seen_names.add(name)
             out.append(
                 {
                     "name": name,
