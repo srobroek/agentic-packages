@@ -1,6 +1,6 @@
 {
   "name": "mcp-1mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
   "author": {
     "name": "Sjors Robroek"
