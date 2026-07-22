@@ -13,6 +13,7 @@ scripts:
   check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
   build-release-please: python3 .apm/scripts/build-release-please.py
   check-release-please: python3 .apm/scripts/build-release-please.py --check
+  check-release-baselines: python3 .apm/scripts/check-release-baselines.py
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
   build-marketplace: >-

@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -74,6 +76,9 @@ jobs:
           else
             echo "no generator tests in .apm/scripts"
           fi
+
+      - name: Validate released version baselines
+        run: python3 .apm/scripts/check-release-baselines.py
 
       - name: Regenerate non-destructive artifacts
         run: |
