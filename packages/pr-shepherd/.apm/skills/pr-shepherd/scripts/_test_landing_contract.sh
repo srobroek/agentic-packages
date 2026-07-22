@@ -348,6 +348,26 @@ assert_not_file "$state/claim-released" "delayed loser leaves the merge claim un
 assert_eq "$(native_holder_for stable-holder 2 actor-c)" "$(<"$state/holder")" \
   "delayed loser preserves the winner native holder token"
 
+new_state recover-claim-waiter-release-before-close
+scenario=recover-claim-waiter-release-before-close
+actor="actor-b"
+run_contract recover-claim merge-1 dead-actor session-registry:loser stable-holder
+assert_eq 2 "$last_rc" "release-before-close loser cannot take the successor generation"
+assert_waiter_status stable-holder closed "exact cleanup leaves the dead generation closed" 1
+winner_waiter="$(waiter_path stable-holder 2)"
+assert_eq actor-c "$(<"$winner_waiter/lease-actor")" \
+  "exact cleanup preserves the concurrent successor lease"
+assert_eq in_progress "$(<"$winner_waiter/status")" \
+  "exact cleanup preserves the concurrent successor waiter"
+assert_eq "$(native_holder_for stable-holder 2 actor-c)" "$(<"$state/holder")" \
+  "exact cleanup preserves the concurrent successor holder"
+assert_eq winner-receipt "$(<"$state/recovery-key")" \
+  "exact cleanup preserves the concurrent successor receipt"
+assert_eq complete "$(<"$state/recovery-phase")" \
+  "exact cleanup preserves the concurrent successor receipt phase"
+assert_eq actor-c "$(<"$state/claim-assignee")" \
+  "exact cleanup preserves the concurrent successor claim"
+
 new_state recover-claim-waiter-after-release
 scenario=recover-claim-waiter-after-release
 actor="actor-c"

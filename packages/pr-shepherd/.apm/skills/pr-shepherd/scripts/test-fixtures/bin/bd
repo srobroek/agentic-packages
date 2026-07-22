@@ -241,6 +241,19 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "release" ]]; then
     touch "$FAKE_STATE/acquired" "$FAKE_STATE/winner-interleaved"
     exit 1
   fi
+  if [[ "$FAKE_SCENARIO" == "recover-claim-waiter-release-before-close" &&
+    ! -f "$FAKE_STATE/winner-interleaved" ]]; then
+    dead_waiter="$(waiter_id_for stable-holder 1)"
+    printf 'closed\n' >"$WAITER_ROOT/$dead_waiter/status"
+    seed_waiter stable-holder in_progress "" 2 actor-c
+    printf '%s\n' "$(native_holder_for stable-holder 2 actor-c)" >"$FAKE_STATE/holder"
+    printf 'actor-c\n' >"$FAKE_STATE/claim-assignee"
+    printf 'in_progress\n' >"$FAKE_STATE/claim-status"
+    printf 'winner-receipt\n' >"$FAKE_STATE/recovery-key"
+    printf 'complete\n' >"$FAKE_STATE/recovery-phase"
+    touch "$FAKE_STATE/acquired" "$FAKE_STATE/winner-interleaved"
+    exit 0
+  fi
   if [[ -f "$FAKE_STATE/acquired" && ! -f "$FAKE_STATE/released" &&
     "$requested_holder" != "$(<"$FAKE_STATE/holder")" ]]; then
     exit 1
