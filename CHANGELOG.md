@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.4.0...srobroek-agentic--v16.5.0) (2026-07-22)
+
+
+### Features
+
+* connect queue events to shepherd and orchestrator ([#608](https://github.com/srobroek/agentic-packages/issues/608)) ([58e25f8](https://github.com/srobroek/agentic-packages/commit/58e25f865f2c28cfb060f94a9bd1aa0ef6bf9dd5))
+
 ## [16.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.3.0...srobroek-agentic--v16.4.0) (2026-07-22)
 
 
