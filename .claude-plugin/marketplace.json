@@ -33,7 +33,7 @@
     {
       "name": "agent-coder-high",
       "description": "Escalated coding agent for complex bounded implementation and debugging.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -45,7 +45,7 @@
     {
       "name": "agent-explorer",
       "description": "Read-only exploration agent for bounded code and configuration discovery.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -69,7 +69,7 @@
     {
       "name": "agent-luna-high",
       "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -81,7 +81,7 @@
     {
       "name": "agent-luna-low",
       "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -93,7 +93,7 @@
     {
       "name": "agent-luna-medium",
       "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -105,7 +105,7 @@
     {
       "name": "agent-luna-xhigh",
       "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -129,7 +129,7 @@
     {
       "name": "agent-operator",
       "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -153,7 +153,7 @@
     {
       "name": "agent-reasoner",
       "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -165,7 +165,7 @@
     {
       "name": "agent-reviewer-high",
       "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -177,7 +177,7 @@
     {
       "name": "agent-reviewer-low",
       "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -189,7 +189,7 @@
     {
       "name": "agent-sol-high",
       "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -201,7 +201,7 @@
     {
       "name": "agent-sol-low",
       "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -213,7 +213,7 @@
     {
       "name": "agent-sol-medium",
       "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -225,7 +225,7 @@
     {
       "name": "agent-sol-xhigh",
       "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -237,7 +237,7 @@
     {
       "name": "agent-worker",
       "description": "Bounded implementation worker for changes without a more specific coding role.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tags": [
         "agent",
         "codex",
@@ -272,7 +272,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "tags": [
         "beads",
         "issue-tracking",
@@ -309,7 +309,7 @@
     {
       "name": "chezmoi-editor",
       "description": "Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "skill",
         "dotfiles",
@@ -356,7 +356,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "10.2.1",
+      "version": "10.2.2",
       "tags": [
         "bundle",
         "baseline"
@@ -644,7 +644,7 @@
     {
       "name": "hooks-portability-ci",
       "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "ci",
         "hooks",
@@ -694,7 +694,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "tags": [
         "hooks",
         "subagent",
@@ -945,7 +945,7 @@
     {
       "name": "license-picker",
       "description": "Interactive \"choose your own adventure\" license picker for open-source projects. Interviews the user about their repo type, threat model, ecosystem, and contribution goals, then recommends an OSI-approved license with full rationale. Validates against real license text and SPDX identifiers.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "skill",
         "licensing",
@@ -959,7 +959,7 @@
     {
       "name": "lsp-go",
       "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "go"
@@ -970,7 +970,7 @@
     {
       "name": "lsp-python",
       "description": "Python LSP server: registers pyright (pyright-langserver) so agents get hover, diagnostics, go-to-definition, and references on Python sources. Installed transitively by the language-python bundle; also installable on its own.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "python"
@@ -981,7 +981,7 @@
     {
       "name": "lsp-rust",
       "description": "Rust LSP server: registers rust-analyzer so agents get hover, diagnostics, go-to-definition, and references on Rust sources. Installed transitively by the language-rust bundle; also installable on its own. Requires rust-analyzer on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "rust"
@@ -992,7 +992,7 @@
     {
       "name": "lsp-shell",
       "description": "Shell LSP server: registers bash-language-server so agents get hover, diagnostics, go-to-definition, and references on Bash/POSIX shell sources. Installed transitively by the language-shell bundle; also installable on its own. Requires bash-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "shell"
@@ -1003,7 +1003,7 @@
     {
       "name": "lsp-terraform",
       "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "terraform"
@@ -1014,7 +1014,7 @@
     {
       "name": "lsp-typescript",
       "description": "TypeScript/JavaScript LSP server: registers typescript-language-server so agents get hover, diagnostics, go-to-definition, and references on TS/JS sources. Installed transitively by the language-typescript bundle; also installable on its own. Requires typescript-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "typescript"
@@ -1081,7 +1081,7 @@
     {
       "name": "mcp-mempalace",
       "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "memory",
@@ -1149,7 +1149,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "3.9.1",
+      "version": "3.10.0",
       "tags": [
         "skill",
         "agent",
@@ -1184,7 +1184,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.11.1",
+      "version": "0.12.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1448,7 +1448,7 @@
     {
       "name": "steering-git-workflow",
       "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a dual-runtime PreToolUse blocker for non-draft or unlinked PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "tags": [
         "steering",
         "git"
@@ -1508,7 +1508,7 @@
     {
       "name": "steering-speckit",
       "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "tags": [
         "steering",
         "speckit"
@@ -1618,7 +1618,7 @@
     {
       "name": "worktrunk-writer",
       "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, exposes schema-2 fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "tags": [
         "worktrunk",
         "worktree",

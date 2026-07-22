@@ -1,12 +1,12 @@
 name: worktrunk-writer
-version: 0.0.0
+version: 1.0.0
 description: >-
   Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named
   worktrees, copies only allowlisted ignored files, records a branch lease,
   validates writer paths before mutation, exposes schema-2 fleet evidence, and
-  delegates merge and removal safety to Worktrunk. Beads metadata is joined
-  when the repository has an active beads workspace. Worktrunk's native
-  plugins remain the owner of runtime activity markers and lifecycle events.
+  delegates merge and removal safety to Worktrunk. Beads metadata is joined when
+  the repository has an active beads workspace. Worktrunk's native plugins
+  remain the owner of runtime activity markers and lifecycle events.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

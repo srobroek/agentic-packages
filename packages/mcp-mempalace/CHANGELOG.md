@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.2...mcp-mempalace--v1.1.0) (2026-07-22)
+
+
+### Features
+
+* make Codex and Claude APM integration target-aware ([#643](https://github.com/srobroek/agentic-packages/issues/643)) ([83fe64b](https://github.com/srobroek/agentic-packages/commit/83fe64b7bf119cb91aaea3f3d7932b2781a45eee))
+
 ## [1.0.2](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.1...mcp-mempalace--v1.0.2) (2026-07-22)
 
 
