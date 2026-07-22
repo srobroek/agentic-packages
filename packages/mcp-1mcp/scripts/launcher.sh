@@ -14,13 +14,14 @@ readonly wait_seconds="${MCP1_LAUNCHER_WAIT_SECONDS:-${ONE_MCP_LAUNCHER_WAIT_SEC
 readonly kill_grace="${MCP1_LAUNCHER_KILL_GRACE_SECONDS:-${ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS:-1}}"
 readonly async_min_servers="${MCP1_LAUNCHER_ASYNC_MIN_SERVERS:-${ONE_MCP_LAUNCHER_ASYNC_MIN_SERVERS:-1}}"
 readonly async_timeout_ms="${MCP1_LAUNCHER_ASYNC_TIMEOUT_MS:-${ONE_MCP_LAUNCHER_ASYNC_TIMEOUT_MS:-5000}}"
+readonly proxy_filter="${MCP1_LAUNCHER_FILTER:-${ONE_MCP_LAUNCHER_FILTER:-}}"
 readonly supplied_deadline="${MCP1_LAUNCHER_DEADLINE_EPOCH:-${ONE_MCP_LAUNCHER_DEADLINE_EPOCH:-}}"
 readonly launcher_locked="${MCP1_LAUNCHER_LOCKED:-0}"
 
 # 1mcp maps every ONE_MCP_* variable to a CLI option. Keep legacy launcher
 # tuning compatible, but never leak launcher-only variables into 1mcp itself.
-unset ONE_MCP_LAUNCHER_WAIT_SECONDS ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS ONE_MCP_LAUNCHER_ASYNC_MIN_SERVERS ONE_MCP_LAUNCHER_ASYNC_TIMEOUT_MS ONE_MCP_LAUNCHER_DEADLINE_EPOCH ONE_MCP_LAUNCHER_LOCKED
-unset MCP1_LAUNCHER_WAIT_SECONDS MCP1_LAUNCHER_KILL_GRACE_SECONDS MCP1_LAUNCHER_ASYNC_MIN_SERVERS MCP1_LAUNCHER_ASYNC_TIMEOUT_MS MCP1_LAUNCHER_DEADLINE_EPOCH MCP1_LAUNCHER_LOCKED
+unset ONE_MCP_LAUNCHER_WAIT_SECONDS ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS ONE_MCP_LAUNCHER_ASYNC_MIN_SERVERS ONE_MCP_LAUNCHER_ASYNC_TIMEOUT_MS ONE_MCP_LAUNCHER_FILTER ONE_MCP_LAUNCHER_DEADLINE_EPOCH ONE_MCP_LAUNCHER_LOCKED
+unset MCP1_LAUNCHER_WAIT_SECONDS MCP1_LAUNCHER_KILL_GRACE_SECONDS MCP1_LAUNCHER_ASYNC_MIN_SERVERS MCP1_LAUNCHER_ASYNC_TIMEOUT_MS MCP1_LAUNCHER_FILTER MCP1_LAUNCHER_DEADLINE_EPOCH MCP1_LAUNCHER_LOCKED
 
 is_uint() {
   [[ "${1:-}" =~ ^[0-9]+$ ]]
@@ -179,6 +180,12 @@ start_runtime() {
     --async-timeout "$async_timeout_ms" >/dev/null
 }
 
+connect_proxy() {
+  local -a command=("$one_mcp_bin" proxy)
+  [[ -z "$proxy_filter" ]] || command+=(--filter "$proxy_filter")
+  exec "${command[@]}"
+}
+
 ensure_runtime() {
   local pid
   local status
@@ -231,9 +238,9 @@ if [[ "$launcher_locked" == 1 ]]; then
   exit $?
 fi
 
-ready && exec "$one_mcp_bin" proxy
+ready && connect_proxy
 acquire_and_start || {
-  ready && exec "$one_mcp_bin" proxy
+  ready && connect_proxy
   die "1mcp-launcher-lock-or-startup-timeout"
 }
-exec "$one_mcp_bin" proxy
+connect_proxy
