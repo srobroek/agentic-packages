@@ -218,9 +218,29 @@ def main() -> int:
     checked_hooks = 0
     checked_agents = 0
 
+    codex_catalog_entries = []
+    for entry in catalog_entries:
+        if not isinstance(entry, dict) or not entry.get("name"):
+            codex_catalog_entries.append(entry)
+            continue
+        source = entry.get("source")
+        target = "all"
+        if isinstance(source, str) and source.startswith("./packages/"):
+            package_manifest_path = ROOT / source.removeprefix("./") / "apm.yml"
+            package_manifest = yaml.safe_load(
+                package_manifest_path.read_text(encoding="utf-8")
+            ) or {}
+            target = package_manifest.get("target", "all")
+            if target not in SUPPORTED_PACKAGE_TARGETS:
+                errors.append(
+                    f"{entry['name']}: unsupported package target {target!r}"
+                )
+        if target != "claude":
+            codex_catalog_entries.append(entry)
+
     catalog_by_name = {
         str(entry["name"]): entry
-        for entry in catalog_entries
+        for entry in codex_catalog_entries
         if isinstance(entry, dict) and entry.get("name")
     }
     marketplace_by_name = {
@@ -228,8 +248,15 @@ def main() -> int:
         for entry in marketplace_entries
         if isinstance(entry, dict) and entry.get("name")
     }
-    if len(catalog_by_name) != len(catalog_entries):
-        errors.append("apm.yml marketplace contains missing or duplicate package names")
+    all_catalog_names = {
+        str(entry["name"])
+        for entry in catalog_entries
+        if isinstance(entry, dict) and entry.get("name")
+    }
+    if len(catalog_by_name) != len(codex_catalog_entries):
+        errors.append(
+            "apm.yml marketplace contains missing or duplicate Codex package names"
+        )
     if len(marketplace_by_name) != len(marketplace_entries):
         errors.append("Codex marketplace contains missing or duplicate plugin names")
     for name in sorted(catalog_by_name.keys() - marketplace_by_name.keys()):
@@ -273,7 +300,7 @@ def main() -> int:
         )
     if len(documented_packages) != len(set(documented_packages)):
         errors.append("Codex compatibility package table contains duplicate rows")
-    unknown_differences = CODEX_DIFFERENCE_PACKAGES - set(catalog_by_name)
+    unknown_differences = CODEX_DIFFERENCE_PACKAGES - all_catalog_names
     if unknown_differences:
         errors.append(
             "Codex difference package set contains unknown packages: "

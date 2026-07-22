@@ -12,7 +12,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
-| `beads` | Beads (bd) issue-tracker conventions | self-contained |
+| `beads` | Organization policy for Beads (bd) | self-contained |
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations | self-contained |
@@ -51,7 +51,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
-| `speckit-beads` | Beads-native SpecKit workflow | `speckit`, `beads` |
+| `speckit-beads` | Beads-native SpecKit task-state layer | `speckit`, `beads` |
 <!-- END:bundles -->
 
 ## How bundles work
