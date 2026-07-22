@@ -494,7 +494,51 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
             self.bd("dep", "add", source, target, "--type", edge_type)
 
         loser_after_links = self.bd("show", loser)[0]
+        canonical_after_links = self.bd("show", canonical)[0]
+        for key, value in expected_metadata.items():
+            self.assertEqual(loser_after_links["metadata"][key], value)
+        self.assertTrue(self.has_edge(source, target, edge_type))
+        self.assertEqual(
+            canonical_after_links["metadata"]["decision_disposition"], "accepted"
+        )
+        if (
+            loser_after_links["status"] == "closed"
+            and loser_after_links["close_reason"] != reason
+        ):
+            for label in ("decision-repair", "non-work"):
+                if label not in loser_after_links.get("labels", []):
+                    self.bd("label", "add", loser, label)
+                    loser_after_links = self.bd("show", loser)[0]
+            self.assertTrue(
+                {"decision-repair", "non-work"}.issubset(
+                    loser_after_links.get("labels", [])
+                )
+            )
+            canonical_before_reopen = self.bd("show", canonical)[0]
+            self.assertEqual(
+                canonical_before_reopen["metadata"]["decision_disposition"],
+                "accepted",
+            )
+            self.bd(
+                "reopen",
+                loser,
+                "--reason",
+                "repair stale decision close reason",
+            )
+            self.bd("close", loser, "--reason", reason)
+
+        loser_after_links = self.bd("show", loser)[0]
         if loser_after_links["status"] != "closed":
+            if "decision-repair" in loser_after_links.get("labels", []):
+                self.assertIn("non-work", loser_after_links.get("labels", []))
+                for key, value in expected_metadata.items():
+                    self.assertEqual(loser_after_links["metadata"][key], value)
+                self.assertTrue(self.has_edge(source, target, edge_type))
+                canonical_during_repair = self.bd("show", canonical)[0]
+                self.assertEqual(
+                    canonical_during_repair["metadata"]["decision_disposition"],
+                    "accepted",
+                )
             self.bd("close", loser, "--reason", reason)
 
         loser_after = self.bd("show", loser)[0]
@@ -509,6 +553,45 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         )
         self.assertNotIn("canonical_decision", canonical_after["metadata"])
         return loser_after
+
+    def assert_repair_recovery(
+        self, loser: str, canonical: str, disposition: str, epic: str
+    ) -> None:
+        repaired = self.settle_noncanonical(loser, canonical, disposition)
+        self.assertTrue(
+            {"decision-repair", "non-work"}.issubset(repaired.get("labels", []))
+        )
+        repeated = self.settle_noncanonical(loser, canonical, disposition)
+        self.assertEqual(repeated["updated_at"], repaired["updated_at"])
+
+        self.bd(
+            "reopen",
+            loser,
+            "--reason",
+            "simulate crash after decision repair reopen",
+        )
+        interrupted = self.bd("show", loser)[0]
+        self.assertEqual(interrupted["status"], "open")
+        self.assertTrue(
+            {"decision-repair", "non-work"}.issubset(interrupted.get("labels", []))
+        )
+        selectable = {
+            item["id"]
+            for item in self.bd(
+                "ready", "--parent", epic, "--exclude-label", "non-work"
+            )
+        }
+        self.assertNotIn(loser, selectable)
+
+        recovered = self.settle_noncanonical(loser, canonical, disposition)
+        self.assertEqual(recovered["status"], "closed")
+        rerun = self.settle_noncanonical(loser, canonical, disposition)
+        self.assertEqual(rerun["updated_at"], recovered["updated_at"])
+        canonical_after = self.bd("show", canonical)[0]
+        self.assertEqual(
+            canonical_after["metadata"]["decision_disposition"], "accepted"
+        )
+        self.assertNotIn("canonical_decision", canonical_after["metadata"])
 
     def test_duplicate_disposition_is_durable_and_idempotent(self):
         epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
@@ -550,6 +633,35 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
             choose_canonical(self.decision_candidates(epic, "shared-contract")),
             canonical,
         )
+
+    def test_closed_duplicate_with_stale_reason_is_repaired_and_resumable(self):
+        epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
+        first = self.create_decision("Decision: first", epic, "repair-route")
+        second = self.create_decision("Decision: second", epic, "repair-route")
+        canonical = choose_canonical(self.decision_candidates(epic, "repair-route"))
+        loser = second if canonical == first else first
+        self.bd("close", loser, "--reason", "accepted and verified")
+
+        stale = self.bd("show", loser)[0]
+        self.assertEqual(stale["status"], "closed")
+        self.assertEqual(stale["close_reason"], "accepted and verified")
+        self.assert_repair_recovery(loser, canonical, "duplicate", epic)
+
+    def test_closed_superseded_with_stale_reason_is_repaired_and_resumable(self):
+        epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
+        old = self.create_decision("Decision: old", epic, "repair-contract")
+        replacement = self.create_decision(
+            "Decision: replacement", epic, "repair-contract"
+        )
+        self.bd("dep", "add", replacement, old, "--type", "supersedes")
+        canonical = choose_canonical(self.decision_candidates(epic, "repair-contract"))
+        self.assertEqual(canonical, replacement)
+        self.bd("close", old, "--reason", "accepted and verified")
+
+        stale = self.bd("show", old)[0]
+        self.assertEqual(stale["status"], "closed")
+        self.assertEqual(stale["close_reason"], "accepted and verified")
+        self.assert_repair_recovery(old, canonical, "superseded", epic)
 
     def test_comment_decision_ambiguity_and_waiting_human_flow(self):
         epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]

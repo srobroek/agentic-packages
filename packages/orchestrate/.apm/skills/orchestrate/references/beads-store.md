@@ -127,6 +127,29 @@ close writes stop partway, record the failure and leave the observed partial
 state. Restart repeats the same keyed reads, completes only missing steps, and
 produces the same result without changing canonical.
 
+`bd close` does not replace the close reason of an already-closed bead. When a
+loser is closed with any reason other than the canonical duplicate or
+superseded reason, repair it only after the loser metadata and required edge
+have passed read-back:
+
+```text
+bd label add <loser> decision-repair
+bd label add <loser> non-work
+bd reopen <loser> --reason "repair stale decision close reason"
+bd close <loser> --reason "<duplicate of|superseded by> <canonical>"
+```
+
+- Add both labels before reopening. Generic ready and claim selectors exclude
+  `non-work`.
+- Read back both labels and confirm canonical is still accepted. Run reopen and
+  close consecutively.
+- A restart between those commands recognizes `decision-repair` plus
+  `non-work`, verifies the durable loser metadata and edge, skips reopen, and
+  closes the loser with the canonical reason.
+- Success requires a final read of both beads showing `status=closed`, the
+  canonical close reason, the expected loser disposition and
+  `canonical_decision`, and unchanged canonical metadata.
+
 An invalid explicit chain remains `decision_disposition=conflict`; no candidate
 is applied until the owner repairs the chain from evidence or enters
 `waiting_human`. Never infer resolution from a message or artifact.
