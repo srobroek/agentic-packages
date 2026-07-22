@@ -59,16 +59,23 @@ MUST A stacked PR merged only into `pr_base` remains open with
   `landing_base`; GitHub `MERGED` by itself never closes the bead.
 
 MERGE SLOT
-MUST Use stable holder `pr-shepherd:<repo>#<pr>@<head_sha>`. Persist one
-  deterministic waiter bead per holder, linked by `metadata.slot_id`. Only the
-  first open valid record by `created_at`, then id, may attempt atomic slot
-  acquisition. Claim that record while holding the slot; close it after release
-  on success, error, signal, and restart recovery.
+MUST Use stable holder `pr-shepherd:<repo>#<pr>@<head_sha>`. Persist one active
+  deterministic waiter generation per holder. Its metadata binds holder,
+  generation, waiter id, and exact `BEADS_ACTOR`; an explicit `parent-child`
+  dependency links it to the slot. Reconcile a missing link after a partial
+  create, but fail closed on a wrong parent or malformed record.
+
+MUST Only the first open or claimed valid record by `created_at`, then id, may
+  claim and recheck priority before atomic slot acquisition. Pending, stacked,
+  and exit-10 outcomes release the slot and leave the same generation open for
+  its leased actor. Terminal merged, cancelled, bounced, or dead outcomes close
+  it. Reusing a terminal holder requires explicit `requeue` and creates the next
+  deterministic generation.
 
 MUST Never bypass an earlier open waiter record or rewrite a shared waiter
-  collection. Close a stale holder's record only after proving its session dead
-  or its PR cancelled, recording the evidence in a merge-bead comment and audit
-  entry.
+  collection. A foreign actor with the same holder must be rejected before slot
+  entry. Transfer its lease only through evidence-gated dead-claim recovery,
+  recording the durable receipt, comment, and audit before successor use.
 
 BOUNCE-BACK
 MUST Compute a deterministic failure key and reconcile the oldest open routed

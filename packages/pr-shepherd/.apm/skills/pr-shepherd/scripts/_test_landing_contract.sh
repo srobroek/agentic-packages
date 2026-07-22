@@ -27,13 +27,14 @@ new_state() {
   local name="$1"
   state="$TMP_ROOT/$name"
   mkdir -p "$state"
+  actor="actor-a"
   touch "$state/bd.log" "$state/gh.log" "$state/git.log" "$state/interactions.jsonl"
 }
 
 run_contract() {
   set +e
   last_output="$(PATH="$FIXTURE_BIN:$SYSTEM_PATH" \
-    FAKE_STATE="$state" FAKE_SCENARIO="$scenario" \
+    FAKE_STATE="$state" FAKE_SCENARIO="$scenario" BEADS_ACTOR="$actor" \
     "$CONTRACT" "$@" 2>&1)"
   last_rc=$?
   set -e
@@ -86,13 +87,23 @@ assert_waiter_status() {
   local holder="$1"
   local expected="$2"
   local message="$3"
+  local generation="${4:-1}"
   local digest waiter actual
 
-  digest="$(printf 'slot-1\0%s\0' "$holder" | sha1sum | awk '{print $1}')"
+  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
   waiter="slot-1-waiter-${digest:0:12}"
   actual="missing"
   [[ ! -f "$state/waiters/$waiter/status" ]] || actual="$(<"$state/waiters/$waiter/status")"
   assert_eq "$expected" "$actual" "$message"
+}
+
+waiter_path() {
+  local holder="$1"
+  local generation="${2:-1}"
+  local digest
+
+  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
+  printf '%s/waiters/slot-1-waiter-%s\n' "$state" "${digest:0:12}"
 }
 
 new_state stale-run
@@ -180,15 +191,17 @@ new_state slot-cleanup-failure
 scenario=slot-cleanup-failure
 run_contract acquire-slot stable-holder 1 0
 assert_eq 2 "$last_rc" "waiter claim failure is surfaced"
-assert_file "$state/released" "claim failure releases the newly owned slot"
-assert_waiter_status stable-holder closed "claim failure trap closes only its waiter record"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "claim failure is rejected before native slot entry"
+assert_waiter_status stable-holder open "claim failure leaves its waiter recoverable"
 
 new_state slot-cleanup-signal
 scenario=slot-cleanup-signal
 run_contract acquire-slot stable-holder 1 0
 assert_eq 143 "$last_rc" "signal during waiter claim is surfaced"
-assert_file "$state/released" "claim signal releases the newly owned slot"
-assert_waiter_status stable-holder closed "claim signal trap closes only its waiter record"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "claim signal occurs before native slot entry"
+assert_waiter_status stable-holder open "claim signal leaves its waiter recoverable"
 
 new_state slot-record-eligibility-interleave
 scenario=slot-record-eligibility-interleave
@@ -211,6 +224,101 @@ run_contract with-slot stable-holder -- touch "$state/command-ran"
 assert_eq 0 "$last_rc" "target close tolerates a concurrent waiter creation"
 assert_waiter_status stable-holder closed "target close is atomic to the owned waiter"
 assert_waiter_status later-holder open "concurrent waiter survives target close"
+
+new_state slot-retryable-release
+scenario=slot-retryable-release
+run_contract with-slot stable-holder -- bash -c 'exit 10'
+assert_eq 10 "$last_rc" "retryable protected outcome is preserved"
+assert_file "$state/released" "retryable outcome releases the native slot"
+assert_waiter_status stable-holder open "retryable release keeps the same waiter open"
+retry_waiter="$(waiter_path stable-holder)"
+assert_eq actor-a "$(<"$retry_waiter/lease-actor")" \
+  "retryable waiter retains its exact actor lease"
+assert_eq "" "$(<"$retry_waiter/assignee")" \
+  "retryable waiter becomes claimable by its leased actor"
+run_contract with-slot stable-holder -- touch "$state/retry-ran"
+assert_eq 0 "$last_rc" "same actor reacquires the retryable waiter"
+assert_file "$state/retry-ran" "reacquired waiter runs the protected command"
+waiter_creates="$(grep -c -- '^create Merge-slot waiter:' "$state/bd.log" || true)"
+assert_eq 1 "$waiter_creates" "retryable reacquisition does not create a generation"
+assert_waiter_status stable-holder closed "terminal completion closes the retryable attempt"
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "closed attempt cannot restart without explicit requeue"
+run_contract acquire-slot stable-holder 1 0 requeue
+assert_eq 0 "$last_rc" "explicit requeue creates the next deterministic generation"
+assert_waiter_status stable-holder in_progress "requeue owns generation two" 2
+run_contract release-slot stable-holder terminal
+assert_eq 0 "$last_rc" "generation two releases terminally"
+
+new_state slot-foreign-lease
+scenario=slot-foreign-lease
+run_contract acquire-slot stable-holder 1 0
+assert_eq 0 "$last_rc" "lease owner acquires the slot"
+acquire_calls="$(grep -c -- '^merge-slot acquire' "$state/bd.log" || true)"
+actor="actor-b"
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "foreign live actor is rejected for the same holder"
+assert_contains "leased to another actor" "$last_output" "foreign lease rejection is explicit"
+assert_eq "$acquire_calls" "$(grep -c -- '^merge-slot acquire' "$state/bd.log" || true)" \
+  "foreign actor is rejected before native slot entry"
+release_calls="$(grep -c -- '^merge-slot release' "$state/bd.log" || true)"
+run_contract release-slot stable-holder terminal
+assert_eq 2 "$last_rc" "foreign actor cannot release another actor's slot"
+assert_eq "$release_calls" "$(grep -c -- '^merge-slot release' "$state/bd.log" || true)" \
+  "foreign actor is rejected before native slot release"
+actor="actor-a"
+run_contract release-slot stable-holder terminal
+assert_eq 0 "$last_rc" "lease owner can terminate its waiter"
+
+new_state recover-claim-waiter
+scenario=recover-claim-waiter
+actor="actor-b"
+run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
+assert_eq 0 "$last_rc" "evidence-gated dead claim transfers the waiter lease"
+takeover_waiter="$(waiter_path stable-holder)"
+assert_eq actor-b "$(<"$takeover_waiter/lease-actor")" \
+  "takeover persistently rewrites the lease actor"
+assert_eq actor-b "$(<"$takeover_waiter/assignee")" \
+  "takeover atomically assigns the successor"
+run_contract acquire-slot stable-holder 1 0
+assert_eq 0 "$last_rc" "successor reacquires after durable dead-claim recovery"
+run_contract release-slot stable-holder terminal
+assert_eq 0 "$last_rc" "successor terminally releases the recovered waiter"
+
+new_state recover-claim-waiter-crash-transfer
+scenario=recover-claim-waiter-crash-transfer
+actor="actor-b"
+run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
+assert_eq 2 "$last_rc" "crash after atomic waiter transfer is surfaced"
+assert_eq prepared "$(<"$state/recovery-phase")" \
+  "waiter takeover retains its prepared recovery receipt"
+run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
+assert_eq 0 "$last_rc" "same successor resumes the durable waiter transfer"
+assert_eq complete "$(<"$state/recovery-phase")" \
+  "resumed waiter takeover completes its recovery receipt"
+takeover_waiter="$(waiter_path stable-holder)"
+assert_eq actor-b "$(<"$takeover_waiter/lease-actor")" \
+  "resumed takeover keeps the successor lease"
+
+new_state slot-link-crash
+scenario=slot-link-crash
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "create-before-link crash fails closed"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "unlinked waiter is never eligible for native slot entry"
+run_contract acquire-slot stable-holder 1 0
+assert_eq 0 "$last_rc" "restart reconciles the missing parent-child link"
+linked_waiter="$(waiter_path stable-holder)"
+assert_eq true "$(<"$linked_waiter/linked")" "reconciled parent-child link persists"
+run_contract release-slot stable-holder terminal
+assert_eq 0 "$last_rc" "reconciled waiter releases normally"
+
+new_state slot-wrong-link
+scenario=slot-wrong-link
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "wrong-parent waiter fails closed"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "wrong-parent waiter never enters the native slot"
 
 new_state recover-slot
 scenario=recover-slot

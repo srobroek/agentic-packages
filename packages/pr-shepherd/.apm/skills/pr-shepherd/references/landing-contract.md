@@ -71,31 +71,46 @@ also handles a later squash that replaces the intermediate merge commit.
 
 ## Persisted queue and recovery
 
-The contract creates one deterministic bead for each stable holder, links it
-to the slot through `metadata.slot_id`, and labels it `gt:slot-waiter`. Open
-valid records form the queue. Eligibility is the first record by `created_at`,
-then id. Only that holder calls atomic
-`bd merge-slot acquire`; the script never calls `acquire --wait` and never
-rewrites merge-slot waiter metadata.
+The contract creates one active deterministic generation for each stable
+holder and labels it `gt:slot-waiter`. Metadata binds the slot id, holder,
+generation, waiter id, and exact `BEADS_ACTOR`. An explicit `parent-child`
+dependency links the waiter to the slot. If creation crashes before linking, a
+restart adds and verifies the missing dependency. A wrong parent, duplicate
+parent, malformed identity, or unlinked queue record fails closed.
 
-After acquisition, the contract atomically claims only that holder's record.
-Release closes only the same record after the native slot release succeeds.
-Contention leaves the record open for restart. A concurrent enqueue or holder
-acquisition changes a different record or the native slot, so it cannot be
-erased by waiter cleanup.
+Open and claimed valid records form the queue. Eligibility is the first record
+by `created_at`, then id. The leased actor claims the record and rechecks
+priority before calling atomic `bd merge-slot acquire`; a foreign actor using
+the same holder is rejected before slot entry. The script never calls
+`acquire --wait` and never rewrites a shared waiter collection.
+
+Pending, stacked, queued, and exit-10 outcomes release the native slot while
+keeping the same generation open and unassigned for its leased actor. Terminal
+merged, cancelled, bounced, or dead work closes only that generation. A later
+attempt for the same terminal holder must pass `requeue`, which creates the
+next deterministic generation. A new head naturally has a new stable holder.
+
+The explicit controls are:
+
+```bash
+scripts/landing-contract.sh acquire-slot <holder> [attempts] [seconds] [resume|requeue]
+scripts/landing-contract.sh release-slot <holder> [terminal|retryable]
+```
 
 Do not delete a quiet receipt. After proving a session dead or a PR cancelled,
 cite the evidence and use the matching recovery command:
 
 ```bash
-scripts/landing-contract.sh recover-claim <merge-bead> <dead-actor> <evidence-ref>
+scripts/landing-contract.sh recover-claim <merge-bead> <dead-actor> <evidence-ref> [waiter-holder]
 scripts/landing-contract.sh recover-slot <merge-bead> <dead-holder> <evidence-ref>
 scripts/landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-ref>
 ```
 
 Each command refuses unsafe changed ownership and records a comment plus audit
-event. Waiter recovery derives the same deterministic waiter id and closes only
-that record; it never mutates another queue entry.
+event. With `waiter-holder`, claim recovery atomically transfers the current
+open attempt's assignee and lease to `BEADS_ACTOR`; it is the only successor
+takeover path. Waiter recovery finds and closes the current open generation and
+never mutates another queue entry.
 If a process died after GitHub merged, rerunning `land` resumes from the remote
 merge receipt and repeats final-base proof without another merge attempt.
 

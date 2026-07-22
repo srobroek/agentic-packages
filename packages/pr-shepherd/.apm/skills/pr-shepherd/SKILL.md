@@ -58,11 +58,14 @@ TRIGGER
 
 MUST Use `landing-contract.sh` for merge-slot acquisition, GitHub merge, and
   landing proof. It carries `--match-head-commit` and releases on every exit.
-MUST Respect durable per-holder waiter records. Only the first open valid
-  record by `created_at`, then id, may attempt atomic merge-slot acquisition.
+MUST Respect durable per-holder waiter generations. Only the first open or
+  claimed valid record by `created_at`, then id, may attempt atomic merge-slot
+  acquisition, and its exact actor lease plus slot parent-child link must match.
 MUST Release every merge-bead claim not closed this pass. A persisted stable
-  waiter record may survive a restart; close only that record after normal
-  release or evidence that its work was cancelled or its session is dead.
+  waiter may survive retryable exit 10, pending, or stacked work. Keep that
+  generation open for the same actor. Close it only for a terminal disposition;
+  use explicit requeue for a later generation or evidence-gated recovery to
+  transfer a dead actor's lease.
 MUST Keep `pr_base` separate from `landing_base`. A stacked GitHub `MERGED`
   state is a hold, not landing proof, until commit ancestry or exact content is
   visible on `landing_base`.
