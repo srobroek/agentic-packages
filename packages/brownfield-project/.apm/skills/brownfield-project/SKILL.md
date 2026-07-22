@@ -58,9 +58,8 @@ project scaffold.
    - constraints: Codex/Claude target, local vs hosted, secrets, network, write access, security posture, and whether Claude Code is used
    Require `find-tools` to start with the primary marketplace baseline
    (unless the capability brief identifies a narrower scope), plus the standalone
-   baseline MCP packages: `mcp-codebase-memory@srobroek-agentic`,
-   `mcp-context7@srobroek-agentic`, `mcp-package-version@srobroek-agentic`,
-   and `mcp-repomix@srobroek-agentic`.
+   baseline MCP packages: `mcp-context7@srobroek-agentic`,
+   `mcp-package-version@srobroek-agentic`, and `mcp-repomix@srobroek-agentic`.
    Recommend optional MCP-only packages (including `mcp-playwright` and
    `mcp-serena@srobroek-agentic`) only when the repository needs that capability.
 8. Run or apply `audit-steering` to identify stale assets, missing packages,

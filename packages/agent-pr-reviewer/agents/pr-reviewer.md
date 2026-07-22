@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: Reviews pull requests for code quality, security, correctness, and test coverage. Read-only; returns structured verdict.
+description: Reviews pull requests with Serena semantic tools when available for code quality, security, correctness, and coverage. Read-only; returns a verdict.
 model: opus
 effort: high
 permissionMode: plan

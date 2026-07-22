@@ -342,18 +342,6 @@
       "source": "./packages/code-intelligence"
     },
     {
-      "name": "codebase-memory",
-      "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
-      "version": "2.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "graph"
-      ],
-      "category": "code-intelligence",
-      "source": "./packages/codebase-memory"
-    },
-    {
       "name": "codex-hook-contract",
       "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
       "version": "0.3.1",
