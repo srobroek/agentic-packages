@@ -5,6 +5,23 @@ set -Eeuo pipefail
 : "${FAKE_SCENARIO:?FAKE_SCENARIO is required}"
 printf '%s\n' "$*" >>"$FAKE_STATE/gh.log"
 
+apply_requested_jq() {
+  local filter=""
+
+  while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--jq" ]]; then
+      filter="${2:-}"
+      break
+    fi
+    shift
+  done
+  [[ -n "$filter" ]] || {
+    printf 'missing --jq filter\n' >&2
+    return 99
+  }
+  jq -r "$filter"
+}
+
 case "$FAKE_SCENARIO:${1:-}:${2:-}" in
 stale-run:run:view)
   printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
@@ -14,6 +31,10 @@ ready-pr:pr:view)
   ;;
 external-approval:pr:view)
   printf 'OPEN\tfalse\tMERGEABLE\tNONE\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
+  ;;
+empty-review:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"SUCCESS"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
 changes-requested:pr:view)
   printf 'OPEN\tfalse\tMERGEABLE\tCHANGES_REQUESTED\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"

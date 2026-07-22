@@ -62,6 +62,17 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local unexpected="$1"
+  local actual="$2"
+  local message="$3"
+  tests=$((tests + 1))
+  if [[ "$actual" == *"$unexpected"* ]]; then
+    printf 'not ok %s: output contained %q\n' "$message" "$unexpected" >&2
+    failures=$((failures + 1))
+  fi
+}
+
 assert_file() {
   local file="$1"
   local message="$2"
@@ -154,6 +165,30 @@ assert_eq 10 "$last_rc" "standalone readiness requires GitHub approval by defaul
 run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main external
 assert_eq 0 "$last_rc" "orchestrated readiness can consume prior independent approval"
 assert_contains "approval=external" "$last_output" "external approval mode is explicit"
+
+new_state empty-review-github
+scenario=empty-review
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main
+assert_eq 10 "$last_rc" "empty GitHub review decision waits for approval"
+assert_contains "review=NONE" "$last_output" "empty GitHub review decision is normalized"
+assert_not_contains PR_STALE "$last_output" "empty GitHub review decision does not shift identity fields"
+
+new_state empty-review-external
+scenario=empty-review
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main external
+assert_eq 0 "$last_rc" "external approval accepts an empty GitHub review decision"
+assert_contains "head=$EXPECTED_HEAD base=main" "$last_output" \
+  "external approval preserves exact head and base fields"
+
+run_contract check-pr owner/repo 7 "$STALE_HEAD" main external
+assert_eq 11 "$last_rc" "empty review parsing still enforces exact head identity"
+assert_contains "actual_head=$EXPECTED_HEAD" "$last_output" \
+  "stale head reports the unshifted live identity"
+
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" release external
+assert_eq 11 "$last_rc" "empty review parsing still enforces exact base identity"
+assert_contains "actual_base=main" "$last_output" \
+  "stale base reports the unshifted live identity"
 
 new_state slot-contention
 scenario=slot-contention
