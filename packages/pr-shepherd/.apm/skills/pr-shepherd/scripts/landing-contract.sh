@@ -704,7 +704,7 @@ check_pr() {
   esac
   data="$(gh pr view "$pr" --repo "$repo" \
     --json state,isDraft,mergeable,reviewDecision,baseRefName,headRefOid,statusCheckRollup \
-    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(.reviewDecision // "NONE"),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv')" ||
+    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(if (.reviewDecision // "") == "" then "NONE" else .reviewDecision end),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv')" ||
     fail "cannot read PR $pr"
   IFS=$'\t' read -r state draft mergeable review base head checks <<<"$data"
 
