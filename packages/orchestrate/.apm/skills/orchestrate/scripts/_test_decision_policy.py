@@ -121,8 +121,6 @@ def choose_canonical(candidates: list[dict]) -> str:
     if not accepted:
         raise PolicyError("no accepted decision candidate")
 
-    targets: set[str] = set()
-
     def walk(candidate_id: str, path: set[str]) -> None:
         if candidate_id in path:
             raise PolicyError("supersession cycle")
@@ -130,14 +128,24 @@ def choose_canonical(candidates: list[dict]) -> str:
         for target in candidate.get("supersedes", []):
             if target not in by_id or by_id[target]["key"] != candidate["key"]:
                 raise PolicyError("invalid supersedes target")
-            targets.add(target)
             walk(target, path | {candidate_id})
 
     for candidate in candidates:
         walk(candidate["id"], set())
 
-    if targets:
-        heads = [candidate for candidate in accepted if candidate["id"] not in targets]
+    accepted_ids = {candidate["id"] for candidate in accepted}
+    accepted_targets = {
+        target
+        for candidate in accepted
+        for target in candidate.get("supersedes", [])
+        if target in accepted_ids
+    }
+    if accepted_targets:
+        heads = [
+            candidate
+            for candidate in accepted
+            if candidate["id"] not in accepted_targets
+        ]
         if not heads:
             raise PolicyError("supersession chain has no accepted head")
         return max(heads, key=lambda item: (item["created_at"], item["id"]))["id"]
@@ -312,6 +320,27 @@ class DecisionPolicyContractTest(unittest.TestCase):
             choose_canonical(
                 [old | {"supersedes": ["d2"]}, new | {"supersedes": ["d1"]}]
             )
+
+    def test_nonaccepted_supersession_does_not_activate_explicit_selection(self):
+        old = {
+            "id": "d1",
+            "key": "route",
+            "created_at": "2026-07-22T01:00:00Z",
+            "disposition": "accepted",
+            "supersedes": [],
+        }
+        new = old | {
+            "id": "d2",
+            "created_at": "2026-07-22T02:00:00Z",
+        }
+        rejected = old | {
+            "id": "d3",
+            "created_at": "2026-07-22T03:00:00Z",
+            "disposition": "rejected",
+            "supersedes": ["d1"],
+        }
+
+        self.assertEqual(choose_canonical([old, new, rejected]), "d1")
 
     def test_unsafe_autonomous_default_is_rejected(self):
         safe = {
