@@ -48,7 +48,7 @@ MUST Treat the active per-holder waiter generation as the queue receipt. Only
   the first open or claimed record by `created_at`, then id, may attempt atomic
   slot acquisition. Require its exact actor lease and slot parent-child link.
   Keep retryable work on the same generation; close terminal work, explicitly
-  requeue a later generation, or transfer a dead lease through recovery.
+  requeue a later generation, or replace a dead lease through recovery.
 MUST Keep PR target `pr_base` distinct from final `landing_base`. GitHub
   `MERGED` does not prove a stacked PR reached the final branch.
 MUST Release every claim not closed this pass. Recover a claim, holder, or
