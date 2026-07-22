@@ -49,17 +49,19 @@ The command reconciles these durable steps:
 
 1. Stamp `bounce_key` and `bounce_phase=preparing` before creation.
 2. Search every non-closed coder/reviewer fix bead with the same key.
-3. Create an unassigned fix bead only when no match exists; reconcile a
-   concurrent duplicate to the oldest bead.
+3. Create an unassigned fix bead only when no match exists; reconcile concurrent
+   and pre-existing duplicates to the oldest open bead, closing every extra.
 4. Stamp canonical `bounce_fix` and `bounce_phase=fix_ready`.
 5. Add the blocking dependency once, then stamp `bounce_phase=parked`.
-6. Correlate both beads, then stamp `bounce_phase=commented`.
+6. Correlate both beads with stable `bounce_receipt=<failure-key>` markers,
+   then stamp `bounce_phase=commented`.
 7. Release the merge-bead claim and stamp `bounce_phase=complete`.
 
 A repeated invocation reports `BOUNCE_REUSED` without creating another bead or
 dependency. If a write fails or the process dies, rerun the same command: it
-reconciles the canonical bead, dependency, comments, and released claim from
-the last phase. Closing the fix bead re-readies every dependent merge bead.
+reconciles the canonical bead, duplicate set, dependency, marker-bearing
+comments, and released claim from the last phase. Closing the fix bead
+re-readies every dependent merge bead.
 
 Warm-context routing belongs to an orchestrator. The standalone contract ends
 after creating or reusing the unassigned fix bead. Non-blocking observations

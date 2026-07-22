@@ -89,3 +89,9 @@ scripts/landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-
 Each command refuses changed ownership and records a comment plus audit event.
 If a process died after GitHub merged, rerunning `land` resumes from the remote
 merge receipt and repeats final-base proof without another merge attempt.
+
+Recovery itself is restartable. Before changing a claim, holder, or waiter, the
+command stores a deterministic `recovery_key` and `recovery_phase=prepared`.
+It advances through `mutated`, `commented`, `audited`, and `complete`. Stable
+markers in Beads comments and the audit log let a retry finish a partially
+written recovery without repeating the mutation, comment, or audit event.

@@ -27,7 +27,7 @@ new_state() {
   local name="$1"
   state="$TMP_ROOT/$name"
   mkdir -p "$state"
-  touch "$state/bd.log" "$state/gh.log" "$state/git.log"
+  touch "$state/bd.log" "$state/gh.log" "$state/git.log" "$state/interactions.jsonl"
 }
 
 run_contract() {
@@ -155,6 +155,18 @@ run_contract with-slot stable-holder -- bash -c 'exit 23'
 assert_eq 23 "$last_rc" "transaction preserves merge failure exit"
 assert_file "$state/released" "transaction releases slot after failure"
 
+new_state slot-cleanup-failure
+scenario=slot-cleanup-failure
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "waiter cleanup failure is surfaced"
+assert_file "$state/released" "cleanup failure releases the newly owned slot"
+
+new_state slot-cleanup-signal
+scenario=slot-cleanup-signal
+run_contract acquire-slot stable-holder 1 0
+assert_eq 143 "$last_rc" "signal during waiter cleanup is surfaced"
+assert_file "$state/released" "cleanup signal releases the newly owned slot"
+
 new_state recover-slot
 scenario=recover-slot
 run_contract recover-slot merge-1 dead-holder session-registry:dead
@@ -175,6 +187,43 @@ run_contract recover-claim merge-1 dead-actor session-registry:dead
 assert_eq 0 "$last_rc" "dead claim recovery succeeds with evidence"
 assert_contains "--assignee  --status open" "$(<"$state/bd.log")" "dead claim is released"
 
+for recovery_kind in slot waiter claim; do
+  new_state "recover-$recovery_kind-crash-mutation"
+  scenario="recover-$recovery_kind-crash-mutation"
+  recovery_subject="dead-$recovery_kind"
+  [[ "$recovery_kind" != "slot" ]] || recovery_subject="dead-holder"
+  [[ "$recovery_kind" != "waiter" ]] || recovery_subject="dead-waiter"
+  [[ "$recovery_kind" != "claim" ]] || recovery_subject="dead-actor"
+  run_contract "recover-$recovery_kind" merge-1 "$recovery_subject" session-registry:dead
+  assert_eq 2 "$last_rc" "$recovery_kind mutation crash is surfaced"
+  assert_eq prepared "$(<"$state/recovery-phase")" "$recovery_kind mutation retains its prepared receipt"
+  run_contract "recover-$recovery_kind" merge-1 "$recovery_subject" session-registry:dead
+  assert_eq 0 "$last_rc" "$recovery_kind mutation resumes idempotently"
+  assert_eq complete "$(<"$state/recovery-phase")" "$recovery_kind recovery receipt completes"
+  comment_calls="$(grep -c -- '^comment merge-1 RECOVERED ' "$state/bd.log" || true)"
+  audit_calls="$(grep -c -- '^audit record .*pr-shepherd.recover-' "$state/bd.log" || true)"
+  assert_eq 1 "$comment_calls" "$recovery_kind recovery emits one durable comment"
+  assert_eq 1 "$audit_calls" "$recovery_kind recovery emits one durable audit event"
+done
+
+new_state recover-slot-crash-comment
+scenario=recover-slot-crash-comment
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "crash after recovery comment is surfaced"
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 0 "$last_rc" "recovery resumes after its durable comment"
+comment_calls="$(grep -c -- '^comment merge-1 RECOVERED ' "$state/bd.log" || true)"
+assert_eq 1 "$comment_calls" "recovery comment marker prevents duplicates"
+
+new_state recover-slot-crash-audit
+scenario=recover-slot-crash-audit
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "crash after recovery audit is surfaced"
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 0 "$last_rc" "recovery resumes after its durable audit"
+audit_calls="$(grep -c -- '^audit record .*pr-shepherd.recover-' "$state/bd.log" || true)"
+assert_eq 1 "$audit_calls" "recovery audit marker prevents duplicates"
+
 new_state duplicate-bounce
 scenario=duplicate-bounce
 run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
@@ -184,6 +233,16 @@ assert_not_contains_file "create" "$state/bd.log" "matching fix bead prevents du
 run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
 assert_eq 0 "$last_rc" "second bounce is idempotent"
 assert_contains BOUNCE_REUSED "$last_output" "second bounce reports reuse"
+
+new_state bounce-preexisting-duplicates
+scenario=bounce-preexisting-duplicates
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 0 "$last_rc" "pre-existing duplicate fixes reconcile"
+assert_contains "close fix-newer --reason Duplicate of fix-oldest" "$(<"$state/bd.log")" \
+  "newer duplicate is deterministically closed"
+assert_contains "dep add merge-1 fix-oldest" "$(<"$state/bd.log")" \
+  "canonical oldest fix becomes the blocker"
+assert_not_contains_file "close fix-oldest" "$state/bd.log" "canonical oldest fix remains open"
 
 new_state bounce-crash-dep
 scenario=bounce-crash-dep
@@ -206,6 +265,10 @@ assert_eq 0 "$last_rc" "comment-write crash resumes idempotently"
 assert_eq complete "$(<"$state/bounce-phase")" "comment recovery reaches a complete receipt"
 dep_calls="$(grep -c -- '^dep add ' "$state/bd.log" || true)"
 assert_eq 1 "$dep_calls" "comment recovery does not duplicate the dependency"
+bounce_merge_comments="$(grep -c -- '^comment merge-1 BOUNCED ' "$state/bd.log" || true)"
+bounce_fix_comments="$(<"$state/bounce-fix-comment-count")"
+assert_eq 1 "$bounce_merge_comments" "crash after first bounce comment does not duplicate it"
+assert_eq 1 "$bounce_fix_comments" "bounce recovery writes the missing correlation once"
 
 new_state verify-content
 scenario=verify-content

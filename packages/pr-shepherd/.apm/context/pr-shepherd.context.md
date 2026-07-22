@@ -75,8 +75,9 @@ MUST Compute a deterministic failure key and reconcile the oldest open routed
 
 MUST Persist `bounce_key`, canonical `bounce_fix`, and monotonic
   `bounce_phase` receipts (`preparing`, `fix_ready`, `parked`, `commented`,
-  `complete`). On restart, reconcile bead, dependency, comments, and released
-  claim from the last durable phase; never create a second blocker.
+  `complete`). On restart, reconcile the oldest canonical bead, close every
+  extra duplicate, and restore dependency, marker-bearing comments, and the
+  released claim from the last durable phase.
 
 MUST The fix description carries exact diagnosis, reproduction, origin
   pointers, and whether the same failure exists on the landing base.
@@ -88,3 +89,7 @@ DEAD CLAIMS
 MUST Claim refusal means a live holder and is skipped. Force-release a claim,
   slot holder, or queued waiter only after session/audit evidence proves it is
   dead and ownership has not changed.
+
+MUST Evidence-gated recovery stores `recovery_key` and advances `prepared` ->
+  `mutated` -> `commented` -> `audited` -> `complete`. Stable comment and audit
+  markers make every crash point resumable without repeating the mutation.

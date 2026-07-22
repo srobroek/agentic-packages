@@ -49,6 +49,23 @@ slot_has_waiter() {
   jq -e --arg holder "$holder" 'any(.waiters[]?; . == $holder)' >/dev/null
 }
 
+arm_slot_release() {
+  local holder="$1"
+  local release_trap
+
+  printf -v release_trap 'release_slot %q >/dev/null || true' "$holder"
+  # Capture the holder value before the caller's local scope unwinds.
+  # shellcheck disable=SC2064
+  trap "$release_trap" EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+}
+
+disarm_slot_release() {
+  trap - HUP INT TERM EXIT
+}
+
 remove_slot_waiter() {
   local holder="$1"
   local required_holder="${2:-}"
@@ -71,8 +88,8 @@ remove_slot_waiter() {
      if ($required != "" and (.holder // "") != $required)
      then error("slot holder changed")
      else .waiters = ((.waiters // []) | map(select(. != $holder)))
-     end')" ||
-    fail "cannot prepare merge-slot waiter cleanup"
+     end')" \
+    || fail "cannot prepare merge-slot waiter cleanup"
   bd update "$slot_id" --metadata "$metadata" >/dev/null || fail "cannot remove merge-slot waiter"
   state="$(slot_state)" || fail "cannot verify merge-slot waiter cleanup"
   if printf '%s' "$state" | slot_has_waiter "$holder"; then
@@ -84,11 +101,14 @@ acquire_slot() {
   local holder="$1"
   local attempts="${2:-3}"
   local interval="${3:-1}"
+  local protection="${4:-handoff}"
   local state actual first_waiter rc attempt queued
 
   [[ -n "$holder" ]] || fail "slot holder is required"
   [[ "$attempts" =~ ^[1-9][0-9]*$ ]] || fail "attempts must be a positive integer"
   [[ "$interval" =~ ^[0-9]+$ ]] || fail "poll interval must be a non-negative integer"
+  [[ "$protection" == "handoff" || "$protection" == "armed" ]] \
+    || fail "slot protection must be handoff or armed"
 
   bd merge-slot create >/dev/null
   queued=false
@@ -101,7 +121,9 @@ acquire_slot() {
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot state"
     first_waiter="$(printf '%s' "$state" | slot_first_waiter)" || fail "invalid merge-slot waiters"
     if [[ "$actual" == "$holder" ]]; then
+      arm_slot_release "$holder"
       remove_slot_waiter "$holder" "$holder"
+      [[ "$protection" == "armed" ]] || disarm_slot_release
       printf 'SLOT_OWNED holder=%s resumed=true\n' "$holder"
       return 0
     fi
@@ -112,7 +134,9 @@ acquire_slot() {
         rc=$?
         set -e
         if [[ $rc -eq 0 ]]; then
+          arm_slot_release "$holder"
           remove_slot_waiter "$holder" "$holder"
+          [[ "$protection" == "armed" ]] || disarm_slot_release
           printf 'SLOT_OWNED holder=%s resumed=false\n' "$holder"
           return 0
         fi
@@ -164,21 +188,15 @@ release_slot() {
 
 run_with_slot() {
   local holder="$1"
-  local release_trap command_rc release_rc acquire_rc
+  local command_rc release_rc acquire_rc
   shift
-  if acquire_slot "$holder" "${SHEPHERD_SLOT_ATTEMPTS:-3}" "${SHEPHERD_SLOT_INTERVAL:-1}"; then
+  if acquire_slot "$holder" "${SHEPHERD_SLOT_ATTEMPTS:-3}" \
+    "${SHEPHERD_SLOT_INTERVAL:-1}" armed; then
     acquire_rc=0
   else
     acquire_rc=$?
   fi
   [[ $acquire_rc -eq 0 ]] || return "$acquire_rc"
-  printf -v release_trap 'release_slot %q >/dev/null || true' "$holder"
-  # Capture the local holder before its scope unwinds.
-  # shellcheck disable=SC2064
-  trap "$release_trap" EXIT
-  trap 'exit 129' HUP
-  trap 'exit 130' INT
-  trap 'exit 143' TERM
 
   if "$@"; then
     command_rc=0
@@ -186,9 +204,9 @@ run_with_slot() {
     command_rc=$?
   fi
 
-  trap - HUP INT TERM EXIT
   if release_slot "$holder"; then
     release_rc=0
+    disarm_slot_release
   else
     release_rc=$?
   fi
@@ -233,13 +251,13 @@ check_run() {
     return 0
   fi
   case "$conclusion" in
-  failure | cancelled | timed_out | action_required | startup_failure)
-    printf 'RUN_FAILED run=%s conclusion=%s head=%s\n' "$run_id" "$conclusion" "$actual_head"
-    return "$EXIT_FAILED"
-    ;;
-  *)
-    fail "run $run_id has unknown conclusion ${conclusion:-empty}"
-    ;;
+    failure | cancelled | timed_out | action_required | startup_failure)
+      printf 'RUN_FAILED run=%s conclusion=%s head=%s\n' "$run_id" "$conclusion" "$actual_head"
+      return "$EXIT_FAILED"
+      ;;
+    *)
+      fail "run $run_id has unknown conclusion ${conclusion:-empty}"
+      ;;
   esac
 }
 
@@ -253,13 +271,13 @@ check_pr() {
 
   require_sha "$expected_head" "expected head"
   case "$approval_mode" in
-  github | external) ;;
-  *) fail "approval mode must be github or external" ;;
+    github | external) ;;
+    *) fail "approval mode must be github or external" ;;
   esac
   data="$(gh pr view "$pr" --repo "$repo" \
     --json state,isDraft,mergeable,reviewDecision,baseRefName,headRefOid,statusCheckRollup \
-    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(.reviewDecision // "NONE"),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv')" ||
-    fail "cannot read PR $pr"
+    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(.reviewDecision // "NONE"),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv')" \
+    || fail "cannot read PR $pr"
   IFS=$'\t' read -r state draft mergeable review base head checks <<<"$data"
 
   if [[ "$head" != "$expected_head" || "$base" != "$expected_base" ]]; then
@@ -303,8 +321,8 @@ verify_landed() {
   require_sha "$expected_merge" "expected merge"
   data="$(gh pr view "$pr" --repo "$repo" \
     --json state,mergedAt,mergeCommit,baseRefName,headRefOid,url \
-    --jq '[.state,(.mergedAt // "NONE"),(.mergeCommit.oid // "NONE"),(.baseRefName // "NONE"),(.headRefOid // "NONE"),(.url // "NONE")] | @tsv')" ||
-    fail "cannot read merged PR $pr"
+    --jq '[.state,(.mergedAt // "NONE"),(.mergeCommit.oid // "NONE"),(.baseRefName // "NONE"),(.headRefOid // "NONE"),(.url // "NONE")] | @tsv')" \
+    || fail "cannot read merged PR $pr"
   IFS=$'\t' read -r state merged_at actual_merge pr_base actual_head url <<<"$data"
 
   if [[ "$state" != "MERGED" || "$merged_at" == "NONE" ]]; then
@@ -317,30 +335,30 @@ verify_landed() {
     return "$EXIT_STALE"
   fi
 
-  remote_base="$(gh api "repos/$repo/git/ref/heads/$landing_base" --jq '.object.sha')" ||
-    fail "cannot read remote base $landing_base"
+  remote_base="$(gh api "repos/$repo/git/ref/heads/$landing_base" --jq '.object.sha')" \
+    || fail "cannot read remote base $landing_base"
   require_sha "$remote_base" "remote base"
-  compare_status="$(gh api "repos/$repo/compare/$expected_merge...$remote_base" --jq '.status')" ||
-    fail "cannot compare merge commit with $landing_base"
+  compare_status="$(gh api "repos/$repo/compare/$expected_merge...$remote_base" --jq '.status')" \
+    || fail "cannot compare merge commit with $landing_base"
   if [[ "$compare_status" == "ahead" || "$compare_status" == "identical" ]]; then
     printf 'LANDED_COMMIT pr=%s merge=%s base=%s base_sha=%s\n' \
       "$pr" "$expected_merge" "$landing_base" "$remote_base"
     return 0
   fi
-  [[ "$compare_status" == "diverged" || "$compare_status" == "behind" ]] ||
-    fail "unknown compare state $compare_status"
+  [[ "$compare_status" == "diverged" || "$compare_status" == "behind" ]] \
+    || fail "unknown compare state $compare_status"
 
   git fetch --quiet --no-tags origin \
     "refs/heads/$landing_base:refs/remotes/origin/$landing_base" \
     "refs/pull/$pr/head" || fail "cannot fetch landing proof refs"
-  fetched_base="$(git rev-parse --verify "refs/remotes/origin/$landing_base^{commit}")" ||
-    fail "cannot resolve fetched base"
+  fetched_base="$(git rev-parse --verify "refs/remotes/origin/$landing_base^{commit}")" \
+    || fail "cannot resolve fetched base"
   [[ "$fetched_base" == "$remote_base" ]] || fail "fetched base does not match GitHub ref"
   git cat-file -e "$recorded_base^{commit}" 2>/dev/null || fail "recorded base object is unavailable"
   git cat-file -e "$expected_head^{commit}" 2>/dev/null || fail "expected head object is unavailable"
 
-  paths_file="$(mktemp "${TMPDIR:-/tmp}/pr-shepherd-paths.XXXXXX")" ||
-    fail "cannot create content-proof file"
+  paths_file="$(mktemp "${TMPDIR:-/tmp}/pr-shepherd-paths.XXXXXX")" \
+    || fail "cannot create content-proof file"
   if ! git diff --name-only -z "$recorded_base" "$expected_head" >"$paths_file"; then
     rm -f -- "$paths_file"
     fail "cannot enumerate PR content"
@@ -350,10 +368,10 @@ verify_landed() {
   changed=0
   while IFS= read -r -d '' path; do
     changed=$((changed + 1))
-    expected_entry="$(git ls-tree "$expected_head" -- "$path")" ||
-      fail "cannot inspect head path $path"
-    actual_entry="$(git ls-tree "$remote_base" -- "$path")" ||
-      fail "cannot inspect base path $path"
+    expected_entry="$(git ls-tree "$expected_head" -- "$path")" \
+      || fail "cannot inspect head path $path"
+    actual_entry="$(git ls-tree "$remote_base" -- "$path")" \
+      || fail "cannot inspect base path $path"
     if [[ "$expected_entry" != "$actual_entry" ]]; then
       printf 'NOT_LANDED_CONTENT pr=%s path=%q base=%s\n' "$pr" "$path" "$landing_base"
       return "$EXIT_WAITING"
@@ -372,10 +390,10 @@ stamp_landing_proof() {
   local merge_sha="$4"
 
   bd update "$merge_bead" --set-metadata "head_sha=$head_sha" \
-    --set-metadata "merge_sha=$merge_sha" --set-metadata "landing_state=proved" >/dev/null ||
-    fail "cannot stamp landing metadata"
-  bd comment "$merge_bead" "LANDED pr=$pr head_sha=$head_sha merge_sha=$merge_sha proof=base" >/dev/null ||
-    fail "cannot record landing proof"
+    --set-metadata "merge_sha=$merge_sha" --set-metadata "landing_state=proved" >/dev/null \
+    || fail "cannot stamp landing metadata"
+  bd comment "$merge_bead" "LANDED pr=$pr head_sha=$head_sha merge_sha=$merge_sha proof=base" >/dev/null \
+    || fail "cannot record landing proof"
 }
 
 record_merge_receipt() {
@@ -388,8 +406,8 @@ record_merge_receipt() {
 
   bd update "$merge_bead" --set-metadata "head_sha=$head_sha" \
     --set-metadata "merge_sha=$merge_sha" --set-metadata "pr_base=$pr_base" \
-    --set-metadata "landing_base=$landing_base" --set-metadata "landing_state=merged" >/dev/null ||
-    fail "cannot persist remote merge receipt"
+    --set-metadata "landing_base=$landing_base" --set-metadata "landing_state=merged" >/dev/null \
+    || fail "cannot persist remote merge receipt"
   bd comment "$merge_bead" \
     "MERGED pr=$pr pr_base=$pr_base landing_base=$landing_base head_sha=$head_sha merge_sha=$merge_sha" \
     >/dev/null || fail "cannot record remote merge receipt"
@@ -402,8 +420,8 @@ hold_for_landing_base() {
   local landing_base="$4"
   local merge_sha="$5"
 
-  bd update "$merge_bead" --set-metadata "landing_state=waiting_base" >/dev/null ||
-    fail "cannot persist stacked landing hold"
+  bd update "$merge_bead" --set-metadata "landing_state=waiting_base" >/dev/null \
+    || fail "cannot persist stacked landing hold"
   bd comment "$merge_bead" \
     "LANDING_HOLD pr=$pr pr_base=$pr_base landing_base=$landing_base merge_sha=$merge_sha" \
     >/dev/null || fail "cannot record stacked landing hold"
@@ -426,13 +444,13 @@ land_owned() {
   require_sha "$recorded_base" "recorded base"
   require_sha "$expected_head" "expected head"
   case "$method" in
-  merge | rebase | squash) ;;
-  *) fail "merge method must be merge, rebase, or squash" ;;
+    merge | rebase | squash) ;;
+    *) fail "merge method must be merge, rebase, or squash" ;;
   esac
 
   data="$(gh pr view "$pr" --repo "$repo" --json state,headRefOid,mergeCommit \
-    --jq '[.state,(.headRefOid // "NONE"),(.mergeCommit.oid // "NONE")] | @tsv')" ||
-    fail "cannot read PR $pr before landing"
+    --jq '[.state,(.headRefOid // "NONE"),(.mergeCommit.oid // "NONE")] | @tsv')" \
+    || fail "cannot read PR $pr before landing"
   IFS=$'\t' read -r state actual_head merge_sha <<<"$data"
   if [[ "$actual_head" != "$expected_head" ]]; then
     printf 'PR_STALE pr=%s expected_head=%s actual_head=%s\n' \
@@ -475,17 +493,17 @@ land_owned() {
     return "$EXIT_UNKNOWN"
   fi
 
-  gh pr merge "$pr" --repo "$repo" "--$method" --match-head-commit "$expected_head" ||
-    {
+  gh pr merge "$pr" --repo "$repo" "--$method" --match-head-commit "$expected_head" \
+    || {
       printf 'LANDING_MERGE_FAILED pr=%s\n' "$pr" >&2
       return "$EXIT_FAILED"
     }
   data="$(gh pr view "$pr" --repo "$repo" --json state,headRefOid,mergeCommit \
-    --jq '[.state,(.headRefOid // "NONE"),(.mergeCommit.oid // "NONE")] | @tsv')" ||
-    fail "cannot read PR $pr after merge"
+    --jq '[.state,(.headRefOid // "NONE"),(.mergeCommit.oid // "NONE")] | @tsv')" \
+    || fail "cannot read PR $pr after merge"
   IFS=$'\t' read -r state actual_head merge_sha <<<"$data"
-  [[ "$state" == "MERGED" && "$actual_head" == "$expected_head" ]] ||
-    fail "PR identity changed after merge"
+  [[ "$state" == "MERGED" && "$actual_head" == "$expected_head" ]] \
+    || fail "PR identity changed after merge"
   require_sha "$merge_sha" "merge commit"
   record_merge_receipt "$merge_bead" "$pr" "$pr_base" "$landing_base" "$expected_head" "$merge_sha"
   set +e
@@ -521,8 +539,8 @@ land_pr() {
     landing_rc=$?
   fi
   [[ $landing_rc -eq 0 ]] || return "$landing_rc"
-  bd close "$merge_bead" --reason "PR #$pr landed on $landing_base with exact proof" >/dev/null ||
-    fail "cannot close landed merge bead"
+  bd close "$merge_bead" --reason "PR #$pr landed on $landing_base with exact proof" >/dev/null \
+    || fail "cannot close landed merge bead"
   printf 'LANDING_COMPLETE merge=%s pr=%s base=%s\n' "$merge_bead" "$pr" "$landing_base"
 }
 
@@ -532,17 +550,41 @@ failure_key() {
   shift 2
   [[ $# -gt 0 ]] || fail "failure-key requires failure details"
   case "$kind" in
-  ci | conflict | review) ;;
-  *) fail "failure kind must be ci, conflict, or review" ;;
+    ci | conflict | review) ;;
+    *) fail "failure kind must be ci, conflict, or review" ;;
   esac
   printf '%s\0' "$repo" "$kind" "$@" | git hash-object --stdin
 }
 
-find_fix() {
+find_fixes() {
   local key="$1"
   bd list --label-any agent:coder,agent:reviewer \
     --status open,in_progress,blocked,deferred --metadata-field "failure_key=$key" \
-    --json | jq -r 'sort_by(.created_at, .id) | .[0].id // empty'
+    --json | jq -r 'sort_by(.created_at, .id) | .[].id'
+}
+
+find_fix() {
+  find_fixes "$1" | sed -n '1p'
+}
+
+reconcile_fix_duplicates() {
+  local key="$1"
+  local canonical="$2"
+  local duplicate
+
+  while IFS= read -r duplicate; do
+    [[ -z "$duplicate" || "$duplicate" == "$canonical" ]] && continue
+    bd close "$duplicate" --reason "Duplicate of $canonical for failure_key=$key" >/dev/null \
+      || fail "cannot close duplicate fix bead $duplicate"
+  done < <(find_fixes "$key")
+}
+
+comment_exists() {
+  local issue="$1"
+  local marker="$2"
+
+  bd comments "$issue" --json | jq -e --arg marker "$marker" \
+    'any(.[]?; (.text // "") | contains($marker))' >/dev/null
 }
 
 dependency_exists() {
@@ -566,13 +608,13 @@ bounce_receipt() {
 
 bounce_phase_rank() {
   case "$1" in
-  "") printf '0\n' ;;
-  preparing) printf '1\n' ;;
-  fix_ready) printf '2\n' ;;
-  parked) printf '3\n' ;;
-  commented) printf '4\n' ;;
-  complete) printf '5\n' ;;
-  *) fail "unknown bounce receipt phase $1" ;;
+    "") printf '0\n' ;;
+    preparing) printf '1\n' ;;
+    fix_ready) printf '2\n' ;;
+    parked) printf '3\n' ;;
+    commented) printf '4\n' ;;
+    complete) printf '5\n' ;;
+    *) fail "unknown bounce receipt phase $1" ;;
   esac
 }
 
@@ -583,8 +625,8 @@ advance_bounce_receipt() {
   local phase="$4"
 
   bd update "$merge_bead" --set-metadata "bounce_key=$key" \
-    --set-metadata "bounce_fix=$fix_bead" --set-metadata "bounce_phase=$phase" >/dev/null ||
-    fail "cannot persist bounce receipt phase $phase"
+    --set-metadata "bounce_fix=$fix_bead" --set-metadata "bounce_phase=$phase" >/dev/null \
+    || fail "cannot persist bounce receipt phase $phase"
 }
 
 ensure_bounce() {
@@ -594,13 +636,13 @@ ensure_bounce() {
   local title="$4"
   local metadata="$5"
   local description="$6"
-  local fix_bead created metadata_with_key canonical receipt phase receipt_fix phase_rank
+  local fix_bead metadata_with_key canonical receipt phase receipt_fix phase_rank marker
 
-  [[ "$route" == "agent:coder" || "$route" == "agent:reviewer" ]] ||
-    fail "bounce route must be agent:coder or agent:reviewer"
+  [[ "$route" == "agent:coder" || "$route" == "agent:reviewer" ]] \
+    || fail "bounce route must be agent:coder or agent:reviewer"
   metadata_with_key="$(printf '%s' "$metadata" | jq -ce --arg key "$key" \
-    'if type == "object" then . + {failure_key: $key} else error("metadata must be an object") end')" ||
-    fail "invalid bounce metadata"
+    'if type == "object" then . + {failure_key: $key} else error("metadata must be an object") end')" \
+    || fail "invalid bounce metadata"
   receipt="$(bounce_receipt "$merge_bead" "$key")" || fail "cannot inspect bounce receipt"
   IFS='|' read -r receipt_fix phase <<<"$receipt"
   phase_rank="$(bounce_phase_rank "$phase")"
@@ -615,16 +657,13 @@ ensure_bounce() {
   fi
 
   if [[ -z "$fix_bead" ]]; then
-    created="$(bd create "$title" --deps "discovered-from:$merge_bead" \
-      --labels "$route" --metadata "$metadata_with_key" --description "$description" --silent)" ||
-      fail "cannot create fix bead"
+    bd create "$title" --deps "discovered-from:$merge_bead" \
+      --labels "$route" --metadata "$metadata_with_key" --description "$description" --silent \
+      >/dev/null \
+      || fail "cannot create fix bead"
     canonical="$(find_fix "$key")" || fail "cannot reconcile bounce creation"
     [[ -n "$canonical" ]] || fail "created fix bead is not queryable"
     fix_bead="$canonical"
-    if [[ "$created" != "$canonical" ]]; then
-      bd close "$created" --reason "Duplicate of $canonical for failure_key=$key" >/dev/null ||
-        fail "cannot close raced duplicate $created"
-    fi
   fi
 
   if [[ -n "$receipt_fix" && "$receipt_fix" != "$fix_bead" ]]; then
@@ -638,20 +677,28 @@ ensure_bounce() {
   if ! dependency_exists "$merge_bead" "$fix_bead"; then
     bd dep add "$merge_bead" "$fix_bead" >/dev/null || fail "cannot park merge bead"
   fi
+  reconcile_fix_duplicates "$key" "$fix_bead"
   if [[ $phase_rank -lt 3 ]]; then
     advance_bounce_receipt "$merge_bead" "$key" "$fix_bead" parked
     phase_rank=3
   fi
   if [[ $phase_rank -lt 4 ]]; then
-    bd comment "$merge_bead" "BOUNCED failure_key=$key fix=$fix_bead route=$route" >/dev/null ||
-      fail "cannot comment merge bead"
-    bd comment "$fix_bead" "CORRELATED merge=$merge_bead failure_key=$key" >/dev/null ||
-      fail "cannot comment fix bead"
+    marker="bounce_receipt=$key"
+    if ! comment_exists "$merge_bead" "$marker"; then
+      bd comment "$merge_bead" \
+        "BOUNCED $marker failure_key=$key fix=$fix_bead route=$route" >/dev/null \
+        || fail "cannot comment merge bead"
+    fi
+    if ! comment_exists "$fix_bead" "$marker"; then
+      bd comment "$fix_bead" \
+        "CORRELATED $marker merge=$merge_bead failure_key=$key" >/dev/null \
+        || fail "cannot comment fix bead"
+    fi
     advance_bounce_receipt "$merge_bead" "$key" "$fix_bead" commented
     phase_rank=4
   fi
-  bd update "$merge_bead" --assignee "" --status open >/dev/null ||
-    fail "cannot release merge bead claim"
+  bd update "$merge_bead" --assignee "" --status open >/dev/null \
+    || fail "cannot release merge bead claim"
   if [[ $phase_rank -lt 5 ]]; then
     advance_bounce_receipt "$merge_bead" "$key" "$fix_bead" complete
     printf 'BOUNCE_PARKED merge=%s fix=%s key=%s\n' "$merge_bead" "$fix_bead" "$key"
@@ -660,63 +707,190 @@ ensure_bounce() {
   fi
 }
 
+recovery_key() {
+  local kind="$1"
+  local subject="$2"
+  local evidence="$3"
+
+  printf '%s\0%s\0%s\0' "$kind" "$subject" "$evidence" | git hash-object --stdin
+}
+
+recovery_phase_rank() {
+  case "$1" in
+    prepared) printf '1\n' ;;
+    mutated) printf '2\n' ;;
+    commented) printf '3\n' ;;
+    audited) printf '4\n' ;;
+    complete) printf '5\n' ;;
+    *) fail "unknown recovery receipt phase ${1:-empty}" ;;
+  esac
+}
+
+advance_recovery_receipt() {
+  local merge_bead="$1"
+  local key="$2"
+  local kind="$3"
+  local subject="$4"
+  local evidence="$5"
+  local phase="$6"
+
+  bd update "$merge_bead" --set-metadata "recovery_key=$key" \
+    --set-metadata "recovery_kind=$kind" --set-metadata "recovery_subject=$subject" \
+    --set-metadata "recovery_evidence=$evidence" --set-metadata "recovery_phase=$phase" \
+    >/dev/null || fail "cannot persist recovery receipt phase $phase"
+}
+
+prepare_recovery() {
+  local merge_bead="$1"
+  local key="$2"
+  local kind="$3"
+  local subject="$4"
+  local evidence="$5"
+  local receipt current_key phase
+
+  receipt="$(bd show "$merge_bead" --json | jq -r \
+    '.[0].metadata | [(.recovery_key // ""), (.recovery_phase // "")] | join("|")')" \
+    || fail "cannot inspect recovery receipt"
+  IFS='|' read -r current_key phase <<<"$receipt"
+  if [[ "$current_key" == "$key" && -n "$phase" ]]; then
+    recovery_phase_rank "$phase" >/dev/null
+    printf '%s|false\n' "$phase"
+    return 0
+  fi
+  if [[ -n "$current_key" && "$phase" != "complete" ]]; then
+    fail "another recovery receipt is incomplete"
+  fi
+  advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" prepared
+  printf 'prepared|true\n'
+}
+
+recovery_audit_exists() {
+  local merge_bead="$1"
+  local tool_name="$2"
+  local beads_path audit_file
+
+  beads_path="$(bd where --json | jq -r '.path // empty')" || return 1
+  [[ -n "$beads_path" ]] || return 1
+  audit_file="$beads_path/interactions.jsonl"
+  [[ -f "$audit_file" ]] || return 1
+  jq -e --arg issue "$merge_bead" --arg tool "$tool_name" \
+    'select(.kind == "tool_call" and .issue_id == $issue and .tool_name == $tool)' \
+    "$audit_file" >/dev/null
+}
+
+finish_recovery() {
+  local merge_bead="$1"
+  local key="$2"
+  local kind="$3"
+  local subject="$4"
+  local evidence="$5"
+  local phase="$6"
+  local phase_rank marker tool_name
+
+  phase_rank="$(recovery_phase_rank "$phase")"
+  if [[ $phase_rank -lt 2 ]]; then
+    advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" mutated
+    phase_rank=2
+  fi
+  marker="recovery_receipt=$key"
+  if [[ $phase_rank -lt 3 ]]; then
+    if ! comment_exists "$merge_bead" "$marker"; then
+      bd comment "$merge_bead" \
+        "RECOVERED $marker kind=$kind subject=$subject evidence=$evidence" >/dev/null \
+        || fail "cannot comment recovery receipt"
+    fi
+    advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" commented
+    phase_rank=3
+  fi
+  tool_name="pr-shepherd.recover-$kind.$key"
+  if [[ $phase_rank -lt 4 ]]; then
+    if ! recovery_audit_exists "$merge_bead" "$tool_name"; then
+      bd audit record --kind tool_call --tool-name "$tool_name" \
+        --issue-id "$merge_bead" >/dev/null || fail "cannot audit recovery receipt"
+    fi
+    advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" audited
+    phase_rank=4
+  fi
+  if [[ $phase_rank -lt 5 ]]; then
+    advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" complete
+  fi
+}
+
 recover_slot() {
   local merge_bead="$1"
   local dead_holder="$2"
   local evidence="$3"
-  local state actual
+  local key prepared phase is_new phase_rank state actual
 
   [[ -n "$evidence" ]] || fail "dead-holder recovery requires an evidence reference"
-  state="$(slot_state)" || fail "cannot inspect merge slot"
-  actual="$(printf '%s' "$state" | slot_holder)"
-  [[ "$actual" == "$dead_holder" ]] ||
-    fail "slot holder changed (expected $dead_holder, found ${actual:-none})"
-  bd merge-slot release --holder "$dead_holder" >/dev/null || fail "cannot release dead holder"
-  bd comment "$merge_bead" "RECOVERED slot_holder=$dead_holder evidence=$evidence" >/dev/null ||
-    fail "cannot record slot recovery"
-  bd audit record --kind tool_call --tool-name pr-shepherd.recover-slot \
-    --issue-id "$merge_bead" >/dev/null || fail "cannot audit slot recovery"
-  printf 'SLOT_RECOVERED merge=%s holder=%s evidence=%s\n' "$merge_bead" "$dead_holder" "$evidence"
+  key="$(recovery_key slot "$dead_holder" "$evidence")" || fail "cannot derive recovery key"
+  prepared="$(prepare_recovery "$merge_bead" "$key" slot "$dead_holder" "$evidence")"
+  IFS='|' read -r phase is_new <<<"$prepared"
+  phase_rank="$(recovery_phase_rank "$phase")"
+  if [[ $phase_rank -lt 2 ]]; then
+    state="$(slot_state)" || fail "cannot inspect merge slot"
+    actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
+    if [[ "$actual" == "$dead_holder" ]]; then
+      bd merge-slot release --holder "$dead_holder" >/dev/null || fail "cannot release dead holder"
+    elif [[ "$is_new" == "true" || -n "$actual" ]]; then
+      fail "slot holder changed (expected $dead_holder, found ${actual:-none})"
+    fi
+  fi
+  finish_recovery "$merge_bead" "$key" slot "$dead_holder" "$evidence" "$phase"
+  printf 'SLOT_RECOVERED merge=%s holder=%s evidence=%s receipt=%s\n' \
+    "$merge_bead" "$dead_holder" "$evidence" "$key"
 }
 
 recover_waiter() {
   local merge_bead="$1"
   local dead_waiter="$2"
   local evidence="$3"
-  local state actual
+  local key prepared phase is_new phase_rank state actual
 
   [[ -n "$evidence" ]] || fail "dead-waiter recovery requires an evidence reference"
-  state="$(slot_state)" || fail "cannot inspect merge slot"
-  actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
-  [[ "$actual" != "$dead_waiter" ]] || fail "dead waiter currently holds the slot"
-  printf '%s' "$state" | slot_has_waiter "$dead_waiter" ||
-    fail "waiter changed or is no longer queued"
-  remove_slot_waiter "$dead_waiter"
-  bd comment "$merge_bead" "RECOVERED slot_waiter=$dead_waiter evidence=$evidence" >/dev/null ||
-    fail "cannot record waiter recovery"
-  bd audit record --kind tool_call --tool-name pr-shepherd.recover-waiter \
-    --issue-id "$merge_bead" >/dev/null || fail "cannot audit waiter recovery"
-  printf 'WAITER_RECOVERED merge=%s waiter=%s evidence=%s\n' "$merge_bead" "$dead_waiter" "$evidence"
+  key="$(recovery_key waiter "$dead_waiter" "$evidence")" || fail "cannot derive recovery key"
+  prepared="$(prepare_recovery "$merge_bead" "$key" waiter "$dead_waiter" "$evidence")"
+  IFS='|' read -r phase is_new <<<"$prepared"
+  phase_rank="$(recovery_phase_rank "$phase")"
+  if [[ $phase_rank -lt 2 ]]; then
+    state="$(slot_state)" || fail "cannot inspect merge slot"
+    actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
+    [[ "$actual" != "$dead_waiter" ]] || fail "dead waiter currently holds the slot"
+    if printf '%s' "$state" | slot_has_waiter "$dead_waiter"; then
+      remove_slot_waiter "$dead_waiter"
+    elif [[ "$is_new" == "true" ]]; then
+      fail "waiter changed or is no longer queued"
+    fi
+  fi
+  finish_recovery "$merge_bead" "$key" waiter "$dead_waiter" "$evidence" "$phase"
+  printf 'WAITER_RECOVERED merge=%s waiter=%s evidence=%s receipt=%s\n' \
+    "$merge_bead" "$dead_waiter" "$evidence" "$key"
 }
 
 recover_claim() {
   local merge_bead="$1"
   local dead_actor="$2"
   local evidence="$3"
-  local actual
+  local key prepared phase is_new phase_rank actual
 
   [[ -n "$evidence" ]] || fail "dead-claim recovery requires an evidence reference"
-  actual="$(bd show "$merge_bead" --json | jq -r '.[0].assignee // empty')" ||
-    fail "cannot inspect merge claim"
-  [[ "$actual" == "$dead_actor" ]] ||
-    fail "claim holder changed (expected $dead_actor, found ${actual:-none})"
-  bd update "$merge_bead" --assignee "" --status open >/dev/null ||
-    fail "cannot release dead claim"
-  bd comment "$merge_bead" "RECOVERED claim_holder=$dead_actor evidence=$evidence" >/dev/null ||
-    fail "cannot record claim recovery"
-  bd audit record --kind tool_call --tool-name pr-shepherd.recover-claim \
-    --issue-id "$merge_bead" >/dev/null || fail "cannot audit claim recovery"
-  printf 'CLAIM_RECOVERED merge=%s holder=%s evidence=%s\n' "$merge_bead" "$dead_actor" "$evidence"
+  key="$(recovery_key claim "$dead_actor" "$evidence")" || fail "cannot derive recovery key"
+  prepared="$(prepare_recovery "$merge_bead" "$key" claim "$dead_actor" "$evidence")"
+  IFS='|' read -r phase is_new <<<"$prepared"
+  phase_rank="$(recovery_phase_rank "$phase")"
+  if [[ $phase_rank -lt 2 ]]; then
+    actual="$(bd show "$merge_bead" --json | jq -r '.[0].assignee // empty')" \
+      || fail "cannot inspect merge claim"
+    if [[ "$actual" == "$dead_actor" ]]; then
+      bd update "$merge_bead" --assignee "" --status open >/dev/null \
+        || fail "cannot release dead claim"
+    elif [[ "$is_new" == "true" || -n "$actual" ]]; then
+      fail "claim holder changed (expected $dead_actor, found ${actual:-none})"
+    fi
+  fi
+  finish_recovery "$merge_bead" "$key" claim "$dead_actor" "$evidence" "$phase"
+  printf 'CLAIM_RECOVERED merge=%s holder=%s evidence=%s receipt=%s\n' \
+    "$merge_bead" "$dead_actor" "$evidence" "$key"
 }
 
 ready_ids() {
@@ -748,61 +922,61 @@ require_command jq
 command_name="${1:-}"
 shift || true
 case "$command_name" in
-check-run)
-  [[ $# -eq 3 ]] || fail "check-run expects 3 arguments"
-  check_run "$@"
-  ;;
-check-pr)
-  [[ $# -ge 4 && $# -le 5 ]] || fail "check-pr expects 4-5 arguments"
-  check_pr "$@"
-  ;;
-verify-landed)
-  [[ $# -eq 6 ]] || fail "verify-landed expects 6 arguments"
-  verify_landed "$@"
-  ;;
-land)
-  [[ $# -ge 8 && $# -le 9 ]] || fail "land expects 8-9 arguments"
-  land_pr "$@"
-  ;;
-acquire-slot)
-  [[ $# -ge 1 && $# -le 3 ]] || fail "acquire-slot expects 1-3 arguments"
-  acquire_slot "$@"
-  ;;
-release-slot)
-  [[ $# -eq 1 ]] || fail "release-slot expects 1 argument"
-  release_slot "$@"
-  ;;
-with-slot)
-  [[ $# -ge 3 ]] || fail "with-slot expects a holder and command"
-  with_slot "$@"
-  ;;
-failure-key)
-  [[ $# -ge 3 ]] || fail "failure-key expects at least 3 arguments"
-  failure_key "$@"
-  ;;
-ensure-bounce)
-  [[ $# -eq 6 ]] || fail "ensure-bounce expects 6 arguments"
-  ensure_bounce "$@"
-  ;;
-recover-slot)
-  [[ $# -eq 3 ]] || fail "recover-slot expects 3 arguments"
-  recover_slot "$@"
-  ;;
-recover-waiter)
-  [[ $# -eq 3 ]] || fail "recover-waiter expects 3 arguments"
-  recover_waiter "$@"
-  ;;
-recover-claim)
-  [[ $# -eq 3 ]] || fail "recover-claim expects 3 arguments"
-  recover_claim "$@"
-  ;;
-ready-ids)
-  [[ $# -eq 0 ]] || fail "ready-ids expects no arguments"
-  ready_ids
-  ;;
--h | --help | help) usage ;;
-*)
-  usage >&2
-  exit "$EXIT_UNKNOWN"
-  ;;
+  check-run)
+    [[ $# -eq 3 ]] || fail "check-run expects 3 arguments"
+    check_run "$@"
+    ;;
+  check-pr)
+    [[ $# -ge 4 && $# -le 5 ]] || fail "check-pr expects 4-5 arguments"
+    check_pr "$@"
+    ;;
+  verify-landed)
+    [[ $# -eq 6 ]] || fail "verify-landed expects 6 arguments"
+    verify_landed "$@"
+    ;;
+  land)
+    [[ $# -ge 8 && $# -le 9 ]] || fail "land expects 8-9 arguments"
+    land_pr "$@"
+    ;;
+  acquire-slot)
+    [[ $# -ge 1 && $# -le 3 ]] || fail "acquire-slot expects 1-3 arguments"
+    acquire_slot "$@"
+    ;;
+  release-slot)
+    [[ $# -eq 1 ]] || fail "release-slot expects 1 argument"
+    release_slot "$@"
+    ;;
+  with-slot)
+    [[ $# -ge 3 ]] || fail "with-slot expects a holder and command"
+    with_slot "$@"
+    ;;
+  failure-key)
+    [[ $# -ge 3 ]] || fail "failure-key expects at least 3 arguments"
+    failure_key "$@"
+    ;;
+  ensure-bounce)
+    [[ $# -eq 6 ]] || fail "ensure-bounce expects 6 arguments"
+    ensure_bounce "$@"
+    ;;
+  recover-slot)
+    [[ $# -eq 3 ]] || fail "recover-slot expects 3 arguments"
+    recover_slot "$@"
+    ;;
+  recover-waiter)
+    [[ $# -eq 3 ]] || fail "recover-waiter expects 3 arguments"
+    recover_waiter "$@"
+    ;;
+  recover-claim)
+    [[ $# -eq 3 ]] || fail "recover-claim expects 3 arguments"
+    recover_claim "$@"
+    ;;
+  ready-ids)
+    [[ $# -eq 0 ]] || fail "ready-ids expects no arguments"
+    ready_ids
+    ;;
+  -h | --help | help) usage ;;
+  *)
+    usage >&2
+    exit "$EXIT_UNKNOWN"
+    ;;
 esac
