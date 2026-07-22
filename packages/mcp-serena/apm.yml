@@ -1,9 +1,10 @@
 name: mcp-serena
 version: 1.2.0
 description: >-
-  MCP server package for Serena semantic code tools. The launcher selects the
-  Codex or Claude Code context from the parent harness and can be overridden
-  with SERENA_MCP_CONTEXT.
+  MCP server package for Serena semantic code tools. The launcher resolves the
+  Codex or Claude Code context from the process ancestry and can be overridden
+  with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent
+  mcp_servers declarations should use the shared semantic route instead.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -21,8 +22,10 @@ dependencies:
       args:
         - '-lc'
         - >-
-          ctx="${SERENA_MCP_CONTEXT:-}"; if [ -z "$ctx" ]; then parent="$(ps -o
-          args= -p "$PPID" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; case
-          "$parent" in *claude*) ctx="claude-code" ;; *codex*) ctx="codex" ;; *)
-          ctx="agent" ;; esac; fi; exec serena start-mcp-server --context "$ctx"
-          --project-from-cwd
+          ctx="${SERENA_MCP_CONTEXT:-}"; if [ -z "$ctx" ]; then ctx="agent";
+          pid="$PPID"; while [ "$pid" -gt 1 ]; do parent="$(ps -o args= -p
+          "$pid" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; case "$parent" in
+          *claude*) ctx="claude-code"; break ;; *codex*) ctx="codex"; break ;;
+          esac; next="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')"; case
+          "$next" in ''|*[!0-9]*) break ;; esac; pid="$next"; done; fi; exec
+          serena start-mcp-server --context "$ctx" --project-from-cwd

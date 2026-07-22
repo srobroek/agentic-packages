@@ -342,18 +342,6 @@
       "source": "./packages/code-intelligence"
     },
     {
-      "name": "codebase-memory",
-      "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
-      "version": "2.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "graph"
-      ],
-      "category": "code-intelligence",
-      "source": "./packages/codebase-memory"
-    },
-    {
       "name": "codex-hook-contract",
       "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
       "version": "0.3.1",
@@ -1126,7 +1114,7 @@
     },
     {
       "name": "mcp-serena",
-      "description": "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.",
+      "description": "MCP server package for Serena semantic code tools. The launcher resolves the Codex or Claude Code context from the process ancestry and can be overridden with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent mcp_servers declarations should use the shared semantic route instead.",
       "version": "1.2.0",
       "tags": [
         "mcp",

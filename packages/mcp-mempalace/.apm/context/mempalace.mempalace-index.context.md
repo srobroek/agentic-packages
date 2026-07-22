@@ -10,9 +10,9 @@ MUST MP-1: use MemPalace's MCP tools for CROSS-SESSION recall — prior decision
 This is memory of what happened in previous sessions, not the current code.
 
 NOT MP-2: use MemPalace to explore the CURRENT codebase's structure (symbols,
-call paths, references, architecture). That is codebase-memory-mcp's job
-(search_graph, trace_path, get_code_snippet). Do not conflate the two: MemPalace
-= what we decided/learned before; codebase-memory = what the code is now.
+call paths, references, architecture). Use the project's semantic symbol tools
+and direct file inspection for that work. Do not conflate the two: MemPalace is
+what we decided or learned before; semantic code tools inspect what exists now.
 
 MUST MP-3: prefer searching MemPalace before re-deriving a decision or
 re-investigating a problem that may have been resolved in an earlier session —
@@ -24,8 +24,8 @@ when a decision, rationale, or hard-won debugging result emerges that a future
 session would benefit from — do not rely solely on end-of-session mining.
 
 NOT MP-5: treat MemPalace as authoritative for current code or config values —
-verbatim memory can be stale. Confirm code facts against the live tree
-(codebase-memory-mcp, Read/Grep) before acting on a remembered detail.
+verbatim memory can be stale. Confirm code facts against the live tree with
+semantic symbol tools or Read/Grep before acting on a remembered detail.
 
 MUST MP-6: scope recall to the project's wing when the question is
 project-specific (the wing is named for the repo), so recall is not diluted by

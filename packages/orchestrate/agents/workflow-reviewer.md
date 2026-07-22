@@ -1,8 +1,8 @@
 ---
 name: workflow-reviewer
 description: >-
-  Independent read-only reviewer in an `orchestrate` run: reviews one node's
-  branch, reports a REVIEW verdict to its bead, re-reviews the delta.
+  Independent read-only reviewer in an `orchestrate` run; uses Serena semantic
+  tools when available to review one node's branch and report a verdict.
 model: sonnet
 effort: high
 permissionMode: plan

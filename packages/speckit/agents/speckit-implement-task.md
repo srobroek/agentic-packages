@@ -1,6 +1,6 @@
 ---
 name: speckit-implement-task
-description: Implements bounded SpecKit tasks or returns a coder delegation brief. Use when the parent provides task IDs, spec context, and worktree scope.
+description: Implements bounded SpecKit tasks with Serena semantic tools when available, or returns a coder delegation brief with task IDs and scope.
 model: sonnet
 effort: medium
 permissionMode: acceptEdits

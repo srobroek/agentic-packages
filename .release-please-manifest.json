@@ -28,7 +28,6 @@
   "packages/chezmoi-editor": "1.2.0",
   "packages/cmux": "1.1.0",
   "packages/code-intelligence": "8.1.0",
-  "packages/codebase-memory": "2.1.0",
   "packages/codex-hook-contract": "0.3.1",
   "packages/core": "10.2.1",
   "packages/data-ai": "2.2.1",

@@ -1,6 +1,6 @@
 ---
 name: parallel-coder
-description: Isolated implementation subagent. Self-commits to its own worktree branch for review and merge. Spawn with isolation:"worktree".
+description: Isolated implementation subagent; requires Serena semantic tools when available. Self-commits to its own worktree branch for review and merge.
 model: sonnet
 effort: medium
 permissionMode: acceptEdits

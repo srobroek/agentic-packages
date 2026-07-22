@@ -341,18 +341,6 @@
       "category": "code-intelligence"
     },
     {
-      "name": "codebase-memory",
-      "source": {
-        "source": "local",
-        "path": "./packages/codebase-memory"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "code-intelligence"
-    },
-    {
       "name": "codex-hook-contract",
       "source": {
         "source": "local",
