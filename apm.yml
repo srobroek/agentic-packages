@@ -673,6 +673,12 @@ marketplace:
       tags:
         - mcp
         - docs
+    - name: mcp-fetcher
+      source: ./packages/mcp-fetcher
+      category: mcp
+      tags:
+        - mcp
+        - web
     - name: mcp-mempalace
       source: ./packages/mcp-mempalace
       category: mcp

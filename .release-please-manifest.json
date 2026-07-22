@@ -90,6 +90,7 @@
   "packages/mcp-1mcp": "1.0.4",
   "packages/mcp-codebase-memory": "1.2.0",
   "packages/mcp-context7": "1.2.0",
+  "packages/mcp-fetcher": "0.1.0",
   "packages/mcp-mempalace": "1.0.2",
   "packages/mcp-package-version": "1.2.0",
   "packages/mcp-playwright": "1.2.0",
