@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.2...mcp-1mcp--v1.0.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* recover 1mcp startup after runtime crashes ([#607](https://github.com/srobroek/agentic-packages/issues/607)) ([a69a02d](https://github.com/srobroek/agentic-packages/commit/a69a02d10cf3aa93aaae9d1d8ac5ca7b99aa9539))
+
 ## [1.0.2](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.1...mcp-1mcp--v1.0.2) (2026-07-21)
 
 
