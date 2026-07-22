@@ -1,20 +1,42 @@
 name: orchestrate
-version: 3.1.0
+version: 3.9.1
 description: >-
-  Orchestrate a fleet of subagents across complex, parallel, or long-running
-  work while controlling cost by routing each role to the cheapest capable
-  model. Run state (task DAG, claims, audit trail, merge coordination) lives in
-  beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus
-  bundled agents (workflow-coder, workflow-reviewer, workflow-advisor,
-  integration-gatekeeper, audit-reporter), a Claude skill-scoped SubagentStart
-  comms hook, explicit Codex spawn-brief protocol, and deterministic scripts
-  (scope disjointness, agent discovery, conflict probe).
+  Coordinates parallel subagents through Beads-backed DAGs, claims, threaded
+  replies, decisions, review, and merge state. Supports exact, specialist,
+  generic-pull, writable-fallback, and read-only research dispatch. Bundles
+  workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
+  workflow-reviewer, workflow-advisor, integration-gatekeeper, and
+  ledger-scribe. Includes deterministic scope, discovery, claim, message,
+  decision, queue, and conflict scripts plus shared PR shepherd landing
+  safeguards. Requires the bd CLI.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
-includes: auto
+targets:
+  - claude
+  - codex
+includes:
+  - .apm/agents
+  - .apm/skills/orchestrate/SKILL.md
+  - .apm/skills/orchestrate/references
+  - .apm/skills/orchestrate/scripts/_test_conflict_probe.py
+  - .apm/skills/orchestrate/scripts/_test_decision_policy.py
+  - .apm/skills/orchestrate/scripts/_test_discover_agents.py
+  - .apm/skills/orchestrate/scripts/_test_msg_lint.py
+  - .apm/skills/orchestrate/scripts/_test_pull_worker.py
+  - .apm/skills/orchestrate/scripts/_test_resolve_queue_dispatch.py
+  - .apm/skills/orchestrate/scripts/_test_scope_check.py
+  - .apm/skills/orchestrate/scripts/_test_thread_message.py
+  - .apm/skills/orchestrate/scripts/conflict-probe.sh
+  - .apm/skills/orchestrate/scripts/discover-agents.py
+  - .apm/skills/orchestrate/scripts/inject-comms.sh
+  - .apm/skills/orchestrate/scripts/msg-lint.py
+  - .apm/skills/orchestrate/scripts/pull-worker.py
+  - .apm/skills/orchestrate/scripts/resolve-queue-dispatch.py
+  - .apm/skills/orchestrate/scripts/scope-check.py
+  - .apm/skills/orchestrate/scripts/thread-message.py
+  - .apm/skills/orchestrate/scripts/worktree-sweep.sh
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/beads#>=0.4.1 <1.0.0
-    - srobroek/agentic-packages/packages/worktrunk-writer#>=1.0.0 <2.0.0
+    - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
+    - srobroek/agentic-packages/packages/pr-shepherd#>=0.11.1 <1.0.0
