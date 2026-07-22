@@ -384,7 +384,31 @@ if command -v bd >/dev/null 2>&1; then
     echo "    beads workspace already present"
   fi
 
-  bash "$SCRIPT_DIR/install-speckit-formulas.sh"
+  # Install the feature-lifecycle formula from the speckit-beads package.
+  # Resolution order mirrors how hook scripts locate their plugin root:
+  # installed plugin dir first, then the monorepo source (dev checkouts).
+  FORMULA_NAME="speckit-feature.formula.toml"
+  FORMULA_SRC=""
+  for cand in \
+    "$HOME/.beads/formulas/$FORMULA_NAME" \
+    "$HOME/.apm/apm_modules/srobroek/agentic-packages/packages/speckit-beads/formulas/$FORMULA_NAME" \
+    "$HOME/.claude/plugins/agentic-packages-speckit-beads/formulas/$FORMULA_NAME" \
+    "$SCRIPT_DIR/../../../../../speckit-beads/formulas/$FORMULA_NAME"; do
+    if [ -f "$cand" ]; then FORMULA_SRC="$cand"; break; fi
+  done
+  if [ "$FORMULA_SRC" = "$HOME/.beads/formulas/$FORMULA_NAME" ]; then
+    echo "    formula available user-level (~/.beads/formulas) -- no project copy needed"
+  elif [ -n "$FORMULA_SRC" ]; then
+    mkdir -p .beads/formulas
+    cp "$FORMULA_SRC" .beads/formulas/
+    if bd formula show speckit-feature >/dev/null 2>&1; then
+      echo "    formula speckit-feature installed and parseable"
+    else
+      echo "    WARNING: formula copied but bd formula show failed -- check bd version (need >= 1.1.0)" >&2
+    fi
+  else
+    echo "    WARNING: speckit-feature formula not found -- install the speckit-beads package, then re-run" >&2
+  fi
 else
   echo "    SKIP: bd (beads) not on PATH" >&2
   echo "          Install hint: mise use -g aqua:gastownhall/beads@latest" >&2
@@ -394,8 +418,8 @@ fi
 echo "==> 7/7 ignore generated status-report artefact"
 # The status-report extension (/speckit.status-report.show) regenerates
 # specs/spec-status.md on every run despite its read-only catalog tag. It is a
-# derived report, not a tracked spec artefact (spec.md and plan.md are tracked;
-# task state is in beads), so ignore just that one file to keep it out of `git status` and
+# derived report, not a tracked spec artefact (spec.md/plan.md/tasks.md ARE
+# tracked), so ignore just that one file to keep it out of `git status` and
 # accidental commits. Idempotent: append the entry only if absent.
 GITIGNORE_ENTRY="specs/**/spec-status.md"
 if [ -f .gitignore ] && grep -qxF "$GITIGNORE_ENTRY" .gitignore; then

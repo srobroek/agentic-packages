@@ -51,7 +51,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer`, `comprehensive-review`^, `performance-testing-review`^, `unit-testing`^, `tdd-workflows`^ |
 | `security` | Security toolkit | `security-scanning`^, `security-compliance`^, `backend-api-security`^, `frontend-mobile-security`^, `reverse-engineering`^ |
-| `speckit-beads` | Beads-native SpecKit task-state layer | `speckit`, `beads` |
+| `speckit-beads` | Beads-native SpecKit workflow | `speckit`, `beads` |
 <!-- END:bundles -->
 
 ## How bundles work
