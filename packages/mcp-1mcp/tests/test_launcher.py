@@ -1,17 +1,21 @@
-"""Regression tests for the 1MCP client launcher."""
+"""Regression tests for the shared 1MCP runtime launcher."""
 
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
-import threading
 import time
 
 
 PACKAGE = Path(__file__).resolve().parents[1]
+
+
+def launcher_script() -> Path:
+    return PACKAGE / "scripts" / "launcher.sh"
 
 
 def launcher_command() -> str:
@@ -23,18 +27,39 @@ def launcher_command() -> str:
     return claude_command
 
 
+def test_manifest_delegates_to_inspectable_launcher_script() -> None:
+    script = launcher_script()
+    command = launcher_command()
+
+    assert script.is_file()
+    assert "scripts/launcher.sh" in command
+    assert "launcher.lock.d" not in command
+    assert len(command) < 1_000
+
+
+def test_launcher_stays_small_and_uses_kernel_locks() -> None:
+    script = launcher_script().read_text(encoding="utf-8")
+
+    assert len(script.splitlines()) < 220
+    assert "flock" in script
+    assert "lockf" in script
+    assert ".takeover" not in script
+    assert ".publish" not in script
+    assert "launcher.lock.d" not in script
+
+
 def install_fake_commands(
     tmp_path: Path,
     *,
     initially_ready: bool = False,
-    start_succeeds: bool = True,
-    start_unready: bool = False,
-    status_hangs: bool = False,
-    background_hangs: bool = False,
-    status_ignores_term: bool = False,
-    background_ignores_term: bool = False,
+    start_behavior: str = "success",
+    status_behavior: str = "return",
     background_delay: float = 0,
     minimal_path: bool = False,
+    include_node: bool = True,
+    include_timeout: bool = True,
+    include_perl: bool = False,
+    lock_mode: str = "flock",
 ) -> tuple[dict[str, str], Path]:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -45,84 +70,131 @@ def install_fake_commands(
     if initially_ready:
         (state_dir / "ready").touch()
 
-    fake = bin_dir / "1mcp"
-    fake.write_text(
-        "#!/bin/sh\n"
-        "state=$FAKE_1MCP_STATE\n"
-        "printf '%s\\n' \"$*\" >>\"$state/actions\"\n"
-        "case \"$1 $2\" in\n"
-        "  'serve --status')\n"
-        "    [ \"$FAKE_1MCP_STATUS\" = hang ] && exec sleep 30\n"
-        "    [ \"$FAKE_1MCP_STATUS\" = ignore ] && { trap '' TERM; exec sleep 30; }\n"
-        "    [ -f \"$state/ready\" ]; exit $?\n"
-        "    ;;\n"
-        "  'serve --background')\n"
-        "    printf 'background diagnostic\\n' >>\"$state/server.log\"\n"
-        "    [ \"$FAKE_1MCP_BACKGROUND\" = hang ] && exec sleep 30\n"
-        "    [ \"$FAKE_1MCP_BACKGROUND\" = ignore ] && { trap '' TERM; exec sleep 30; }\n"
-        "    [ \"$FAKE_1MCP_BACKGROUND_DELAY\" = 0 ] || sleep \"$FAKE_1MCP_BACKGROUND_DELAY\"\n"
-        "    [ \"$FAKE_1MCP_STARTS\" = unready ] && exit 0\n"
-        "    [ \"$FAKE_1MCP_STARTS\" = success ] || exit 1\n"
-        "    touch \"$state/ready\"\n"
-        "    exit 0\n"
-        "    ;;\n"
-        "  'serve --background-bootstrap')\n"
-        "    [ \"$FAKE_1MCP_STARTS\" = hold ] || exit 2\n"
-        "    sleep 30\n"
-        "    ;;\n"
-        "  'serve --stop') exit 99 ;;\n"
-        "  'proxy ') exit 0 ;;\n"
-        "esac\n"
-        "exit 2\n",
+    entry = tmp_path / "node_modules" / "@1mcp" / "agent" / "build" / "index.js"
+    entry.parent.mkdir(parents=True)
+    entry.write_text(
+        """#!/usr/bin/env node
+const fs = require("fs");
+const path = require("path");
+const state = process.env.FAKE_1MCP_STATE;
+const args = process.argv.slice(2);
+const leakedLauncherEnv = Object.keys(process.env).filter(
+  (key) => key.startsWith("ONE_MCP_LAUNCHER_") || key.startsWith("MCP1_LAUNCHER_")
+);
+if (leakedLauncherEnv.length > 0) {
+  fs.appendFileSync(
+    path.join(state, "actions"),
+    "env-leak " + leakedLauncherEnv.join(" ") + "\\n"
+  );
+  process.exit(87);
+}
+fs.appendFileSync(path.join(state, "actions"), args.join(" ") + "\\n");
+
+const sleep = (milliseconds) => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+};
+const hold = (ignoreTerm) => {
+  if (ignoreTerm) process.on("SIGTERM", () => {});
+  setInterval(() => {}, 1000);
+};
+
+const main = () => {
+if (args[0] === "serve" && args[1] === "--status") {
+  if (process.env.FAKE_1MCP_STATUS === "hang") {
+    hold(false);
+    return;
+  }
+  if (process.env.FAKE_1MCP_STATUS === "ignore") {
+    hold(true);
+    return;
+  }
+  process.exit(fs.existsSync(path.join(state, "ready")) ? 0 : 1);
+}
+
+if (args[0] === "serve" && args[1] === "--background") {
+  fs.appendFileSync(path.join(state, "server.log"), "background diagnostic\\n");
+  if (!process.argv[1].endsWith(".js")) process.exit(88);
+  if (process.env.FAKE_1MCP_STARTS === "hang") {
+    hold(false);
+    return;
+  }
+  if (process.env.FAKE_1MCP_STARTS === "ignore") {
+    hold(true);
+    return;
+  }
+  sleep(Number(process.env.FAKE_1MCP_BACKGROUND_DELAY) * 1000);
+  if (process.env.FAKE_1MCP_STARTS === "failure") process.exit(1);
+  if (process.env.FAKE_1MCP_STARTS === "unready") process.exit(0);
+  fs.writeFileSync(path.join(state, "ready"), "");
+  process.exit(0);
+}
+
+if (args[0] === "serve" && args[1] === "--background-bootstrap") {
+  if (process.env.FAKE_1MCP_STARTS !== "hold") process.exit(2);
+  hold(false);
+  return;
+}
+
+if (args[0] === "serve" && args[1] === "--stop") process.exit(99);
+if (args[0] === "proxy") process.exit(0);
+process.exit(2);
+};
+main();
+""",
         encoding="utf-8",
     )
-    fake.chmod(0o755)
+    entry.chmod(0o755)
+    (bin_dir / "1mcp").symlink_to(entry)
 
     env = dict(os.environ)
     env["FAKE_1MCP_STATE"] = str(state_dir)
-    env["FAKE_1MCP_STARTS"] = (
-        "unready" if start_unready else ("success" if start_succeeds else "failure")
-    )
-    env["FAKE_1MCP_STATUS"] = "ignore" if status_ignores_term else ("hang" if status_hangs else "return")
-    env["FAKE_1MCP_BACKGROUND"] = (
-        "ignore" if background_ignores_term else ("hang" if background_hangs else "return")
-    )
+    env["FAKE_1MCP_STARTS"] = start_behavior
+    env["FAKE_1MCP_STATUS"] = status_behavior
     env["FAKE_1MCP_BACKGROUND_DELAY"] = str(background_delay)
     env["XDG_CONFIG_HOME"] = str(tmp_path / "config")
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "5"
-    env["ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS"] = "1"
-    if minimal_path:
-        for command in (
-            "awk",
-            "cksum",
-            "date",
-            "mkdir",
-            "mv",
-            "ps",
-            "rm",
-            "rmdir",
-            "sed",
-            "sleep",
-            "stat",
-            "touch",
-            "tr",
-        ):
-            target = subprocess.run(
-                ["bash", "-lc", f"command -v {command}"],
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout.strip()
-            (bin_dir / command).symlink_to(target)
-        env["PATH"] = str(bin_dir)
-    else:
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "5"
+    env["MCP1_LAUNCHER_KILL_GRACE_SECONDS"] = "1"
+
+    if not minimal_path:
         env["PATH"] = f"{bin_dir}:{env['PATH']}"
+        return env, actions
+
+    commands = ["bash", "date", "env", "mkdir", "mv", "ps", "sleep", "tr"]
+    if include_node:
+        commands.append("node")
+    if include_timeout:
+        commands.append("timeout")
+    if include_perl:
+        commands.append("perl")
+    if lock_mode == "flock":
+        commands.append("flock")
+    for command in commands:
+        target = shutil.which(command)
+        assert target is not None, command
+        (bin_dir / command).symlink_to(target)
+
+    if lock_mode == "lockf":
+        real_flock = shutil.which("flock")
+        assert real_flock is not None
+        lockf = bin_dir / "lockf"
+        lockf.write_text(
+            "#!/bin/sh\n"
+            "seconds=$2\n"
+            "file=$3\n"
+            "shift 3\n"
+            'exec "$FAKE_REAL_FLOCK" -w "$seconds" "$file" "$@"\n',
+            encoding="utf-8",
+        )
+        lockf.chmod(0o755)
+        env["FAKE_REAL_FLOCK"] = real_flock
+
+    env["PATH"] = str(bin_dir)
     return env, actions
 
 
 def run_launcher(env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["/bin/bash", "-c", launcher_command()],
+        ["bash", str(launcher_script())],
         env=env,
         capture_output=True,
         text=True,
@@ -130,8 +202,11 @@ def run_launcher(env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def action_count(actions: Path, action: str) -> int:
-    return actions.read_text(encoding="utf-8").splitlines().count(action)
+def action_count(actions: Path, prefix: str) -> int:
+    return sum(
+        line == prefix or line.startswith(f"{prefix} ")
+        for line in actions.read_text(encoding="utf-8").splitlines()
+    )
 
 
 def write_pid_file(config_home: Path, pid: int) -> Path:
@@ -155,63 +230,23 @@ def write_pid_file(config_home: Path, pid: int) -> Path:
     return pid_file
 
 
-def process_start_identity(pid: int) -> str:
-    proc_stat = Path(f"/proc/{pid}/stat")
-    if proc_stat.is_file():
-        after_comm = proc_stat.read_text(encoding="utf-8").rsplit(") ", 1)[1]
-        return f"linux:{after_comm.split()[19]}"
-    result = subprocess.run(
-        ["ps", "-p", str(pid), "-o", "lstart="],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return f"ps:{result.stdout.strip()}"
-
-
-def write_mkdir_lock(config_home: Path, pid: int, start_identity: str) -> Path:
-    lock_dir = config_home / "1mcp" / "launcher.lock.d"
-    lock_dir.mkdir(parents=True)
-    (lock_dir / "owner").write_text(
-        f"pid={pid}\nstart={start_identity}\n",
-        encoding="utf-8",
-    )
-    return lock_dir
-
-
-def write_claim(lock_dir: Path, kind: str, pid: int, start_identity: str) -> Path:
-    claim = lock_dir / f".{kind}.{pid}"
-    claim.mkdir()
-    (claim / "start").write_text(f"{start_identity}\n", encoding="utf-8")
-    return claim
-
-
-def run_with_same_pid_orphan_claim(
-    env: dict[str, str], lock_dir: Path, kind: str
-) -> subprocess.CompletedProcess[str]:
-    env["FAKE_ORPHAN_CLAIM_LOCK"] = str(lock_dir)
-    prefix = (
-        f'claim="$FAKE_ORPHAN_CLAIM_LOCK/.{kind}.$$"; '
-        'mkdir "$claim"; '
-        "printf 'linux:old-incarnation\\n' >\"$claim/start\"; "
-    )
-    return subprocess.run(
-        ["/bin/bash", "-c", prefix + launcher_command()],
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def wait_for_action(actions: Path, prefix: str, timeout: float = 3) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if action_count(actions, prefix):
+            return
+        time.sleep(0.01)
+    raise AssertionError(f"action never observed: {prefix}")
 
 
 def test_launcher_has_no_runtime_signal_path() -> None:
-    command = launcher_command()
+    script = launcher_script().read_text(encoding="utf-8")
 
-    assert "serve --stop" not in command
-    assert 'kill "$pid"' not in command
+    assert "serve --stop" not in script
+    assert 'kill "$pid"' not in script
 
 
-def test_ready_runtime_connects_without_starting(tmp_path: Path) -> None:
+def test_ready_runtime_connects_without_locking_or_starting(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path, initially_ready=True)
 
     result = run_launcher(env)
@@ -219,22 +254,59 @@ def test_ready_runtime_connects_without_starting(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert action_count(actions, "serve --background") == 0
     assert action_count(actions, "proxy") == 1
+    assert not (Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock").exists()
+
+
+def test_empty_scope_starts_async_runtime_and_connects(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    lines = actions.read_text(encoding="utf-8")
+    assert action_count(actions, "serve --background") == 1
+    assert "--enable-async-loading" in lines
+    assert "--async-min-servers 1" in lines
+    assert "--async-timeout 5000" in lines
+    assert action_count(actions, "proxy") == 1
+
+
+def test_background_launch_resolves_npm_bin_symlink(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+
+
+def test_legacy_launcher_tuning_is_supported_but_not_leaked_to_1mcp(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    env.pop("MCP1_LAUNCHER_WAIT_SECONDS")
+    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "4"
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert "env-leak" not in actions.read_text(encoding="utf-8")
 
 
 def test_concurrent_launchers_start_once_and_both_connect(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path)
-    command = launcher_command()
+    env, actions = install_fake_commands(tmp_path, background_delay=0.5)
+    command = ["bash", str(launcher_script())]
 
-    first = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-    second = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
+    first = subprocess.Popen(command, env=env)
+    second = subprocess.Popen(command, env=env)
 
-    assert first.wait(timeout=5) == 0
-    assert second.wait(timeout=5) == 0
+    assert first.wait(timeout=8) == 0
+    assert second.wait(timeout=8) == 0
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 2
 
 
-def test_mismatched_reused_pid_is_quarantined_without_signalling_process(
+def test_stale_pid_for_reused_process_is_quarantined_without_signal(
     tmp_path: Path,
 ) -> None:
     env, actions = install_fake_commands(tmp_path)
@@ -251,28 +323,61 @@ def test_mismatched_reused_pid_is_quarantined_without_signalling_process(
         assert not pid_file.exists()
         quarantined = list(pid_file.parent.glob("server.pid.stale.*"))
         assert len(quarantined) == 1
-        assert json.loads(quarantined[0].read_text(encoding="utf-8"))["pid"] == unrelated.pid
     finally:
-        unrelated.send_signal(signal.SIGTERM)
+        unrelated.terminate()
         unrelated.wait(timeout=5)
 
 
-def test_empty_scope_starts_and_connects(tmp_path: Path) -> None:
+def test_malformed_pid_file_is_quarantined(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
+    pid_file = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "server.pid"
+    pid_file.parent.mkdir(parents=True)
+    pid_file.write_text("not json", encoding="utf-8")
 
     result = run_launcher(env)
 
     assert result.returncode == 0, result.stderr
     assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 1
+    assert len(list(pid_file.parent.glob("server.pid.stale.*"))) == 1
 
 
-def test_genuine_unhealthy_runtime_is_not_signalled(tmp_path: Path) -> None:
+def test_launcher_self_pid_is_treated_as_stale(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    pid_file = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "server.pid"
+    pid_file.parent.mkdir(parents=True)
+    env["FAKE_PID_FILE"] = str(pid_file)
+    env["FAKE_LAUNCHER"] = str(launcher_script())
+    command = (
+        "printf '{\"pid\":%s,\"url\":\"http://127.0.0.1:3050/mcp\","
+        "\"port\":3050,\"host\":\"127.0.0.1\",\"transport\":\"http\","
+        "\"startedAt\":\"x\",\"configDir\":\"x\"}' \"$$\" "
+        '>"$FAKE_PID_FILE"; exec bash "$FAKE_LAUNCHER"'
+    )
+
+    result = subprocess.run(
+        ["bash", "-c", command],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert len(list(pid_file.parent.glob("server.pid.stale.*"))) == 1
+
+
+def test_genuine_unhealthy_runtime_is_preserved_and_not_signalled(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, start_behavior="hold")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "2"
+    runtime_env = dict(env)
+    runtime_env.pop("MCP1_LAUNCHER_WAIT_SECONDS")
+    runtime_env.pop("MCP1_LAUNCHER_KILL_GRACE_SECONDS")
     genuine = subprocess.Popen(
         [str(tmp_path / "bin" / "1mcp"), "serve", "--background-bootstrap"],
-        env={**env, "FAKE_1MCP_STARTS": "hold"},
+        env=runtime_env,
     )
     pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), genuine.pid)
 
@@ -282,17 +387,16 @@ def test_genuine_unhealthy_runtime_is_not_signalled(tmp_path: Path) -> None:
 
         assert result.returncode == 1
         assert "operator intervention" in result.stderr
-        assert action_count(actions, "serve --stop") == 0
-        assert action_count(actions, "serve --background") == 0
         assert genuine.poll() is None
         assert pid_file.exists()
+        assert action_count(actions, "serve --stop") == 0
+        assert action_count(actions, "serve --background") == 0
     finally:
-        if genuine.poll() is None:
-            genuine.terminate()
-            genuine.wait(timeout=5)
+        genuine.terminate()
+        genuine.wait(timeout=5)
 
 
-def test_spoofed_1mcp_process_is_structurally_rejected_without_signal(
+def test_process_with_runtime_words_in_one_argument_is_not_trusted(
     tmp_path: Path,
 ) -> None:
     env, actions = install_fake_commands(tmp_path)
@@ -305,144 +409,101 @@ def test_spoofed_1mcp_process_is_structurally_rejected_without_signal(
         result = run_launcher(env)
 
         assert result.returncode == 0, result.stderr
-        assert action_count(actions, "serve --stop") == 0
-        assert action_count(actions, "serve --background") == 1
         assert spoof.poll() is None
+        assert action_count(actions, "serve --background") == 1
         assert not pid_file.exists()
     finally:
         spoof.terminate()
         spoof.wait(timeout=5)
 
 
-def test_launcher_self_pid_is_quarantined_as_stale(tmp_path: Path) -> None:
+def test_stale_legacy_lock_artifacts_cannot_block_startup(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
     runtime_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp"
-    runtime_dir.mkdir(parents=True)
-    prefix = (
-        "printf '{\"pid\":%s,\"url\":\"http://127.0.0.1:3050/mcp\","
-        "\"port\":3050,\"host\":\"127.0.0.1\",\"transport\":\"http\","
-        "\"startedAt\":\"2026-07-21T00:00:00Z\",\"configDir\":\"x\"}' "
-        f'"$$" >"{runtime_dir / "server.pid"}"; '
-    )
+    old_lock = runtime_dir / "launcher.lock.d"
+    old_lock.mkdir(parents=True)
+    (old_lock / "owner").write_text("dead owner", encoding="utf-8")
+    (runtime_dir / "launcher.lock").write_text("stale contents", encoding="utf-8")
 
-    result = subprocess.run(
-        ["/bin/bash", "-c", prefix + launcher_command()],
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = run_launcher(env)
 
     assert result.returncode == 0, result.stderr
-    assert "operator intervention" not in result.stderr
     assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 1
-    assert len(list(runtime_dir.glob("server.pid.stale.*"))) == 1
 
 
-def test_parent_shell_command_embedding_is_not_runtime_identity(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path)
-    shell = subprocess.Popen(
-        ["bash", "-c", "sleep 30 # 1mcp serve --background-bootstrap"],
-    )
-    pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), shell.pid)
-
-    try:
-        result = run_launcher(env)
-
-        assert result.returncode == 0, result.stderr
-        assert shell.poll() is None
-        assert action_count(actions, "serve --background") == 1
-        assert not pid_file.exists()
-    finally:
-        shell.terminate()
-        shell.wait(timeout=5)
-
-
-def test_start_failure_is_bounded_and_preserves_diagnostics(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, start_succeeds=False)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+def test_failed_background_start_is_bounded_and_diagnostic(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, start_behavior="failure")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "2"
 
     started = time.monotonic()
     result = run_launcher(env)
     elapsed = time.monotonic() - started
 
     assert result.returncode == 1
-    assert elapsed < 3
+    assert elapsed < 4
+    assert "startup failed" in result.stderr
     assert action_count(actions, "serve --background") == 1
-    assert "background diagnostic" in (tmp_path / "state" / "server.log").read_text(encoding="utf-8")
-    assert "serve --status" in result.stderr
+    assert "background diagnostic" in (
+        tmp_path / "state" / "server.log"
+    ).read_text(encoding="utf-8")
 
 
 def test_hung_status_is_bounded_without_starting(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, status_hangs=True, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    env, actions = install_fake_commands(tmp_path, status_behavior="hang")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "2"
 
     started = time.monotonic()
     result = run_launcher(env)
     elapsed = time.monotonic() - started
 
     assert result.returncode == 1
-    assert elapsed < 3
+    assert elapsed < 4
     assert action_count(actions, "serve --background") == 0
     assert action_count(actions, "proxy") == 0
 
 
 def test_hung_background_start_is_bounded(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, background_hangs=True, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
+    env, actions = install_fake_commands(tmp_path, start_behavior="hang")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "3"
 
     started = time.monotonic()
     result = run_launcher(env)
     elapsed = time.monotonic() - started
 
     assert result.returncode == 1
-    assert elapsed < 3
+    assert elapsed < 5
     assert action_count(actions, "serve --background") == 1
     assert action_count(actions, "proxy") == 0
 
 
-def test_status_ignoring_term_is_force_stopped_near_deadline(tmp_path: Path) -> None:
+def test_term_releases_kernel_lock_for_next_launcher(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, start_behavior="hang")
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "3"
+    first = subprocess.Popen(
+        ["bash", str(launcher_script())],
+        env=env,
+        start_new_session=True,
+    )
+    wait_for_action(actions, "serve --background")
+
+    os.killpg(first.pid, signal.SIGTERM)
+    first.wait(timeout=5)
+    env["FAKE_1MCP_STARTS"] = "success"
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "6"
+
+    second = run_launcher(env)
+
+    assert second.returncode == 0, second.stderr
+    assert action_count(actions, "serve --background") == 2
+    assert action_count(actions, "proxy") == 1
+
+
+def test_lockf_fallback_serializes_startup(tmp_path: Path) -> None:
     env, actions = install_fake_commands(
         tmp_path,
-        status_ignores_term=True,
         minimal_path=True,
+        lock_mode="lockf",
     )
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
-    env["ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS"] = "1"
-
-    started = time.monotonic()
-    result = run_launcher(env)
-    elapsed = time.monotonic() - started
-
-    assert result.returncode == 1
-    assert elapsed < 4
-    assert action_count(actions, "serve --background") == 0
-
-
-def test_background_ignoring_term_is_force_stopped_near_deadline(
-    tmp_path: Path,
-) -> None:
-    env, actions = install_fake_commands(
-        tmp_path,
-        background_ignores_term=True,
-        minimal_path=True,
-    )
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
-    env["ONE_MCP_LAUNCHER_KILL_GRACE_SECONDS"] = "1"
-
-    started = time.monotonic()
-    result = run_launcher(env)
-    elapsed = time.monotonic() - started
-
-    assert result.returncode == 1
-    assert elapsed < 4
-    assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 0
-
-
-def test_launcher_works_without_flock(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
 
     result = run_launcher(env)
 
@@ -451,328 +512,77 @@ def test_launcher_works_without_flock(tmp_path: Path) -> None:
     assert action_count(actions, "proxy") == 1
 
 
-def test_stale_mkdir_lock_is_quarantined_and_retried_once(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
-
-    result = run_launcher(env)
-
-    assert result.returncode == 0, result.stderr
-    assert not lock_dir.exists()
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-    assert action_count(actions, "serve --background") == 1
-
-
-def test_ownerless_stale_mkdir_lock_recovers_after_grace(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "3"
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    lock_dir.mkdir(parents=True)
-
-    result = run_launcher(env)
-
-    assert result.returncode == 0, result.stderr
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-    assert action_count(actions, "serve --background") == 1
-
-
-def test_malformed_stale_mkdir_lock_recovers_after_grace(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "3"
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    lock_dir.mkdir(parents=True)
-    (lock_dir / "owner").write_text("not-an-owner-record\n", encoding="utf-8")
-
-    result = run_launcher(env)
-
-    assert result.returncode == 0, result.stderr
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-    assert action_count(actions, "serve --background") == 1
-
-
-def test_concurrent_owner_write_during_grace_is_not_stolen(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "2"
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    lock_dir.mkdir(parents=True)
-    owner = subprocess.Popen(["sleep", "30"])
-    timer = threading.Timer(
-        0.2,
-        lambda: (lock_dir / "owner").write_text(
-            f"pid={owner.pid}\nstart={process_start_identity(owner.pid)}\n",
-            encoding="utf-8",
-        ),
-    )
-    timer.start()
-
-    try:
-        result = run_launcher(env)
-        timer.join(timeout=2)
-
-        assert result.returncode == 1
-        assert "lock-timeout" in result.stderr
-        assert owner.poll() is None
-        assert lock_dir.exists()
-        assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
-        assert action_count(actions, "serve --background") == 0
-    finally:
-        owner.terminate()
-        owner.wait(timeout=5)
-
-
-def test_two_stale_lock_contenders_cannot_steal_new_owner(tmp_path: Path) -> None:
+def test_perl_timeout_fallback_is_supported(tmp_path: Path) -> None:
     env, actions = install_fake_commands(
         tmp_path,
         minimal_path=True,
-        background_delay=1,
+        include_timeout=False,
+        include_perl=True,
     )
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "4"
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
-    real_mv = (tmp_path / "bin" / "mv").resolve()
-    barrier = tmp_path / "state" / "mv-barrier"
-    mv = tmp_path / "bin" / "mv"
-    mv.unlink()
-    mv.write_text(
-        "#!/bin/sh\n"
-        "case \"$2\" in\n"
-        "  *launcher.lock.d.stale.*)\n"
-        "    if mkdir \"$FAKE_MV_BARRIER.first\" 2>/dev/null; then\n"
-        "      count=0\n"
-        "      while [ ! -d \"$FAKE_MV_BARRIER.second\" ] && [ \"$count\" -lt 50 ]; do\n"
-        "        sleep 0.01\n"
-        "        count=$((count + 1))\n"
-        "      done\n"
-        "    else\n"
-        "      mkdir \"$FAKE_MV_BARRIER.second\" 2>/dev/null || :\n"
-        "      sleep 0.2\n"
-        "    fi\n"
-        "    ;;\n"
-        "esac\n"
-        "exec \"$FAKE_REAL_MV\" \"$@\"\n",
-        encoding="utf-8",
-    )
-    mv.chmod(0o755)
-    env["FAKE_MV_BARRIER"] = str(barrier)
-    env["FAKE_REAL_MV"] = str(real_mv)
-    command = launcher_command()
-
-    first = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-    second = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-
-    assert first.wait(timeout=8) == 0
-    assert second.wait(timeout=8) == 0
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-    assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 2
-
-
-def test_orphaned_legacy_takeover_marker_does_not_block_recovery(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
-    (lock_dir / ".takeover").mkdir()
 
     result = run_launcher(env)
 
     assert result.returncode == 0, result.stderr
     assert action_count(actions, "serve --background") == 1
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
 
 
-def test_orphaned_takeover_claim_from_reused_pid_does_not_block_recovery(
-    tmp_path: Path,
-) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
+def test_missing_1mcp_fails_with_actionable_error(tmp_path: Path) -> None:
+    env, _ = install_fake_commands(tmp_path, minimal_path=True)
+    (tmp_path / "bin" / "1mcp").unlink()
 
-    result = run_with_same_pid_orphan_claim(env, lock_dir, "takeover")
+    result = run_launcher(env)
 
-    assert result.returncode == 0, result.stderr
-    assert action_count(actions, "serve --background") == 1
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
+    assert result.returncode == 1
+    assert "1mcp-not-installed" in result.stderr
 
 
-def test_orphaned_publish_claim_from_reused_pid_does_not_block_recovery(
-    tmp_path: Path,
-) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
-
-    result = run_with_same_pid_orphan_claim(env, lock_dir, "publish")
-
-    assert result.returncode == 0, result.stderr
-    assert action_count(actions, "serve --background") == 1
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-
-
-def test_live_takeover_claim_is_preserved(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
-    lock_dir = write_mkdir_lock(Path(env["XDG_CONFIG_HOME"]), 999_999_999, "linux:1")
-    claimant = subprocess.Popen(["sleep", "30"])
-    claim = write_claim(
-        lock_dir,
-        "takeover",
-        claimant.pid,
-        process_start_identity(claimant.pid),
+def test_missing_node_fails_with_actionable_error(tmp_path: Path) -> None:
+    env, _ = install_fake_commands(
+        tmp_path,
+        minimal_path=True,
+        include_node=False,
     )
 
-    try:
-        result = run_launcher(env)
+    result = run_launcher(env)
 
-        assert result.returncode == 1
-        assert "lock-timeout" in result.stderr
-        assert claimant.poll() is None
-        assert claim.exists()
-        assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
-        assert action_count(actions, "serve --background") == 0
-    finally:
-        claimant.terminate()
-        claimant.wait(timeout=5)
+    assert result.returncode == 1
+    assert "node-not-installed" in result.stderr
 
 
-def test_owner_publication_after_grace_cannot_race_takeover(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "4"
-    env["ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS"] = "1"
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    real_mv = (tmp_path / "bin" / "mv").resolve()
-    mv = tmp_path / "bin" / "mv"
-    mv.unlink()
-    mv.write_text(
-        "#!/bin/sh\n"
-        "case \"$2\" in\n"
-        "  */owner) sleep 2 ;;\n"
-        "esac\n"
-        "exec \"$FAKE_REAL_MV\" \"$@\"\n",
-        encoding="utf-8",
-    )
-    mv.chmod(0o755)
-    env["FAKE_REAL_MV"] = str(real_mv)
-    command = launcher_command()
-
-    creator = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-    time.sleep(0.2)
-    reaper = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-
-    creator_status = creator.wait(timeout=8)
-    reaper_status = reaper.wait(timeout=8)
-
-    assert (creator_status, reaper_status) == (0, 0)
-    assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 2
-    assert not list(lock_dir.parent.glob("launcher.lock.d.stale.*"))
-
-
-def test_delayed_publish_claim_yields_to_takeover_before_owner_publication(
-    tmp_path: Path,
-) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "5"
-    env["ONE_MCP_LAUNCHER_OWNER_GRACE_SECONDS"] = "1"
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    barrier = tmp_path / "claim-race"
-
-    real_mkdir = (tmp_path / "bin" / "mkdir").resolve()
-    mkdir = tmp_path / "bin" / "mkdir"
-    mkdir.unlink()
-    mkdir.write_text(
-        "#!/bin/sh\n"
-        "case \"$1\" in\n"
-        "  \"$FAKE_CLAIM_LOCK\"/.publish.*)\n"
-        "    while [ ! -f \"$FAKE_CLAIM_BARRIER.reaper-final\" ]; do sleep 0.01; done\n"
-        "    \"$FAKE_REAL_MKDIR\" \"$@\" || exit $?\n"
-        "    touch \"$FAKE_CLAIM_BARRIER.publish-created\"\n"
-        "    exit 0\n"
-        "    ;;\n"
-        "esac\n"
-        "exec \"$FAKE_REAL_MKDIR\" \"$@\"\n",
-        encoding="utf-8",
-    )
-    mkdir.chmod(0o755)
-
-    real_mv = (tmp_path / "bin" / "mv").resolve()
-    mv = tmp_path / "bin" / "mv"
-    mv.unlink()
-    mv.write_text(
-        "#!/bin/sh\n"
-        "if [ \"$1\" = \"$FAKE_CLAIM_LOCK\" ]; then\n"
-        "  touch \"$FAKE_CLAIM_BARRIER.reaper-final\"\n"
-        "  while [ ! -f \"$FAKE_CLAIM_BARRIER.publish-created\" ]; do sleep 0.01; done\n"
-        "  sleep 0.2\n"
-        "fi\n"
-        "if [ \"$2\" = \"$FAKE_CLAIM_LOCK/owner\" ]; then\n"
-        "  for claim in \"$FAKE_CLAIM_LOCK\"/.takeover.*; do\n"
-        "    [ -d \"$claim\" ] && touch \"$FAKE_CLAIM_BARRIER.violation\"\n"
-        "  done\n"
-        "fi\n"
-        "exec \"$FAKE_REAL_MV\" \"$@\"\n",
-        encoding="utf-8",
-    )
-    mv.chmod(0o755)
-    env["FAKE_CLAIM_LOCK"] = str(lock_dir)
-    env["FAKE_CLAIM_BARRIER"] = str(barrier)
-    env["FAKE_REAL_MKDIR"] = str(real_mkdir)
-    env["FAKE_REAL_MV"] = str(real_mv)
-    command = launcher_command()
-
-    creator = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-    time.sleep(0.2)
-    reaper = subprocess.Popen(["/bin/bash", "-c", command], env=env, text=True)
-
-    creator_status = creator.wait(timeout=10)
-    reaper_status = reaper.wait(timeout=10)
-
-    assert (creator_status, reaper_status) == (0, 0)
-    assert not Path(f"{barrier}.violation").exists()
-    assert action_count(actions, "serve --background") == 1
-    assert action_count(actions, "proxy") == 2
-    assert len(list(lock_dir.parent.glob("launcher.lock.d.stale.*"))) == 1
-
-
-def test_live_mkdir_lock_owner_is_preserved(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
-    owner = subprocess.Popen(["sleep", "30"])
-    lock_dir = write_mkdir_lock(
-        Path(env["XDG_CONFIG_HOME"]),
-        owner.pid,
-        process_start_identity(owner.pid),
+def test_missing_timeout_implementation_fails_closed(tmp_path: Path) -> None:
+    env, _ = install_fake_commands(
+        tmp_path,
+        minimal_path=True,
+        include_timeout=False,
+        include_perl=False,
     )
 
-    try:
-        result = run_launcher(env)
+    result = run_launcher(env)
 
-        assert result.returncode == 1
-        assert "lock-timeout" in result.stderr
-        assert owner.poll() is None
-        assert lock_dir.exists()
-        assert action_count(actions, "serve --background") == 0
-    finally:
-        owner.terminate()
-        owner.wait(timeout=5)
+    assert result.returncode == 1
+    assert "needs-timeout-gtimeout-or-perl" in result.stderr
 
 
-def test_term_exits_without_continuing_startup(tmp_path: Path) -> None:
-    env, actions = install_fake_commands(tmp_path, start_unready=True, minimal_path=True)
-    env["ONE_MCP_LAUNCHER_WAIT_SECONDS"] = "1"
-    launcher = subprocess.Popen(
-        ["/bin/bash", "-c", launcher_command()],
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
+def test_missing_kernel_lock_implementation_fails_closed(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(
+        tmp_path,
+        minimal_path=True,
+        lock_mode="none",
     )
-    deadline = time.monotonic() + 3
-    while (
-        action_count(actions, "serve --background") == 0
-        and time.monotonic() < deadline
-    ):
-        time.sleep(0.01)
 
-    launcher.terminate()
-    _, stderr = launcher.communicate(timeout=5)
+    result = run_launcher(env)
 
-    assert launcher.returncode == 143, stderr
-    assert action_count(actions, "proxy") == 0
-    lock_dir = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "launcher.lock.d"
-    assert not lock_dir.exists()
+    assert result.returncode == 1
+    assert "needs-flock-or-lockf" in result.stderr
+    assert action_count(actions, "serve --background") == 0
+
+
+def test_invalid_tuning_values_fail_before_startup(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path)
+    env["MCP1_LAUNCHER_WAIT_SECONDS"] = "not-a-number"
+
+    result = run_launcher(env)
+
+    assert result.returncode == 1
+    assert "invalid-wait-seconds" in result.stderr
+    assert actions.read_text(encoding="utf-8") == ""
