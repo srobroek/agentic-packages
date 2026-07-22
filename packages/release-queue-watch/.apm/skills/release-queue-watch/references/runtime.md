@@ -44,7 +44,7 @@ Pull-request state changes emit one `pr-lifecycle` JSON record:
   "type": "pr-lifecycle",
   "transition": "updated",
   "source": "webhook",
-  "lifecycleKey": "owner/repo#42#abc123#updated#2026-07-21T01:00:00Z",
+  "lifecycleKey": "owner/repo#42#abc123#updated#2026-07-21T01:00:00Z#f2d7349b675ea3c1",
   "pullRequest": {
     "repository": "owner/repo",
     "number": 42,
@@ -76,6 +76,6 @@ Pull-request state changes emit one `pr-lifecycle` JSON record:
 
 Webhook records include `deliveryId` and `webhookAction`. Reconciliation records use `source=reconciliation`; failure and absence records also include a `reason`. A reconciliation-only close is not proof of merge, so consumers revalidate the PR through GitHub before mutating state.
 
-`lifecycleKey` is deterministic across webhook and REST sources. The runtime suppresses a repeated key within the process in addition to delivery-id rejection and semantic debounce. Consumers persist the key when they need restart-safe dedupe.
+`lifecycleKey` is deterministic across webhook and REST sources. Treat it as an opaque value: its final fingerprint covers the emitted PR state and the exact observed CI signals, so a new CI attempt gets a new key even when GitHub leaves the PR's `updated_at` timestamp unchanged. The runtime suppresses a repeated key within the process in addition to delivery-id rejection and semantic debounce. Consumers persist the key when they need restart-safe dedupe.
 
 Initial REST reconciliation can emit lifecycle and dispatch records before `watcher-active`. Every record is read-only input: the runtime does not modify GitHub or Beads.
