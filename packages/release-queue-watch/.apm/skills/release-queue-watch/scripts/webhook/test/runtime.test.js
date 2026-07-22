@@ -108,6 +108,43 @@ test("starts the signed receiver before forwarding and shuts down cleanly", asyn
 	await runtime.stop();
 });
 
+test("forwards unchanged records to the advisory dispatcher and drains it", async (t) => {
+	const stateDir = await mkdtemp(join(tmpdir(), "release-queue-runtime-wake-"));
+	t.after(() => rm(stateDir, { recursive: true, force: true }));
+	const records = [];
+	let drained = false;
+	const runtime = await startReleaseQueueRuntime(
+		{
+			repository: "owner/repo",
+			host: "127.0.0.1",
+			port: 0,
+			maxMergeSlots: 1,
+			pollIntervalMs: 60_000,
+			stateDir,
+		},
+		{
+			readToken: async () => "token",
+			adapter: { listOpenPullRequests: async () => [] },
+			startForwarder: async () => ({
+				exit: new Promise(() => {}),
+				stop: async () => ({ code: 0, signal: "SIGINT" }),
+			}),
+			wakeDispatcher: {
+				enqueue: async (record) => records.push(record),
+				drain: async () => {
+					drained = true;
+				},
+			},
+			logger: { log() {}, error() {} },
+		},
+	);
+
+	await runtime.wakeDispatcher.drain();
+	assert.deepEqual(records.map((record) => record.type), ["watcher-active"]);
+	await runtime.stop();
+	assert.equal(drained, true);
+});
+
 test("retries failed forwarder cleanup without leaking the receiver", async (t) => {
 	const stateDir = await mkdtemp(
 		join(tmpdir(), "release-queue-runtime-retry-"),

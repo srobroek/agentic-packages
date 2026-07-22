@@ -76,6 +76,15 @@ export function parseArgs(argv, env = process.env) {
 
 export async function startReleaseQueueRuntime(options, dependencies = {}) {
 	const logger = dependencies.logger ?? console;
+	const wakeDispatcher = dependencies.wakeDispatcher;
+	const publish = (record, error = false) => {
+		logger[error ? "error" : "log"](JSON.stringify(record));
+		void wakeDispatcher?.enqueue(record).catch((wakeError) =>
+			logger.error(
+				JSON.stringify({ type: "wake-error", message: wakeError.message }),
+			),
+		);
+	};
 	const secretRecord = await loadOrCreateWebhookSecret(
 		options.stateDir,
 		dependencies.secretOptions,
@@ -85,7 +94,7 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 	});
 	const onLifecycle =
 		dependencies.onLifecycle ??
-		((record) => logger.log(JSON.stringify(record)));
+		((record) => publish(record));
 	const queue =
 		dependencies.queue ??
 		new ReleaseQueueState({
@@ -95,8 +104,7 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 	const adapter = dependencies.adapter ?? new OctokitRestAdapter({ token });
 	const onDispatch =
 		dependencies.onDispatch ??
-		((item) =>
-			logger.log(JSON.stringify({ type: "dispatch", pullRequest: item })));
+		((item) => publish({ type: "dispatch", pullRequest: item }));
 	const reconciler = new PollingReconciler({
 		repositories: [options.repository],
 		adapter,
@@ -104,12 +112,13 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 		intervalMs: options.pollIntervalMs,
 		onDispatch,
 		onError: (error, repository) =>
-			logger.error(
-				JSON.stringify({
+			publish(
+				{
 					type: "reconcile-error",
 					repository,
 					message: error.message,
-				}),
+				},
+				true,
 			),
 	});
 	const receiver = await createWebhookReceiver({
@@ -120,8 +129,9 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 		onRepositoryDirty: (repository) => reconciler.request(repository),
 		onEvent: dependencies.onEvent,
 		onError: (error) =>
-			logger.error(
-				JSON.stringify({ type: "webhook-error", message: error.message }),
+			publish(
+				{ type: "webhook-error", message: error.message },
+				true,
 			),
 	});
 
@@ -141,16 +151,14 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 		await receiver.close();
 		throw error;
 	}
-	logger.log(
-		JSON.stringify({
-			type: "watcher-active",
-			repository: options.repository,
-			receiver: receiver.url,
-			secretPath: secretRecord.path,
-			pollIntervalMs: options.pollIntervalMs,
-			maxMergeSlots: options.maxMergeSlots,
-		}),
-	);
+	publish({
+		type: "watcher-active",
+		repository: options.repository,
+		receiver: receiver.url,
+		secretPath: secretRecord.path,
+		pollIntervalMs: options.pollIntervalMs,
+		maxMergeSlots: options.maxMergeSlots,
+	});
 
 	let reconcilerStopped = false;
 	let forwarderStopped = false;
@@ -182,6 +190,7 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 				errors.push(error);
 			}
 		}
+		await wakeDispatcher?.drain();
 		if (errors.length > 0) {
 			throw new AggregateError(
 				errors,
@@ -195,6 +204,7 @@ export async function startReleaseQueueRuntime(options, dependencies = {}) {
 		queue,
 		receiver,
 		reconciler,
+		wakeDispatcher,
 		secretPath: secretRecord.path,
 		stop() {
 			if (reconcilerStopped && forwarderStopped && receiverClosed)
