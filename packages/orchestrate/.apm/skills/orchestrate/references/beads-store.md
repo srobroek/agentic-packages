@@ -87,6 +87,8 @@ the work physically lives. Stamp each applicable transition:
 | PR open/head refresh | gatekeeper | `--set-metadata repo=<owner/repo> --set-metadata pr=<n> --set-metadata head_sha=<sha>` |
 | Queue dispatch accepted | orchestrator | atomically set `queue_dispatch=<repo#pr@head>` and `queue_dispatch_pending=<same key>`; after SendMessage succeeds, set `queue_dispatch_sent=<same key>` |
 | Queue dispatch received | gatekeeper | verify the exact key and set `queue_dispatch_ack=<same key>` before revalidation; startup resumes acknowledged approved nodes |
+| Queue lifecycle accepted | orchestrator | atomically set `queue_lifecycle`, `queue_lifecycle_transition`, `queue_lifecycle_head`, and pending (or immediate ack for non-waking informational events); set sent after SendMessage |
+| Queue lifecycle handled | gatekeeper | revalidate and record the outcome, then set `queue_lifecycle_ack=<same key>`; lifecycle never enters the merge path |
 | Merge | gatekeeper | `bd update <bead> --set-metadata merge_sha=<sha>` |
 
 - Add `repo` when work lands outside the epic repository. Watcher-backed PRs
@@ -94,7 +96,7 @@ the work physically lives. Stamp each applicable transition:
 - `--metadata` merges with existing keys (verified on bd 1.1.0), so stamps do
   not clobber `node` or `scope`.
 - `worktree` is ephemeral. `branch`, `pushed`, `pr`, `head_sha`, and the
-  `queue_dispatch*` receipts survive worktree teardown.
+  `queue_dispatch*` / `queue_lifecycle*` receipts survive worktree teardown.
 - Pending and sent receipts are replayable. Only an ack matching the current
   dispatch suppresses a repeated handoff.
 - Separate receipt keys make each transition monotonic. Concurrent sent and ack
@@ -146,10 +148,10 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 - **Async waits:** `bd gate create --type=gh:pr --blocks <bead> --await-id <pr#>`
   (PR merge) or `--type=gh:run --await-id <run-id>` (CI); `bd gate check`
   evaluates and closes resolved gates. A gated bead stays out of `bd ready`.
-- **Readiness wake-up:** `release-queue-watch` emits read-only JSON dispatches.
-  The orchestrator resolves them against `repo`/`pr`/`head_sha` metadata and
-  may wake the gatekeeper. Dispatch never acquires or replaces the merge slot;
-  see `references/queue-watcher.md`.
+- **Queue wake-up:** `release-queue-watch` emits read-only dispatch and
+  lifecycle records. The orchestrator resolves its nodes first; unmatched
+  records may route once to pr-shepherd. Neither record type acquires or
+  replaces the merge slot; see `references/queue-watcher.md`.
 - `conflict-probe.sh` is the merge-safety probe primitive (`conflicts`,
   `pairwise`, `ci`).
 

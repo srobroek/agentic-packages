@@ -64,10 +64,11 @@ Role: lead session / orchestrator.
    ledger-scribe live the whole run as background subagents, reached by
    SendMessage. State lives in beads — recycle them to shed context
    (`references/lifecycle.md`).
-9. **Queue dispatch is input, never authority.** For GitHub-backed runs, the
-   read-only `release-queue-watch` dependency may wake an already-approved
-   node. The orchestrator validates and assigns; the gatekeeper alone owns
-   `bd merge-slot`, GitHub revalidation, and merge mutations
+9. **Queue events are input, never authority.** For GitHub-backed runs, the
+   read-only `release-queue-watch` dependency may report lifecycle changes or
+   wake an already-approved node. The orchestrator resolves its nodes first;
+   unmatched records may route once to `pr-shepherd`. The gatekeeper alone owns
+   orchestrate-node `bd merge-slot`, GitHub revalidation, and merge mutations
    (`references/queue-watcher.md`).
 
 ## Workflow
@@ -96,9 +97,11 @@ Role: lead session / orchestrator.
    id + artifacts path.
 5. GitHub-backed run → LOAD `references/queue-watcher.md`; start one installed
    `release-queue-watch` runtime per repository with one notification slot and
-   REST reconciliation enabled. Resolve each JSON line with
-   `resolve-queue-dispatch.py`; only an exact approved node match may wake the
-   gatekeeper. Non-GitHub run → skip this step.
+   REST reconciliation enabled. Resolve each JSON line serially with
+   `resolve-queue-dispatch.py`. An exact orchestrate node owns the record;
+   otherwise route it once through pr-shepherd's resolver. Only approved or
+   terminal lifecycle matches wake the gatekeeper; only a ready dispatch may
+   start the merge path. Non-GitHub run → skip this step.
 6. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
    background `workflow-coder` subagent (`subagent_type: workflow-coder`,
@@ -117,8 +120,8 @@ Role: lead session / orchestrator.
 8. Gatekeeper integrates approved branches FCFS under the exclusive merge slot
    (`bd merge-slot acquire`/`release`), conflict-guarded
    (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`
-   + `bd gate check`. A valid queue dispatch wakes the gatekeeper but never
-   bypasses those checks or acquires the slot. Push conflicts back to coders.
+   + `bd gate check`. A valid queue event wakes revalidation but never bypasses
+   those checks or acquires the slot. Push conflicts back to coders.
    Dismiss coder only after its node merges; sweep its worktree. At recycle
    points
    (`references/lifecycle.md`), check run spend vs budget; over → finish
@@ -144,6 +147,6 @@ Role: lead session / orchestrator.
 | `references/comms-block.md` | canonical protocol; auto-injected via `SubagentStart`; paste into teammate briefs |
 | `references/beads-store.md` | the state store: epic/node beads, state mapping, git-anchor contract, audit, merge-slot, gates |
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
-| `references/queue-watcher.md` | watcher JSON contract, approved-node resolution, dispatch dedupe, merge-slot boundary |
+| `references/queue-watcher.md` | watcher lifecycle/dispatch contract, deterministic ownership, crash replay, merge-slot boundary |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
-| Scripts | `scope-check.py` · `discover-agents.py` · `resolve-queue-dispatch.py` · `conflict-probe.sh` · `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable; `_test_*.py` self-tests) |
+| Scripts | `scope-check.py` · `discover-agents.py` · `resolve-queue-dispatch.py` (dispatch + lifecycle) · `conflict-probe.sh` · `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable; `_test_*.py` self-tests) |

@@ -9,7 +9,9 @@ description: >-
   agent:coder that parks the merge bead until fixed. Ships the pr-shepherd
   skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle
   and bounce-back protocol. Requires the bd CLI (gastownhall/beads >= 1.1.0) and
-  gh; all parts are inert in repos without .beads/.
+  gh; optionally consumes release-queue-watch lifecycle and dispatch records
+  with durable crash-replay receipts. All parts are inert in repos without
+  .beads/.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -25,3 +27,4 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/beads#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/release-queue-watch#>=0.4.0 <1.0.0

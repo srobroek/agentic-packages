@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.1.0...orchestrate--v3.2.0) (2026-07-22)
+
+
+### Features
+
+* dispatch approved pull requests from signed webhook events ([#601](https://github.com/srobroek/agentic-packages/issues/601)) ([b244cfe](https://github.com/srobroek/agentic-packages/commit/b244cfe0e43f4aa0010ca352e518d18059da3246))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.0.0...orchestrate--v3.1.0) (2026-07-21)
 
 
