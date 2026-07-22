@@ -121,7 +121,10 @@ and `head_sha`.
    normalization first. `status=duplicate` has a matching ack and is not sent.
 
 Pending, sent, and ack are monotonic receipts. A late sent update must not erase
-an ack. Acknowledgment records delivery, not merge permission.
+an ack. Every receipt present for the current dispatch must contain its exact
+identity key. Do not replace an unacknowledged dispatch with a later record;
+the resolver exits 3 on crossed or mismatched receipts. Acknowledgment records
+delivery, not merge permission.
 
 ## Lifecycle receipts
 
@@ -151,11 +154,15 @@ anchor until the gatekeeper confirms GitHub.
 - `opened` or `updated` on an unapproved node is informational. Persist the
   resolver's atomic `queue_lifecycle_ack`; do not wake a merge actor.
 - A stale failure is a no-op after revalidation. Confirmed failure routes back
-  to the coder. Confirmed external merge closes the node with the actual merge
-  SHA. Confirmed close-without-merge is reported to the orchestrator; it is not
-  silently treated as merged.
+  to the coder. For a confirmed external merge, the approved head must still
+  equal GitHub's head; the gatekeeper passes the actual merge SHA to N7's
+  `verify-landed` transaction and closes only after final-base ancestry or
+  exact-content proof. Confirmed close-without-merge is reported to the
+  orchestrator; it is not silently treated as merged.
 - A lifecycle wake-up never acquires the merge slot or merges. A separate valid
-  dispatch is required to enter the watcher-backed merge path.
+  dispatch is required to enter the watcher-backed merge path. Even when the
+  node already stores an older dispatch, finish and acknowledge the lifecycle
+  handling without entering `land`; resume the dispatch in its own pass.
 
 ## Crash recovery and fallback
 
@@ -167,8 +174,10 @@ resolve-queue-dispatch.py --nodes-file <snapshot> --replay-unacknowledged
 
 Replay the returned `dispatches` and `lifecycles` after applying any non-empty
 `requiredMetadata`. Invalid persisted identity stops that replay; log it rather
-than guessing. Gatekeeper startup also resumes acknowledged approved nodes that
-have not merged.
+than guessing. A current key with a receipt for another key, or a new record
+arriving before the current key is acknowledged, is invalid ownership state.
+Gatekeeper startup also resumes acknowledged approved nodes that have not
+merged.
 
 REST reconciliation belongs to the watcher. Initial reconciliation may emit
 records before `watcher-active`. On `webhook-error`, `reconcile-error`, malformed

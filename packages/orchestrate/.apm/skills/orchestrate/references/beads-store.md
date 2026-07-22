@@ -287,11 +287,16 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 
 ## Gatekeeper primitives
 
-- **Mutual exclusion:** `bd merge-slot create` once per run (idempotent);
-  `bd merge-slot acquire` before integrating, `release` after. A second
-  acquirer fails, or queues with `--wait` — FCFS order comes from the waiters
-  queue. On restart, `bd merge-slot check`: held by your own actor name → a
-  previous incarnation crashed mid-merge; verify the tree, then `release`.
+- **Landing transaction:** orchestrated and standalone integration both invoke
+  pr-shepherd's N7 `landing-contract.sh`. Its persisted per-holder waiter
+  generations enforce FCFS order before atomic `bd merge-slot acquire`; its
+  fenced native holder is released on success, pending, stale, conflict,
+  unknown evidence, merge failure, and trapped process exit. The gatekeeper
+  never bypasses that transaction with `acquire --wait` or an unconditional
+  release.
+- **Restart recovery:** `bd merge-slot check` identifies the native holder.
+  Recover a claim, waiter, or slot only through the N7 evidence-gated recovery
+  commands. Quiet or old state is not proof of death.
 - **Async waits:** `bd gate create --type=gh:pr --blocks <bead> --await-id <pr#>`
   (PR merge) or `--type=gh:run --await-id <run-id>` (CI); `bd gate check`
   evaluates and closes resolved gates. A gated bead stays out of `bd ready`.
@@ -299,8 +304,10 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
   lifecycle records. The orchestrator resolves its nodes first; unmatched
   records may route once to pr-shepherd. Neither record type acquires or
   replaces the merge slot; see `references/queue-watcher.md`.
-- `conflict-probe.sh` is the merge-safety probe primitive (`conflicts`,
-  `pairwise`, `ci`).
+- `conflict-probe.sh` provides fail-closed planning probes (`conflicts`,
+  `pairwise`, `ci`) and the orchestrated adapters for N7 `check-run`, `land`,
+  and `verify-landed`. A conflict probe exits 2 when it cannot classify state;
+  changed-file output is never a clean-merge fallback.
 
 ## Reading the run (scribe / resume / close-out)
 

@@ -193,6 +193,56 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         with self.assertRaisesRegex(MODULE.ResolutionError, "metadata.branch"):
             MODULE.resolve(dispatch(), [node(branch=None)])
 
+    def test_rejects_mismatched_dispatch_receipt(self):
+        key = f"owner/repo#42@{'a' * 40}"
+        with self.assertRaisesRegex(MODULE.ResolutionError, "receipt mismatch"):
+            MODULE.resolve(
+                dispatch(),
+                [
+                    node(
+                        queue_dispatch=key,
+                        queue_dispatch_pending=f"owner/repo#42@{'c' * 40}",
+                    )
+                ],
+            )
+
+    def test_rejects_new_dispatch_while_previous_receipt_is_unacknowledged(self):
+        old_key = f"owner/repo#42@{'c' * 40}"
+        with self.assertRaisesRegex(MODULE.ResolutionError, "cannot replace"):
+            MODULE.resolve(
+                dispatch(),
+                [
+                    node(
+                        queue_dispatch=old_key,
+                        queue_dispatch_pending=old_key,
+                    )
+                ],
+            )
+
+    def test_new_dispatch_replays_after_completed_prior_lineage(self):
+        old_key = f"owner/repo#42@{'a' * 40}"
+        new_key = f"owner/repo#42@{'c' * 40}"
+        tracked = node(
+            head_sha="c" * 40,
+            queue_dispatch=old_key,
+            queue_dispatch_pending=old_key,
+            queue_dispatch_sent=old_key,
+            queue_dispatch_ack=old_key,
+        )
+
+        admitted = MODULE.resolve(dispatch(headSha="c" * 40), [tracked])
+        tracked["metadata"].update(admitted["requiredMetadata"])
+        pending = MODULE.resolve(dispatch(headSha="c" * 40), [tracked])
+        replayed = MODULE.replay_unacknowledged([tracked])
+        tracked["metadata"]["queue_dispatch_sent"] = new_key
+        sent = MODULE.resolve(dispatch(headSha="c" * 40), [tracked])
+
+        self.assertEqual(admitted["status"], "resolved")
+        self.assertEqual(pending["deliveryState"], "pending")
+        self.assertEqual(replayed[0]["dispatchKey"], new_key)
+        self.assertEqual(replayed[0]["deliveryState"], "pending")
+        self.assertEqual(sent["deliveryState"], "sent")
+
     def test_resolves_lifecycle_for_exact_orchestrate_node(self):
         result = MODULE.resolve(lifecycle("failed", checks="fail"), [node()])
 
@@ -287,6 +337,71 @@ class ResolveQueueDispatchTest(unittest.TestCase):
 
         self.assertTrue(result["headChanged"])
         self.assertEqual(result["headSha"], "c" * 40)
+        self.assertNotIn("dispatchKey", result)
+
+    def test_rejects_mismatched_lifecycle_receipt(self):
+        key = "owner/repo#42#failed#opaque"
+        with self.assertRaisesRegex(MODULE.ResolutionError, "receipt mismatch"):
+            MODULE.resolve(
+                lifecycle("failed", checks="fail"),
+                [
+                    node(
+                        queue_lifecycle=key,
+                        queue_lifecycle_pending="owner/repo#42#other#opaque",
+                    )
+                ],
+            )
+
+    def test_rejects_new_lifecycle_while_previous_receipt_is_unacknowledged(self):
+        old_key = "owner/repo#42#updated#old"
+        with self.assertRaisesRegex(MODULE.ResolutionError, "cannot replace"):
+            MODULE.resolve(
+                lifecycle("failed", checks="fail"),
+                [
+                    node(
+                        queue_lifecycle=old_key,
+                        queue_lifecycle_head="a" * 40,
+                        queue_lifecycle_pending=old_key,
+                        queue_lifecycle_transition="updated",
+                    )
+                ],
+            )
+
+    def test_new_lifecycle_replays_after_completed_prior_lineage(self):
+        old_key = "owner/repo#42#updated#old"
+        new_key = "owner/repo#42#failed#opaque"
+        tracked = node(
+            queue_lifecycle=old_key,
+            queue_lifecycle_head="a" * 40,
+            queue_lifecycle_pending=old_key,
+            queue_lifecycle_sent=old_key,
+            queue_lifecycle_ack=old_key,
+            queue_lifecycle_transition="updated",
+        )
+        event = lifecycle("failed", checks="fail")
+
+        admitted = MODULE.resolve(event, [tracked])
+        tracked["metadata"].update(admitted["requiredMetadata"])
+        pending = MODULE.resolve(event, [tracked])
+        replayed = MODULE.replay_unacknowledged_lifecycles([tracked])
+        tracked["metadata"]["queue_lifecycle_sent"] = new_key
+        sent = MODULE.resolve(event, [tracked])
+
+        self.assertEqual(admitted["status"], "resolved")
+        self.assertEqual(pending["deliveryState"], "pending")
+        self.assertEqual(replayed[0]["lifecycleKey"], new_key)
+        self.assertEqual(replayed[0]["deliveryState"], "pending")
+        self.assertEqual(sent["deliveryState"], "sent")
+
+    def test_accepts_reconciled_external_merge_for_proof_only(self):
+        event = lifecycle("merged", state="closed")
+        event["source"] = "reconciliation"
+
+        result = MODULE.resolve(event, [node()])
+
+        self.assertEqual(result["transition"], "merged")
+        self.assertTrue(result["wakeGatekeeper"])
+        self.assertNotIn("dispatchKey", result)
 
     def test_rejects_malformed_lifecycle(self):
         with self.assertRaisesRegex(MODULE.ContractError, "transition"):

@@ -33,7 +33,7 @@ Blocked workers stay in `working` — `BLOCKED` is a message, not a node state.
 | `reported → in_review` | worker reports declared evidence; orchestrator spawns a different compatible reviewer |
 | `working` (blocked) | worker sends `BLOCKED kind:design\|debug`, idles, and spawns nothing; orchestrator brokers and relays `ADVICE` |
 | `changes_requested → working` | same worker applies exactly the `FIX` items; same reviewer re-reviews the delta |
-| `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; gatekeeper acquires the merge slot, probes conflicts, revalidates, merges, stamps `merge_sha`, and closes |
+| `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; gatekeeper invokes N7's shared landing transaction, which revalidates identity/CI, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
 | `failed` | unrecoverable; set `state:failed` plus status `blocked`, log the error, and surface it |
@@ -74,8 +74,9 @@ agent for the same live claim — it loses context and may create a second write
    --status in_progress --json`. Each recovery record carries exact actor in
    `assignee`, directed or generic mode in `execution_dispatch`, branch/worktree
    or non-git resource scope, and the fine-grained `state:` label.
-3. Run `bd merge-slot check`. Verify and release a slot held by a crashed
-   gatekeeper before integration resumes.
+3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
+   gatekeeper. Resume the N7 landing transaction, or use its evidence-gated
+   recovery command after proving the exact actor lease is dead.
 4. Resume every live assignee by messaging its recovered handle. Never route an
    assigned bead to a generic queue. Treat an unassigned `in_progress` bead as
    inconsistent and run dead-claim recovery before redispatch.
