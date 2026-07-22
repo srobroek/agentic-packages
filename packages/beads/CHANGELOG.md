@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.4.2...beads--v0.5.0) (2026-07-22)
+
+
+### Features
+
+* keep agent replies and decisions in Beads ([#622](https://github.com/srobroek/agentic-packages/issues/622)) ([3e5082c](https://github.com/srobroek/agentic-packages/commit/3e5082c1fda4a36ebd67e78ef5ec234666f54a0d))
+
 ## [0.4.2](https://github.com/srobroek/agentic-packages/compare/beads--v0.4.1...beads--v0.4.2) (2026-07-22)
 
 

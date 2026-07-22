@@ -309,6 +309,16 @@ def test_empty_scope_starts_async_runtime_and_connects(tmp_path: Path) -> None:
     assert action_count(actions, "proxy") == 1
 
 
+def test_proxy_filter_is_forwarded_without_leaking_launcher_env(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, initially_ready=True)
+    env["MCP1_LAUNCHER_FILTER"] = "semantic"
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert "proxy --filter semantic" in actions.read_text(encoding="utf-8").splitlines()
+
+
 def test_background_launch_resolves_npm_bin_symlink(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
 

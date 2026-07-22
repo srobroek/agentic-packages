@@ -1,14 +1,14 @@
 name: pr-shepherd
-version: 0.8.1
+version: 0.9.0
 description: >-
   Cross-session PR shepherd with beads as its durable state store. It validates
   exact check and head identity, honors persisted merge-slot order, merges with
   an atomic head guard, proves exact content on the final landing branch, and
   reconciles partial bounce writes through durable receipts. Stacked PRs remain
   open after their intermediate merge until their content reaches the landing
-  branch. The skill and standalone agent optionally consume
-  release-queue-watch records with crash-replay receipts. Requires bd, gh, git,
-  and jq; inert in repositories without .beads/.
+  branch. The skill and standalone agent optionally consume release-queue-watch
+  records with crash-replay receipts. Requires bd, gh, git, and jq; inert in
+  repositories without .beads/.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -23,5 +23,5 @@ tags:
   - multi-agent
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/beads#>=0.4.2 <1.0.0
+    - srobroek/agentic-packages/packages/beads#>=0.5.0 <1.0.0
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.5.0 <1.0.0

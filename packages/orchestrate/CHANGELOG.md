@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.6.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.5.0...orchestrate--v3.6.0) (2026-07-22)
+
+
+### Features
+
+* preserve multi-agent decisions across restarts ([#616](https://github.com/srobroek/agentic-packages/issues/616)) ([69aaa25](https://github.com/srobroek/agentic-packages/commit/69aaa252e13c4fe1517a107d0aba748331bc9df3))
+
+
+### Bug Fixes
+
+* apply exact landing safety to orchestrated merges ([#623](https://github.com/srobroek/agentic-packages/issues/623)) ([4931e2f](https://github.com/srobroek/agentic-packages/commit/4931e2f40f12a13a3a10c78fe63ef2040bc41084))
+* **deps:** sync internal package pins (patch-level dep releases) ([e7e4d7a](https://github.com/srobroek/agentic-packages/commit/e7e4d7a99bf6dc911138c1f085fd667873f70f9d))
+
 ## [3.5.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.4.0...orchestrate--v3.5.0) (2026-07-22)
 
 
