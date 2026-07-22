@@ -6,6 +6,10 @@ readonly EXIT_WAITING=10
 readonly EXIT_STALE=11
 readonly EXIT_FAILED=12
 readonly EXIT_SLOT_QUEUED=75
+readonly QUERY_FOUND=0
+readonly QUERY_ABSENT=1
+readonly QUERY_ERROR=2
+readonly SLOT_CLEANUP_ATTEMPTS=5
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
 
@@ -69,7 +73,7 @@ disarm_slot_release() {
 remove_slot_waiter() {
   local holder="$1"
   local required_holder="${2:-}"
-  local state slot_id actual metadata
+  local state slot_id actual snapshot confirmed metadata after attempt
 
   state="$(slot_state)" || fail "cannot inspect merge slot for waiter cleanup"
   slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
@@ -82,19 +86,51 @@ remove_slot_waiter() {
     return 0
   fi
 
-  metadata="$(bd show "$slot_id" --json | jq -ce --arg holder "$holder" \
-    --arg required "$required_holder" \
-    '.[0].metadata |
-     if ($required != "" and (.holder // "") != $required)
-     then error("slot holder changed")
-     else .waiters = ((.waiters // []) | map(select(. != $holder)))
-     end')" \
-    || fail "cannot prepare merge-slot waiter cleanup"
-  bd update "$slot_id" --metadata "$metadata" >/dev/null || fail "cannot remove merge-slot waiter"
-  state="$(slot_state)" || fail "cannot verify merge-slot waiter cleanup"
-  if printf '%s' "$state" | slot_has_waiter "$holder"; then
-    fail "merge-slot waiter cleanup did not persist"
-  fi
+  attempt=1
+  while [[ $attempt -le $SLOT_CLEANUP_ATTEMPTS ]]; do
+    snapshot="$(bd show "$slot_id" --json | jq -ce \
+      '.[0] | {revision: (.updated_at // ""), metadata: (.metadata // {})}')" \
+      || fail "cannot inspect merge-slot waiter revision"
+    if ! printf '%s' "$snapshot" | jq -e --arg holder "$holder" \
+      'any(.metadata.waiters[]?; . == $holder)' >/dev/null; then
+      return 0
+    fi
+    metadata="$(printf '%s' "$snapshot" | jq -ce --arg holder "$holder" \
+      --arg required "$required_holder" \
+      '.metadata |
+       if ($required != "" and (.holder // "") != $required)
+       then error("slot holder changed")
+       else .waiters = ((.waiters // []) | map(select(. != $holder)))
+       end')" \
+      || fail "cannot prepare merge-slot waiter cleanup"
+
+    confirmed="$(bd show "$slot_id" --json | jq -ce \
+      '.[0] | {revision: (.updated_at // ""), metadata: (.metadata // {})}')" \
+      || fail "cannot confirm merge-slot waiter revision"
+    if [[ "$snapshot" != "$confirmed" ]]; then
+      attempt=$((attempt + 1))
+      continue
+    fi
+
+    bd update "$slot_id" --metadata "$metadata" >/dev/null \
+      || fail "cannot remove merge-slot waiter"
+    after="$(bd show "$slot_id" --json | jq -ce '.[0].metadata // {}')" \
+      || fail "cannot verify merge-slot waiter cleanup"
+    if printf '%s' "$after" | jq -e --arg holder "$holder" \
+      'any(.waiters[]?; . == $holder)' >/dev/null; then
+      attempt=$((attempt + 1))
+      continue
+    fi
+    printf '%s\n%s\n' "$metadata" "$after" | jq -se \
+      '.[0] as $expected | .[1] as $actual |
+       ($actual | del(.waiters)) == ($expected | del(.waiters)) and
+       all($expected.waiters[]?; . as $waiter |
+         any($actual.waiters[]?; . == $waiter))' >/dev/null \
+      || fail "merge-slot waiter cleanup lost concurrent state"
+    return 0
+  done
+
+  fail "merge-slot waiter cleanup remained stale after $SLOT_CLEANUP_ATTEMPTS attempts"
 }
 
 acquire_slot() {
@@ -579,19 +615,59 @@ reconcile_fix_duplicates() {
   done < <(find_fixes "$key")
 }
 
-comment_exists() {
+comment_marker_state() {
   local issue="$1"
   local marker="$2"
+  local comments rc
 
-  bd comments "$issue" --json | jq -e --arg marker "$marker" \
+  if ! comments="$(bd comments "$issue" --json)"; then
+    return "$QUERY_ERROR"
+  fi
+  set +e
+  printf '%s' "$comments" | jq -e --arg marker "$marker" \
     'any(.[]?; (.text // "") | contains($marker))' >/dev/null
+  rc=$?
+  set -e
+  case "$rc" in
+    0) return "$QUERY_FOUND" ;;
+    1) return "$QUERY_ABSENT" ;;
+    *) return "$QUERY_ERROR" ;;
+  esac
 }
 
-dependency_exists() {
+comment_once() {
+  local issue="$1"
+  local marker="$2"
+  local message="$3"
+  local query_rc
+
+  if comment_marker_state "$issue" "$marker"; then
+    return 0
+  else
+    query_rc=$?
+  fi
+  [[ $query_rc -eq $QUERY_ABSENT ]] || fail "cannot query comment receipt on $issue"
+  bd comment "$issue" "$message" >/dev/null || fail "cannot write comment receipt on $issue"
+}
+
+dependency_state() {
   local merge_bead="$1"
   local fix_bead="$2"
-  bd show "$merge_bead" --json | jq -e --arg fix "$fix_bead" \
-    '.[0].dependencies[]? | select((.id // .depends_on_id) == $fix)' >/dev/null
+  local issue rc
+
+  if ! issue="$(bd show "$merge_bead" --json)"; then
+    return "$QUERY_ERROR"
+  fi
+  set +e
+  printf '%s' "$issue" | jq -e --arg fix "$fix_bead" \
+    'any(.[0].dependencies[]?; (.id // .depends_on_id) == $fix)' >/dev/null
+  rc=$?
+  set -e
+  case "$rc" in
+    0) return "$QUERY_FOUND" ;;
+    1) return "$QUERY_ABSENT" ;;
+    *) return "$QUERY_ERROR" ;;
+  esac
 }
 
 bounce_receipt() {
@@ -636,7 +712,7 @@ ensure_bounce() {
   local title="$4"
   local metadata="$5"
   local description="$6"
-  local fix_bead metadata_with_key canonical receipt phase receipt_fix phase_rank marker
+  local fix_bead metadata_with_key canonical receipt phase receipt_fix phase_rank marker query_rc
 
   [[ "$route" == "agent:coder" || "$route" == "agent:reviewer" ]] \
     || fail "bounce route must be agent:coder or agent:reviewer"
@@ -674,8 +750,15 @@ ensure_bounce() {
     phase_rank=2
   fi
 
-  if ! dependency_exists "$merge_bead" "$fix_bead"; then
+  if dependency_state "$merge_bead" "$fix_bead"; then
+    query_rc=$QUERY_FOUND
+  else
+    query_rc=$?
+  fi
+  if [[ $query_rc -eq $QUERY_ABSENT ]]; then
     bd dep add "$merge_bead" "$fix_bead" >/dev/null || fail "cannot park merge bead"
+  elif [[ $query_rc -eq $QUERY_ERROR ]]; then
+    fail "cannot query bounce dependency receipt"
   fi
   reconcile_fix_duplicates "$key" "$fix_bead"
   if [[ $phase_rank -lt 3 ]]; then
@@ -684,16 +767,10 @@ ensure_bounce() {
   fi
   if [[ $phase_rank -lt 4 ]]; then
     marker="bounce_receipt=$key"
-    if ! comment_exists "$merge_bead" "$marker"; then
-      bd comment "$merge_bead" \
-        "BOUNCED $marker failure_key=$key fix=$fix_bead route=$route" >/dev/null \
-        || fail "cannot comment merge bead"
-    fi
-    if ! comment_exists "$fix_bead" "$marker"; then
-      bd comment "$fix_bead" \
-        "CORRELATED $marker merge=$merge_bead failure_key=$key" >/dev/null \
-        || fail "cannot comment fix bead"
-    fi
+    comment_once "$merge_bead" "$marker" \
+      "BOUNCED $marker failure_key=$key fix=$fix_bead route=$route"
+    comment_once "$fix_bead" "$marker" \
+      "CORRELATED $marker merge=$merge_bead failure_key=$key"
     advance_bounce_receipt "$merge_bead" "$key" "$fix_bead" commented
     phase_rank=4
   fi
@@ -764,18 +841,26 @@ prepare_recovery() {
   printf 'prepared|true\n'
 }
 
-recovery_audit_exists() {
+recovery_audit_state() {
   local merge_bead="$1"
   local tool_name="$2"
-  local beads_path audit_file
+  local beads_path audit_file rc
 
-  beads_path="$(bd where --json | jq -r '.path // empty')" || return 1
-  [[ -n "$beads_path" ]] || return 1
+  beads_path="$(bd where --json | jq -er '.path | select(type == "string" and length > 0)')" \
+    || return "$QUERY_ERROR"
   audit_file="$beads_path/interactions.jsonl"
-  [[ -f "$audit_file" ]] || return 1
-  jq -e --arg issue "$merge_bead" --arg tool "$tool_name" \
-    'select(.kind == "tool_call" and .issue_id == $issue and .tool_name == $tool)' \
+  [[ -f "$audit_file" ]] || return "$QUERY_ABSENT"
+  set +e
+  jq -se --arg issue "$merge_bead" --arg tool "$tool_name" \
+    'any(.[]; .kind == "tool_call" and .issue_id == $issue and .tool_name == $tool)' \
     "$audit_file" >/dev/null
+  rc=$?
+  set -e
+  case "$rc" in
+    0) return "$QUERY_FOUND" ;;
+    1) return "$QUERY_ABSENT" ;;
+    *) return "$QUERY_ERROR" ;;
+  esac
 }
 
 finish_recovery() {
@@ -785,7 +870,7 @@ finish_recovery() {
   local subject="$4"
   local evidence="$5"
   local phase="$6"
-  local phase_rank marker tool_name
+  local phase_rank marker tool_name query_rc
 
   phase_rank="$(recovery_phase_rank "$phase")"
   if [[ $phase_rank -lt 2 ]]; then
@@ -794,19 +879,23 @@ finish_recovery() {
   fi
   marker="recovery_receipt=$key"
   if [[ $phase_rank -lt 3 ]]; then
-    if ! comment_exists "$merge_bead" "$marker"; then
-      bd comment "$merge_bead" \
-        "RECOVERED $marker kind=$kind subject=$subject evidence=$evidence" >/dev/null \
-        || fail "cannot comment recovery receipt"
-    fi
+    comment_once "$merge_bead" "$marker" \
+      "RECOVERED $marker kind=$kind subject=$subject evidence=$evidence"
     advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" commented
     phase_rank=3
   fi
   tool_name="pr-shepherd.recover-$kind.$key"
   if [[ $phase_rank -lt 4 ]]; then
-    if ! recovery_audit_exists "$merge_bead" "$tool_name"; then
+    if recovery_audit_state "$merge_bead" "$tool_name"; then
+      query_rc=$QUERY_FOUND
+    else
+      query_rc=$?
+    fi
+    if [[ $query_rc -eq $QUERY_ABSENT ]]; then
       bd audit record --kind tool_call --tool-name "$tool_name" \
         --issue-id "$merge_bead" >/dev/null || fail "cannot audit recovery receipt"
+    elif [[ $query_rc -eq $QUERY_ERROR ]]; then
+      fail "cannot query recovery audit receipt"
     fi
     advance_recovery_receipt "$merge_bead" "$key" "$kind" "$subject" "$evidence" audited
     phase_rank=4
@@ -832,7 +921,7 @@ recover_slot() {
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
     if [[ "$actual" == "$dead_holder" ]]; then
       bd merge-slot release --holder "$dead_holder" >/dev/null || fail "cannot release dead holder"
-    elif [[ "$is_new" == "true" || -n "$actual" ]]; then
+    elif [[ "$is_new" == "true" ]]; then
       fail "slot holder changed (expected $dead_holder, found ${actual:-none})"
     fi
   fi
@@ -871,7 +960,7 @@ recover_claim() {
   local merge_bead="$1"
   local dead_actor="$2"
   local evidence="$3"
-  local key prepared phase is_new phase_rank actual
+  local key prepared phase is_new phase_rank claim actual status successor_state
 
   [[ -n "$evidence" ]] || fail "dead-claim recovery requires an evidence reference"
   key="$(recovery_key claim "$dead_actor" "$evidence")" || fail "cannot derive recovery key"
@@ -879,13 +968,24 @@ recover_claim() {
   IFS='|' read -r phase is_new <<<"$prepared"
   phase_rank="$(recovery_phase_rank "$phase")"
   if [[ $phase_rank -lt 2 ]]; then
-    actual="$(bd show "$merge_bead" --json | jq -r '.[0].assignee // empty')" \
+    claim="$(bd show "$merge_bead" --json | jq -ce \
+      '.[0] | {assignee: (.assignee // ""), status: (.status // ""), labels: (.labels // [])}')" \
       || fail "cannot inspect merge claim"
+    actual="$(printf '%s' "$claim" | jq -r '.assignee')"
+    status="$(printf '%s' "$claim" | jq -r '.status')"
     if [[ "$actual" == "$dead_actor" ]]; then
       bd update "$merge_bead" --assignee "" --status open >/dev/null \
         || fail "cannot release dead claim"
-    elif [[ "$is_new" == "true" || -n "$actual" ]]; then
+    elif [[ "$is_new" == "true" ]]; then
       fail "claim holder changed (expected $dead_actor, found ${actual:-none})"
+    elif [[ -n "$actual" ]]; then
+      successor_state="$(printf '%s' "$claim" | jq -r \
+        'if .status == "in_progress" and any(.labels[]?; . == "state:working")
+         then "working" else "unsafe" end')"
+      [[ "$actual" != "$dead_actor" && "$successor_state" == "working" ]] \
+        || fail "claim changed to unsafe successor state (holder=${actual:-none}, status=${status:-none})"
+    elif [[ "$status" != "open" ]]; then
+      fail "unowned claim has unsafe resumed status ${status:-none}"
     fi
   fi
   finish_recovery "$merge_bead" "$key" claim "$dead_actor" "$evidence" "$phase"

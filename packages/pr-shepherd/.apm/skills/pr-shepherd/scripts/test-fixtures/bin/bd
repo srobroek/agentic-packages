@@ -60,7 +60,9 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
       fi
       ;;
     recover-slot*)
-      if [[ -f "$FAKE_STATE/released" ]]; then
+      if [[ -f "$FAKE_STATE/successor" ]]; then
+        printf '{"available":false,"holder":"successor","id":"slot-1","waiters":null}\n'
+      elif [[ -f "$FAKE_STATE/released" ]]; then
         printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
       else
         printf '{"available":false,"holder":"dead-holder","id":"slot-1","waiters":null}\n'
@@ -118,7 +120,8 @@ if [[ "${1:-}" == "list" ]]; then
     else
       printf '[{"id":"fix-newer","created_at":"2026-01-02T00:00:00Z"},{"id":"fix-oldest","created_at":"2026-01-01T00:00:00Z"}]\n'
     fi
-  elif [[ "$FAKE_SCENARIO" == "duplicate-bounce" || "$FAKE_SCENARIO" == bounce-crash-* ]]; then
+  elif [[ "$FAKE_SCENARIO" == "duplicate-bounce" || "$FAKE_SCENARIO" == bounce-crash-* ||
+    "$FAKE_SCENARIO" == bounce-*-query-error ]]; then
     printf '[{"id":"fix-1","created_at":"2026-01-01T00:00:00Z"}]\n'
   else
     printf '[]\n'
@@ -128,21 +131,56 @@ fi
 
 if [[ "${1:-}" == "show" ]]; then
   if [[ "${2:-}" == "slot-1" ]]; then
-    if [[ "$FAKE_SCENARIO" == recover-waiter-* || "$FAKE_SCENARIO" == "recover-waiter" ]]; then
+    if [[ "$FAKE_SCENARIO" == "slot-cleanup-interleave" ]]; then
+      show_count="$(increment "$FAKE_STATE/slot-show-count")"
       if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
-        printf '[{"id":"slot-1","metadata":{"waiters":[]}}]\n'
+        printf '[{"id":"slot-1","updated_at":"r3","metadata":{"holder":"stable-holder","waiters":["concurrent-waiter"]}}]\n'
+      elif [[ "$show_count" -eq 1 ]]; then
+        printf '[{"id":"slot-1","updated_at":"r1","metadata":{"holder":"stable-holder","waiters":["stable-holder"]}}]\n'
       else
-        printf '[{"id":"slot-1","metadata":{"waiters":["dead-waiter"]}}]\n'
+        printf '[{"id":"slot-1","updated_at":"r2","metadata":{"holder":"stable-holder","waiters":["stable-holder","concurrent-waiter"]}}]\n'
+      fi
+    elif [[ "$FAKE_SCENARIO" == "slot-cleanup-stale" ]]; then
+      show_count="$(increment "$FAKE_STATE/slot-show-count")"
+      printf '[{"id":"slot-1","updated_at":"r%s","metadata":{"holder":"stable-holder","waiters":["stable-holder","concurrent-%s"]}}]\n' \
+        "$show_count" "$show_count"
+    elif [[ "$FAKE_SCENARIO" == "recover-waiter-successor-interleave" ]]; then
+      show_count="$(increment "$FAKE_STATE/slot-show-count")"
+      if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
+        printf '[{"id":"slot-1","updated_at":"r3","metadata":{"holder":"successor","waiters":["concurrent-waiter"]}}]\n'
+      elif [[ "$show_count" -eq 1 ]]; then
+        printf '[{"id":"slot-1","updated_at":"r1","metadata":{"holder":null,"waiters":["dead-waiter"]}}]\n'
+      else
+        printf '[{"id":"slot-1","updated_at":"r2","metadata":{"holder":"successor","waiters":["dead-waiter","concurrent-waiter"]}}]\n'
+      fi
+    elif [[ "$FAKE_SCENARIO" == recover-waiter-* || "$FAKE_SCENARIO" == "recover-waiter" ]]; then
+      if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
+        printf '[{"id":"slot-1","updated_at":"r2","metadata":{"waiters":[]}}]\n'
+      else
+        printf '[{"id":"slot-1","updated_at":"r1","metadata":{"waiters":["dead-waiter"]}}]\n'
       fi
     else
       holder="stable-holder"
       if [[ -f "$FAKE_STATE/holder" ]]; then
         holder="$(<"$FAKE_STATE/holder")"
       fi
-      printf '[{"id":"slot-1","metadata":{"holder":"%s","waiters":["%s"]}}]\n' \
-        "$holder" "$holder"
+      if [[ -f "$FAKE_STATE/waiter-cleaned" ]]; then
+        printf '[{"id":"slot-1","updated_at":"r2","metadata":{"holder":"%s","waiters":[]}}]\n' \
+          "$holder"
+      else
+        printf '[{"id":"slot-1","updated_at":"r1","metadata":{"holder":"%s","waiters":["%s"]}}]\n' \
+          "$holder" "$holder"
+      fi
     fi
   else
+    if [[ "$FAKE_SCENARIO" == "bounce-receipt-query-error" ||
+      "$FAKE_SCENARIO" == "recover-receipt-query-error" ]]; then
+      exit 88
+    fi
+    if [[ "$FAKE_SCENARIO" == "bounce-dependency-query-error" &&
+      -f "$FAKE_STATE/bounce-phase" && "$(<"$FAKE_STATE/bounce-phase")" == "fix_ready" ]]; then
+      exit 88
+    fi
     dependency_json='[]'
     if [[ -f "$FAKE_STATE/dependency" ]]; then
       dependency_target="fix-1"
@@ -155,16 +193,24 @@ if [[ "${1:-}" == "show" ]]; then
     recovery_key=""
     recovery_phase=""
     assignee=""
+    status="open"
+    labels='[]'
     [[ ! -f "$FAKE_STATE/bounce-key" ]] || bounce_key="$(<"$FAKE_STATE/bounce-key")"
     [[ ! -f "$FAKE_STATE/bounce-fix" ]] || bounce_fix="$(<"$FAKE_STATE/bounce-fix")"
     [[ ! -f "$FAKE_STATE/bounce-phase" ]] || bounce_phase="$(<"$FAKE_STATE/bounce-phase")"
     [[ ! -f "$FAKE_STATE/recovery-key" ]] || recovery_key="$(<"$FAKE_STATE/recovery-key")"
     [[ ! -f "$FAKE_STATE/recovery-phase" ]] || recovery_phase="$(<"$FAKE_STATE/recovery-phase")"
-    if [[ "$FAKE_SCENARIO" == recover-claim* && ! -f "$FAKE_STATE/claim-released" ]]; then
+    if [[ "$FAKE_SCENARIO" == recover-claim* && -f "$FAKE_STATE/successor" ]]; then
+      assignee="successor"
+      status="in_progress"
+      labels='["agent:integrator","state:working"]'
+    elif [[ "$FAKE_SCENARIO" == recover-claim* && ! -f "$FAKE_STATE/claim-released" ]]; then
       assignee="dead-actor"
+      status="in_progress"
+      labels='["agent:integrator","state:working"]'
     fi
-    printf '[{"id":"merge-1","assignee":"%s","metadata":{"bounce_key":"%s","bounce_fix":"%s","bounce_phase":"%s","recovery_key":"%s","recovery_phase":"%s"},"dependencies":%s}]\n' \
-      "$assignee" "$bounce_key" "$bounce_fix" "$bounce_phase" "$recovery_key" "$recovery_phase" "$dependency_json"
+    printf '[{"id":"merge-1","assignee":"%s","status":"%s","labels":%s,"metadata":{"bounce_key":"%s","bounce_fix":"%s","bounce_phase":"%s","recovery_key":"%s","recovery_phase":"%s"},"dependencies":%s}]\n' \
+      "$assignee" "$status" "$labels" "$bounce_key" "$bounce_fix" "$bounce_phase" "$recovery_key" "$recovery_phase" "$dependency_json"
   fi
   exit 0
 fi
@@ -198,6 +244,10 @@ case "${1:-}" in
     ;;
   comments)
     issue="${2:-}"
+    if [[ "$FAKE_SCENARIO" == "bounce-comment-query-error" ||
+      "$FAKE_SCENARIO" == "recover-comment-query-error" ]]; then
+      exit 88
+    fi
     if [[ "$issue" == "merge-1" && -f "$FAKE_STATE/bounce-comment-merge" ]]; then
       printf '[{"text":"BOUNCED bounce_receipt=key-1"}]\n'
     elif [[ "$issue" == fix-* && -f "$FAKE_STATE/bounce-comment-fix" ]]; then
@@ -233,6 +283,26 @@ case "${1:-}" in
         kill -TERM "$PPID"
         exit 94
       fi
+      metadata=""
+      previous=""
+      for argument in "$@"; do
+        [[ "$previous" != "--metadata" ]] || metadata="$argument"
+        previous="$argument"
+      done
+      if [[ "$FAKE_SCENARIO" == "slot-cleanup-interleave" ]]; then
+        printf '%s' "$metadata" | jq -e \
+          '.holder == "stable-holder" and .waiters == ["concurrent-waiter"]' >/dev/null \
+          || exit 89
+        touch "$FAKE_STATE/concurrent-state-preserved"
+      elif [[ "$FAKE_SCENARIO" == "recover-waiter-successor-interleave" ]]; then
+        printf '%s' "$metadata" | jq -e \
+          '.holder == "successor" and .waiters == ["concurrent-waiter"]' >/dev/null \
+          || exit 89
+        touch "$FAKE_STATE/concurrent-state-preserved"
+      elif [[ "$FAKE_SCENARIO" == "slot-cleanup-stale" ]]; then
+        touch "$FAKE_STATE/stale-update-attempted"
+        exit 89
+      fi
       touch "$FAKE_STATE/waiter-cleaned"
       exit 0
     fi
@@ -249,7 +319,8 @@ case "${1:-}" in
           recovery_key=*) printf '%s\n' "${argument#recovery_key=}" >"$FAKE_STATE/recovery-key" ;;
           recovery_phase=*)
             recovery_phase="${argument#recovery_phase=}"
-            if [[ "$recovery_phase" == "mutated" && "$FAKE_SCENARIO" == recover-*-crash-mutation &&
+            if [[ "$recovery_phase" == "mutated" &&
+              ("$FAKE_SCENARIO" == recover-*-crash-mutation || "$FAKE_SCENARIO" == recover-*-successor) &&
               ! -f "$FAKE_STATE/mutated-phase-failed" ]]; then
               touch "$FAKE_STATE/mutated-phase-failed"
               exit 95
@@ -288,6 +359,9 @@ case "${1:-}" in
     exit 0
     ;;
   where)
+    if [[ "$FAKE_SCENARIO" == "recover-audit-query-error" ]]; then
+      exit 88
+    fi
     printf '{"path":"%s"}\n' "$FAKE_STATE"
     exit 0
     ;;

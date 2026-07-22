@@ -167,6 +167,21 @@ run_contract acquire-slot stable-holder 1 0
 assert_eq 143 "$last_rc" "signal during waiter cleanup is surfaced"
 assert_file "$state/released" "cleanup signal releases the newly owned slot"
 
+new_state slot-cleanup-interleave
+scenario=slot-cleanup-interleave
+run_contract acquire-slot stable-holder 1 0
+assert_eq 0 "$last_rc" "waiter cleanup retries across a concurrent queue revision"
+assert_file "$state/concurrent-state-preserved" \
+  "waiter cleanup preserves a concurrently enqueued waiter"
+
+new_state slot-cleanup-stale
+scenario=slot-cleanup-stale
+run_contract acquire-slot stable-holder 1 0
+assert_eq 2 "$last_rc" "continuously stale waiter cleanup fails closed"
+assert_not_contains_file "update slot-1 --metadata" "$state/bd.log" \
+  "stale cleanup never writes an unconfirmed metadata snapshot"
+assert_file "$state/released" "stale cleanup releases the newly owned slot"
+
 new_state recover-slot
 scenario=recover-slot
 run_contract recover-slot merge-1 dead-holder session-registry:dead
@@ -180,6 +195,13 @@ run_contract recover-waiter merge-1 dead-waiter session-registry:dead
 assert_eq 0 "$last_rc" "dead queued waiter recovery succeeds with evidence"
 assert_file "$state/waiter-cleaned" "dead waiter is removed from persisted queue"
 assert_contains "pr-shepherd.recover-waiter" "$(<"$state/bd.log")" "dead waiter recovery is audited"
+
+new_state recover-waiter-successor-interleave
+scenario=recover-waiter-successor-interleave
+run_contract recover-waiter merge-1 dead-waiter session-registry:dead
+assert_eq 0 "$last_rc" "waiter recovery retries across a successor slot acquisition"
+assert_file "$state/concurrent-state-preserved" \
+  "waiter recovery preserves successor ownership and its queued waiter"
 
 new_state recover-claim
 scenario=recover-claim
@@ -206,6 +228,24 @@ for recovery_kind in slot waiter claim; do
   assert_eq 1 "$audit_calls" "$recovery_kind recovery emits one durable audit event"
 done
 
+for recovery_kind in slot claim; do
+  new_state "recover-$recovery_kind-successor"
+  scenario="recover-$recovery_kind-successor"
+  recovery_subject="dead-holder"
+  [[ "$recovery_kind" != "claim" ]] || recovery_subject="dead-actor"
+  run_contract "recover-$recovery_kind" merge-1 "$recovery_subject" session-registry:dead
+  assert_eq 2 "$last_rc" "$recovery_kind successor fixture crashes after mutation"
+  touch "$state/successor"
+  run_contract "recover-$recovery_kind" merge-1 "$recovery_subject" session-registry:dead
+  assert_eq 0 "$last_rc" "$recovery_kind recovery accepts valid successor progress"
+  run_contract "recover-$recovery_kind" merge-1 "$recovery_subject" session-registry:dead
+  assert_eq 0 "$last_rc" "$recovery_kind successor recovery remains idempotent"
+  comment_calls="$(grep -c -- '^comment merge-1 RECOVERED ' "$state/bd.log" || true)"
+  audit_calls="$(grep -c -- '^audit record .*pr-shepherd.recover-' "$state/bd.log" || true)"
+  assert_eq 1 "$comment_calls" "$recovery_kind successor recovery emits one comment"
+  assert_eq 1 "$audit_calls" "$recovery_kind successor recovery emits one audit event"
+done
+
 new_state recover-slot-crash-comment
 scenario=recover-slot-crash-comment
 run_contract recover-slot merge-1 dead-holder session-registry:dead
@@ -224,6 +264,33 @@ assert_eq 0 "$last_rc" "recovery resumes after its durable audit"
 audit_calls="$(grep -c -- '^audit record .*pr-shepherd.recover-' "$state/bd.log" || true)"
 assert_eq 1 "$audit_calls" "recovery audit marker prevents duplicates"
 
+new_state recover-receipt-query-error
+scenario=recover-receipt-query-error
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "recovery receipt query failure is surfaced"
+assert_not_contains_file "merge-slot release" "$state/bd.log" \
+  "recovery receipt query failure prevents mutation"
+
+new_state recover-comment-query-error
+scenario=recover-comment-query-error
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "recovery comment query failure is surfaced"
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "recovery comment query failure remains fail closed on resume"
+assert_not_contains_file "comment merge-1 RECOVERED" "$state/bd.log" \
+  "recovery comment query failure cannot emit a duplicate"
+
+new_state recover-audit-query-error
+scenario=recover-audit-query-error
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "recovery audit query failure is surfaced"
+run_contract recover-slot merge-1 dead-holder session-registry:dead
+assert_eq 2 "$last_rc" "recovery audit query failure remains fail closed on resume"
+comment_calls="$(grep -c -- '^comment merge-1 RECOVERED ' "$state/bd.log" || true)"
+assert_eq 1 "$comment_calls" "audit query failure does not duplicate the durable comment"
+assert_not_contains_file "audit record" "$state/bd.log" \
+  "audit query failure never emits a possibly duplicate audit event"
+
 new_state duplicate-bounce
 scenario=duplicate-bounce
 run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
@@ -233,6 +300,31 @@ assert_not_contains_file "create" "$state/bd.log" "matching fix bead prevents du
 run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
 assert_eq 0 "$last_rc" "second bounce is idempotent"
 assert_contains BOUNCE_REUSED "$last_output" "second bounce reports reuse"
+
+new_state bounce-receipt-query-error
+scenario=bounce-receipt-query-error
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 2 "$last_rc" "bounce receipt query failure is surfaced"
+assert_not_contains_file "create" "$state/bd.log" \
+  "bounce receipt query failure prevents duplicate fix creation"
+
+new_state bounce-comment-query-error
+scenario=bounce-comment-query-error
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 2 "$last_rc" "bounce comment query failure is surfaced"
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 2 "$last_rc" "bounce comment query failure remains fail closed on resume"
+assert_not_contains_file "comment merge-1 BOUNCED" "$state/bd.log" \
+  "bounce comment query failure cannot emit a duplicate"
+
+new_state bounce-dependency-query-error
+scenario=bounce-dependency-query-error
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 2 "$last_rc" "bounce dependency receipt query failure is surfaced"
+run_contract ensure-bounce merge-1 key-1 agent:coder "Fix CI" '{"repo":"owner/repo"}' "exact diagnosis"
+assert_eq 2 "$last_rc" "bounce dependency query failure remains fail closed on resume"
+assert_not_contains_file "dep add" "$state/bd.log" \
+  "bounce dependency query failure cannot emit a duplicate dependency"
 
 new_state bounce-preexisting-duplicates
 scenario=bounce-preexisting-duplicates
