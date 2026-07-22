@@ -185,28 +185,7 @@ ensure_runtime() {
 
   runtime_status
   status=$?
-  case "$status" in
-    0) return 0 ;;
-    3) ;;
-    4)
-      if [[ ! -f "$pid_file" ]]; then
-        printf '1mcp reported an unreachable runtime without PID state; refusing recovery\n' >&2
-        return 1
-      fi
-      pid="$(read_pid 2>/dev/null || :)"
-      if [[ -n "$pid" ]] && is_runtime_process "$pid"; then
-        wait_ready && return 0
-        printf '1mcp runtime is alive but unhealthy; operator intervention required\n' >&2
-        run_bounded 2 "$one_mcp_bin" serve --status >&2 || :
-        return 1
-      fi
-      quarantine_stale_pid || return 1
-      ;;
-    *)
-      printf '1mcp status check failed with exit code %s; refusing to start a duplicate runtime\n' "$status" >&2
-      return 1
-      ;;
-  esac
+  ((status == 0)) && return 0
 
   if [[ -f "$pid_file" ]]; then
     pid="$(read_pid 2>/dev/null || :)"
@@ -217,6 +196,9 @@ ensure_runtime() {
       return 1
     fi
     quarantine_stale_pid || return 1
+  elif ((status != 3)); then
+    printf '1mcp status check failed with exit code %s and no recoverable PID state\n' "$status" >&2
+    return 1
   fi
 
   start_runtime || {

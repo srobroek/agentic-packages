@@ -40,7 +40,7 @@ def test_manifest_delegates_to_inspectable_launcher_script() -> None:
 def test_launcher_stays_small_and_uses_kernel_locks() -> None:
     script = launcher_script().read_text(encoding="utf-8")
 
-    assert len(script.splitlines()) < 275
+    assert len(script.splitlines()) < 250
     assert "flock" in script
     assert "lockf" in script
     assert ".takeover" not in script
@@ -115,6 +115,14 @@ if (args[0] === "serve" && args[1] === "--status") {
     fs.writeFileSync(path.join(state, "status-hung-once"), "");
     hold(false);
     return;
+  }
+  const runtimePid = path.join(process.env.XDG_CONFIG_HOME, "1mcp", "server.pid");
+  if (process.env.FAKE_1MCP_STATUS === "hang-stale" && fs.existsSync(runtimePid)) {
+    hold(false);
+    return;
+  }
+  if (process.env.FAKE_1MCP_STATUS === "error-stale" && fs.existsSync(runtimePid)) {
+    process.exit(2);
   }
   if (process.env.FAKE_1MCP_STATUS === "error") process.exit(2);
   if (
@@ -390,8 +398,41 @@ def test_unreachable_reused_pid_is_quarantined_and_recovered(
         unrelated.wait(timeout=5)
 
 
+def test_timed_out_status_with_unrelated_pid_recovers_safely(
+    tmp_path: Path,
+) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="hang-stale")
+    unrelated = subprocess.Popen(["sleep", "30"])
+    pid_file = write_pid_file(Path(env["XDG_CONFIG_HOME"]), unrelated.pid)
+
+    try:
+        result = run_launcher(env)
+
+        assert result.returncode == 0, result.stderr
+        assert unrelated.poll() is None
+        assert action_count(actions, "serve --background") == 1
+        assert not pid_file.exists()
+        assert len(list(pid_file.parent.glob("server.pid.stale.*"))) == 1
+    finally:
+        unrelated.terminate()
+        unrelated.wait(timeout=5)
+
+
 def test_malformed_pid_file_is_quarantined(tmp_path: Path) -> None:
     env, actions = install_fake_commands(tmp_path)
+    pid_file = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "server.pid"
+    pid_file.parent.mkdir(parents=True)
+    pid_file.write_text("not json", encoding="utf-8")
+
+    result = run_launcher(env)
+
+    assert result.returncode == 0, result.stderr
+    assert action_count(actions, "serve --background") == 1
+    assert len(list(pid_file.parent.glob("server.pid.stale.*"))) == 1
+
+
+def test_status_error_from_malformed_pid_file_is_recovered(tmp_path: Path) -> None:
+    env, actions = install_fake_commands(tmp_path, status_behavior="error-stale")
     pid_file = Path(env["XDG_CONFIG_HOME"]) / "1mcp" / "server.pid"
     pid_file.parent.mkdir(parents=True)
     pid_file.write_text("not json", encoding="utf-8")
@@ -470,7 +511,7 @@ def test_unreachable_status_without_a_trusted_runtime_fails_closed(
     result = run_launcher(env)
 
     assert result.returncode == 1
-    assert "without PID state" in result.stderr
+    assert "no recoverable PID state" in result.stderr
     assert action_count(actions, "serve --background") == 0
     assert action_count(actions, "proxy") == 0
 
