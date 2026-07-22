@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.6.0...release-queue-watch--v0.6.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* make agent and watcher metadata safer ([4fd84c6](https://github.com/srobroek/agentic-packages/commit/4fd84c6fce0b64465fcb372eb38b7439e0ef79ac))
+
 ## [0.6.0](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.5.0...release-queue-watch--v0.6.0) (2026-07-22)
 
 
