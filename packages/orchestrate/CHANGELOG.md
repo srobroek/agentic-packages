@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.3.0...orchestrate--v3.4.0) (2026-07-22)
+
+
+### Features
+
+* coordinate agents with Beads message threads ([#615](https://github.com/srobroek/agentic-packages/issues/615)) ([7f76270](https://github.com/srobroek/agentic-packages/commit/7f76270b70d4d520a96eb782af0bced88620b2f3))
+* **deps:** sync internal package pins (minor-level dep releases) ([f2c6de9](https://github.com/srobroek/agentic-packages/commit/f2c6de9745b359e719d2f57b51e359f0b7f86064))
+* let generic workers claim compatible ready tasks ([#614](https://github.com/srobroek/agentic-packages/issues/614)) ([3f5f47e](https://github.com/srobroek/agentic-packages/commit/3f5f47e60b4538b20f36f9672f71f56178a3e7d7))
+* route code and non-code work to compatible agents ([#609](https://github.com/srobroek/agentic-packages/issues/609)) ([7b8eb51](https://github.com/srobroek/agentic-packages/commit/7b8eb51608119a413fcdd65c929398363eaa8d0c))
+* route writable and research tasks through dedicated agents ([#613](https://github.com/srobroek/agentic-packages/issues/613)) ([7508b28](https://github.com/srobroek/agentic-packages/commit/7508b28e262b92940d90b7cb63acea856ae1edfb))
+
 ## [3.3.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.2.0...orchestrate--v3.3.0) (2026-07-22)
 
 

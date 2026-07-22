@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/srobroek/agentic-packages/compare/beads--v0.4.1...beads--v0.4.2) (2026-07-22)
+
+
+### Documentation
+
+* **beads:** fold Codex-injected guidance into beads context ([#617](https://github.com/srobroek/agentic-packages/issues/617)) ([7dcc2b3](https://github.com/srobroek/agentic-packages/commit/7dcc2b39e2253e1a1936988160930713a8d0c1de))
+
 ## [0.4.1](https://github.com/srobroek/agentic-packages/compare/beads--v0.4.0...beads--v0.4.1) (2026-07-20)
 
 

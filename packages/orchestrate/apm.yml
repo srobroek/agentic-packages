@@ -1,5 +1,5 @@
 name: orchestrate
-version: 3.3.0
+version: 3.4.0
 description: >-
   Orchestrate a fleet of subagents across complex, parallel, or long-running
   work while controlling cost by routing each role to the cheapest capable
