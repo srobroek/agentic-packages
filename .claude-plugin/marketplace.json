@@ -1068,6 +1068,17 @@
       "source": "./packages/mcp-context7"
     },
     {
+      "name": "mcp-fetcher",
+      "description": "MCP server package for Fetcher, providing direct web-page retrieval for coding agents.",
+      "version": "0.1.0",
+      "tags": [
+        "mcp",
+        "web"
+      ],
+      "category": "mcp",
+      "source": "./packages/mcp-fetcher"
+    },
+    {
       "name": "mcp-mempalace",
       "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
       "version": "1.0.2",

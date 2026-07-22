@@ -1,0 +1,24 @@
+name: mcp-fetcher
+version: 0.1.0
+description: >-
+  MCP server package for Fetcher, providing direct web-page retrieval for coding
+  agents.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: all
+category: mcp
+tags:
+  - mcp
+  - web
+dependencies:
+  mcp:
+    - name: fetcher
+      registry: false
+      transport: stdio
+      command: npx
+      args:
+        - '-y'
+        - fetcher-mcp
+      env:
+        USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36
