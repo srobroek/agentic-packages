@@ -272,7 +272,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
-      "version": "0.4.2",
+      "version": "0.5.0",
       "tags": [
         "beads",
         "issue-tracking",
@@ -1049,7 +1049,7 @@
     {
       "name": "mcp-1mcp",
       "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "tags": [
         "mcp",
         "aggregation"
@@ -1150,7 +1150,7 @@
     {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, a read-only event-driven PR queue handoff with deterministic orchestrator/pr-shepherd ownership, and deterministic scripts (scope disjointness, agent discovery, queue-event resolution, conflict probe).",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "tags": [
         "skill",
         "agent",
@@ -1185,7 +1185,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.8.1",
+      "version": "0.9.0",
       "tags": [
         "beads",
         "merge-queue",
