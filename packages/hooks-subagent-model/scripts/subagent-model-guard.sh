@@ -71,7 +71,47 @@ deny() {
 
 toml_string() {
   local path="$1" key="$2"
-  sed -n "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$path" 2>/dev/null | head -n 1
+  local line rhs quote value remainder c escaped i
+
+  # Agent profiles only need scalar metadata, so keep this parser bounded and
+  # dependency-free while accepting TOML's basic/literal string delimiters.
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*${key}[[:space:]]*= ]] || continue
+
+    rhs="${line#*=}"
+    rhs="${rhs#"${rhs%%[![:space:]]*}"}"
+    [[ -n "$rhs" ]] || continue
+    quote="${rhs:0:1}"
+    [[ "$quote" == '"' || "$quote" == "'" ]] || continue
+
+    value=""
+    escaped=0
+    i=1
+    while (( i < ${#rhs} )); do
+      c="${rhs:$i:1}"
+      if [[ "$quote" == '"' && "$escaped" == 1 ]]; then
+        # Keep unknown escapes intact; profile identifiers only use the two
+        # escapes that affect delimiter parsing, but valid TOML still passes.
+        case "$c" in
+          '"'|\\) value="${value}${c}" ;;
+          *) value="${value}\\${c}" ;;
+        esac
+        escaped=0
+      elif [[ "$quote" == '"' && "$c" == \\ ]]; then
+        escaped=1
+      elif [[ "$c" == "$quote" ]]; then
+        remainder="${rhs:$((i + 1))}"
+        remainder="${remainder#"${remainder%%[![:space:]]*}"}"
+        [[ -z "$remainder" || "${remainder:0:1}" == "#" ]] || break
+        printf '%s\n' "$value"
+        return 0
+      else
+        value="${value}${c}"
+      fi
+      i=$((i + 1))
+    done
+  done < "$path"
+  return 0
 }
 
 find_named_profile() {

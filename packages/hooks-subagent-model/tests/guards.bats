@@ -40,6 +40,18 @@ write_codex_agent() {
   } > "$root/.codex/agents/$name.toml"
 }
 
+write_codex_agent_literal() {
+  root="$1"; name="$2"; model="${3:-}"; effort="${4:-}"
+  mkdir -p "$root/.codex/agents"
+  {
+    printf "name = '%s'\n" "$name"
+    printf "description = 'Test'\n"
+    [ -z "$model" ] || printf "model = '%s'\n" "$model"
+    [ -z "$effort" ] || printf "model_reasoning_effort = '%s'\n" "$effort"
+    printf "developer_instructions = 'Work'\n"
+  } > "$root/.codex/agents/$name.toml"
+}
+
 # --- allow: model explicitly set --------------------------------------------
 
 @test "model set + general-purpose -> allow (no output)" {
@@ -80,11 +92,32 @@ write_codex_agent() {
   [ -z "$output" ]
 }
 
+@test "Codex pinned project agent with TOML literal strings -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  write_codex_agent_literal "$project" workflow-coder gpt-5.6-luna xhigh
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"workflow-coder",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 @test "Codex pinned global agent -> allow" {
   project="$BATS_TEST_TMPDIR/project"
   global="$BATS_TEST_TMPDIR/global"
   mkdir -p "$project"
   write_codex_agent "$global" explorer gpt-5.6-luna medium
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"explorer",task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global/.codex"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "Codex pinned global agent with TOML literal strings -> allow" {
+  project="$BATS_TEST_TMPDIR/project"
+  global="$BATS_TEST_TMPDIR/global"
+  mkdir -p "$project"
+  write_codex_agent_literal "$global" explorer gpt-5.6-luna medium
   payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{agent_type:"explorer",task_name:"test"}}')"
   run_guard "$payload" CODEX_HOME="$global/.codex"
   [ "$status" -eq 0 ]
