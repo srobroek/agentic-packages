@@ -35,8 +35,8 @@ native_holder_for() {
   local waiter digest
 
   waiter="$(waiter_id_for "$holder" "$generation")"
-  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" \
-    | git hash-object --stdin)"
+  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" |
+    git hash-object --stdin)"
   printf 'pr-shepherd:%s\n' "$digest"
 }
 
@@ -71,15 +71,15 @@ seed_waiter() {
 
 seed_scenario_waiters() {
   case "$FAKE_SCENARIO" in
-    slot-fairness) seed_waiter earlier-holder open 0 ;;
-    slot-fairness-tie)
-      seed_waiter tie-a open 0
-      seed_waiter tie-b open 0
-      ;;
-    recover-slot*) seed_waiter dead-holder in_progress 1 ;;
-    recover-waiter*) seed_waiter dead-waiter open 1 ;;
-    recover-claim-waiter*) seed_waiter stable-holder in_progress 1 1 dead-actor ;;
-    slot-wrong-link) seed_waiter stable-holder open 1 1 actor-a wrong:slot-other ;;
+  slot-fairness) seed_waiter earlier-holder open 0 ;;
+  slot-fairness-tie)
+    seed_waiter tie-a open 0
+    seed_waiter tie-b open 0
+    ;;
+  recover-slot*) seed_waiter dead-holder in_progress 1 ;;
+  recover-waiter*) seed_waiter dead-waiter open 1 ;;
+  recover-claim-waiter*) seed_waiter stable-holder in_progress 1 1 dead-actor ;;
+  slot-wrong-link) seed_waiter stable-holder open 1 1 actor-a wrong:slot-other ;;
   esac
 }
 
@@ -130,63 +130,63 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
     exit 0
   fi
   case "$FAKE_SCENARIO" in
-    slot-contention)
-      check_count="$(increment "$FAKE_STATE/check-count")"
-      if [[ "$check_count" -eq 1 ]]; then
-        printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
-      else
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      fi
-      ;;
-    slot-fairness*)
+  slot-contention)
+    check_count="$(increment "$FAKE_STATE/check-count")"
+    if [[ "$check_count" -eq 1 ]]; then
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
+    else
       printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      ;;
-    slot-queued-restart)
-      if [[ -f "$FAKE_STATE/make-available" ]]; then
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      elif [[ -f "$FAKE_STATE/queued" ]]; then
-        printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
-      else
-        printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
-      fi
-      ;;
-    slot-restart | slot-failure | land-restart | land-waiting | land-release-failure)
-      if [[ "$FAKE_SCENARIO" == "slot-restart" ]]; then
-        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
-          "$(native_holder_for stable-holder)"
-      else
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      fi
-      ;;
-    recover-slot*)
-      if [[ -f "$FAKE_STATE/successor" ]]; then
-        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
-          "$(native_holder_for successor)"
-      elif [[ -f "$FAKE_STATE/released" ]]; then
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      else
-        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
-          "$(native_holder_for dead-holder)"
-      fi
-      ;;
-    recover-waiter*)
-      if [[ -f "$FAKE_STATE/concurrent-holder" ]]; then
-        printf '{"available":false,"holder":"successor","id":"slot-1","waiters":null}\n'
-      else
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      fi
-      ;;
-    recover-claim-waiter*)
-      if [[ -f "$FAKE_STATE/released" ]]; then
-        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      else
-        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
-          "$(native_holder_for stable-holder 1 dead-actor)"
-      fi
-      ;;
-    *)
+    fi
+    ;;
+  slot-fairness*)
+    printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    ;;
+  slot-queued-restart)
+    if [[ -f "$FAKE_STATE/make-available" ]]; then
       printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
-      ;;
+    elif [[ -f "$FAKE_STATE/queued" ]]; then
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":false,"holder":"other","id":"slot-1","waiters":null}\n'
+    fi
+    ;;
+  slot-restart | slot-failure | land-restart | land-waiting | land-release-failure)
+    if [[ "$FAKE_SCENARIO" == "slot-restart" ]]; then
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+        "$(native_holder_for stable-holder)"
+    else
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    fi
+    ;;
+  recover-slot*)
+    if [[ -f "$FAKE_STATE/successor" ]]; then
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+        "$(native_holder_for successor)"
+    elif [[ -f "$FAKE_STATE/released" ]]; then
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+        "$(native_holder_for dead-holder)"
+    fi
+    ;;
+  recover-waiter*)
+    if [[ -f "$FAKE_STATE/concurrent-holder" ]]; then
+      printf '{"available":false,"holder":"successor","id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    fi
+    ;;
+  recover-claim-waiter*)
+    if [[ -f "$FAKE_STATE/released" ]]; then
+      printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    else
+      printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+        "$(native_holder_for stable-holder 1 dead-actor)"
+    fi
+    ;;
+  *)
+    printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+    ;;
   esac
   exit 0
 fi
@@ -403,170 +403,170 @@ if [[ "${1:-}" == "create" ]]; then
 fi
 
 case "${1:-}" in
-  close)
-    if [[ -d "$WAITER_ROOT/${2:-}" ]]; then
-      if [[ "$FAKE_SCENARIO" == "recover-waiter-successor-interleave" &&
-        ! -f "$FAKE_STATE/concurrent-state-preserved" ]]; then
-        seed_waiter successor in_progress
-        seed_waiter concurrent-waiter open
-        touch "$FAKE_STATE/concurrent-holder" "$FAKE_STATE/concurrent-state-preserved"
-      elif [[ "$FAKE_SCENARIO" == "slot-record-close-interleave" &&
-        ! -f "$FAKE_STATE/concurrent-state-preserved" ]]; then
-        seed_waiter later-holder open
-        touch "$FAKE_STATE/concurrent-state-preserved"
-      fi
-      printf 'closed\n' >"$WAITER_ROOT/${2}/status"
-      touch "$FAKE_STATE/waiter-cleaned"
-      exit 0
+close)
+  if [[ -d "$WAITER_ROOT/${2:-}" ]]; then
+    if [[ "$FAKE_SCENARIO" == "recover-waiter-successor-interleave" &&
+      ! -f "$FAKE_STATE/concurrent-state-preserved" ]]; then
+      seed_waiter successor in_progress
+      seed_waiter concurrent-waiter open
+      touch "$FAKE_STATE/concurrent-holder" "$FAKE_STATE/concurrent-state-preserved"
+    elif [[ "$FAKE_SCENARIO" == "slot-record-close-interleave" &&
+      ! -f "$FAKE_STATE/concurrent-state-preserved" ]]; then
+      seed_waiter later-holder open
+      touch "$FAKE_STATE/concurrent-state-preserved"
     fi
-    if [[ "$FAKE_SCENARIO" == "land-restart" && ! -f "$FAKE_STATE/released" ]]; then
-      printf 'close happened before slot release\n' >&2
-      exit 98
-    fi
-    if [[ -n "${2:-}" ]]; then
-      touch "$FAKE_STATE/closed-${2}"
-    fi
+    printf 'closed\n' >"$WAITER_ROOT/${2}/status"
+    touch "$FAKE_STATE/waiter-cleaned"
     exit 0
-    ;;
-  comments)
-    issue="${2:-}"
-    if [[ "$FAKE_SCENARIO" == "bounce-comment-query-error" ||
-      "$FAKE_SCENARIO" == "recover-comment-query-error" ]]; then
-      exit 88
+  fi
+  if [[ "$FAKE_SCENARIO" == "land-restart" && ! -f "$FAKE_STATE/released" ]]; then
+    printf 'close happened before slot release\n' >&2
+    exit 98
+  fi
+  if [[ -n "${2:-}" ]]; then
+    touch "$FAKE_STATE/closed-${2}"
+  fi
+  exit 0
+  ;;
+comments)
+  issue="${2:-}"
+  if [[ "$FAKE_SCENARIO" == "bounce-comment-query-error" ||
+    "$FAKE_SCENARIO" == "recover-comment-query-error" ]]; then
+    exit 88
+  fi
+  if [[ "$issue" == "merge-1" && -f "$FAKE_STATE/bounce-comment-merge" ]]; then
+    printf '[{"text":"BOUNCED bounce_receipt=key-1"}]\n'
+  elif [[ "$issue" == fix-* && -f "$FAKE_STATE/bounce-comment-fix" ]]; then
+    printf '[{"text":"CORRELATED bounce_receipt=key-1"}]\n'
+  elif [[ "$issue" == "merge-1" && -f "$FAKE_STATE/recovery-comment" ]]; then
+    jq -cn --arg text "$(<"$FAKE_STATE/recovery-comment")" '[{text: $text}]'
+  else
+    printf '[]\n'
+  fi
+  exit 0
+  ;;
+comment)
+  if [[ "$*" == *"BOUNCED bounce_receipt="* ]]; then
+    touch "$FAKE_STATE/bounce-comment-merge"
+  elif [[ "$*" == *"CORRELATED bounce_receipt="* ]]; then
+    if [[ "$FAKE_SCENARIO" == "bounce-crash-comment" && ! -f "$FAKE_STATE/comment-failed" ]]; then
+      touch "$FAKE_STATE/comment-failed"
+      exit 92
     fi
-    if [[ "$issue" == "merge-1" && -f "$FAKE_STATE/bounce-comment-merge" ]]; then
-      printf '[{"text":"BOUNCED bounce_receipt=key-1"}]\n'
-    elif [[ "$issue" == fix-* && -f "$FAKE_STATE/bounce-comment-fix" ]]; then
-      printf '[{"text":"CORRELATED bounce_receipt=key-1"}]\n'
-    elif [[ "$issue" == "merge-1" && -f "$FAKE_STATE/recovery-comment" ]]; then
-      jq -cn --arg text "$(<"$FAKE_STATE/recovery-comment")" '[{text: $text}]'
-    else
-      printf '[]\n'
+    touch "$FAKE_STATE/bounce-comment-fix"
+    increment "$FAKE_STATE/bounce-fix-comment-count" >/dev/null
+  elif [[ "$*" == *"RECOVERED recovery_receipt="* ]]; then
+    printf '%s\n' "${3:-}" >"$FAKE_STATE/recovery-comment"
+  fi
+  exit 0
+  ;;
+update)
+  if [[ -d "$WAITER_ROOT/${2:-}" && "$*" == *"--claim"* ]]; then
+    if [[ "$FAKE_SCENARIO" == "slot-cleanup-failure" ]]; then
+      exit 93
     fi
+    if [[ "$FAKE_SCENARIO" == "slot-cleanup-signal" ]]; then
+      kill -TERM "$PPID"
+      exit 94
+    fi
+    [[ "$(<"$WAITER_ROOT/${2}/status")" != "closed" ]] || exit 1
+    printf 'in_progress\n' >"$WAITER_ROOT/${2}/status"
+    printf '%s\n' "${BEADS_ACTOR:-}" >"$WAITER_ROOT/${2}/assignee"
+    touch "$FAKE_STATE/waiter-claimed"
     exit 0
-    ;;
-  comment)
-    if [[ "$*" == *"BOUNCED bounce_receipt="* ]]; then
-      touch "$FAKE_STATE/bounce-comment-merge"
-    elif [[ "$*" == *"CORRELATED bounce_receipt="* ]]; then
-      if [[ "$FAKE_SCENARIO" == "bounce-crash-comment" && ! -f "$FAKE_STATE/comment-failed" ]]; then
-        touch "$FAKE_STATE/comment-failed"
-        exit 92
-      fi
-      touch "$FAKE_STATE/bounce-comment-fix"
-      increment "$FAKE_STATE/bounce-fix-comment-count" >/dev/null
-    elif [[ "$*" == *"RECOVERED recovery_receipt="* ]]; then
-      printf '%s\n' "${3:-}" >"$FAKE_STATE/recovery-comment"
-    fi
-    exit 0
-    ;;
-  update)
-    if [[ -d "$WAITER_ROOT/${2:-}" && "$*" == *"--claim"* ]]; then
-      if [[ "$FAKE_SCENARIO" == "slot-cleanup-failure" ]]; then
-        exit 93
-      fi
-      if [[ "$FAKE_SCENARIO" == "slot-cleanup-signal" ]]; then
-        kill -TERM "$PPID"
-        exit 94
-      fi
-      [[ "$(<"$WAITER_ROOT/${2}/status")" != "closed" ]] || exit 1
-      printf 'in_progress\n' >"$WAITER_ROOT/${2}/status"
-      printf '%s\n' "${BEADS_ACTOR:-}" >"$WAITER_ROOT/${2}/assignee"
-      touch "$FAKE_STATE/waiter-claimed"
-      exit 0
-    fi
-    if [[ -d "$WAITER_ROOT/${2:-}" ]]; then
-      transferred=false
-      previous=""
-      for argument in "$@"; do
-        if [[ "$previous" == "--assignee" ]]; then
-          printf '%s\n' "$argument" >"$WAITER_ROOT/${2}/assignee"
-        elif [[ "$previous" == "--status" ]]; then
-          printf '%s\n' "$argument" >"$WAITER_ROOT/${2}/status"
-        elif [[ "$previous" == "--set-metadata" && "$argument" == lease_actor=* ]]; then
-          printf '%s\n' "${argument#lease_actor=}" >"$WAITER_ROOT/${2}/lease-actor"
-          transferred=true
-        fi
-        previous="$argument"
-      done
-      if [[ "$transferred" == "true" &&
-        "$FAKE_SCENARIO" == "recover-claim-waiter-crash-transfer" &&
-        ! -f "$FAKE_STATE/waiter-transfer-failed" ]]; then
-        touch "$FAKE_STATE/waiter-transfer-failed"
-        exit 95
-      fi
-      exit 0
-    fi
-    if [[ "${2:-}" == "slot-1" && "$*" == *"--metadata"* ]]; then
-      printf 'shared slot metadata rewrite is forbidden\n' >&2
-      exit 89
-    fi
-    if [[ "${2:-}" == "merge-1" && "$*" == *"--assignee  --status open"* ]]; then
-      touch "$FAKE_STATE/claim-released"
-      : >"$FAKE_STATE/claim-assignee"
-      printf 'open\n' >"$FAKE_STATE/claim-status"
-    fi
-    if [[ "${2:-}" == "merge-1" && "$*" == *"--claim"* ]]; then
-      [[ ! -s "$FAKE_STATE/claim-assignee" ]] || exit 1
-      printf '%s\n' "${BEADS_ACTOR:-}" >"$FAKE_STATE/claim-assignee"
-      printf 'in_progress\n' >"$FAKE_STATE/claim-status"
-    fi
+  fi
+  if [[ -d "$WAITER_ROOT/${2:-}" ]]; then
+    transferred=false
     previous=""
     for argument in "$@"; do
-      if [[ "$previous" == "--set-metadata" ]]; then
-        case "$argument" in
-          bounce_key=*) printf '%s\n' "${argument#bounce_key=}" >"$FAKE_STATE/bounce-key" ;;
-          bounce_fix=*) printf '%s\n' "${argument#bounce_fix=}" >"$FAKE_STATE/bounce-fix" ;;
-          bounce_phase=*) printf '%s\n' "${argument#bounce_phase=}" >"$FAKE_STATE/bounce-phase" ;;
-          recovery_key=*) printf '%s\n' "${argument#recovery_key=}" >"$FAKE_STATE/recovery-key" ;;
-          recovery_phase=*)
-            recovery_phase="${argument#recovery_phase=}"
-            if [[ "$recovery_phase" == "mutated" &&
-              ("$FAKE_SCENARIO" == recover-*-crash-mutation || "$FAKE_SCENARIO" == recover-*-successor) &&
-              ! -f "$FAKE_STATE/mutated-phase-failed" ]]; then
-              touch "$FAKE_STATE/mutated-phase-failed"
-              exit 95
-            fi
-            if [[ "$recovery_phase" == "commented" && "$FAKE_SCENARIO" == "recover-slot-crash-comment" &&
-              ! -f "$FAKE_STATE/commented-phase-failed" ]]; then
-              touch "$FAKE_STATE/commented-phase-failed"
-              exit 96
-            fi
-            if [[ "$recovery_phase" == "audited" && "$FAKE_SCENARIO" == "recover-slot-crash-audit" &&
-              ! -f "$FAKE_STATE/audited-phase-failed" ]]; then
-              touch "$FAKE_STATE/audited-phase-failed"
-              exit 97
-            fi
-            printf '%s\n' "$recovery_phase" >"$FAKE_STATE/recovery-phase"
-            ;;
-        esac
+      if [[ "$previous" == "--assignee" ]]; then
+        printf '%s\n' "$argument" >"$WAITER_ROOT/${2}/assignee"
+      elif [[ "$previous" == "--status" ]]; then
+        printf '%s\n' "$argument" >"$WAITER_ROOT/${2}/status"
+      elif [[ "$previous" == "--set-metadata" && "$argument" == lease_actor=* ]]; then
+        printf '%s\n' "${argument#lease_actor=}" >"$WAITER_ROOT/${2}/lease-actor"
+        transferred=true
       fi
       previous="$argument"
     done
-    exit 0
-    ;;
-  audit)
-    if [[ "${2:-}" == "record" ]]; then
-      tool_name=""
-      issue_id=""
-      previous=""
-      for argument in "$@"; do
-        [[ "$previous" != "--tool-name" ]] || tool_name="$argument"
-        [[ "$previous" != "--issue-id" ]] || issue_id="$argument"
-        previous="$argument"
-      done
-      printf '{"kind":"tool_call","tool_name":"%s","issue_id":"%s"}\n' \
-        "$tool_name" "$issue_id" >>"$FAKE_STATE/interactions.jsonl"
+    if [[ "$transferred" == "true" &&
+      "$FAKE_SCENARIO" == "recover-claim-waiter-crash-transfer" &&
+      ! -f "$FAKE_STATE/waiter-transfer-failed" ]]; then
+      touch "$FAKE_STATE/waiter-transfer-failed"
+      exit 95
     fi
     exit 0
-    ;;
-  where)
-    if [[ "$FAKE_SCENARIO" == "recover-audit-query-error" ]]; then
-      exit 88
+  fi
+  if [[ "${2:-}" == "slot-1" && "$*" == *"--metadata"* ]]; then
+    printf 'shared slot metadata rewrite is forbidden\n' >&2
+    exit 89
+  fi
+  if [[ "${2:-}" == "merge-1" && "$*" == *"--assignee  --status open"* ]]; then
+    touch "$FAKE_STATE/claim-released"
+    : >"$FAKE_STATE/claim-assignee"
+    printf 'open\n' >"$FAKE_STATE/claim-status"
+  fi
+  if [[ "${2:-}" == "merge-1" && "$*" == *"--claim"* ]]; then
+    [[ ! -s "$FAKE_STATE/claim-assignee" ]] || exit 1
+    printf '%s\n' "${BEADS_ACTOR:-}" >"$FAKE_STATE/claim-assignee"
+    printf 'in_progress\n' >"$FAKE_STATE/claim-status"
+  fi
+  previous=""
+  for argument in "$@"; do
+    if [[ "$previous" == "--set-metadata" ]]; then
+      case "$argument" in
+      bounce_key=*) printf '%s\n' "${argument#bounce_key=}" >"$FAKE_STATE/bounce-key" ;;
+      bounce_fix=*) printf '%s\n' "${argument#bounce_fix=}" >"$FAKE_STATE/bounce-fix" ;;
+      bounce_phase=*) printf '%s\n' "${argument#bounce_phase=}" >"$FAKE_STATE/bounce-phase" ;;
+      recovery_key=*) printf '%s\n' "${argument#recovery_key=}" >"$FAKE_STATE/recovery-key" ;;
+      recovery_phase=*)
+        recovery_phase="${argument#recovery_phase=}"
+        if [[ "$recovery_phase" == "mutated" &&
+          ("$FAKE_SCENARIO" == recover-*-crash-mutation || "$FAKE_SCENARIO" == recover-*-successor) &&
+          ! -f "$FAKE_STATE/mutated-phase-failed" ]]; then
+          touch "$FAKE_STATE/mutated-phase-failed"
+          exit 95
+        fi
+        if [[ "$recovery_phase" == "commented" && "$FAKE_SCENARIO" == "recover-slot-crash-comment" &&
+          ! -f "$FAKE_STATE/commented-phase-failed" ]]; then
+          touch "$FAKE_STATE/commented-phase-failed"
+          exit 96
+        fi
+        if [[ "$recovery_phase" == "audited" && "$FAKE_SCENARIO" == "recover-slot-crash-audit" &&
+          ! -f "$FAKE_STATE/audited-phase-failed" ]]; then
+          touch "$FAKE_STATE/audited-phase-failed"
+          exit 97
+        fi
+        printf '%s\n' "$recovery_phase" >"$FAKE_STATE/recovery-phase"
+        ;;
+      esac
     fi
-    printf '{"path":"%s"}\n' "$FAKE_STATE"
-    exit 0
-    ;;
+    previous="$argument"
+  done
+  exit 0
+  ;;
+audit)
+  if [[ "${2:-}" == "record" ]]; then
+    tool_name=""
+    issue_id=""
+    previous=""
+    for argument in "$@"; do
+      [[ "$previous" != "--tool-name" ]] || tool_name="$argument"
+      [[ "$previous" != "--issue-id" ]] || issue_id="$argument"
+      previous="$argument"
+    done
+    printf '{"kind":"tool_call","tool_name":"%s","issue_id":"%s"}\n' \
+      "$tool_name" "$issue_id" >>"$FAKE_STATE/interactions.jsonl"
+  fi
+  exit 0
+  ;;
+where)
+  if [[ "$FAKE_SCENARIO" == "recover-audit-query-error" ]]; then
+    exit 88
+  fi
+  printf '{"path":"%s"}\n' "$FAKE_STATE"
+  exit 0
+  ;;
 esac
 
 printf 'unexpected fake bd invocation: %s\n' "$*" >&2
