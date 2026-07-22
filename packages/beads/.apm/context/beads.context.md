@@ -3,16 +3,27 @@
 SCOPE
 MUST Use bd for persistent, multi-session, or multi-agent work tracking when
   the repo has `.beads/` (`bd where` succeeds).
+NOT Track tasks in markdown TODO lists — use bd issues instead.
 DEFAULT TaskCreate stays for single-session scratch lists; SpecKit artifacts
   (spec.md/plan.md) stay the source for WHAT to build — beads tracks execution
   state, not requirements.
 NOT `bd edit` — opens $EDITOR and blocks the agent; use `bd update` flags.
+
+QUICK REFERENCE
+  bd ready                # find available work
+  bd show <id>            # view issue details
+  bd update <id> --claim  # claim work (atomic)
+  bd close <id>           # complete work
+  bd prime                # refresh Beads context into session
 
 MEMORY
 DEFAULT `bd remember "insight" --key <slug>` for repo-scoped durable facts any
   agent or tool must see (gotchas, conventions, decisions); every memory is
   injected verbatim via bd prime each session — keep the set ≤30, prune stale
   keys with `bd forget` during session review.
+MUST Run `bd prime` when Beads context is missing or stale before issuing bd
+  commands; Codex 0.129.0+ loads it automatically via native hooks — use
+  `/hooks` in Codex to inspect or toggle them.
 DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
   stays in Claude auto-memory (see mempalace steering).
 
@@ -86,6 +97,10 @@ MUST End sessions that mutated beads with `bd dolt push` (issue data rides
   `refs/dolt/data`, NOT git commits; `git push` alone syncs nothing).
 NOT Routine `bd import` of issues.jsonl — it is upsert-only passive export;
   `bd dolt pull` is the sync path.
+DEFAULT Architecture: issues live in a local Dolt DB; sync uses
+  `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive
+  export only. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md
+  for details and anti-patterns.
 
 GITHUB MIRROR (only where beads mirror out to GitHub issues)
 MUST Mirror with `bd github push <ids>`, never by hand-creating the issue —

@@ -272,7 +272,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) issue-tracker conventions: the dependency-aware work DAG that agents use for persistent task tracking, atomic work claiming, and multi-agent coordination. Ships steering that scopes beads against SpecKit artifacts (requirements) and TaskCreate (single-session scratch) and fixes conventions for labels vs structured fields vs metadata, actor identity, claim etiquette, JSON envelope determinism, and Dolt sync. Ships a PreToolUse guard denying mutating `gh issue` commands in beads repos (task state lives in bd; issue reads stay allowed). Session-start wiring is native: run `bd setup claude --global` once (SessionStart bd prime injection) and `bd init --skip-hooks` per repo. Requires the bd CLI (gastownhall/beads >= 1.1.0); all surfaces are inert in repos without .beads/.",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "tags": [
         "beads",
         "issue-tracking",
@@ -1150,7 +1150,7 @@
     {
       "name": "orchestrate",
       "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, a read-only event-driven PR queue handoff with deterministic orchestrator/pr-shepherd ownership, and deterministic scripts (scope disjointness, agent discovery, queue-event resolution, conflict probe).",
-      "version": "3.3.0",
+      "version": "3.4.0",
       "tags": [
         "skill",
         "agent",
@@ -1185,7 +1185,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; optionally consumes release-queue-watch lifecycle and dispatch records with durable crash-replay receipts. All parts are inert in repos without .beads/.",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "tags": [
         "beads",
         "merge-queue",
