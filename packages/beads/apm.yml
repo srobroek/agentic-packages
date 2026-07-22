@@ -1,20 +1,19 @@
 name: beads
-version: 0.4.1
+version: 0.5.1
 description: >-
-  Organization policy for Beads (bd): persistent task scope, atomic claims,
-  field and metadata conventions, actor identity, lifecycle, gates, audit,
-  formulas, molecules, wisps, swarms, merge slots, JSON envelopes, and
-  authority-aware Dolt sync. Ships a PreToolUse guard denying mutating `gh
-  issue` commands in beads repos and a concise dual-runtime subagent claim and
-  handoff contract. The bd CLI owns `bd init`, `bd setup`, native Claude and
-  Codex lifecycle hooks, generated instruction blocks and skills, and the Git
-  hook bundle; this package does not render copies of those integrations.
-  Requires gastownhall/beads >= 1.1.0; policy surfaces are inert outside a
-  Beads workspace.
+  Beads (bd) conventions for persistent task DAGs, atomic claims, native reply
+  threads, decision records, ambiguity handling, actor identity, JSON envelopes,
+  and Dolt sync. Steering separates local comments from cross-boundary decisions
+  and harness wakes from persisted messages. A guard denies mutating `gh issue`
+  commands in Beads repositories. Global `bd setup` wires session start; `bd
+  init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and
+  activates only in repositories with `.beads/`.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
+targets:
+  - claude
+  - codex
 includes: auto
 category: project-lifecycle
 tags:

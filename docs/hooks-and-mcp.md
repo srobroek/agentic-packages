@@ -42,7 +42,7 @@ expecting the MCP runtime to be configured separately by the environment.
 | `mcp-package-version` | MCP server for package version discovery |
 | `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. |
-| `mcp-serena` | MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT. |
+| `mcp-serena` | MCP server package for Serena semantic code tools. The launcher resolves the Codex or Claude Code context from the process ancestry and can be overridden with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent mcp_servers declarations should use the shared semantic route instead. |
 | `mcp-tauri` | Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment. |
 <!-- END:mcp -->
 

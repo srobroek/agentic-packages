@@ -1,7 +1,7 @@
 {
   "name": "pr-shepherd",
-  "version": "0.6.0",
-  "description": "Cross-session PR shepherd backed by Beads. Discovers ready PRs through body backlinks, ignores drafts and release-please PRs, probes review, CI, and conflicts, serializes merges with the Beads merge slot, bounces failures into fix beads, and closes explicitly completing work beads only after verified landing and resolved blockers. Ships a dual-runtime skill, standalone agent, lifecycle steering, and merge probe. Requires gastownhall/beads >= 1.1.0 and gh; inert outside Beads repositories.",
+  "version": "0.11.1",
+  "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -11,6 +11,10 @@
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/beads"
+    },
+    {
+      "git": "srobroek/agentic-packages",
+      "path": "packages/release-queue-watch"
     }
   ]
 }
