@@ -28,6 +28,18 @@ waiter_id_for() {
   printf 'slot-1-waiter-%s\n' "${digest:0:12}"
 }
 
+native_holder_for() {
+  local holder="$1"
+  local generation="${2:-1}"
+  local lease_actor="${3:-actor-a}"
+  local waiter digest
+
+  waiter="$(waiter_id_for "$holder" "$generation")"
+  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" \
+    | git hash-object --stdin)"
+  printf 'pr-shepherd:%s\n' "$digest"
+}
+
 seed_waiter() {
   local holder="$1"
   local status="${2:-open}"
@@ -140,18 +152,21 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
       ;;
     slot-restart | slot-failure | land-restart | land-waiting | land-release-failure)
       if [[ "$FAKE_SCENARIO" == "slot-restart" ]]; then
-        printf '{"available":false,"holder":"stable-holder","id":"slot-1","waiters":null}\n'
+        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+          "$(native_holder_for stable-holder)"
       else
         printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
       fi
       ;;
     recover-slot*)
       if [[ -f "$FAKE_STATE/successor" ]]; then
-        printf '{"available":false,"holder":"successor","id":"slot-1","waiters":null}\n'
+        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+          "$(native_holder_for successor)"
       elif [[ -f "$FAKE_STATE/released" ]]; then
         printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
       else
-        printf '{"available":false,"holder":"dead-holder","id":"slot-1","waiters":null}\n'
+        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+          "$(native_holder_for dead-holder)"
       fi
       ;;
     recover-waiter*)
@@ -159,6 +174,14 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
         printf '{"available":false,"holder":"successor","id":"slot-1","waiters":null}\n'
       else
         printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+      fi
+      ;;
+    recover-claim-waiter*)
+      if [[ -f "$FAKE_STATE/released" ]]; then
+        printf '{"available":true,"holder":null,"id":"slot-1","waiters":null}\n'
+      else
+        printf '{"available":false,"holder":"%s","id":"slot-1","waiters":null}\n' \
+          "$(native_holder_for stable-holder 1 dead-actor)"
       fi
       ;;
     *)
@@ -169,6 +192,11 @@ if [[ "${1:-}" == "merge-slot" && "${2:-}" == "check" ]]; then
 fi
 
 if [[ "${1:-}" == "merge-slot" && "${2:-}" == "acquire" ]]; then
+  if [[ "$FAKE_SCENARIO" == "recover-claim-waiter-competitor-before-acquire" &&
+    "${BEADS_ACTOR:-}" == "actor-c" && ! -f "$FAKE_STATE/acquire-blocked" ]]; then
+    touch "$FAKE_STATE/acquire-blocked"
+    exit 1
+  fi
   if [[ "$FAKE_SCENARIO" == "slot-record-holder-race" &&
     ! -f "$FAKE_STATE/concurrent-holder" ]]; then
     seed_waiter successor in_progress
@@ -196,6 +224,25 @@ fi
 
 if [[ "${1:-}" == "merge-slot" && "${2:-}" == "release" ]]; then
   if [[ "$FAKE_SCENARIO" == "land-release-failure" ]]; then
+    exit 1
+  fi
+  requested_holder=""
+  previous=""
+  for argument in "$@"; do
+    [[ "$previous" != "--holder" ]] || requested_holder="$argument"
+    previous="$argument"
+  done
+  if [[ "$FAKE_SCENARIO" == "recover-claim-waiter-delayed-loser" &&
+    ! -f "$FAKE_STATE/winner-interleaved" ]]; then
+    dead_waiter="$(waiter_id_for stable-holder 1)"
+    printf 'closed\n' >"$WAITER_ROOT/$dead_waiter/status"
+    seed_waiter stable-holder in_progress "" 2 actor-c
+    printf '%s\n' "$(native_holder_for stable-holder 2 actor-c)" >"$FAKE_STATE/holder"
+    touch "$FAKE_STATE/acquired" "$FAKE_STATE/winner-interleaved"
+    exit 1
+  fi
+  if [[ -f "$FAKE_STATE/acquired" && ! -f "$FAKE_STATE/released" &&
+    "$requested_holder" != "$(<"$FAKE_STATE/holder")" ]]; then
     exit 1
   fi
   touch "$FAKE_STATE/released"

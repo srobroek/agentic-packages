@@ -97,16 +97,34 @@ run_contract actor-a release-slot stable-holder terminal
 
 run_contract actor-a acquire-slot takeover-holder 1 0
 [[ $rc -eq 0 ]] || fail "takeover fixture acquire failed: $output"
+dead_native_holder="$(bd merge-slot check --json | jq -er '.holder')"
 run_contract actor-b release-slot takeover-holder terminal
 [[ $rc -eq 2 ]] || fail "foreign actor released a live actor's slot: $output"
-[[ "$(bd merge-slot check --json | jq -r '.holder')" == takeover-holder ]] \
+[[ "$(bd merge-slot check --json | jq -r '.holder')" == "$dead_native_holder" ]] \
   || fail "foreign release changed the native holder"
 merge_bead="$(BEADS_ACTOR=actor-a bd create 'Dead integrator claim' \
   --labels agent:integrator --silent)"
 BEADS_ACTOR=actor-a bd update "$merge_bead" --claim >/dev/null
 run_contract actor-b recover-claim "$merge_bead" actor-a session-registry:dead takeover-holder
 [[ $rc -eq 0 ]] || fail "dead actor takeover failed: $output"
-assert_record "$slot_id" takeover-holder 1 in_progress actor-b actor-b
+assert_record "$slot_id" takeover-holder 1 closed actor-a actor-a
+assert_record "$slot_id" takeover-holder 2 in_progress actor-b actor-b
+successor_native_holder="$(bd merge-slot check --json | jq -er '.holder')"
+[[ "$successor_native_holder" != "$dead_native_holder" ]] \
+  || fail "successor reused the dead native holder token"
+set +e
+bd merge-slot release --holder "$dead_native_holder" >/dev/null 2>&1
+stale_release_rc=$?
+set -e
+[[ $stale_release_rc -ne 0 ]] || fail "delayed dead-token release succeeded"
+[[ "$(bd merge-slot check --json | jq -er '.holder')" == "$successor_native_holder" ]] \
+  || fail "delayed dead-token release changed successor ownership"
+winner_receipt="$(bd show "$merge_bead" --json | jq -er '.[0].metadata.recovery_key')"
+run_contract actor-c recover-claim "$merge_bead" actor-a session-registry:competitor takeover-holder
+[[ $rc -eq 2 ]] || fail "competing successor replaced the winner: $output"
+[[ "$(bd show "$merge_bead" --json | jq -er '.[0].metadata.recovery_key')" == "$winner_receipt" ]] \
+  || fail "competing successor overwrote the winner receipt"
+assert_record "$slot_id" takeover-holder 2 in_progress actor-b actor-b
 run_contract actor-b acquire-slot takeover-holder 1 0
 [[ $rc -eq 0 ]] || fail "successor could not resume recovered waiter: $output"
 run_contract actor-b release-slot takeover-holder terminal

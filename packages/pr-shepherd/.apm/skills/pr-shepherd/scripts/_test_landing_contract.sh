@@ -72,6 +72,16 @@ assert_file() {
   fi
 }
 
+assert_not_file() {
+  local file="$1"
+  local message="$2"
+  tests=$((tests + 1))
+  if [[ -e "$file" ]]; then
+    printf 'not ok %s: unexpected %s\n' "$message" "$file" >&2
+    failures=$((failures + 1))
+  fi
+}
+
 assert_not_contains_file() {
   local needle="$1"
   local file="$2"
@@ -104,6 +114,19 @@ waiter_path() {
 
   digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
   printf '%s/waiters/slot-1-waiter-%s\n' "$state" "${digest:0:12}"
+}
+
+native_holder_for() {
+  local holder="$1"
+  local generation="$2"
+  local lease_actor="$3"
+  local waiter digest
+
+  waiter="$(waiter_path "$holder" "$generation")"
+  waiter="${waiter##*/}"
+  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" \
+    | sha1sum | awk '{print $1}')"
+  printf 'pr-shepherd:%s\n' "$digest"
 }
 
 new_state stale-run
@@ -276,29 +299,73 @@ actor="actor-b"
 run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
 assert_eq 0 "$last_rc" "evidence-gated dead claim transfers the waiter lease"
 takeover_waiter="$(waiter_path stable-holder)"
+assert_eq closed "$(<"$takeover_waiter/status")" \
+  "takeover closes the dead waiter generation"
+takeover_waiter="$(waiter_path stable-holder 2)"
 assert_eq actor-b "$(<"$takeover_waiter/lease-actor")" \
-  "takeover persistently rewrites the lease actor"
+  "takeover creates a successor-leased generation"
 assert_eq actor-b "$(<"$takeover_waiter/assignee")" \
-  "takeover atomically assigns the successor"
+  "successor atomically claims its fresh generation"
 run_contract acquire-slot stable-holder 1 0
 assert_eq 0 "$last_rc" "successor reacquires after durable dead-claim recovery"
 run_contract release-slot stable-holder terminal
 assert_eq 0 "$last_rc" "successor terminally releases the recovered waiter"
 
-new_state recover-claim-waiter-crash-transfer
-scenario=recover-claim-waiter-crash-transfer
+new_state recover-claim-waiter-competitor-before-acquire
+scenario=recover-claim-waiter-competitor-before-acquire
+actor="actor-c"
+run_contract recover-claim merge-1 dead-actor session-registry:winner stable-holder
+assert_eq 2 "$last_rc" "blocked first successor leaves its fresh generation retryable"
+assert_waiter_status stable-holder open "blocked successor keeps generation two queued" 2
+queued_successor="$(waiter_path stable-holder 2)"
+assert_eq actor-c "$(<"$queued_successor/lease-actor")" \
+  "queued successor owns the generation lease"
 actor="actor-b"
-run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
-assert_eq 2 "$last_rc" "crash after atomic waiter transfer is surfaced"
-assert_eq prepared "$(<"$state/recovery-phase")" \
-  "waiter takeover retains its prepared recovery receipt"
-run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
-assert_eq 0 "$last_rc" "same successor resumes the durable waiter transfer"
+run_contract recover-claim merge-1 dead-actor session-registry:loser stable-holder
+assert_eq 2 "$last_rc" "competitor cannot take a queued successor generation"
+assert_eq actor-c "$(<"$queued_successor/lease-actor")" \
+  "loser leaves the queued successor lease unchanged"
+assert_not_file "$state/recovery-key" "competitors before acquire record no recovery receipt"
+assert_waiter_status stable-holder closed "first successor closes the dead generation before queueing" 1
+assert_not_file "$state/claim-released" "competitors before acquire leave the merge claim untouched"
+release_calls="$(grep -c -- '^merge-slot release' "$state/bd.log" || true)"
+assert_eq 1 "$release_calls" "later competitor does not repeat dead-token release"
+
+new_state recover-claim-waiter-delayed-loser
+scenario=recover-claim-waiter-delayed-loser
+actor="actor-b"
+run_contract recover-claim merge-1 dead-actor session-registry:loser stable-holder
+assert_eq 2 "$last_rc" "delayed loser cannot release a newly acquired successor token"
+winner_waiter="$(waiter_path stable-holder 2)"
+assert_eq actor-c "$(<"$winner_waiter/lease-actor")" \
+  "delayed loser preserves the winner lease"
+assert_eq in_progress "$(<"$winner_waiter/status")" \
+  "delayed loser preserves the winner waiter state"
+assert_not_contains_file "recovery_key=" "$state/bd.log" \
+  "delayed loser records no recovery receipt"
+assert_waiter_status stable-holder closed "interleaved winner closes the dead generation" 1
+assert_not_file "$state/claim-released" "delayed loser leaves the merge claim untouched"
+assert_eq "$(native_holder_for stable-holder 2 actor-c)" "$(<"$state/holder")" \
+  "delayed loser preserves the winner native holder token"
+
+new_state recover-claim-waiter-after-release
+scenario=recover-claim-waiter-after-release
+actor="actor-c"
+run_contract recover-claim merge-1 dead-actor session-registry:winner stable-holder
+assert_eq 0 "$last_rc" "first successor completes recovery after dead release"
+winner_receipt="$(<"$state/recovery-key")"
+actor="actor-b"
+run_contract recover-claim merge-1 dead-actor session-registry:loser stable-holder
+assert_eq 2 "$last_rc" "later competitor cannot replace the winning successor"
+assert_eq "$winner_receipt" "$(<"$state/recovery-key")" \
+  "later competitor preserves the winner receipt"
+winner_waiter="$(waiter_path stable-holder 2)"
+assert_eq actor-c "$(<"$winner_waiter/lease-actor")" \
+  "later competitor preserves the winner generation"
+assert_eq actor-c "$(<"$state/claim-assignee")" \
+  "later competitor preserves the winner merge claim"
 assert_eq complete "$(<"$state/recovery-phase")" \
-  "resumed waiter takeover completes its recovery receipt"
-takeover_waiter="$(waiter_path stable-holder)"
-assert_eq actor-b "$(<"$takeover_waiter/lease-actor")" \
-  "resumed takeover keeps the successor lease"
+  "later competitor preserves the completed winner receipt"
 
 new_state slot-link-crash
 scenario=slot-link-crash

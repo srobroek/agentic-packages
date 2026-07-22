@@ -71,6 +71,21 @@ waiter_id() {
   printf '%s-waiter-%s\n' "$slot_id" "${digest:0:12}"
 }
 
+native_holder_token() {
+  local holder="$1"
+  local record="$2"
+  local waiter generation lease digest
+
+  waiter="$(printf '%s' "$record" | jq -er '.id')" || return "$QUERY_ERROR"
+  generation="$(printf '%s' "$record" | jq -er '.metadata.generation')" \
+    || return "$QUERY_ERROR"
+  lease="$(printf '%s' "$record" | jq -er '.metadata.lease_actor | select(length > 0)')" \
+    || return "$QUERY_ERROR"
+  digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease" "$waiter" \
+    | git hash-object --stdin)" || return "$QUERY_ERROR"
+  printf 'pr-shepherd:%s\n' "$digest"
+}
+
 current_actor() {
   [[ -n "${BEADS_ACTOR:-}" ]] || fail "BEADS_ACTOR is required for merge-slot waiters"
   printf '%s\n' "$BEADS_ACTOR"
@@ -432,7 +447,7 @@ acquire_slot() {
   local interval="${3:-1}"
   local protection="${4:-handoff}"
   local waiter_mode="${5:-resume}"
-  local state slot_id actual first_waiter first_waiter_id waiter rc attempt
+  local state slot_id actual first_waiter first_waiter_id waiter record native_holder rc attempt
 
   [[ -n "$holder" ]] || fail "slot holder is required"
   [[ "$attempts" =~ ^[1-9][0-9]*$ ]] || fail "attempts must be a positive integer"
@@ -447,6 +462,10 @@ acquire_slot() {
   slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
   [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
   waiter="$(ensure_waiter_record "$slot_id" "$holder" "$waiter_mode")"
+  record="$(waiter_record_by_id "$waiter" "$slot_id" "$holder")" \
+    || fail "cannot validate waiter before native slot entry"
+  native_holder="$(native_holder_token "$holder" "$record")" \
+    || fail "cannot derive native holder token"
   attempt=1
   while [[ $attempt -le $attempts ]]; do
     if [[ $attempt -gt 1 && "$interval" -gt 0 ]]; then
@@ -454,7 +473,7 @@ acquire_slot() {
     fi
     state="$(slot_state)" || fail "cannot inspect merge slot"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot state"
-    if [[ "$actual" == "$holder" ]]; then
+    if [[ "$actual" == "$native_holder" ]]; then
       claim_waiter_record "$waiter" "$slot_id" "$holder"
       arm_slot_release "$holder"
       [[ "$protection" == "armed" ]] || disarm_slot_release
@@ -471,7 +490,7 @@ acquire_slot() {
         [[ "$first_waiter_id" == "$waiter" && "$first_waiter" == "$holder" ]] \
           || fail "waiter $waiter lost queue priority during claim"
         set +e
-        bd merge-slot acquire --holder "$holder" >/dev/null
+        bd merge-slot acquire --holder "$native_holder" >/dev/null
         rc=$?
         set -e
         if [[ $rc -eq 0 ]]; then
@@ -496,7 +515,7 @@ acquire_slot() {
 release_slot() {
   local holder="$1"
   local disposition="${2:-terminal}"
-  local state slot_id actual already_available waiter_rc
+  local state slot_id actual already_available waiter_rc record native_holder
 
   [[ "$disposition" == "retryable" || "$disposition" == "terminal" ]] \
     || fail "slot release disposition must be retryable or terminal"
@@ -516,10 +535,15 @@ release_slot() {
   [[ -n "$slot_id" ]] || return "$EXIT_UNKNOWN"
   if printf '%s' "$state" | slot_available; then
     already_available=true
-  elif [[ "$actual" != "$holder" ]]; then
-    printf 'SLOT_FOREIGN expected=%s actual=%s\n' "$holder" "${actual:-unknown}" >&2
-    return "$EXIT_FAILED"
   else
+    record="$(active_waiter_record "$slot_id" "$holder")" \
+      || fail "cannot find active waiter for native slot release"
+    native_holder="$(native_holder_token "$holder" "$record")" \
+      || fail "cannot derive native holder token"
+    if [[ "$actual" != "$native_holder" ]]; then
+      printf 'SLOT_FOREIGN expected=%s actual=%s\n' "$native_holder" "${actual:-unknown}" >&2
+      return "$EXIT_FAILED"
+    fi
     validate_waiter_owner "$slot_id" "$holder"
     if [[ "$disposition" == "retryable" ]]; then
       if release_waiter_record "$slot_id" "$holder" retryable true \
@@ -530,7 +554,7 @@ release_slot() {
       fi
       [[ $waiter_rc -eq 0 ]] || return "$waiter_rc"
     fi
-    if bd merge-slot release --holder "$holder" >/dev/null; then
+    if bd merge-slot release --holder "$native_holder" >/dev/null; then
       already_available=false
     else
       printf 'SLOT_RELEASE_FAILED holder=%s\n' "$holder" >&2
@@ -1246,7 +1270,7 @@ recover_slot() {
   local merge_bead="$1"
   local dead_holder="$2"
   local evidence="$3"
-  local key prepared phase is_new phase_rank state slot_id actual
+  local key prepared phase is_new phase_rank state slot_id actual record native_holder query_rc
 
   [[ -n "$evidence" ]] || fail "dead-holder recovery requires an evidence reference"
   key="$(recovery_key slot "$dead_holder" "$evidence")" || fail "cannot derive recovery key"
@@ -1258,10 +1282,22 @@ recover_slot() {
     slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
     [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
-    if [[ "$actual" == "$dead_holder" ]]; then
-      bd merge-slot release --holder "$dead_holder" >/dev/null || fail "cannot release dead holder"
-    elif [[ "$is_new" == "true" ]]; then
-      fail "slot holder changed (expected $dead_holder, found ${actual:-none})"
+    if record="$(active_waiter_record "$slot_id" "$dead_holder")"; then
+      query_rc=$QUERY_FOUND
+    else
+      query_rc=$?
+    fi
+    if [[ $query_rc -eq $QUERY_FOUND ]]; then
+      native_holder="$(native_holder_token "$dead_holder" "$record")" \
+        || fail "cannot derive dead native holder token"
+      if [[ "$actual" == "$native_holder" ]]; then
+        bd merge-slot release --holder "$native_holder" >/dev/null \
+          || fail "cannot release dead holder"
+      elif [[ "$is_new" == "true" ]]; then
+        fail "slot holder changed (expected $native_holder, found ${actual:-none})"
+      fi
+    elif [[ $query_rc -ne $QUERY_ABSENT || "$is_new" == "true" ]]; then
+      fail "cannot find dead holder waiter generation"
     fi
     force_close_waiter_record "$slot_id" "$dead_holder" false "recovered dead slot holder"
   fi
@@ -1274,7 +1310,7 @@ recover_waiter() {
   local merge_bead="$1"
   local dead_waiter="$2"
   local evidence="$3"
-  local key prepared phase phase_rank state slot_id actual
+  local key prepared phase phase_rank state slot_id actual record native_holder query_rc
 
   [[ -n "$evidence" ]] || fail "dead-waiter recovery requires an evidence reference"
   key="$(recovery_key waiter "$dead_waiter" "$evidence")" || fail "cannot derive recovery key"
@@ -1286,7 +1322,18 @@ recover_waiter() {
     slot_id="$(printf '%s' "$state" | jq -r '.id // empty')" || fail "invalid merge-slot id"
     actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
     [[ -n "$slot_id" ]] || fail "merge-slot id is missing"
-    [[ "$actual" != "$dead_waiter" ]] || fail "dead waiter currently holds the slot"
+    if record="$(active_waiter_record "$slot_id" "$dead_waiter")"; then
+      query_rc=$QUERY_FOUND
+    else
+      query_rc=$?
+    fi
+    if [[ $query_rc -eq $QUERY_FOUND ]]; then
+      native_holder="$(native_holder_token "$dead_waiter" "$record")" \
+        || fail "cannot derive dead waiter native holder token"
+      [[ "$actual" != "$native_holder" ]] || fail "dead waiter currently holds the slot"
+    elif [[ $query_rc -ne $QUERY_ABSENT ]]; then
+      fail "cannot find dead waiter generation"
+    fi
     force_close_waiter_record "$slot_id" "$dead_waiter" true "recovered dead queued waiter"
   fi
   finish_recovery "$merge_bead" "$key" waiter "$dead_waiter" "$evidence" "$phase"
@@ -1299,21 +1346,63 @@ recover_claim() {
   local dead_actor="$2"
   local evidence="$3"
   local waiter_holder="${4:-}"
-  local subject key prepared phase is_new phase_rank claim actual status successor_state
-  local successor state slot_id record waiter lease assignee waiter_status
+  local subject key prepared phase claim actual status successor_state receipt
+  local successor state slot_id record lease native_holder recovery_holder waiter_mode
 
   [[ -n "$evidence" ]] || fail "dead-claim recovery requires an evidence reference"
+  successor="$(current_actor)"
+  [[ "$successor" != "$dead_actor" ]] || fail "successor must differ from dead actor"
   subject="$dead_actor"
-  [[ -z "$waiter_holder" ]] || subject="$dead_actor|$waiter_holder"
-  if [[ -n "$waiter_holder" ]]; then
-    successor="$(current_actor)"
-    [[ "$successor" != "$dead_actor" ]] || fail "successor must differ from dead actor"
-  fi
+  [[ -z "$waiter_holder" ]] || subject="$dead_actor|$waiter_holder|$successor"
   key="$(recovery_key claim "$subject" "$evidence")" || fail "cannot derive recovery key"
+  receipt="$(bd show "$merge_bead" --json | jq -r \
+    '.[0].metadata | [(.recovery_key // ""), (.recovery_phase // "")] | join("|")')" \
+    || fail "cannot inspect recovery receipt"
+  if [[ "$receipt" == "$key|complete" ]]; then
+    printf 'CLAIM_RECOVERED merge=%s holder=%s waiter=%s evidence=%s receipt=%s\n' \
+      "$merge_bead" "$dead_actor" "${waiter_holder:-none}" "$evidence" "$key"
+    return 0
+  fi
+
+  if [[ -n "$waiter_holder" ]]; then
+    state="$(slot_state)" || fail "cannot inspect merge slot for waiter recovery"
+    slot_id="$(printf '%s' "$state" | jq -er '.id // empty')" \
+      || fail "merge-slot id is missing"
+    record="$(active_waiter_record "$slot_id" "$waiter_holder")" \
+      || fail "cannot find current open waiter attempt for takeover"
+    waiter_link_state "$record" "$slot_id" \
+      || fail "waiter has invalid parent linkage"
+    lease="$(printf '%s' "$record" | jq -r '.metadata.lease_actor // ""')"
+    native_holder="$(native_holder_token "$waiter_holder" "$record")" \
+      || fail "cannot derive native holder token"
+    actual="$(printf '%s' "$state" | slot_holder)" || fail "invalid merge-slot holder"
+    if [[ "$lease" == "$dead_actor" ]]; then
+      if [[ "$actual" == "$native_holder" ]]; then
+        bd merge-slot release --holder "$native_holder" >/dev/null \
+          || fail "cannot release dead native holder"
+      elif [[ -n "$actual" ]]; then
+        fail "slot holder changed before dead-owner recovery"
+      fi
+      force_close_waiter_record "$slot_id" "$waiter_holder" true \
+        "recovered dead waiter generation"
+      waiter_mode=requeue
+      acquire_slot "$waiter_holder" 1 0 handoff "$waiter_mode" \
+        || fail "cannot acquire fresh successor waiter generation"
+    elif [[ "$lease" == "$successor" ]]; then
+      [[ "$actual" == "$native_holder" ]] \
+        || fail "successor waiter does not own its native slot token"
+    else
+      fail "waiter recovery is leased to another successor"
+    fi
+  else
+    recovery_holder="pr-shepherd:claim-recovery:$merge_bead:$dead_actor"
+    acquire_slot "$recovery_holder" 1 0 handoff resume \
+      || fail "cannot acquire dead-claim recovery slot"
+  fi
+
   prepared="$(prepare_recovery "$merge_bead" "$key" claim "$subject" "$evidence")"
-  IFS='|' read -r phase is_new <<<"$prepared"
-  phase_rank="$(recovery_phase_rank "$phase")"
-  if [[ $phase_rank -lt 2 ]]; then
+  IFS='|' read -r phase _ <<<"$prepared"
+  if [[ "$(recovery_phase_rank "$phase")" -lt 2 ]]; then
     claim="$(bd show "$merge_bead" --json | jq -ce \
       '.[0] | {assignee: (.assignee // ""), status: (.status // ""), labels: (.labels // [])}')" \
       || fail "cannot inspect merge claim"
@@ -1322,64 +1411,31 @@ recover_claim() {
     if [[ "$actual" == "$dead_actor" ]]; then
       bd update "$merge_bead" --assignee "" --status open >/dev/null \
         || fail "cannot release dead claim"
-      if [[ -n "$waiter_holder" ]]; then
-        BEADS_ACTOR="$successor" bd update "$merge_bead" --claim >/dev/null \
-          || fail "cannot atomically reclaim merge bead for waiter successor"
-      fi
-    elif [[ "$is_new" == "true" ]]; then
-      fail "claim holder changed (expected $dead_actor, found ${actual:-none})"
+      BEADS_ACTOR="$successor" bd update "$merge_bead" --claim >/dev/null \
+        || fail "cannot atomically reclaim merge bead for successor"
     elif [[ -n "$actual" ]]; then
       successor_state="$(printf '%s' "$claim" | jq -r \
         'if .status == "in_progress" and any(.labels[]?; . == "state:working")
          then "working" else "unsafe" end')"
-      [[ "$actual" != "$dead_actor" && "$successor_state" == "working" ]] \
+      [[ "$actual" == "$successor" && "$successor_state" == "working" ]] \
         || fail "claim changed to unsafe successor state (holder=${actual:-none}, status=${status:-none})"
-      [[ -z "$waiter_holder" || "$actual" == "$successor" ]] \
-        || fail "waiter recovery was resumed by a different successor"
     elif [[ "$status" != "open" ]]; then
       fail "unowned claim has unsafe resumed status ${status:-none}"
-    elif [[ -n "$waiter_holder" ]]; then
+    else
       BEADS_ACTOR="$successor" bd update "$merge_bead" --claim >/dev/null \
         || fail "cannot atomically resume merge-bead reclaim"
     fi
-    if [[ -n "$waiter_holder" ]]; then
-      claim="$(bd show "$merge_bead" --json | jq -ce \
-        '.[0] | {assignee: (.assignee // ""), status: (.status // "")}')" \
-        || fail "cannot verify merge-bead reclaim"
-      [[ "$(printf '%s' "$claim" | jq -r '.status + "|" + .assignee')" == "in_progress|$successor" ]] || fail "merge-bead reclaim did not persist"
-      state="$(slot_state)" || fail "cannot inspect merge slot for waiter recovery"
-      slot_id="$(printf '%s' "$state" | jq -er '.id // empty')" \
-        || fail "merge-slot id is missing"
-      record="$(active_waiter_record "$slot_id" "$waiter_holder")" \
-        || fail "cannot find current open waiter attempt for takeover"
-      waiter="$(printf '%s' "$record" | jq -er '.id')" || fail "invalid waiter identity"
-      record="$(waiter_record_by_id "$waiter" "$slot_id" "$waiter_holder")" \
-        || fail "cannot validate waiter takeover target"
-      waiter_link_state "$record" "$slot_id" \
-        || fail "waiter $waiter has invalid parent linkage"
-      lease="$(printf '%s' "$record" | jq -r '.metadata.lease_actor // ""')"
-      assignee="$(printf '%s' "$record" | jq -r '.assignee // ""')"
-      waiter_status="$(printf '%s' "$record" | jq -r '.status')"
-      if [[ "$lease" == "$dead_actor" &&
-        ("$assignee" == "$dead_actor" || -z "$assignee") &&
-        ("$waiter_status" == "open" || "$waiter_status" == "in_progress") ]]; then
-        bd update "$waiter" --assignee "$successor" --status in_progress \
-          --set-metadata "lease_actor=$successor" >/dev/null \
-          || fail "cannot atomically transfer waiter lease"
-      elif [[ "$lease" == "$successor" && "$assignee" == "$successor" &&
-        "$waiter_status" == "in_progress" ]]; then
-        :
-      else
-        fail "waiter $waiter changed to an unsafe lease state"
-      fi
-      record="$(waiter_record_by_id "$waiter" "$slot_id" "$waiter_holder")" \
-        || fail "cannot verify waiter lease transfer"
-      [[ "$(printf '%s' "$record" | jq -r \
-        '.status + "|" + (.assignee // "") + "|" + (.metadata.lease_actor // "")')" == "in_progress|$successor|$successor" ]] \
-        || fail "waiter lease transfer did not persist"
-    fi
+    claim="$(bd show "$merge_bead" --json | jq -ce \
+      '.[0] | {assignee: (.assignee // ""), status: (.status // "")}')" \
+      || fail "cannot verify merge-bead reclaim"
+    [[ "$(printf '%s' "$claim" | jq -r '.status + "|" + .assignee')" == "in_progress|$successor" ]] \
+      || fail "merge-bead reclaim did not persist"
   fi
   finish_recovery "$merge_bead" "$key" claim "$subject" "$evidence" "$phase"
+  if [[ -z "$waiter_holder" ]]; then
+    release_slot "$recovery_holder" terminal >/dev/null \
+      || fail "cannot release dead-claim recovery slot"
+  fi
   printf 'CLAIM_RECOVERED merge=%s holder=%s waiter=%s evidence=%s receipt=%s\n' \
     "$merge_bead" "$dead_actor" "${waiter_holder:-none}" "$evidence" "$key"
 }

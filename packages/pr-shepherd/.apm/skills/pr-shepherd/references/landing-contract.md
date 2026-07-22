@@ -80,9 +80,10 @@ parent, malformed identity, or unlinked queue record fails closed.
 
 Open and claimed valid records form the queue. Eligibility is the first record
 by `created_at`, then id. The leased actor claims the record and rechecks
-priority before calling atomic `bd merge-slot acquire`; a foreign actor using
-the same holder is rejected before slot entry. The script never calls
-`acquire --wait` and never rewrites a shared waiter collection.
+priority before calling atomic `bd merge-slot acquire`. The native holder token
+binds the queue holder, generation, waiter id, and actor lease. A foreign actor
+using the same queue holder is rejected before slot entry. The script never
+calls `acquire --wait` and never rewrites a shared waiter collection.
 
 Pending, stacked, queued, and exit-10 outcomes release the native slot while
 keeping the same generation open and unassigned for its leased actor. Terminal
@@ -107,10 +108,11 @@ scripts/landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-
 ```
 
 Each command refuses unsafe changed ownership and records a comment plus audit
-event. With `waiter-holder`, claim recovery atomically transfers the current
-open attempt's assignee and lease to `BEADS_ACTOR`; it is the only successor
-takeover path. Waiter recovery finds and closes the current open generation and
-never mutates another queue entry.
+event. With `waiter-holder`, claim recovery releases only the dead generation's
+native holder token, closes that generation, and lets one successor atomically
+acquire a fresh generation. A delayed competitor cannot release the successor
+token or replace its waiter and recovery receipt. Waiter recovery finds and
+closes the current open generation and never mutates another queue entry.
 If a process died after GitHub merged, rerunning `land` resumes from the remote
 merge receipt and repeats final-base proof without another merge attempt.
 

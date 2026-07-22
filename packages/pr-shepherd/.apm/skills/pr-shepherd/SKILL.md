@@ -65,7 +65,7 @@ MUST Release every merge-bead claim not closed this pass. A persisted stable
   waiter may survive retryable exit 10, pending, or stacked work. Keep that
   generation open for the same actor. Close it only for a terminal disposition;
   use explicit requeue for a later generation or evidence-gated recovery to
-  transfer a dead actor's lease.
+  replace a dead actor's generation.
 MUST Keep `pr_base` separate from `landing_base`. A stacked GitHub `MERGED`
   state is a hold, not landing proof, until commit ancestry or exact content is
   visible on `landing_base`.
