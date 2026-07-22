@@ -35,4 +35,47 @@ ${XDG_STATE_HOME:-$HOME/.local/state}/release-queue-watch/OWNER--REPO
 
 `@octokit/webhooks` verifies `X-Hub-Signature-256` before queue mutation. Pull-request events update queue identity immediately. Check, status, and workflow events request a debounced Octokit REST reconciliation.
 
-The runtime emits a `dispatch` record only when a PR is non-draft, has a clean GitHub merge state, and has passing observed checks. It does not mutate GitHub.
+The runtime emits a `dispatch` record only when a PR is non-draft, has a clean GitHub merge state, and has passing observed checks. Existing `dispatch`, `watcher-active`, `reconcile-error`, and `webhook-error` record shapes remain unchanged.
+
+Pull-request state changes emit one `pr-lifecycle` JSON record:
+
+```json
+{
+  "type": "pr-lifecycle",
+  "transition": "updated",
+  "source": "webhook",
+  "lifecycleKey": "owner/repo#42#abc123#updated#2026-07-21T01:00:00Z#f2d7349b675ea3c1",
+  "pullRequest": {
+    "repository": "owner/repo",
+    "number": 42,
+    "title": "Ready change",
+    "headSha": "abc123",
+    "baseRef": "main",
+    "labels": ["priority:high"],
+    "priority": 1,
+    "draft": false,
+    "mergeable": null,
+    "checks": "pending",
+    "createdAt": "2026-07-21T00:00:00Z",
+    "updatedAt": "2026-07-21T01:00:00Z",
+    "state": "blocked",
+    "activeSince": null
+  },
+  "deliveryId": "github-delivery-id",
+  "webhookAction": "synchronize"
+}
+```
+
+| Transition | Signed webhook source | REST reconciliation fallback |
+|---|---|---|
+| `opened` | `opened` or `reopened` | Discovers an open PR absent from local state |
+| `updated` | Any non-close PR action other than open/reopen | Detects changed head, metadata, mergeability, or checks |
+| `failed` | Emitted after the check event triggers REST reconciliation | Checks change to `fail` |
+| `merged` | `closed` with GitHub `merged=true` | Not inferred from absence |
+| `closed` | `closed` with GitHub `merged=false` | A tracked PR disappears from the open-PR list |
+
+Webhook records include `deliveryId` and `webhookAction`. Reconciliation records use `source=reconciliation`; failure and absence records also include a `reason`. A reconciliation-only close is not proof of merge, so consumers revalidate the PR through GitHub before mutating state.
+
+`lifecycleKey` is deterministic across webhook and REST sources. Treat it as an opaque value: its final fingerprint covers the emitted PR state and the exact observed CI signals, so a new CI attempt gets a new key even when GitHub leaves the PR's `updated_at` timestamp unchanged. The runtime suppresses a repeated key within the process in addition to delivery-id rejection and semantic debounce. Consumers persist the key when they need restart-safe dedupe.
+
+Initial REST reconciliation can emit lifecycle and dispatch records before `watcher-active`. Every record is read-only input: the runtime does not modify GitHub or Beads.
