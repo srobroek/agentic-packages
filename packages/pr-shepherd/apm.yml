@@ -26,5 +26,5 @@ tags:
   - multi-agent
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/beads#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/beads#>=0.4.2 <1.0.0
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.5.0 <1.0.0
