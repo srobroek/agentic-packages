@@ -1,12 +1,13 @@
 name: steering-git-workflow
-version: 2.2.0
+version: 2.3.0
 description: >-
   Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge
-  flags, and pre-push verification. Replaces the retired commit-push-* skills
-  and git nudge hooks.
+  flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a
+  dual-runtime PreToolUse blocker for non-draft or unlinked PR creation.
+  Replaces the retired commit-push-* skills and git nudge hooks.
 author: Sjors Robroek
 license: Apache-2.0
-type: instructions
+type: hybrid
 target: all
 includes: auto
 category: steering

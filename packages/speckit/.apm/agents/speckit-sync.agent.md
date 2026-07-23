@@ -1,6 +1,6 @@
 ---
 name: speckit-sync
-description: "Audits active SpecKit artifacts for implementation drift, inter-spec conflicts, or both; spawn with scope: drift, conflicts, or both."
+description: "Audits SpecKit artifacts with Serena semantic tools when available; spawn with scope: drift, conflicts, or both."
 x-lint:
   allow: [W6, W9]
   reason: "the dual-scope agent keeps each standalone audit contract explicit"

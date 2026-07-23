@@ -18,6 +18,7 @@ Usage:
 Exit codes: 0 disjoint (safe to claim), 1 conflict (conflicting beads on
 stdout), 2 usage/bd error.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,7 +54,9 @@ def _scopes_overlap(a: list[str], b: list[str]) -> bool:
 
 def _bd_json(bd: str, *args: str) -> object:
     proc = subprocess.run(
-        [bd, *args, "--json"], capture_output=True, text=True,
+        [bd, *args, "--json"],
+        capture_output=True,
+        text=True,
         env={**os.environ, "BD_JSON_ENVELOPE": ""},
     )
     if proc.returncode != 0:
@@ -109,7 +112,9 @@ def check(bd: str, candidate: str, epic: str | None) -> int:
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="scope-check.py", description=__doc__)
     p.add_argument("--candidate", required=True, help="bead id about to be claimed")
-    p.add_argument("--epic", help="restrict the in-flight sweep to one run epic's children")
+    p.add_argument(
+        "--epic", help="restrict the in-flight sweep to one run epic's children"
+    )
     p.add_argument("--bd", default="bd", help="bd binary (default: from PATH)")
     args = p.parse_args(argv)
     sys.exit(check(args.bd, args.candidate, args.epic))

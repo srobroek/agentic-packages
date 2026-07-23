@@ -79,3 +79,36 @@ Webhook records include `deliveryId` and `webhookAction`. Reconciliation records
 `lifecycleKey` is deterministic across webhook and REST sources. Treat it as an opaque value: its final fingerprint covers the emitted PR state and the exact observed CI signals, so a new CI attempt gets a new key even when GitHub leaves the PR's `updated_at` timestamp unchanged. The runtime suppresses a repeated key within the process in addition to delivery-id rejection and semantic debounce. Consumers persist the key when they need restart-safe dedupe.
 
 Initial REST reconciliation can emit lifecycle and dispatch records before `watcher-active`. Every record is read-only input: the runtime does not modify GitHub or Beads.
+
+## Advisory wake dispatcher
+
+`src/wake-dispatcher.js` exports `AdvisoryWakeDispatcher` for supervisors that
+run the watcher and an integrator in the same process. Pass the dispatcher to
+`startReleaseQueueRuntime` as `wakeDispatcher`; the runtime keeps its stdout and
+stderr records unchanged. Shutdown stops new reconciliation, closes the webhook
+receiver, awaits in-flight reconciliation, then drains pending wakes so no
+producer can publish after the final drain.
+
+The dispatcher accepts adapters for the orchestrate and pr-shepherd resolvers.
+It sends a record to the shepherd resolver only when the orchestrate adapter
+returns `status=unmatched`. Duplicate, informational, ambiguous, and invalid
+orchestrate results never fall through. The selected wake callback receives the
+exact repository, PR number, head SHA, event identity, target id, and resolver
+`requiredMetadata`. That callback persists the receipt and wakes the target;
+the watcher does neither operation itself.
+
+Calls to `enqueue`, including records parsed through `enqueueLine`, run one at a
+time in input order. Malformed NDJSON and resolver failures call `onFallback`
+without invoking either consumer. A rejected wake leaves that record failed,
+then releases the queue so a later durable replay can proceed.
+
+Consumers process the NDJSON stream serially through durable Beads receipts.
+An exact active orchestrate node has routing precedence. Only records unmatched
+to orchestrate may be offered once to pr-shepherd; never fan one record to both
+integrators. Either consumer revalidates GitHub before acting, and only the
+selected integrator may acquire `bd merge-slot`.
+
+Start through `pnpm --silent start` when stdout is machine-consumed. Lifecycle,
+dispatch, and `watcher-active` records use stdout. `webhook-error` and
+`reconcile-error` records use stderr; the process supervisor must parse both
+streams and trigger the documented fallback on an error record or process exit.

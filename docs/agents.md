@@ -9,10 +9,16 @@ and TOML for Codex. Generic raw and semantic Codex profiles each have their own
 `agent-*` package; there is no mega-package containing every Codex role.
 
 Every agent-bearing package owns `.apm/agent-models.yml`. APM 0.26 drops model
-metadata when it transforms an agent to Codex TOML, so a shared post-deploy
-injector reads those distributed mappings and restores `model` and
-`model_reasoning_effort`. The consuming project owns the lifecycle trigger
-because APM does not discover lifecycle blocks from dependency packages.
+metadata when it transforms an agent to Codex TOML. The package lifecycle
+handles that limitation:
+
+- The post-deploy injector restores `model` and `model_reasoning_effort`.
+- The consumer owns the lifecycle trigger because APM does not discover
+  lifecycle blocks from dependencies.
+- The strict check requires every portable source and deployed Codex profile
+  to resolve to a complete mapping.
+- Wrapper packages map the external agents they install. A consumer that
+  installs an external agent directly supplies `.apm/agent-models.yml`.
 
 Use the parent workflow package or explicitly install a standalone profile.
 APM 0.26 honors package/dependency targets, although an explicit direct install

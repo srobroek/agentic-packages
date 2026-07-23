@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.0](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.2.0...steering-git-workflow--v2.3.0) (2026-07-22)
+
+
+### Features
+
+* make Codex and Claude APM integration target-aware ([#643](https://github.com/srobroek/agentic-packages/issues/643)) ([83fe64b](https://github.com/srobroek/agentic-packages/commit/83fe64b7bf119cb91aaea3f3d7932b2781a45eee))
+
+
+### Bug Fixes
+
+* prevent duplicate and invalid release notes ([#645](https://github.com/srobroek/agentic-packages/issues/645)) ([01d3689](https://github.com/srobroek/agentic-packages/commit/01d3689d03245a46adb511b04cb3d12ce1c7b603))
+
 ## [2.2.0](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.1.0...steering-git-workflow--v2.2.0) (2026-07-16)
 
 

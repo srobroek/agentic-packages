@@ -1,7 +1,7 @@
 {
   "name": "orchestrate",
-  "version": "3.2.0",
-  "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, a read-only event-driven PR queue handoff, and deterministic scripts (scope disjointness, agent discovery, dispatch resolution, conflict probe).",
+  "version": "3.10.0",
+  "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
   "author": {
     "name": "Sjors Robroek"
   },

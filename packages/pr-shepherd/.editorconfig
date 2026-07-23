@@ -1,0 +1,13 @@
+root = false
+
+[*.sh]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+binary_next_line = true
+
+[{bd,gh,git}]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+binary_next_line = true

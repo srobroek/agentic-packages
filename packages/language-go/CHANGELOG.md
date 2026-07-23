@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/language-go--v3.2.0...language-go--v3.2.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/language-go--v3.1.0...language-go--v3.2.0) (2026-07-20)
 
 

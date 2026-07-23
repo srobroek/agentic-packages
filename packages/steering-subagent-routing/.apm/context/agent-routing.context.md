@@ -21,8 +21,8 @@ wrote the runaway fake-clock tests. Well-scoped simple mechanical patches
 (single-file rename, bounded transform, lookup, format fix) stay haiku-eligible.
 
 Do not encode MCP usage in model overrides. When delegating to coding or design
-agents, pass task-specific instructions to use the project's available tools, such
-as Context7 for library docs, codebase-memory-mcp for graph-aware exploration,
+agents, pass task-specific instructions to use the project's available tools,
+such as Context7 for library docs, semantic symbol tools for code exploration,
 Playwright for browser verification, or Stitch for design work.
 
 In beads repos (`bd where` succeeds), pass the bead id in the spawn prompt so

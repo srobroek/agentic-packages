@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 16.4.0
+version: 16.9.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -13,9 +13,10 @@ scripts:
   check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
   build-release-please: python3 .apm/scripts/build-release-please.py
   check-release-please: python3 .apm/scripts/build-release-please.py --check
+  check-release-baselines: python3 .apm/scripts/check-release-baselines.py
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
-  build-marketplace: apm pack
+  build-marketplace: apm pack && python3 .apm/scripts/build-marketplace-block.py
   inject-agent-models: python3 .apm/scripts/inject-agent-models.py
   check-agent-models: python3 .apm/scripts/inject-agent-models.py --check
   build-native-plugins: python3 .apm/scripts/build-native-plugins.py
@@ -24,7 +25,7 @@ scripts:
   check-docs: python3 .apm/scripts/render-docs.py all --check
   build-artifacts: >-
     python3 .apm/scripts/build-native-plugins.py && python3
-    .apm/scripts/render-docs.py all && apm pack
+    .apm/scripts/render-docs.py all && apm run build-marketplace
   install: apm install --target claude,codex
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
   audit-codex-config: python3 .apm/scripts/audit-codex-config.py
@@ -257,13 +258,6 @@ marketplace:
       tags:
         - bundle
         - semantic
-    - name: codebase-memory
-      source: ./packages/codebase-memory
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - graph
     - name: codex-hook-contract
       source: ./packages/codex-hook-contract
       category: project-lifecycle
@@ -680,6 +674,12 @@ marketplace:
       tags:
         - mcp
         - docs
+    - name: mcp-fetcher
+      source: ./packages/mcp-fetcher
+      category: mcp
+      tags:
+        - mcp
+        - web
     - name: mcp-mempalace
       source: ./packages/mcp-mempalace
       category: mcp
@@ -992,6 +992,15 @@ marketplace:
         - research
         - services
         - release-notes
+    - name: worktrunk-writer
+      source: ./packages/worktrunk-writer
+      category: project-lifecycle
+      tags:
+        - worktrunk
+        - worktree
+        - agents
+        - isolation
+        - lifecycle
     - name: write-agentic
       source: ./packages/write-agentic
       category: agentic-maintenance

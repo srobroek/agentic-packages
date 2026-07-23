@@ -11,6 +11,8 @@
 #          2 error/unknown (bad refs, or old git without merge-tree --write-tree)
 #   merge-probe.sh pr <pr-number>
 #       -> prints gh pr view JSON: state, mergeability, review, checks; exit follows gh
+#   merge-probe.sh eligibility
+#       -> reads gh PR JSON on stdin; prints eligible|draft|release|closed
 #
 # Portability floor: bash 3.2 + BSD coreutils.
 set -euo pipefail
@@ -21,6 +23,19 @@ command -v git >/dev/null || die "git not found"
 cmd="${1:-}"; shift || true
 
 case "$cmd" in
+  eligibility)
+    command -v jq >/dev/null || die "jq not found (needed for eligibility)"
+    jq -er '
+      if (.headRefName | startswith("release-please--branches--"))
+        or any(.labels[]?; .name == "autorelease: pending") then "release"
+      elif .state == "MERGED" then "merged"
+      elif .state != "OPEN" then "closed"
+      elif .isDraft == true then "draft"
+      else "eligible"
+      end
+    '
+    ;;
+
   conflicts)
     base="${1:?base ref}"; branch="${2:?branch ref}"
     base_sha="$(git rev-parse --verify "$base^{commit}" 2>/dev/null)" || die "bad base $base"
@@ -53,10 +68,10 @@ case "$cmd" in
     pr="${1:?pr number}"
     command -v gh >/dev/null || die "gh not found (needed for pr)"
     gh pr view "$pr" --json \
-      number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,baseRefName,headRefName,headRefOid,url
+      number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,baseRefName,headRefName,headRefOid,mergeCommit,labels,body,url
     ;;
 
   *)
-    die "usage: conflicts <base> <branch> | pr <number> (got '${cmd:-}')"
+    die "usage: conflicts <base> <branch> | pr <number> | eligibility (got '${cmd:-}')"
     ;;
 esac

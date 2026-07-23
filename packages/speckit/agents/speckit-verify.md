@@ -1,6 +1,6 @@
 ---
 name: speckit-verify
-description: "Verifies a SpecKit implementation against requirements or completed tasks; spawn with mode: requirements or tasks to produce the required gate report."
+description: "Verifies SpecKit implementations with Serena semantic tools when available; spawn with mode: requirements or tasks for the gate report."
 x-lint:
   allow: [W6, W9]
   reason: "the dual-mode gate agent keeps each standalone verification contract explicit"

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+: "${FAKE_STATE:?FAKE_STATE is required}"
+: "${FAKE_SCENARIO:?FAKE_SCENARIO is required}"
+printf '%s\n' "$*" >>"$FAKE_STATE/git.log"
+
+case "${1:-}" in
+hash-object)
+  sha1sum | awk '{print $1}'
+  ;;
+fetch | cat-file)
+  exit 0
+  ;;
+rev-parse)
+  printf '%s\n' "$REMOTE_BASE"
+  ;;
+merge-tree)
+  printf 'ffffffffffffffffffffffffffffffffffffffff\n'
+  ;;
+diff)
+  printf 'path/to/file.txt\0'
+  ;;
+ls-tree)
+  if [[ "$FAKE_SCENARIO" == "land-stack-hold" && "${2:-}" == "$REMOTE_BASE" ]]; then
+    printf '100644 blob 3333333333333333333333333333333333333333\tpath/to/file.txt\n'
+  else
+    printf '100644 blob 2222222222222222222222222222222222222222\tpath/to/file.txt\n'
+  fi
+  ;;
+*)
+  printf 'unexpected fake git invocation: %s\n' "$*" >&2
+  exit 99
+  ;;
+esac

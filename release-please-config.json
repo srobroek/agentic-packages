@@ -392,18 +392,6 @@
         }
       ]
     },
-    "packages/codebase-memory": {
-      "release-type": "simple",
-      "component": "codebase-memory",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/codex-hook-contract": {
       "release-type": "simple",
       "component": "codex-hook-contract",
@@ -1148,6 +1136,18 @@
         }
       ]
     },
+    "packages/mcp-fetcher": {
+      "release-type": "simple",
+      "component": "mcp-fetcher",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/mcp-mempalace": {
       "release-type": "simple",
       "component": "mcp-mempalace",
@@ -1679,6 +1679,18 @@
     "packages/whats-new": {
       "release-type": "simple",
       "component": "whats-new",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/worktrunk-writer": {
+      "release-type": "simple",
+      "component": "worktrunk-writer",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

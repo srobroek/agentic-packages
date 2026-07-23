@@ -9,7 +9,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - **35 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **19 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **20 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **9 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 - **14 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
@@ -214,15 +214,17 @@ Then audit the installed runtime assets:
 
 ```bash
 apm run inject-agent-models # restore package-owned Codex model settings
+apm run check-agent-models  # reject missing mappings and generated drift
 apm run audit-agentic-tools   # report runtime parity + agent metadata completeness
 ```
 
 A ready-made `apm.yml` for consuming projects lives in [`templates/project-apm.yml`](templates/project-apm.yml) -- it wires installation, compilation, and audit as `apm run setup-agentic-tools`.
 
-> Each agent-bearing package owns `.apm/agent-models.yml`. APM currently drops
+> Each agent-bearing package owns `.apm/agent-models.yml`. APM 0.26 drops
 > model metadata while producing Codex TOML, so the consuming project's trusted
 > `post-install` and `post-update` lifecycle hooks run the shared injector after
-> deployment.
+> deployment. The check fails when a source or deployed agent lacks a mapping,
+> when a mapping omits model or reasoning effort, or when generated TOML drifts.
 
 ---
 

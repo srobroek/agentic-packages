@@ -1,9 +1,0 @@
-{
-  "name": "agent-luna-high",
-  "version": "1.0.0",
-  "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

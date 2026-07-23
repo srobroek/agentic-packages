@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.1.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.1...agentic-maintenance--v6.1.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d9c360b](https://github.com/srobroek/agentic-packages/commit/d9c360b3ee94e51cc59d997a7baa30e6abeb4d51))
+
+## [6.1.1](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.0...agentic-maintenance--v6.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
 ## [6.1.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.0.0...agentic-maintenance--v6.1.0) (2026-07-21)
 
 
