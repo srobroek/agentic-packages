@@ -1,6 +1,6 @@
 {
   "name": "agent-reviewer-high",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
   "author": {
     "name": "Sjors Robroek"

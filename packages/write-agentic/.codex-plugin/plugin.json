@@ -1,6 +1,6 @@
 {
   "name": "write-agentic",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
   "author": {
     "name": "Sjors Robroek"
