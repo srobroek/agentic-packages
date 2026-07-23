@@ -1,6 +1,6 @@
 {
   "name": "core",
-  "version": "11.0.1",
+  "version": "11.0.2",
   "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
   "author": {
     "name": "Sjors Robroek"
