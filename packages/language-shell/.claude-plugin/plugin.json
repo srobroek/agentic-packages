@@ -1,7 +1,7 @@
 {
   "name": "language-shell",
   "version": "2.3.0",
-  "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
+  "description": "Shell scripting toolkit with Shell LSP.",
   "author": {
     "name": "Sjors Robroek"
   },

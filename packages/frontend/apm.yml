@@ -3,8 +3,7 @@ version: 4.0.1
 description: >-
   Frontend development and design toolkit: the Playwright browser skill,
   frontend steering, and external design/build skills (Impeccable, Interface
-  Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page
-  plugins.
+  Design, Stitch).
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -23,10 +22,3 @@ dependencies:
       Dammyjay93/interface-design/.claude/skills/interface-design#2f9be3206855bcb2d1d0af262c8bae25cba6658d
     - >-
       google-labs-code/stitch-skills/plugins/stitch-design#3f64079d75d025bc5890c73669f27c26a2d80b31
-    - >-
-      wshobson/agents/plugins/frontend-mobile-development#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/ui-design#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/accessibility-compliance#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/brand-landingpage#5cc2549a50fc672230efd0a0307e2fd27ffba792

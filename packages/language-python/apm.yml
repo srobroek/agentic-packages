@@ -1,8 +1,6 @@
 name: language-python
 version: 3.3.0
-description: >-
-  Python toolkit: the python-quality skill, opinionated Python steering, and
-  Hobson's python-development specialists.
+description: "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP."
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle
@@ -17,5 +15,3 @@ dependencies:
     - srobroek/agentic-packages/packages/python-quality#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/language-steering-python#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/lsp-python#>=0.4.0 <1.0.0
-    - >-
-      wshobson/agents/plugins/python-development#5cc2549a50fc672230efd0a0307e2fd27ffba792

@@ -164,7 +164,7 @@
     },
     {
       "name": "agentic-maintenance",
-      "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
+      "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
       "version": "6.1.3",
       "tags": [
         "bundle",
@@ -271,7 +271,7 @@
     },
     {
       "name": "core",
-      "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
+      "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
       "version": "10.4.2",
       "tags": [
         "bundle",
@@ -282,7 +282,7 @@
     },
     {
       "name": "data-ai",
-      "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
+      "description": "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases.",
       "version": "2.2.1",
       "tags": [
         "bundle",
@@ -344,17 +344,6 @@
       "source": "./packages/dependency-quality"
     },
     {
-      "name": "developer-tools",
-      "description": "Everyday developer tooling: Hobson developer-essentials, debugging, comprehensive review, git/PR, and documentation-generation workflows.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "tooling"
-      ],
-      "category": "engineering",
-      "source": "./packages/developer-tools"
-    },
-    {
       "name": "diagrams",
       "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
       "version": "2.1.0",
@@ -364,17 +353,6 @@
       ],
       "category": "diagrams",
       "source": "./packages/diagrams"
-    },
-    {
-      "name": "docs-architecture",
-      "description": "Documentation standards: Hobson documentation-standards plugin. Heavier C4/doc-generation plugins were retired from bundles; install directly from wshobson/agents per-project if needed.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "documentation"
-      ],
-      "category": "docs",
-      "source": "./packages/docs-architecture"
     },
     {
       "name": "eli5",
@@ -402,7 +380,7 @@
     },
     {
       "name": "frontend",
-      "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
+      "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch).",
       "version": "4.0.1",
       "tags": [
         "bundle",
@@ -434,17 +412,6 @@
       ],
       "category": "planning-product",
       "source": "./packages/goal-writer"
-    },
-    {
-      "name": "governance",
-      "description": "Agent governance: Hobson MCP protection, signed audit trails, review policy, and no-verify blocking workflows.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "governance"
-      ],
-      "category": "governance",
-      "source": "./packages/governance"
     },
     {
       "name": "handover",
@@ -648,19 +615,8 @@
       "source": "./packages/hooks-worktree"
     },
     {
-      "name": "incident-response",
-      "description": "Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "incident"
-      ],
-      "category": "debugging",
-      "source": "./packages/incident-response"
-    },
-    {
       "name": "infrastructure",
-      "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
+      "description": "Infrastructure and operations toolkit: infrastructure steering.",
       "version": "3.2.0",
       "tags": [
         "bundle",
@@ -670,42 +626,8 @@
       "source": "./packages/infrastructure"
     },
     {
-      "name": "language-arm-cortex",
-      "description": "ARM Cortex-M firmware toolkit: Hobson's embedded arm-cortex-microcontrollers specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "embedded",
-        "arm"
-      ],
-      "category": "languages",
-      "source": "./packages/language-arm-cortex"
-    },
-    {
-      "name": "language-dotnet",
-      "description": ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "dotnet"
-      ],
-      "category": "languages",
-      "source": "./packages/language-dotnet"
-    },
-    {
-      "name": "language-functional",
-      "description": "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "functional"
-      ],
-      "category": "languages",
-      "source": "./packages/language-functional"
-    },
-    {
       "name": "language-go",
-      "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
+      "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
       "version": "3.3.0",
       "tags": [
         "bundle",
@@ -715,30 +637,8 @@
       "source": "./packages/language-go"
     },
     {
-      "name": "language-julia",
-      "description": "Julia development toolkit: Hobson's scientific-computing julia-development specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "julia"
-      ],
-      "category": "languages",
-      "source": "./packages/language-julia"
-    },
-    {
-      "name": "language-jvm",
-      "description": "JVM language toolkit: Hobson's Java, Scala, and enterprise jvm-languages specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "jvm"
-      ],
-      "category": "languages",
-      "source": "./packages/language-jvm"
-    },
-    {
       "name": "language-python",
-      "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
+      "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
       "version": "3.3.0",
       "tags": [
         "bundle",
@@ -749,7 +649,7 @@
     },
     {
       "name": "language-rust",
-      "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
+      "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
       "version": "3.3.0",
       "tags": [
         "bundle",
@@ -760,7 +660,7 @@
     },
     {
       "name": "language-shell",
-      "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
+      "description": "Shell scripting toolkit with Shell LSP.",
       "version": "2.3.0",
       "tags": [
         "bundle",
@@ -826,7 +726,7 @@
     },
     {
       "name": "language-terraform",
-      "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
+      "description": "Terraform and HCL toolkit: opinionated Terraform steering. No dedicated quality skill yet.",
       "version": "2.3.0",
       "tags": [
         "bundle",
@@ -837,7 +737,7 @@
     },
     {
       "name": "language-typescript",
-      "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
+      "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and TypeScript LSP.",
       "version": "3.3.0",
       "tags": [
         "bundle",
@@ -845,18 +745,6 @@
       ],
       "category": "languages",
       "source": "./packages/language-typescript"
-    },
-    {
-      "name": "language-web-scripting",
-      "description": "PHP and Ruby web scripting toolkit: Hobson's web-scripting specialists.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "php",
-        "ruby"
-      ],
-      "category": "languages",
-      "source": "./packages/language-web-scripting"
     },
     {
       "name": "license-picker",
@@ -1215,7 +1103,7 @@
     },
     {
       "name": "review",
-      "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
+      "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent. Language-specific quality checks live in the language-<lang> bundles.",
       "version": "4.1.1",
       "tags": [
         "bundle",
@@ -1247,17 +1135,6 @@
       ],
       "category": "security",
       "source": "./packages/secrets-scan"
-    },
-    {
-      "name": "security",
-      "description": "Security toolkit: Hobson security-scanning, security-compliance, backend-api-security, frontend-mobile-security, and reverse-engineering plugins for vulnerability analysis, compliance, and hardening.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "security"
-      ],
-      "category": "security",
-      "source": "./packages/security"
     },
     {
       "name": "session-review",

@@ -341,18 +341,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "developer-tools",
-      "source": {
-        "source": "local",
-        "path": "./packages/developer-tools"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
       "name": "diagrams",
       "source": {
         "source": "local",
@@ -363,18 +351,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "diagrams"
-    },
-    {
-      "name": "docs-architecture",
-      "source": {
-        "source": "local",
-        "path": "./packages/docs-architecture"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "docs"
     },
     {
       "name": "eli5",
@@ -435,18 +411,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "planning-product"
-    },
-    {
-      "name": "governance",
-      "source": {
-        "source": "local",
-        "path": "./packages/governance"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "governance"
     },
     {
       "name": "handover",
@@ -629,18 +593,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "incident-response",
-      "source": {
-        "source": "local",
-        "path": "./packages/incident-response"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "debugging"
-    },
-    {
       "name": "infrastructure",
       "source": {
         "source": "local",
@@ -653,70 +605,10 @@
       "category": "infrastructure"
     },
     {
-      "name": "language-arm-cortex",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-arm-cortex"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-dotnet",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-dotnet"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-functional",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-functional"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
       "name": "language-go",
       "source": {
         "source": "local",
         "path": "./packages/language-go"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-julia",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-julia"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-jvm",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-jvm"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -837,18 +729,6 @@
       "source": {
         "source": "local",
         "path": "./packages/language-typescript"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-web-scripting",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-web-scripting"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1161,18 +1041,6 @@
       "source": {
         "source": "local",
         "path": "./packages/secrets-scan"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
-      "name": "security",
-      "source": {
-        "source": "local",
-        "path": "./packages/security"
       },
       "policy": {
         "installation": "AVAILABLE",

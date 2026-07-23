@@ -5,7 +5,7 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
 <!-- BEGIN:intro-counts -->
-- **41 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **30 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
 - **35 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **12 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **20 steering packages** -- opt-in opinionated conventions (per domain and per language)
@@ -284,7 +284,7 @@ Then check for stragglers:
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
 
-Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (wshobson, mattpocock) stay pinned to `#main`. Each package is versioned independently via release-please.
+Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (mattpocock and others) stay pinned to `#main`. Each package is versioned independently via release-please.
 
 `core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) plus `resume-session` and the Matt Pocock and Hobson plugins explicitly -- so a single `apm install core@srobroek-agentic` brings in all baseline skills transitively.
 

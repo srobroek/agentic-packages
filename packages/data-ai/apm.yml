@@ -1,9 +1,6 @@
 name: data-ai
 version: 2.2.1
-description: >-
-  Data and AI toolkit: data steering plus Hobson LLM application, data
-  engineering, MLOps, database design, migrations, and cloud optimization
-  plugins.
+description: "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases."
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -15,15 +12,3 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/steering-data#>=1.1.0 <2.0.0
-    - >-
-      wshobson/agents/plugins/llm-application-dev#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/data-engineering#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/machine-learning-ops#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/database-design#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/database-migrations#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/database-cloud-optimization#5cc2549a50fc672230efd0a0307e2fd27ffba792

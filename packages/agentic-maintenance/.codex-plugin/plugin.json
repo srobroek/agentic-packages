@@ -1,7 +1,7 @@
 {
   "name": "agentic-maintenance",
   "version": "6.1.3",
-  "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
+  "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
   "author": {
     "name": "Sjors Robroek"
   },
