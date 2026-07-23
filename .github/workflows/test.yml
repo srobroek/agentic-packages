@@ -132,6 +132,14 @@ jobs:
           install: true
           cache: true
 
+      - name: Expose mise tools outside the repo tree
+        run: |
+          # Tests run bd with cwd in a tempdir where mise.toml doesn't apply,
+          # so mise shims can't resolve a version there. Put the real binary
+          # directory on PATH instead of relying on shims.
+          dirname "$(mise which bd)" >> "$GITHUB_PATH"
+          "$(mise which bd)" version
+
       - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
         run: |
           # Lint the package's own scripts at the same severity the suite targets.
