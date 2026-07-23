@@ -261,7 +261,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "6.1.2",
+      "version": "6.1.3",
       "tags": [
         "bundle",
         "steering"
@@ -1161,7 +1161,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "3.13.0",
+      "version": "4.0.0",
       "tags": [
         "skill",
         "agent",
@@ -1378,7 +1378,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "3.3.1",
+      "version": "3.3.2",
       "tags": [
         "speckit",
         "beads",
