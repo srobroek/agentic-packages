@@ -10,6 +10,23 @@ Coordinate validation of one or more journeys. `FORMAT.md` in the journeys
 directory is normative; read it plus `README.md` (config) and the target
 `journey.md` files first.
 
+Formula templates and their copy helper live in this skill's directory:
+`formulas/*.formula.toml` and `scripts/install_formulas.py`.
+
+## Beads formula provisioning
+
+When the repository contains `.beads/`, run
+`python3 scripts/install_formulas.py <repo-root>` before validation. The helper
+copies the package-owned formulas into `.beads/formulas/` and leaves identical
+copies unchanged. If a destination differs, stop and ask before rerunning with
+`--force`.
+
+Use `journey-step-agentic-verification` when the result needs no human gate.
+Use `journey-step-human-verification` when a human must approve the triaged
+result before evidence is recorded. Pour one molecule per selected journey
+step; both formulas fan out runtime, definition, and acceptance checks before
+triage.
+
 ## Who validates
 
 Spawn one `journey-validator` agent per journey — the complete validation
