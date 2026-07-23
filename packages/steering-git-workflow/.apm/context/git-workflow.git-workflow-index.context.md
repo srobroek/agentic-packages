@@ -23,15 +23,22 @@ ask about deleting the merged branch.
 
 Verifying work landed:
 
-MUST GW-3: in a squash-merge repo, prove work reached main by CONTENT, not
-ancestry. Invalid: `git merge-base --is-ancestor` and `git branch --merged` — a
-squashed tip is never an ancestor of main; equally invalid is reading a
-non-empty `git merge-tree` as not-landed — a squashed branch keeps its diverged
-merge-from-main history. Valid: `git cat-file -e origin/main:<path>`, a file or
-tree diff against origin/main, or the change's presence in the squash commit.
-When a path is absent from main's tip, an empty `git log origin/main -- <path>`
-proves it never landed; a non-empty log means it landed and was later removed
-or renamed.
+MUST GW-3: prove the exact reviewed work reached its final destination:
+
+1. PR-backed work: read `state`, `baseRefName`, `headRefOid`, and `mergeCommit`
+   with `gh pr view`. `MERGED` proves that recorded PR head landed in its base.
+   Compare the branch tip with `headRefOid`; later commits remain unlanded.
+   A merge into an intermediate branch requires proof that the intermediate
+   change reached the final destination.
+2. Work without a PR: `git cherry` or stable patch IDs may prove an individual
+   commit has an equivalent patch. They do not prove equivalence for a
+   multi-commit squash.
+3. Acceptance: inspect the recorded merge commit or the exact expected
+   hunks/content. Equality with the destination tip proves the required current
+   state, but not historical provenance.
+
+NOT Ancestry, merge-tree output, path existence, or non-empty path history as
+sole landing proof. Path history only identifies commits to inspect.
 
 Changesets (repos using them): add one for behavior/API/breaking changes;
 skip for docs, tests, CI, and no-behavior refactors.
