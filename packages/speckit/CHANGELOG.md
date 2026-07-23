@@ -1,5 +1,46 @@
 # Changelog
 
+## [8.1.1](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.0...speckit--v8.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
+## [8.1.0](https://github.com/srobroek/agentic-packages/compare/speckit--v8.0.0...speckit--v8.1.0) (2026-07-21)
+
+
+### Features
+
+* **agents:** preserve model routing in workflow packages ([df86afc](https://github.com/srobroek/agentic-packages/commit/df86afc45f5c6da979e939aba1ed7f5fe2fcbc6a))
+
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v7.0.0...speckit--v8.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574))
+
+### Features
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574)) ([7637119](https://github.com/srobroek/agentic-packages/commit/76371191da9da679e92c99d3b8b6a6b3817065d7))
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v6.0.0...speckit--v7.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* share MCP backends through 1MCP
+
+### Features
+
+* share MCP backends through 1MCP ([4896601](https://github.com/srobroek/agentic-packages/commit/4896601ca0326762493f340526a97a341b98e24a))
+
 ## [6.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v5.1.2...speckit--v6.0.0) (2026-07-20)
 
 

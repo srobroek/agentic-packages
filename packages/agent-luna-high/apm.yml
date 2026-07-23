@@ -1,0 +1,13 @@
+name: agent-luna-high
+version: 1.1.0
+description: Explicit Luna high-effort agent profile for demanding bounded analysis.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: codex
+includes: auto
+category: engineering
+tags:
+  - agent
+  - codex
+  - routing

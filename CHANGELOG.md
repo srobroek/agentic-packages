@@ -1,5 +1,153 @@
 # Changelog
 
+## [16.9.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.8.0...srobroek-agentic--v16.9.0) (2026-07-22)
+
+
+### Features
+
+* make Codex and Claude APM integration target-aware ([#643](https://github.com/srobroek/agentic-packages/issues/643)) ([83fe64b](https://github.com/srobroek/agentic-packages/commit/83fe64b7bf119cb91aaea3f3d7932b2781a45eee))
+
+
+### Bug Fixes
+
+* prevent duplicate and invalid release notes ([#645](https://github.com/srobroek/agentic-packages/issues/645)) ([01d3689](https://github.com/srobroek/agentic-packages/commit/01d3689d03245a46adb511b04cb3d12ce1c7b603))
+
+## [16.8.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.7.1...srobroek-agentic--v16.8.0) (2026-07-22)
+
+
+### Features
+
+* add direct fetcher MCP package ([816a044](https://github.com/srobroek/agentic-packages/commit/816a04439daba896d5ed5c0124c0c2bbe163f7c3))
+
+## [16.7.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.7.0...srobroek-agentic--v16.7.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
+## [16.7.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.6.0...srobroek-agentic--v16.7.0) (2026-07-22)
+
+
+### Features
+
+* discover packaged workers with validated metadata ([#625](https://github.com/srobroek/agentic-packages/issues/625)) ([0a170b8](https://github.com/srobroek/agentic-packages/commit/0a170b801d417cf912703228344d3eff25a8b36d))
+
+
+### Bug Fixes
+
+* keep package artifacts stable after tests ([#629](https://github.com/srobroek/agentic-packages/issues/629)) ([f3fec83](https://github.com/srobroek/agentic-packages/commit/f3fec8320f69d1e719fa051473055a2e6e7e43fc))
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
+## [16.6.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.5.0...srobroek-agentic--v16.6.0) (2026-07-22)
+
+
+### Features
+
+* keep agent replies and decisions in Beads ([#622](https://github.com/srobroek/agentic-packages/issues/622)) ([3e5082c](https://github.com/srobroek/agentic-packages/commit/3e5082c1fda4a36ebd67e78ef5ec234666f54a0d))
+* verify pull requests before and after merge ([#612](https://github.com/srobroek/agentic-packages/issues/612)) ([66aaa91](https://github.com/srobroek/agentic-packages/commit/66aaa91bccd7d8694fe65c7f0b645208f4855372))
+
+## [16.5.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.4.0...srobroek-agentic--v16.5.0) (2026-07-22)
+
+
+### Features
+
+* connect queue events to shepherd and orchestrator ([#608](https://github.com/srobroek/agentic-packages/issues/608)) ([58e25f8](https://github.com/srobroek/agentic-packages/commit/58e25f865f2c28cfb060f94a9bd1aa0ef6bf9dd5))
+
+## [16.4.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.3.0...srobroek-agentic--v16.4.0) (2026-07-22)
+
+
+### Features
+
+* dispatch approved pull requests from signed webhook events ([#601](https://github.com/srobroek/agentic-packages/issues/601)) ([b244cfe](https://github.com/srobroek/agentic-packages/commit/b244cfe0e43f4aa0010ca352e518d18059da3246))
+* emit pull request lifecycle events from queue watchers ([#603](https://github.com/srobroek/agentic-packages/issues/603)) ([88768f8](https://github.com/srobroek/agentic-packages/commit/88768f8b9ccca64a27989a22c9ed77e720774ca5))
+
+## [16.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.2.0...srobroek-agentic--v16.3.0) (2026-07-21)
+
+
+### Features
+
+* watch pull request queues with signed GitHub webhooks ([#598](https://github.com/srobroek/agentic-packages/issues/598)) ([0896546](https://github.com/srobroek/agentic-packages/commit/08965468317167fa7df6674b61fc906b47ad0ed5))
+
+## [16.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.1.0...srobroek-agentic--v16.2.0) (2026-07-21)
+
+
+### Features
+
+* add native gh interval watcher skill ([3b17ed9](https://github.com/srobroek/agentic-packages/commit/3b17ed9f6c68e5359c8efca693b08ba6940b77be))
+
+## [16.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.3...srobroek-agentic--v16.1.0) (2026-07-21)
+
+
+### Features
+
+* **agent-management:** compile global root contexts safely ([659b663](https://github.com/srobroek/agentic-packages/commit/659b663f6b5d3f0676348a2dba7e0872b07eb85a))
+
+
+### Bug Fixes
+
+* **hooks:** remove dead relative command paths ([#589](https://github.com/srobroek/agentic-packages/issues/589)) ([4ce1d9e](https://github.com/srobroek/agentic-packages/commit/4ce1d9e3685e6a5ddc92640311852f9883a669b2))
+
+## [16.0.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.2...srobroek-agentic--v16.0.3) (2026-07-21)
+
+
+### Bug Fixes
+
+* sanitize stale hooks and harden 1MCP startup ([#586](https://github.com/srobroek/agentic-packages/issues/586)) ([b7c2e8f](https://github.com/srobroek/agentic-packages/commit/b7c2e8f7bfb5c7592c0b991c235e64a4d90882a4))
+
+## [16.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.1...srobroek-agentic--v16.0.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* make lifecycle trust checks reliable ([#585](https://github.com/srobroek/agentic-packages/issues/585)) ([6d7f4af](https://github.com/srobroek/agentic-packages/commit/6d7f4af411e0ce2286094c74891296be28b6f71c))
+
+## [16.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.0.0...srobroek-agentic--v16.0.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **agent-management:** distribute agent model injector ([#582](https://github.com/srobroek/agentic-packages/issues/582)) ([cd63272](https://github.com/srobroek/agentic-packages/commit/cd6327260d47012962795206f0be3a1bcd4b3475))
+
+## [16.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v15.0.0...srobroek-agentic--v16.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Replace patch-agentic-tools with the trusted install-agentic-tools, update-agentic-tools, or setup-agentic-tools wrappers. Review the lifecycle block and run apm lifecycle trust before using those commands.
+
+### Features
+
+* require trusted lifecycle hooks for agent model injection ([8fa1e37](https://github.com/srobroek/agentic-packages/commit/8fa1e374e9cd10dfbf7b0bcc4142d6997620e0fb))
+
+## [15.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v14.0.0...srobroek-agentic--v15.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574))
+
+### Features
+
+* add managed Serena lifecycle hooks ([#576](https://github.com/srobroek/agentic-packages/issues/576)) ([e3d50ab](https://github.com/srobroek/agentic-packages/commit/e3d50ab3d80cabc945370b706ae91cb2eb823ef1))
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574)) ([7637119](https://github.com/srobroek/agentic-packages/commit/76371191da9da679e92c99d3b8b6a6b3817065d7))
+
+
+### Bug Fixes
+
+* stop noisy hook warnings and broken pipes ([#575](https://github.com/srobroek/agentic-packages/issues/575)) ([f9f1acf](https://github.com/srobroek/agentic-packages/commit/f9f1acfabe0e16578f87a9d7a1e3b1b6bd7992b4))
+
+## [14.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v13.0.0...srobroek-agentic--v14.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* share MCP backends through 1MCP
+
+### Features
+
+* share MCP backends through 1MCP ([4896601](https://github.com/srobroek/agentic-packages/commit/4896601ca0326762493f340526a97a341b98e24a))
+
 ## [13.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v12.5.1...srobroek-agentic--v13.0.0) (2026-07-20)
 
 

@@ -1,0 +1,10 @@
+version: 1
+agents:
+  bash-pro:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh
+  posix-shell-pro:
+    codex:
+      model: gpt-5.6-luna
+      reasoning_effort: xhigh

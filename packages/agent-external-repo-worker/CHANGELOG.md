@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.1.0...agent-external-repo-worker--v2.2.0) (2026-07-21)
+
+
+### Features
+
+* **agents:** preserve model routing in workflow packages ([df86afc](https://github.com/srobroek/agentic-packages/commit/df86afc45f5c6da979e939aba1ed7f5fe2fcbc6a))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.0.0...agent-external-repo-worker--v2.1.0) (2026-07-16)
 
 

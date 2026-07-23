@@ -1,6 +1,6 @@
 ---
 name: license-picker
-description: Interactive license picker for open-source projects. Interviews the user about repo type, threat model, and goals, then recommends an OSI-approved license with rationale and implementation steps. Use when setting up a new repo, relicensing, or when the user asks "what license should I use".
+description: Selects an OSI-approved license from project constraints and explains implementation tradeoffs. Use for new repositories, relicensing, or “what license should I use?”
 ---
 
 # License Picker

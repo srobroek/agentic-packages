@@ -8,7 +8,7 @@
     {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "agent",
         "adversarial",
@@ -20,8 +20,8 @@
     },
     {
       "name": "agent-coder",
-      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Claude also gets a top-level edit reminder; Codex relies on steering because tool-hook payloads do not identify subagent edits.",
-      "version": "4.1.0",
+      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
+      "version": "6.1.1",
       "tags": [
         "agent",
         "engineering",
@@ -31,9 +31,33 @@
       "source": "./packages/agent-coder"
     },
     {
+      "name": "agent-coder-high",
+      "description": "Escalated coding agent for complex bounded implementation and debugging.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-coder-high"
+    },
+    {
+      "name": "agent-explorer",
+      "description": "Read-only exploration agent for bounded code and configuration discovery.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "code-intelligence",
+      "source": "./packages/agent-explorer"
+    },
+    {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "tags": [
         "agent",
         "engineering",
@@ -43,9 +67,57 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
+      "name": "agent-luna-high",
+      "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-high"
+    },
+    {
+      "name": "agent-luna-low",
+      "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-low"
+    },
+    {
+      "name": "agent-luna-medium",
+      "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-medium"
+    },
+    {
+      "name": "agent-luna-xhigh",
+      "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-luna-xhigh"
+    },
+    {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "tags": [
         "skill",
         "maintenance",
@@ -55,9 +127,21 @@
       "source": "./packages/agent-management"
     },
     {
+      "name": "agent-operator",
+      "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-operator"
+    },
+    {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "2.1.0",
+      "version": "3.1.1",
       "tags": [
         "agent",
         "quality",
@@ -67,9 +151,105 @@
       "source": "./packages/agent-pr-reviewer"
     },
     {
+      "name": "agent-reasoner",
+      "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "planning-product",
+      "source": "./packages/agent-reasoner"
+    },
+    {
+      "name": "agent-reviewer-high",
+      "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-reviewer-high"
+    },
+    {
+      "name": "agent-reviewer-low",
+      "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-reviewer-low"
+    },
+    {
+      "name": "agent-sol-high",
+      "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-high"
+    },
+    {
+      "name": "agent-sol-low",
+      "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-sol-low"
+    },
+    {
+      "name": "agent-sol-medium",
+      "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-medium"
+    },
+    {
+      "name": "agent-sol-xhigh",
+      "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-sol-xhigh"
+    },
+    {
+      "name": "agent-worker",
+      "description": "Bounded implementation worker for changes without a more specific coding role.",
+      "version": "1.1.0",
+      "tags": [
+        "agent",
+        "codex",
+        "routing"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-worker"
+    },
+    {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents. Includes Hobson documentation-standards and plugin-eval for evaluating external packages.",
-      "version": "4.2.0",
+      "version": "6.1.2",
       "tags": [
         "bundle",
         "steering"
@@ -91,8 +271,8 @@
     },
     {
       "name": "beads",
-      "description": "Beads (bd) issue-tracker conventions: the dependency-aware work DAG that agents use for persistent task tracking, atomic work claiming, and multi-agent coordination. Ships steering that scopes beads against SpecKit artifacts (requirements) and TaskCreate (single-session scratch) and fixes conventions for labels vs structured fields vs metadata, actor identity, claim etiquette, JSON envelope determinism, and Dolt sync. Ships a PreToolUse guard denying mutating `gh issue` commands in beads repos (task state lives in bd; issue reads stay allowed). Session-start wiring is native: run `bd setup claude --global` once (SessionStart bd prime injection) and `bd init --skip-hooks` per repo. Requires the bd CLI (gastownhall/beads >= 1.1.0); all surfaces are inert in repos without .beads/.",
-      "version": "0.4.0",
+      "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
+      "version": "0.6.0",
       "tags": [
         "beads",
         "issue-tracking",
@@ -105,7 +285,7 @@
     {
       "name": "brownfield-project",
       "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "skill",
         "lifecycle",
@@ -129,7 +309,7 @@
     {
       "name": "chezmoi-editor",
       "description": "Edit chezmoi-managed dotfiles from their authoritative source files. Use when changing dotfiles, global agent/tool config, templates, private files, symlinked config, or any live target that may be managed by chezmoi.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "skill",
         "dotfiles",
@@ -152,31 +332,19 @@
     },
     {
       "name": "code-intelligence",
-      "description": "Codebase understanding toolkit: codebase-memory graph skill, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "6.2.0",
+      "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
+      "version": "8.1.1",
       "tags": [
         "bundle",
-        "graph"
+        "semantic"
       ],
       "category": "code-intelligence",
       "source": "./packages/code-intelligence"
     },
     {
-      "name": "codebase-memory",
-      "description": "Structured graph queries against the indexed code graph: trace callers/callees, find references, map architecture. Requires the codebase-memory-mcp server; for lightweight orientation, use explore.",
-      "version": "2.1.0",
-      "tags": [
-        "skill",
-        "code-intelligence",
-        "graph"
-      ],
-      "category": "code-intelligence",
-      "source": "./packages/codebase-memory"
-    },
-    {
       "name": "codex-hook-contract",
       "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "tags": [
         "codex",
         "hooks",
@@ -188,7 +356,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock grill workflows, and the Hobson context/orchestration plugins.",
-      "version": "7.6.0",
+      "version": "10.2.2",
       "tags": [
         "bundle",
         "baseline"
@@ -199,7 +367,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "bundle",
         "data"
@@ -249,8 +417,8 @@
     },
     {
       "name": "dependency-quality",
-      "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it, audits the lockfile for known CVEs, and registers the package-version MCP server for version discovery. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
-      "version": "3.2.0",
+      "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it and audits the lockfile for known CVEs. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults.",
+      "version": "4.0.0",
       "tags": [
         "bundle",
         "dependencies",
@@ -319,7 +487,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
-      "version": "3.3.0",
+      "version": "4.0.1",
       "tags": [
         "bundle",
         "frontend"
@@ -452,7 +620,7 @@
     {
       "name": "hooks-git-workflow",
       "description": "Opt-in git workflow hook: warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
-      "version": "2.3.0",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "git",
@@ -476,7 +644,7 @@
     {
       "name": "hooks-portability-ci",
       "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "tags": [
         "ci",
         "hooks",
@@ -511,9 +679,22 @@
       "source": "./packages/hooks-quality"
     },
     {
-      "name": "hooks-subagent-model",
-      "description": "Model-routing deny gate for subagent spawns. A PreToolUse:Agent hook DENIES an Agent/Task call when `model` is omitted AND the named subagent_type has no pinned model in its definition (or subagent_type itself is omitted) — the spawn would otherwise silently inherit the parent session's model, often an expensive top-tier one. The deny reason is a tier routing table (cheap tier for mechanical work, mid tier for bounded coding/research, top tier or an explicit session-model pass-through for deep/adversarial work) so the caller's retry succeeds. The deny reason also notes that reasoning effort is NOT enforceable per-call (no `effort` field exists on the Agent tool_input) and points to pinning `effort:` in reusable agent definitions instead. The inherit-by-default type list is overridable per-project via SUBAGENT_MODEL_GUARD_INHERIT_TYPES. Fails open on malformed input. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
+      "name": "hooks-serena",
+      "description": "Serena lifecycle hooks for Claude Code and Codex. Activates Serena at session start, reminds agents to use symbolic tools, and clears hook state at session end without configuring MCP transport.",
       "version": "0.2.0",
+      "tags": [
+        "hooks",
+        "serena",
+        "semantic",
+        "lifecycle"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/hooks-serena"
+    },
+    {
+      "name": "hooks-subagent-model",
+      "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
+      "version": "0.3.0",
       "tags": [
         "hooks",
         "subagent",
@@ -609,7 +790,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "go"
@@ -653,7 +834,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "rust"
@@ -664,7 +845,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit: Hobson's Bash and POSIX shell-scripting specialists.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "bundle",
         "shell"
@@ -741,7 +922,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "bundle",
         "typescript"
@@ -764,7 +945,7 @@
     {
       "name": "license-picker",
       "description": "Interactive \"choose your own adventure\" license picker for open-source projects. Interviews the user about their repo type, threat model, ecosystem, and contribution goals, then recommends an OSI-approved license with full rationale. Validates against real license text and SPDX identifiers.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "tags": [
         "skill",
         "licensing",
@@ -778,7 +959,7 @@
     {
       "name": "lsp-go",
       "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "go"
@@ -789,7 +970,7 @@
     {
       "name": "lsp-python",
       "description": "Python LSP server: registers pyright (pyright-langserver) so agents get hover, diagnostics, go-to-definition, and references on Python sources. Installed transitively by the language-python bundle; also installable on its own.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "python"
@@ -800,7 +981,7 @@
     {
       "name": "lsp-rust",
       "description": "Rust LSP server: registers rust-analyzer so agents get hover, diagnostics, go-to-definition, and references on Rust sources. Installed transitively by the language-rust bundle; also installable on its own. Requires rust-analyzer on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "rust"
@@ -811,7 +992,7 @@
     {
       "name": "lsp-shell",
       "description": "Shell LSP server: registers bash-language-server so agents get hover, diagnostics, go-to-definition, and references on Bash/POSIX shell sources. Installed transitively by the language-shell bundle; also installable on its own. Requires bash-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "shell"
@@ -822,7 +1003,7 @@
     {
       "name": "lsp-terraform",
       "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "terraform"
@@ -833,7 +1014,7 @@
     {
       "name": "lsp-typescript",
       "description": "TypeScript/JavaScript LSP server: registers typescript-language-server so agents get hover, diagnostics, go-to-definition, and references on TS/JS sources. Installed transitively by the language-typescript bundle; also installable on its own. Requires typescript-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "tags": [
         "lsp",
         "typescript"
@@ -852,6 +1033,17 @@
       ],
       "category": "planning-product",
       "source": "./packages/matt-skills"
+    },
+    {
+      "name": "mcp-1mcp",
+      "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
+      "version": "1.0.4",
+      "tags": [
+        "mcp",
+        "aggregation"
+      ],
+      "category": "mcp",
+      "source": "./packages/mcp-1mcp"
     },
     {
       "name": "mcp-codebase-memory",
@@ -876,9 +1068,20 @@
       "source": "./packages/mcp-context7"
     },
     {
+      "name": "mcp-fetcher",
+      "description": "MCP server package for Fetcher, providing direct web-page retrieval for coding agents.",
+      "version": "0.2.0",
+      "tags": [
+        "mcp",
+        "web"
+      ],
+      "category": "mcp",
+      "source": "./packages/mcp-fetcher"
+    },
+    {
       "name": "mcp-mempalace",
-      "description": "MCP server package for MemPalace, a local-first cross-session memory layer for coding agents. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships the mempalace-mcp stdio server, a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace (cross-session memory) against codebase-memory (current code structure). Complements code intelligence; it is not code navigation.",
-      "version": "0.4.0",
+      "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
+      "version": "1.1.0",
       "tags": [
         "mcp",
         "memory",
@@ -922,8 +1125,8 @@
     },
     {
       "name": "mcp-serena",
-      "description": "MCP server package for Serena semantic code tools. The launcher selects the Codex or Claude Code context from the parent harness and can be overridden with SERENA_MCP_CONTEXT.",
-      "version": "1.2.0",
+      "description": "MCP server package for Serena semantic code tools. The launcher resolves the Codex or Claude Code context from the process ancestry and can be overridden with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent mcp_servers declarations should use the shared semantic route instead.",
+      "version": "1.2.1",
       "tags": [
         "mcp",
         "semantic"
@@ -933,8 +1136,8 @@
     },
     {
       "name": "mcp-tauri",
-      "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
-      "version": "1.2.0",
+      "description": "Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment.",
+      "version": "2.0.0",
       "tags": [
         "mcp",
         "tauri",
@@ -945,8 +1148,8 @@
     },
     {
       "name": "orchestrate",
-      "description": "Orchestrate a fleet of subagents across complex, parallel, or long-running work while controlling cost by routing each role to the cheapest capable model. Run state (task DAG, claims, audit trail, merge coordination) lives in beads (the bd CLI, a hard prerequisite). Ships the orchestration playbook plus bundled agents (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe), a Claude skill-scoped SubagentStart comms hook, explicit Codex spawn-brief protocol, and deterministic scripts (scope disjointness, agent discovery, conflict probe).",
-      "version": "2.0.0",
+      "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
+      "version": "3.10.0",
       "tags": [
         "skill",
         "agent",
@@ -968,8 +1171,8 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser tasks through a Playwright MCP server: navigate, click, fill forms, and extract page data.",
-      "version": "3.2.0",
+      "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
+      "version": "4.0.0",
       "tags": [
         "skill",
         "frontend",
@@ -980,8 +1183,8 @@
     },
     {
       "name": "pr-shepherd",
-      "description": "Cross-session PR/merge shepherd with beads (bd) as the central state store. Merge work lives as beads labeled agent:integrator with gh:pr/gh:run gate beads owning async waits; any session (or a /loop or cron invocation) drains the queue: bd gate check, atomic claim, merge-tree conflict probe + gh PR state, then either a slot-guarded merge or a bounce-back fix bead routed to agent:coder that parks the merge bead until fixed. Ships the pr-shepherd skill, a standalone pr-shepherd agent, steering for the merge-bead lifecycle and bounce-back protocol, and an advisory Stop hook that reminds when the integrator queue is non-empty. Requires the bd CLI (gastownhall/beads >= 1.1.0) and gh; all parts are inert in repos without .beads/.",
-      "version": "0.4.0",
+      "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
+      "version": "0.12.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1006,7 +1209,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "3.4.0",
+      "version": "4.1.1",
       "tags": [
         "bundle",
         "lifecycle"
@@ -1041,6 +1244,19 @@
       "source": "./packages/release-please"
     },
     {
+      "name": "release-queue-watch",
+      "description": "Runs a signed local GitHub webhook receiver that emits deterministic PR lifecycle records, tracks agent-owned priority and merge-slot state, and retains Octokit REST reconciliation without mutating GitHub or Beads.",
+      "version": "0.6.1",
+      "tags": [
+        "github",
+        "pull-requests",
+        "ci",
+        "monitoring"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/release-queue-watch"
+    },
+    {
       "name": "resume-cv",
       "description": "CV / career-resume bundle: focused resume-tailoring and broad career-support workflows. Renamed from `resume` to avoid a namespace collision with `resume-session` (which resumes a prior coding SESSION, not a CV).",
       "version": "1.2.0",
@@ -1066,7 +1282,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent, and Hobson comprehensive-review, performance-testing-review, unit-testing, and tdd-workflows plugins. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "3.2.0",
+      "version": "4.1.1",
       "tags": [
         "bundle",
         "review"
@@ -1124,7 +1340,7 @@
     {
       "name": "sniff",
       "description": "Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code across 21 languages and formats, maps each finding to refactoring.guru smells, patterns, and techniques, stress-tests every recommendation with a built-in adversarial pragmatism critic, and produces a prioritized refactoring plan (impact, value, cost, severity, backwards-compatibility). Drives each language toolchain's own linters and analyzers (opportunistic, never required) with a guided first-run installer. Advisory by default; applies low-risk refactors only on explicit approval behind a verification re-run. Standalone: no APM dependencies.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "skill",
         "agent",
@@ -1139,7 +1355,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "6.0.0",
+      "version": "8.1.1",
       "tags": [
         "bundle",
         "speckit"
@@ -1150,7 +1366,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "1.1.0",
+      "version": "3.2.2",
       "tags": [
         "speckit",
         "beads",
@@ -1231,14 +1447,27 @@
     },
     {
       "name": "steering-git-workflow",
-      "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, and pre-push verification. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "2.2.0",
+      "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a dual-runtime PreToolUse blocker for non-draft or unlinked PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
+      "version": "2.3.0",
       "tags": [
         "steering",
         "git"
       ],
       "category": "steering",
       "source": "./packages/steering-git-workflow"
+    },
+    {
+      "name": "steering-global-bootstrap",
+      "description": "User-scope bootstrap steering that keeps reusable agentic assets in APM packages and limits chezmoi to session profiles and dotfile management. Install globally; project behavior remains project-local.",
+      "version": "1.1.0",
+      "tags": [
+        "steering",
+        "bootstrap",
+        "global",
+        "apm"
+      ],
+      "category": "steering",
+      "source": "./packages/steering-global-bootstrap"
     },
     {
       "name": "steering-infrastructure",
@@ -1279,7 +1508,7 @@
     {
       "name": "steering-speckit",
       "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "tags": [
         "steering",
         "speckit"
@@ -1290,7 +1519,7 @@
     {
       "name": "steering-subagent-routing",
       "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
-      "version": "3.2.0",
+      "version": "3.2.1",
       "tags": [
         "steering",
         "routing"
@@ -1334,8 +1563,8 @@
     },
     {
       "name": "user-journeys",
-      "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), the journey format spec and templates, and a deterministic index/lint script.",
-      "version": "0.3.1",
+      "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), agent-only and human-gated Beads verification formulas, the journey format spec and templates, and deterministic index, lint, and formula-install scripts.",
+      "version": "0.4.0",
       "tags": [
         "journeys",
         "validation",
@@ -1387,6 +1616,20 @@
       "source": "./packages/whats-new"
     },
     {
+      "name": "worktrunk-writer",
+      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, exposes schema-2 fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
+      "version": "1.0.0",
+      "tags": [
+        "worktrunk",
+        "worktree",
+        "agents",
+        "isolation",
+        "lifecycle"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/worktrunk-writer"
+    },
+    {
       "name": "write-agentic",
       "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
       "version": "3.2.0",
@@ -1401,7 +1644,7 @@
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "tags": [
         "skill",
         "docs",

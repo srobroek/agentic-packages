@@ -6,6 +6,7 @@ stub `bd` executable that replays canned JSON per subcommand. Real-bd behavior
 (label filters, claim semantics, metadata merge) is verified manually against
 bd 1.1.0 and documented in references/beads-store.md.
 """
+
 import json
 import os
 import stat
@@ -20,7 +21,9 @@ SCOPE = os.path.join(HERE, "scope-check.py")
 
 def _bead(bid, scope=None, status="open"):
     return {
-        "id": bid, "status": status, "labels": ["orc-node"],
+        "id": bid,
+        "status": status,
+        "labels": ["orc-node"],
         "metadata": {"scope": scope} if scope is not None else {},
     }
 
@@ -39,7 +42,7 @@ def _make_stub(dirpath, show, listing):
             'case "$1" in\n'
             '  show) cat "$here/show.json" ;;\n'
             '  list) cat "$here/list.json" ;;\n'
-            "  *) echo \"stub bd: unknown $1\" >&2; exit 2 ;;\n"
+            '  *) echo "stub bd: unknown $1" >&2; exit 2 ;;\n'
             "esac\n"
         )
     os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
@@ -47,8 +50,9 @@ def _make_stub(dirpath, show, listing):
 
 
 def _run(*args):
-    return subprocess.run([sys.executable, SCOPE, *args],
-                          capture_output=True, text=True)
+    return subprocess.run(
+        [sys.executable, SCOPE, *args], capture_output=True, text=True
+    )
 
 
 class ScopeCheckTest(unittest.TestCase):
@@ -121,8 +125,10 @@ class ScopeCheckTest(unittest.TestCase):
         bd = _make_stub(
             self.dir,
             show={"schema_version": 1, "data": [_bead("orc-1", ["docs/**"])]},
-            listing={"schema_version": 1,
-                     "data": [_bead("orc-2", ["src/**"], status="in_progress")]},
+            listing={
+                "schema_version": 1,
+                "data": [_bead("orc-2", ["src/**"], status="in_progress")],
+            },
         )
         p = _run("--candidate", "orc-1", "--bd", bd)
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)

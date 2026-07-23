@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v2.3.0...hooks-git-workflow--v3.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574))
+
+### Features
+
+* **speckit:** remove noisy stop hooks ([#574](https://github.com/srobroek/agentic-packages/issues/574)) ([7637119](https://github.com/srobroek/agentic-packages/commit/76371191da9da679e92c99d3b8b6a6b3817065d7))
+
 ## [2.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-workflow--v2.2.0...hooks-git-workflow--v2.3.0) (2026-07-20)
 
 

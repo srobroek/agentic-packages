@@ -4,18 +4,14 @@ description: >-
   Read-only run-record reporter in an `orchestrate` run: answers queries over
   node beads and audit trail, produces the end-of-run report. Never writes.
 model: haiku
-tools: Read, Grep, Glob, Bash, Write
-x-agentic:
-  codex:
-    model: "gpt-5.4-mini"
-    reasoning_effort: "low"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "haiku"
-    effort: "low"
-    permissions:
-      mode: "read-only"
+effort: low
+permissionMode: plan
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Write
 ---
 
 You are the persistent ledger scribe. You own reading the run's record but you

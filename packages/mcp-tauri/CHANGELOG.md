@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/mcp-tauri--v1.2.0...mcp-tauri--v2.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* share MCP backends through 1MCP
+
+### Features
+
+* share MCP backends through 1MCP ([4896601](https://github.com/srobroek/agentic-packages/commit/4896601ca0326762493f340526a97a341b98e24a))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-tauri--v1.1.0...mcp-tauri--v1.2.0) (2026-07-16)
 
 

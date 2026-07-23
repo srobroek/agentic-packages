@@ -2,7 +2,7 @@
 
 SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. It is delivered as **three opt-in packages** so you can adopt exactly the layer you want:
 
-- **`speckit`** -- the mechanism: six SpecKit sub-agents, the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, and the SpecKit workflow guard hooks (PR-title guidance, commit checks, stop gate).
+- **`speckit`** -- the mechanism: the `speckit-bugfix` skill, the `speckit-setup` bootstrap skill, SpecKit workflow guard hooks, and its bundled task agents. APM deploys the agents to both Claude and Codex.
 - **`steering-speckit`** -- the opinionated mandatory-gated Phase 1/2/3 workflow steering. Opt in to adopt the process.
 - **`speckit-beads`** -- the enforcement layer: a beads (`bd`) formula whose poured molecule IS the phase DAG (human gates included), plus guards that keep task state in beads. Depends on `speckit` and `beads`.
 

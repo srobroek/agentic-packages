@@ -76,6 +76,49 @@ def test_plain_factual_line_passes(tmp_path):
     assert run(tmp_path, doc) == []
 
 
+def test_inline_code_identifier_is_not_slop_prose(tmp_path):
+    found = run(
+        tmp_path,
+        "Install the `comprehensive-review` package with `apm install`.\n",
+    )
+    assert "E2" not in codes(found)
+
+
+def test_inline_code_does_not_hide_adjacent_slop_prose(tmp_path):
+    found = run(
+        tmp_path,
+        "The comprehensive `comprehensive-review` package is powerful.\n",
+    )
+    assert "E2" in codes(found)
+
+
+def test_double_backtick_code_span_is_not_slop_prose(tmp_path):
+    found = run(tmp_path, "The identifier is ``comprehensive-review``.\n")
+    assert "E2" not in codes(found)
+
+
+def test_escaped_backticks_do_not_hide_slop_prose(tmp_path):
+    found = run(tmp_path, r"The \`comprehensive-review\` package." + "\n")
+    e2 = [finding for finding in found if finding[1] == "E2"]
+    assert e2 == [("ERROR", "E2", 1, "slop lexicon: 'comprehensive'")]
+
+
+def test_inline_masking_preserves_later_error_line_and_text(tmp_path):
+    found = run(
+        tmp_path,
+        "Use `comprehensive-review`.\nThe comprehensive mode is enabled.\n",
+    )
+    e2 = [finding for finding in found if finding[1] == "E2"]
+    assert e2 == [("ERROR", "E2", 2, "slop lexicon: 'comprehensive'")]
+
+
+def test_inline_masking_preserves_source_offsets():
+    line = "Use `comprehensive-review`, then reject comprehensive prose."
+    masked = slop_lint._strip_inline_code(line)
+    assert len(masked) == len(line)
+    assert masked.index("comprehensive") == line.rindex("comprehensive")
+
+
 # --- E3 internal references (consumer only) --------------------------------
 
 

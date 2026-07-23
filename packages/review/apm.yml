@@ -1,5 +1,5 @@
 name: review
-version: 3.2.0
+version: 4.1.1
 description: >-
   Code review and verification toolkit: the verify skill and the PR reviewer
   agent, and Hobson comprehensive-review, performance-testing-review,
@@ -16,7 +16,7 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/verify#>=2.1.0 <3.0.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.1 <4.0.0
     - >-
       wshobson/agents/plugins/comprehensive-review#5cc2549a50fc672230efd0a0307e2fd27ffba792
     - >-

@@ -13,17 +13,17 @@ starting point, refined by what the catalog actually offers.
 | **Workflow-reviewer** | `workflow-reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Workflow-advisor** | `workflow-advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Integration Gatekeeper** | `integration-gatekeeper` (bundled) | **mid tier** medium | **persistent** | → top tier only if merge reasoning is genuinely gnarly |
-| **Ledger Scribe** | `ledger-scribe` (bundled) | **cheap tier** low, read-only | **persistent** | — |
+| **Audit reporter** | `audit-reporter` (bundled) | **cheap tier** low, read-only | **ephemeral** | — |
 | **Tiebreaker** | `general-purpose` (fresh) | **top tier** high, read-only | ephemeral, gated | → xhigh only if genuinely complex |
 
 All custom roles ship **bundled** with this package (coder, reviewer, advisor,
-gatekeeper, scribe); the remaining routes are built-in agents (`Explore`,
+gatekeeper, audit reporter); the remaining routes are built-in agents (`Explore`,
 `general-purpose`) present everywhere. The package does not assume
 `code-reviewer`/`adversarial-challenger` exist; those are optional upgrades
 when the catalog has them.
 
 "Persistent" means the role is always available for the run, not that it is one
-never-restarted process — recycle the Gatekeeper/Scribe to shed context (see
+never-restarted process — recycle the Gatekeeper to shed context (see
 `references/lifecycle.md`). The orchestrator never executes work directly; see
 SKILL.md Core rules.
 

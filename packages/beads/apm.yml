@@ -1,21 +1,19 @@
 name: beads
-version: 0.4.0
+version: 0.6.0
 description: >-
-  Beads (bd) issue-tracker conventions: the dependency-aware work DAG that
-  agents use for persistent task tracking, atomic work claiming, and multi-agent
-  coordination. Ships steering that scopes beads against SpecKit artifacts
-  (requirements) and TaskCreate (single-session scratch) and fixes conventions
-  for labels vs structured fields vs metadata, actor identity, claim etiquette,
-  JSON envelope determinism, and Dolt sync. Ships a PreToolUse guard denying
-  mutating `gh issue` commands in beads repos (task state lives in bd; issue
-  reads stay allowed). Session-start wiring is native: run `bd setup claude
-  --global` once (SessionStart bd prime injection) and `bd init --skip-hooks`
-  per repo. Requires the bd CLI (gastownhall/beads >= 1.1.0); all surfaces are
-  inert in repos without .beads/.
+  Beads (bd) conventions for persistent task DAGs, atomic claims, native reply
+  threads, decision records, ambiguity handling, actor identity, JSON envelopes,
+  and Dolt sync. Steering separates local comments from cross-boundary decisions
+  and harness wakes from persisted messages. A guard denies mutating `gh issue`
+  commands in Beads repositories. Global `bd setup` wires session start; `bd
+  init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and
+  activates only in repositories with `.beads/`.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
+targets:
+  - claude
+  - codex
 includes: auto
 category: project-lifecycle
 tags:

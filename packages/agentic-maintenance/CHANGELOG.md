@@ -1,5 +1,48 @@
 # Changelog
 
+## [6.1.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.1...agentic-maintenance--v6.1.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d9c360b](https://github.com/srobroek/agentic-packages/commit/d9c360b3ee94e51cc59d997a7baa30e6abeb4d51))
+
+## [6.1.1](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.0...agentic-maintenance--v6.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
+## [6.1.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.0.0...agentic-maintenance--v6.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([649d3cc](https://github.com/srobroek/agentic-packages/commit/649d3ccf623c6cc25ab036cef1b17a614cd50a5e))
+
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v5.0.0...agentic-maintenance--v6.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([2a45b59](https://github.com/srobroek/agentic-packages/commit/2a45b59834c0e6614d76237b6b63e30ba72e3e67))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v4.2.0...agentic-maintenance--v5.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([424b28c](https://github.com/srobroek/agentic-packages/commit/424b28c351aa5f7ad6c3463152f09205addd413f))
+
 ## [4.2.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v4.1.0...agentic-maintenance--v4.2.0) (2026-07-20)
 
 

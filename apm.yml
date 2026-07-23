@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 13.0.0
+version: 16.9.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -13,25 +13,29 @@ scripts:
   check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
   build-release-please: python3 .apm/scripts/build-release-please.py
   check-release-please: python3 .apm/scripts/build-release-please.py --check
+  check-release-baselines: python3 .apm/scripts/check-release-baselines.py
   build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
   check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
-  build-marketplace: apm pack
+  build-marketplace: apm pack && python3 .apm/scripts/build-marketplace-block.py
+  inject-agent-models: python3 .apm/scripts/inject-agent-models.py
+  check-agent-models: python3 .apm/scripts/inject-agent-models.py --check
   build-native-plugins: python3 .apm/scripts/build-native-plugins.py
   check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
   render-docs: python3 .apm/scripts/render-docs.py all
   check-docs: python3 .apm/scripts/render-docs.py all --check
   build-artifacts: >-
     python3 .apm/scripts/build-native-plugins.py && python3
-    .apm/scripts/render-docs.py all && apm pack
+    .apm/scripts/render-docs.py all && apm run build-marketplace
   install: apm install --target claude,codex
-  patch-agents: python3 .apm/scripts/patch-runtime-agents.py --all
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
   audit-codex-config: python3 .apm/scripts/audit-codex-config.py
   sanitize-codex-hooks: python3 .apm/scripts/sanitize-codex-hooks.py
+  sanitize-claude-hooks: python3 .apm/scripts/sanitize-claude-hooks.py
   test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
+  test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
     apm run install && apm compile --target codex,claude --no-constitution &&
-    apm run patch-agents && apm run audit-agentic-assets && apm run
+    apm run inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
   strategy: distributed
@@ -73,6 +77,20 @@ marketplace:
         - agent
         - engineering
         - implementation
+    - name: agent-coder-high
+      source: ./packages/agent-coder-high
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-explorer
+      source: ./packages/agent-explorer
+      category: code-intelligence
+      tags:
+        - agent
+        - codex
+        - routing
     - name: agent-external-repo-worker
       source: ./packages/agent-external-repo-worker
       category: engineering
@@ -80,6 +98,34 @@ marketplace:
         - agent
         - engineering
         - repos
+    - name: agent-luna-high
+      source: ./packages/agent-luna-high
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-luna-low
+      source: ./packages/agent-luna-low
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-luna-medium
+      source: ./packages/agent-luna-medium
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-luna-xhigh
+      source: ./packages/agent-luna-xhigh
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
     - name: agent-management
       source: ./packages/agent-management
       category: agentic-maintenance
@@ -87,6 +133,13 @@ marketplace:
         - skill
         - maintenance
         - apm
+    - name: agent-operator
+      source: ./packages/agent-operator
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
     - name: agent-pr-reviewer
       source: ./packages/agent-pr-reviewer
       category: quality
@@ -94,6 +147,62 @@ marketplace:
         - agent
         - quality
         - review
+    - name: agent-reasoner
+      source: ./packages/agent-reasoner
+      category: planning-product
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-reviewer-high
+      source: ./packages/agent-reviewer-high
+      category: quality
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-reviewer-low
+      source: ./packages/agent-reviewer-low
+      category: quality
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-sol-high
+      source: ./packages/agent-sol-high
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-sol-low
+      source: ./packages/agent-sol-low
+      category: quality
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-sol-medium
+      source: ./packages/agent-sol-medium
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-sol-xhigh
+      source: ./packages/agent-sol-xhigh
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
+    - name: agent-worker
+      source: ./packages/agent-worker
+      category: engineering
+      tags:
+        - agent
+        - codex
+        - routing
     - name: agentic-maintenance
       source: ./packages/agentic-maintenance
       category: agentic-maintenance
@@ -148,14 +257,7 @@ marketplace:
       category: code-intelligence
       tags:
         - bundle
-        - graph
-    - name: codebase-memory
-      source: ./packages/codebase-memory
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - graph
+        - semantic
     - name: codex-hook-contract
       source: ./packages/codex-hook-contract
       category: project-lifecycle
@@ -353,6 +455,14 @@ marketplace:
         - hooks
         - quality
         - lint
+    - name: hooks-serena
+      source: ./packages/hooks-serena
+      category: project-lifecycle
+      tags:
+        - hooks
+        - serena
+        - semantic
+        - lifecycle
     - name: hooks-subagent-model
       source: ./packages/hooks-subagent-model
       category: project-lifecycle
@@ -546,6 +656,12 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
+    - name: mcp-1mcp
+      source: ./packages/mcp-1mcp
+      category: mcp
+      tags:
+        - mcp
+        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp
@@ -558,6 +674,12 @@ marketplace:
       tags:
         - mcp
         - docs
+    - name: mcp-fetcher
+      source: ./packages/mcp-fetcher
+      category: mcp
+      tags:
+        - mcp
+        - web
     - name: mcp-mempalace
       source: ./packages/mcp-mempalace
       category: mcp
@@ -653,6 +775,14 @@ marketplace:
         - release
         - release-please
         - ci-cd
+    - name: release-queue-watch
+      source: ./packages/release-queue-watch
+      category: project-lifecycle
+      tags:
+        - github
+        - pull-requests
+        - ci
+        - monitoring
     - name: resume-cv
       source: ./packages/resume-cv
       category: resume
@@ -768,6 +898,14 @@ marketplace:
       tags:
         - steering
         - git
+    - name: steering-global-bootstrap
+      source: ./packages/steering-global-bootstrap
+      category: steering
+      tags:
+        - steering
+        - bootstrap
+        - global
+        - apm
     - name: steering-infrastructure
       source: ./packages/steering-infrastructure
       category: steering
@@ -854,6 +992,15 @@ marketplace:
         - research
         - services
         - release-notes
+    - name: worktrunk-writer
+      source: ./packages/worktrunk-writer
+      category: project-lifecycle
+      tags:
+        - worktrunk
+        - worktree
+        - agents
+        - isolation
+        - lifecycle
     - name: write-agentic
       source: ./packages/write-agentic
       category: agentic-maintenance

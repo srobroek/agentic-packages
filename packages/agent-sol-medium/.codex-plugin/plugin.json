@@ -1,0 +1,9 @@
+{
+  "name": "agent-sol-medium",
+  "version": "1.1.0",
+  "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

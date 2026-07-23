@@ -23,7 +23,7 @@ bd info >/dev/null 2>&1 || bd init --stealth --prefix orc
 
 | Object | Beads representation |
 |---|---|
-| Run | one **epic** bead; metadata `run_id`, `primary_branch`, `base_sha`, `artifacts` (abs dir) |
+| Run | one **epic** bead; metadata `run_id`, `primary_branch`, `base_sha`, `artifacts` (abs dir), optional `swarm` handle |
 | DAG node | **task** bead, `--parent <epic>`, label `orc-node`, metadata `node` (short id), `scope` (JSON array of globs) |
 | Node dep | `bd dep add <dependent> <dependency>` (`blocks` type), one per edge |
 | Git anchors | node metadata, stamped per the contract below |
@@ -31,6 +31,8 @@ bd info >/dev/null 2>&1 || bd init --stealth --prefix orc
 ```
 EPIC=$(bd create "orchestrate run-<id>" --type epic --silent \
   --metadata '{"run_id":"run-<id>","primary_branch":"main","base_sha":"<sha>","artifacts":"<abs>/.orchestration/run-<id>/artifacts"}')
+# For multi-node runs, persist the returned handle from `bd swarm create "$EPIC"`
+# as metadata key `swarm`; later status/validation reads that handle.
 T1=$(bd create "t1: <desc>" --parent "$EPIC" --labels orc-node --silent \
   --metadata '{"node":"t1","scope":["src/auth/**"]}')
 bd dep add "$T3" "$T1"        # t3 depends on t1
@@ -130,11 +132,12 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 
 ## Gatekeeper primitives
 
-- **Mutual exclusion:** `bd merge-slot create` once per run (idempotent);
-  `bd merge-slot acquire` before integrating, `release` after. A second
-  acquirer fails, or queues with `--wait` — FCFS order comes from the waiters
-  queue. On restart, `bd merge-slot check`: held by your own actor name → a
-  previous incarnation crashed mid-merge; verify the tree, then `release`.
+- **Mutual exclusion:** `bd merge-slot create` once per run (idempotent), with
+  a stable holder such as `run-<id>-gatekeeper`. Acquire without `--wait`;
+  contention is advisory, so report the current holder and retry after release.
+  Always release on success, conflict, CI wait, and failure. On restart,
+  `bd merge-slot check` and verify remote state before releasing a slot held by
+  the same stable actor.
 - **Async waits:** `bd gate create --type=gh:pr --blocks <bead> --await-id <pr#>`
   (PR merge) or `--type=gh:run --await-id <run-id>` (CI); `bd gate check`
   evaluates and closes resolved gates. A gated bead stays out of `bd ready`.

@@ -1,5 +1,5 @@
 name: lsp-python
-version: 0.3.0
+version: 0.4.0
 description: >-
   Python LSP server: registers pyright (pyright-langserver) so agents get hover,
   diagnostics, go-to-definition, and references on Python sources. Installed
@@ -7,7 +7,7 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
+target: claude
 includes: auto
 category: languages
 tags:

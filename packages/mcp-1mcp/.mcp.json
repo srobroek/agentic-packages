@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "1mcp": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        "launcher_rel=\"apm_modules/srobroek/agentic-packages/packages/mcp-1mcp/scripts/launcher.sh\"; for apm_root in \"${APM_HOME:-}\" \"${HOME}/.apm\" \"$PWD/.apm\"; do [ -n \"$apm_root\" ] || continue; launcher=\"$apm_root/$launcher_rel\"; [ -r \"$launcher\" ] && exec bash \"$launcher\"; done; echo 1mcp-apm-launcher-not-found-run-apm-install >&2; exit 1"
+      ]
+    }
+  }
+}

@@ -1,5 +1,41 @@
 # Changelog
 
+## [8.1.1](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.0...code-intelligence--v8.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d9c360b](https://github.com/srobroek/agentic-packages/commit/d9c360b3ee94e51cc59d997a7baa30e6abeb4d51))
+
+## [8.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.0.0...code-intelligence--v8.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([649d3cc](https://github.com/srobroek/agentic-packages/commit/649d3ccf623c6cc25ab036cef1b17a614cd50a5e))
+
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v7.0.0...code-intelligence--v8.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([424b28c](https://github.com/srobroek/agentic-packages/commit/424b28c351aa5f7ad6c3463152f09205addd413f))
+
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v6.2.0...code-intelligence--v7.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* share MCP backends through 1MCP
+
+### Features
+
+* share MCP backends through 1MCP ([4896601](https://github.com/srobroek/agentic-packages/commit/4896601ca0326762493f340526a97a341b98e24a))
+
 ## [6.2.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v6.1.0...code-intelligence--v6.2.0) (2026-07-20)
 
 

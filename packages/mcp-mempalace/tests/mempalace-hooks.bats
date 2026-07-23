@@ -28,9 +28,19 @@ setup() {
   # Stub mempalace on PATH: records invocations, emits canned status.
   BIN="$(mktemp -d "${BATS_TEST_TMPDIR}/bin.XXXXXX")"
   CALLS="$BIN/calls.log"
+  STAGED="$BIN/staged.log"
+  MINE_GATE="$BIN/mine.gate"
   cat > "$BIN/mempalace" <<EOF
 #!/usr/bin/env bash
+if [ "\$1" = "mine" ] && [ -d "\$2" ]; then
+  for staged in "\$2"/*.jsonl; do
+    [ -e "\$staged" ] && basename "\$staged" >> "$STAGED"
+  done
+fi
 echo "\$@" >> "$CALLS"
+if [ "\$1" = "mine" ]; then
+  while [ -e "$MINE_GATE" ]; do sleep 0.05; done
+fi
 if [ "\$1" = "status" ]; then
   wing="\$(basename "$REPO")"
   printf '  WING: %s\n    ROOM: technical  12 drawers\n    ROOM: decisions  3 drawers\n' "\$wing"
@@ -39,6 +49,10 @@ exit 0
 EOF
   chmod +x "$BIN/mempalace"
   export PATH="$BIN:$PATH"
+}
+
+teardown() {
+  rm -f "${MINE_GATE:-}"
 }
 
 # --- parse ------------------------------------------------------------------
@@ -90,6 +104,26 @@ EOF
   [ -z "$output" ]
 }
 
+@test "wake-up: drains stdin before the missing-dependency gate" {
+  rm "$BIN/mempalace"
+  run /bin/bash -o pipefail -c '
+    dd if=/dev/zero bs=1048576 count=8 2>/dev/null |
+      (cd "$1" && PATH=/usr/bin:/bin /bin/bash "$2")
+  ' _ "$REPO" "$WAKE"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "wake-up: drains stdin before the non-repo gate" {
+  DIR="$(mktemp -d "${BATS_TEST_TMPDIR}/nongit.XXXXXX")"
+  run /bin/bash -o pipefail -c '
+    dd if=/dev/zero bs=1048576 count=8 2>/dev/null |
+      (cd "$1" && PATH="$2:/usr/bin:/bin" /bin/bash "$3")
+  ' _ "$DIR" "$BIN" "$WAKE"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 # --- auto-mine --------------------------------------------------------------
 
 _transcript() {
@@ -99,9 +133,12 @@ _transcript() {
 }
 
 _wait_calls() {
+  local expected="${1:-1}"
+  local count
   # Detached worker is async; poll briefly for the stub call log.
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    [ -s "$CALLS" ] && return 0
+    count="$(grep -c -- "--mode convos" "$CALLS" 2>/dev/null || true)"
+    [ "$count" -ge "$expected" ] && return 0
     sleep 0.25
   done
   return 1
@@ -147,17 +184,15 @@ EOF
 
 @test "auto-mine: resumed session (grown transcript) stages under a new name" {
   T="$(_transcript)"
-  jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
-  printf '{"type":"user"}\n' >> "$T"
+  touch "$MINE_GATE"
   jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
   _wait_calls
-  wing="$(basename "$REPO")"
-  # both line-count-suffixed names were staged at some point; at minimum the
-  # names differ, so the grown transcript is not skipped as already-mined
-  run ls "$HOME/.mempalace/auto-mine/staging/$wing/"
-  # (files may already be deleted by the successful mine — assert via call log)
-  c="$(grep -c -- "--mode convos" "$CALLS")"
-  [ "$c" -ge 2 ]
+  printf '{"type":"user"}\n' >> "$T"
+  jq -cn --arg t "$T" '{transcript_path:$t}' | (cd "$REPO" && /bin/bash "$MINE")
+  _wait_calls 2
+  rm "$MINE_GATE"
+  grep -Fxq 'session-abc.2.jsonl' "$STAGED"
+  grep -Fxq 'session-abc.3.jsonl' "$STAGED"
 }
 
 @test "auto-mine: no transcript_path on stdin -> exits 0, no mine" {

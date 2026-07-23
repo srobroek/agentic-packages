@@ -15,6 +15,10 @@
 # Never blocks a session start; any failure exits 0 with no output.
 set -euo pipefail
 
+# Drain the hook payload before any self-gate can exit. Hook runners may still
+# be writing stdin when this process starts, and an early exit gives them EPIPE.
+cat >/dev/null 2>&1 || true
+
 # mempalace is optional tooling — if it isn't installed, stay silent.
 command -v mempalace >/dev/null 2>&1 || exit 0
 

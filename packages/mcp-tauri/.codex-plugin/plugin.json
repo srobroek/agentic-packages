@@ -1,10 +1,9 @@
 {
   "name": "mcp-tauri",
-  "version": "1.2.0",
-  "description": "MCP server package for Tauri, enabling AI assistants to build, test, and debug Tauri v2 apps — UI automation, IPC monitoring, log streaming, mobile device listing, and plugin setup.",
+  "version": "2.0.0",
+  "description": "Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment.",
   "author": {
     "name": "Sjors Robroek"
   },
-  "license": "Apache-2.0",
-  "mcpServers": "./.codex.mcp.json"
+  "license": "Apache-2.0"
 }

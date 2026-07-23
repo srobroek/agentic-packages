@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.1.1](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v3.1.0...agent-pr-reviewer--v3.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* route agent code discovery through Serena ([bf9593c](https://github.com/srobroek/agentic-packages/commit/bf9593c14f5d486af11f2d364e8d5dd66d3b0306))
+
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v3.0.0...agent-pr-reviewer--v3.1.0) (2026-07-21)
+
+
+### Features
+
+* **agents:** preserve model routing in workflow packages ([df86afc](https://github.com/srobroek/agentic-packages/commit/df86afc45f5c6da979e939aba1ed7f5fe2fcbc6a))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v2.1.0...agent-pr-reviewer--v3.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* share MCP backends through 1MCP
+
+### Features
+
+* share MCP backends through 1MCP ([4896601](https://github.com/srobroek/agentic-packages/commit/4896601ca0326762493f340526a97a341b98e24a))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v2.0.0...agent-pr-reviewer--v2.1.0) (2026-07-16)
 
 

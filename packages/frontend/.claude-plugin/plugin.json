@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "3.3.0",
+  "version": "4.0.1",
   "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page plugins.",
   "author": {
     "name": "Sjors Robroek"

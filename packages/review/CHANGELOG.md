@@ -1,5 +1,30 @@
 # Changelog
 
+## [4.1.1](https://github.com/srobroek/agentic-packages/compare/review--v4.1.0...review--v4.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d9c360b](https://github.com/srobroek/agentic-packages/commit/d9c360b3ee94e51cc59d997a7baa30e6abeb4d51))
+
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/review--v4.0.0...review--v4.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([649d3cc](https://github.com/srobroek/agentic-packages/commit/649d3ccf623c6cc25ab036cef1b17a614cd50a5e))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/review--v3.2.0...review--v4.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([424b28c](https://github.com/srobroek/agentic-packages/commit/424b28c351aa5f7ad6c3463152f09205addd413f))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/review--v3.1.0...review--v3.2.0) (2026-07-20)
 
 

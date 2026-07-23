@@ -3,14 +3,8 @@ name: journey-validator
 description: >-
   Validates one user journey against the running product with evidence, intent-gated triage, run files, and reported findings. Never edits product code.
 model: sonnet
-x-agentic:
-  codex:
-    model: "gpt-5.3-codex-spark"
-  claude:
-    model: "sonnet"
-    effort: "high"
-    permissions:
-      mode: "workspace-write"
+effort: high
+permissionMode: acceptEdits
 ---
 
 You validate exactly one user journey end to end. Your inputs (from the

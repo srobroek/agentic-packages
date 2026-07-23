@@ -57,7 +57,8 @@ teardown() {
   [ "$status" -eq 0 ]
   ctx="$(echo "$output" | jq -r '.hookSpecificOutput.additionalContext')"
   # Project identity + code-discovery routing (this package's own concern)
-  echo "$ctx" | grep -q "codebase-memory-mcp" || { echo "no discovery routing"; return 1; }
+  echo "$ctx" | grep -q "Serena" || { echo "no semantic discovery routing"; return 1; }
+  echo "$ctx" | grep -q "rg for exact text" || { echo "no exact-search routing"; return 1; }
   # Working-style discipline moved to steering-pragmatic; it MUST NOT appear here.
   for gone in "MANDATORY RULES" "MUST Code economy" "MUST YAGNI" "MUST Comments" "MUST Reports"; do
     if echo "$ctx" | grep -q "$gone"; then echo "working-style leaked back: $gone"; return 1; fi

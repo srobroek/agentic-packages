@@ -1,5 +1,90 @@
 # Changelog
 
+## [10.2.2](https://github.com/srobroek/agentic-packages/compare/core--v10.2.1...core--v10.2.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([836d341](https://github.com/srobroek/agentic-packages/commit/836d3411bb18042103f690789c4b9631fc23fbd6))
+
+## [10.2.1](https://github.com/srobroek/agentic-packages/compare/core--v10.2.0...core--v10.2.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([cddb9de](https://github.com/srobroek/agentic-packages/commit/cddb9de421e4cea5a28e96b71626610d52adaaee))
+
+## [10.2.0](https://github.com/srobroek/agentic-packages/compare/core--v10.1.1...core--v10.2.0) (2026-07-22)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([c1720ad](https://github.com/srobroek/agentic-packages/commit/c1720ad12f33be022f89a744192cf6ed8b1380c5))
+
+
+### Bug Fixes
+
+* prevent subagents from inheriting unintended models ([44f3d50](https://github.com/srobroek/agentic-packages/commit/44f3d501dfeb3ce2b645e53b5ddc77a63938fdb6))
+
+## [10.1.1](https://github.com/srobroek/agentic-packages/compare/core--v10.1.0...core--v10.1.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([a7d6a10](https://github.com/srobroek/agentic-packages/commit/a7d6a10b5a89ab5ca128e8fe0bd873b48e4e6b54))
+
+## [10.1.0](https://github.com/srobroek/agentic-packages/compare/core--v10.0.0...core--v10.1.0) (2026-07-21)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([f40d5f4](https://github.com/srobroek/agentic-packages/commit/f40d5f464d993ce0628cc52326ecdf0f6863922f))
+
+## [10.0.0](https://github.com/srobroek/agentic-packages/compare/core--v9.0.0...core--v10.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1c358a4](https://github.com/srobroek/agentic-packages/commit/1c358a48506fd51c3eab78f3c523b540ada12a41))
+
+## [9.0.0](https://github.com/srobroek/agentic-packages/compare/core--v8.0.0...core--v9.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([2a45b59](https://github.com/srobroek/agentic-packages/commit/2a45b59834c0e6614d76237b6b63e30ba72e3e67))
+
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/core--v7.7.0...core--v8.0.0) (2026-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* make semantic code intelligence the core default
+
+### Features
+
+* make semantic code intelligence the core default ([accf483](https://github.com/srobroek/agentic-packages/commit/accf483fb8856e1b61f0c95d9b428c30b544f049))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d404fa5](https://github.com/srobroek/agentic-packages/commit/d404fa56d5d41c2b65af02525335cc91574b19d0))
+
+## [7.7.0](https://github.com/srobroek/agentic-packages/compare/core--v7.6.0...core--v7.7.0) (2026-07-20)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([df10eb4](https://github.com/srobroek/agentic-packages/commit/df10eb45b8a8306bed96ef925d1d5ca7d5d6d2c6))
+
 ## [7.6.0](https://github.com/srobroek/agentic-packages/compare/core--v7.5.0...core--v7.6.0) (2026-07-20)
 
 

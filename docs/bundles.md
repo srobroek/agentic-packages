@@ -12,13 +12,13 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
 | `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-coder`, `agent-pr-reviewer`, `documentation-standards`^, `plugin-eval`^ |
-| `beads` | Beads (bd) issue-tracker conventions | self-contained |
+| `beads` | Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync | self-contained |
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
-| `code-intelligence` | Codebase understanding toolkit | `codebase-memory`, `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
+| `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations | self-contained |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `beads`, `grilling`^, `grill-with-docs`^, `context-management`^, `agent-orchestration`^ |
 | `data-ai` | Data and AI toolkit | `steering-data`, `llm-application-dev`^, `data-engineering`^, `machine-learning-ops`^, `database-design`^, `database-migrations`^, `database-cloud-optimization`^ |
-| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit`, `mcp-package-version` |
+| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit` |
 | `developer-tools` | Everyday developer tooling | `developer-essentials`^, `debugging-toolkit`^, `comprehensive-review`^, `git-pr-workflows`^ |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `docs-architecture` | Documentation standards | `documentation-standards`^ |

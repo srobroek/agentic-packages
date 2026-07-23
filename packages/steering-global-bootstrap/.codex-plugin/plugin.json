@@ -1,0 +1,9 @@
+{
+  "name": "steering-global-bootstrap",
+  "version": "1.1.0",
+  "description": "User-scope bootstrap steering that keeps reusable agentic assets in APM packages and limits chezmoi to session profiles and dotfile management. Install globally; project behavior remains project-local.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

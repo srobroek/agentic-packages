@@ -31,9 +31,27 @@ def _make_script(hooks_dir: Path, package: str, name: str) -> Path:
 def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     hooks_dir = tmp_path / "hooks"
     live = _make_script(hooks_dir, "live-pkg", "real.sh")
+    obsolete = _make_script(
+        hooks_dir,
+        "agent-coder",
+        "coder-delegation-reminder.sh",
+    )
+    future_agent_coder_hook = _make_script(
+        hooks_dir,
+        "agent-coder",
+        "future-legitimate-hook.sh",
+    )
     events = {
         "PreToolUse": [
             {"matcher": "Bash", "hooks": [{"type": "command", "command": str(live)}]},
+            {
+                "matcher": "Edit",
+                "hooks": [{"type": "command", "command": str(obsolete)}],
+            },
+            {
+                "matcher": "Stop",
+                "hooks": [{"type": "command", "command": str(future_agent_coder_hook)}],
+            },
             {
                 "matcher": "Bash",
                 "hooks": [
@@ -52,7 +70,7 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
 
     removed = sanitize_claude_hooks.clean_events(events)
 
-    assert removed == 2
+    assert removed == 3
     assert "Stop" not in events  # emptied event is deleted
     commands = [
         handler["command"]
@@ -62,6 +80,8 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     ]
     assert str(live) in commands
     assert "echo hi" in commands
+    assert str(obsolete) not in commands
+    assert str(future_agent_coder_hook) in commands
     assert not any("dead-pkg" in c for c in commands)
 
 
@@ -74,6 +94,44 @@ def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
     }
     assert sanitize_claude_hooks.clean_events(events) == 1
     assert events == {}
+
+
+def test_retired_agent_coder_hook_is_removed_even_if_script_exists(
+    tmp_path: Path,
+) -> None:
+    retired = _make_script(
+        tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh"
+    )
+    events = {
+        "PreToolUse": [
+            {"hooks": [{"type": "command", "command": str(retired)}]}
+        ]
+    }
+
+    assert sanitize_claude_hooks.clean_events(events) == 1
+    assert events == {}
+
+
+def test_deduplicate_groups_keeps_apm_owned_copy() -> None:
+    handler = {"type": "command", "command": "serena-hooks remind"}
+    legacy = {"matcher": "*", "hooks": [handler]}
+    managed = {
+        "matcher": "*",
+        "hooks": [handler],
+        "_apm_source": "hooks-serena",
+    }
+    events = {
+        "PreToolUse": [legacy, managed],
+        "SessionStart": [managed, legacy],
+    }
+
+    removed = sanitize_claude_hooks.deduplicate_groups(events)
+
+    assert removed == 2
+    assert events == {
+        "PreToolUse": [managed],
+        "SessionStart": [managed],
+    }
 
 
 def test_prune_stale_removes_unreferenced_hook_dirs(tmp_path: Path) -> None:

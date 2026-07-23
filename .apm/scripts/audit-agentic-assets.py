@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Report runtime parity and agent metadata completeness."""
+"""Report target-aware agent and shared skill runtime parity."""
 
 from __future__ import annotations
 
 from pathlib import Path
+
+import yaml
 
 
 def names(path: Path, suffix: str) -> set[str]:
@@ -80,17 +82,41 @@ def parse_scalar_map(frontmatter: str) -> dict:
     return root
 
 
+def agent_package_target(path: Path) -> str:
+    package_root = path.parents[2]
+    manifest = yaml.safe_load((package_root / "apm.yml").read_text(encoding="utf-8")) or {}
+    return str(manifest.get("target") or "all")
+
+
+def agent_model_mapping(path: Path, name: str) -> dict[str, str]:
+    mapping_path = path.parents[1] / "agent-models.yml"
+    if not mapping_path.is_file():
+        return {}
+    document = yaml.safe_load(mapping_path.read_text(encoding="utf-8")) or {}
+    agents = document.get("agents") or {}
+    runtime = agents.get(name) if isinstance(agents, dict) else None
+    codex = runtime.get("codex") if isinstance(runtime, dict) else None
+    return {key: str(value) for key, value in codex.items()} if isinstance(codex, dict) else {}
+
+
 def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
     metadata: dict[str, dict[str, str]] = {}
     for path in source_agent_paths(package):
         frontmatter = split_frontmatter(path.read_text(encoding="utf-8"))
         parsed = parse_scalar_map(frontmatter)
-        codex = parsed.get("x-agentic", {}).get("codex", {}) if isinstance(parsed.get("x-agentic"), dict) else {}
-        metadata[path.name.removesuffix(".agent.md")] = {
-            "model": str(codex.get("model", "")) if isinstance(codex, dict) else "",
-            "effort": str(codex.get("reasoning_effort", "")) if isinstance(codex, dict) else "",
-            "access": str(codex.get("sandbox_mode", "")) if isinstance(codex, dict) else "",
-            "approval": str(codex.get("approval_policy", "")) if isinstance(codex, dict) else "",
+        name = str(parsed.get("name") or path.name.removesuffix(".agent.md"))
+        mapping = agent_model_mapping(path, name)
+        metadata[str(path.relative_to(package))] = {
+            "name": name,
+            "target": agent_package_target(path),
+            "model": str(parsed.get("model", "")),
+            "effort": str(parsed.get("effort", "")),
+            "model_reasoning_effort": str(parsed.get("model_reasoning_effort", "")),
+            "permissionMode": str(parsed.get("permissionMode", "")),
+            "tools": str(parsed.get("tools", "")),
+            "x-agentic": str(parsed.get("x-agentic", "")),
+            "mapped_model": mapping.get("model", ""),
+            "mapped_reasoning_effort": mapping.get("reasoning_effort", ""),
         }
     return metadata
 
@@ -98,7 +124,14 @@ def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
 def main() -> int:
     root = Path.cwd()
     package = package_root(root) or root
-    source = {path.name.removesuffix(".agent.md") for path in source_agent_paths(package)}
+    metadata = source_agent_metadata(package)
+    source = {actual["name"] for actual in metadata.values()}
+    expected_claude = {
+        actual["name"] for actual in metadata.values() if actual["target"] in {"all", "claude"}
+    }
+    expected_codex = {
+        actual["name"] for actual in metadata.values() if actual["target"] in {"all", "codex"}
+    }
     skills = source_skill_names(package)
     codex = names(root / ".codex" / "agents", ".toml")
     claude = names(root / ".claude" / "agents", ".md")
@@ -114,21 +147,30 @@ def main() -> int:
     } if (root / ".claude" / "skills").is_dir() else set()
 
     print("Agent parity")
-    print(f"- source: {len(source)}")
-    print(f"- codex: {len(codex)}")
+    print(f"- source definitions: {len(metadata)}")
+    print(f"- unique roles: {len(source)}")
+    print(f"- expected claude: {len(expected_claude)}")
+    print(f"- expected codex: {len(expected_codex)}")
     print(f"- claude: {len(claude)}")
+    print(f"- codex: {len(codex)}")
     parity_errors: list[str] = []
     if source:
-        if missing := sorted(source - codex):
-            print("- missing in codex: " + ", ".join(missing))
-            parity_errors.append(f"{len(missing)} source agents missing in codex")
-        if missing := sorted(source - claude):
+        if missing := sorted(expected_claude - claude):
             print("- missing in claude: " + ", ".join(missing))
-            parity_errors.append(f"{len(missing)} source agents missing in claude")
-        if extra := sorted(codex - source):
-            print("- codex-only: " + ", ".join(extra))
-        if extra := sorted(claude - source):
+            parity_errors.append(f"{len(missing)} Claude agents missing")
+        if missing := sorted(expected_codex - codex):
+            print("- missing in codex: " + ", ".join(missing))
+            parity_errors.append(f"{len(missing)} Codex agents missing")
+        if extra := sorted(claude - expected_claude):
             print("- claude-only: " + ", ".join(extra))
+        if extra := sorted(codex - expected_codex):
+            print("- codex-only: " + ", ".join(extra))
+        if leaked := sorted(expected_claude & (codex - expected_codex)):
+            print("- Claude-targeted agents leaked into codex: " + ", ".join(leaked))
+            parity_errors.append(f"{len(leaked)} Claude-targeted agents leaked into Codex")
+        if leaked := sorted(expected_codex & (claude - expected_claude)):
+            print("- Codex-targeted agents leaked into claude: " + ", ".join(leaked))
+            parity_errors.append(f"{len(leaked)} Codex-targeted agents leaked into Claude")
 
     print("\nSkill parity")
     print(f"- source: {len(skills)}")
@@ -170,17 +212,27 @@ def main() -> int:
     ]:
         print(f"- {candidate}")
 
-    metadata = source_agent_metadata(package)
     print("\nAgent metadata")
     missing = []
     if (package / "packages").is_dir() and not source:
         missing.append("no source agents discovered in package monorepo")
     if (package / "packages").is_dir() and not skills:
         missing.append("no source skills discovered in package monorepo")
-    for agent, actual in sorted(metadata.items()):
-        for key in ("model", "effort", "access", "approval"):
+    for source_path, actual in sorted(metadata.items()):
+        required = []
+        if actual["target"] in {"all", "claude"}:
+            required.extend(("model", "effort", "permissionMode"))
+        for key in required:
             if not actual.get(key):
-                missing.append(f"{agent}: missing {key}")
+                missing.append(f"{source_path}: missing {key}")
+        if actual["target"] in {"all", "codex"}:
+            for key in ("mapped_model", "mapped_reasoning_effort"):
+                if not actual.get(key):
+                    missing.append(f"{source_path}: missing package-local {key}")
+        if actual.get("x-agentic"):
+            missing.append(f"{source_path}: legacy x-agentic block remains")
+        if actual["target"] in {"all", "codex"} and actual.get("tools"):
+            missing.append(f"{source_path}: Codex profile declares unsupported tools")
     print(f"- checked: {len(metadata)}")
     print(f"- missing fields: {len(missing)}")
     for item in missing[:30]:

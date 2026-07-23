@@ -1,0 +1,9 @@
+{
+  "name": "agent-sol-low",
+  "version": "1.1.0",
+  "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

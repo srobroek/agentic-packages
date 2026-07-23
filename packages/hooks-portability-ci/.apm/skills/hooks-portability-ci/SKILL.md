@@ -1,6 +1,6 @@
 ---
 name: hooks-portability-ci
-description: Lint shipped hook scripts for the portability failure modes the audits found - bash 3.2 parse errors (;;& fallthrough, mapfile/readarray), GNU-only sed/grep constructs (\b word boundaries, +?/*? lazy quantifiers), and string-form tool_input payloads that crash jq. Use when the user asks to check hook portability, lint hooks for bash 3.2 / BSD, run the portability gate, or wire a portability check into CI.
+description: Checks shipped hooks for Bash 3.2, BSD userland, and string tool-input compatibility. Use for hook portability audits or CI gates.
 ---
 
 # Hook Portability CI

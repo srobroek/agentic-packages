@@ -1,0 +1,13 @@
+name: agent-luna-low
+version: 1.1.0
+description: Explicit Luna low-effort agent profile for tiny mechanical tasks.
+author: Sjors Robroek
+license: Apache-2.0
+type: hybrid
+target: codex
+includes: auto
+category: engineering
+tags:
+  - agent
+  - codex
+  - routing

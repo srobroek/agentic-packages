@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/pr-create-guard.sh",
+            "statusMessage": "Checking draft PR and Beads linkage policy...",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -60,6 +60,14 @@ setup() {
   printf '%s' "$out" | jq -e '.systemMessage | test("Unpushed")' >/dev/null
 }
 
+@test "warn: branch without upstream stays silent" {
+  BARE="$(mktemp -d "${BATS_TEST_TMPDIR}/bare.XXXXXX")"; git init -q --bare "$BARE"
+  printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init
+  git -C "$REPO" remote add origin "$BARE"
+  out="$(jq -cn '{stop_hook_active:false}' | (cd "$REPO" && /bin/bash "$WARN") 2>&1)"
+  [ -z "$out" ]
+}
+
 @test "warn: pushed and clean -> no output" {
   BARE="$(mktemp -d "${BATS_TEST_TMPDIR}/bare.XXXXXX")"; git init -q --bare "$BARE"
   printf 'v1\n' > "$REPO/f.txt"; git -C "$REPO" add f.txt; git -C "$REPO" commit -q -m init

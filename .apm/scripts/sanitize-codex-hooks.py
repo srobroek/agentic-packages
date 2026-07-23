@@ -24,8 +24,11 @@ SUPPORTED_EVENTS = {
     "SubagentStop",
     "Stop",
 }
+OBSOLETE_COMMAND_SUFFIXES = {
+    "/agent-coder/scripts/coder-delegation-reminder.sh",
+}
 CODEX_UNAVAILABLE_PACKAGES = {
-    "agent-coder",
+    "hooks-subagent-model",
     "hooks-subagent-worktree",
     "hooks-worktree",
 }
@@ -44,7 +47,33 @@ def runtime_semantics(value: object) -> object:
     return value
 
 
-def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
+def command_script_path(
+    command: str, working_dir: Path | None = None
+) -> Path | None:
+    """Return a checkable hook script path, resolving relative paths."""
+    token = command.strip().split()[0] if command.strip() else ""
+    if token.startswith("~"):
+        return Path(token).expanduser()
+    if token.startswith("/"):
+        return Path(token)
+    if working_dir is not None and "/" in token:
+        return working_dir / token
+    return None
+
+
+def handler_is_stale(handler: dict, working_dir: Path | None = None) -> bool:
+    if handler.get("type") != "command":
+        return False
+    command = handler.get("command")
+    if not isinstance(command, str):
+        return False
+    script = command_script_path(command, working_dir)
+    return script is not None and not script.is_file()
+
+
+def sanitize(
+    config: dict, working_dir: Path | None = None
+) -> tuple[dict, dict[str, int]]:
     source_hooks = config.get("hooks", {})
     clean_hooks: dict[str, list[dict]] = {}
     counts = {
@@ -67,9 +96,18 @@ def sanitize(config: dict) -> tuple[dict, dict[str, int]]:
             clean_handlers: list[dict] = []
             for handler in group.get("hooks", []):
                 command = handler.get("command", "")
-                if handler.get("type") != "command" or any(
-                    f"/{package}/" in command
-                    for package in CODEX_UNAVAILABLE_PACKAGES
+                command_token = command.strip().split()[0] if command.strip() else ""
+                if (
+                    handler.get("type") != "command"
+                    or handler_is_stale(handler, working_dir)
+                    or any(
+                        command_token.endswith(suffix)
+                        for suffix in OBSOLETE_COMMAND_SUFFIXES
+                    )
+                    or any(
+                        f"/{package}/" in command
+                        for package in CODEX_UNAVAILABLE_PACKAGES
+                    )
                 ):
                     counts["handlers_removed"] += 1
                     continue
@@ -184,7 +222,8 @@ def main() -> int:
         return 0
 
     original = json.loads(args.path.read_text(encoding="utf-8"))
-    clean, counts = sanitize(original)
+    working_dir = args.path.expanduser().resolve().parent.parent
+    clean, counts = sanitize(original, working_dir)
     config_changed = clean != original
     hooks_dir = args.hooks_dir or args.path.parent / "hooks"
     stale = (

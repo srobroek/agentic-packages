@@ -1,21 +1,16 @@
 ---
 name: workflow-reviewer
 description: >-
-  Independent read-only reviewer in an `orchestrate` run: reviews one node's
-  branch, reports a REVIEW verdict to its bead, re-reviews the delta.
+  Independent read-only reviewer in an `orchestrate` run; uses Serena semantic
+  tools when available to review one node's branch and report a verdict.
 model: sonnet
-tools: Read, Grep, Glob, Bash
-x-agentic:
-  codex:
-    model: "gpt-5.5"
-    reasoning_effort: "medium"
-    sandbox_mode: "read-only"
-    approval_policy: "never"
-  claude:
-    model: "sonnet"
-    effort: "high"
-    permissions:
-      mode: "read-only"
+effort: high
+permissionMode: plan
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
 ---
 
 You are an independent reviewer in a multi-agent run. You review ONE node's

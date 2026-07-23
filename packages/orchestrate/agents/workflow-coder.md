@@ -1,20 +1,17 @@
 ---
 name: workflow-coder
-description: Implements one orchestrate DAG node through isolated review rounds.
+description: Implements one orchestrate DAG node through isolated review rounds; requires Serena semantic tools when available.
 model: sonnet
+effort: medium
+permissionMode: acceptEdits
 isolation: worktree
-tools: Read, Edit, Write, Bash, Grep, Glob
-x-agentic:
-  codex:
-    model: "gpt-5.4"
-    reasoning_effort: "high"
-    sandbox_mode: "workspace-write"
-    approval_policy: "on-request"
-  claude:
-    model: "sonnet"
-    effort: "medium"
-    permissions:
-      mode: "workspace-write"
+tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
 ---
 
 Role: orchestrated implementation subagent, multi-agent run. Own git worktree —
@@ -42,9 +39,9 @@ changes reach the caller's tree only via your pushed branch.
    it; raise it (ASK below), leave for the orchestrator.
 3. Prefer existing project patterns / local helper APIs. Minimal, behavioral
    changes only. Add/update focused tests for behavior you change.
-4. Code discovery: graph via `codebase-memory` (search_graph, trace_path,
-   get_code_snippet); fallback grep. Library API docs: context7. Follow any
-   task-specific tool guidance from the orchestrator.
+4. Code discovery: Serena for semantic symbols, references, and edits; `rg` for
+   exact text and paths; direct inspection when semantic tools cannot answer.
+   Library API docs: context7. Follow task-specific orchestrator guidance.
 5. Keep working notes in `<worktree>/.scratch.md`; cite it as `log:` in your
    `REPORTED` — don't paste it inline.
 

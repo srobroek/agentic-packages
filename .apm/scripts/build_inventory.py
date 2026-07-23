@@ -17,7 +17,7 @@ provided transitively by ``pip install apm-cli`` in CI).
 The emitted context dict (see :func:`build_context`) carries:
 
 * ``packages`` -- per-package records sorted by name, each with
-  ``name, description, version, type, category, tags, source, deps,
+  ``name, description, version, type, target, targets, category, tags, source, deps,
   classification, is_bundle, includes_resolved`` (the resolved member list with
   first-party vs external ``^`` marking, matching the old README renderer).
 * ``by_kind`` -- packages grouped by classification (bundle/skill/agent/
@@ -53,8 +53,31 @@ _FIRST_PARTY = re.compile(r"srobroek/agentic-packages/packages/([\w-]+)")
 # only on hand-authored EXTERNAL entries (a marketplace package whose `source` is
 # a git repo, not ./packages/<dir>) and are slotted into canonical position here.
 _MARKETPLACE_ENTRY_ORDER = (
-    "name", "source", "ref", "subdir", "version", "tag_pattern", "category", "tags",
+    "name",
+    "source",
+    "ref",
+    "subdir",
+    "version",
+    "tag_pattern",
+    "category",
+    "tags",
 )
+
+_SUPPORTED_TARGETS = ("claude", "codex")
+
+
+def _package_targets(manifest: dict) -> tuple[str, list[str]]:
+    """Return canonical package target metadata.
+
+    Package manifests use the scalar ``target`` contract. ``all`` (and a
+    missing target for compatibility with older packages) means both supported
+    marketplace runtimes.
+    """
+    target = str(manifest.get("target") or "all")
+    if target not in {"all", *_SUPPORTED_TARGETS}:
+        raise ValueError(f"unsupported package target: {target}")
+    targets = list(_SUPPORTED_TARGETS) if target == "all" else [target]
+    return target, targets
 
 
 def _load_manifest_path(path: Path) -> dict:
@@ -73,8 +96,11 @@ def _apm_deps(manifest: dict) -> list[str]:
         if isinstance(dep, str):
             out.append(dep)
         elif isinstance(dep, dict):
-            # object form: prefer git/id locator for naming
-            out.append(str(dep.get("git") or dep.get("id") or dep.get("path") or ""))
+            git = str(dep.get("git") or dep.get("id") or "").rstrip("/")
+            path = str(dep.get("path") or "").strip("/")
+            ref = str(dep.get("ref") or "")
+            locator = "/".join(part for part in (git, path) if part)
+            out.append(f"{locator}#{ref}" if locator and ref else locator)
     return [d for d in out if d]
 
 
@@ -186,7 +212,7 @@ def _external_repo_slug(source) -> str:
     s = source.strip()
     s = s.removeprefix("https://").removeprefix("http://")
     if s.startswith("github.com/"):
-        s = s[len("github.com/"):]
+        s = s[len("github.com/") :]
     s = s.removesuffix(".git")
     parts = [p for p in s.split("/") if p]
     # owner/repo lives in the FIRST two segments for owner/repo and
@@ -252,6 +278,7 @@ def build_context(marketplace: dict | None = None) -> dict:
         found.add(name)
         pkg_dir = manifest.parent
         deps = _apm_deps(pkg)
+        target, targets = _package_targets(pkg)
         classification = _classify(name, pkg_dir)
         description = str(pkg.get("description") or "").strip()
 
@@ -261,7 +288,9 @@ def build_context(marketplace: dict | None = None) -> dict:
             includes = _includes_resolved(deps)
             if not includes:
                 includes = (
-                    "self-contained" if (pkg_dir / ".apm").is_dir() else "external packages"
+                    "self-contained"
+                    if (pkg_dir / ".apm").is_dir()
+                    else "external packages"
                 )
         else:
             includes = ""
@@ -275,24 +304,32 @@ def build_context(marketplace: dict | None = None) -> dict:
         if tags:
             entry["tags"] = list(tags)
         if name not in curation and not entry.get("tags"):
-            warnings.append(f"{name}: new package with no tags (add tags: to its apm.yml)")
-        marketplace_entries.append({k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry})
+            warnings.append(
+                f"{name}: new package with no tags (add tags: to its apm.yml)"
+            )
+        marketplace_entries.append(
+            {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
+        )
 
-        packages.append({
-            "name": name,
-            "dirname": dirname,
-            "description": description,
-            "summary": _bundle_summary(description) if is_bundle else description,
-            "version": str(pkg.get("version", "0.0.1")),
-            "type": str(pkg.get("type") or ""),
-            "category": entry.get("category", ""),
-            "tags": entry.get("tags", []),
-            "source": f"./packages/{dirname}",
-            "deps": deps,
-            "classification": classification,
-            "is_bundle": is_bundle,
-            "includes_resolved": includes,
-        })
+        packages.append(
+            {
+                "name": name,
+                "dirname": dirname,
+                "description": description,
+                "summary": _bundle_summary(description) if is_bundle else description,
+                "version": str(pkg.get("version", "0.0.1")),
+                "type": str(pkg.get("type") or ""),
+                "target": target,
+                "targets": targets,
+                "category": entry.get("category", ""),
+                "tags": entry.get("tags", []),
+                "source": f"./packages/{dirname}",
+                "deps": deps,
+                "classification": classification,
+                "is_bundle": is_bundle,
+                "includes_resolved": includes,
+            }
+        )
 
     # Append hand-authored external entries (git-source packages with no
     # packages/ dir). Reshape through the canonical key order so git-source fields
@@ -313,25 +350,34 @@ def build_context(marketplace: dict | None = None) -> dict:
         marketplace_entries.append(
             {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
         )
-        external_marketplace.append({
-            "name": name,
-            "source": entry.get("source"),
-            "repo": _external_repo_slug(entry.get("source")),
-            "ref": entry.get("ref", ""),
-            "category": entry.get("category", ""),
-            "tags": list(entry.get("tags") or []),
-        })
+        external_marketplace.append(
+            {
+                "name": name,
+                "source": entry.get("source"),
+                "repo": _external_repo_slug(entry.get("source")),
+                "ref": entry.get("ref", ""),
+                "category": entry.get("category", ""),
+                "tags": list(entry.get("tags") or []),
+            }
+        )
 
     # A curated name with no packages/ dir is "dropped" ONLY if it is not a
     # recognised external entry -- external sources are intentionally dir-less.
     for stale in sorted(set(curation) - found - set(external)):
-        warnings.append(f"{stale}: in marketplace block but no packages/ dir -- dropped")
+        warnings.append(
+            f"{stale}: in marketplace block but no packages/ dir -- dropped"
+        )
 
     packages.sort(key=lambda p: p["name"])
     marketplace_entries.sort(key=lambda e: e["name"])
 
     by_kind: dict[str, list[dict]] = {
-        "bundle": [], "skill": [], "agent": [], "steering": [], "hooks": [], "mcp": [],
+        "bundle": [],
+        "skill": [],
+        "agent": [],
+        "steering": [],
+        "hooks": [],
+        "mcp": [],
     }
     for p in packages:
         by_kind[p["classification"]].append(p)

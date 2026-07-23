@@ -11,18 +11,6 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-beads-tasks-guard.sh",
-            "timeout": 10
-          }
-        ]
-      }
     ]
   }
 }
