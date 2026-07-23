@@ -1,5 +1,6 @@
 ---
 name: operator
+effort: low
 description: Executes tiny mechanical commands, formatting, and inventory steps with
   explicit targets and no design judgment.
 ---

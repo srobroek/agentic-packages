@@ -67,54 +67,6 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
-      "name": "agent-luna-high",
-      "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-high"
-    },
-    {
-      "name": "agent-luna-low",
-      "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-low"
-    },
-    {
-      "name": "agent-luna-medium",
-      "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-medium"
-    },
-    {
-      "name": "agent-luna-xhigh",
-      "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-xhigh"
-    },
-    {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
       "version": "1.2.1",
@@ -197,54 +149,6 @@
       ],
       "category": "quality",
       "source": "./packages/agent-reviewer-low"
-    },
-    {
-      "name": "agent-sol-high",
-      "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-high"
-    },
-    {
-      "name": "agent-sol-low",
-      "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "quality",
-      "source": "./packages/agent-sol-low"
-    },
-    {
-      "name": "agent-sol-medium",
-      "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-medium"
-    },
-    {
-      "name": "agent-sol-xhigh",
-      "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-xhigh"
     },
     {
       "name": "agent-worker",
