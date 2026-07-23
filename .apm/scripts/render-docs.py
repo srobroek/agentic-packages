@@ -72,6 +72,7 @@ def _load_inventory():
 # Jinja environment
 # --------------------------------------------------------------------------- #
 
+
 def _escape_cell(text) -> str:
     """Make a string safe for one markdown table cell (mirrors the old
     escape_cell()): pipe-escape, flatten newlines, strip."""
@@ -83,7 +84,7 @@ def _jinja_env():
 
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES)),
-        autoescape=False,            # markdown, not HTML
+        autoescape=False,  # markdown, not HTML
         keep_trailing_newline=False,  # templates control their own trailing newline
         trim_blocks=False,
         lstrip_blocks=False,
@@ -96,15 +97,19 @@ def _jinja_env():
 # readme-tables: docs/*.md table sections + README intro counts
 # --------------------------------------------------------------------------- #
 
+
 # Each section's (template, header row, row-builder). Row-builders take the
 # inventory context and return a list of raw (un-escaped) cell lists.
 def _rows_bundles(ctx):
-    return [[f"`{p['name']}`", p["summary"], p["includes_resolved"]] for p in ctx["by_kind"]["bundle"]]
+    return [
+        [f"`{p['name']}`", p["summary"], p["includes_resolved"]] for p in ctx["by_kind"]["bundle"]
+    ]
 
 
 def _rows_simple(kind):
     def build(ctx):
         return [[f"`{p['name']}`", p["description"]] for p in ctx["by_kind"][kind]]
+
     return build
 
 
@@ -136,14 +141,44 @@ def _rows_external_repos(ctx):
 
 # marker -> (template name, headers, row-builder, target doc file)
 TABLE_SECTIONS = {
-    "bundles": ("bundles.jinja", ["Bundle", "What it gives you", "Includes"], _rows_bundles, "docs/bundles.md"),
-    "external-sources": ("external-sources.jinja", ["Source repo", "Count", "Members pulled"], _rows_external_sources, "docs/bundles.md"),
-    "external-repos": ("external-repos.jinja", ["Plugin", "Category", "Pinned ref", "Tags"], _rows_external_repos, "docs/external-repos.md"),
+    "bundles": (
+        "bundles.jinja",
+        ["Bundle", "What it gives you", "Includes"],
+        _rows_bundles,
+        "docs/bundles.md",
+    ),
+    "external-sources": (
+        "external-sources.jinja",
+        ["Source repo", "Count", "Members pulled"],
+        _rows_external_sources,
+        "docs/bundles.md",
+    ),
+    "external-repos": (
+        "external-repos.jinja",
+        ["Plugin", "Category", "Pinned ref", "Tags"],
+        _rows_external_repos,
+        "docs/external-repos.md",
+    ),
     "skills": ("skills.jinja", ["Skill", "Description"], _rows_simple("skill"), "docs/skills.md"),
     "agents": ("agents.jinja", ["Agent", "Description"], _rows_simple("agent"), "docs/agents.md"),
-    "steering": ("steering.jinja", ["Steering Package", "Description"], _rows_simple("steering"), "docs/steering.md"),
-    "hooks": ("hooks.jinja", ["Hook Package", "Description"], _rows_simple("hooks"), "docs/hooks-and-mcp.md"),
-    "mcp": ("mcp.jinja", ["MCP Package", "Description"], _rows_simple("mcp"), "docs/hooks-and-mcp.md"),
+    "steering": (
+        "steering.jinja",
+        ["Steering Package", "Description"],
+        _rows_simple("steering"),
+        "docs/steering.md",
+    ),
+    "hooks": (
+        "hooks.jinja",
+        ["Hook Package", "Description"],
+        _rows_simple("hooks"),
+        "docs/hooks-and-mcp.md",
+    ),
+    "mcp": (
+        "mcp.jinja",
+        ["MCP Package", "Description"],
+        _rows_simple("mcp"),
+        "docs/hooks-and-mcp.md",
+    ),
 }
 
 # README intro counts: rendered template, injected into README.md.
@@ -217,6 +252,7 @@ def cmd_readme_tables(ctx, check: bool) -> int:
 # --------------------------------------------------------------------------- #
 # marketplace-block: rewrite the marketplace: block in apm.yml
 # --------------------------------------------------------------------------- #
+
 
 class _IndentDumper(yaml.Dumper):
     """Indent block sequences under their key, matching apm.yml's hand style."""

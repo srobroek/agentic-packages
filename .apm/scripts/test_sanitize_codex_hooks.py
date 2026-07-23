@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 SCRIPT = Path(__file__).with_name("sanitize-codex-hooks.py")
 SPEC = importlib.util.spec_from_file_location("sanitize_codex_hooks", SCRIPT)
@@ -46,8 +45,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         {
                             "type": "command",
                             "command": (
-                                f"{hooks_dir}/agent-coder/scripts/"
-                                "coder-delegation-reminder.sh"
+                                f"{hooks_dir}/agent-coder/scripts/coder-delegation-reminder.sh"
                             ),
                         },
                         {
@@ -62,9 +60,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": (
-                                f"{hooks_dir}/hooks-worktree/scripts/create.sh"
-                            ),
+                            "command": (f"{hooks_dir}/hooks-worktree/scripts/create.sh"),
                         }
                     ]
                 }
@@ -182,8 +178,7 @@ def test_sanitize_removes_legacy_claude_only_subagent_model_guard() -> None:
                         {
                             "type": "command",
                             "command": (
-                                "/tmp/hooks/hooks-subagent-model/scripts/"
-                                "subagent-model-guard.sh"
+                                "/tmp/hooks/hooks-subagent-model/scripts/subagent-model-guard.sh"
                             ),
                         }
                     ],
@@ -230,9 +225,7 @@ def test_sanitize_resolves_relative_script_from_config_workspace(
     clean, counts = sanitize_codex_hooks.sanitize(config, tmp_path)
 
     assert len(clean["hooks"]["PreToolUse"]) == 1
-    assert clean["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == (
-        ".codex/hooks/live.sh"
-    )
+    assert clean["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == (".codex/hooks/live.sh")
     assert counts["handlers_removed"] == 1
 
 

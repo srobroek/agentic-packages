@@ -30,7 +30,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-
 OBSOLETE_COMMAND_SUFFIXES = {
     "/agent-coder/scripts/coder-delegation-reminder.sh",
     # Retired srobroek-agentic scripts superseded by APM packages:
@@ -136,9 +135,7 @@ def deduplicate_groups(events: dict) -> int:
                 removed += 1
                 existing_index = seen_groups[group_key]
                 existing_group = clean_groups[existing_index]
-                if not existing_group.get("_apm_source") and group.get(
-                    "_apm_source"
-                ):
+                if not existing_group.get("_apm_source") and group.get("_apm_source"):
                     clean_groups[existing_index] = group
                 continue
             seen_groups[group_key] = len(clean_groups)
@@ -253,9 +250,7 @@ def main() -> int:
         settings = json.loads(args.settings.read_text(encoding="utf-8"))
         settings_events = settings.get("hooks", {})
         counts["settings_handlers_removed"] = clean_events(settings_events)
-        counts["settings_duplicate_groups_removed"] = deduplicate_groups(
-            settings_events
-        )
+        counts["settings_duplicate_groups_removed"] = deduplicate_groups(settings_events)
         events_dicts.append(settings_events)
     else:
         print(f"Claude hooks sanitizer: {args.settings} does not exist")
@@ -271,21 +266,17 @@ def main() -> int:
         return 0
 
     stale = (
-        prune_stale_entries(events_dicts, args.hooks_dir, check=True)
-        if args.prune_stale
-        else []
+        prune_stale_entries(events_dicts, args.hooks_dir, check=True) if args.prune_stale else []
     )
     changed = any(counts.values()) or bool(stale)
 
     if not args.check:
         if settings is not None and (
-            counts["settings_handlers_removed"]
-            or counts["settings_duplicate_groups_removed"]
+            counts["settings_handlers_removed"] or counts["settings_duplicate_groups_removed"]
         ):
             atomic_write_json(args.settings, settings)
         if sidecar is not None and (
-            counts["sidecar_handlers_removed"]
-            or counts["sidecar_duplicate_groups_removed"]
+            counts["sidecar_handlers_removed"] or counts["sidecar_duplicate_groups_removed"]
         ):
             atomic_write_json(args.sidecar, sidecar)
         if args.prune_stale:
