@@ -50,9 +50,13 @@ def load_mappings(root: Path) -> dict[str, dict[str, str]]:
             if not codex.get("model") or not codex.get("reasoning_effort"):
                 raise MappingError(f"{path}: {name}.codex requires model and reasoning_effort")
             normalized = {key: str(value) for key, value in codex.items()}
-            if name in merged and merged[name] != normalized:
+            if name in merged:
+                if merged[name] == normalized:
+                    continue  # identical re-declaration across bundles; first occurrence wins
                 raise MappingError(
-                    f"conflicting mapping for {name}: {origins[name]} and {path}"
+                    f"conflicting mapping for {name}:\n"
+                    f"  {origins[name]}: {merged[name]}\n"
+                    f"  {path}: {normalized}"
                 )
             merged[str(name)] = normalized
             origins[str(name)] = path
