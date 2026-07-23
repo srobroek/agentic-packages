@@ -1,9 +1,0 @@
-{
-  "name": "security",
-  "version": "2.1.0",
-  "description": "Security toolkit bundle.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

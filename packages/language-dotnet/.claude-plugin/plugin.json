@@ -1,9 +1,0 @@
-{
-  "name": "language-dotnet",
-  "version": "2.1.0",
-  "description": ".NET development toolkit.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

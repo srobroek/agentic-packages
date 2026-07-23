@@ -1,9 +1,0 @@
-{
-  "name": "language-arm-cortex",
-  "version": "2.1.0",
-  "description": "ARM Cortex-M firmware toolkit.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

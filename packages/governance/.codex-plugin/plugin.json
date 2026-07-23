@@ -1,9 +1,0 @@
-{
-  "name": "governance",
-  "version": "2.1.0",
-  "description": "Agent governance bundle.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "MIT"
-}

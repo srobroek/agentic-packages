@@ -488,33 +488,9 @@
         }
       ]
     },
-    "packages/developer-tools": {
-      "release-type": "simple",
-      "component": "developer-tools",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/diagrams": {
       "release-type": "simple",
       "component": "diagrams",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/docs-architecture": {
-      "release-type": "simple",
-      "component": "docs-architecture",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -575,18 +551,6 @@
     "packages/goal-writer": {
       "release-type": "simple",
       "component": "goal-writer",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/governance": {
-      "release-type": "simple",
-      "component": "governance",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -788,18 +752,6 @@
         }
       ]
     },
-    "packages/incident-response": {
-      "release-type": "simple",
-      "component": "incident-response",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/infrastructure": {
       "release-type": "simple",
       "component": "infrastructure",
@@ -812,69 +764,9 @@
         }
       ]
     },
-    "packages/language-arm-cortex": {
-      "release-type": "simple",
-      "component": "language-arm-cortex",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-dotnet": {
-      "release-type": "simple",
-      "component": "language-dotnet",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-functional": {
-      "release-type": "simple",
-      "component": "language-functional",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/language-go": {
       "release-type": "simple",
       "component": "language-go",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-julia": {
-      "release-type": "simple",
-      "component": "language-julia",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-jvm": {
-      "release-type": "simple",
-      "component": "language-jvm",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -995,18 +887,6 @@
     "packages/language-typescript": {
       "release-type": "simple",
       "component": "language-typescript",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-web-scripting": {
-      "release-type": "simple",
-      "component": "language-web-scripting",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1391,18 +1271,6 @@
     "packages/secrets-scan": {
       "release-type": "simple",
       "component": "secrets-scan",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/security": {
-      "release-type": "simple",
-      "component": "security",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

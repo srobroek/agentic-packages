@@ -316,24 +316,12 @@ marketplace:
         - bundle
         - dependencies
         - supply-chain
-    - name: developer-tools
-      source: ./packages/developer-tools
-      category: engineering
-      tags:
-        - bundle
-        - tooling
     - name: diagrams
       source: ./packages/diagrams
       category: diagrams
       tags:
         - bundle
         - diagrams
-    - name: docs-architecture
-      source: ./packages/docs-architecture
-      category: docs
-      tags:
-        - bundle
-        - documentation
     - name: eli5
       source: ./packages/eli5
       category: planning-product
@@ -368,12 +356,6 @@ marketplace:
         - skill
         - planning
         - goals
-    - name: governance
-      source: ./packages/governance
-      category: governance
-      tags:
-        - bundle
-        - governance
     - name: handover
       source: ./packages/handover
       category: project-lifecycle
@@ -495,55 +477,18 @@ marketplace:
         - hooks
         - worktree
         - lifecycle
-    - name: incident-response
-      source: ./packages/incident-response
-      category: debugging
-      tags:
-        - bundle
-        - incident
     - name: infrastructure
       source: ./packages/infrastructure
       category: infrastructure
       tags:
         - bundle
         - infrastructure
-    - name: language-arm-cortex
-      source: ./packages/language-arm-cortex
-      category: languages
-      tags:
-        - bundle
-        - embedded
-        - arm
-    - name: language-dotnet
-      source: ./packages/language-dotnet
-      category: languages
-      tags:
-        - bundle
-        - dotnet
-    - name: language-functional
-      source: ./packages/language-functional
-      category: languages
-      tags:
-        - bundle
-        - functional
     - name: language-go
       source: ./packages/language-go
       category: languages
       tags:
         - bundle
         - go
-    - name: language-julia
-      source: ./packages/language-julia
-      category: languages
-      tags:
-        - bundle
-        - julia
-    - name: language-jvm
-      source: ./packages/language-jvm
-      category: languages
-      tags:
-        - bundle
-        - jvm
     - name: language-python
       source: ./packages/language-python
       category: languages
@@ -604,13 +549,6 @@ marketplace:
       tags:
         - bundle
         - typescript
-    - name: language-web-scripting
-      source: ./packages/language-web-scripting
-      category: languages
-      tags:
-        - bundle
-        - php
-        - ruby
     - name: license-picker
       source: ./packages/license-picker
       category: project-lifecycle
@@ -823,12 +761,6 @@ marketplace:
         - security
         - secrets
         - pre-commit
-    - name: security
-      source: ./packages/security
-      category: security
-      tags:
-        - bundle
-        - security
     - name: session-review
       source: ./packages/session-review
       category: project-lifecycle

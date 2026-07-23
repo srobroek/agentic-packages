@@ -440,17 +440,6 @@
       "source": "./packages/dependency-quality"
     },
     {
-      "name": "developer-tools",
-      "description": "Everyday developer tooling bundle.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "tooling"
-      ],
-      "category": "engineering",
-      "source": "./packages/developer-tools"
-    },
-    {
       "name": "diagrams",
       "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
       "version": "2.1.0",
@@ -460,17 +449,6 @@
       ],
       "category": "diagrams",
       "source": "./packages/diagrams"
-    },
-    {
-      "name": "docs-architecture",
-      "description": "Documentation standards bundle.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "documentation"
-      ],
-      "category": "docs",
-      "source": "./packages/docs-architecture"
     },
     {
       "name": "eli5",
@@ -530,17 +508,6 @@
       ],
       "category": "planning-product",
       "source": "./packages/goal-writer"
-    },
-    {
-      "name": "governance",
-      "description": "Agent governance bundle.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "governance"
-      ],
-      "category": "governance",
-      "source": "./packages/governance"
     },
     {
       "name": "handover",
@@ -744,17 +711,6 @@
       "source": "./packages/hooks-worktree"
     },
     {
-      "name": "incident-response",
-      "description": "Incident response and production debugging bundle.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "incident"
-      ],
-      "category": "debugging",
-      "source": "./packages/incident-response"
-    },
-    {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering.",
       "version": "3.2.0",
@@ -766,40 +722,6 @@
       "source": "./packages/infrastructure"
     },
     {
-      "name": "language-arm-cortex",
-      "description": "ARM Cortex-M firmware toolkit.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "embedded",
-        "arm"
-      ],
-      "category": "languages",
-      "source": "./packages/language-arm-cortex"
-    },
-    {
-      "name": "language-dotnet",
-      "description": ".NET development toolkit.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "dotnet"
-      ],
-      "category": "languages",
-      "source": "./packages/language-dotnet"
-    },
-    {
-      "name": "language-functional",
-      "description": "Functional programming toolkit.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "functional"
-      ],
-      "category": "languages",
-      "source": "./packages/language-functional"
-    },
-    {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
       "version": "3.3.0",
@@ -809,28 +731,6 @@
       ],
       "category": "languages",
       "source": "./packages/language-go"
-    },
-    {
-      "name": "language-julia",
-      "description": "Julia development toolkit.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "julia"
-      ],
-      "category": "languages",
-      "source": "./packages/language-julia"
-    },
-    {
-      "name": "language-jvm",
-      "description": "JVM language toolkit for Java, Scala, and Kotlin.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "jvm"
-      ],
-      "category": "languages",
-      "source": "./packages/language-jvm"
     },
     {
       "name": "language-python",
@@ -941,18 +841,6 @@
       ],
       "category": "languages",
       "source": "./packages/language-typescript"
-    },
-    {
-      "name": "language-web-scripting",
-      "description": "PHP and Ruby web scripting toolkit.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "php",
-        "ruby"
-      ],
-      "category": "languages",
-      "source": "./packages/language-web-scripting"
     },
     {
       "name": "license-picker",
@@ -1325,17 +1213,6 @@
       ],
       "category": "security",
       "source": "./packages/secrets-scan"
-    },
-    {
-      "name": "security",
-      "description": "Security toolkit bundle.",
-      "version": "2.1.0",
-      "tags": [
-        "bundle",
-        "security"
-      ],
-      "category": "security",
-      "source": "./packages/security"
     },
     {
       "name": "session-review",

@@ -1,9 +1,0 @@
-{
-  "name": "incident-response",
-  "version": "2.1.0",
-  "description": "Incident response and production debugging bundle.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}
