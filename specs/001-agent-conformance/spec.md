@@ -28,6 +28,14 @@ declared contract is asserted deterministically. The LLM call is the only
 nondeterministic element; every assertion on the captured reply is pure and
 reproducible.
 
+## Clarifications
+
+### Session 2026-07-24
+
+- Q: Run each agent with its pinned model/effort, or one cheap model for cost? → A: Pinned models — the regression under guard is the shipped configuration; a scoped iteration run may override the model explicitly, but fleet/release sweeps always use the pins. *(auto-resolved: recommended default, user unavailable)*
+- Q: How does the unattended run ship in v1? → A: Scheduled CI (nightly cron) plus manual dispatch, never a required PR check; requires an API-key secret in the CI environment. *(auto-resolved: recommended default, user unavailable)*
+- Q: Where does the harness live? → A: A new self-contained package (`packages/agent-conformance`), versioned and released like the other packages, reading other packages' agent sources read-only at run time. *(auto-resolved: recommended default, user unavailable)*
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Pre-release conformance sweep (Priority: P1)
@@ -196,12 +204,16 @@ appearing as a required check on any PR.
   persist the raw reply of every non-PASS case as an inspectable artifact.
 - **FR-008**: The runner MUST support scoping to a single agent or a single
   package for iteration, producing the same per-case verdicts as the fleet
-  run.
+  run; scoped runs MAY override the model explicitly, and any override MUST
+  be recorded in the report so an overridden verdict is never mistaken for a
+  shipped-configuration verdict.
 - **FR-009**: The LLM-in-the-loop suite MUST NOT run as a required per-PR
   check; the deterministic coverage/consistency checks alone MAY run per-PR.
-- **FR-010**: The suite MUST be runnable unattended (scheduled), failing fast
-  with an explicit configuration error when credentials are unavailable, and
-  publishing the same report artifacts as a local run.
+- **FR-010**: The suite MUST be runnable unattended via repository automation
+  on a nightly schedule and on manual dispatch, failing fast with an explicit
+  configuration error when credentials are unavailable, and publishing the
+  same report artifacts as a local run; the automated run MUST NOT be wired
+  as a required pull-request status check.
 - **FR-011**: A deterministic consistency check MUST verify each case's
   encoded expectations (first-line pattern, caps) against the agent source's
   declared contract and fail on drift, so a contract edit cannot silently
@@ -255,10 +267,18 @@ appearing as a required check on any PR.
 - **Runtime**: v1 exercises agents on the Claude runtime only. Codex profiles
   are generated transforms of the same portable source; cross-runtime
   conformance is out of scope for v1.
+- **Packaging**: the harness ships as a new self-contained package
+  (`packages/agent-conformance`) following the repository's package
+  conventions, reading other packages' shipped agent sources read-only at
+  run time — consistent with the constitution's self-contained-packages
+  principle (no package reaches into another's internals at runtime; agent
+  definitions are published contract surfaces, and the existing doc
+  generators set the precedent for cross-package read-only scans).
 - **Model pins are part of the contract**: cases run each agent with its
   pinned model and effort from frontmatter/agent-models metadata, because the
   regression being guarded is "the shipped configuration honors the shipped
-  contract".
+  contract". Explicit per-run model overrides exist for cheap iteration and
+  are stamped into the report (FR-008).
 - **Fleet scope**: all 34 current `.agent.md` files are in scope. Agents whose
   faithful execution requires a full orchestrate run environment may ship as
   reasoned skips in v1 provided the skip is visible in every report; the
