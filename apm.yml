@@ -147,6 +147,13 @@ marketplace:
         - agent
         - quality
         - review
+    - name: agent-quality-guards
+      source: ./packages/agent-quality-guards
+      category: quality
+      tags:
+        - agent
+        - quality
+        - triage
     - name: agent-reasoner
       source: ./packages/agent-reasoner
       category: planning-product

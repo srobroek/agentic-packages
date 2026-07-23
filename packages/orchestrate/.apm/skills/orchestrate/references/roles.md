@@ -9,9 +9,11 @@ starting point, refined by what the catalog actually offers.
 |---|---|---|---|---|
 | **Orchestrator** | you (lead session) | your session model | whole run | delegate deep planning / disputes |
 | **Researcher** | `Explore` → `general-purpose`, `speckit-research` | **cheap tier** low/med | ephemeral (reuse for follow-ups) | → mid tier when a single task is synthesis-heavy (see fan-out/fan-in below) |
-| **Docs-guard** | `docs-guard` (bundled) | **cheap tier** medium, read-only | ephemeral | → workflow-reviewer when policy or meaning is disputed |
-| **Data-metrics-summarizer** | `data-metrics-summarizer` (bundled) | **cheap tier** medium, read-only | ephemeral | → researcher when interpretation is required |
-| **Lint-guard** | `lint-guard` (bundled) | **cheap tier** high, read-only | ephemeral | → workflow-reviewer when rule intent is disputed |
+| **Docs-guard** | `docs-guard` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → workflow-reviewer when policy or meaning is disputed |
+| **Data-metrics-summarizer** | `data-metrics-summarizer` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → researcher when interpretation is required |
+| **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → workflow-reviewer when rule intent is disputed |
+| **Maintenance-metrics-reader** | `maintenance-metrics-reader` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → researcher when a root cause is ambiguous |
+| **Reviewer-mechanics** | `reviewer-mechanics` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → workflow-reviewer on deeper correctness questions |
 | **Workflow-coder** | `workflow-coder` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the coder — on a reasoning block it raises `BLOCKED` |
 | **Workflow-reviewer** | `workflow-reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Workflow-advisor** | `workflow-advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
@@ -20,7 +22,7 @@ starting point, refined by what the catalog actually offers.
 | **Audit reporter** | `audit-reporter` (bundled) | **cheap tier** low, read-only | **ephemeral** | — |
 | **Tiebreaker** | `general-purpose` (fresh) | **top tier** high, read-only | ephemeral, gated | → xhigh only if genuinely complex |
 
-All custom roles ship **bundled** with this package (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe, docs-guard, data-metrics-summarizer, lint-guard); the remaining routes are built-in agents (`Explore`,
+Workflow roles ship **bundled** with this package (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe); quality-guard roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the `agent-quality-guards` dependency; the remaining routes are built-in agents (`Explore`,
 `general-purpose`) present everywhere. The package does not assume
 `code-reviewer`/`adversarial-challenger` exist; those are optional upgrades
 when the catalog has them.
@@ -38,6 +40,8 @@ SKILL.md Core rules.
 | Docs-guard | nothing (read-only) | nothing | reads scope | flags low-signal doc issues before merge review |
 | Data-metrics-summarizer | nothing (read-only) | nothing | reads scope | compacts logs/telemetry into bounded, prompt-driven summaries |
 | Lint-guard | nothing (read-only) | nothing | reads scope | triages lint artifacts and classifies likely false positives |
+| Maintenance-metrics-reader | nothing (read-only) | nothing | reads repo metadata + scoped trees | emits `MAINTENANCE SNAPSHOT <scope> status=PASS\|WARN\|FAIL` with top signals and evidence |
+| Reviewer-mechanics | nothing (read-only) | nothing | reads scope diff only | emits `MECH-REVIEW <scope> verdict=PASS\|CHANGES` with deterministic `file:line` findings |
 | Workflow-coder | its `scope` only | **nothing** | own git worktree | commits + pushes its branch; on block → `BLOCKED kind:design\|debug` to `main` |
 | Workflow-reviewer | nothing (read-only) | nothing | reads branch/worktree | logs `review` verdict as audit record + bead comment |
 | Workflow-advisor | nothing (read-only) | nothing | reads code | one `ADVICE`, then exits |
@@ -53,6 +57,8 @@ SKILL.md Core rules.
 | Documentation-only node or documentation lint report | `docs-guard` | syntax, links, structure, and reported documentation findings only |
 | Existing lint report with many or stale findings | `lint-guard` | validate and normalize the report; never replace the project linter |
 | Large scoped log, metric, CSV, JSON, or JSONL artifact | `data-metrics-summarizer` | compact the supplied evidence; never diagnose or recommend |
+| Repository hygiene scan (stale branches, worktrees, locks) | `maintenance-metrics-reader` | report signals with evidence; never delete or repair |
+| Scoped diff smoke-check before review handoff | `reviewer-mechanics` | mechanical findings only; never judge design or merge strategy |
 
 These specialists preprocess bounded evidence. A semantic correctness decision
 still belongs to `workflow-reviewer`, a researcher, or an advisor.

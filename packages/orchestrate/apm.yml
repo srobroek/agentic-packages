@@ -5,8 +5,10 @@ description: >-
   replies, decisions, review, and merge state. Supports exact, specialist,
   generic-pull, writable-fallback, and read-only research dispatch. Bundles
   workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
-  workflow-reviewer, workflow-advisor, integration-gatekeeper, docs-guard,
-  data-metrics-summarizer, lint-guard, and ledger-scribe. Includes deterministic
+  workflow-reviewer, workflow-advisor, integration-gatekeeper, and
+  ledger-scribe. Quality triage roles (docs-guard, lint-guard,
+  data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics)
+  come from the agent-quality-guards dependency. Includes deterministic
   scope, discovery, claim, message, decision, queue, and conflict scripts plus
   shared PR shepherd landing safeguards. Requires the bd CLI.
 author: Sjors Robroek
@@ -40,3 +42,4 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
     - srobroek/agentic-packages/packages/pr-shepherd#>=0.13.1 <1.0.0
+    - srobroek/agentic-packages/packages/agent-quality-guards#>=0.1.0 <1.0.0

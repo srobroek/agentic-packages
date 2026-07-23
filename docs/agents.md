@@ -39,6 +39,7 @@ runtime's transformer.
 | `agent-luna-xhigh` | Explicit Luna maximum-effort agent profile for bounded implementation and debugging. |
 | `agent-operator` | Mechanical operator agent for tiny commands, formatting, and inventory steps. |
 | `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
+| `agent-quality-guards` | Read-only quality-guard subagents for bounded triage: docs-guard checks scoped documentation and documentation lint findings, lint-guard validates and normalizes lint reports, data-metrics-summarizer compacts large logs and metrics, maintenance-metrics-reader snapshots repository maintenance health (stale branches, worktrees, lock states), and reviewer-mechanics smoke-checks scoped diffs for mechanical issues. All five reply with bounded, capped verdict lines and never edit files. |
 | `agent-reasoner` | Read-only reasoning agent for exceptional architecture, policy, and adversarial questions. |
 | `agent-reviewer-high` | Adversarial read-only reviewer for security-sensitive and broad-impact changes. |
 | `agent-reviewer-low` | Mechanical read-only reviewer for tiny changes with explicit criteria. |
