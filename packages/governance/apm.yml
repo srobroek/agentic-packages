@@ -1,8 +1,6 @@
 name: governance
 version: 2.1.0
-description: >-
-  Agent governance: Hobson MCP protection, signed audit trails, review policy,
-  and no-verify blocking workflows.
+description: Agent governance bundle.
 author: Sjors Robroek
 license: MIT
 type: hybrid
@@ -12,13 +10,3 @@ category: governance
 tags:
   - bundle
   - governance
-dependencies:
-  apm:
-    - >-
-      wshobson/agents/plugins/protect-mcp#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/signed-audit-trails#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/review-agent-governance#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/block-no-verify#5cc2549a50fc672230efd0a0307e2fd27ffba792

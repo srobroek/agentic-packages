@@ -1,8 +1,6 @@
 name: language-go
 version: 3.3.0
-description: >-
-  Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's
-  systems-programming specialists.
+description: Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle
@@ -17,5 +15,3 @@ dependencies:
     - srobroek/agentic-packages/packages/go-quality#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/language-steering-go#>=1.1.0 <2.0.0
     - srobroek/agentic-packages/packages/lsp-go#>=0.4.0 <1.0.0
-    - >-
-      wshobson/agents/plugins/systems-programming#5cc2549a50fc672230efd0a0307e2fd27ffba792

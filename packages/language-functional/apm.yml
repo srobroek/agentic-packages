@@ -1,8 +1,6 @@
 name: language-functional
 version: 2.1.0
-description: >-
-  Functional programming toolkit: Hobson's Elixir and Haskell
-  functional-programming specialists.
+description: Functional programming toolkit.
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle
@@ -12,7 +10,3 @@ category: languages
 tags:
   - bundle
   - functional
-dependencies:
-  apm:
-    - >-
-      wshobson/agents/plugins/functional-programming#5cc2549a50fc672230efd0a0307e2fd27ffba792

@@ -21,4 +21,4 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/web-fetch#>=2.1.0 <3.0.0
-    - wshobson/agents/plugins/code-documentation#main
+    - mattpocock/skills/skills/engineering/grill-with-docs#main

@@ -284,7 +284,7 @@ Then check for stragglers:
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
 
-Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (wshobson, mattpocock) stay pinned to `#main`. Each package is versioned independently via release-please.
+Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (mattpocock and others) stay pinned to `#main`. Each package is versioned independently via release-please.
 
 `core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) plus `resume-session` and the Matt Pocock and Hobson plugins explicitly -- so a single `apm install core@srobroek-agentic` brings in all baseline skills transitively.
 

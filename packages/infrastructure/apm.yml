@@ -1,9 +1,6 @@
 name: infrastructure
 version: 3.2.0
-description: >-
-  Infrastructure and operations toolkit: infrastructure steering plus Hobson
-  cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability
-  plugins.
+description: Infrastructure and operations toolkit: infrastructure steering.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -15,15 +12,3 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/steering-infrastructure#>=2.1.0 <3.0.0
-    - >-
-      wshobson/agents/plugins/cloud-infrastructure#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/kubernetes-operations#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/cicd-automation#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/deployment-strategies#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/deployment-validation#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/observability-monitoring#5cc2549a50fc672230efd0a0307e2fd27ffba792

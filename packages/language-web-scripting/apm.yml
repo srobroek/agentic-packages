@@ -1,6 +1,6 @@
 name: language-web-scripting
 version: 2.1.0
-description: 'PHP and Ruby web scripting toolkit: Hobson''s web-scripting specialists.'
+description: PHP and Ruby web scripting toolkit.
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle
@@ -11,7 +11,3 @@ tags:
   - bundle
   - php
   - ruby
-dependencies:
-  apm:
-    - >-
-      wshobson/agents/plugins/web-scripting#5cc2549a50fc672230efd0a0307e2fd27ffba792
