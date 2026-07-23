@@ -1,7 +1,6 @@
 ---
 name: journey-write
-description: >-
-  Author, amend, or migrate user journeys from feature evidence; grills the user on genuine unknowns and audits against the definition-of-ready checklist.
+description: Use when authoring or amending user journeys from feature evidence, grilling on unknowns and checking the definition-of-ready.
 ---
 
 # journey-write

@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Orchestrate coordinated subagents for parallel or long-running implementation with isolated worktrees, independent review, safe merging, and durable run state in beads (bd).
+description: Use when decomposing work across multiple subagents with isolated worktrees, independent review, safe merging, and durable run state in beads (bd).
 x-lint:
   allow: [W6]
   reason: "the loaded skill must retain its core orchestration protocol while detailed mechanics remain in references"

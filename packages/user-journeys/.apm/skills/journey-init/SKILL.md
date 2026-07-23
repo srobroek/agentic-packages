@@ -1,7 +1,6 @@
 ---
 name: journey-init
-description: >-
-  Set up a user-journeys directory: investigate the repo, interview the user on preferences and interfaces, scaffold the format spec, README config, and index.
+description: Use when setting up a user-journeys directory for a repo that has none: investigates, interviews, and scaffolds the format spec.
 ---
 
 # journey-init
