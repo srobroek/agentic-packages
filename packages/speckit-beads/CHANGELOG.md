@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.3](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v3.3.2...speckit-beads--v3.3.3) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#677](https://github.com/srobroek/agentic-packages/issues/677)) ([546411c](https://github.com/srobroek/agentic-packages/commit/546411c55b213309f210db1810ac35f48e6e41fe))
+
 ## [3.3.2](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v3.3.1...speckit-beads--v3.3.2) (2026-07-23)
 
 
