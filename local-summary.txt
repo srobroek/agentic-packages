@@ -1,0 +1,44 @@
+total local branches: 16
+attached branches: 15
+orphaned branches: 1
+total worktrees: 4
+attached worktrees: 3
+detached worktrees: 1
+
+# Report Totals
+# total local branches: 16
+# attached branches: 15
+# orphaned branches: 1
+# total worktrees: 4
+# attached worktrees: 3
+# detached worktrees: 1
+
+# Local Branch/Worktree Compact Index
+Generated: 2026-07-22T23:06:21+04:00
+Base: main
+
+# Branches
+branch\thead\trel(ahead/behind)\ttouched_files\tadded\tremoved\tsummary
+chore/agent-effort-pins	91ab80f8	152/6	7	+0		div=diverged M=
+chore/pin-apm-cli	d00884f5	150/1	4	+0		div=diverged M=
+chore/rust-steering-plugin-allos	b9f1fa61	470/1	1	+0		div=diverged M=
+docs/ai-tells-modernize	8f1f61c3	154/1	3	+0		div=diverged M=
+feat/apm-021-semver-ranges	b3c84dd1	462/3	25	+0		div=diverged M=
+feat/gw3-verify-landed-by-content	97bb3338	85/1	2	+0		div=diverged M=
+feat/journey-campaign-issue-driven	2340b8fd	162/1	1	+0		div=diverged M=
+feat/orchestrate-skill	09ddfe84	276/1	30	+0		div=diverged M=
+feat/rust-tauri-e2e-steering	e5129109	493/2	1	+0		div=diverged M=
+feat/subagent-model-guard	324c903f	153/3	17	+0		div=diverged M=
+feat/worktree-artifact-cleanup	59465812	276/4	14	+0		div=diverged M=
+fix/1mcp-reliable-launcher	a3c802eb	42/7	5	+0		div=diverged M=
+fix/agentic-hooks-enoent-and-stat	de1120be	462/1	2	+0		div=diverged M=
+fix/journey-validator-canonical-driving-doc	fa16ddd3	161/1	2	+0		div=diverged M=
+fix/speckit-spec-detection	05171eae	149/1	2	+0		div=diverged M=
+main	29f3dd0e	0/0	0	+0		base M=
+
+# Worktrees
+path\thead\tbranch\tstate\tdiff_files_worktree\tdiff_files_staged\tadded_wt\tremoved_wt\tadded_staged\tremoved_staged
+/home/sjors/dev/agentic-packages	29f3dd0e10f8	refs/heads/main	attached	0	0	0	0	0	0
+/home/sjors/dev/agentic-packages-codex-profiles	0000000000000000000000000000000000000000	refs/heads/codex-native-profiles	orphaned-missing-branch|zero-or-missing-head	528	547	32	214	35	214
+/home/sjors/tmp/ap-ai-tells-v2	8f1f61c35a66	refs/heads/docs/ai-tells-modernize	attached	624	624	57	264	57	264
+/home/sjors/tmp/worktrees/agentic-packages/fix-speckit-hook	05171eaeea4d	refs/heads/fix/speckit-spec-detection	attached	624	624	59	256	59	256
