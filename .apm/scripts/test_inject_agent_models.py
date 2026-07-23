@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT_COPY = Path(__file__).with_name("inject-agent-models.py")
 SCRIPT = (
     Path(__file__).parents[2]
@@ -106,8 +105,7 @@ def test_deployed_agent_without_mapping_fails(tmp_path: Path) -> None:
     )
     stale = agents / "stale-agent.toml"
     stale.write_text(
-        'name = "stale-agent"\ndescription = "Stale"\n'
-        'developer_instructions = "Work"\n',
+        'name = "stale-agent"\ndescription = "Stale"\ndeveloper_instructions = "Work"\n',
         encoding="utf-8",
     )
 
@@ -123,7 +121,7 @@ def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
     source = tmp_path / "packages" / "unmapped" / "agents" / "reviewer.md"
     source.parent.mkdir(parents=True)
     source.write_text(
-        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        "---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n",
         encoding="utf-8",
     )
 
@@ -139,7 +137,7 @@ def test_apm_agent_source_without_mapping_fails(tmp_path: Path) -> None:
     source = tmp_path / "packages" / "unmapped" / ".apm" / "agents" / "reviewer.agent.md"
     source.parent.mkdir(parents=True)
     source.write_text(
-        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        "---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n",
         encoding="utf-8",
     )
 

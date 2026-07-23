@@ -1,0 +1,24 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "templates/",
+    "__pycache__/",
+    ".venv/",
+    "node_modules/",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = [
+    "E501",   # line-too-long: long lines are intentional in many scripts
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files: allow assert + magic comparisons
+".apm/scripts/test_*.py" = ["S101"]
+
+# ty configuration (ty is not currently installed; add when available)
+[tool.ty.rules]
+# non-strict: suppress noisy warnings until baseline is established
+strict = false

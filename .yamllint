@@ -7,6 +7,10 @@ extends: default
 rules:
   document-start: disable
   line-length: disable
+  # The apm.yml generator mixes indented and non-indented block sequences;
+  # both are valid YAML, so don't enforce one style.
+  indentation:
+    indent-sequences: whatever
   truthy:
     allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
     check-keys: false

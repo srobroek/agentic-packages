@@ -126,6 +126,20 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install repo tools via mise (bd for orchestrate harnesses)
+        uses: jdx/mise-action@dad1bfd3df957f44999b559dd69dc1671cb4e9ea  # v4.2.1
+        with:
+          install: true
+          cache: true
+
+      - name: Expose mise tools outside the repo tree
+        run: |
+          # Tests run bd with cwd in a tempdir where mise.toml doesn't apply,
+          # so mise shims can't resolve a version there. Put the real binary
+          # directory on PATH instead of relying on shims.
+          dirname "$(mise which bd)" >> "$GITHUB_PATH"
+          "$(mise which bd)" version
+
       - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
         run: |
           # Lint the package's own scripts at the same severity the suite targets.

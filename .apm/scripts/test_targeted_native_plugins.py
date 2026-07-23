@@ -21,9 +21,7 @@ def _load(name: str, filename: str):
 
 build_inventory = _load("target_build_inventory", "build_inventory.py")
 build_native_plugins = _load("target_build_native_plugins", "build-native-plugins.py")
-build_marketplace_block = _load(
-    "target_build_marketplace_block", "build-marketplace-block.py"
-)
+build_marketplace_block = _load("target_build_marketplace_block", "build-marketplace-block.py")
 audit_codex_config = _load("target_audit_codex_config", "audit-codex-config.py")
 
 

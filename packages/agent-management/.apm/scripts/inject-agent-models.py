@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Inject package-owned model mappings into APM-generated Codex agents."""
 
 from __future__ import annotations
@@ -11,7 +15,6 @@ import tomllib
 from pathlib import Path
 
 import yaml
-
 
 MAPPING_NAME = "agent-models.yml"
 ALLOWED_CODEX_FIELDS = {"model", "reasoning_effort"}
@@ -121,15 +124,15 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
             errors.append(f"deployed Codex agent has no name: {path}")
             continue
         if name in deployed:
-            errors.append(f"duplicate deployed Codex agent name {name}: {deployed[name]} and {path}")
+            errors.append(
+                f"duplicate deployed Codex agent name {name}: {deployed[name]} and {path}"
+            )
             continue
         deployed[name] = path
 
     for name, path in sorted(deployed.items()):
         if name not in mappings:
-            errors.append(
-                f"deployed Codex agent lacks {MAPPING_NAME} entry: {path} ({name})"
-            )
+            errors.append(f"deployed Codex agent lacks {MAPPING_NAME} entry: {path} ({name})")
 
     for name, mapping in sorted(mappings.items()):
         path = deployed.get(name)

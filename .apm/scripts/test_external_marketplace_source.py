@@ -55,6 +55,7 @@ def _marketplace(*entries: dict) -> dict:
 # _is_local_source                                                             #
 # --------------------------------------------------------------------------- #
 
+
 @pytest.mark.parametrize(
     "source,is_local",
     [
@@ -94,6 +95,7 @@ def test_external_repo_slug(source, slug):
 # external_marketplace doc-table records                                       #
 # --------------------------------------------------------------------------- #
 
+
 def test_external_marketplace_records_built():
     mk = _marketplace(
         {
@@ -118,9 +120,7 @@ def test_external_marketplace_records_built():
 def test_external_marketplace_excludes_local_and_collisions():
     # Local packages never appear; a colliding external name (also a local dir)
     # is excluded from external_marketplace too (local wins).
-    mk = _marketplace(
-        {"name": "agent-coder", "source": "srobroek/elsewhere", "ref": "main"}
-    )
+    mk = _marketplace({"name": "agent-coder", "source": "srobroek/elsewhere", "ref": "main"})
     ctx = bi.build_context(mk)
     names = {r["name"] for r in ctx["external_marketplace"]}
     assert "agent-coder" not in names
@@ -130,6 +130,7 @@ def test_external_marketplace_excludes_local_and_collisions():
 # --------------------------------------------------------------------------- #
 # external entry preservation                                                  #
 # --------------------------------------------------------------------------- #
+
 
 def test_external_entry_survives_build_context():
     mk = _marketplace(
@@ -174,7 +175,9 @@ def test_external_entry_not_reported_as_dropped():
         {"name": "zzz-external-demo", "source": "srobroek/project-setup", "ref": "main"}
     )
     ctx = bi.build_context(mk)
-    drops = [w for w in ctx["marketplace"]["warnings"] if "zzz-external-demo" in w and "dropped" in w]
+    drops = [
+        w for w in ctx["marketplace"]["warnings"] if "zzz-external-demo" in w and "dropped" in w
+    ]
     assert not drops, f"external entry wrongly reported as dropped: {drops}"
 
 
@@ -195,12 +198,11 @@ def test_dict_form_external_source_preserved():
 # collision: local dir wins                                                    #
 # --------------------------------------------------------------------------- #
 
+
 def test_name_collision_local_wins_no_duplicate():
     # 'agent-coder' is a real local package; an external entry with the same name
     # must be ignored (local wins) and NOT produce a second entry.
-    mk = _marketplace(
-        {"name": "agent-coder", "source": "srobroek/somewhere-else", "ref": "main"}
-    )
+    mk = _marketplace({"name": "agent-coder", "source": "srobroek/somewhere-else", "ref": "main"})
     ctx = bi.build_context(mk)
     matches = [e for e in ctx["marketplace"]["entries"] if e["name"] == "agent-coder"]
     assert len(matches) == 1, f"expected exactly one agent-coder entry, got {matches}"
@@ -212,6 +214,7 @@ def test_name_collision_local_wins_no_duplicate():
 # --------------------------------------------------------------------------- #
 # no regression for local-only blocks                                          #
 # --------------------------------------------------------------------------- #
+
 
 def test_repo_block_local_entries_have_canonical_shape():
     # Local (./packages/<dir>) entries must keep the name/source/category/tags
@@ -236,6 +239,7 @@ def test_repo_block_local_entries_have_canonical_shape():
 # --------------------------------------------------------------------------- #
 # render round-trip                                                            #
 # --------------------------------------------------------------------------- #
+
 
 def test_external_entry_round_trips_through_render():
     import yaml

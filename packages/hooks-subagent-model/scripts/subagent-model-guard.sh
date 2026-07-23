@@ -150,6 +150,68 @@ find_codex_profile() {
   find_named_profile "$codex_home/agents" "$wanted"
 }
 
+# Enumerate every installed Codex agent profile reachable from cwd (project
+# ancestry) plus CODEX_HOME/agents, deduplicating by name. Emits at most 12
+# entries sorted alphabetically, one per line in the form
+# "name (model/effort)" or just "name" when the profile lacks those fields.
+# Pure bash — no declare -A, no nested functions, compatible with bash 3.2+.
+list_installed_profiles() {
+  local directory parent codex_home p profile_name model_val effort_val
+  local seen_names raw_entries entry count
+
+  seen_names=""   # newline-separated list of already-emitted names
+  raw_entries=""  # collected "name\tentry" lines for sort+cap
+
+  directory="$cwd"
+  [[ -n "$directory" && -d "$directory" ]] || directory="$PWD"
+
+  _collect_dir() {
+    local dir="$1"
+    [[ -d "$dir" ]] || return 0
+    for p in "$dir"/*.toml; do
+      [[ -f "$p" ]] || continue
+      profile_name="$(toml_string "$p" name)"
+      [[ -n "$profile_name" ]] || continue
+      # Skip names already collected (project profiles shadow global ones).
+      printf '%s\n' "$seen_names" | grep -qxF "$profile_name" && continue
+      seen_names="${seen_names}${profile_name}
+"
+      model_val="$(toml_string "$p" model)"
+      effort_val="$(toml_string "$p" model_reasoning_effort)"
+      if [[ -n "$model_val" && -n "$effort_val" ]]; then
+        raw_entries="${raw_entries}${profile_name}	${profile_name} (${model_val}/${effort_val})
+"
+      elif [[ -n "$model_val" ]]; then
+        raw_entries="${raw_entries}${profile_name}	${profile_name} (${model_val})
+"
+      else
+        raw_entries="${raw_entries}${profile_name}	${profile_name}
+"
+      fi
+    done
+  }
+
+  while [[ -n "$directory" ]]; do
+    _collect_dir "$directory/.codex/agents"
+    [[ "$directory" == "/" ]] && break
+    parent="${directory%/*}"
+    [[ -n "$parent" ]] || parent="/"
+    [[ "$parent" == "$directory" ]] && break
+    directory="$parent"
+  done
+
+  codex_home="${CODEX_HOME:-${HOME}/.codex}"
+  _collect_dir "$codex_home/agents"
+
+  # Sort by name column and cap at 12; emit only the display column.
+  count=0
+  while IFS='	' read -r _ entry; do
+    [ "$count" -ge 12 ] && break
+    printf '%s\n' "$entry"
+    count=$((count + 1))
+  done < <(printf '%s' "$raw_entries" | sort)
+}
+
 if [[ "$is_codex" == "true" ]]; then
   if [[ -z "$subagent_type" || "$subagent_type" == "default" ]]; then
     if [[ "${SUBAGENT_MODEL_GUARD_ALLOW_AD_HOC:-0}" == "1" \
@@ -157,7 +219,14 @@ if [[ "$is_codex" == "true" ]]; then
       && -n "$reasoning_effort" && "$reasoning_effort" != "null" ]]; then
       exit 0
     fi
-    deny "Codex agent selection blocked: choose a configured semantic agent_type instead of default/ad-hoc delegation. Use operator for mechanical work; explorer for bounded discovery; coder, worker, or workflow-coder for implementation; workflow-reviewer or reviewer-high for review; reasoner only for exceptional deep reasoning. Each selected profile must pin both model and model_reasoning_effort."
+    # Build the catalog-driven deny message by enumerating installed profiles
+    # so the recommendation reflects what the project actually has available.
+    catalog_list="$(list_installed_profiles)"
+    if [[ -n "$catalog_list" ]]; then
+      deny "Codex agent selection blocked: choose a configured agent_type instead of default/ad-hoc delegation. Choose a configured agent_type from the installed catalog: $(printf '%s' "$catalog_list" | paste -sd ', ' -). Pick the profile whose role best matches the task. Each selected profile must pin both model and model_reasoning_effort."
+    else
+      deny "Codex agent selection blocked: choose a configured agent_type instead of default/ad-hoc delegation. No installed agent profiles were found. Define a project or global agent profile in .codex/agents/ that pins model and model_reasoning_effort, then retry with its name as agent_type."
+    fi
   fi
 
   profile="$(find_codex_profile "$subagent_type" || true)"

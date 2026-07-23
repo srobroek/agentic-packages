@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 SCRIPT = Path(__file__).with_name("sanitize-claude-hooks.py")
 SPEC = importlib.util.spec_from_file_location("sanitize_claude_hooks", SCRIPT)
@@ -88,9 +87,7 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
 def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
     events = {
-        "SessionStart": [
-            {"hooks": [{"type": "command", "command": "~/hooks/missing-reminder"}]}
-        ]
+        "SessionStart": [{"hooks": [{"type": "command", "command": "~/hooks/missing-reminder"}]}]
     }
     assert sanitize_claude_hooks.clean_events(events) == 1
     assert events == {}
@@ -99,14 +96,8 @@ def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
 def test_retired_agent_coder_hook_is_removed_even_if_script_exists(
     tmp_path: Path,
 ) -> None:
-    retired = _make_script(
-        tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh"
-    )
-    events = {
-        "PreToolUse": [
-            {"hooks": [{"type": "command", "command": str(retired)}]}
-        ]
-    }
+    retired = _make_script(tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh")
+    events = {"PreToolUse": [{"hooks": [{"type": "command", "command": str(retired)}]}]}
 
     assert sanitize_claude_hooks.clean_events(events) == 1
     assert events == {}
@@ -205,9 +196,7 @@ def test_cli_end_to_end_settings_sidecar_and_symlink(tmp_path: Path) -> None:
         "--prune-stale",
     ]
 
-    check = subprocess.run(
-        [*argv, "--check"], capture_output=True, text=True, check=False
-    )
+    check = subprocess.run([*argv, "--check"], capture_output=True, text=True, check=False)
     assert check.returncode == 1  # stale wiring detected
 
     apply = subprocess.run(argv, capture_output=True, text=True, check=False)
@@ -226,9 +215,7 @@ def test_cli_end_to_end_settings_sidecar_and_symlink(tmp_path: Path) -> None:
     assert json.loads(sidecar.read_text(encoding="utf-8")) == {}
     assert sorted(p.name for p in hooks_dir.iterdir()) == ["live-pkg"]
 
-    rerun = subprocess.run(
-        [*argv, "--check"], capture_output=True, text=True, check=False
-    )
+    rerun = subprocess.run([*argv, "--check"], capture_output=True, text=True, check=False)
     assert rerun.returncode == 0  # idempotent: nothing left to clean
 
 

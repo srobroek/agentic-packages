@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Report target-aware agent and shared skill runtime parity."""
 
 from __future__ import annotations
@@ -135,16 +139,24 @@ def main() -> int:
     skills = source_skill_names(package)
     codex = names(root / ".codex" / "agents", ".toml")
     claude = names(root / ".claude" / "agents", ".md")
-    agent_skills = {
-        path.name
-        for path in (root / ".agents" / "skills").iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    } if (root / ".agents" / "skills").is_dir() else set()
-    claude_skills = {
-        path.name
-        for path in (root / ".claude" / "skills").iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    } if (root / ".claude" / "skills").is_dir() else set()
+    agent_skills = (
+        {
+            path.name
+            for path in (root / ".agents" / "skills").iterdir()
+            if path.is_dir() and (path / "SKILL.md").is_file()
+        }
+        if (root / ".agents" / "skills").is_dir()
+        else set()
+    )
+    claude_skills = (
+        {
+            path.name
+            for path in (root / ".claude" / "skills").iterdir()
+            if path.is_dir() and (path / "SKILL.md").is_file()
+        }
+        if (root / ".claude" / "skills").is_dir()
+        else set()
+    )
 
     print("Agent parity")
     print(f"- source definitions: {len(metadata)}")

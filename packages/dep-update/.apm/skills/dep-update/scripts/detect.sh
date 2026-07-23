@@ -12,9 +12,12 @@
 # resolving it to a registry latest is the research step's job.
 #
 # Ecosystems covered: npm/pnpm/yarn (node), pip/uv/poetry (python),
-# cargo (rust), go.
+# cargo (rust), go, ruby (Gemfile), php (composer.json).
 #
 # Usage: detect.sh [project-dir]   (defaults to the current directory)
+#
+# TWIN: packages/whats-new/.apm/skills/whats-new/scripts/detect.sh
+# Keep both byte-identical except this header block.
 
 set -uo pipefail
 
@@ -209,6 +212,60 @@ scan_go() {
   done < go.mod
 }
 
+# --- ruby ------------------------------------------------------------------
+
+scan_ruby() {
+  [ -f Gemfile ] || return 0
+  local line name ver
+  while IFS= read -r line; do
+    case "$line" in
+      *gem\ *)
+        name=$(printf '%s\n' "$line" | sed -n "s/.*gem[[:space:]]*['\"]\\([^'\"]*\\)['\"].*/\\1/p")
+        ver=$(printf '%s\n' "$line" | sed -n "s/.*gem[[:space:]]*['\"][^'\"]*['\"][[:space:]]*,[[:space:]]*['\"]\\([^'\"]*\\)['\"].*/\\1/p")
+        [ -n "$name" ] && { emit "rubygems" "$name" "${ver:-?}"; found=$((found + 1)); }
+        ;;
+    esac
+  done < Gemfile
+}
+
+# --- php -------------------------------------------------------------------
+
+scan_php() {
+  [ -f composer.json ] || return 0
+  # Prefer jq (robust to inline-object form); platform reqs (php, ext-*, lib-*)
+  # are not packages -- drop them.
+  if command -v jq >/dev/null 2>&1; then
+    local pair name ver
+    while IFS= read -r pair; do
+      name=${pair%%$'\t'*}
+      ver=${pair#*$'\t'}
+      case "$name" in php|ext-*|lib-*|''|*' '*) continue ;; esac
+      emit "packagist" "$name" "${ver:-?}"
+      found=$((found + 1))
+    done <<EOF
+$(jq -r '
+  [ (.require // {}), (."require-dev" // {}) ] | add // {}
+  | to_entries[] | .key + "\t" + (.value|tostring)
+' composer.json 2>/dev/null)
+EOF
+    return 0
+  fi
+  # --- jq-less fallback ---
+  local in_deps=0 line key ver
+  while IFS= read -r line; do
+    case "$line" in
+      *'"require"'*|*'"require-dev"'*) in_deps=1; continue ;;
+    esac
+    if [ "$in_deps" -eq 1 ]; then
+      case "$line" in *'}'*) in_deps=0; continue ;; esac
+      key=$(printf '%s\n' "$line" | sed -n 's/^[[:space:]]*"\([^"]*\)"[[:space:]]*:.*/\1/p')
+      ver=$(printf '%s\n' "$line" | sed -n 's/^[[:space:]]*"[^"]*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+      case "$key" in php|ext-*|''|lib-*) continue ;; esac
+      [ -n "$key" ] && { emit "packagist" "$key" "${ver:-?}"; found=$((found + 1)); }
+    fi
+  done < composer.json
+}
+
 # --- main ------------------------------------------------------------------
 
 main() {
@@ -223,12 +280,15 @@ main() {
   scan_python
   scan_rust
   scan_go
+  scan_ruby
+  scan_php
 
   note ""
-  note "dep-update/detect: ${found} dependency declaration(s) found in ${target}"
+  note "detect: ${found} dependency declaration(s) found in ${target}"
   if [ "$found" -eq 0 ]; then
     note "No supported manifest found (package.json, uv.lock, poetry.lock,"
-    note "requirements.txt, pyproject.toml, Cargo.toml, go.mod)."
+    note "requirements.txt, pyproject.toml, Cargo.toml, go.mod, Gemfile,"
+    note "composer.json)."
   fi
   return 0
 }
