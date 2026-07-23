@@ -5,8 +5,8 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 targets:
-  - claude
-  - codex
+- claude
+- codex
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
@@ -23,9 +23,8 @@ scripts:
   check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
   render-docs: python3 .apm/scripts/render-docs.py all
   check-docs: python3 .apm/scripts/render-docs.py all --check
-  build-artifacts: >-
-    python3 .apm/scripts/build-native-plugins.py && python3
-    .apm/scripts/render-docs.py all && apm run build-marketplace
+  build-artifacts: python3 .apm/scripts/build-native-plugins.py && python3 .apm/scripts/render-docs.py
+    all && apm run build-marketplace
   install: apm install --target claude,codex
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
   audit-codex-config: python3 .apm/scripts/audit-codex-config.py
@@ -41,13 +40,13 @@ compilation:
   strategy: distributed
   source_attribution: true
   exclude:
-    - packages/**
-    - templates/**
-    - .apm/instructions/70-language-typescript.instructions.md
-    - .apm/instructions/71-language-python.instructions.md
-    - .apm/instructions/72-language-go.instructions.md
-    - .apm/instructions/73-language-rust.instructions.md
-    - .apm/instructions/74-language-terraform.instructions.md
+  - packages/**
+  - templates/**
+  - .apm/instructions/70-language-typescript.instructions.md
+  - .apm/instructions/71-language-python.instructions.md
+  - .apm/instructions/72-language-go.instructions.md
+  - .apm/instructions/73-language-rust.instructions.md
+  - .apm/instructions/74-language-terraform.instructions.md
   placement:
     min_instructions_per_file: 1
 marketplace:
@@ -62,972 +61,907 @@ marketplace:
   build:
     tagPattern: '{name}--v{version}'
   packages:
-    - name: agent-adversarial-challenger
-      source: ./packages/agent-adversarial-challenger
-      category: quality
-      tags:
-        - agent
-        - adversarial
-        - critique
-        - decision-review
-    - name: agent-coder
-      source: ./packages/agent-coder
-      category: engineering
-      tags:
-        - agent
-        - engineering
-        - implementation
-    - name: agent-coder-high
-      source: ./packages/agent-coder-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-explorer
-      source: ./packages/agent-explorer
-      category: code-intelligence
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-external-repo-worker
-      source: ./packages/agent-external-repo-worker
-      category: engineering
-      tags:
-        - agent
-        - engineering
-        - repos
-    - name: agent-luna-high
-      source: ./packages/agent-luna-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-low
-      source: ./packages/agent-luna-low
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-medium
-      source: ./packages/agent-luna-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-xhigh
-      source: ./packages/agent-luna-xhigh
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-management
-      source: ./packages/agent-management
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - apm
-    - name: agent-operator
-      source: ./packages/agent-operator
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-pr-reviewer
-      source: ./packages/agent-pr-reviewer
-      category: quality
-      tags:
-        - agent
-        - quality
-        - review
-    - name: agent-quality-guards
-      source: ./packages/agent-quality-guards
-      category: quality
-      tags:
-        - agent
-        - quality
-        - triage
-    - name: agent-reasoner
-      source: ./packages/agent-reasoner
-      category: planning-product
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-reviewer-high
-      source: ./packages/agent-reviewer-high
-      category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-reviewer-low
-      source: ./packages/agent-reviewer-low
-      category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-high
-      source: ./packages/agent-sol-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-low
-      source: ./packages/agent-sol-low
-      category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-medium
-      source: ./packages/agent-sol-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-xhigh
-      source: ./packages/agent-sol-xhigh
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-worker
-      source: ./packages/agent-worker
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agentic-maintenance
-      source: ./packages/agentic-maintenance
-      category: agentic-maintenance
-      tags:
-        - bundle
-        - steering
-    - name: audit-steering
-      source: ./packages/audit-steering
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - steering
-    - name: beads
-      source: ./packages/beads
-      category: project-lifecycle
-      tags:
-        - beads
-        - issue-tracking
-        - coordination
-        - multi-agent
-    - name: brownfield-project
-      source: ./packages/brownfield-project
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - brownfield
-    - name: catchup
-      source: ./packages/catchup
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - resume
-    - name: chezmoi-editor
-      source: ./packages/chezmoi-editor
-      category: dotfiles
-      tags:
-        - skill
-        - dotfiles
-        - chezmoi
-    - name: cmux
-      source: ./packages/cmux
-      category: developer-tools
-      tags:
-        - bundle
-        - cmux
-        - terminal
-    - name: code-intelligence
-      source: ./packages/code-intelligence
-      category: code-intelligence
-      tags:
-        - bundle
-        - semantic
-    - name: codex-hook-contract
-      source: ./packages/codex-hook-contract
-      category: project-lifecycle
-      tags:
-        - codex
-        - hooks
-        - reference
-    - name: core
-      source: ./packages/core
-      category: core
-      tags:
-        - bundle
-        - baseline
-    - name: data-ai
-      source: ./packages/data-ai
-      category: data
-      tags:
-        - bundle
-        - data
-    - name: debate
-      source: ./packages/debate
-      category: planning-product
-      tags:
-        - skill
-        - planning
-        - analysis
-    - name: dep-audit
-      source: ./packages/dep-audit
-      category: security
-      tags:
-        - skill
-        - security
-        - dependencies
-        - audit
-        - cve
-    - name: dep-update
-      source: ./packages/dep-update
-      category: code-intelligence
-      tags:
-        - skill
-        - dependencies
-        - upgrade
-        - advisory
-        - cve
-    - name: dependency-quality
-      source: ./packages/dependency-quality
-      category: project-lifecycle
-      tags:
-        - bundle
-        - dependencies
-        - supply-chain
-    - name: developer-tools
-      source: ./packages/developer-tools
-      category: engineering
-      tags:
-        - bundle
-        - tooling
-    - name: diagrams
-      source: ./packages/diagrams
-      category: diagrams
-      tags:
-        - bundle
-        - diagrams
-    - name: docs-architecture
-      source: ./packages/docs-architecture
-      category: docs
-      tags:
-        - bundle
-        - documentation
-    - name: eli5
-      source: ./packages/eli5
-      category: planning-product
-      tags:
-        - skill
-        - planning
-        - explanation
-    - name: find-tools
-      source: ./packages/find-tools
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - discovery
-    - name: frontend
-      source: ./packages/frontend
-      category: frontend
-      tags:
-        - bundle
-        - frontend
-    - name: go-quality
-      source: ./packages/go-quality
-      category: languages
-      tags:
-        - skill
-        - languages
-        - go
-    - name: goal-writer
-      source: ./packages/goal-writer
-      category: planning-product
-      tags:
-        - skill
-        - planning
-        - goals
-    - name: governance
-      source: ./packages/governance
-      category: governance
-      tags:
-        - bundle
-        - governance
-    - name: handover
-      source: ./packages/handover
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - handover
-    - name: headroom
-      source: ./packages/headroom
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - tokens
-        - compression
-    - name: hooks-attribution-guard
-      source: ./packages/hooks-attribution-guard
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - attribution
-    - name: hooks-bash-safety
-      source: ./packages/hooks-bash-safety
-      category: project-lifecycle
-      tags:
-        - hooks
-        - bash
-        - safety
-    - name: hooks-chezmoi-guard
-      source: ./packages/hooks-chezmoi-guard
-      category: project-lifecycle
-      tags:
-        - hooks
-        - chezmoi
-        - dotfiles
-        - safety
-    - name: hooks-close-keywords
-      source: ./packages/hooks-close-keywords
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - github
-        - issues
-    - name: hooks-git-safety
-      source: ./packages/hooks-git-safety
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - safety
-    - name: hooks-git-workflow
-      source: ./packages/hooks-git-workflow
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - commit
-    - name: hooks-package-investigate
-      source: ./packages/hooks-package-investigate
-      category: project-lifecycle
-      tags:
-        - hooks
-        - dependencies
-        - supply-chain
-    - name: hooks-portability-ci
-      source: ./packages/hooks-portability-ci
-      category: project-lifecycle
-      tags:
-        - ci
-        - hooks
-        - portability
-        - testing
-    - name: hooks-precommit-gate
-      source: ./packages/hooks-precommit-gate
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - pre-commit
-    - name: hooks-quality
-      source: ./packages/hooks-quality
-      category: quality
-      tags:
-        - hooks
-        - quality
-        - lint
-    - name: hooks-serena
-      source: ./packages/hooks-serena
-      category: project-lifecycle
-      tags:
-        - hooks
-        - serena
-        - semantic
-        - lifecycle
-    - name: hooks-subagent-model
-      source: ./packages/hooks-subagent-model
-      category: project-lifecycle
-      tags:
-        - hooks
-        - subagent
-        - model
-        - cost
-        - routing
-    - name: hooks-subagent-worktree
-      source: ./packages/hooks-subagent-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - subagent
-        - isolation
-        - policy
-    - name: hooks-worktree
-      source: ./packages/hooks-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - lifecycle
-    - name: incident-response
-      source: ./packages/incident-response
-      category: debugging
-      tags:
-        - bundle
-        - incident
-    - name: infrastructure
-      source: ./packages/infrastructure
-      category: infrastructure
-      tags:
-        - bundle
-        - infrastructure
-    - name: language-arm-cortex
-      source: ./packages/language-arm-cortex
-      category: languages
-      tags:
-        - bundle
-        - embedded
-        - arm
-    - name: language-dotnet
-      source: ./packages/language-dotnet
-      category: languages
-      tags:
-        - bundle
-        - dotnet
-    - name: language-functional
-      source: ./packages/language-functional
-      category: languages
-      tags:
-        - bundle
-        - functional
-    - name: language-go
-      source: ./packages/language-go
-      category: languages
-      tags:
-        - bundle
-        - go
-    - name: language-julia
-      source: ./packages/language-julia
-      category: languages
-      tags:
-        - bundle
-        - julia
-    - name: language-jvm
-      source: ./packages/language-jvm
-      category: languages
-      tags:
-        - bundle
-        - jvm
-    - name: language-python
-      source: ./packages/language-python
-      category: languages
-      tags:
-        - bundle
-        - python
-    - name: language-rust
-      source: ./packages/language-rust
-      category: languages
-      tags:
-        - bundle
-        - rust
-    - name: language-shell
-      source: ./packages/language-shell
-      category: languages
-      tags:
-        - bundle
-        - shell
-    - name: language-steering-go
-      source: ./packages/language-steering-go
-      category: languages
-      tags:
-        - steering
-        - go
-    - name: language-steering-python
-      source: ./packages/language-steering-python
-      category: languages
-      tags:
-        - steering
-        - python
-    - name: language-steering-rust
-      source: ./packages/language-steering-rust
-      category: languages
-      tags:
-        - steering
-        - rust
-    - name: language-steering-terraform
-      source: ./packages/language-steering-terraform
-      category: languages
-      tags:
-        - steering
-        - terraform
-    - name: language-steering-typescript
-      source: ./packages/language-steering-typescript
-      category: languages
-      tags:
-        - steering
-        - typescript
-    - name: language-terraform
-      source: ./packages/language-terraform
-      category: languages
-      tags:
-        - bundle
-        - terraform
-    - name: language-typescript
-      source: ./packages/language-typescript
-      category: languages
-      tags:
-        - bundle
-        - typescript
-    - name: language-web-scripting
-      source: ./packages/language-web-scripting
-      category: languages
-      tags:
-        - bundle
-        - php
-        - ruby
-    - name: license-picker
-      source: ./packages/license-picker
-      category: project-lifecycle
-      tags:
-        - skill
-        - licensing
-        - open-source
-        - interactive
-        - setup
-    - name: lsp-go
-      source: ./packages/lsp-go
-      category: languages
-      tags:
-        - lsp
-        - go
-    - name: lsp-python
-      source: ./packages/lsp-python
-      category: languages
-      tags:
-        - lsp
-        - python
-    - name: lsp-rust
-      source: ./packages/lsp-rust
-      category: languages
-      tags:
-        - lsp
-        - rust
-    - name: lsp-shell
-      source: ./packages/lsp-shell
-      category: languages
-      tags:
-        - lsp
-        - shell
-    - name: lsp-terraform
-      source: ./packages/lsp-terraform
-      category: languages
-      tags:
-        - lsp
-        - terraform
-    - name: lsp-typescript
-      source: ./packages/lsp-typescript
-      category: languages
-      tags:
-        - lsp
-        - typescript
-    - name: matt-skills
-      source: ./packages/matt-skills
-      category: planning-product
-      tags:
-        - bundle
-        - matt-pocock
-        - workflows
-    - name: mcp-1mcp
-      source: ./packages/mcp-1mcp
-      category: mcp
-      tags:
-        - mcp
-        - aggregation
-    - name: mcp-codebase-memory
-      source: ./packages/mcp-codebase-memory
-      category: mcp
-      tags:
-        - mcp
-        - codebase
-    - name: mcp-context7
-      source: ./packages/mcp-context7
-      category: mcp
-      tags:
-        - mcp
-        - docs
-    - name: mcp-fetcher
-      source: ./packages/mcp-fetcher
-      category: mcp
-      tags:
-        - mcp
-        - web
-    - name: mcp-mempalace
-      source: ./packages/mcp-mempalace
-      category: mcp
-      tags:
-        - mcp
-        - memory
-        - cross-session
-    - name: mcp-package-version
-      source: ./packages/mcp-package-version
-      category: mcp
-      tags:
-        - mcp
-        - versions
-    - name: mcp-playwright
-      source: ./packages/mcp-playwright
-      category: mcp
-      tags:
-        - mcp
-        - browser
-    - name: mcp-repomix
-      source: ./packages/mcp-repomix
-      category: mcp
-      tags:
-        - mcp
-        - repomix
-    - name: mcp-serena
-      source: ./packages/mcp-serena
-      category: mcp
-      tags:
-        - mcp
-        - semantic
-    - name: mcp-tauri
-      source: ./packages/mcp-tauri
-      category: mcp
-      tags:
-        - mcp
-        - tauri
-        - testing
-    - name: orchestrate
-      source: ./packages/orchestrate
-      category: agentic-maintenance
-      tags:
-        - skill
-        - agent
-        - orchestration
-    - name: planning-product
-      source: ./packages/planning-product
-      category: planning-product
-      tags:
-        - bundle
-        - planning
-    - name: playwright
-      source: ./packages/playwright
-      category: frontend
-      tags:
-        - skill
-        - frontend
-        - browser
-    - name: pr-shepherd
-      source: ./packages/pr-shepherd
-      category: project-lifecycle
-      tags:
-        - beads
-        - merge-queue
-        - pull-requests
-        - integration
-        - multi-agent
-    - name: presentation
-      source: ./packages/presentation
-      category: presentation
-      tags:
-        - bundle
-        - slides
-    - name: project-lifecycle
-      source: ./packages/project-lifecycle
-      category: project-lifecycle
-      tags:
-        - bundle
-        - lifecycle
-    - name: project-setup
-      source: srobroek/project-setup
-      ref: project-setup-v0.5.2
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - setup
-        - scaffold
-    - name: python-quality
-      source: ./packages/python-quality
-      category: languages
-      tags:
-        - skill
-        - languages
-        - python
-    - name: release-please
-      source: ./packages/release-please
-      category: project-lifecycle
-      tags:
-        - skill
-        - hooks
-        - release
-        - release-please
-        - ci-cd
-    - name: release-queue-watch
-      source: ./packages/release-queue-watch
-      category: project-lifecycle
-      tags:
-        - github
-        - pull-requests
-        - ci
-        - monitoring
-    - name: resume-cv
-      source: ./packages/resume-cv
-      category: resume
-      tags:
-        - bundle
-        - resume
-    - name: resume-session
-      source: ./packages/resume-session
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - resume
-    - name: review
-      source: ./packages/review
-      category: quality
-      tags:
-        - bundle
-        - review
-    - name: rust-quality
-      source: ./packages/rust-quality
-      category: languages
-      tags:
-        - skill
-        - languages
-        - rust
-    - name: secrets-scan
-      source: ./packages/secrets-scan
-      category: security
-      tags:
-        - security
-        - secrets
-        - pre-commit
-    - name: security
-      source: ./packages/security
-      category: security
-      tags:
-        - bundle
-        - security
-    - name: session-review
-      source: ./packages/session-review
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - review
-    - name: sniff
-      source: ./packages/sniff
-      category: quality
-      tags:
-        - skill
-        - agent
-        - quality
-        - refactoring
-        - code-smells
-        - tech-debt
-    - name: speckit
-      source: ./packages/speckit
-      category: speckit
-      tags:
-        - bundle
-        - speckit
-    - name: speckit-beads
-      source: ./packages/speckit-beads
-      category: speckit
-      tags:
-        - speckit
-        - beads
-        - workflow
-        - gates
-    - name: steering-architecture
-      source: ./packages/steering-architecture
-      category: steering
-      tags:
-        - steering
-        - architecture
-        - design
-    - name: steering-backend
-      source: ./packages/steering-backend
-      category: steering
-      tags:
-        - steering
-        - backend
-    - name: steering-data
-      source: ./packages/steering-data
-      category: steering
-      tags:
-        - steering
-        - data
-    - name: steering-delivery
-      source: ./packages/steering-delivery
-      category: steering
-      tags:
-        - steering
-        - git
-        - commit
-        - workflow
-    - name: steering-docs-specs
-      source: ./packages/steering-docs-specs
-      category: steering
-      tags:
-        - steering
-        - docs
-    - name: steering-frontend
-      source: ./packages/steering-frontend
-      category: steering
-      tags:
-        - steering
-        - frontend
-    - name: steering-git-workflow
-      source: ./packages/steering-git-workflow
-      category: steering
-      tags:
-        - steering
-        - git
-    - name: steering-global-bootstrap
-      source: ./packages/steering-global-bootstrap
-      category: steering
-      tags:
-        - steering
-        - bootstrap
-        - global
-        - apm
-    - name: steering-infrastructure
-      source: ./packages/steering-infrastructure
-      category: steering
-      tags:
-        - steering
-        - infrastructure
-    - name: steering-pragmatic
-      source: ./packages/steering-pragmatic
-      category: steering
-      tags:
-        - steering
-        - pragmatic
-        - personality
-        - code-economy
-        - minimalism
-    - name: steering-project-structure
-      source: ./packages/steering-project-structure
-      category: steering
-      tags:
-        - steering
-        - structure
-    - name: steering-speckit
-      source: ./packages/steering-speckit
-      category: steering
-      tags:
-        - steering
-        - speckit
-    - name: steering-subagent-routing
-      source: ./packages/steering-subagent-routing
-      category: steering
-      tags:
-        - steering
-        - routing
-    - name: steering-toolchain-defaults
-      source: ./packages/steering-toolchain-defaults
-      category: steering
-      tags:
-        - steering
-        - toolchain
-    - name: steering-tools-scripts
-      source: ./packages/steering-tools-scripts
-      category: steering
-      tags:
-        - steering
-        - tooling
-    - name: typescript-quality
-      source: ./packages/typescript-quality
-      category: languages
-      tags:
-        - skill
-        - languages
-        - typescript
-    - name: user-journeys
-      source: ./packages/user-journeys
-      category: quality
-      tags:
-        - journeys
-        - validation
-        - e2e
-        - quality
-    - name: verify
-      source: ./packages/verify
-      category: quality
-      tags:
-        - skill
-        - quality
-        - verification
-    - name: web-fetch
-      source: ./packages/web-fetch
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - web
-    - name: whats-new
-      source: ./packages/whats-new
-      category: code-intelligence
-      tags:
-        - skill
-        - code-intelligence
-        - dependencies
-        - changelog
-        - upgrade
-        - research
-        - services
-        - release-notes
-    - name: worktrunk-writer
-      source: ./packages/worktrunk-writer
-      category: project-lifecycle
-      tags:
-        - worktrunk
-        - worktree
-        - agents
-        - isolation
-        - lifecycle
-    - name: write-agentic
-      source: ./packages/write-agentic
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - authoring
-    - name: write-docs
-      source: ./packages/write-docs
-      category: docs
-      tags:
-        - skill
-        - docs
-        - writing
+  - name: agent-adversarial-challenger
+    source: ./packages/agent-adversarial-challenger
+    category: quality
+    tags:
+    - agent
+    - adversarial
+    - critique
+    - decision-review
+  - name: agent-coder
+    source: ./packages/agent-coder
+    category: engineering
+    tags:
+    - agent
+    - engineering
+    - implementation
+  - name: agent-coder-high
+    source: ./packages/agent-coder-high
+    category: engineering
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-explorer
+    source: ./packages/agent-explorer
+    category: code-intelligence
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-external-repo-worker
+    source: ./packages/agent-external-repo-worker
+    category: engineering
+    tags:
+    - agent
+    - engineering
+    - repos
+  - name: agent-management
+    source: ./packages/agent-management
+    category: agentic-maintenance
+    tags:
+    - skill
+    - maintenance
+    - apm
+  - name: agent-operator
+    source: ./packages/agent-operator
+    category: engineering
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-pr-reviewer
+    source: ./packages/agent-pr-reviewer
+    category: quality
+    tags:
+    - agent
+    - quality
+    - review
+  - name: agent-quality-guards
+    source: ./packages/agent-quality-guards
+    category: quality
+    tags:
+    - agent
+    - quality
+    - triage
+  - name: agent-reasoner
+    source: ./packages/agent-reasoner
+    category: planning-product
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-reviewer-high
+    source: ./packages/agent-reviewer-high
+    category: quality
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-reviewer-low
+    source: ./packages/agent-reviewer-low
+    category: quality
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agent-worker
+    source: ./packages/agent-worker
+    category: engineering
+    tags:
+    - agent
+    - codex
+    - routing
+  - name: agentic-maintenance
+    source: ./packages/agentic-maintenance
+    category: agentic-maintenance
+    tags:
+    - bundle
+    - steering
+  - name: audit-steering
+    source: ./packages/audit-steering
+    category: agentic-maintenance
+    tags:
+    - skill
+    - maintenance
+    - steering
+  - name: beads
+    source: ./packages/beads
+    category: project-lifecycle
+    tags:
+    - beads
+    - issue-tracking
+    - coordination
+    - multi-agent
+  - name: brownfield-project
+    source: ./packages/brownfield-project
+    category: project-lifecycle
+    tags:
+    - skill
+    - lifecycle
+    - brownfield
+  - name: catchup
+    source: ./packages/catchup
+    category: project-lifecycle
+    tags:
+    - skill
+    - lifecycle
+    - resume
+  - name: chezmoi-editor
+    source: ./packages/chezmoi-editor
+    category: dotfiles
+    tags:
+    - skill
+    - dotfiles
+    - chezmoi
+  - name: cmux
+    source: ./packages/cmux
+    category: developer-tools
+    tags:
+    - bundle
+    - cmux
+    - terminal
+  - name: code-intelligence
+    source: ./packages/code-intelligence
+    category: code-intelligence
+    tags:
+    - bundle
+    - semantic
+  - name: codex-hook-contract
+    source: ./packages/codex-hook-contract
+    category: project-lifecycle
+    tags:
+    - codex
+    - hooks
+    - reference
+  - name: core
+    source: ./packages/core
+    category: core
+    tags:
+    - bundle
+    - baseline
+  - name: data-ai
+    source: ./packages/data-ai
+    category: data
+    tags:
+    - bundle
+    - data
+  - name: debate
+    source: ./packages/debate
+    category: planning-product
+    tags:
+    - skill
+    - planning
+    - analysis
+  - name: dep-audit
+    source: ./packages/dep-audit
+    category: security
+    tags:
+    - skill
+    - security
+    - dependencies
+    - audit
+    - cve
+  - name: dep-update
+    source: ./packages/dep-update
+    category: code-intelligence
+    tags:
+    - skill
+    - dependencies
+    - upgrade
+    - advisory
+    - cve
+  - name: dependency-quality
+    source: ./packages/dependency-quality
+    category: project-lifecycle
+    tags:
+    - bundle
+    - dependencies
+    - supply-chain
+  - name: developer-tools
+    source: ./packages/developer-tools
+    category: engineering
+    tags:
+    - bundle
+    - tooling
+  - name: diagrams
+    source: ./packages/diagrams
+    category: diagrams
+    tags:
+    - bundle
+    - diagrams
+  - name: docs-architecture
+    source: ./packages/docs-architecture
+    category: docs
+    tags:
+    - bundle
+    - documentation
+  - name: eli5
+    source: ./packages/eli5
+    category: planning-product
+    tags:
+    - skill
+    - planning
+    - explanation
+  - name: find-tools
+    source: ./packages/find-tools
+    category: agentic-maintenance
+    tags:
+    - skill
+    - maintenance
+    - discovery
+  - name: frontend
+    source: ./packages/frontend
+    category: frontend
+    tags:
+    - bundle
+    - frontend
+  - name: go-quality
+    source: ./packages/go-quality
+    category: languages
+    tags:
+    - skill
+    - languages
+    - go
+  - name: goal-writer
+    source: ./packages/goal-writer
+    category: planning-product
+    tags:
+    - skill
+    - planning
+    - goals
+  - name: governance
+    source: ./packages/governance
+    category: governance
+    tags:
+    - bundle
+    - governance
+  - name: handover
+    source: ./packages/handover
+    category: project-lifecycle
+    tags:
+    - skill
+    - lifecycle
+    - handover
+  - name: headroom
+    source: ./packages/headroom
+    category: agentic-maintenance
+    tags:
+    - skill
+    - maintenance
+    - tokens
+    - compression
+  - name: hooks-attribution-guard
+    source: ./packages/hooks-attribution-guard
+    category: project-lifecycle
+    tags:
+    - hooks
+    - git
+    - attribution
+  - name: hooks-bash-safety
+    source: ./packages/hooks-bash-safety
+    category: project-lifecycle
+    tags:
+    - hooks
+    - bash
+    - safety
+  - name: hooks-chezmoi-guard
+    source: ./packages/hooks-chezmoi-guard
+    category: project-lifecycle
+    tags:
+    - hooks
+    - chezmoi
+    - dotfiles
+    - safety
+  - name: hooks-close-keywords
+    source: ./packages/hooks-close-keywords
+    category: project-lifecycle
+    tags:
+    - hooks
+    - git
+    - github
+    - issues
+  - name: hooks-git-safety
+    source: ./packages/hooks-git-safety
+    category: project-lifecycle
+    tags:
+    - hooks
+    - git
+    - safety
+  - name: hooks-git-workflow
+    source: ./packages/hooks-git-workflow
+    category: project-lifecycle
+    tags:
+    - hooks
+    - git
+    - commit
+  - name: hooks-package-investigate
+    source: ./packages/hooks-package-investigate
+    category: project-lifecycle
+    tags:
+    - hooks
+    - dependencies
+    - supply-chain
+  - name: hooks-portability-ci
+    source: ./packages/hooks-portability-ci
+    category: project-lifecycle
+    tags:
+    - ci
+    - hooks
+    - portability
+    - testing
+  - name: hooks-precommit-gate
+    source: ./packages/hooks-precommit-gate
+    category: project-lifecycle
+    tags:
+    - hooks
+    - git
+    - pre-commit
+  - name: hooks-quality
+    source: ./packages/hooks-quality
+    category: quality
+    tags:
+    - hooks
+    - quality
+    - lint
+  - name: hooks-serena
+    source: ./packages/hooks-serena
+    category: project-lifecycle
+    tags:
+    - hooks
+    - serena
+    - semantic
+    - lifecycle
+  - name: hooks-subagent-model
+    source: ./packages/hooks-subagent-model
+    category: project-lifecycle
+    tags:
+    - hooks
+    - subagent
+    - model
+    - cost
+    - routing
+  - name: hooks-subagent-worktree
+    source: ./packages/hooks-subagent-worktree
+    category: project-lifecycle
+    tags:
+    - hooks
+    - worktree
+    - subagent
+    - isolation
+    - policy
+  - name: hooks-worktree
+    source: ./packages/hooks-worktree
+    category: project-lifecycle
+    tags:
+    - hooks
+    - worktree
+    - lifecycle
+  - name: incident-response
+    source: ./packages/incident-response
+    category: debugging
+    tags:
+    - bundle
+    - incident
+  - name: infrastructure
+    source: ./packages/infrastructure
+    category: infrastructure
+    tags:
+    - bundle
+    - infrastructure
+  - name: language-arm-cortex
+    source: ./packages/language-arm-cortex
+    category: languages
+    tags:
+    - bundle
+    - embedded
+    - arm
+  - name: language-dotnet
+    source: ./packages/language-dotnet
+    category: languages
+    tags:
+    - bundle
+    - dotnet
+  - name: language-functional
+    source: ./packages/language-functional
+    category: languages
+    tags:
+    - bundle
+    - functional
+  - name: language-go
+    source: ./packages/language-go
+    category: languages
+    tags:
+    - bundle
+    - go
+  - name: language-julia
+    source: ./packages/language-julia
+    category: languages
+    tags:
+    - bundle
+    - julia
+  - name: language-jvm
+    source: ./packages/language-jvm
+    category: languages
+    tags:
+    - bundle
+    - jvm
+  - name: language-python
+    source: ./packages/language-python
+    category: languages
+    tags:
+    - bundle
+    - python
+  - name: language-rust
+    source: ./packages/language-rust
+    category: languages
+    tags:
+    - bundle
+    - rust
+  - name: language-shell
+    source: ./packages/language-shell
+    category: languages
+    tags:
+    - bundle
+    - shell
+  - name: language-steering-go
+    source: ./packages/language-steering-go
+    category: languages
+    tags:
+    - steering
+    - go
+  - name: language-steering-python
+    source: ./packages/language-steering-python
+    category: languages
+    tags:
+    - steering
+    - python
+  - name: language-steering-rust
+    source: ./packages/language-steering-rust
+    category: languages
+    tags:
+    - steering
+    - rust
+  - name: language-steering-terraform
+    source: ./packages/language-steering-terraform
+    category: languages
+    tags:
+    - steering
+    - terraform
+  - name: language-steering-typescript
+    source: ./packages/language-steering-typescript
+    category: languages
+    tags:
+    - steering
+    - typescript
+  - name: language-terraform
+    source: ./packages/language-terraform
+    category: languages
+    tags:
+    - bundle
+    - terraform
+  - name: language-typescript
+    source: ./packages/language-typescript
+    category: languages
+    tags:
+    - bundle
+    - typescript
+  - name: language-web-scripting
+    source: ./packages/language-web-scripting
+    category: languages
+    tags:
+    - bundle
+    - php
+    - ruby
+  - name: license-picker
+    source: ./packages/license-picker
+    category: project-lifecycle
+    tags:
+    - skill
+    - licensing
+    - open-source
+    - interactive
+    - setup
+  - name: lsp-go
+    source: ./packages/lsp-go
+    category: languages
+    tags:
+    - lsp
+    - go
+  - name: lsp-python
+    source: ./packages/lsp-python
+    category: languages
+    tags:
+    - lsp
+    - python
+  - name: lsp-rust
+    source: ./packages/lsp-rust
+    category: languages
+    tags:
+    - lsp
+    - rust
+  - name: lsp-shell
+    source: ./packages/lsp-shell
+    category: languages
+    tags:
+    - lsp
+    - shell
+  - name: lsp-terraform
+    source: ./packages/lsp-terraform
+    category: languages
+    tags:
+    - lsp
+    - terraform
+  - name: lsp-typescript
+    source: ./packages/lsp-typescript
+    category: languages
+    tags:
+    - lsp
+    - typescript
+  - name: matt-skills
+    source: ./packages/matt-skills
+    category: planning-product
+    tags:
+    - bundle
+    - matt-pocock
+    - workflows
+  - name: mcp-1mcp
+    source: ./packages/mcp-1mcp
+    category: mcp
+    tags:
+    - mcp
+    - aggregation
+  - name: mcp-codebase-memory
+    source: ./packages/mcp-codebase-memory
+    category: mcp
+    tags:
+    - mcp
+    - codebase
+  - name: mcp-context7
+    source: ./packages/mcp-context7
+    category: mcp
+    tags:
+    - mcp
+    - docs
+  - name: mcp-fetcher
+    source: ./packages/mcp-fetcher
+    category: mcp
+    tags:
+    - mcp
+    - web
+  - name: mcp-mempalace
+    source: ./packages/mcp-mempalace
+    category: mcp
+    tags:
+    - mcp
+    - memory
+    - cross-session
+  - name: mcp-package-version
+    source: ./packages/mcp-package-version
+    category: mcp
+    tags:
+    - mcp
+    - versions
+  - name: mcp-playwright
+    source: ./packages/mcp-playwright
+    category: mcp
+    tags:
+    - mcp
+    - browser
+  - name: mcp-repomix
+    source: ./packages/mcp-repomix
+    category: mcp
+    tags:
+    - mcp
+    - repomix
+  - name: mcp-serena
+    source: ./packages/mcp-serena
+    category: mcp
+    tags:
+    - mcp
+    - semantic
+  - name: mcp-tauri
+    source: ./packages/mcp-tauri
+    category: mcp
+    tags:
+    - mcp
+    - tauri
+    - testing
+  - name: orchestrate
+    source: ./packages/orchestrate
+    category: agentic-maintenance
+    tags:
+    - skill
+    - agent
+    - orchestration
+  - name: planning-product
+    source: ./packages/planning-product
+    category: planning-product
+    tags:
+    - bundle
+    - planning
+  - name: playwright
+    source: ./packages/playwright
+    category: frontend
+    tags:
+    - skill
+    - frontend
+    - browser
+  - name: pr-shepherd
+    source: ./packages/pr-shepherd
+    category: project-lifecycle
+    tags:
+    - beads
+    - merge-queue
+    - pull-requests
+    - integration
+    - multi-agent
+  - name: presentation
+    source: ./packages/presentation
+    category: presentation
+    tags:
+    - bundle
+    - slides
+  - name: project-lifecycle
+    source: ./packages/project-lifecycle
+    category: project-lifecycle
+    tags:
+    - bundle
+    - lifecycle
+  - name: python-quality
+    source: ./packages/python-quality
+    category: languages
+    tags:
+    - skill
+    - languages
+    - python
+  - name: release-please
+    source: ./packages/release-please
+    category: project-lifecycle
+    tags:
+    - skill
+    - hooks
+    - release
+    - release-please
+    - ci-cd
+  - name: release-queue-watch
+    source: ./packages/release-queue-watch
+    category: project-lifecycle
+    tags:
+    - github
+    - pull-requests
+    - ci
+    - monitoring
+  - name: resume-cv
+    source: ./packages/resume-cv
+    category: resume
+    tags:
+    - bundle
+    - resume
+  - name: resume-session
+    source: ./packages/resume-session
+    category: project-lifecycle
+    tags:
+    - skill
+    - lifecycle
+    - resume
+  - name: review
+    source: ./packages/review
+    category: quality
+    tags:
+    - bundle
+    - review
+  - name: rust-quality
+    source: ./packages/rust-quality
+    category: languages
+    tags:
+    - skill
+    - languages
+    - rust
+  - name: secrets-scan
+    source: ./packages/secrets-scan
+    category: security
+    tags:
+    - security
+    - secrets
+    - pre-commit
+  - name: security
+    source: ./packages/security
+    category: security
+    tags:
+    - bundle
+    - security
+  - name: session-review
+    source: ./packages/session-review
+    category: project-lifecycle
+    tags:
+    - skill
+    - lifecycle
+    - review
+  - name: sniff
+    source: ./packages/sniff
+    category: quality
+    tags:
+    - skill
+    - agent
+    - quality
+    - refactoring
+    - code-smells
+    - tech-debt
+  - name: speckit
+    source: ./packages/speckit
+    category: speckit
+    tags:
+    - bundle
+    - speckit
+  - name: speckit-beads
+    source: ./packages/speckit-beads
+    category: speckit
+    tags:
+    - speckit
+    - beads
+    - workflow
+    - gates
+  - name: steering-architecture
+    source: ./packages/steering-architecture
+    category: steering
+    tags:
+    - steering
+    - architecture
+    - design
+  - name: steering-backend
+    source: ./packages/steering-backend
+    category: steering
+    tags:
+    - steering
+    - backend
+  - name: steering-data
+    source: ./packages/steering-data
+    category: steering
+    tags:
+    - steering
+    - data
+  - name: steering-delivery
+    source: ./packages/steering-delivery
+    category: steering
+    tags:
+    - steering
+    - git
+    - commit
+    - workflow
+  - name: steering-docs-specs
+    source: ./packages/steering-docs-specs
+    category: steering
+    tags:
+    - steering
+    - docs
+  - name: steering-frontend
+    source: ./packages/steering-frontend
+    category: steering
+    tags:
+    - steering
+    - frontend
+  - name: steering-git-workflow
+    source: ./packages/steering-git-workflow
+    category: steering
+    tags:
+    - steering
+    - git
+  - name: steering-global-bootstrap
+    source: ./packages/steering-global-bootstrap
+    category: steering
+    tags:
+    - steering
+    - bootstrap
+    - global
+    - apm
+  - name: steering-infrastructure
+    source: ./packages/steering-infrastructure
+    category: steering
+    tags:
+    - steering
+    - infrastructure
+  - name: steering-pragmatic
+    source: ./packages/steering-pragmatic
+    category: steering
+    tags:
+    - steering
+    - pragmatic
+    - personality
+    - code-economy
+    - minimalism
+  - name: steering-project-structure
+    source: ./packages/steering-project-structure
+    category: steering
+    tags:
+    - steering
+    - structure
+  - name: steering-speckit
+    source: ./packages/steering-speckit
+    category: steering
+    tags:
+    - steering
+    - speckit
+  - name: steering-subagent-routing
+    source: ./packages/steering-subagent-routing
+    category: steering
+    tags:
+    - steering
+    - routing
+  - name: steering-toolchain-defaults
+    source: ./packages/steering-toolchain-defaults
+    category: steering
+    tags:
+    - steering
+    - toolchain
+  - name: steering-tools-scripts
+    source: ./packages/steering-tools-scripts
+    category: steering
+    tags:
+    - steering
+    - tooling
+  - name: typescript-quality
+    source: ./packages/typescript-quality
+    category: languages
+    tags:
+    - skill
+    - languages
+    - typescript
+  - name: user-journeys
+    source: ./packages/user-journeys
+    category: quality
+    tags:
+    - journeys
+    - validation
+    - e2e
+    - quality
+  - name: verify
+    source: ./packages/verify
+    category: quality
+    tags:
+    - skill
+    - quality
+    - verification
+  - name: web-fetch
+    source: ./packages/web-fetch
+    category: code-intelligence
+    tags:
+    - skill
+    - code-intelligence
+    - web
+  - name: whats-new
+    source: ./packages/whats-new
+    category: code-intelligence
+    tags:
+    - skill
+    - code-intelligence
+    - dependencies
+    - changelog
+    - upgrade
+    - research
+    - services
+    - release-notes
+  - name: worktrunk-writer
+    source: ./packages/worktrunk-writer
+    category: project-lifecycle
+    tags:
+    - worktrunk
+    - worktree
+    - agents
+    - isolation
+    - lifecycle
+  - name: write-agentic
+    source: ./packages/write-agentic
+    category: agentic-maintenance
+    tags:
+    - skill
+    - maintenance
+    - authoring
+  - name: write-docs
+    source: ./packages/write-docs
+    category: docs
+    tags:
+    - skill
+    - docs
+    - writing

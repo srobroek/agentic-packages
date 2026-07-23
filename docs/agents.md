@@ -33,20 +33,12 @@ runtime's transformer.
 | `agent-coder-high` | Escalated coding agent for complex bounded implementation and debugging. |
 | `agent-explorer` | Read-only exploration agent for bounded code and configuration discovery. |
 | `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
-| `agent-luna-high` | Explicit Luna high-effort agent profile for demanding bounded analysis. |
-| `agent-luna-low` | Explicit Luna low-effort agent profile for tiny mechanical tasks. |
-| `agent-luna-medium` | Explicit Luna medium-effort agent profile for bounded exploration and synthesis. |
-| `agent-luna-xhigh` | Explicit Luna maximum-effort agent profile for bounded implementation and debugging. |
 | `agent-operator` | Mechanical operator agent for tiny commands, formatting, and inventory steps. |
 | `agent-pr-reviewer` | Subagent that reviews pull requests for code quality, security, and best practices. |
 | `agent-quality-guards` | Read-only quality-guard subagents for bounded triage: docs-guard checks scoped documentation and documentation lint findings, lint-guard validates and normalizes lint reports, data-metrics-summarizer compacts large logs and metrics, maintenance-metrics-reader snapshots repository maintenance health (stale branches, worktrees, lock states), and reviewer-mechanics smoke-checks scoped diffs for mechanical issues. All five reply with bounded, capped verdict lines and never edit files. |
 | `agent-reasoner` | Read-only reasoning agent for exceptional architecture, policy, and adversarial questions. |
 | `agent-reviewer-high` | Adversarial read-only reviewer for security-sensitive and broad-impact changes. |
 | `agent-reviewer-low` | Mechanical read-only reviewer for tiny changes with explicit criteria. |
-| `agent-sol-high` | Explicit Sol high-effort agent profile for complex cross-cutting work. |
-| `agent-sol-low` | Explicit Sol low-effort agent profile for mechanical validation and review. |
-| `agent-sol-medium` | Standard Sol medium-effort agent profile for general implementation and analysis. |
-| `agent-sol-xhigh` | Explicit Sol maximum-effort profile for exceptional bounded reasoning. |
 | `agent-worker` | Bounded implementation worker for changes without a more specific coding role. |
 <!-- END:agents -->
 
