@@ -32,9 +32,9 @@ reproducible.
 
 ### Session 2026-07-24
 
-- Q: Run each agent with its pinned model/effort, or one cheap model for cost? → A: Pinned models — the regression under guard is the shipped configuration; a scoped iteration run may override the model explicitly, but fleet/release sweeps always use the pins. *(auto-resolved: recommended default, user unavailable)*
-- Q: How does the unattended run ship in v1? → A: Scheduled CI (nightly cron) plus manual dispatch, never a required PR check; requires an API-key secret in the CI environment. *(auto-resolved: recommended default, user unavailable)*
-- Q: Where does the harness live? → A: A new self-contained package (`packages/agent-conformance`), versioned and released like the other packages, reading other packages' agent sources read-only at run time. *(auto-resolved: recommended default, user unavailable)*
+- Q: Run each agent with its pinned model/effort, or one cheap model for cost? → A: Pinned models — the regression under guard is the shipped configuration; a scoped iteration run may override the model explicitly, but fleet/release sweeps always use the pins.
+- Q: How does the unattended run ship in v1? → A: Local-only in v1 — the suite ships as a locally invoked runner; CI automation (scheduled or manual) is deferred to a follow-up feature. The runner must not assume an interactive human (it is automatable), but no CI workflow is part of this spec.
+- Q: Where does the harness live? → A: A new self-contained package (`packages/agent-conformance`), versioned and released like the other packages, reading other packages' agent sources read-only at run time.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -113,31 +113,6 @@ agent's fixtures execute; the report contains only that agent.
 
 ---
 
-### User Story 4 - Scheduled unattended run (Priority: P4)
-
-The suite runs on a schedule (nightly or pre-release automation) without a
-human present, publishes its report where maintainers will see it, and fails
-loudly on regressions without blocking unrelated PR merges.
-
-**Why this priority**: The bead explicitly scopes this as
-nightly/pre-release, not per-PR; automation is valuable but only after the
-local runner (P1) is trustworthy.
-
-**Independent Test**: Trigger the scheduled job manually; verify it completes,
-publishes the report artifact, and its failure status is visible without
-appearing as a required check on any PR.
-
-**Acceptance Scenarios**:
-
-1. **Given** credentials configured for unattended use, **When** the scheduled
-   run executes, **Then** the same report as the local run is produced and
-   persisted, and a regression sets the run's status to failed.
-2. **Given** credentials are absent, **When** the scheduled run starts,
-   **Then** it fails fast with an explicit configuration message rather than
-   reporting agents as failing.
-
----
-
 ### Edge Cases
 
 - **Uncapped agents** (e.g., agents whose contract says `CAP uncapped`):
@@ -209,11 +184,11 @@ appearing as a required check on any PR.
   shipped-configuration verdict.
 - **FR-009**: The LLM-in-the-loop suite MUST NOT run as a required per-PR
   check; the deterministic coverage/consistency checks alone MAY run per-PR.
-- **FR-010**: The suite MUST be runnable unattended via repository automation
-  on a nightly schedule and on manual dispatch, failing fast with an explicit
-  configuration error when credentials are unavailable, and publishing the
-  same report artifacts as a local run; the automated run MUST NOT be wired
-  as a required pull-request status check.
+- **FR-010**: The runner MUST be non-interactive once invoked (no prompts,
+  deterministic exit codes, report written to a predictable path) and MUST
+  fail fast with an explicit configuration error when credentials are
+  unavailable — so that a later feature can wrap it in scheduled automation
+  without changes. Shipping any CI workflow is out of scope for this feature.
 - **FR-011**: A deterministic consistency check MUST verify each case's
   encoded expectations (first-line pattern, caps) against the agent source's
   declared contract and fail on drift, so a contract edit cannot silently
@@ -258,9 +233,6 @@ appearing as a required check on any PR.
   check failure before any LLM run.
 - **SC-005**: A scoped single-agent run completes in under 3 minutes,
   making the harness usable inside an authoring loop.
-- **SC-006**: The scheduled run produces the same report format as the local
-  run and its regressions are visible to maintainers without inspecting logs
-  (failed run status + persisted report artifact).
 
 ## Assumptions
 
@@ -283,10 +255,11 @@ appearing as a required check on any PR.
   faithful execution requires a full orchestrate run environment may ship as
   reasoned skips in v1 provided the skip is visible in every report; the
   expectation is that most get stub-environment fixtures.
-- **Trigger cadence**: local pre-release invocation is the primary interface;
-  a scheduled unattended run is included but is not a required PR gate.
-- **Credentials**: maintainers and the scheduled environment have Claude
-  credentials available; the harness does not manage or provision them.
+- **Trigger cadence**: local pre-release invocation is the v1 interface. The
+  runner is built automatable (FR-010), but wrapping it in scheduled CI is a
+  deferred follow-up feature, tracked as its own bead.
+- **Credentials**: maintainers have Claude credentials available locally; the
+  harness does not manage or provision them.
 - **Flake policy**: bounded retries (default 2 retries after first failure);
   pass-on-retry reports FLAKY and defaults to non-fatal exit.
 - **No-reprint threshold**: a reply reprints the fixture when it contains a
