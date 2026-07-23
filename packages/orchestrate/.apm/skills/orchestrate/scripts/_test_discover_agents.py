@@ -191,6 +191,9 @@ class DiscoverAgentsTest(unittest.TestCase):
         self.assertEqual(agents["workflow-researcher"]["model"], "sonnet")
         self.assertIn("WebSearch", str(agents["workflow-researcher"]["tools"]))
         self.assertEqual(agents["workflow-worker"]["model"], "sonnet")
+        for name in ("docs-guard", "lint-guard", "data-metrics-summarizer"):
+            self.assertEqual(agents[name]["model"], "haiku")
+            self.assertEqual(agents[name]["tools"], "Read, Grep, Glob, Bash")
 
     def test_json_is_byte_deterministic(self) -> None:
         self.write(self.first, "beta.md", definition("beta"))
