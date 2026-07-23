@@ -14,7 +14,7 @@ tags:
   - planning
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/debate#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/debate#>=2.2.0 <3.0.0
     - srobroek/agentic-packages/packages/eli5#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/web-fetch#>=2.1.0 <3.0.0
     - >-
