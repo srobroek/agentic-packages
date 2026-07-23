@@ -4,15 +4,21 @@
 # pinned/declared versions, across ecosystems, WITHOUT network access. Used to
 # pick a research target when the user names none.
 #
-# Portability floor: bash 3.2.57 + BSD sed/grep/awk (stock macOS). No jq here so
-# this stays dependency-free; parsing is best-effort and line-oriented.
+# Portability floor: bash 3.2.57 + BSD sed/grep/awk (stock macOS). No jq
+# required; parsing is best-effort and line-oriented (jq used when available
+# for the node path for robustness).
 #
-# Output: one "ecosystem<TAB>name<TAB>version" line per dependency found, then a
-# short summary on stderr. Version is the declared/pinned string verbatim (may be
-# a range like "^1.2.0"); resolving it to a concrete number is the registry
-# step's job, not this one.
+# Output: one "ecosystem<TAB>name<TAB>version" line per dependency found, then
+# a short summary on stderr. Version is the lockfile-pinned string verbatim;
+# resolving it to a registry latest is the research step's job.
+#
+# Ecosystems covered: npm/pnpm/yarn (node), pip/uv/poetry (python),
+# cargo (rust), go, ruby (Gemfile), php (composer.json).
 #
 # Usage: detect.sh [project-dir]   (defaults to the current directory)
+#
+# TWIN: packages/dep-update/.apm/skills/dep-update/scripts/detect.sh
+# Keep both byte-identical except this header block.
 
 set -uo pipefail
 
@@ -45,7 +51,7 @@ $(jq -r '
 EOF
     return 0
   fi
-  # --- jq-less fallback: heuristic line parse of the *Dependencies blocks. ---
+  # --- jq-less fallback: heuristic line parse of the *Dependencies blocks ---
   local in_deps=0 line key ver
   while IFS= read -r line; do
     case "$line" in
@@ -70,11 +76,66 @@ EOF
 # --- python ----------------------------------------------------------------
 
 scan_python() {
+  # uv.lock: "name = ..." lines inside [[package]] blocks (best-effort).
+  if [ -f uv.lock ]; then
+    local in_pkg=0 pkg_name pkg_ver line
+    pkg_name=""; pkg_ver=""
+    while IFS= read -r line; do
+      case "$line" in
+        '[[package]]'*)
+          # Emit the previous package if complete.
+          if [ -n "$pkg_name" ] && [ -n "$pkg_ver" ]; then
+            emit "pypi" "$pkg_name" "$pkg_ver"
+            found=$((found + 1))
+          fi
+          pkg_name=""; pkg_ver=""; in_pkg=1 ;;
+        'name = "'*)
+          [ "$in_pkg" -eq 1 ] || continue
+          pkg_name=$(printf '%s\n' "$line" | sed -n 's/^name = "\([^"]*\)".*/\1/p') ;;
+        'version = "'*)
+          [ "$in_pkg" -eq 1 ] || continue
+          pkg_ver=$(printf '%s\n' "$line" | sed -n 's/^version = "\([^"]*\)".*/\1/p') ;;
+      esac
+    done < uv.lock
+    # Emit the last package.
+    if [ -n "$pkg_name" ] && [ -n "$pkg_ver" ]; then
+      emit "pypi" "$pkg_name" "$pkg_ver"
+      found=$((found + 1))
+    fi
+    return 0
+  fi
+
+  # poetry.lock: name/version pairs.
+  if [ -f poetry.lock ]; then
+    local in_pkg=0 pkg_name pkg_ver line
+    pkg_name=""; pkg_ver=""
+    while IFS= read -r line; do
+      case "$line" in
+        '[[package]]'*)
+          if [ -n "$pkg_name" ] && [ -n "$pkg_ver" ]; then
+            emit "pypi" "$pkg_name" "$pkg_ver"
+            found=$((found + 1))
+          fi
+          pkg_name=""; pkg_ver=""; in_pkg=1 ;;
+        'name = "'*)
+          [ "$in_pkg" -eq 1 ] || continue
+          pkg_name=$(printf '%s\n' "$line" | sed -n 's/^name = "\([^"]*\)".*/\1/p') ;;
+        'version = "'*)
+          [ "$in_pkg" -eq 1 ] || continue
+          pkg_ver=$(printf '%s\n' "$line" | sed -n 's/^version = "\([^"]*\)".*/\1/p') ;;
+      esac
+    done < poetry.lock
+    if [ -n "$pkg_name" ] && [ -n "$pkg_ver" ]; then
+      emit "pypi" "$pkg_name" "$pkg_ver"
+      found=$((found + 1))
+    fi
+    return 0
+  fi
+
   # requirements.txt: "pkg==1.2.3" / "pkg>=1.0" / "pkg".
   if [ -f requirements.txt ]; then
     local line name ver
     while IFS= read -r line; do
-      # strip comments and whitespace
       line=$(printf '%s\n' "$line" | sed 's/#.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
       [ -n "$line" ] || continue
       case "$line" in -*|.*|/*) continue ;; esac   # skip -r/-e/paths
@@ -84,10 +145,11 @@ scan_python() {
       emit "pypi" "$name" "${ver:-?}"
       found=$((found + 1))
     done < requirements.txt
+    return 0
   fi
-  # pyproject.toml [project] dependencies and [tool.poetry.dependencies].
+
+  # pyproject.toml: [project] dependencies and [tool.poetry.dependencies].
   if [ -f pyproject.toml ]; then
-    # "requests >=2.0" or 'requests = "^2.0"' lines, best-effort.
     local line name ver
     while IFS= read -r line; do
       case "$line" in
@@ -225,8 +287,9 @@ main() {
   note ""
   note "detect: ${found} dependency declaration(s) found in ${target}"
   if [ "$found" -eq 0 ]; then
-    note "No supported manifest found (package.json, requirements.txt,"
-    note "pyproject.toml, Cargo.toml, go.mod, Gemfile, composer.json)."
+    note "No supported manifest found (package.json, uv.lock, poetry.lock,"
+    note "requirements.txt, pyproject.toml, Cargo.toml, go.mod, Gemfile,"
+    note "composer.json)."
   fi
   return 0
 }
