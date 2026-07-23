@@ -9,15 +9,17 @@ starting point, refined by what the catalog actually offers.
 |---|---|---|---|---|
 | **Orchestrator** | you (lead session) | your session model | whole run | delegate deep planning / disputes |
 | **Researcher** | `Explore` → `general-purpose`, `speckit-research` | **cheap tier** low/med | ephemeral (reuse for follow-ups) | → mid tier when a single task is synthesis-heavy (see fan-out/fan-in below) |
+| **Docs-guard** | `docs-guard` (bundled) | **cheap tier** low, read-only | ephemeral | escalate to mid tier for policy disputes |
+| **Lint-guard** | `lint-guard` (bundled) | **cheap tier** low, read-only | ephemeral | → mid tier when rule intent is ambiguous |
 | **Workflow-coder** | `workflow-coder` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the coder — on a reasoning block it raises `BLOCKED` |
 | **Workflow-reviewer** | `workflow-reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Workflow-advisor** | `workflow-advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Integration Gatekeeper** | `integration-gatekeeper` (bundled) | **mid tier** medium | **persistent** | → top tier only if merge reasoning is genuinely gnarly |
+| **Ledger-Scribe** | `ledger-scribe` (bundled) | **cheap tier** low, read-only | ephemeral | escalate to mid if issue interpretation is ambiguous |
 | **Audit reporter** | `audit-reporter` (bundled) | **cheap tier** low, read-only | **ephemeral** | — |
 | **Tiebreaker** | `general-purpose` (fresh) | **top tier** high, read-only | ephemeral, gated | → xhigh only if genuinely complex |
 
-All custom roles ship **bundled** with this package (coder, reviewer, advisor,
-gatekeeper, audit reporter); the remaining routes are built-in agents (`Explore`,
+All custom roles ship **bundled** with this package (workflow-coder, workflow-reviewer, workflow-advisor, integration-gatekeeper, ledger-scribe, docs-guard, lint-guard); the remaining routes are built-in agents (`Explore`,
 `general-purpose`) present everywhere. The package does not assume
 `code-reviewer`/`adversarial-challenger` exist; those are optional upgrades
 when the catalog has them.
@@ -32,6 +34,8 @@ SKILL.md Core rules.
 | Role | Writes | Spawns | Runs in | Notes |
 |---|---|---|---|---|
 | Orchestrator | no code | **everything; sole dismisser** | lead session | coordination + deterministic scripts only |
+| Docs-guard | nothing (read-only) | nothing | reads scope | flags low-signal doc issues before merge review |
+| Lint-guard | nothing (read-only) | nothing | reads scope | triages lint artifacts and classifies likely false positives |
 | Workflow-coder | its `scope` only | **nothing** | own git worktree | commits + pushes its branch; on block → `BLOCKED kind:design\|debug` to `main` |
 | Workflow-reviewer | nothing (read-only) | nothing | reads branch/worktree | logs `review` verdict as audit record + bead comment |
 | Workflow-advisor | nothing (read-only) | nothing | reads code | one `ADVICE`, then exits |
