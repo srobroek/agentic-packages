@@ -7,7 +7,7 @@ Unlike local packages, these are **fetched from their source repo on install** r
 <!-- BEGIN:external-repos -->
 | Plugin | Category | Pinned ref | Tags |
 | --- | --- | --- | --- |
-| [`project-setup`](https://github.com/srobroek/project-setup) | project-lifecycle | `project-setup-v0.5.2` | skill, lifecycle, setup, scaffold |
+| [`project-setup`](https://github.com/srobroek/project-setup) | project-lifecycle | `project-setup-v0.5.2` | `skill`, `lifecycle`, `setup`, `scaffold` |
 <!-- END:external-repos -->
 
 ---
