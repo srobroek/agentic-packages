@@ -4,7 +4,7 @@ description: >-
   Read-only lint triage specialist in an `orchestrate` run: ingests lint output
   and filters actionable versus likely false positives without implementing fixes.
 model: haiku
-effort: low
+effort: high
 permissionMode: plan
 tools:
   - Read

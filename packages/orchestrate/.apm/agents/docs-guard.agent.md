@@ -4,7 +4,7 @@ description: >-
   Read-only docs guard in an `orchestrate` run: validates documentation edits
   and docs-focused lint output before handoff.
 model: haiku
-effort: low
+effort: medium
 permissionMode: plan
 tools:
   - Read

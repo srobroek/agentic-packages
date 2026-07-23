@@ -6,7 +6,8 @@ description: >-
   generic-pull, writable-fallback, and read-only research dispatch. Bundles
   workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
   workflow-reviewer, workflow-advisor, integration-gatekeeper, docs-guard,
-  lint-guard, and ledger-scribe. Includes deterministic scope, discovery, claim,
+  data-metrics-summarizer, lint-guard, and ledger-scribe. Includes deterministic
+  scope, discovery, claim,
   message,
   decision, queue, and conflict scripts plus shared PR shepherd landing
   safeguards. Requires the bd CLI.
