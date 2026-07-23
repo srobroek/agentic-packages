@@ -12,6 +12,7 @@
   "packages/agent-management": "1.2.1",
   "packages/agent-operator": "1.1.0",
   "packages/agent-pr-reviewer": "3.1.1",
+  "packages/agent-quality-guards": "0.1.0",
   "packages/agent-reasoner": "1.1.0",
   "packages/agent-reviewer-high": "1.1.0",
   "packages/agent-reviewer-low": "1.1.0",

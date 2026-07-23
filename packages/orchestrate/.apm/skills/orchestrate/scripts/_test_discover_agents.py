@@ -191,7 +191,23 @@ class DiscoverAgentsTest(unittest.TestCase):
         self.assertEqual(agents["workflow-researcher"]["model"], "sonnet")
         self.assertIn("WebSearch", str(agents["workflow-researcher"]["tools"]))
         self.assertEqual(agents["workflow-worker"]["model"], "sonnet")
-        for name in ("docs-guard", "lint-guard", "data-metrics-summarizer"):
+
+    def test_quality_guard_package_agents_preserve_model_and_tools(self) -> None:
+        package_agents = (
+            SCRIPT.parents[5] / "agent-quality-guards" / ".apm" / "agents"
+        )
+        if not package_agents.is_dir():
+            self.skipTest("agent-quality-guards sibling package not present")
+
+        agents = {agent["name"]: agent for agent in self.collect(package_agents)}
+
+        for name in (
+            "docs-guard",
+            "lint-guard",
+            "data-metrics-summarizer",
+            "maintenance-metrics-reader",
+            "reviewer-mechanics",
+        ):
             self.assertEqual(agents[name]["model"], "haiku")
             self.assertEqual(agents[name]["tools"], "Read, Grep, Glob, Bash")
 

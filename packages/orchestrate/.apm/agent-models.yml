@@ -1,13 +1,5 @@
 version: 1
 agents:
-  docs-guard:
-    codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: medium
-  data-metrics-summarizer:
-    codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: medium
   integration-gatekeeper:
     codex:
       model: gpt-5.6-sol
@@ -16,10 +8,6 @@ agents:
     codex:
       model: gpt-5.3-codex-spark
       reasoning_effort: low
-  lint-guard:
-    codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: high
   workflow-advisor:
     codex:
       model: gpt-5.6-sol

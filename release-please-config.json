@@ -200,6 +200,18 @@
         }
       ]
     },
+    "packages/agent-quality-guards": {
+      "release-type": "simple",
+      "component": "agent-quality-guards",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-reasoner": {
       "release-type": "simple",
       "component": "agent-reasoner",
