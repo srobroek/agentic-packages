@@ -6,14 +6,9 @@ subagent-model-guard.sh enforces SM-1..SM-2.
 
 MUST SM-1: Claude Agent/Task spawns whose `subagent_type` has no pinned model must pass an explicit `model`. Codex Agent spawns must select a named semantic `agent_type` whose nearest project or global custom profile pins both `model` and `model_reasoning_effort`; a project profile shadows a same-named global profile and must never fall through when incomplete.
 
-MUST SM-2: pick the model by workload when SM-1 requires one. Use the tiers in steering-subagent-routing:
-
-- Cheap tier: CI watching, shepherding, log triage, batched Git operations,
-  file sweeps, and formatting.
-- Mid tier: bounded coding, standard research, PR fix rounds, documentation,
-  and test authoring.
-- Top tier: deep or adversarial research, architecture, cross-cutting
-  synthesis, and judge or verification passes.
+MUST SM-2: pick the model by workload when SM-1 requires one. See the
+  criteria-based routing table in steering-subagent-routing for tier
+  definitions and Codex fallback models.
 
 The deny message carries the concrete routing choices needed for a corrected retry.
 

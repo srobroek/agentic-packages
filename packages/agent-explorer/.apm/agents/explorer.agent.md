@@ -1,5 +1,6 @@
 ---
 name: explorer
+effort: medium
 description: Maps relevant files, dependencies, and runtime paths for a bounded question
   without editing or proposing architecture.
 ---

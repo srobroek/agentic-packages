@@ -157,7 +157,7 @@ if [[ "$is_codex" == "true" ]]; then
       && -n "$reasoning_effort" && "$reasoning_effort" != "null" ]]; then
       exit 0
     fi
-    deny "Codex agent selection blocked: choose a configured semantic agent_type instead of default/ad-hoc delegation. Use operator or luna-low for mechanical work; explorer or luna-medium for bounded discovery; coder, worker, or workflow-coder for implementation; workflow-reviewer or reviewer-high for review; reasoner only for exceptional deep reasoning. Each selected profile must pin both model and model_reasoning_effort."
+    deny "Codex agent selection blocked: choose a configured semantic agent_type instead of default/ad-hoc delegation. Use operator for mechanical work; explorer for bounded discovery; coder, worker, or workflow-coder for implementation; workflow-reviewer or reviewer-high for review; reasoner only for exceptional deep reasoning. Each selected profile must pin both model and model_reasoning_effort."
   fi
 
   profile="$(find_codex_profile "$subagent_type" || true)"

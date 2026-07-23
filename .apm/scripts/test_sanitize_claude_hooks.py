@@ -232,6 +232,50 @@ def test_cli_end_to_end_settings_sidecar_and_symlink(tmp_path: Path) -> None:
     assert rerun.returncode == 0  # idempotent: nothing left to clean
 
 
+def test_claude_project_dir_missing_script_is_stale(tmp_path: Path) -> None:
+    """${CLAUDE_PROJECT_DIR} paths with a missing script must be flagged."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    events = {
+        "WorktreeCreate": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PROJECT_DIR}/scripts/worktree-create.sh",
+                    }
+                ]
+            }
+        ]
+    }
+    removed = sanitize_claude_hooks.clean_events(events, repo_root=repo_root)
+    assert removed == 1
+    assert events == {}
+
+
+def test_claude_project_dir_existing_script_is_kept(tmp_path: Path) -> None:
+    """${CLAUDE_PROJECT_DIR} paths with an existing script must be kept."""
+    repo_root = tmp_path / "repo"
+    script = repo_root / "scripts" / "real-hook.sh"
+    script.parent.mkdir(parents=True)
+    script.write_text("#!/bin/sh\n", encoding="utf-8")
+    events = {
+        "PreToolUse": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PROJECT_DIR}/scripts/real-hook.sh",
+                    }
+                ]
+            }
+        ]
+    }
+    removed = sanitize_claude_hooks.clean_events(events, repo_root=repo_root)
+    assert removed == 0
+    assert "PreToolUse" in events
+
+
 def test_cli_missing_files_is_a_noop(tmp_path: Path) -> None:
     result = subprocess.run(
         [
