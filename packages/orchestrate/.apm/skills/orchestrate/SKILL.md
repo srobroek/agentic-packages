@@ -38,9 +38,9 @@ Role: lead session / orchestrator.
 3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
    tool background subagents (`subagent_type: workflow-coder`,
    `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
-   Decline the harness's suggestion to spawn teammates. Teams = rare gated
-   exception (`references/teams.md`); unsure whether the trigger is met → use
-   subagents.
+   Decline the harness's suggestion to spawn teammates. Agent-teams are a
+   Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
+   unsure whether the trigger is met → use subagents.
 4. **Every tool user runs in Worktrunk.** Implementation, reviewers, auditors,
    and advisors that invoke tools must use a separately prepared Worktrunk
    worktree and record its branch/path on the bead. Conversational agents that

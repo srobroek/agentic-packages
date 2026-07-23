@@ -6,6 +6,9 @@ pipeline. Decline the harness's proposal to spawn agent-teams for ordinary
 parallel work; use a team only when a trigger below is unmistakably met — if
 unsure, use subagents.
 
+Agent-teams are a Claude Code-only orchestration mode; they are not used in
+Codex or other non-Claude Code runtimes.
+
 ## Triggers (teams worth it)
 
 | Trigger | Why teams |
