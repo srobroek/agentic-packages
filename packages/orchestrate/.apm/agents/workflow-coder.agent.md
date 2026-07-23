@@ -2,7 +2,7 @@
 name: workflow-coder
 description: Implements one orchestrate DAG node through isolated review rounds; requires Serena semantic tools when available.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 isolation: worktree
 tools:

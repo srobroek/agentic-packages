@@ -5,7 +5,7 @@ x-lint:
   allow: [W6, W9]
   reason: "the dual-mode gate agent keeps each standalone verification contract explicit"
 model: opus
-effort: xhigh
+effort: high
 permissionMode: plan
 memory: user
 ---

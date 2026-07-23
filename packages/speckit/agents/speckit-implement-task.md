@@ -2,7 +2,7 @@
 name: speckit-implement-task
 description: Implements bounded SpecKit tasks with Serena semantic tools when available, or returns a coder delegation brief with task IDs and scope.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 ---
 

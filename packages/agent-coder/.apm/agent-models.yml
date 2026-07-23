@@ -3,8 +3,8 @@ agents:
   coder:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: xhigh
+      reasoning_effort: high
   parallel-coder:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: xhigh
+      reasoning_effort: high
