@@ -1,5 +1,6 @@
 ---
 name: coder-high
+effort: high
 description: Escalated coding role for complex bounded implementation, difficult debugging,
   and cross-module behavior changes.
 ---
