@@ -12,6 +12,7 @@ GEMINI.md
 !/.github/workflows/
 !/.github/ISSUE_TEMPLATE/
 !/.github/PULL_REQUEST_TEMPLATE.md
+!/.github/actionlint.yaml
 /.cursor/
 /.opencode/
 /.gemini/
