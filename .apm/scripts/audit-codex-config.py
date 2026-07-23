@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Validate Codex-specific package manifests, hooks, and MCP files."""
 
 from __future__ import annotations
@@ -135,9 +139,7 @@ APPROVAL_POLICIES = {
     "never",
 }
 PLUGIN_SCRIPT_RE = re.compile(r"\$\{PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
-PROJECT_SCRIPT_RE = re.compile(
-    r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)"
-)
+PROJECT_SCRIPT_RE = re.compile(r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)")
 
 
 def load_json(path: Path) -> dict:
@@ -176,8 +178,7 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
     if is_project_source:
         if "${PLUGIN_ROOT}" in command:
             errors.append(
-                f"{path}: project hooks must use APM's /./ source marker, "
-                "not PLUGIN_ROOT"
+                f"{path}: project hooks must use APM's /./ source marker, not PLUGIN_ROOT"
             )
         for rel in PROJECT_SCRIPT_RE.findall(command):
             target = ROOT / ".apm" / "hooks" / rel
@@ -191,15 +192,11 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
         return errors
 
     if "git rev-parse" in command:
-        errors.append(
-            f"{path}: plugin hook startup must not discover the Git root"
-        )
+        errors.append(f"{path}: plugin hook startup must not discover the Git root")
     plugin_root = path.parents[2]
     script_refs = PLUGIN_SCRIPT_RE.findall(command)
     if "/scripts/" in command and not script_refs:
-        errors.append(
-            f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT"
-        )
+        errors.append(f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT")
     for rel in script_refs:
         target = plugin_root / rel
         if not target.is_file():
@@ -227,14 +224,12 @@ def main() -> int:
         target = "all"
         if isinstance(source, str) and source.startswith("./packages/"):
             package_manifest_path = ROOT / source.removeprefix("./") / "apm.yml"
-            package_manifest = yaml.safe_load(
-                package_manifest_path.read_text(encoding="utf-8")
-            ) or {}
+            package_manifest = (
+                yaml.safe_load(package_manifest_path.read_text(encoding="utf-8")) or {}
+            )
             target = package_manifest.get("target", "all")
             if target not in SUPPORTED_PACKAGE_TARGETS:
-                errors.append(
-                    f"{entry['name']}: unsupported package target {target!r}"
-                )
+                errors.append(f"{entry['name']}: unsupported package target {target!r}")
         else:
             # External entries (git-source, not ./packages/) are packed by their
             # own upstream repo and are never present in this repo's marketplace.json.
@@ -259,9 +254,7 @@ def main() -> int:
         if isinstance(entry, dict) and entry.get("name")
     }
     if len(catalog_by_name) != len(codex_catalog_entries):
-        errors.append(
-            "apm.yml marketplace contains missing or duplicate Codex package names"
-        )
+        errors.append("apm.yml marketplace contains missing or duplicate Codex package names")
     if len(marketplace_by_name) != len(marketplace_entries):
         errors.append("Codex marketplace contains missing or duplicate plugin names")
     for name in sorted(catalog_by_name.keys() - marketplace_by_name.keys()):
@@ -271,19 +264,11 @@ def main() -> int:
     for name in sorted(catalog_by_name.keys() & marketplace_by_name.keys()):
         expected = catalog_by_name[name].get("source")
         actual_source = marketplace_by_name[name].get("source")
-        actual = (
-            actual_source.get("path")
-            if isinstance(actual_source, dict)
-            else actual_source
-        )
+        actual = actual_source.get("path") if isinstance(actual_source, dict) else actual_source
         if expected != actual:
-            errors.append(
-                f"{name}: Codex marketplace source {actual!r} != catalog {expected!r}"
-            )
+            errors.append(f"{name}: Codex marketplace source {actual!r} != catalog {expected!r}")
 
-    compatibility = (ROOT / "docs" / "codex-compatibility.md").read_text(
-        encoding="utf-8"
-    )
+    compatibility = (ROOT / "docs" / "codex-compatibility.md").read_text(encoding="utf-8")
     documented_events = markdown_table_ids(
         compatibility,
         "## Event parity",
@@ -299,24 +284,19 @@ def main() -> int:
     if set(documented_events) != CLAUDE_EVENTS:
         missing = sorted(CLAUDE_EVENTS - set(documented_events))
         extra = sorted(set(documented_events) - CLAUDE_EVENTS)
-        errors.append(
-            "Codex compatibility event table drift: "
-            f"missing={missing}, extra={extra}"
-        )
+        errors.append(f"Codex compatibility event table drift: missing={missing}, extra={extra}")
     if len(documented_packages) != len(set(documented_packages)):
         errors.append("Codex compatibility package table contains duplicate rows")
     unknown_differences = CODEX_DIFFERENCE_PACKAGES - all_catalog_names
     if unknown_differences:
         errors.append(
-            "Codex difference package set contains unknown packages: "
-            f"{sorted(unknown_differences)}"
+            f"Codex difference package set contains unknown packages: {sorted(unknown_differences)}"
         )
     if set(documented_packages) != CODEX_DIFFERENCE_PACKAGES:
         missing = sorted(CODEX_DIFFERENCE_PACKAGES - set(documented_packages))
         extra = sorted(set(documented_packages) - CODEX_DIFFERENCE_PACKAGES)
         errors.append(
-            "Codex compatibility difference table drift: "
-            f"missing={missing}, extra={extra}"
+            f"Codex compatibility difference table drift: missing={missing}, extra={extra}"
         )
 
     for entry in marketplace_entries:
@@ -378,9 +358,7 @@ def main() -> int:
                         errors.append(
                             f"{path}: Codex hook timeout must be explicitly bounded to 1-60s"
                         )
-                    errors.extend(
-                        validate_hook_command(path, handler.get("command"))
-                    )
+                    errors.extend(validate_hook_command(path, handler.get("command")))
 
     actual_hook_manifests = {
         path.relative_to(ROOT).as_posix()

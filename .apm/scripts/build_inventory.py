@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Canonical package inventory: walk packages/*/apm.yml ONCE, emit one context.
 
 This is the single source of dynamic data for every generated doc artifact. The
@@ -287,11 +291,7 @@ def build_context(marketplace: dict | None = None) -> dict:
         if is_bundle:
             includes = _includes_resolved(deps)
             if not includes:
-                includes = (
-                    "self-contained"
-                    if (pkg_dir / ".apm").is_dir()
-                    else "external packages"
-                )
+                includes = "self-contained" if (pkg_dir / ".apm").is_dir() else "external packages"
         else:
             includes = ""
 
@@ -304,12 +304,8 @@ def build_context(marketplace: dict | None = None) -> dict:
         if tags:
             entry["tags"] = list(tags)
         if name not in curation and not entry.get("tags"):
-            warnings.append(
-                f"{name}: new package with no tags (add tags: to its apm.yml)"
-            )
-        marketplace_entries.append(
-            {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
-        )
+            warnings.append(f"{name}: new package with no tags (add tags: to its apm.yml)")
+        marketplace_entries.append({k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry})
 
         packages.append(
             {
@@ -347,9 +343,7 @@ def build_context(marketplace: dict | None = None) -> dict:
                 f"dir exists and takes precedence (remove one to resolve)"
             )
             continue
-        marketplace_entries.append(
-            {k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry}
-        )
+        marketplace_entries.append({k: entry[k] for k in _MARKETPLACE_ENTRY_ORDER if k in entry})
         external_marketplace.append(
             {
                 "name": name,
@@ -364,9 +358,7 @@ def build_context(marketplace: dict | None = None) -> dict:
     # A curated name with no packages/ dir is "dropped" ONLY if it is not a
     # recognised external entry -- external sources are intentionally dir-less.
     for stale in sorted(set(curation) - found - set(external)):
-        warnings.append(
-            f"{stale}: in marketplace block but no packages/ dir -- dropped"
-        )
+        warnings.append(f"{stale}: in marketplace block but no packages/ dir -- dropped")
 
     packages.sort(key=lambda p: p["name"])
     marketplace_entries.sort(key=lambda e: e["name"])

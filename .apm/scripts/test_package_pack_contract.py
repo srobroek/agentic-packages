@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).parents[2]
 PACKAGES = ("orchestrate", "pr-shepherd", "release-queue-watch", "beads")
 PYTHON_PACKAGES = ("orchestrate", "pr-shepherd")
@@ -55,9 +54,7 @@ def _pack(package: Path) -> str:
 
 
 def _manifest_includes(package_name: str) -> tuple[str, ...]:
-    manifest = (ROOT / "packages" / package_name / "apm.yml").read_text(
-        encoding="utf-8"
-    )
+    manifest = (ROOT / "packages" / package_name / "apm.yml").read_text(encoding="utf-8")
     includes: list[str] = []
     in_includes = False
     for line in manifest.splitlines():
@@ -81,19 +78,13 @@ def _tracked_packable_files(package_name: str) -> tuple[str, ...]:
         capture_output=True,
         check=True,
     )
-    relative = (
-        path.removeprefix(package_prefix)
-        for path in result.stdout.splitlines()
-    )
-    return tuple(
-        path for path in relative if path.startswith(PACKABLE_PREFIXES)
-    )
+    relative = (path.removeprefix(package_prefix) for path in result.stdout.splitlines())
+    return tuple(path for path in relative if path.startswith(PACKABLE_PREFIXES))
 
 
 def _is_covered(path: str, includes: tuple[str, ...]) -> bool:
     return any(
-        path == include or path.startswith(f"{include.rstrip('/')}/")
-        for include in includes
+        path == include or path.startswith(f"{include.rstrip('/')}/") for include in includes
     )
 
 
@@ -108,9 +99,7 @@ def test_supported_package_target_dry_run_succeeds(tmp_path: Path, package_name:
 def test_explicit_includes_cover_every_tracked_packable_file(package_name: str):
     includes = _manifest_includes(package_name)
     missing = [
-        path
-        for path in _tracked_packable_files(package_name)
-        if not _is_covered(path, includes)
+        path for path in _tracked_packable_files(package_name) if not _is_covered(path, includes)
     ]
     assert not missing, (
         f"{package_name}/apm.yml omits tracked packable files:\n  "
@@ -120,9 +109,7 @@ def test_explicit_includes_cover_every_tracked_packable_file(package_name: str):
 
 
 @pytest.mark.parametrize("package_name", PYTHON_PACKAGES)
-def test_python_test_residue_does_not_change_package_contents(
-    tmp_path: Path, package_name: str
-):
+def test_python_test_residue_does_not_change_package_contents(tmp_path: Path, package_name: str):
     package = _copy_package(tmp_path, package_name)
     clean_output = _pack(package)
 

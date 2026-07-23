@@ -377,7 +377,7 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
             ["bd", "version"], capture_output=True, text=True, check=True, timeout=15
         ).stdout
         self.assertIn("version 1.1.0", version)
-        subprocess.run(
+        init = subprocess.run(
             [
                 "bd",
                 "init",
@@ -391,11 +391,15 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
                 "--sandbox",
             ],
             cwd=self.repo,
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
             timeout=60,
         )
+        if init.returncode != 0:
+            raise RuntimeError(
+                f"bd init failed ({init.returncode}): {init.stderr or init.stdout}"
+            )
 
     def bd(
         self,

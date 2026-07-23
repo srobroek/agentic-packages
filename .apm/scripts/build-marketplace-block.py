@@ -68,9 +68,7 @@ def main(argv: list[str] | None = None) -> int:
         return render_result
     inventory = _load_inventory().build_context()
     allowed = {
-        package["name"]
-        for package in inventory["packages"]
-        if "codex" in package["targets"]
+        package["name"] for package in inventory["packages"] if "codex" in package["targets"]
     }
     filtered = filter_codex_marketplace(CODEX_MARKETPLACE, allowed, check=check)
     if filtered:

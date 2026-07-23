@@ -60,16 +60,12 @@ def check_profile(profile: Path, packages_dir: Path) -> list[str]:
         pkg = parts[0]
         pkg_dir = packages_dir / pkg
         if not pkg_dir.is_dir():
-            problems.append(
-                f"{profile.name}: no package source for '{pkg}' ({command})"
-            )
+            problems.append(f"{profile.name}: no package source for '{pkg}' ({command})")
             continue
         # Installed layout hooks/<pkg>/<rel> mirrors the package source layout.
         rel = Path(*parts[1:])
         if not (pkg_dir / rel).is_file():
-            problems.append(
-                f"{profile.name}: '{pkg}' no longer ships '{rel}' ({command})"
-            )
+            problems.append(f"{profile.name}: '{pkg}' no longer ships '{rel}' ({command})")
     return problems
 
 

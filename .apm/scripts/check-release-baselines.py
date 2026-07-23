@@ -9,7 +9,6 @@ import re
 import subprocess
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "release-please-config.json"
 MANIFEST = ROOT / ".release-please-manifest.json"
@@ -69,8 +68,7 @@ def check_release_baselines() -> list[str]:
             if versions:
                 latest = max(versions, key=versions.get)
                 errors.append(
-                    f"{path}: first-release sentinel has published tag "
-                    f"{component}--v{latest}"
+                    f"{path}: first-release sentinel has published tag {component}--v{latest}"
                 )
             continue
         if not STABLE_VERSION.fullmatch(version):
@@ -82,10 +80,7 @@ def check_release_baselines() -> list[str]:
             continue
         latest = max(versions, key=versions.get)
         if version != latest:
-            errors.append(
-                f"{path}: baseline {version} is behind latest tag "
-                f"{component}--v{latest}"
-            )
+            errors.append(f"{path}: baseline {version} is behind latest tag {component}--v{latest}")
     return errors
 
 
