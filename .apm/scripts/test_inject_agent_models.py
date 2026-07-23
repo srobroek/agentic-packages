@@ -51,6 +51,33 @@ def test_discovers_package_owned_mapping_and_patches_codex(tmp_path: Path) -> No
     assert 'model_reasoning_effort = "xhigh"' in text
 
 
+def test_identical_duplicate_across_packages_is_accepted(tmp_path: Path) -> None:
+    # Both language-go and language-rust (by design) declare the same four
+    # wshobson systems-programming agents with byte-identical values so each
+    # bundle is standalone-sufficient. Installing both must not raise.
+    for pkg in ("language-go", "language-rust"):
+        write_mapping(tmp_path / "packages" / pkg / ".apm" / "agent-models.yml")
+
+    mappings = injector.load_mappings(tmp_path)
+    assert mappings == {"coder": {"model": "gpt-5.6-luna", "reasoning_effort": "xhigh"}}
+
+
+def test_conflicting_duplicate_names_both_files_and_values(tmp_path: Path) -> None:
+    path_one = tmp_path / "packages" / "one" / ".apm" / "agent-models.yml"
+    path_two = tmp_path / "packages" / "two" / ".apm" / "agent-models.yml"
+    write_mapping(path_one, model="gpt-5.6-luna")
+    write_mapping(path_two, model="gpt-5.6-sol")
+
+    with pytest.raises(injector.MappingError) as exc_info:
+        injector.load_mappings(tmp_path)
+    msg = str(exc_info.value)
+    assert "conflicting mapping for coder" in msg
+    assert "packages/one" in msg
+    assert "packages/two" in msg
+    assert "gpt-5.6-luna" in msg
+    assert "gpt-5.6-sol" in msg
+
+
 def test_rejects_conflicting_package_mappings(tmp_path: Path) -> None:
     write_mapping(tmp_path / "packages" / "one" / ".apm" / "agent-models.yml")
     write_mapping(
