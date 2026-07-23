@@ -34,7 +34,7 @@ scripts:
   test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
   test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
-    apm run install && apm compile --target codex,claude --no-constitution &&
+    apm run install && apm compile --target codex,claude &&
     apm run inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
@@ -766,6 +766,15 @@ marketplace:
       tags:
         - bundle
         - lifecycle
+    - name: project-setup
+      source: srobroek/project-setup
+      ref: project-setup-v0.5.2
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - setup
+        - scaffold
     - name: python-quality
       source: ./packages/python-quality
       category: languages

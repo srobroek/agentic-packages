@@ -11,6 +11,5 @@ branch at the end.
   remote branch so nothing lives only in a local or disposable (`/tmp`) worktree
   that may not survive. If a push is blocked, say so explicitly rather than
   silently leaving work local.
-- Before ending a session or handing off, confirm the tree is clean and the
-  branch is pushed. Verify what actually landed (`git log`, `git status`) — do
-  not assume a chained commit-and-push succeeded.
+- Session-end enforcement (GW-1/GW-2) is defined in git-workflow steering and
+  enforced by hooks-git-workflow.

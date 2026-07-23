@@ -235,6 +235,11 @@ def main() -> int:
                 errors.append(
                     f"{entry['name']}: unsupported package target {target!r}"
                 )
+        else:
+            # External entries (git-source, not ./packages/) are packed by their
+            # own upstream repo and are never present in this repo's marketplace.json.
+            # Skip them from the Codex catalog cross-check.
+            continue
         if target != "claude":
             codex_catalog_entries.append(entry)
 

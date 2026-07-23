@@ -35,7 +35,7 @@ expecting the MCP runtime to be configured separately by the environment.
 | MCP Package | Description |
 | --- | --- |
 | `mcp-1mcp` | MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy. |
-| `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). |
+| `mcp-codebase-memory` | MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). Available but not wired by default; requires explicit installation and index build. |
 | `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
 | `mcp-fetcher` | MCP server package for Fetcher, providing direct web-page retrieval for coding agents. |
 | `mcp-mempalace` | MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment. |
