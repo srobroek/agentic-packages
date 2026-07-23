@@ -34,7 +34,7 @@ scripts:
   test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
   test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
-    apm run install && apm compile --target codex,claude --no-constitution &&
+    apm run install && apm compile --target codex,claude &&
     apm run inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
