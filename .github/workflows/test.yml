@@ -151,7 +151,7 @@ jobs:
         run: |
           py_files=$(find "$PKG" -name 'test_*.py' 2>/dev/null || true)
           if [ -n "$py_files" ]; then
-            echo "$py_files" | xargs -r uv run --with pytest pytest -q
+            echo "$py_files" | xargs -r uv run --with pytest --with pyyaml pytest -q
           else
             echo "no pytest files in $PKG"
           fi
@@ -166,7 +166,7 @@ jobs:
           if [ -n "$harnesses" ]; then
             for h in $harnesses; do
               echo "harness: $h"
-              ( cd "$(dirname "$h")" && python3 "$(basename "$h")" )
+              ( cd "$(dirname "$h")" && uv run --with pyyaml "$(basename "$h")" )
             done
           else
             echo "no _test_*.py harnesses in $PKG"
