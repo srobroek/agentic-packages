@@ -1059,7 +1059,7 @@
     },
     {
       "name": "mcp-codebase-memory",
-      "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).",
+      "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). Available but not wired by default; requires explicit installation and index build.",
       "version": "1.2.0",
       "tags": [
         "mcp",
@@ -1228,6 +1228,24 @@
       ],
       "category": "project-lifecycle",
       "source": "./packages/project-lifecycle"
+    },
+    {
+      "name": "project-setup",
+      "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
+      "version": "0.5.2",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "setup",
+        "scaffold"
+      ],
+      "category": "project-lifecycle",
+      "source": {
+        "source": "github",
+        "repo": "srobroek/project-setup",
+        "ref": "project-setup-v0.5.2",
+        "sha": "c7c1368986cf039532709eb63fb3fc7d1c8f411f"
+      }
     },
     {
       "name": "python-quality",
