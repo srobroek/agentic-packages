@@ -61,6 +61,7 @@ import os
 import resource
 import signal
 import socket
+import subprocess
 import sys
 import threading
 
@@ -90,11 +91,25 @@ server.listen()
 server.settimeout(0.2)
 
 allocation = None
+children = []
 def allocate_memory():
     global allocation
     megabytes = int(os.environ.get("FAKE_SERENA_ALLOCATE_MB", "0"))
     if megabytes > 0:
         allocation = bytearray(megabytes * 1024 * 1024)
+    child_megabytes = int(os.environ.get("FAKE_SERENA_CHILD_ALLOCATE_MB", "0"))
+    child_count = int(os.environ.get("FAKE_SERENA_CHILD_COUNT", "0"))
+    for _ in range(child_count):
+        children.append(
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    "import time; allocation = bytearray("
+                    f"{child_megabytes} * 1024 * 1024); time.sleep(60)",
+                ]
+            )
+        )
 
 threading.Timer(0.2, allocate_memory).start()
 
@@ -360,7 +375,8 @@ def test_worktree_memory_cap_stops_the_backend(
 ) -> None:
     env, pool_home, serena_actions, proxy_actions = pool_env
     env["SERENA_WORKTREE_MEMORY_MB"] = "128"
-    env["FAKE_SERENA_ALLOCATE_MB"] = "192"
+    env["FAKE_SERENA_CHILD_ALLOCATE_MB"] = "80"
+    env["FAKE_SERENA_CHILD_COUNT"] = "2"
     env["FAKE_PROXY_SECONDS"] = "2"
     repo = init_repo(tmp_path)
     worktree = add_worktree(repo, "feature")
