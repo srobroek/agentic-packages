@@ -1,6 +1,6 @@
 name: language-python
 version: 3.3.0
-description: Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.
+description: "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP."
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle

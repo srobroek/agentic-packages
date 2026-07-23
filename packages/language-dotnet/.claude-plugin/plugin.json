@@ -1,7 +1,7 @@
 {
   "name": "language-dotnet",
   "version": "2.1.0",
-  "description": ".NET development toolkit: Hobson's C# and ASP.NET dotnet-contribution specialists.",
+  "description": ".NET development toolkit.",
   "author": {
     "name": "Sjors Robroek"
   },

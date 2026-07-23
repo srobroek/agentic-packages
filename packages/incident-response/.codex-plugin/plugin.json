@@ -1,7 +1,7 @@
 {
   "name": "incident-response",
   "version": "2.1.0",
-  "description": "Incident response and production debugging: Hobson error-debugging, distributed-debugging, incident-response, error-diagnostics, and debugging-toolkit plugins for diagnosing failures in running systems.",
+  "description": "Incident response and production debugging bundle.",
   "author": {
     "name": "Sjors Robroek"
   },

@@ -1,7 +1,7 @@
 {
   "name": "language-julia",
   "version": "2.1.0",
-  "description": "Julia development toolkit: Hobson's scientific-computing julia-development specialists.",
+  "description": "Julia development toolkit.",
   "author": {
     "name": "Sjors Robroek"
   },

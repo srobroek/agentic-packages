@@ -1,6 +1,6 @@
 name: language-rust
 version: 3.3.0
-description: Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.
+description: "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP."
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

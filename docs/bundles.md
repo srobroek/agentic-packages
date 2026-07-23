@@ -17,7 +17,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations | self-contained |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `beads`, `grilling`^, `grill-with-docs`^ |
-| `data-ai` |  | external packages |
+| `data-ai` | Data and AI toolkit | `steering-data` |
 | `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit` |
 | `developer-tools` | Everyday developer tooling bundle | external packages |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
@@ -25,17 +25,17 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^ |
 | `governance` | Agent governance bundle | external packages |
 | `incident-response` | Incident response and production debugging bundle | external packages |
-| `infrastructure` |  | external packages |
+| `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure` |
 | `language-arm-cortex` | ARM Cortex-M firmware toolkit | external packages |
 | `language-dotnet` | .NET development toolkit | external packages |
 | `language-functional` | Functional programming toolkit | external packages |
-| `language-go` |  | external packages |
+| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `lsp-go` |
 | `language-julia` | Julia development toolkit | external packages |
 | `language-jvm` | JVM language toolkit for Java, Scala, and Kotlin | external packages |
-| `language-python` |  | external packages |
-| `language-rust` |  | self-contained |
+| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `lsp-python` |
+| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `lsp-rust` |
 | `language-shell` | Shell scripting toolkit with Shell LSP | `lsp-shell` |
-| `language-terraform` |  | external packages |
+| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `lsp-terraform` |
 | `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `lsp-typescript` |
 | `language-web-scripting` | PHP and Ruby web scripting toolkit | external packages |
 | `lsp-go` | Go LSP server | external packages |

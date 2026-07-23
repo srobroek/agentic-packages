@@ -1,7 +1,7 @@
 {
   "name": "docs-architecture",
   "version": "2.1.0",
-  "description": "Documentation standards: Hobson documentation-standards plugin. Heavier C4/doc-generation plugins were retired from bundles; install directly from wshobson/agents per-project if needed.",
+  "description": "Documentation standards bundle.",
   "author": {
     "name": "Sjors Robroek"
   },

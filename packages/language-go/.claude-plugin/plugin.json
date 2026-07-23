@@ -1,7 +1,7 @@
 {
   "name": "language-go",
   "version": "3.3.0",
-  "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
+  "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
   "author": {
     "name": "Sjors Robroek"
   },

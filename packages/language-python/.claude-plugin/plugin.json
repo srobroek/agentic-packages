@@ -1,7 +1,7 @@
 {
   "name": "language-python",
   "version": "3.3.0",
-  "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Hobson's python-development specialists.",
+  "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
   "author": {
     "name": "Sjors Robroek"
   },
