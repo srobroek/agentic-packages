@@ -309,3 +309,196 @@ MUST do something.
         p = _write(tmp_path, "SKILL.md", content)
         rc = lint_mod.main([str(p)])
         assert rc == 1, "missing reason should be E9 → exit 1"
+
+
+# ---------------------------------------------------------------------------
+# Anti-pattern rules ported from plugin-eval (W10/W11/W12, E1 extension)
+# ---------------------------------------------------------------------------
+
+_SKILL_BASE = """\
+---
+name: {name}
+description: {desc}
+---
+
+# {name}
+
+{body}
+"""
+
+
+class TestAntiPatternRules:
+    # --- E1 EMPTY_DESCRIPTION extension ---
+
+    def test_e1_short_description_under_20_chars(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="short-desc-skill",
+            desc="Too brief.",  # 9 chars
+            body="MUST do something.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        error_codes = [code for sev, code, _ in findings if sev == "ERROR"]
+        assert "E1" in error_codes, "description under 20 chars should be E1"
+
+    def test_e1_yaml_folded_description_not_flagged_as_short(self, tmp_path):
+        # ">-" folded YAML marker must not count toward the char minimum
+        content = """\
+---
+name: folded-desc-skill
+description: >-
+  This is a long enough description to not trigger the short-desc check.
+---
+
+# folded-desc-skill
+
+MUST do something.
+"""
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        error_codes = [code for sev, code, _ in findings if sev == "ERROR"]
+        assert "E1" not in error_codes, "folded YAML description should not be flagged"
+
+    def test_e1_description_exactly_20_chars_is_clean(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="exact-skill",
+            desc="Use when you need it.",  # exactly 21 chars — safe
+            body="MUST do something.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        e1_errors = [msg for sev, code, msg in findings if sev == "ERROR" and code == "E1"]
+        short_desc_errors = [m for m in e1_errors if "too short" in m]
+        assert short_desc_errors == []
+
+    # --- W10 OVER_CONSTRAINED ---
+
+    def test_w10_over_constrained_skill(self, tmp_path):
+        # 16 MUST/NEVER/ALWAYS directives — above the threshold of 15
+        musts = "\n".join(f"MUST do step {i}." for i in range(16))
+        content = _SKILL_BASE.format(
+            name="over-constrained",
+            desc="Use when you need to do many constrained things.",
+            body=musts,
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W10" in warn_codes, "16 MUST directives should trigger W10"
+
+    def test_w10_at_threshold_not_triggered(self, tmp_path):
+        # exactly 15 — should NOT trigger
+        musts = "\n".join(f"MUST do step {i}." for i in range(15))
+        content = _SKILL_BASE.format(
+            name="at-threshold",
+            desc="Use when you need exactly fifteen constraints.",
+            body=musts,
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W10" not in warn_codes, "exactly 15 should not trigger W10"
+
+    def test_w10_not_applied_to_context(self, tmp_path):
+        # context files legitimately carry dense rules
+        musts = "\n".join(f"MUST do step {i}." for i in range(20))
+        content = f"# dense context\n\n{musts}\n"
+        p = _write(tmp_path, "rules.context.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W10" not in warn_codes, "W10 must not fire on context files"
+
+    # --- W11 MISSING_TRIGGER ---
+
+    def test_w11_description_with_use_when(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="triggered-skill",
+            desc="Use when you need to audit code for smells.",
+            body="MUST check everything.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W11" not in warn_codes, '"Use when" should satisfy trigger check'
+
+    def test_w11_description_with_use_for(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="for-triggered-skill",
+            desc="Use for running lint checks on the project.",
+            body="MUST check everything.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W11" not in warn_codes, '"Use for" should satisfy trigger check'
+
+    def test_w11_missing_trigger_warns(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="no-trigger-skill",
+            desc="Manages isolated worktrees for delegated repository agents.",
+            body="MUST check everything.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W11" in warn_codes, "description without trigger phrase should warn W11"
+
+    def test_w11_not_applied_to_agent(self, tmp_path):
+        content = """\
+---
+name: my-agent
+description: Manages isolated operations without any trigger phrase.
+---
+
+# My Agent
+
+## Output
+
+PASS|FAIL verdict. CAP 100 words. Never reprint paths only.
+"""
+        p = _write(tmp_path, "my-agent.agent.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W11" not in warn_codes, "W11 must not fire on agent files"
+
+    # --- W12 BLOATED_SKILL ---
+
+    def test_w12_bloated_skill_without_references(self, tmp_path):
+        # >800 non-empty lines, no references/ dir
+        body = "\n".join(f"Line of content number {i}." for i in range(850))
+        content = _SKILL_BASE.format(
+            name="bloated-skill",
+            desc="Use when you need this very large skill.",
+            body=body,
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W12" in warn_codes, "skill over 800 lines without references/ should warn W12"
+
+    def test_w12_bloated_skill_with_references_no_warn(self, tmp_path):
+        # >800 non-empty lines BUT references/ dir exists — acceptable
+        refs_dir = tmp_path / "references"
+        refs_dir.mkdir()
+        (refs_dir / "extra.md").write_text("# Extra reference content\n", encoding="utf-8")
+        body = "\n".join(f"Line of content number {i}." for i in range(850))
+        content = _SKILL_BASE.format(
+            name="big-but-structured-skill",
+            desc="Use when you need this large but well-structured skill.",
+            body=body,
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W12" not in warn_codes, "references/ dir should suppress W12"
+
+    def test_w12_under_threshold_no_warn(self, tmp_path):
+        content = _SKILL_BASE.format(
+            name="normal-skill",
+            desc="Use when you need this normal-sized skill.",
+            body="MUST do something reasonable.",
+        )
+        p = _write(tmp_path, "SKILL.md", content)
+        findings = lint_mod.lint(p)
+        warn_codes = [code for sev, code, _ in findings if sev == "WARN"]
+        assert "W12" not in warn_codes, "small skill should not trigger W12"

@@ -42,6 +42,29 @@ SIGIL_LINE = re.compile(r"^\s*[!~?−-]\s+\S")
 CAPS_ENUM = re.compile(r"\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b")
 FRONTMATTER_KEY = re.compile(r"^(\w[\w-]*):", re.M)
 
+# Anti-pattern rules ported from plugin-eval (wshobson/agents static.py).
+# W10 OVER_CONSTRAINED: skills with more than this many MUST/NEVER/ALWAYS directives
+# become brittle and reduce model flexibility. Threshold matches plugin-eval.
+_OVER_CONSTRAINED_THRESHOLD = 15
+# W11 MISSING_TRIGGER: recognised trigger phrasings a model uses to decide when to
+# invoke a skill. Extended beyond plugin-eval's set to include "Use for/to" and
+# "invoke" which are common in this corpus alongside "Use when/after/before".
+_TRIGGER_PATTERN = re.compile(
+    r"\b(?:should\s+be\s+)?used?\s+(?:this\s+skill\s+)?(?:immediately\s+)?"
+    r"(?:when|after|before|whenever|for|to)\b"
+    r"|\buse\s+proactively\b"
+    r"|\btrigger(?:s)?\s+(?:when|on)\b"
+    r"|\bauto[-\s]?loads?\s+(?:when|on)\b"
+    r"|\binvoke\b",
+    re.IGNORECASE,
+)
+# W12 BLOATED_SKILL: line threshold above which a skill without a references/ dir
+# is considered to need progressive disclosure. Threshold matches plugin-eval.
+_BLOATED_LINE_THRESHOLD = 800
+# YAML folded/literal scalar markers that prefix multi-line frontmatter values.
+# Strip before checking character length so ">-" doesn't look like a short desc.
+_YAML_SCALAR_PREFIX = re.compile(r"^[>|][>|-]?\s*")
+
 
 def words(s: str) -> int:
     return len(s.split())
@@ -159,6 +182,11 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             cap = 15 if kind == "pointer" else 25
             if words(desc) > cap:
                 err("E1", f"description {words(desc)}w > {cap}w cap for {kind}")
+            # EMPTY_DESCRIPTION (plugin-eval): description present but < 20 chars
+            # after stripping YAML folded/literal markers (">-", ">", "|").
+            desc_content = _YAML_SCALAR_PREFIX.sub("", desc).strip()
+            if desc_content and len(desc_content) < 20:
+                err("E1", f"description too short ({len(desc_content)} chars < 20 minimum)")
 
     # E2 hedges on normative lines (keyword-style: MUST/DEFAULT/ASK/NOT)
     for i, ln in enumerate(lines, 1):
@@ -215,6 +243,44 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
                 warn("W9", f"line {i} duplicates line {seen[key]}")
             else:
                 seen[key] = i
+
+    # W10 OVER_CONSTRAINED (plugin-eval): skills with excessive MUST/NEVER/ALWAYS
+    # density become brittle. Threshold of 15 matches plugin-eval. Only applied to
+    # skills; context files legitimately carry dense normative rules for agents.
+    if kind == "skill":
+        mna_count = len(re.findall(r"\b(MUST|NEVER|ALWAYS)\b", text))
+        if mna_count > _OVER_CONSTRAINED_THRESHOLD:
+            warn(
+                "W10",
+                f"{mna_count} MUST/NEVER/ALWAYS directives > {_OVER_CONSTRAINED_THRESHOLD} threshold — "
+                "overly prescriptive instructions reduce model flexibility",
+            )
+
+    # W11 MISSING_TRIGGER (plugin-eval): skill description lacks a recognised
+    # trigger phrase, making it hard for the model to auto-invoke the skill.
+    # Only skills are checked (agents and pointers use different routing).
+    if kind == "skill":
+        desc = fm.get("description", "")
+        desc_content = _YAML_SCALAR_PREFIX.sub("", desc).strip()
+        # Only warn when a non-trivial description is present but has no trigger phrase.
+        if desc_content and len(desc_content) >= 20 and not _TRIGGER_PATTERN.search(desc_content):
+            warn(
+                "W11",
+                'skill description lacks a trigger phrase (e.g. "Use when …", "Use for …", '
+                '"Triggers on …") — without one the model cannot determine when to invoke it',
+            )
+
+    # W12 BLOATED_SKILL (plugin-eval): skills over 800 lines without a references/
+    # subdirectory should offload supporting material to progressive disclosure.
+    if kind == "skill":
+        n_total = len([l for l in text.splitlines() if l.strip()])
+        has_refs = (path.parent / "references").exists()
+        if n_total > _BLOATED_LINE_THRESHOLD and not has_refs:
+            warn(
+                "W12",
+                f"{n_total} non-empty lines without a references/ directory — "
+                "large skills should offload supporting material to references/",
+            )
 
     # Apply x-lint overrides: suppress allowed codes, emit OVERRIDDEN trace
     if not allowed_codes:
