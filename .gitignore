@@ -13,6 +13,8 @@ GEMINI.md
 !/.github/ISSUE_TEMPLATE/
 !/.github/PULL_REQUEST_TEMPLATE.md
 !/.github/actionlint.yaml
+!/.github/requirements-ci.txt
+!/.github/zizmor.yml
 /.cursor/
 /.opencode/
 /.gemini/

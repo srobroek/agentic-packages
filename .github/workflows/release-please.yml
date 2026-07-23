@@ -72,7 +72,10 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
-          cache: pip
+          # No pip cache here: this job runs on the release path after
+          # release-please-action publishes artifacts, so caching would be
+          # flagged as cache-poisoning (zizmor: cache-poisoning) by the
+          # workflow-lint gate. The install is a one-off on every release push.
 
       - name: Sync generated artifacts on the release PR
         if: ${{ steps.release.outputs.pr }}
@@ -87,7 +90,7 @@ jobs:
           git fetch origin "$RELEASE_BRANCH"
           git checkout "$RELEASE_BRANCH"
 
-          python3 -m pip install --quiet "apm-cli==0.26.0" "jinja2==3.1.6"
+          python3 -m pip install --quiet -r .github/requirements-ci.txt
           python3 .apm/scripts/build-native-plugins.py
           python3 .apm/scripts/render-docs.py all
           apm run build-marketplace

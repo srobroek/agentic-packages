@@ -30,17 +30,21 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
           cache: pip
+          cache-dependency-path: .github/requirements-ci.txt
 
       - name: Set up APM
         # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
-        # PyYAML comes transitively from apm-cli.
-        run: pip install "apm-cli==0.26.0" "jinja2==3.1.6"
+        # PyYAML comes transitively from apm-cli. pytest is installed here so the
+        # cache key (requirements-ci.txt) is the single source of truth for all
+        # pinned versions used by this job and by the generator tests step below.
+        run: pip install -r .github/requirements-ci.txt
 
       - name: Validate hook JSON
         run: |
@@ -77,7 +81,6 @@ jobs:
         run: |
           gen_tests=$(find .apm/scripts -name 'test_*.py' 2>/dev/null || true)
           if [ -n "$gen_tests" ]; then
-            pip install "pytest==8.4.1"
             echo "$gen_tests" | xargs -r python3 -m pytest -q
           else
             echo "no generator tests in .apm/scripts"
