@@ -1,5 +1,5 @@
 name: core
-version: 10.2.2
+version: 10.3.0
 description: >-
   Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
   and agentic-maintenance sub-bundles, plus resume-session, the Matt Pocock

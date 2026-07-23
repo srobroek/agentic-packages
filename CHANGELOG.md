@@ -1,5 +1,13 @@
 # Changelog
 
+## [16.10.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.9.0...srobroek-agentic--v16.10.0) (2026-07-23)
+
+
+### Features
+
+* add documentation, lint, and metrics agents to orchestrate ([#650](https://github.com/srobroek/agentic-packages/issues/650)) ([10c1e30](https://github.com/srobroek/agentic-packages/commit/10c1e30ae271c1a5801301ae1948f7d2caea4ff8))
+* **user-journeys:** add Beads verification formulas ([#606](https://github.com/srobroek/agentic-packages/issues/606)) ([1ae5c5c](https://github.com/srobroek/agentic-packages/commit/1ae5c5c29fe185c62d2445bdea8bb6e04ef3006d))
+
 ## [16.9.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.8.0...srobroek-agentic--v16.9.0) (2026-07-22)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/srobroek/agentic-packages/compare/beads--v0.6.0...beads--v0.6.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* verify landed work after squash merges ([#569](https://github.com/srobroek/agentic-packages/issues/569)) ([5ddf26a](https://github.com/srobroek/agentic-packages/commit/5ddf26a8a8afb52787eb516896b160485d958feb))
+
 ## [0.6.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.5.1...beads--v0.6.0) (2026-07-22)
 
 
