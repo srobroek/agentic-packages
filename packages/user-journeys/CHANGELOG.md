@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.4.0...user-journeys--v0.5.0) (2026-07-23)
+
+
+### Features
+
+* **user-journeys:** add Beads verification formulas ([#606](https://github.com/srobroek/agentic-packages/issues/606)) ([1ae5c5c](https://github.com/srobroek/agentic-packages/commit/1ae5c5c29fe185c62d2445bdea8bb6e04ef3006d))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.3.1...user-journeys--v0.4.0) (2026-07-21)
 
 

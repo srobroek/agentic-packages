@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.11.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.10.0...orchestrate--v3.11.0) (2026-07-23)
+
+
+### Features
+
+* add documentation, lint, and metrics agents to orchestrate ([#650](https://github.com/srobroek/agentic-packages/issues/650)) ([10c1e30](https://github.com/srobroek/agentic-packages/commit/10c1e30ae271c1a5801301ae1948f7d2caea4ff8))
+* **deps:** sync internal package pins (minor-level dep releases) ([#646](https://github.com/srobroek/agentic-packages/issues/646)) ([29f3dd0](https://github.com/srobroek/agentic-packages/commit/29f3dd0e10f84f9c740db515743cc057d83bbb4f))
+
 ## [3.10.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.9.1...orchestrate--v3.10.0) (2026-07-22)
 
 
