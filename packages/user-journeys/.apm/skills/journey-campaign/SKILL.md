@@ -1,7 +1,6 @@
 ---
 name: journey-campaign
-description: >-
-  Validation campaign at fleet scale, journey-driven or issue-driven: fan out validators, dedupe findings, dispatch coder agents, re-validate until green or a hard stop.
+description: Use when running journey or issue-driven validation at fleet scale: fan out validators, fix defects, and re-validate until green.
 ---
 
 # journey-campaign

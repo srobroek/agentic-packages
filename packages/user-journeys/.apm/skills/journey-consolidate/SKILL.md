@@ -1,7 +1,6 @@
 ---
 name: journey-consolidate
-description: >-
-  Human-blessed journey checkpoint: advance last_reviewed, flush old delta-log entries, prune runs, regenerate the index. Never runs without explicit per-journey approval.
+description: Use when advancing a journey checkpoint with human approval: flush delta-log entries, prune old runs, and regenerate the index.
 ---
 
 # journey-consolidate

@@ -1,7 +1,6 @@
 ---
 name: journey-verify
-description: >-
-  Validate user journeys against the running product: drive each step, triage mismatches with intent gating, amend journeys, record runs, report findings.
+description: Use when validating user journeys against the running product: drives each step, triages mismatches, and records run results.
 ---
 
 # journey-verify

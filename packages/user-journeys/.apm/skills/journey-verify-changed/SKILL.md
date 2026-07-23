@@ -1,7 +1,6 @@
 ---
 name: journey-verify-changed
-description: >-
-  Diff-scoped journey validation: map changed files and stated intent to journey surfaces and steps, then validate only the impacted journeys.
+description: Use when validating only the journeys affected by a diff, PR, or branch change rather than the full journey suite.
 ---
 
 # journey-verify-changed

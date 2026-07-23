@@ -1,6 +1,6 @@
 ---
 name: worktrunk-writer
-description: Manages isolated Worktrunk leases for delegated tool-using writers, reviewers, and repository agents.
+description: Use when delegating a tool-using agent, reviewer, or repository worker into an isolated Worktrunk lease.
 ---
 
 # Worktrunk Writer

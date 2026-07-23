@@ -1,6 +1,6 @@
 ---
 name: debate
-description: Deep tradeoff analysis on architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path.
+description: Use when stress-testing an architectural decision, technology choice, or feature proposal from both sides before committing.
 ---
 
 # Debate
