@@ -2,7 +2,7 @@
 name: workflow-pull-worker
 description: Claims and executes one compatible generic orchestration node.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 tools:
   - Read
