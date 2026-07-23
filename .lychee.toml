@@ -1,0 +1,19 @@
+timeout = 20
+# Accept rate-limited responses as non-failures
+accept = [200, 429]
+accept_timeouts = true
+
+# Private/internal URLs unreachable from CI, plus GitHub anchor fragments
+exclude = [
+    # Amazon-internal pages
+    "w\\.amazon\\.com",
+    "code\\.amazon\\.com",
+    "\\.hub\\.amazon\\.dev",
+    "hub\\.cx\\.aws\\.dev",
+    "npmpm\\.corp\\.amazon\\.com",
+    # GitHub fragment anchors — lychee cannot verify in-page anchors
+    "github\\.com.*#[a-z]",
+    # Localhost / placeholder URLs
+    "localhost",
+    "example\\.com",
+]

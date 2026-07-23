@@ -18,17 +18,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changed:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       packages: ${{ steps.detect.outputs.packages }}
       any: ${{ steps.detect.outputs.any }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Detect changed packages that have tests
         id: detect
@@ -40,12 +46,13 @@ jobs:
             | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
           # Keep only those that actually ship a test suite (bats or pytest).
           have_tests=""
+          # shellcheck disable=SC2086
           for p in $changed_pkgs; do
-            if find "$p" -name '*.bats' -o -name 'test_*.py' | grep -q .; then
+            if find "$p" \( -name '*.bats' -o -name 'test_*.py' -o -name '_test_*.py' \) | grep -q .; then
               have_tests="$have_tests $p"
             fi
           done
-          have_tests=$(echo $have_tests | tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
+          have_tests=$(echo "$have_tests" | tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
           echo "packages=$have_tests" >> "$GITHUB_OUTPUT"
           if [ "$have_tests" = "[]" ]; then
             echo "any=false" >> "$GITHUB_OUTPUT"
@@ -59,11 +66,13 @@ jobs:
   # descriptions, missing output contracts) can't land silently.
   agentic-lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Lint changed agentic markdown
         run: |
@@ -89,16 +98,23 @@ jobs:
     needs: changed
     if: needs.changed.outputs.any == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         package: ${{ fromJSON(needs.changed.outputs.packages) }}
+    # PKG avoids ${{ matrix.package }} in run: scripts, which zizmor flags as
+    # template-injection (the package path comes from the PR author).
+    env:
+      PKG: ${{ matrix.package }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
 
       - name: Set up bats
-        uses: bats-core/bats-action@4.0.0
+        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43  # 4.0.0
         with:
           support-install: false
           assert-install: false
@@ -106,36 +122,38 @@ jobs:
           file-install: false
 
       - name: Set up uv (for pytest)
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
+        with:
+          enable-cache: true
 
       - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
         run: |
           # Lint the package's own scripts at the same severity the suite targets.
-          sh_files=$(find "${{ matrix.package }}" -name '*.sh' 2>/dev/null || true)
+          sh_files=$(find "$PKG" -name '*.sh' 2>/dev/null || true)
           if [ -n "$sh_files" ]; then
-            # shellcheck is preinstalled on ubuntu-latest runners
+            # preinstalled on ubuntu-latest runners
             echo "$sh_files" | xargs -r shellcheck -S warning
-            echo "shellcheck clean: ${{ matrix.package }}"
+            echo "shellcheck clean: $PKG"
           else
-            echo "no .sh in ${{ matrix.package }}"
+            echo "no .sh in $PKG"
           fi
 
       - name: Run bats suites
         run: |
-          bats_files=$(find "${{ matrix.package }}" -name '*.bats' 2>/dev/null || true)
+          bats_files=$(find "$PKG" -name '*.bats' 2>/dev/null || true)
           if [ -n "$bats_files" ]; then
             echo "$bats_files" | xargs -r bats
           else
-            echo "no .bats in ${{ matrix.package }}"
+            echo "no .bats in $PKG"
           fi
 
       - name: Run pytest suites
         run: |
-          py_files=$(find "${{ matrix.package }}" -name 'test_*.py' 2>/dev/null || true)
+          py_files=$(find "$PKG" -name 'test_*.py' 2>/dev/null || true)
           if [ -n "$py_files" ]; then
-            echo "$py_files" | xargs -r uv run --with pytest pytest -q
+            echo "$py_files" | xargs -r uv run --with pytest --with pyyaml pytest -q
           else
-            echo "no pytest files in ${{ matrix.package }}"
+            echo "no pytest files in $PKG"
           fi
 
       - name: Run standalone _test_*.py harnesses
@@ -144,14 +162,14 @@ jobs:
           # pytest modules -- pytest's default discovery (test_*.py) skips the
           # leading underscore, so run them directly. (e.g. speckit-dag-hooks'
           # _test_dispatcher.py, which validates the dispatcher against nodes.json.)
-          harnesses=$(find "${{ matrix.package }}" -name '_test_*.py' 2>/dev/null || true)
+          harnesses=$(find "$PKG" -name '_test_*.py' 2>/dev/null || true)
           if [ -n "$harnesses" ]; then
             for h in $harnesses; do
               echo "harness: $h"
-              ( cd "$(dirname "$h")" && python3 "$(basename "$h")" )
+              ( cd "$(dirname "$h")" && uv run --with pyyaml "$(basename "$h")" )
             done
           else
-            echo "no _test_*.py harnesses in ${{ matrix.package }}"
+            echo "no _test_*.py harnesses in $PKG"
           fi
 
       - name: Generated-artifact drift gate (build_nodes.py --check)
@@ -161,14 +179,14 @@ jobs:
           # regenerates to a buffer and exits 1 on drift, so a PR that edits the
           # builder (or hand-edits the committed JSON) without regenerating fails
           # here. No-op for packages without a builder.
-          builders=$(find "${{ matrix.package }}" -name 'build_nodes.py' 2>/dev/null || true)
+          builders=$(find "$PKG" -name 'build_nodes.py' 2>/dev/null || true)
           if [ -n "$builders" ]; then
             for b in $builders; do
               echo "drift check: $b"
               python3 "$b" --check
             done
           else
-            echo "no build_nodes.py in ${{ matrix.package }}"
+            echo "no build_nodes.py in $PKG"
           fi
 
   # Stable, always-running aggregator -- this is the REQUIRED check on main.
@@ -178,20 +196,25 @@ jobs:
     needs: [changed, test, agentic-lint]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Evaluate test matrix result
+        # env: pulls needs context out of run: scripts so zizmor does not flag
+        # the result values as template-injection (they are GitHub-internal, but
+        # zizmor cannot verify that without an API token).
+        env:
+          CHANGED_RESULT: ${{ needs.changed.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          LINT_RESULT: ${{ needs.agentic-lint.result }}
         run: |
-          changed_result="${{ needs.changed.result }}"
-          test_result="${{ needs.test.result }}"
-          lint_result="${{ needs.agentic-lint.result }}"
-          echo "changed=$changed_result test=$test_result agentic-lint=$lint_result"
-          if [ "$lint_result" != "success" ]; then
-            echo "::error::agentic-lint did not succeed ($lint_result)"; exit 1
+          echo "changed=$CHANGED_RESULT test=$TEST_RESULT agentic-lint=$LINT_RESULT"
+          if [ "$LINT_RESULT" != "success" ]; then
+            echo "::error::agentic-lint did not succeed ($LINT_RESULT)"; exit 1
           fi
-          if [ "$changed_result" != "success" ]; then
-            echo "::error::change-detection job did not succeed ($changed_result)"; exit 1
+          if [ "$CHANGED_RESULT" != "success" ]; then
+            echo "::error::change-detection job did not succeed ($CHANGED_RESULT)"; exit 1
           fi
-          case "$test_result" in
-            success|skipped) echo "Tests gate OK ($test_result)";;
-            *) echo "::error::test matrix result: $test_result"; exit 1;;
+          case "$TEST_RESULT" in
+            success|skipped) echo "Tests gate OK ($TEST_RESULT)";;
+            *) echo "::error::test matrix result: $TEST_RESULT"; exit 1;;
           esac

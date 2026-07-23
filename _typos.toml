@@ -1,0 +1,14 @@
+[files]
+# CHANGELOG.md files contain commit SHA fragments that trigger false positives
+# (e.g. commit id "abd5330" flagged as "abd" → "and").
+# Generated dirs have no source content to check.
+extend-exclude = ["**/CHANGELOG.md", "**/.apm/apm_modules/**", "**/node_modules/**"]
+
+[default.extend-words]
+# git clean -nd is a valid git flag pair, not a word
+nd = "nd"
+# regex token in attribution-guard.sh — partial match of "generated/generating"
+generat = "generat"
+# hyphenated "mis-formatted" used intentionally in quality.bats test comments
+mis = "mis"
+Mis = "Mis"
