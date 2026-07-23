@@ -85,10 +85,12 @@ def _scopes(extra: list[str], include_plugins: bool) -> list[str]:
 
 
 def _parse_frontmatter(text: str) -> dict[str, str]:
-    """Minimal YAML-frontmatter reader: top-level `key: value` scalars plus
-    folded/literal block scalars (`>-`, `|`, `>`). Nested mappings (e.g. the
-    x-agentic block) are collapsed away. Sufficient for
-    name/description/model/tools/isolation without a yaml dependency."""
+    """Read the frontmatter subset used by agent definitions.
+
+    Supports top-level scalars, folded/literal block scalars, and the block
+    sequence used by ``tools``. Nested mappings such as ``x-agentic`` remain
+    intentionally opaque.
+    """
     m = FRONTMATTER.match(text)
     if not m:
         raise ValueError("missing or unterminated YAML frontmatter")
@@ -114,6 +116,19 @@ def _parse_frontmatter(text: str) -> dict[str, str]:
                 block.append(lines[i].strip())
                 i += 1
             fm[key] = " ".join(b for b in block if b).strip()
+        elif key == "tools" and not val:
+            tools = []
+            while i < len(lines) and (
+                not lines[i].strip() or lines[i][:1] in " \t"
+            ):
+                item = lines[i].strip()
+                i += 1
+                if not item:
+                    continue
+                if not item.startswith("- ") or not item[2:].strip():
+                    raise ValueError("tools must be a YAML block sequence")
+                tools.append(item[2:].strip().strip("'\""))
+            fm[key] = ", ".join(tools)
         else:
             fm[key] = val.strip("'\"")
     return fm

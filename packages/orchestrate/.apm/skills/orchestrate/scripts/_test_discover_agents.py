@@ -151,6 +151,23 @@ class DiscoverAgentsTest(unittest.TestCase):
         self.assertEqual(agent["model"], "inherit")
         self.assertEqual(agent["tools"], "(all)")
 
+    def test_tools_block_sequence_is_normalized(self) -> None:
+        self.write(
+            self.first,
+            "block-tools.md",
+            "---\n"
+            "name: block-tools\n"
+            "description: Uses list-form tools.\n"
+            "tools:\n"
+            "  - Read\n"
+            "  - Bash\n"
+            "---\n",
+        )
+
+        agent = self.collect(self.first)[0]
+
+        self.assertEqual(agent["tools"], "Read, Bash")
+
     def test_role_filter_uses_whole_words(self) -> None:
         self.write(self.first, "coder.md", definition("coder"))
         self.write(
