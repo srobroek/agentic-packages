@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -366,6 +367,8 @@ class DecisionPolicyContractTest(unittest.TestCase):
 
 class BeadsDecisionPolicyTest(unittest.TestCase):
     def setUp(self) -> None:
+        if shutil.which("bd") is None:
+            self.skipTest("bd CLI not installed")
         cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
         cache_root.mkdir(parents=True, exist_ok=True)
         self.directory = tempfile.TemporaryDirectory(
