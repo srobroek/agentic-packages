@@ -709,6 +709,15 @@ marketplace:
       tags:
         - bundle
         - lifecycle
+    - name: project-setup
+      source: srobroek/project-setup
+      ref: project-setup-v0.5.2
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - setup
+        - scaffold
     - name: python-quality
       source: ./packages/python-quality
       category: languages
