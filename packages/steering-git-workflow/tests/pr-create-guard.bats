@@ -226,15 +226,11 @@ setup() {
 }
 
 @test "emits advisory allow when python3 is absent" {
-  no_py_bin="$BATS_TEST_TMPDIR/no-py-bin"
-  mkdir -p "$no_py_bin"
-  # Provide bash and other needed tools but not python3.
-  ln -sf "$(command -v bash)" "$no_py_bin/bash"
-  ln -sf "$(command -v printf)" "$no_py_bin/printf" 2>/dev/null || true
+  # Use the injectable env var so the test works regardless of system PATH.
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --draft --body one' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run env PATH="$no_py_bin" bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  run env PR_CREATE_GUARD_PYTHON=/nonexistent bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
   [ "$status" -eq 0 ]
   [[ "$output" == *'"allow"'* ]]
   [[ "$output" == *'additionalContext'* ]]

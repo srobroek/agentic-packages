@@ -15,9 +15,11 @@ deny_fallback() {
   printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","additionalContext":"PR creation policy checker unavailable (python3 absent or errored). Proceed with --draft and a valid Tracks-Bead trailer in Beads repositories. Install python3 to enable automated verification."}}'
 }
 
-command -v python3 >/dev/null 2>&1 || { deny_fallback; exit 0; }
+# PR_CREATE_GUARD_PYTHON lets tests inject /nonexistent without touching PATH.
+_python3="${PR_CREATE_GUARD_PYTHON:-python3}"
+command -v "$_python3" >/dev/null 2>&1 || { deny_fallback; exit 0; }
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-output="$(printf '%s' "$payload" | python3 "$script_dir/pr-create-guard.py")" || {
+output="$(printf '%s' "$payload" | "$_python3" "$script_dir/pr-create-guard.py")" || {
   deny_fallback
   exit 0
 }
