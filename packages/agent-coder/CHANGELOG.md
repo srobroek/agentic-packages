@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.2](https://github.com/srobroek/agentic-packages/compare/agent-coder--v6.1.1...agent-coder--v6.1.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** harden isolation and delivery rules for delegated workers ([#657](https://github.com/srobroek/agentic-packages/issues/657)) ([956f6e1](https://github.com/srobroek/agentic-packages/commit/956f6e1615a484746023d8e63085d8f514b07bf7))
+
 ## [6.1.1](https://github.com/srobroek/agentic-packages/compare/agent-coder--v6.1.0...agent-coder--v6.1.1) (2026-07-22)
 
 
