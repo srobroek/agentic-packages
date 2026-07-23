@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Canonical package inventory: walk packages/*/apm.yml ONCE, emit one context.
 
 This is the single source of dynamic data for every generated doc artifact. The

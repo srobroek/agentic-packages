@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Inject package-owned model mappings into APM-generated Codex agents."""
 
 from __future__ import annotations

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6", "jinja2>=3"]
+# ///
 """Render every generated doc artifact from the single canonical inventory.
 
 One inventory walk (``build_inventory.build_context``) feeds three renderers:

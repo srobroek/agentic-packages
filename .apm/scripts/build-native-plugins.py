@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Generate committed native plugin layout for every native-capable package.
 
 The marketplace `source: ./packages/<name>` entries are consumed by three
