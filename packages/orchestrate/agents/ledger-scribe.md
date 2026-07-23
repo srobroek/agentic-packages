@@ -1,11 +1,11 @@
 ---
 name: ledger-scribe
 description: >-
-  Read-only run-record reporter in an `orchestrate` run: answers queries over
-  node beads and audit trail, produces the end-of-run report. Never writes.
+  Run-record reporter in an `orchestrate` run: queries beads and audit trail,
+  writes only the end-of-run report artifact; never edits code or beads.
 model: haiku
 effort: low
-permissionMode: plan
+permissionMode: acceptEdits
 tools:
   - Read
   - Grep
@@ -55,5 +55,6 @@ Never write to beads.
 
 ## Output
 Answer queries in ≤ 100 words: per-node one-liners (`node — state — sha/pr`),
-then failures/blocked beads, then open gates/slot. Reference bead ids; never
-reprint bead JSON or audit records verbatim.
+then failed/blocked nodes, then open gates/slot. Node states: DONE|BLOCKED|FAILED|RUNNING|PENDING.
+Reference bead ids and artifact paths only; never reprint bead JSON or audit
+records verbatim.
