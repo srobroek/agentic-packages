@@ -1,5 +1,27 @@
 # Changelog
 
+## [17.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.12.0...srobroek-agentic--v17.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668))
+
+### Features
+
+* CI runs every test suite, caches dependencies, and gates workflow quality ([#666](https://github.com/srobroek/agentic-packages/issues/666)) ([a4461cc](https://github.com/srobroek/agentic-packages/commit/a4461cc314f2c3baa54e511be44d6589ba769996))
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668)) ([5ba8f01](https://github.com/srobroek/agentic-packages/commit/5ba8f019572661f184468fd99bf3fbfc9d5240e6))
+
+
+### Bug Fixes
+
+* hook sanitizer detects dead project-level entries and PR guard fails open ([#665](https://github.com/srobroek/agentic-packages/issues/665)) ([0f1dbff](https://github.com/srobroek/agentic-packages/commit/0f1dbff9bf6d2021751f6f10f2903dcb45875092))
+* **inject-agent-models:** tolerate identical duplicate mappings across packages ([#669](https://github.com/srobroek/agentic-packages/issues/669)) ([c2eda86](https://github.com/srobroek/agentic-packages/commit/c2eda860c2caf85c5645b323779f5c669a8adaf2))
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+* steering matches deployed models and sheds per-session token weight ([#664](https://github.com/srobroek/agentic-packages/issues/664)) ([05ac136](https://github.com/srobroek/agentic-packages/commit/05ac136fb5b81c8a3b2497078eb79d88a4aa9f2c))
+
 ## [16.12.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.11.0...srobroek-agentic--v16.12.0) (2026-07-23)
 
 

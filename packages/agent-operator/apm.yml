@@ -1,5 +1,5 @@
 name: agent-operator
-version: 1.1.0
+version: 2.0.0
 description: Mechanical operator agent for tiny commands, formatting, and inventory steps.
 author: Sjors Robroek
 license: Apache-2.0

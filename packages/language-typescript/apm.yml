@@ -1,5 +1,5 @@
 name: language-typescript
-version: 3.3.0
+version: 4.0.0
 description: >-
   TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated
   TS/JS steering, and TypeScript LSP.

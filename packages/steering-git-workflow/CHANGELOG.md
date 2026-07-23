@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.1...steering-git-workflow--v2.3.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* hook sanitizer detects dead project-level entries and PR guard fails open ([#665](https://github.com/srobroek/agentic-packages/issues/665)) ([0f1dbff](https://github.com/srobroek/agentic-packages/commit/0f1dbff9bf6d2021751f6f10f2903dcb45875092))
+
 ## [2.3.1](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.0...steering-git-workflow--v2.3.1) (2026-07-23)
 
 

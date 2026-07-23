@@ -1,6 +1,6 @@
 name: language-go
-version: 3.3.0
-description: "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP."
+version: 4.0.0
+description: 'Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.'
 author: Sjors Robroek
 license: Apache-2.0
 type: bundle

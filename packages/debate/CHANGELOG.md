@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/debate--v2.1.0...debate--v2.2.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/debate--v2.0.0...debate--v2.1.0) (2026-07-16)
 
 

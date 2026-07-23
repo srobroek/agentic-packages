@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.2.0...write-agentic--v3.3.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.1.0...write-agentic--v3.2.0) (2026-07-16)
 
 

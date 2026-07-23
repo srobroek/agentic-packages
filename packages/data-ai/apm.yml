@@ -1,6 +1,8 @@
 name: data-ai
-version: 2.2.1
-description: "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases."
+version: 3.0.0
+description: >-
+  Data and AI toolkit: data steering for LLM applications, data engineering,
+  MLOps, and databases.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-codebase-memory--v1.2.0...mcp-codebase-memory--v1.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* steering matches deployed models and sheds per-session token weight ([#664](https://github.com/srobroek/agentic-packages/issues/664)) ([05ac136](https://github.com/srobroek/agentic-packages/commit/05ac136fb5b81c8a3b2497078eb79d88a4aa9f2c))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-codebase-memory--v1.1.0...mcp-codebase-memory--v1.2.0) (2026-07-16)
 
 

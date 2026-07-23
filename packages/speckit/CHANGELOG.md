@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.3](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.2...speckit--v8.1.3) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** converge Claude effort and Codex reasoning_effort pins ([#663](https://github.com/srobroek/agentic-packages/issues/663)) ([9f149f2](https://github.com/srobroek/agentic-packages/commit/9f149f2cda79e819ce25b37e5eba2ffdd52fd115))
+
 ## [8.1.2](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.1...speckit--v8.1.2) (2026-07-23)
 
 

@@ -1,5 +1,5 @@
 name: sniff
-version: 3.2.0
+version: 3.2.1
 description: >-
   Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code
   across 21 languages and formats, maps each finding to refactoring.guru smells,

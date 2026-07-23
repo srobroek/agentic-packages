@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/language-terraform--v2.3.0...language-terraform--v3.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+
+### Features
+
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+
 ## [2.3.0](https://github.com/srobroek/agentic-packages/compare/language-terraform--v2.2.0...language-terraform--v2.3.0) (2026-07-23)
 
 

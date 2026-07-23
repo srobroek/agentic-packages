@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-explorer--v1.1.0...agent-explorer--v2.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668))
+
+### Features
+
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668)) ([5ba8f01](https://github.com/srobroek/agentic-packages/commit/5ba8f019572661f184468fd99bf3fbfc9d5240e6))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/agent-explorer--v1.0.0...agent-explorer--v1.1.0) (2026-07-22)
 
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-model--v0.3.0...hooks-subagent-model--v1.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668))
+
+### Features
+
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668)) ([5ba8f01](https://github.com/srobroek/agentic-packages/commit/5ba8f019572661f184468fd99bf3fbfc9d5240e6))
+
+
+### Bug Fixes
+
+* **hooks-subagent-model:** recommend installed agent profiles instead of hardcoded names ([#670](https://github.com/srobroek/agentic-packages/issues/670)) ([2c508ab](https://github.com/srobroek/agentic-packages/commit/2c508ab6b599d456f0c49c4f3daea8c672300925))
+* steering matches deployed models and sheds per-session token weight ([#664](https://github.com/srobroek/agentic-packages/issues/664)) ([05ac136](https://github.com/srobroek/agentic-packages/commit/05ac136fb5b81c8a3b2497078eb79d88a4aa9f2c))
+
 ## [0.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-model--v0.2.1...hooks-subagent-model--v0.3.0) (2026-07-22)
 
 

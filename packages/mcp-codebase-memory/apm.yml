@@ -1,5 +1,5 @@
 name: mcp-codebase-memory
-version: 1.2.0
+version: 1.2.1
 description: >-
   MCP server package for the Codebase Memory MCP, providing graph-aware project
   orientation (symbol search, call paths, code snippets). Available but not

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.5.0...user-journeys--v0.6.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
 ## [0.5.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.4.0...user-journeys--v0.5.0) (2026-07-23)
 
 
