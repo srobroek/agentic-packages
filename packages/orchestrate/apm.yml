@@ -1,5 +1,5 @@
 name: orchestrate
-version: 3.12.0
+version: 3.13.0
 description: >-
   Coordinates parallel subagents through Beads-backed DAGs, claims, threaded
   replies, decisions, review, and merge state. Supports exact, specialist,
@@ -7,10 +7,10 @@ description: >-
   workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
   workflow-reviewer, workflow-advisor, integration-gatekeeper, and
   ledger-scribe. Quality triage roles (docs-guard, lint-guard,
-  data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics)
-  come from the agent-quality-guards dependency. Includes deterministic
-  scope, discovery, claim, message, decision, queue, and conflict scripts plus
-  shared PR shepherd landing safeguards. Requires the bd CLI.
+  data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come
+  from the agent-quality-guards dependency. Includes deterministic scope,
+  discovery, claim, message, decision, queue, and conflict scripts plus shared
+  PR shepherd landing safeguards. Requires the bd CLI.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

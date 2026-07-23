@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.13.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.12.0...orchestrate--v3.13.0) (2026-07-23)
+
+
+### Features
+
+* standalone quality-guard agents for docs, lint, metrics, maintenance, and diff triage ([#656](https://github.com/srobroek/agentic-packages/issues/656)) ([1263c67](https://github.com/srobroek/agentic-packages/commit/1263c670ce5f7ab7de5b6cc5b55803e1dadaf8c0))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([5297f20](https://github.com/srobroek/agentic-packages/commit/5297f20f05426e0875c33d8b1a7aaff89cf7e0fb))
+
 ## [3.12.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.11.0...orchestrate--v3.12.0) (2026-07-23)
 
 
