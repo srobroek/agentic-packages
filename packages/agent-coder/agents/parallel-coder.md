@@ -41,7 +41,8 @@ library API documentation.
    (unique per-agent path). `cd` into it and do all edits/commits there. Report
    that worktree path so the main thread can remove it after merging. If worktrees
    are unavailable, fall back to a dedicated branch (`git switch -c coder/<short-task-slug>`)
-   **only when you are the sole implementer**. Never commit onto the caller's active branch.
+   **only when you are the sole implementer** — two coders doing `git switch` on
+   one shared checkout will clobber each other. Never commit onto the caller's active branch.
 3. Stage and commit following the repository's commit conventions (no AI attribution).
    Group logically separable changes into separate commits.
 4. Do **not** push, do **not** merge, and do **not** switch back to or modify the
