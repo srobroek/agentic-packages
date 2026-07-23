@@ -4,7 +4,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "ctx=\"${SERENA_MCP_CONTEXT:-}\"; if [ -z \"$ctx\" ]; then ctx=\"agent\"; pid=\"$PPID\"; while [ \"$pid\" -gt 1 ]; do parent=\"$(ps -o args= -p \"$pid\" 2>/dev/null | tr \"[:upper:]\" \"[:lower:]\")\"; case \"$parent\" in *claude*) ctx=\"claude-code\"; break ;; *codex*) ctx=\"codex\"; break ;; esac; next=\"$(ps -o ppid= -p \"$pid\" 2>/dev/null | tr -d ' ')\"; case \"$next\" in ''|*[!0-9]*) break ;; esac; pid=\"$next\"; done; fi; exec serena start-mcp-server --context \"$ctx\" --project-from-cwd"
+        "launcher_rel=\"apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py\"; for apm_root in \"${APM_HOME:-}\" \"${HOME}/.apm\" \"$PWD/.apm\"; do [ -n \"$apm_root\" ] || continue; launcher=\"$apm_root/$launcher_rel\"; [ -r \"$launcher\" ] && exec python3 \"$launcher\"; done; echo serena-apm-launcher-not-found-run-apm-install >&2; exit 1"
       ]
     }
   }
