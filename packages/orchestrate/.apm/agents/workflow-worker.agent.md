@@ -2,7 +2,7 @@
 name: workflow-worker
 description: Generic writable fallback for one compatible orchestrate node.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 tools:
   - Read

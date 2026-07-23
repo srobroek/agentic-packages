@@ -210,7 +210,7 @@ setup() {
   [[ "$output" == *'must start as drafts'* ]]
 }
 
-@test "fails closed for PR creation when python checker fails" {
+@test "emits advisory allow when python checker fails" {
   fail_bin="$BATS_TEST_TMPDIR/fail-bin"
   mkdir -p "$fail_bin"
   printf '%s\n' '#!/usr/bin/env sh' 'exit 127' > "$fail_bin/python3"
@@ -219,7 +219,22 @@ setup() {
     --arg command 'gh pr create --draft --body one' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
   run env PATH="$fail_bin:$PATH" bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'could not be verified'* ]]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'"allow"'* ]]
+  [[ "$output" == *'additionalContext'* ]]
+  [[ "$output" != *'"deny"'* ]]
+}
+
+@test "emits advisory allow when python3 is absent" {
+  # Use the injectable env var so the test works regardless of system PATH.
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
+    --arg command 'gh pr create --draft --body one' \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run env PR_CREATE_GUARD_PYTHON=/nonexistent bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'"allow"'* ]]
+  [[ "$output" == *'additionalContext'* ]]
+  [[ "$output" != *'"deny"'* ]]
 }
 
 @test "allows a quoted documentation mention of gh pr create" {
