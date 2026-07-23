@@ -144,11 +144,29 @@ write_codex_agent_literal() {
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("no project or global custom profile")' >/dev/null
 }
 
-@test "Codex default agent -> deny with semantic routing guidance" {
+@test "Codex default agent, no profiles installed -> deny with create-profile guidance" {
   payload='{"tool_name":"Agent","cwd":"/tmp","tool_input":{"task_name":"test"}}'
   run_guard "$payload" CODEX_HOME="$BATS_TEST_TMPDIR/empty"
   [ "$decision" = "deny" ]
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("workflow-coder")' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("Define a project or global agent profile")' >/dev/null
+}
+
+@test "Codex default agent, profiles installed -> deny listing installed catalog" {
+  project="$BATS_TEST_TMPDIR/catalog-project"
+  global="$BATS_TEST_TMPDIR/catalog-global"
+  write_codex_agent "$project" alpha-worker gpt-5.6-luna medium
+  write_codex_agent "$project" beta-coder gpt-4o high
+  write_codex_agent "$global" gamma-reviewer gpt-5.6-luna low
+  payload="$(jq -cn --arg cwd "$project" '{tool_name:"Agent",cwd:$cwd,tool_input:{task_name:"test"}}')"
+  run_guard "$payload" CODEX_HOME="$global/.codex"
+  [ "$decision" = "deny" ]
+  # Catalog names appear in the deny reason; alphabetical order.
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("alpha-worker")' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("beta-coder")' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("gamma-reviewer")' >/dev/null
+  # No hardcoded legacy names should appear.
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("workflow-coder") | not' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("luna-low") | not' >/dev/null
 }
 
 @test "Codex explicit ad-hoc model and effort require opt-in" {
