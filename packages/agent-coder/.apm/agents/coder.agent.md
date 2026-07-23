@@ -2,7 +2,7 @@
 name: coder
 description: Implementation subagent for bounded code changes; requires Serena semantic tools when available. Edits caller's tree directly; does not commit.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 ---
 

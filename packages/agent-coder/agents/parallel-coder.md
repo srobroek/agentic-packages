@@ -2,7 +2,7 @@
 name: parallel-coder
 description: Isolated implementation subagent; requires Serena semantic tools when available. Self-commits to its own worktree branch for review and merge.
 model: sonnet
-effort: medium
+effort: high
 permissionMode: acceptEdits
 ---
 
