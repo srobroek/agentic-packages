@@ -126,6 +126,15 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install bd (beads CLI, needed by orchestrate harnesses)
+        if: env.PKG == 'packages/orchestrate'
+        run: |
+          curl -fsSL --retry 3 -o /tmp/beads.tar.gz \
+            https://github.com/gastownhall/beads/releases/download/v1.1.0/beads_1.1.0_linux_amd64.tar.gz
+          tar -xzf /tmp/beads.tar.gz -C /tmp bd
+          install -m 0755 /tmp/bd /usr/local/bin/bd
+          bd version
+
       - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
         run: |
           # Lint the package's own scripts at the same severity the suite targets.
