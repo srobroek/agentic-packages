@@ -149,6 +149,18 @@
       "category": "quality"
     },
     {
+      "name": "agent-quality-guards",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-quality-guards"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
       "name": "agent-reasoner",
       "source": {
         "source": "local",

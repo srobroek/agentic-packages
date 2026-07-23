@@ -151,6 +151,18 @@
       "source": "./packages/agent-pr-reviewer"
     },
     {
+      "name": "agent-quality-guards",
+      "description": "Read-only quality-guard subagents for bounded triage: docs-guard checks scoped documentation and documentation lint findings, lint-guard validates and normalizes lint reports, data-metrics-summarizer compacts large logs and metrics, maintenance-metrics-reader snapshots repository maintenance health (stale branches, worktrees, lock states), and reviewer-mechanics smoke-checks scoped diffs for mechanical issues. All five reply with bounded, capped verdict lines and never edit files.",
+      "version": "0.0.0",
+      "tags": [
+        "agent",
+        "quality",
+        "triage"
+      ],
+      "category": "quality",
+      "source": "./packages/agent-quality-guards"
+    },
+    {
       "name": "agent-reasoner",
       "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
       "version": "1.1.0",
@@ -1148,7 +1160,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, docs-guard, data-metrics-summarizer, lint-guard, and ledger-scribe. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
+      "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
       "version": "3.12.0",
       "tags": [
         "skill",

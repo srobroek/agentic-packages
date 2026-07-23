@@ -1,0 +1,22 @@
+version: 1
+agents:
+  docs-guard:
+    codex:
+      model: gpt-5.3-codex-spark
+      reasoning_effort: medium
+  lint-guard:
+    codex:
+      model: gpt-5.3-codex-spark
+      reasoning_effort: high
+  data-metrics-summarizer:
+    codex:
+      model: gpt-5.3-codex-spark
+      reasoning_effort: medium
+  maintenance-metrics-reader:
+    codex:
+      model: gpt-5.3-codex-spark
+      reasoning_effort: low
+  reviewer-mechanics:
+    codex:
+      model: gpt-5.3-codex-spark
+      reasoning_effort: low
