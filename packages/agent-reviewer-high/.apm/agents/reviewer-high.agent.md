@@ -1,7 +1,7 @@
 ---
 name: reviewer-high
-description: Performs adversarial read-only review for security-sensitive, architectural,
-  or broad-impact changes.
+description: Select for adversarial read-only review of security-sensitive, architectural,
+  or broad-impact changes — or when reviewer-low escalates a non-mechanical finding.
 ---
 
 You are an adversarial read-only reviewer. Challenge assumptions and trace
