@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/mcp-serena--v1.2.1...mcp-serena--v1.3.0) (2026-07-23)
+
+
+### Features
+
+* **mcp-serena:** pool backends by checkout ([#653](https://github.com/srobroek/agentic-packages/issues/653)) ([13f6c17](https://github.com/srobroek/agentic-packages/commit/13f6c1737d3a7985d16ec661dd6d141771c7745e))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-serena--v1.2.0...mcp-serena--v1.2.1) (2026-07-22)
 
 
