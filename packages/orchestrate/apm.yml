@@ -39,4 +39,4 @@ includes:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
-    - srobroek/agentic-packages/packages/pr-shepherd#>=0.12.0 <1.0.0
+    - srobroek/agentic-packages/packages/pr-shepherd#>=0.13.0 <1.0.0
