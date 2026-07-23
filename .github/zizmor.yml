@@ -1,0 +1,10 @@
+rules:
+  # reconcile-pins and release-please persist the App token credential on
+  # checkout intentionally: both workflows push commits back to the repo and
+  # need the credential in the git remote URL. Setting persist-credentials: false
+  # would break git push; the risk is accepted because these workflows run only
+  # on push-to-main (not on pull_request), and the token is short-lived.
+  artipacked:
+    ignore:
+      - reconcile-pins.yml
+      - release-please.yml

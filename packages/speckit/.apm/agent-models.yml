@@ -3,7 +3,7 @@ agents:
   speckit-implement-task:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: xhigh
+      reasoning_effort: high
   speckit-research:
     codex:
       model: gpt-5.6-luna
@@ -11,7 +11,7 @@ agents:
   speckit-sync:
     codex:
       model: gpt-5.6-sol
-      reasoning_effort: medium
+      reasoning_effort: high
   speckit-verify:
     codex:
       model: gpt-5.6-sol

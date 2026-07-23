@@ -116,54 +116,6 @@
         }
       ]
     },
-    "packages/agent-luna-high": {
-      "release-type": "simple",
-      "component": "agent-luna-high",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-low": {
-      "release-type": "simple",
-      "component": "agent-luna-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-medium": {
-      "release-type": "simple",
-      "component": "agent-luna-medium",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-xhigh": {
-      "release-type": "simple",
-      "component": "agent-luna-xhigh",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/agent-management": {
       "release-type": "simple",
       "component": "agent-management",
@@ -239,54 +191,6 @@
     "packages/agent-reviewer-low": {
       "release-type": "simple",
       "component": "agent-reviewer-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-high": {
-      "release-type": "simple",
-      "component": "agent-sol-high",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-low": {
-      "release-type": "simple",
-      "component": "agent-sol-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-medium": {
-      "release-type": "simple",
-      "component": "agent-sol-medium",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-xhigh": {
-      "release-type": "simple",
-      "component": "agent-sol-xhigh",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

@@ -1,5 +1,6 @@
 ---
 name: worker
+effort: high
 description: Completes a bounded implementation or repair with focused tests when
   no more specific coding role is available.
 ---

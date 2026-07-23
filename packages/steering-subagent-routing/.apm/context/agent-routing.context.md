@@ -1,18 +1,27 @@
 # Agent Routing
 
-Model routing is applied by the patch-agents finalizer; overrides live in `.apm/runtime-agent-overrides.yml`.
+Model routing is applied by per-package `agent-models.yml` files, injected at build time via `inject-agent-models.py`.
 
 ## Criteria-based routing
 
 | Task type | Claude tier | Claude effort | Codex fallback |
 |-----------|-------------|----------------|----------------|
-| review / verify / adversarial / design judgment | opus (fable when available) | high | gpt-5.5 high |
-| scoped implementation, refactors, tests | sonnet | medium | gpt-5.4 medium |
-| mechanical/bounded transforms, lookups | haiku | low | gpt-5.4-mini low |
+| review / verify / adversarial / design judgment | opus | high | gpt-5.6-sol high |
+| scoped implementation, refactors, tests | sonnet | medium | gpt-5.6-luna xhigh |
+| mechanical/bounded transforms, lookups | haiku | low | gpt-5.3-codex-spark low–medium |
 | orchestration / planning | main session | inherit | parent session |
-| explicit coding-agent override | — | — | gpt-5.4 high |
+| explicit coding-agent override | — | — | gpt-5.6-luna high |
+
+NOTE: `fable` is the frontier Claude model but is reserved for explicit user
+opt-in only — never auto-routed by steering or agents.
 
 Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
+
+Select agents by role match, not by hardcoded name: from the installed agent
+catalog, pick the agent whose description best matches the task's role at the
+tier above — semantic roles (coder, reviewer, explorer, operator, reasoner)
+over generic wrappers. This works with whatever catalog a project has
+installed, including third-party agents.
 
 NOT haiku for implementation tasks that are complex, ambiguous, or loosely
 scoped — measured (84-run matrix, 2026-07): haiku follows instruction-shaped

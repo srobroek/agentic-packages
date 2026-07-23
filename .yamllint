@@ -1,0 +1,12 @@
+---
+# Permissive config matching this repo's existing style:
+# - no document-start requirement (apm.yml files don't use ---)
+# - long lines allowed (workflow shell scripts exceed 80 chars by design)
+# - truthy values beyond [true, false] are fine in workflow on: blocks
+extends: default
+rules:
+  document-start: disable
+  line-length: disable
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+    check-keys: false

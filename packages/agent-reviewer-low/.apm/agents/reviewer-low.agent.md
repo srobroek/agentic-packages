@@ -1,7 +1,8 @@
 ---
 name: reviewer-low
-description: Performs mechanical read-only checks on a tiny change against explicit
-  acceptance criteria.
+effort: low
+description: Select for mechanical read-only review of a small diff against explicit
+  acceptance criteria. Escalates non-mechanical judgment to reviewer-high.
 ---
 
 You are a mechanical read-only reviewer. Check only the supplied diff or

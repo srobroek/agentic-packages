@@ -5,8 +5,8 @@ author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 targets:
-  - claude
-  - codex
+- claude
+- codex
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
@@ -23,9 +23,8 @@ scripts:
   check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
   render-docs: python3 .apm/scripts/render-docs.py all
   check-docs: python3 .apm/scripts/render-docs.py all --check
-  build-artifacts: >-
-    python3 .apm/scripts/build-native-plugins.py && python3
-    .apm/scripts/render-docs.py all && apm run build-marketplace
+  build-artifacts: python3 .apm/scripts/build-native-plugins.py && python3 .apm/scripts/render-docs.py
+    all && apm run build-marketplace
   install: apm install --target claude,codex
   audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
   audit-codex-config: python3 .apm/scripts/audit-codex-config.py
@@ -34,20 +33,20 @@ scripts:
   test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
   test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
-    apm run install && apm compile --target codex,claude --no-constitution &&
+    apm run install && apm compile --target codex,claude &&
     apm run inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
   strategy: distributed
   source_attribution: true
   exclude:
-    - packages/**
-    - templates/**
-    - .apm/instructions/70-language-typescript.instructions.md
-    - .apm/instructions/71-language-python.instructions.md
-    - .apm/instructions/72-language-go.instructions.md
-    - .apm/instructions/73-language-rust.instructions.md
-    - .apm/instructions/74-language-terraform.instructions.md
+  - packages/**
+  - templates/**
+  - .apm/instructions/70-language-typescript.instructions.md
+  - .apm/instructions/71-language-python.instructions.md
+  - .apm/instructions/72-language-go.instructions.md
+  - .apm/instructions/73-language-rust.instructions.md
+  - .apm/instructions/74-language-terraform.instructions.md
   placement:
     min_instructions_per_file: 1
 marketplace:
@@ -98,34 +97,6 @@ marketplace:
         - agent
         - engineering
         - repos
-    - name: agent-luna-high
-      source: ./packages/agent-luna-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-low
-      source: ./packages/agent-luna-low
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-medium
-      source: ./packages/agent-luna-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-xhigh
-      source: ./packages/agent-luna-xhigh
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
     - name: agent-management
       source: ./packages/agent-management
       category: agentic-maintenance
@@ -171,34 +142,6 @@ marketplace:
     - name: agent-reviewer-low
       source: ./packages/agent-reviewer-low
       category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-high
-      source: ./packages/agent-sol-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-low
-      source: ./packages/agent-sol-low
-      category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-medium
-      source: ./packages/agent-sol-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-xhigh
-      source: ./packages/agent-sol-xhigh
-      category: engineering
       tags:
         - agent
         - codex
@@ -704,6 +647,15 @@ marketplace:
       tags:
         - bundle
         - lifecycle
+    - name: project-setup
+      source: srobroek/project-setup
+      ref: project-setup-v0.5.2
+      category: project-lifecycle
+      tags:
+        - skill
+        - lifecycle
+        - setup
+        - scaffold
     - name: python-quality
       source: ./packages/python-quality
       category: languages

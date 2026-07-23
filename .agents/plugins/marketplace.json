@@ -65,54 +65,6 @@
       "category": "engineering"
     },
     {
-      "name": "agent-luna-high",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-high"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-low",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-low"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-medium",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-medium"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-xhigh",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-xhigh"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
       "name": "agent-management",
       "source": {
         "source": "local",
@@ -195,54 +147,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "quality"
-    },
-    {
-      "name": "agent-sol-high",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-high"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-sol-low",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-low"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "quality"
-    },
-    {
-      "name": "agent-sol-medium",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-medium"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-sol-xhigh",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-xhigh"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
     },
     {
       "name": "agent-worker",

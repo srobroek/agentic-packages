@@ -1,0 +1,11 @@
+self-hosted-runner:
+  labels: []
+
+config-variables: null
+
+paths:
+  .github/workflows/reconcile-pins.yml:
+    ignore:
+      # SC2016: single-quoted shell glob 'packages/*/apm.yml' is intentionally
+      # literal — the shell must not expand it before passing to git diff.
+      - "SC2016"

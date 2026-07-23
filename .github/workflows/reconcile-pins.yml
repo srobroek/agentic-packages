@@ -63,6 +63,7 @@ env:
 jobs:
   reconcile:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Mint release-app token
         id: app-token
@@ -72,7 +73,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Checkout main
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           ref: main
           fetch-depth: 0
@@ -200,7 +201,7 @@ jobs:
           commit_group() {
             local sev="$1" type="$2" subject="$3"
             local files
-            files=$(python3 -c "import json;print('\n'.join(json.load(open('.reconcile-groups.json'))['$sev']))")
+            files=$(python3 -c "import json,sys; print('\n'.join(json.load(open('.reconcile-groups.json'))[sys.argv[1]]))" "$sev")
             [ -z "$files" ] && return 0
             echo "$files" | tr '\n' '\0' | xargs -0 git add --
             git commit -m "$type: $subject"

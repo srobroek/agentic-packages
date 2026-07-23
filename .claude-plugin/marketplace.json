@@ -67,54 +67,6 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
-      "name": "agent-luna-high",
-      "description": "Explicit Luna high-effort agent profile for demanding bounded analysis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-high"
-    },
-    {
-      "name": "agent-luna-low",
-      "description": "Explicit Luna low-effort agent profile for tiny mechanical tasks.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-low"
-    },
-    {
-      "name": "agent-luna-medium",
-      "description": "Explicit Luna medium-effort agent profile for bounded exploration and synthesis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-medium"
-    },
-    {
-      "name": "agent-luna-xhigh",
-      "description": "Explicit Luna maximum-effort agent profile for bounded implementation and debugging.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-luna-xhigh"
-    },
-    {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
       "version": "1.2.1",
@@ -197,54 +149,6 @@
       ],
       "category": "quality",
       "source": "./packages/agent-reviewer-low"
-    },
-    {
-      "name": "agent-sol-high",
-      "description": "Explicit Sol high-effort agent profile for complex cross-cutting work.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-high"
-    },
-    {
-      "name": "agent-sol-low",
-      "description": "Explicit Sol low-effort agent profile for mechanical validation and review.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "quality",
-      "source": "./packages/agent-sol-low"
-    },
-    {
-      "name": "agent-sol-medium",
-      "description": "Standard Sol medium-effort agent profile for general implementation and analysis.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-medium"
-    },
-    {
-      "name": "agent-sol-xhigh",
-      "description": "Explicit Sol maximum-effort profile for exceptional bounded reasoning.",
-      "version": "1.1.0",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-sol-xhigh"
     },
     {
       "name": "agent-worker",
@@ -947,7 +851,7 @@
     },
     {
       "name": "mcp-codebase-memory",
-      "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets).",
+      "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). Available but not wired by default; requires explicit installation and index build.",
       "version": "1.2.0",
       "tags": [
         "mcp",
@@ -1116,6 +1020,24 @@
       ],
       "category": "project-lifecycle",
       "source": "./packages/project-lifecycle"
+    },
+    {
+      "name": "project-setup",
+      "description": "Bootstrap a new repo or add a package with explicit setup choices, APM package selection, tooling, and verification. Use when creating a project, adding a monorepo package, choosing bundles/skills/agents/MCP packages, or running setup scripts.",
+      "version": "0.5.2",
+      "tags": [
+        "skill",
+        "lifecycle",
+        "setup",
+        "scaffold"
+      ],
+      "category": "project-lifecycle",
+      "source": {
+        "source": "github",
+        "repo": "srobroek/project-setup",
+        "ref": "project-setup-v0.5.2",
+        "sha": "c7c1368986cf039532709eb63fb3fc7d1c8f411f"
+      }
     },
     {
       "name": "python-quality",
