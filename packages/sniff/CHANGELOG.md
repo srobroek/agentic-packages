@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.0...sniff--v3.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** converge Claude effort and Codex reasoning_effort pins ([#663](https://github.com/srobroek/agentic-packages/issues/663)) ([9f149f2](https://github.com/srobroek/agentic-packages/commit/9f149f2cda79e819ce25b37e5eba2ffdd52fd115))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/sniff--v3.1.0...sniff--v3.2.0) (2026-07-21)
 
 

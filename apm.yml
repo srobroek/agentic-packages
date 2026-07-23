@@ -1,12 +1,12 @@
 name: srobroek-agentic
-version: 16.12.0
+version: 17.0.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
 targets:
-- claude
-- codex
+  - claude
+  - codex
 includes: auto
 scripts:
   build-readme-tables: python3 .apm/scripts/build-readme-tables.py
@@ -34,20 +34,20 @@ scripts:
   test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
   test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
-    apm run install && apm compile --target codex,claude &&
-    apm run inject-agent-models && apm run audit-agentic-assets && apm run
+    apm run install && apm compile --target codex,claude && apm run
+    inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
   strategy: distributed
   source_attribution: true
   exclude:
-  - packages/**
-  - templates/**
-  - .apm/instructions/70-language-typescript.instructions.md
-  - .apm/instructions/71-language-python.instructions.md
-  - .apm/instructions/72-language-go.instructions.md
-  - .apm/instructions/73-language-rust.instructions.md
-  - .apm/instructions/74-language-terraform.instructions.md
+    - packages/**
+    - templates/**
+    - .apm/instructions/70-language-typescript.instructions.md
+    - .apm/instructions/71-language-python.instructions.md
+    - .apm/instructions/72-language-go.instructions.md
+    - .apm/instructions/73-language-rust.instructions.md
+    - .apm/instructions/74-language-terraform.instructions.md
   placement:
     min_instructions_per_file: 1
 marketplace:

@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v4.0.0...orchestrate--v4.1.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
+
+### Bug Fixes
+
+* **agents:** converge Claude effort and Codex reasoning_effort pins ([#663](https://github.com/srobroek/agentic-packages/issues/663)) ([9f149f2](https://github.com/srobroek/agentic-packages/commit/9f149f2cda79e819ce25b37e5eba2ffdd52fd115))
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v3.13.0...orchestrate--v4.0.0) (2026-07-23)
 
 

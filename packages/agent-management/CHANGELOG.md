@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.1...agent-management--v1.2.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **inject-agent-models:** tolerate identical duplicate mappings across packages ([#669](https://github.com/srobroek/agentic-packages/issues/669)) ([c2eda86](https://github.com/srobroek/agentic-packages/commit/c2eda860c2caf85c5645b323779f5c669a8adaf2))
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.0...agent-management--v1.2.1) (2026-07-22)
 
 

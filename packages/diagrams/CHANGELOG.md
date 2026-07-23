@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/diagrams--v2.1.0...diagrams--v2.1.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/diagrams--v2.0.0...diagrams--v2.1.0) (2026-07-16)
 
 

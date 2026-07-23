@@ -1,5 +1,5 @@
 name: diagrams
-version: 2.1.0
+version: 2.1.1
 description: >-
   Diagram generation bundle for editable draw.io diagrams, visual Excalidraw
   diagrams, and D2 architecture or flow diagrams.
@@ -16,4 +16,5 @@ dependencies:
   apm:
     - Agents365-ai/drawio-skill#89ff88cb27cd876d9085071d4f73c2502d0492e4
     - coleam00/excalidraw-diagram-skill#8646fcc9f74f38539c6cdb4c969723336a96ddcd
-    - neuro-synapse/network-topology-agent/.claude/skills/d2-diagram#6c342cef17238ab6c296711ef92c8a7cf83c064f
+    - >-
+      neuro-synapse/network-topology-agent/.claude/skills/d2-diagram#6c342cef17238ab6c296711ef92c8a7cf83c064f
