@@ -7,10 +7,8 @@ description: >-
   workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
   workflow-reviewer, workflow-advisor, integration-gatekeeper, docs-guard,
   data-metrics-summarizer, lint-guard, and ledger-scribe. Includes deterministic
-  scope, discovery, claim,
-  message,
-  decision, queue, and conflict scripts plus shared PR shepherd landing
-  safeguards. Requires the bd CLI.
+  scope, discovery, claim, message, decision, queue, and conflict scripts plus
+  shared PR shepherd landing safeguards. Requires the bd CLI.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

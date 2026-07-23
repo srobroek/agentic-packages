@@ -1,8 +1,6 @@
 ---
 name: docs-guard
-description: >-
-  Read-only docs guard in an `orchestrate` run: validates documentation edits
-  and docs-focused lint output before handoff.
+description: Checks scoped documentation and documentation lint findings before orchestrate review.
 model: haiku
 effort: medium
 permissionMode: plan
@@ -46,15 +44,15 @@ lightweight checks and triage.
 
 ## Decision
 
-- `status=block`: one or more actionable issues needing human attention.
-- `status=warn`: mostly advisory issues (non-blocking).
-- `status=pass`: no actionable issues.
+- `BLOCK`: one or more actionable issues need a documentation change.
+- `WARN`: only advisory or inconclusive issues remain.
+- `PASS`: no actionable issues remain.
 
 ## Output
 
 Reply to `main` as:
 
-`DOCS-GUARD <node> status=<pass|warn|block> items=<N>`
+`DOCS-GUARD <node> verdict=PASS|WARN|BLOCK items=<N>`
 
 For non-pass, include a numbered list of the top 8 findings:
 
@@ -62,7 +60,8 @@ For non-pass, include a numbered list of the top 8 findings:
 
 Then add:
 
-- `next=<recheck|ignore>` for `warn`
-- `next=<fix|reassign>` for `block`
+- `next=RECHECK|IGNORE` for `WARN`
+- `next=FIX|REASSIGN` for `BLOCK`
 
-Maximum 80 words outside the list.
+CAP 80 words clean, 160 words with findings.
+MUST Never reprint file contents, diffs, or the caller's claim.
