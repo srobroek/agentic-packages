@@ -1,6 +1,6 @@
 {
   "name": "language-rust",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Hobson's systems-programming specialists.",
   "author": {
     "name": "Sjors Robroek"
