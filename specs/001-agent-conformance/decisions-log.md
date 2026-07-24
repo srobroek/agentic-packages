@@ -61,13 +61,30 @@ and on the gate beads.
   contracts, chronic-flake→FAIL promotion, word-count pinned to
   `len(reply.split())`.
 
+- **Implementation progress** (2026-07-24): T001–T008 (engine, 47 pytest
+  green), T012 (sweep-driver SKILL.md), T014 (per-PR conformance-check gate
+  in test.yml, wired into tests-gate) landed on branch 001-agent-conformance.
+  T009/T010/T011 (fixtures + skips, all 34 agents) delegated to two parallel
+  coder subagents; T013 (live validation) pending fixtures.
+- **Interleaved user-priority work** (same day): PR #681
+  (hooks-subagent-fork fork_turns guard) shipped ready-for-review on its own
+  branch, merge bead orc-hgq. Binary-verified: Codex treats an omitted
+  fork_turns as a full-history fork, so omitted is denied too; default cap 3
+  (not 5) with the tradeoff rationale in the guard header.
+
 ## Open questions for the user
 
-- **Disk pressure (2026-07-24)**: the machine hit 100% full mid-run (ENOSPC),
-  then recovered to ~7 GiB free without intervention. Largest reclaimable
-  caches if it recurs: `~/Library/Caches/Mozilla.sccache` 13G,
-  `Homebrew` 3.8G (`brew cleanup`), `pip` 1.3G. Not deleted — user data,
-  needs your call.
+- **Disk pressure (2026-07-24)**: the machine twice hit 100% full mid-run
+  (ENOSPC); macOS purged local snapshots and recovered (~17 GiB free after
+  the second incident). Active growers observed: `~/.finch/.disks` 3.4G,
+  `~/.mempalace/palace/chroma.sqlite3` 688M. Largest reclaimable caches if it
+  recurs: `~/Library/Caches/Mozilla.sccache` 13G, `Homebrew` 3.8G
+  (`brew cleanup`), `pip` 1.3G. Not deleted — user data, needs your call.
+  Project-side scan was clean: no stale worktrees (`git worktree prune`
+  no-op, `~/personal/dev/.worktrees` empty, repo `.git` 15M), no merged-stale
+  local branches; remote branches `worktree-worktree-93356` (7 unmerged
+  commits), `bot/reconcile-internal-pins` (3), `renovate/pytest-9.x` (1) all
+  carry unmerged work — deleting them is a user call, savings negligible.
 - FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now depends on parallel
   Task-spawn batching inside one session; if real sweeps exceed it, the fix
   is raising batch width, not architecture.
