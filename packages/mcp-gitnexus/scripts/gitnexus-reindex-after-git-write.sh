@@ -36,5 +36,5 @@ if [ -f "$LOCK" ]; then
 fi
 touch "$LOCK"
 
-nohup sh -c "cd '$PRIMARY' && gitnexus analyze --embeddings >/dev/null 2>&1; rm -f '$LOCK'" >/dev/null 2>&1 &
+nohup sh -c "cd '$PRIMARY' && gitnexus analyze >/dev/null 2>&1; rm -f '$LOCK'" >/dev/null 2>&1 &
 exit 0
