@@ -1,6 +1,6 @@
 ---
 name: shepherd
-description: In-run merge shepherd for a bead-as-brief orchestrate run. Lands approved node branches via draft PRs and the merge slot, manages PR state and audit only (never edits content), reclaims worktrees on merge, and ticks gates each cycle. Distinct from the standalone pr-shepherd daemon.
+description: In-run merge shepherd. Lands approved branches via draft PRs, manages PR state only, reclaims worktrees.
 model: sonnet
 effort: high
 permissionMode: acceptEdits

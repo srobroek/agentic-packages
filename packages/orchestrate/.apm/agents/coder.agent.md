@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Persistent domain-scoped implementer in a bead-as-brief orchestrate run. Claims one node at a time, delegates implementation bulk to throwaway children, and self-commits to its worktree branch. Requires Serena semantic tools when available.
+description: Delegation-first domain specialist. Claims one node, delegates bulk to children, self-commits.
 model: sonnet
 effort: high
 permissionMode: acceptEdits

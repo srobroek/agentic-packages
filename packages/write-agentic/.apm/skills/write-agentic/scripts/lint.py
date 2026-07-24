@@ -154,6 +154,38 @@ def parse_xlint(text: str) -> tuple[set[str], str]:
     return codes, reason
 
 
+def _has_rules_contract(path: Path, fm: dict) -> bool:
+    """True if this agent has a companion rules file that declares a
+    completion contract, i.e. .apm/rules/<name>.rules.json with a non-empty
+    `completion` list. The agent file lives at .apm/agents/<name>.agent.md, so
+    the rules dir is a sibling: ../rules/. Name comes from frontmatter, falling
+    back to the filename stem. Any read/parse error → False (no contract)."""
+    name = (fm.get("name") or "").strip() or path.name.split(".")[0]
+    rules_dir = path.parent.parent / "rules"
+    # Effort-tier variants (coder-low/-medium/-high/-xhigh) share the base's
+    # rules file (same contract, different effort). Try the exact name, then
+    # the name with a trailing -<tier> suffix stripped.
+    candidates = [name]
+    m = re.match(r"^(.*)-(low|medium|high|xhigh)$", name)
+    if m:
+        candidates.append(m.group(1))
+    data = None
+    for cand in candidates:
+        try:
+            import json as _json
+            data = _json.loads((rules_dir / f"{cand}.rules.json").read_text(encoding="utf-8"))
+            break
+        except Exception:
+            continue
+    if data is None:
+        return False
+    completion = data.get("completion")
+    # A completion checklist OR an authority matrix both constitute a
+    # machine-enforced output/behaviour contract (T2 actors like the shepherd
+    # carry authority-only contracts with no per-node completion checklist).
+    return bool(completion) or bool(data.get("authority"))
+
+
 def lint(path: Path) -> list[tuple[str, str, str]]:
     """Return [(severity, code, message)]."""
     raw: list[tuple[str, str, str]] = []
@@ -204,17 +236,25 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             if m:
                 err("E3", f"line {i}: model name '{m.group(0)}' in prose — route via steering-subagent-routing")
 
-    # E5 agent output contract
+    # E5 agent output contract.
+    # A bead-as-brief agent's output contract is its companion rules file
+    # (.apm/rules/<name>.rules.json with a `completion` checklist) — the
+    # machine-enforced spec of what it must produce (REPORTED comment, push,
+    # handoff label, ...). That is strictly stronger than a prose section and
+    # avoids duplicating the contract in two places, so a rules-backed agent
+    # satisfies E5 without a prose "Output contract" heading.
     if kind == "agent":
-        if not re.search(r"^#+\s*Output|^OUTPUT", body, re.M):
-            err("E5", "agent has no Output contract section")
+        if _has_rules_contract(path, fm):
+            pass  # rules file IS the output contract
+        elif not re.search(r"^#+\s*Output|^OUTPUT", body, re.M):
+            err("E5", "agent has no Output contract section (and no .apm/rules/<name>.rules.json)")
         else:
             if not CAPS_ENUM.search(body):
                 warn("W5", "no CAPS verdict enum (PASS|FAIL style) found in output contract")
             if not re.search(r"\bCAP\b|\b\d+\s*w(ords)?\b|≤\s*\d+", body):
                 err("E5", "output contract has no word cap")
-        if not re.search(r"never reprint|paths? only|path:line", body, re.I):
-            warn("W5", "no no-reprint rule in output contract")
+            if not re.search(r"never reprint|paths? only|path:line", body, re.I):
+                warn("W5", "no no-reprint rule in output contract")
 
     # E6 size caps
     n_lines = len([l for l in lines if l.strip()])

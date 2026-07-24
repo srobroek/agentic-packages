@@ -1,3 +1,8 @@
+---
+x-lint:
+  allow: [E3]
+  reason: "design reference documenting the model-routing tier table; model names are the subject matter, not instructions to load a model"
+---
 # Bead-as-Brief — orchestrate v2 architecture
 
 Status: Accepted — bead orc-3v0. Supersedes the ASSIGN-prompt contract in
