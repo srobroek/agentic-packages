@@ -115,6 +115,7 @@
   "packages/steering-subagent-routing": "3.2.2",
   "packages/steering-toolchain-defaults": "2.1.0",
   "packages/steering-tools-scripts": "1.1.0",
+  "packages/toolchain-cache-policy": "0.0.0",
   "packages/typescript-quality": "2.1.0",
   "packages/user-journeys": "0.6.0",
   "packages/verify": "2.1.0",

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# orchestrate: deterministic merge-conflict + CI probe for the Integration Gatekeeper.
+# orchestrate: deterministic merge-conflict + CI probe for the Shepherd.
 #
 # Predicts whether a branch merges cleanly into a base WITHOUT mutating any tree
-# (git merge-tree), and reports CI status for its PR if one exists. The Gatekeeper
+# (git merge-tree), and reports CI status for its PR if one exists. The Shepherd
 # leaves merge ordering to successful merge-slot acquisition and pushback from
 # these facts instead of guessing.
 #

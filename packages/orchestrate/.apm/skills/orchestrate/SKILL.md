@@ -36,7 +36,7 @@ Role: lead session / orchestrator.
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
 3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: workflow-coder`,
+   tool background subagents (`subagent_type: builder`,
    `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
@@ -46,22 +46,22 @@ Role: lead session / orchestrator.
    worktree and record its branch/path on the bead. Conversational agents that
    use no tools and the primary human are exempt. Writers self-commit, push,
    and report branch + worktree path.
-5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Coder
+5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Builder
    blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
-   idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
+   idles; you broker a `advisor` (or debugger, per `roles.md`) and
    relay `ADVICE` back.
-6. **You own review per code node; resume coders, never re-spawn.** Per
-   code-writing node: spawn a `workflow-reviewer` against the coder's branch.
-   Coder ends its turn after `REPORTED` → becomes a resumable background
+6. **You own review per code node; resume builders, never re-spawn.** Per
+   code-writing node: spawn a `reviewer` against the builder's branch.
+   Builder ends its turn after `REPORTED` → becomes a resumable background
    subagent. Retain
    its `agentId`/name; drive fix rounds via SendMessage to that handle
-   (auto-resumes with context + worktree). Never spawn a fresh coder for a
+   (auto-resumes with context + worktree). Never spawn a fresh builder for a
    node under review. Dismiss only on approval + merge.
 7. **Comms protocol is mandatory.** Claude's skill-scoped `SubagentStart` hook
    auto-injects `comms-block.md` into subagents. Codex does not run skill
    frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
    brief. Teammates are not subagents either; include it in their briefs.
-8. **Durable state, on-demand reporters.** The integration gatekeeper is the
+8. **Durable state, on-demand reporters.** The shepherd is the
    only persistent service. Invoke `audit-reporter` on demand for a bounded
    status or close-out report; it reads Beads and exits. State lives in Beads,
    never in a process or a second graph.
@@ -89,32 +89,32 @@ Role: lead session / orchestrator.
    `bd swarm status <epic>` for health checks. The swarm is the DAG runtime;
    never recreate it in `graph.py`, JSON, or an in-memory ledger.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
-   Match task→agent via `references/roles.md`. Bundle roles: `workflow-coder`,
-   `workflow-reviewer`, `workflow-advisor`, `integration-gatekeeper`,
+   Match task→agent via `references/roles.md`. Bundle roles: `builder`,
+   `reviewer`, `advisor`, `shepherd`,
    `audit-reporter`. Non-code roles → built-ins (`Explore`, `general-purpose`);
    broad research → fan-out/fan-in in `roles.md`.
-4. Spawn `integration-gatekeeper` once; invoke `audit-reporter` on demand with
+4. Spawn `shepherd` once; invoke `audit-reporter` on demand with
    the epic id and artifacts path for status or close-out reporting.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
-   background `workflow-coder` subagent (`subagent_type: workflow-coder`,
+   background `builder` subagent (`subagent_type: builder`,
    Worktrunk-prepared worktree) with brief per `references/spawn-brief.md` (bead
-   id, scope, base, epic id, artifacts path, protocol). The coder claims its
+   id, scope, base, epic id, artifacts path, protocol). The builder claims its
    bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
    metadata — the resumable record. (teammates: see Rule 7). Agents record
    their own audit events + comments.
-6. On `REPORTED`: set `state:in_review` and spawn `workflow-reviewer` against
-   branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
-   `agentId` as `FIX` (resumes same coder; never a new one). On `BLOCKED`:
-   spawn `workflow-advisor`/debugger, relay `ADVICE` back, dismiss it. Same
+6. On `REPORTED`: set `state:in_review` and spawn `reviewer` against
+   branch/worktree. Relay `REVIEW` findings via SendMessage to builder's
+   `agentId` as `FIX` (resumes same builder; never a new one). On `BLOCKED`:
+   spawn `advisor`/debugger, relay `ADVICE` back, dismiss it. Same
    reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
-   state=approved`, send `APPROVE <node>` to the gatekeeper — the merge
+   state=approved`, send `APPROVE <node>` to the shepherd — the merge
    handoff trigger.
-7. Gatekeeper merges approved branches opportunistically under the exclusive merge slot
+7. Shepherd merges approved branches opportunistically under the exclusive merge slot
    (`bd merge-slot create` once, then `bd merge-slot acquire`/`release` without
    `--wait`), conflict-guarded
    (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`
-   + `bd gate check`; pushes conflicts back to coders. Dismiss coder only
+   + `bd gate check`; pushes conflicts back to builders. Dismiss builder only
    after its node merges; sweep its worktree. At recycle points
    (`references/lifecycle.md`), check run spend vs budget; over → finish
    in-flight work, stop fanning out.

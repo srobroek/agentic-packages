@@ -4,9 +4,8 @@ description: >-
   Coordinates parallel subagents through Beads-backed DAGs, claims, threaded
   replies, decisions, review, and merge state. Supports exact, specialist,
   generic-pull, writable-fallback, and read-only research dispatch. Bundles
-  workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
-  workflow-reviewer, workflow-advisor, integration-gatekeeper, and
-  ledger-scribe. Quality triage roles (docs-guard, lint-guard,
+  coder (with effort-tier variants), researcher, reviewer, advisor,
+  shepherd, and scribe. Quality triage roles (docs-guard, lint-guard,
   data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come
   from the agent-quality-guards dependency. Includes deterministic scope,
   discovery, claim, message, decision, queue, and conflict scripts plus shared
@@ -19,6 +18,8 @@ targets:
   - codex
 includes:
   - .apm/agents
+  - .apm/hooks
+  - .apm/rules
   - .apm/skills/orchestrate/SKILL.md
   - .apm/skills/orchestrate/references
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py

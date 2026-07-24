@@ -27,7 +27,7 @@ Everything else → subagents.
 - **Small teams only.** 3–5 members on efficient tiers — not a
   uniform top-tier team (see steering-subagent-routing).
 - **Teammates cannot spawn background subagents** (in-process) — the
-  orchestrator-brokered advisor and the persistent gatekeeper/scribe, which rely
+  orchestrator-brokered advisor and the persistent shepherd/scribe, which rely
   on that, do not work inside a team. Use a team only as a bounded burst for the
   collaborative sub-problem, then return to the subagent pipeline.
 - **No nested teams; one team per session; lead is fixed.** Address teammates by

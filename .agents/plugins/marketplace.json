@@ -1289,6 +1289,18 @@
       "category": "steering"
     },
     {
+      "name": "toolchain-cache-policy",
+      "source": {
+        "source": "local",
+        "path": "./packages/toolchain-cache-policy"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "typescript-quality",
       "source": {
         "source": "local",

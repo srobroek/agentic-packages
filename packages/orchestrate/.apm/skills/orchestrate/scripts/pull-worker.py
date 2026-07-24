@@ -291,7 +291,7 @@ def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
     if dispatch not in (None, "", "generic") or selected_agent not in (
         None,
         "",
-        "workflow-pull-worker",
+        "coder",
     ):
         raise PullWorkerError(
             "routing_envelope",

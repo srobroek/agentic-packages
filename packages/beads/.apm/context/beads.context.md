@@ -69,6 +69,7 @@ DEFAULT Read only the relevant workflow contract:
 - [Semantic audit and reporting](beads.audit.context.md)
 - [Formulas, molecules, bonds, and wisps](beads.composition.context.md)
 - [Swarms and merge slots](beads.coordination.context.md)
+- [Orchestration doctrine: claim⟺contract, wisps, links, labels, gates](beads.orchestration-doctrine.context.md)
 
 FINDINGS
 DEFAULT Unactioned findings (audits, deferred items, failed checks) become beads

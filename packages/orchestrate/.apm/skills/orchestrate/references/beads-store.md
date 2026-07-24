@@ -204,12 +204,12 @@ bd update <bead> --status <status>                    # only where status change
 |---|---|---|---|
 | `pending` | `open` | `state:pending` | orchestrator at `bd create` |
 | `ready` | `open` | — (derived, never stored) | `bd ready --label orc-node --parent <epic>` + clean `scope-check.py` |
-| `working` | `in_progress` | `state:working` | coder: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
-| `reported` | `in_progress` | `state:reported` | coder, after push |
+| `working` | `in_progress` | `state:working` | builder: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
+| `reported` | `in_progress` | `state:reported` | builder, after push |
 | `in_review` | `in_progress` | `state:in_review` | orchestrator at reviewer spawn |
 | `changes_requested` | `in_progress` | `state:changes_requested` | orchestrator on `REVIEW verdict=changes` |
 | `approved` | `in_progress` | `state:approved` | orchestrator on `REVIEW verdict=approve` |
-| `merged` | `closed` | `state:merged` | gatekeeper: `set-state` then `bd close <bead> --reason merged` |
+| `merged` | `closed` | `state:merged` | shepherd: `set-state` then `bd close <bead> --reason merged` |
 | `dismissed` | `closed` | `state:dismissed` | orchestrator: `set-state` then `bd close <bead> --reason dismissed` |
 | `failed` | `blocked` | `state:failed` | orchestrator: `set-state` then `bd update <bead> --status blocked` |
 | `waiting_human` | `in_progress` | `state:waiting_human` | orchestrator on `ASK`; add `bd gate create --type=human --blocks <bead>` when the node has not started yet |
@@ -231,9 +231,9 @@ the work physically lives. Two stamping points, no exceptions:
 
 | When | Who | Stamp |
 |---|---|---|
-| Claim (immediately after `--claim`) | coder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
-| Report (after push) | coder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
-| Merge | gatekeeper | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
+| Claim (immediately after `--claim`) | builder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
+| Report (after push) | builder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
+| Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
 Add a `repo` key when the node's work lands in a different repository than the
 run epic's. `--metadata` merges with existing keys (verified on bd 1.1.0), so
@@ -277,10 +277,10 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 - State-carrying verbs additionally flip status/label per the mapping table;
   `bd set-state` emits its own event bead, so transitions are double-anchored.
 
-## Gatekeeper primitives
+## Shepherd primitives
 
 - **Mutual exclusion:** `bd merge-slot create` once per run (idempotent), with
-  a stable holder such as `run-<id>-gatekeeper`. Acquire without `--wait`;
+  a stable holder such as `run-<id>-shepherd`. Acquire without `--wait`;
   contention is advisory, so report the current holder and retry after release.
   Always release on success, conflict, CI wait, and failure. On restart,
   `bd merge-slot check` and verify remote state before releasing a slot held by

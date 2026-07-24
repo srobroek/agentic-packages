@@ -5,12 +5,12 @@ needs to act and participate in the run — bead id, owned scope, base ref, run 
 id, artifacts path, deterministic commands, protocol pointers, tool guidance, and
 escalation rules — templates below.
 
-## Coder brief — copyable shape
+## Builder brief — copyable shape
 
 ```
 ASSIGN <node>
   title:    <one line>
-  bead:     <bead-id>                            # your node bead; BEADS_ACTOR=coder-<node>
+  bead:     <bead-id>                            # your node bead; BEADS_ACTOR=builder-<node>
   scope:    <globs you own; stay inside them>
   base:     <ref@sha>
   epic:     <epic-bead-id>
@@ -19,7 +19,7 @@ ASSIGN <node>
   commands:
     claim:  bd update <bead> --claim   THEN   bd update <bead> --metadata '{"branch":"<b>","worktree":"<abs>","base_sha":"<sha>"}'
     state:  bd set-state <bead> state=<name> --reason "<why>"
-    log:    bd audit record --actor coder-<node> --kind tool_call --tool-name orc.<verb> --issue-id <bead>
+    log:    bd audit record --actor builder-<node> --kind tool_call --tool-name orc.<verb> --issue-id <bead>
             + bd comment <bead> "<VERB> <node> …fields… output_ref=<artifact path>"
     verify: <project verify cmd, e.g. `just test` / `cargo test -p <crate>`>
   protocol: on block → BLOCKED kind:<design|debug> to main (do NOT spawn). After green:
@@ -30,22 +30,22 @@ ASSIGN <node>
   ASK:      raise ASK <node> for anything needing product intent not covered here.
 ```
 
-The coder's `--claim` + metadata stamp is the resumable record (assignee, branch,
+The builder's `--claim` + metadata stamp is the resumable record (assignee, branch,
 worktree, base) — see `references/lifecycle.md` (Resume) and the git-anchor
 contract in `references/beads-store.md`.
 
 ## Persistent-infra brief (once each)
 
-Give the **gatekeeper** only the epic bead id, the artifacts path, and its job
+Give the **shepherd** only the epic bead id, the artifacts path, and its job
 pointer. Invoke the audit reporter separately when a report is needed.
-Example: `You are the run gatekeeper. epic=<bead-id>. Integrate approved branches
+Example: `You are the run shepherd. epic=<bead-id>. Integrate approved branches
 under the merge slot without waiting; if held, report the holder, defer, and
 retry. Order follows successful acquisition, not FIFO. Message me MERGED/CONFLICT. Await
 approved nodes.`
 
 ## Reviewer brief (one per code node)
 
-Spawn a `workflow-reviewer` in a separately prepared Worktrunk worktree:
+Spawn a `reviewer` in a separately prepared Worktrunk worktree:
 `Review node <node> (bead <bead-id>): branch <b> at worktree <wt> (base <ref>).
 Scope <globs>. Report REVIEW <node> verdict=approve|changes; for changes give a
 numbered list, each` file:line — problem — required action `(one clause each).
@@ -55,7 +55,7 @@ Escalate the reviewer a tier in the brief when the diff is complex or security-c
 
 ## Advisor / debugger brief
 
-Spawn a `workflow-advisor` (kind:design) or `debugger`/`general-purpose` (kind:debug)
+Spawn a `advisor` (kind:design) or `debugger`/`general-purpose` (kind:debug)
 in a separately prepared Worktrunk worktree whenever it will invoke tools;
-with the coder's question verbatim + the minimal code context from its `BLOCKED`.
-Reply ADVICE back in one call, read-only; relay to the coder, then dismiss.
+with the builder's question verbatim + the minimal code context from its `BLOCKED`.
+Reply ADVICE back in one call, read-only; relay to the builder, then dismiss.
