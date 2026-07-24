@@ -17,7 +17,6 @@ targets:
   - codex
 includes:
   - .apm/agents
-  - .apm/rules
   - .apm/instructions
   - .apm/skills/pr-shepherd/SKILL.md
   - .apm/skills/pr-shepherd/references

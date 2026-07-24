@@ -52,41 +52,14 @@ MUST Otherwise file `bd create --discovered-from:<merge-bead>`, label
   failures when detected.
 MUST Park: `bd dep add <merge-bead> <fix-bead>`, comment merge bead, release
   claim (`--assignee "" --status open`). Coder closing fix re-readies merge.
-DEFAULT Warm-context routing: a live orchestrator ROUTES the fix bead (resumes
-  or respawns the origin worker at it); it NEVER claims work itself. The
-  shepherd's contract ends at filing unassigned.
+DEFAULT Warm-context routing: a live orchestrator may claim the fix bead for
+  its origin worker; the shepherd's contract ends at filing unassigned.
 DEFAULT Non-blocking observations (flaky-but-passed, warnings) become
   `related`-linked beads or comments, not blocking deps.
 
 PICKUP
 DEFAULT Workers poll `bd ready --assignee <me> --json` first, then
   `bd ready --label agent:<kind> --unassigned --json`.
-
-CONTENT IS READ-ONLY
-MUST Manage PR STATE and audit only: `gh pr ready`/`merge`/`close`, merge-bead
-  metadata (`merge_sha`, `pr`), state transitions. NEVER push commits, edit PR
-  body or code, resolve conflicts, or amend a branch. Every content problem is
-  a bounce-back (fix bead), never an in-place fix. The command surface is
-  narrow — a `git push`/`git commit`/`gh pr edit` from the shepherd is a
-  contract violation.
-
-SHEEPDOG (per-repo singleton lease)
-MUST At most one shepherd per repo. On start, claim the repo's sheepdog wisp
-  (`[wisp:patrol] sheepdog <repo>`, `--wisp-type patrol`); claim refusal = a
-  live shepherd already owns the repo → exit. Touch the sheepdog each patrol
-  cycle; a 24h-stale sheepdog is the dead-shepherd signal for recovery.
-
-WORKTREE RECLAMATION (wipe-on-merge)
-DEFAULT On merge-bead close, an unblocked `[wisp:recovery] wipe-worktree <path>`
-  wisp (stamped at worktree creation, blocked by the merge bead) becomes
-  actionable; the shepherd patrol reclaims the worktree (`git worktree remove`
-  + branch delete) and closes the wisp. Crash-safe: abandoned runs leave wipe
-  wisps for the next patrol.
-
-GATE TICKING
-MUST Each patrol cycle, run `bd gate check --type=gh` to resolve gh:run/gh:pr
-  gates (they never self-resolve). This is how CI-blocked and external-PR beads
-  re-enter the ready frontier.
 
 MERGE SLOT
 MUST One `bd merge-slot create` per repo (idempotent); `acquire` without
