@@ -177,18 +177,19 @@ agent's fixtures execute; the report contains only that agent.
 - **FR-007**: The full-fleet run MUST emit a single machine-readable report
   plus a human-readable summary, listing every agent exactly once, and MUST
   persist the raw reply of every non-PASS case as an inspectable artifact.
-- **FR-008**: The runner MUST support scoping to a single agent or a single
+- **FR-008**: The suite MUST support scoping to a single agent or a single
   package for iteration, producing the same per-case verdicts as the fleet
   run; scoped runs MAY override the model explicitly, and any override MUST
   be recorded in the report so an overridden verdict is never mistaken for a
   shipped-configuration verdict.
 - **FR-009**: The LLM-in-the-loop suite MUST NOT run as a required per-PR
   check; the deterministic coverage/consistency checks alone MAY run per-PR.
-- **FR-010**: The runner MUST be non-interactive once invoked (no prompts,
-  deterministic exit codes, report written to a predictable path) and MUST
-  fail fast with an explicit configuration error when credentials are
-  unavailable — so that a later feature can wrap it in scheduled automation
-  without changes. Shipping any CI workflow is out of scope for this feature.
+- **FR-010**: The suite's deterministic components (its engine) MUST be
+  non-interactive once invoked (no prompts, deterministic exit codes, report
+  written to a predictable path) and MUST fail fast with an explicit
+  configuration error when the execution environment is unusable — so that a
+  later feature can wrap the suite in scheduled automation. Shipping any CI
+  workflow for the LLM sweep is out of scope for this feature.
 - **FR-011**: A deterministic consistency check MUST verify each case's
   encoded expectations (first-line pattern, caps) against the agent source's
   declared contract and fail on drift, so a contract edit cannot silently

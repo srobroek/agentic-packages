@@ -43,12 +43,13 @@ irrelevant — runner is Python; any shell entry point must honor it)
 **Project Type**: single package — `packages/agent-conformance` (clarify Q3)
 
 **Performance Goals**: full-fleet sweep < 30 min wall-clock (SC-002);
-single-agent scoped run < 3 min (SC-005); default 4 concurrent CLI calls
+single-agent scoped run < 3 min (SC-005); default 4-wide Task-spawn batches
 
-**Constraints**: per-case wall-clock timeout + `--max-budget-usd` cap
-(FR-012); non-interactive once invoked (FR-010); fixtures repo-local, no
-network beyond the LLM call (FR-013); LLM suite never a required PR check
-(FR-009)
+**Constraints**: per-case wall-clock timeout + reply-size budget checked at
+assert time (FR-012; monetary budget advisory in-session, enforced only in
+the headless fallback); engine non-interactive (FR-010); fixtures
+repo-local, no network beyond the LLM call (FR-013); LLM sweep never a
+required PR check — deterministic `check` may gate per-PR (FR-009)
 
 **Scale/Scope**: 34 agents across 13 packages today; discovery-driven
 (FR-001) so the count floats with the fleet

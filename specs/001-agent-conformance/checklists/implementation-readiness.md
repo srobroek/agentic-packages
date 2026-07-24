@@ -19,14 +19,15 @@
 
 ## Risk checks
 
-- [x] Cost bounded per case (--max-budget-usd) and per run (34 agents × ~2 cases × $1 cap worst-case ≈ $70 hard ceiling; typical ≪)
+- [x] Cost: in-session sweeps are subscription-covered (no metered spend); monetary budgets enforced only in the deferred headless fallback (per-case cap + $25 aggregate, orc-qrt)
 - [x] Interrupted-run behavior specified (JSONL journal + report rebuild)
 - [x] No new runtime dependencies beyond PyYAML (already CI baseline)
 - [x] Constitution check passed pre- and post-design (plan.md)
-- [ ] `--safe-mode` fidelity assumption unverified: headless `claude -p --safe-mode --system-prompt-file` as an agent-execution proxy is design-validated but not yet empirically probed against one real agent. **Mitigation**: T006 includes a smoke probe as its first commit; if fidelity fails, fall back is documented in R1 alternatives. Accepted risk, tracked in decisions-log.md.
+- [x] Execution fidelity: resolved by the R1 pivot — the sweep spawns
+  installed agents via the Task tool, the production path itself; the
+  headless-proxy fidelity question is mooted for v1 (deferred with orc-qrt).
 
 ## Notes
 
-- Single open item is an empirical unknown, not a requirements defect —
-  implementation (T006) resolves it by construction. Gate assessed PASS for
-  proceeding to analyze/implement.
+- Post-pivot re-evaluation: 13/13 pass. Gate assessed PASS for proceeding to
+  analyze/implement.

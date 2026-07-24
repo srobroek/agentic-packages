@@ -42,7 +42,8 @@ Derivation rules (mirrors write-agentic lint idioms):
 | `assert.required_patterns` | list[regex] | – | section/structure presence |
 | `assert.forbidden_patterns` | list[regex] | – | e.g. findings section absent in clean regime |
 | `assert.artifacts` | list[{path, line_pattern}] | – | side-effect files (FR-005) |
-| `timeout_s` | int | – | default 120 |
+| `timeout_s` | int | – | default 120; in-session: driver instruction + assert checks capture duration |
+| `max_reply_bytes` | int | – | default 65536; assert checks reply file size post-capture, ERROR on breach (FR-012) |
 | `budget_usd` | float | – | default 1.00 |
 
 Validation (in `check` mode, LLM-free):
@@ -69,7 +70,8 @@ safety).
 | `attempts` | list[Attempt] | see below |
 | `model`, `effort` | str | as invoked |
 | `model_source` | `pinned`\|`inherited-session`\|`override` | R6 |
-| `duration_s`, `cost_usd` | float | from CLI JSON envelope |
+| `duration_s` | float | wall-clock per case |
+| `cost_usd` | float \| null | null for in-session sweeps (no cost envelope); populated by the headless fallback only (orc-qrt) |
 
 `Attempt`: `{n, passed, failed_assertions: [{kind, detail}], reply_path,
 exit_code, duration_s}`. Raw reply persisted at `reply_path` for every

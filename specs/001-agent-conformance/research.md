@@ -70,7 +70,8 @@ inject, guard hooks) exactly as production spawns do — that *is* the shipped
 configuration under test; "fixture is the only context" applies to
 task-shaped input, not the runtime preamble. To make environment-induced
 drift diagnosable, `stage` records a `context_fingerprint` in the manifest
-(hash of the installed agent file + harness version + date); `report` carries
+(SHA-256, truncated to 16 hex chars, of installed-agent-file bytes +
+harness version + ISO date YYYY-MM-DD); `report` carries
 it so a verdict change with an unchanged agent file points at environment
 drift rather than contract drift.
 

@@ -26,15 +26,18 @@
  "cases":[ /* CaseResult objects, exactly one entry per agent-case */ ],
  "skips":[{"agent":"workflow-coder","reason":"…"}],
  "exit_code":1,
- "meta":{"claude_version":"2.1.198","harness_version":"0.1.0",
-         "jobs":4,"retries":2,"strict_flaky":false}}
+ "meta":{"harness_version":"0.1.0","claude_version":null,
+         "concurrency":4,"retries":2,"strict_flaky":false}}
 ```
 
 Invariants:
 - Every discovered agent appears ≥1 time across `cases`+`skips`, and any
   agent with zero entries fails the run with ERROR (defense-in-depth on top
   of `check`).
-- `model_overrides` non-null whenever `--model` was passed; consumers MUST
+- `meta.claude_version` is null for in-session sweeps (no CLI envelope);
+  the headless fallback populates it. `meta.concurrency` is the sweep
+  driver's batch width (skill-specified, default 4).
+- `model_overrides` non-null whenever a model override was used; consumers MUST
   treat overridden verdicts as non-shipped-config evidence (FR-008).
 
 ## `report.md`
