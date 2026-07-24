@@ -1,5 +1,5 @@
 ---
-name: workflow-advisor
+name: advisor
 description: >-
   Read-only design advisor in an `orchestrate` run: answers one blocked-coder
   question with ONE recommendation (`ADVICE`), then exits. Never implements.

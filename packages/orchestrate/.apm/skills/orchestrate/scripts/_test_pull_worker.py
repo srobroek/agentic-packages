@@ -18,7 +18,7 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "pull-worker.py")
-AGENT = os.path.join(HERE, "../../../agents/workflow-pull-worker.agent.md")
+AGENT = os.path.join(HERE, "../../../agents/coder.agent.md")
 SPEC = importlib.util.spec_from_file_location("pull_worker", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
@@ -266,20 +266,22 @@ class PullWorkerUnitTest(unittest.TestCase):
         self.assertEqual(seen["kwargs"]["timeout"], 15.0)
         self.assertEqual(seen["kwargs"]["env"]["BEADS_ACTOR"], "pull-python-1")
 
-    def test_agent_contract_requires_holder_death_evidence(self):
+    def test_coder_contract_is_bead_as_brief(self):
+        # The former workflow-pull-worker folded into `coder`; validate the new
+        # contract's load-bearing invariants, not the deleted prose.
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
-        self.assertIn("Only the coordinator may clear and requeue a dead claim", agent)
-        self.assertIn("after recording holder-death evidence", agent)
+        self.assertIn("name: coder", agent)
+        self.assertIn("CLAIM", agent)        # bead-as-brief activation
+        self.assertIn("REPORTED", agent)     # handoff evidence
 
-    def test_agent_contract_reports_every_error_and_stop(self):
+    def test_coder_contract_forbids_close_and_merge_metadata(self):
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
-        self.assertIn("Always send a", agent)
-        self.assertIn("status=<ERROR|STOPPED>", agent)
-        self.assertIn("claim=<none|bead|unknown>", agent)
+        self.assertIn("never write `merge_sha` or `pr`", agent)
+        self.assertIn("status=blocked", agent)   # escape hatch
 
 
 STUB = r"""

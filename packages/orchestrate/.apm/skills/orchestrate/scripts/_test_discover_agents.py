@@ -183,14 +183,11 @@ class DiscoverAgentsTest(unittest.TestCase):
 
         agents = {agent["name"]: agent for agent in self.collect(package_agents)}
 
-        self.assertEqual(agents["workflow-pull-worker"]["model"], "sonnet")
-        self.assertEqual(
-            agents["workflow-pull-worker"]["tools"],
-            "Read, Edit, Write, Bash, Grep, Glob",
-        )
-        self.assertEqual(agents["workflow-researcher"]["model"], "sonnet")
-        self.assertIn("WebSearch", str(agents["workflow-researcher"]["tools"]))
-        self.assertEqual(agents["workflow-worker"]["model"], "sonnet")
+        self.assertEqual(agents["coder"]["model"], "sonnet")
+        self.assertIn("Agent", str(agents["coder"]["tools"]))  # delegates to children
+        self.assertEqual(agents["researcher"]["model"], "sonnet")
+        self.assertIn("WebSearch", str(agents["researcher"]["tools"]))
+        self.assertEqual(agents["shepherd"]["model"], "sonnet")
 
     def test_quality_guard_package_agents_preserve_model_and_tools(self) -> None:
         package_agents = (

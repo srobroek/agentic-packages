@@ -1,7 +1,7 @@
 {
-  "agent": "workflow-researcher",
+  "agent": "researcher",
   "tier": "T1",
-  "_comment": "Read-only research node. Produces an artifact (output_ref under artifacts_dir), reports, hands off. Never writes git metadata or merge/verdict state — its restricted tool surface is why it stays a separate definition from domain-specialist.",
+  "_comment": "Read-only research node. Produces an artifact (output_ref under artifacts_dir), reports, hands off. Never writes git metadata or merge/verdict state — its restricted tool surface is why it stays a separate definition from coder.",
   "completion": [
     { "check": "output_ref", "require": "metadata.output_ref" },
     { "check": "handoff",    "require": "label ~ ^agent:" },

@@ -1,5 +1,5 @@
 {
-  "agent": "workflow-reviewer",
+  "agent": "reviewer",
   "tier": "T1",
   "_comment": "Fresh per node (resume only within a node's fix rounds). Claims a review wisp; writes a verdict line on the node + a GitHub review; on approve closes the wisp and swaps needs-review:<dim> -> reviewed:<dim>. Never pushes code, never closes/merges the node, never writes coder metadata.",
   "completion": [

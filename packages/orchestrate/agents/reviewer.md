@@ -1,5 +1,5 @@
 ---
-name: workflow-reviewer
+name: reviewer
 description: >-
   Independent read-only reviewer in an `orchestrate` run; uses Serena semantic
   tools when available to review one node's branch and report a verdict.

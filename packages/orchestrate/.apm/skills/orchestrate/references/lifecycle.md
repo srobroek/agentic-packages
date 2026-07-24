@@ -15,7 +15,7 @@ pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─�
    │                                                    │                   │ verdict=approve
    └──────────── deps closed + scope free ──────────────┘                   ▼
                                                                          approved
-                                             git: APPROVE → gatekeeper   │ non-git: evidence accepted
+                                             git: APPROVE → shepherd   │ non-git: evidence accepted
                                     CONFLICT ─► working (rebase)          │
                                                  │                        ▼
                                                  └────────► merged ───► dismissed
@@ -33,7 +33,7 @@ Blocked workers stay in `working` — `BLOCKED` is a message, not a node state.
 | `reported → in_review` | worker reports declared evidence; orchestrator spawns a different compatible reviewer |
 | `working` (blocked) | worker sends `BLOCKED kind:design\|debug`, idles, and spawns nothing; orchestrator brokers and relays `ADVICE` |
 | `changes_requested → working` | same worker applies exactly the `FIX` items; same reviewer re-reviews the delta |
-| `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; gatekeeper invokes N7's shared landing transaction, which revalidates identity/CI, serializes on the merge slot, proves the final base, releases, and closes |
+| `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; shepherd invokes N7's shared landing transaction, which revalidates identity/CI, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
 | `failed` | unrecoverable; set `state:failed` plus status `blocked`, log the error, and surface it |
@@ -45,7 +45,7 @@ subject sounds technical.
 
 | Evidence | Required completion proof | Terminal owner |
 |---|---|---|
-| `git` | pushed branch, commit SHAs, scoped verification, independent branch review | gatekeeper closes as `merged` |
+| `git` | pushed branch, commit SHAs, scoped verification, independent branch review | shepherd closes as `merged` |
 | `artifact` | absolute `output_ref`, method, verification, independent evidence review | orchestrator closes as `dismissed` |
 | `comment` | bead comment or audit-event ref, verification, independent evidence review | orchestrator closes as `dismissed` |
 | `external` | resource identity, read-back or before/after evidence, verification, independent evidence review | orchestrator closes as `dismissed` |
@@ -60,9 +60,9 @@ merge requirement.
 
 | Class | Agents | Rule |
 |---|---|---|
-| Persistent | Integration Gatekeeper, Ledger Scribe | spawned once, live the whole run, addressed via SendMessage — never polled |
+| Persistent | Shepherd, Scribe | spawned once, live the whole run, addressed via SendMessage — never polled |
 | Task-scoped | Directed worker or Generic pull worker; independent reviewer | kept alive across fix rounds; reviewer re-reviews deltas; dismissed only after merge or approved non-git closure. Never re-spawn a fresh worker for a live claim |
-| Ephemeral | Researcher gatherers/synthesizer, Workflow-advisor/debugger, Tiebreaker | spawn → return → maybe resume for follow-ups |
+| Ephemeral | Researcher gatherers/synthesizer, Advisor/debugger, Tiebreaker | spawn → return → maybe resume for follow-ups |
 
 Stopped background subagents auto-resume on SendMessage. Never re-spawn a fresh
 agent for the same live claim — it loses context and may create a second writer.
@@ -75,7 +75,7 @@ agent for the same live claim — it loses context and may create a second write
    `assignee`, directed or generic mode in `execution_dispatch`, branch/worktree
    or non-git resource scope, and the fine-grained `state:` label.
 3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
-   gatekeeper. Resume the N7 landing transaction, or use its evidence-gated
+   shepherd. Resume the N7 landing transaction, or use its evidence-gated
    recovery command after proving the exact actor lease is dead.
 4. Resume every live assignee by messaging its recovered handle. Never route an
    assigned bead to a generic queue. Treat an unassigned `in_progress` bead as
@@ -85,7 +85,7 @@ agent for the same live claim — it loses context and may create a second write
    pending or sent receipts identify the last completed delivery step. Only a
    matching ack suppresses replay. Normalize key-only migration records before
    SendMessage by stamping a pending receipt. Route records unmatched to the
-   run once through pr-shepherd. The gatekeeper resumes acknowledged, approved,
+   run once through pr-shepherd. The shepherd resumes acknowledged, approved,
    unmerged nodes from its startup scan; see
    `references/queue-watcher.md`.
 
@@ -128,10 +128,10 @@ That safe default prevents two workers from mutating the same scope.
 
 ## Recycle persistent infra to shed context
 
-The Gatekeeper and Scribe are restartable at a quiescent point because Beads
+The Shepherd and Scribe are restartable at a quiescent point because Beads
 and git are the source of truth.
 
-- **Gatekeeper:** recycle after a merge completes and the slot is released,
+- **Shepherd:** recycle after a merge completes and the slot is released,
   never during conflict negotiation.
 - **Scribe:** read-only; restartable anytime.
 - **Task workers:** never recycle mid-node. Their in-progress reasoning belongs

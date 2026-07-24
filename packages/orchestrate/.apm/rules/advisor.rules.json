@@ -1,5 +1,5 @@
 {
-  "agent": "workflow-advisor",
+  "agent": "advisor",
   "tier": "T1",
   "_comment": "Claims an escalation wisp, writes exactly one ADVICE comment on it, exits. Touches nothing else — no node writes, no state, no labels, no metadata.",
   "completion": [

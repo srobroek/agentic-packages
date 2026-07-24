@@ -14,9 +14,9 @@ This file adds the per-verb field table and a worked example.
 | `REPORTED` | coder → orch | node, verify, plus branch+commit(s)/PR for git evidence or `output_ref` for non-git evidence |
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
 | `FIX` | orch → coder | node, the exact items to address, reviewer id |
-| `CONFLICT` | gatekeeper → coder | node, with(node), files, required action |
-| `APPROVE` | orch → gatekeeper | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
-| `MERGED` | gatekeeper → orch | node, sha, base, verify_after_merge |
+| `CONFLICT` | shepherd → coder | node, with(node), files, required action |
+| `APPROVE` | orch → shepherd | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
+| `MERGED` | shepherd → orch | node, sha, base, verify_after_merge |
 | `DISMISS` | orch → coder | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, one exact nonempty question, impact, waiting actor, resume condition |
 | `NO_WORK` | generic worker → orch | run epic, queue activation, `reason:no-compatible-work` |
@@ -192,9 +192,9 @@ to: main   summary: "t3 approved"
 REVIEW t3  verdict: approve  note: both items resolved; delta re-reviewed
 ```
 
-**Handoff to the gatekeeper**
+**Handoff to the shepherd**
 ```
-to: gatekeeper  summary: "t3 approved, ready to integrate"
+to: shepherd  summary: "t3 approved, ready to integrate"
 APPROVE t3
 branch: coder/t3-auth-middleware
 base: main @ 3f9a1c2

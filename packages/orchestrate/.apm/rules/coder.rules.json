@@ -1,5 +1,5 @@
 {
-  "agent": "domain-specialist",
+  "agent": "coder",
   "tier": "T1",
   "_comment": "Single source of truth for the SubagentStop evaluator AND the generated 'Your bead contract' block in the agent definition (compile-time). Do not hand-edit the generated block. Lifecycle phases (reported/in_review/approved/...) are NOT bd statuses; they derive from status + labels + gates + review-wisp closure. A specialist never CLOSES its own node, so `closed` is the forbidden built-in status.",
   "completion": [

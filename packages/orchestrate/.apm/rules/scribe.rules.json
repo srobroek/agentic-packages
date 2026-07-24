@@ -1,5 +1,5 @@
 {
-  "agent": "ledger-scribe",
+  "agent": "scribe",
   "tier": "T2",
   "_comment": "T2 persistent batch consumer: drains ledger wisps on a timer gate, folds them into the epic run record, closes them. Per-transaction authority only — no completion checklist on a specific node claim; the enforced invariant is that it never mutates node beads and holds no claim at exit. deny_states/deny_metadata block any accidental node-state or delivery-metadata write.",
   "authority": {

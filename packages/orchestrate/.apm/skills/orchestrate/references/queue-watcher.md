@@ -19,7 +19,7 @@ limits outstanding readiness notifications. It is not the Beads merge lock.
 | Signature verification, debounce, PR ranking, REST repair | `release-queue-watch` |
 | Orchestrate node lookup and agent assignment | orchestrator |
 | Unmatched generic merge-bead lookup | `pr-shepherd` resolver |
-| Orchestrate PR/head revalidation | integration gatekeeper |
+| Orchestrate PR/head revalidation | integration shepherd |
 | Generic PR/head revalidation | PR shepherd |
 | Exclusive integration lock | `bd merge-slot` held by the selected integrator |
 
@@ -100,7 +100,7 @@ and `head_sha`.
 
 1. Apply all `requiredMetadata` in one `bd update`. A new dispatch atomically
    stamps `queue_dispatch` and `queue_dispatch_pending`.
-2. Send the persistent gatekeeper:
+2. Send the persistent shepherd:
 
    ```text
    APPROVE <node>
@@ -114,7 +114,7 @@ and `head_sha`.
    ```
 
 3. After SendMessage accepts the handoff, stamp
-   `queue_dispatch_sent=<identity-key>`. The gatekeeper validates the matching
+   `queue_dispatch_sent=<identity-key>`. The shepherd validates the matching
    pending or sent receipt and stamps `queue_dispatch_ack=<identity-key>` before
    authoritative revalidation.
 4. `status=replay` reuses pending or sent receipts. Apply an emitted legacy
@@ -130,10 +130,10 @@ delivery, not merge permission.
 
 Lifecycle resolution matches one active orchestrate node by `repo` and `pr`.
 A head mismatch is reported as `headChanged`; it is never trusted as the new
-anchor until the gatekeeper confirms GitHub.
+anchor until the shepherd confirms GitHub.
 
 - Approved nodes and `failed`, `merged`, or `closed` transitions set
-  `wakeGatekeeper=true`. Persist `queue_lifecycle`,
+  `wakeShepherd=true`. Persist `queue_lifecycle`,
   `queue_lifecycle_transition`, `queue_lifecycle_head`, and
   `queue_lifecycle_pending` atomically, then send:
 
@@ -149,13 +149,13 @@ anchor until the gatekeeper confirms GitHub.
   lifecycle: <lifecycleKey>
   ```
 
-  Stamp `queue_lifecycle_sent` after SendMessage. The gatekeeper stamps
+  Stamp `queue_lifecycle_sent` after SendMessage. The shepherd stamps
   `queue_lifecycle_ack` only after it revalidates and records the outcome.
 - `opened` or `updated` on an unapproved node is informational. Persist the
   resolver's atomic `queue_lifecycle_ack`; do not wake a merge actor.
 - A stale failure is a no-op after revalidation. Confirmed failure routes back
   to the coder. For a confirmed external merge, the approved head must still
-  equal GitHub's head; the gatekeeper passes the actual merge SHA to N7's
+  equal GitHub's head; the shepherd passes the actual merge SHA to N7's
   `verify-landed` transaction and closes only after final-base ancestry or
   exact-content proof. Confirmed close-without-merge is reported to the
   orchestrator; it is not silently treated as merged.
@@ -176,13 +176,13 @@ Replay the returned `dispatches` and `lifecycles` after applying any non-empty
 `requiredMetadata`. Invalid persisted identity stops that replay; log it rather
 than guessing. A current key with a receipt for another key, or a new record
 arriving before the current key is acknowledged, is invalid ownership state.
-Gatekeeper startup also resumes acknowledged approved nodes that have not
+Shepherd startup also resumes acknowledged approved nodes that have not
 merged.
 
 REST reconciliation belongs to the watcher. Initial reconciliation may emit
 records before `watcher-active`. On `webhook-error`, `reconcile-error`, malformed
 output, or watcher exit, surface the error and run one explicit `bd gate check`
-plus the existing gatekeeper/shepherd pass. Restart or stop the watcher; never
+plus the existing shepherd/shepherd pass. Restart or stop the watcher; never
 start a duplicate CI polling loop and never infer green or merged state from
 silence.
 

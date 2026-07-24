@@ -36,7 +36,7 @@ Role: lead session / orchestrator.
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
 3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: workflow-coder`,
+   tool background subagents (`subagent_type: coder`,
    `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
@@ -48,10 +48,10 @@ Role: lead session / orchestrator.
    and report branch + worktree path.
 5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Coder
    blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
-   idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
+   idles; you broker a `advisor` (or debugger, per `roles.md`) and
    relay `ADVICE` back.
 6. **You own review per code node; resume coders, never re-spawn.** Per
-   code-writing node: spawn a `workflow-reviewer` against the coder's branch.
+   code-writing node: spawn a `reviewer` against the coder's branch.
    Coder ends its turn after `REPORTED` → becomes a resumable background
    subagent. Retain
    its `agentId`/name; drive fix rounds via SendMessage to that handle
@@ -61,7 +61,7 @@ Role: lead session / orchestrator.
    auto-injects `comms-block.md` into subagents. Codex does not run skill
    frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
    brief. Teammates are not subagents either; include it in their briefs.
-8. **Durable state, on-demand reporters.** The integration gatekeeper is the
+8. **Durable state, on-demand reporters.** The shepherd is the
    only persistent service. Invoke `audit-reporter` on demand for a bounded
    status or close-out report; it reads Beads and exits. State lives in Beads,
    never in a process or a second graph.
@@ -89,28 +89,28 @@ Role: lead session / orchestrator.
    `bd swarm status <epic>` for health checks. The swarm is the DAG runtime;
    never recreate it in `graph.py`, JSON, or an in-memory ledger.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
-   Match task→agent via `references/roles.md`. Bundle roles: `workflow-coder`,
-   `workflow-reviewer`, `workflow-advisor`, `integration-gatekeeper`,
+   Match task→agent via `references/roles.md`. Bundle roles: `coder`,
+   `reviewer`, `advisor`, `shepherd`,
    `audit-reporter`. Non-code roles → built-ins (`Explore`, `general-purpose`);
    broad research → fan-out/fan-in in `roles.md`.
-4. Spawn `integration-gatekeeper` once; invoke `audit-reporter` on demand with
+4. Spawn `shepherd` once; invoke `audit-reporter` on demand with
    the epic id and artifacts path for status or close-out reporting.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
-   background `workflow-coder` subagent (`subagent_type: workflow-coder`,
+   background `coder` subagent (`subagent_type: coder`,
    Worktrunk-prepared worktree) with brief per `references/spawn-brief.md` (bead
    id, scope, base, epic id, artifacts path, protocol). The coder claims its
    bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
    metadata — the resumable record. (teammates: see Rule 7). Agents record
    their own audit events + comments.
-6. On `REPORTED`: set `state:in_review` and spawn `workflow-reviewer` against
+6. On `REPORTED`: set `state:in_review` and spawn `reviewer` against
    branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
    `agentId` as `FIX` (resumes same coder; never a new one). On `BLOCKED`:
-   spawn `workflow-advisor`/debugger, relay `ADVICE` back, dismiss it. Same
+   spawn `advisor`/debugger, relay `ADVICE` back, dismiss it. Same
    reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
-   state=approved`, send `APPROVE <node>` to the gatekeeper — the merge
+   state=approved`, send `APPROVE <node>` to the shepherd — the merge
    handoff trigger.
-7. Gatekeeper merges approved branches opportunistically under the exclusive merge slot
+7. Shepherd merges approved branches opportunistically under the exclusive merge slot
    (`bd merge-slot create` once, then `bd merge-slot acquire`/`release` without
    `--wait`), conflict-guarded
    (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`

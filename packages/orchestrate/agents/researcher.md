@@ -1,5 +1,5 @@
 ---
-name: workflow-researcher
+name: researcher
 description: Read-only fallback for one bounded orchestrate research node.
 model: sonnet
 effort: medium

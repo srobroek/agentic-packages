@@ -60,7 +60,7 @@ Write the route before dispatch so recovery never has to infer it from prose.
 
 `execution_evidence=git` means tracked files change, even when the task is
 documentation or configuration. It requires a worktree, commit, push, and
-gatekeeper integration. Other evidence modes require an `output_ref` or
+shepherd integration. Other evidence modes require an `output_ref` or
 verifiable external-state reference and never require an empty commit.
 
 ## Dispatch ready work
@@ -109,13 +109,13 @@ when. Approved branches integrate under the exclusive merge slot
 (`bd merge-slot acquire` without `--wait`); a held slot is advisory, so report
 the holder, defer, and retry. Order follows successful acquisition, not a queue
 or FIFO guarantee. Integrations remain conflict-guarded
-by the gatekeeper (`conflict-probe.sh`). The graph expresses *dependencies* (what
+by the shepherd (`conflict-probe.sh`). The graph expresses *dependencies* (what
 must happen before what), not *integration sequence*.
 
 For GitHub-backed runs, `release-queue-watch` priority affects which eligible
 PR readiness hint arrives first. It does not rewrite the DAG or reserve the
 merge slot. The orchestrator admits only an exact existing approved node, and
-the gatekeeper's slot waiters remain the integration order after admission.
+the shepherd's slot waiters remain the integration order after admission.
 
 ## Scope hygiene
 
