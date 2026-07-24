@@ -183,8 +183,8 @@ class DiscoverAgentsTest(unittest.TestCase):
 
         agents = {agent["name"]: agent for agent in self.collect(package_agents)}
 
-        self.assertEqual(agents["coder"]["model"], "sonnet")
-        self.assertIn("Agent", str(agents["coder"]["tools"]))  # delegates to children
+        self.assertEqual(agents["builder"]["model"], "sonnet")
+        self.assertIn("Agent", str(agents["builder"]["tools"]))  # delegates to children
         self.assertEqual(agents["researcher"]["model"], "sonnet")
         self.assertIn("WebSearch", str(agents["researcher"]["tools"]))
         self.assertEqual(agents["shepherd"]["model"], "sonnet")
