@@ -104,10 +104,11 @@ rules="$(yq -o=json '.' "$rules_file" 2>/dev/null || true)"
 # Bead accessors.
 # ---------------------------------------------------------------------------
 bead_id="$(printf '%s' "$bead_json" | jq -r '.id // "?"' 2>/dev/null)"
-bead_state="$(printf '%s' "$bead_json" | jq -r '.status // .state // empty' 2>/dev/null)"
-# state may live in metadata.state (custom state) rather than status
-meta_state="$(printf '%s' "$bead_json" | jq -r '.metadata.state // empty' 2>/dev/null)"
-[ -n "$meta_state" ] && bead_state="$meta_state"
+# Lifecycle is the built-in bd status only (open|in_progress|blocked|deferred|
+# closed). The design's richer phases are NOT custom statuses — they are
+# derived from status + labels + gates + review-wisp closure (single source of
+# truth per fact). Do not mirror phase into metadata.state.
+bead_state="$(printf '%s' "$bead_json" | jq -r '.status // empty' 2>/dev/null)"
 
 has_metadata_key() { printf '%s' "$bead_json" | jq -e --arg k "$1" '.metadata[$k] != null and .metadata[$k] != ""' >/dev/null 2>&1; }
 label_matches()    { printf '%s' "$bead_json" | jq -e --arg re "$1" '((.labels // []) | map(test($re)) | any)' >/dev/null 2>&1; }

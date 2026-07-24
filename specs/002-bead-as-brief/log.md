@@ -76,14 +76,17 @@ likely to change later. Append-only during the run.
 - Full writeup: `validation-run/REPORT.md`; per-iteration journals
   `iteration-1.md`, `iteration-2-3.md`; artifact + sample renders in
   `validation-run/starforge-artifact/`.
-- **[HUMAN INPUT NEEDED] custom bead states.** bd `--status` rejects
-  `reported`/`approved`/`changes_requested`/etc. — only built-in states are
-  accepted. The v2 design assumes a rich node state machine. Two options:
-  (a) register custom statuses in bd (if it supports it — needs investigation),
-  or (b) keep the state machine entirely in `metadata.state` and treat bd
-  `status` as coarse (open/in_progress/closed). The evaluator already reads
-  `metadata.state` first, so (b) works today. RECOMMEND (b) unless bd gains
-  first-class custom states — but this is a real design decision, flagging.
+- **[RESOLVED — no custom states, no metadata.state] bead lifecycle.** bd has
+  exactly 5 built-in statuses: open, in_progress, blocked, deferred, closed.
+  Re-examined the design's 8 named phases: 7 are redundant — already carried
+  by gates (waiting_human), the review-wisp dep graph (approved,
+  changes_requested), labels + a REPORTED comment (reported/in_review), or
+  closed-with-reason (merged/dismissed/failed). None need a custom status or a
+  mirrored `metadata.state` (which violated our own "no state mirroring"
+  rule). FIX APPLIED: evaluator now reads built-in `status` only; rules file
+  escape=blocked, deny_states=[closed]; fixtures use built-in statuses;
+  data-model documents the derived phase→signal mapping. 13/13 still green.
+  This SIMPLIFIED the design — the earlier "human input needed" flag is void.
 - **[finding] bd flag inconsistency** (create `-l/--labels` vs update
   `--add-label`) and **ephemeral wisps hidden from `bd list`** (use
   `bd mol wisp list`). Both must land in the generated contract blocks + the

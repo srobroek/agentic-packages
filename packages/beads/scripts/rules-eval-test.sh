@@ -28,77 +28,77 @@ bead() { # helper builds a fixture payload; args are jq --argjson/--arg pairs ba
 # --- complete git node: all checks satisfied -> allow ---
 run "git complete" allow "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t1", status:"reported", labels:["orc-node","agent:reviewer"],
+  _bead:{id:"t1", status:"in_progress", labels:["orc-node","agent:reviewer"],
     metadata:{execution_kind:"git", branch:"node-t1", push:"abc123"},
     comments:[{text:"BRIEF do the thing"},{text:"REPORTED done, verified"}]}}')"
 
 # --- git node missing push -> block, only push fails ---
 run "git missing push" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t2", status:"reported", labels:["agent:reviewer"],
+  _bead:{id:"t2", status:"in_progress", labels:["agent:reviewer"],
     metadata:{execution_kind:"git", branch:"node-t2"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- git node missing handoff label -> block ---
 run "git missing handoff label" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t3", status:"reported", labels:["orc-node"],
+  _bead:{id:"t3", status:"in_progress", labels:["orc-node"],
     metadata:{execution_kind:"git", branch:"n", push:"sha"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- no REPORTED comment -> block ---
 run "git no reported comment" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t4", status:"working", labels:["agent:reviewer"],
+  _bead:{id:"t4", status:"in_progress", labels:["agent:reviewer"],
     metadata:{execution_kind:"git", branch:"n", push:"sha"},
     comments:[{text:"CHECKPOINT step 1"}]}}')"
 
-# --- escape hatch: failed + FAILED comment -> allow despite missing everything ---
-run "escape failed+FAILED" allow "$(jq -cn --arg rf "$DS" '{
+# --- escape hatch: blocked + FAILED comment -> allow despite missing everything ---
+run "escape blocked+FAILED" allow "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t5", status:"failed", labels:[],
+  _bead:{id:"t5", status:"blocked", labels:[],
     metadata:{execution_kind:"git"},
     comments:[{text:"FAILED repo is broken, cannot proceed"}]}}')"
 
-# --- failed state but NO failed comment -> still block (escape not satisfied) ---
-run "failed state no FAILED comment" block "$(jq -cn --arg rf "$DS" '{
+# --- blocked status but NO FAILED comment -> still block (escape not satisfied) ---
+run "blocked status no FAILED comment" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t6", status:"failed", labels:[],
+  _bead:{id:"t6", status:"blocked", labels:[],
     metadata:{execution_kind:"git"},
     comments:[{text:"CHECKPOINT partial"}]}}')"
 
-# --- authority violation: specialist left bead in approved -> block ---
-run "authority deny approved" block "$(jq -cn --arg rf "$DS" '{
+# --- authority violation: specialist closed its own node -> block ---
+run "authority deny closed" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t7", status:"approved", labels:["agent:reviewer"],
+  _bead:{id:"t7", status:"closed", labels:["agent:reviewer"],
     metadata:{execution_kind:"git", branch:"n", push:"sha"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- authority violation: wrote merge_sha -> block even if checklist ok ---
 run "authority deny merge_sha" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t8", status:"reported", labels:["agent:reviewer"],
+  _bead:{id:"t8", status:"in_progress", labels:["agent:reviewer"],
     metadata:{execution_kind:"git", branch:"n", push:"sha", merge_sha:"deadbeef"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- artifact kind: output_ref present, push NOT required -> allow ---
 run "artifact complete" allow "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t9", status:"reported", labels:["agent:reviewer"],
+  _bead:{id:"t9", status:"in_progress", labels:["agent:reviewer"],
     metadata:{execution_kind:"artifact", output_ref:"/run/artifacts/report.md"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- artifact kind missing output_ref -> block ---
 run "artifact missing output_ref" block "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t10", status:"reported", labels:["agent:reviewer"],
+  _bead:{id:"t10", status:"in_progress", labels:["agent:reviewer"],
     metadata:{execution_kind:"artifact"},
     comments:[{text:"REPORTED done"}]}}')"
 
 # --- bounce: 3rd attempt on an incomplete bead -> force ALLOW ---
 run "bounce at max_attempts" allow "$(jq -cn --arg rf "$DS" '{
   agent_type:"domain-specialist", _rules_file:$rf,
-  _bead:{id:"t11", status:"working", labels:[],
+  _bead:{id:"t11", status:"in_progress", labels:[],
     metadata:{execution_kind:"git", stop_attempts:2},
     comments:[{text:"CHECKPOINT stuck"}]}}')"
 
@@ -107,7 +107,7 @@ run "no agent_type" allow '{"session_id":"x"}'
 
 # --- unknown agent, no rules file -> allow (per-agent evaluator defers to net) ---
 run "unknown agent" allow "$(jq -cn '{agent_type:"totally-unknown-agent",
-  _bead:{id:"t12", status:"working", metadata:{}, comments:[]}}')"
+  _bead:{id:"t12", status:"in_progress", metadata:{}, comments:[]}}')"
 
 echo
 echo "rules-eval conformance: $pass passed, $fail failed"

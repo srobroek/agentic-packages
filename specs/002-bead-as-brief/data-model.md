@@ -67,17 +67,29 @@ Native bd blocker. `human` (ASK/approval) · `timer` (scribe cycle) ·
 approving reviewer via swap, orchestrator via retrigger) · `reviewed:<dim>`.
 Declarative only — merge safety derives from the dep graph, never labels.
 
-## State machine (node)
+## State machine (node) — DERIVED, not stored
 
-```
-pending → working → reported → in_review → approved → merged | dismissed
-        ↘ failed (any state)    waiting_human (human gate)
-          changes_requested (any dimension verdict=changes)
-```
+bd has exactly five built-in statuses: `open`, `in_progress`, `blocked`,
+`deferred`, `closed` (`--claim` sets `in_progress`). The design's richer
+lifecycle phases are **not** custom statuses and are **not** mirrored into
+metadata — each is derived from the built-in status plus labels, gates, and
+review-wisp closure (single source of truth per fact):
 
-Claim lifecycle: released at `reported`; fix rounds re-claim (queued behind
-the specialist's current claim). BLOCKED is a wisp + pause state, not a node
-state.
+| Design phase | Derived from |
+|---|---|
+| pending | `status=open`, unclaimed |
+| working | `status=in_progress` (claimed) |
+| reported | `status=in_progress` + `agent:reviewer` label + REPORTED comment |
+| in_review | `status=in_progress`, claimed by a reviewer |
+| waiting_human | open **human gate** blocking the bead |
+| changes_requested | review wisp **open** + `needs-review:<dim>` label |
+| approved | all review wisps closed → merge bead ready (dep graph) |
+| merged / dismissed | `status=closed` + reason |
+| failed | `status=blocked` + FAILED comment (the escape hatch) |
+
+Claim lifecycle: released at the reported point; fix rounds re-claim (queued
+behind the specialist's current claim). BLOCKED is a wisp + pause; the
+escape-hatch exit is `status=blocked` + a FAILED/BLOCKED comment.
 
 ## Actor ↔ bead authority matrix (summary)
 

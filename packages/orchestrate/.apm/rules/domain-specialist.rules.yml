@@ -20,12 +20,18 @@ completion:
   - check: reported
     require: comment.verb in [REPORTED]
 
+# Lifecycle phases (reported/in_review/approved/...) are NOT bd statuses; they
+# are derived from status + labels + gates + wisp closure. A specialist never
+# CLOSES its own node (only the merge path / orchestrator does) — so `closed`
+# is the forbidden built-in status here.
 authority:
-  deny_states: [approved, changes_requested, merged, dismissed, closed]
+  deny_states: [closed]
   deny_metadata: [merge_sha, pr]
 
+# Escape hatch: set bd status=blocked and leave a FAILED/BLOCKED comment. This
+# is the always-permitted exit for a genuinely stuck node.
 escape:
-  state: failed
+  state: blocked
   require: comment.verb in [FAILED, BLOCKED]
 
 pause:
