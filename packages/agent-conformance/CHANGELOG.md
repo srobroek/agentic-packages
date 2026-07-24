@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v1.0.1...agent-conformance--v1.0.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agent-conformance:** tolerate markdown emphasis and literal L1 token on the verdict line ([#693](https://github.com/srobroek/agentic-packages/issues/693)) ([bbeddb0](https://github.com/srobroek/agentic-packages/commit/bbeddb0dba65dbafc26561b9524a7c13ba655b2d))
+
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v1.0.0...agent-conformance--v1.0.1) (2026-07-24)
 
 

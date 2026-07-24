@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.3](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.2...project-lifecycle--v4.2.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2cd577e](https://github.com/srobroek/agentic-packages/commit/2cd577e73098023b623149cfc9cb554af2234246))
+
 ## [4.2.2](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.1...project-lifecycle--v4.2.2) (2026-07-23)
 
 
