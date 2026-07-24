@@ -8,16 +8,16 @@ This file adds the per-verb field table and a worked example.
 
 | Verb | From → To | Carries |
 |---|---|---|
-| `ASSIGN` | orch → builder | node, title, scope, base, store, deps, commands, protocol |
-| `BLOCKED` | builder → orch | node, `kind:design\|debug`, the question + minimal code context |
-| `ADVICE` | advisor → orch → builder | node, answer, rationale, refs (orch relays) |
-| `REPORTED` | builder → orch | node, verify, plus branch+commit(s)/PR for git evidence or `output_ref` for non-git evidence |
+| `ASSIGN` | orch → domain-specialist | node, title, scope, base, store, deps, commands, protocol |
+| `BLOCKED` | domain-specialist → orch | node, `kind:design\|debug`, the question + minimal code context |
+| `ADVICE` | advisor → orch → domain-specialist | node, answer, rationale, refs (orch relays) |
+| `REPORTED` | domain-specialist → orch | node, verify, plus branch+commit(s)/PR for git evidence or `output_ref` for non-git evidence |
 | `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
-| `FIX` | orch → builder | node, the exact items to address, reviewer id |
-| `CONFLICT` | shepherd → builder | node, with(node), files, required action |
+| `FIX` | orch → domain-specialist | node, the exact items to address, reviewer id |
+| `CONFLICT` | shepherd → domain-specialist | node, with(node), files, required action |
 | `APPROVE` | orch → shepherd | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
 | `MERGED` | shepherd → orch | node, sha, base, verify_after_merge |
-| `DISMISS` | orch → builder | node (approved + merged; safe to exit) |
+| `DISMISS` | orch → domain-specialist | node (approved + merged; safe to exit) |
 | `ASK` | any → orch | node, one exact nonempty question, impact, waiting actor, resume condition |
 | `NO_WORK` | generic worker → orch | run epic, queue activation, `reason:no-compatible-work` |
 
@@ -49,19 +49,19 @@ wrong-bead, self-referential, and cyclic parents.
 
 ```text
 python3 scripts/thread-message.py send \
-  --actor orchestrator --assignee builder-t3 --run orc-7f3a --bead orc-7f3a.3 \
+  --actor orchestrator --assignee domain-specialist-t3 --run orc-7f3a --bead orc-7f3a.3 \
   --subject "Review requested" --body "Read the node report."
 
 python3 scripts/thread-message.py reply \
-  --actor builder-t3 --assignee orchestrator --run orc-7f3a --bead orc-7f3a.3 \
+  --actor domain-specialist-t3 --assignee orchestrator --run orc-7f3a --bead orc-7f3a.3 \
   --parent orc-wisp-abc --subject "Report ready" --body "See output_ref."
 
 python3 scripts/thread-message.py inbox \
-  --actor builder-t3 --run orc-7f3a --bead orc-7f3a.3
+  --actor domain-specialist-t3 --run orc-7f3a --bead orc-7f3a.3
 
 python3 scripts/thread-message.py show --message orc-wisp-abc --thread
 
-python3 scripts/thread-message.py acknowledge --actor builder-t3 --run orc-7f3a \
+python3 scripts/thread-message.py acknowledge --actor domain-specialist-t3 --run orc-7f3a \
   --bead orc-7f3a.3 --message orc-wisp-abc
 ```
 
@@ -128,7 +128,7 @@ reason: no-compatible-work
 
 **Assign**
 ```
-to: builder-t3   summary: "assign node t3 auth-token refactor"
+to: domain-specialist-t3   summary: "assign node t3 auth-token refactor"
 ASSIGN t3
   title:    Refactor auth token validation into middleware
   bead:     orc-7f3a.3
@@ -142,7 +142,7 @@ ASSIGN t3
   protocol: on block → BLOCKED to main (don't spawn). green → commit+push, state=reported, REPORTED to main, stay alive.
 ```
 
-**Blocked → orchestrator brokers an advisor** (the builder spawns nothing)
+**Blocked → orchestrator brokers an advisor** (the domain-specialist spawns nothing)
 ```
 to: main        summary: "blocked on token refresh race"
 BLOCKED t3
@@ -152,7 +152,7 @@ BLOCKED t3
   context: src/auth/refresh.rs:40-88; tests/auth/refresh_test.rs
 ```
 ```
-to: builder-t3    summary: "advice on t3: single-flight dedupe"   # main → builder
+to: domain-specialist-t3    summary: "advice on t3: single-flight dedupe"   # main → domain-specialist
 ADVICE t3
   answer:  Use (b) single-flight keyed by jti.
   because: multi-proc refresh; in-proc mutex won't serialize.
@@ -163,7 +163,7 @@ ADVICE t3
 ```
 to: main        summary: "t3 reported, green, awaiting review"
 REPORTED t3
-  branch:   builder/t3-auth-middleware
+  branch:   domain-specialist/t3-auth-middleware
   worktree: /home/…/.claude/worktrees/t3
   commits:  a1b2c3d refactor→middleware; d4e5f6a single-flight refresh
   changed:  src/auth/middleware.rs, src/auth/refresh.rs, tests/auth/*
@@ -182,7 +182,7 @@ REVIEW t3  verdict: changes  items: 2
   ok: structure, naming, single-flight approach sound
 ```
 ```
-to: builder-t3   summary: "apply 2 review fixes on t3"
+to: domain-specialist-t3   summary: "apply 2 review fixes on t3"
 FIX t3
   items: 1) propagate error at middleware.rs:52  2) add double-refresh regression test
   reviewer: reviewer-t3 (kept alive; re-reviews delta)
@@ -196,7 +196,7 @@ REVIEW t3  verdict: approve  note: both items resolved; delta re-reviewed
 ```
 to: shepherd  summary: "t3 approved, ready to integrate"
 APPROVE t3
-branch: builder/t3-auth-middleware
+branch: domain-specialist/t3-auth-middleware
 base: main @ 3f9a1c2
 ```
 
@@ -204,7 +204,7 @@ A watcher-backed PR uses the same verb after deterministic dispatch resolution:
 
 ```
 APPROVE t3
-branch: builder/t3-auth-middleware
+branch: domain-specialist/t3-auth-middleware
 base: main @ 3f9a1c2
 source: release-queue-watch
 repo: owner/repo
@@ -217,7 +217,7 @@ A lifecycle wake-up uses the same verb but cannot enter the merge path:
 
 ```text
 APPROVE t3
-branch: builder/t3-auth-middleware
+branch: domain-specialist/t3-auth-middleware
 base: main @ 3f9a1c2
 source: release-queue-watch-lifecycle
 repo: owner/repo
