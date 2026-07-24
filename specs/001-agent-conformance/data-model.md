@@ -19,7 +19,7 @@ Never persisted; the agent file is the source of truth.
 
 Derivation rules (mirrors write-agentic lint idioms):
 - CAPS enum regex `\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b` locates verdict enums.
-- `CAP <N>w clean · <M>w with findings` → dual caps; `CAP <N>w`/`CAP <N> words` →
+- `CAP <N>w clean · <M>w with findings` → dual caps (the second regime noun varies: findings, blockers, signals — any word matches); `CAP <N>w`/`CAP <N> words` →
   single; `CAP uncapped` → uncapped=true; `≤ <N> words` prose forms → single cap.
 - Agents whose Output section defies derivation (structured lines, prose caps)
   still parse to partial contracts; the case YAML supplies the rest, and

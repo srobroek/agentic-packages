@@ -238,8 +238,8 @@ Findings and dispositions (full text on bead orc-mol-q72):
    resolved path must stay under the sandbox root.
 3. **MED — credential leakage into persisted replies** → largely eliminated
    in-session (guards + no raw key in env of spawned agent); additionally
-   `assert` scans replies for high-entropy token patterns and redacts before
-   persisting, flagging the case for human review.
+   `assert` scans every persisted reply (PASS included) for high-entropy
+   token patterns and redacts before writing.
 4. **LOW — no aggregate run budget** → in-session: advisory (subscription);
    headless: `--max-run-budget-usd` default $25, aborts remaining cases.
 5. **LOW — regex catastrophic backtracking from fixture patterns** →
