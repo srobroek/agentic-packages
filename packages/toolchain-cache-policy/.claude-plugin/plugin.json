@@ -6,5 +6,5 @@
     "name": "Sjors Robroek"
   },
   "license": "Apache-2.0",
-  "hooks": "./hooks/hooks.json"
+  "hooks": "./hooks/claude-hooks.json"
 }

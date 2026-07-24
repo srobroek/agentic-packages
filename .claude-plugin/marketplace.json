@@ -977,7 +977,7 @@
     },
     {
       "name": "orchestrate",
-      "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
+      "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
       "version": "4.2.2",
       "tags": [
         "skill",
@@ -1384,6 +1384,21 @@
       ],
       "category": "steering",
       "source": "./packages/steering-tools-scripts"
+    },
+    {
+      "name": "toolchain-cache-policy",
+      "description": "Enforces one shared, bounded build/cache location per toolchain across all worktrees and clones, so N parallel agent worktrees cannot each grow a multi-GB build tree and fill the disk. A SessionStart hook (1) writes shared cache env for cargo, sccache, uv, pip, go, npm, pnpm, bun, and gradle to CLAUDE_ENV_FILE, (2) enforces the cargo config target-dir (config files apply unconditionally), and (3) runs a disk-pressure GC that evicts regenerable build output (cargo target, go build cache) when free space drops below a floor, never touching module/package download stores. Fails open; advisory only. Claude SessionStart; Codex SessionStart parity.",
+      "version": "0.0.0",
+      "tags": [
+        "hooks",
+        "cache",
+        "disk",
+        "worktree",
+        "toolchain",
+        "scaling"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/toolchain-cache-policy"
     },
     {
       "name": "typescript-quality",

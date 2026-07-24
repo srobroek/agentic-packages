@@ -109,6 +109,10 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
     "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
+    "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
+    "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
+    "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
+    "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
     "packages/mcp-gitnexus/.apm/hooks/hooks.json": "native-required",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
@@ -201,7 +205,11 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
         errors.append(f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT")
     for rel in script_refs:
         target = plugin_root / rel
-        if not target.is_file():
+        # A ${PLUGIN_ROOT}/... reference is usually a script file, but may also
+        # be a resource directory passed to the hook (e.g. RULES_DIR=.apm/rules
+        # for the bead-contract evaluator). Accept either; only a reference that
+        # resolves to nothing is a real missing-target error.
+        if not target.is_file() and not target.is_dir():
             errors.append(f"{path}: missing plugin hook target {rel}")
     return errors
 
