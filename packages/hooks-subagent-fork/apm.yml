@@ -7,12 +7,12 @@ description: >-
   overrides). Denials carry the corrected call format.
   A SubagentStart hook injects the fork_turns="none" discipline into spawning
   subagents, and an always-on instruction carries the same rule in the main
-  session. Claude spawn payloads carry none of the Codex spawn fields and
-  pass through untouched. The hook fails open on malformed input.
+  session. Codex-only: Claude has no fork_turns concept, so the package does
+  not target Claude at all. The hook fails open on malformed input.
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
-target: all
+target: codex
 includes: auto
 category: project-lifecycle
 tags:

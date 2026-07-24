@@ -576,7 +576,7 @@
     },
     {
       "name": "hooks-subagent-fork",
-      "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Claude spawn payloads carry none of the Codex spawn fields and pass through untouched. The hook fails open on malformed input.",
+      "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Codex-only: Claude has no fork_turns concept, so the package does not target Claude at all. The hook fails open on malformed input.",
       "version": "0.1.0",
       "tags": [
         "hooks",
