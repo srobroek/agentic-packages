@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.3](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v3.1.2...agent-pr-reviewer--v3.1.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
 ## [3.1.2](https://github.com/srobroek/agentic-packages/compare/agent-pr-reviewer--v3.1.1...agent-pr-reviewer--v3.1.2) (2026-07-24)
 
 

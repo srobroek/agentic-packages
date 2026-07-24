@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.14.0...pr-shepherd--v0.14.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
 ## [0.14.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.13.3...pr-shepherd--v0.14.0) (2026-07-24)
 
 
