@@ -36,7 +36,7 @@ Derivation rules (mirrors write-agentic lint idioms):
 | `prompt` | str | ✔ | the task message sent to the agent |
 | `sandbox.files` | map[path→content] | – | staged into fresh temp dir before run |
 | `sandbox.git` | bool | – | `git init` + commit staged files (default false) |
-| `assert.first_line` | str (regex) | ✔ | anchored at first non-empty reply line |
+| `assert.first_line` | str (regex) | – | anchored at first non-empty reply line; omit for prose contracts (check warns when both case and derived contract lack it) |
 | `assert.max_words` | int \| `uncapped` | ✔ | for the declared regime |
 | `assert.no_reprint` | bool | – | default true |
 | `assert.required_patterns` | list[regex] | – | section/structure presence |
@@ -64,10 +64,11 @@ safety).
 | Field | Type | Notes |
 |---|---|---|
 | `agent`, `case` | str | identity |
+| `context_fingerprint` | str | hash of installed agent file + harness version + date (env-drift diagnosis) |
 | `verdict` | PASS\|FLAKY\|FAIL\|ERROR\|SKIP | FR-006 |
 | `attempts` | list[Attempt] | see below |
 | `model`, `effort` | str | as invoked |
-| `model_source` | `pinned`\|`inherited-default`\|`override` | R6 |
+| `model_source` | `pinned`\|`inherited-session`\|`override` | R6 |
 | `duration_s`, `cost_usd` | float | from CLI JSON envelope |
 
 `Attempt`: `{n, passed, failed_assertions: [{kind, detail}], reply_path,

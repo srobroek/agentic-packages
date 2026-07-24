@@ -52,6 +52,15 @@ and on the gate beads.
   T007); LOW aggregate budget + LOW regex DoS encoded in R11 and cli.md.
   No blocking findings remain for the v1 design.
 
+- **Critique verdict PROCEED-WITH-CHANGES, 7 findings — all adopted** (bead
+  orc-mol-uf5): driver-corruption defense (verbatim-write mandate + reply
+  plausibility floor), context-inheritance made observable
+  (context_fingerprint), fixture-rot defense (repo-level deterministic
+  conformance-check CI step, new T014 — within FR-009 since no LLM),
+  per-segment no-reprint matching, first_line now optional for prose
+  contracts, chronic-flake→FAIL promotion, word-count pinned to
+  `len(reply.split())`.
+
 ## Open questions for the user
 
 - None blocking. FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now

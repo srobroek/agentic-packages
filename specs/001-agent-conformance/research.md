@@ -57,9 +57,22 @@ into a deterministic engine and an in-session sweep driver.
 so sweep orchestration itself is not a deterministic program. Mitigations:
 `stage` writes an explicit manifest (the session cannot silently drop a
 case — `report` fails on journal/manifest mismatch), `assert`/`report` are
-pure, and the reply file is the subagent's verbatim final message. This
-matches the repo's existing pattern of skill-driven verification
-(verify/pr-shepherd skills).
+pure, and the reply file is the subagent's verbatim final message. Driver
+integrity hardening (critique HIGH-1): SKILL.md mandates writing the Task
+result to `reply_path` directly with no editing, summarizing, or reformat;
+`assert` enforces a reply plausibility floor (R4) so truncated/paraphrased
+saves surface as ERROR. This matches the repo's existing pattern of
+skill-driven verification (verify/pr-shepherd skills).
+
+**Context inheritance is accepted fidelity, made observable** (critique
+HIGH-2): Task spawns inherit the session's injection stack (SubagentStart
+inject, guard hooks) exactly as production spawns do — that *is* the shipped
+configuration under test; "fixture is the only context" applies to
+task-shaped input, not the runtime preamble. To make environment-induced
+drift diagnosable, `stage` records a `context_fingerprint` in the manifest
+(hash of the installed agent file + harness version + date); `report` carries
+it so a verdict change with an unchanged agent file points at environment
+drift rather than contract drift.
 
 ## R2. Contract extraction: source of truth for assertions
 
@@ -102,22 +115,29 @@ checks a directory-listing exercise.
 
 ## R4. Assertion semantics (deterministic layer)
 
-**Decision**:
+**Decision** *(refined per critique findings 4, 5, 7)*:
 - **First line**: regex match against the first non-empty line of the reply.
-- **Word cap**: whitespace-token count of the full reply ≤ declared cap for
-  the fixture's regime; skipped when the contract declares uncapped. A 10%
-  grace multiplier is NOT applied — caps are the contract, exact enforcement,
-  because production parsers budget on the stated numbers.
-- **No-reprint**: fail if the reply contains any verbatim run of ≥160
-  consecutive characters (after whitespace normalization) from any
-  fixture-staged file or the fixture prompt. 160 chars ≈ 2–3 code lines —
-  above quoting a path or identifier, below any meaningful "reprint".
-  Frozen as part of assertion semantics per the spec assumption.
+  Optional — prose-contract agents (e.g. ledger-scribe) have no L1 pattern;
+  when both the case omits `assert.first_line` and the derived contract has
+  none, `check` warns (not fails) and the assertion is skipped.
+- **Word cap**: `len(reply.split())` (Python semantics: split on any
+  whitespace run; `path:line` is one token) ≤ declared cap for the fixture's
+  regime; skipped when the contract declares uncapped. No grace multiplier —
+  caps are the contract; production parsers budget on the stated numbers.
+- **No-reprint**: fixture content (prompt + staged files) is segmented at
+  line boundaries; fail only if the reply contains a verbatim run of ≥160
+  normalized characters matching a *contiguous* fixture segment. Per-segment
+  matching prevents false positives when an agent legitimately cites many
+  short fragments (lint-guard echoing `file:line — rule — reason` per
+  finding). Frozen as assertion semantics per the spec assumption.
 - **Sections**: required-section presence via regex (e.g. `^L1 ` line);
   conditional sections asserted absent for clean-regime fixtures where the
   contract says "only if non-empty".
 - **Side-effect artifacts** (FR-005): fixture declares expected files
   (path glob + per-line verdict regex), checked in the sandbox after the run.
+- **Reply plausibility floor**: a reply file under 50 bytes for a non-trivial
+  case is ERROR (`implausible-reply`), not judged — defends against the
+  sweep driver truncating or paraphrasing a save (critique HIGH-1).
 
 **Rationale**: every assertion is a pure function of (reply, fixture,
 declared contract) — reproducible offline against persisted artifacts.
@@ -125,12 +145,19 @@ declared contract) — reproducible offline against persisted artifacts.
 ## R5. Verdicts, retries, flake policy
 
 **Decision**: PASS / FLAKY / FAIL / ERROR / SKIP as specified (FR-006).
-Default 2 retries after first failure; retry re-invokes the LLM (fresh
-sample), assertion layer identical. FLAKY = any retry passed. ERROR = CLI
-exit non-zero, timeout at the transport layer, auth/config failure — never
-counted as an agent regression. Exit code: 0 all PASS/SKIP; 1 any FAIL; 2 any
-ERROR; FLAKY configurable (`--strict-flaky` → exit 1), default exit 0 with
-prominent report line.
+Default 2 retries after first failure; a retry is a fresh spawn (fresh
+sample), assertion layer identical. FLAKY = any retry passed — semantically
+"this agent's contract holds probabilistically, not reliably", which is
+exactly the signal wanted for prompt-tightening even though each sample is
+independent. ERROR = spawn failure, missing/implausible reply, timeout at
+the transport layer, config failure — never counted as an agent regression.
+Exit code: 0 all PASS/SKIP; 1 any FAIL; 2 any ERROR; FLAKY configurable
+(`--strict-flaky` → exit 1), default exit 0 with prominent report line.
+**Flake escalation** (critique finding 6): `report` compares against prior
+run reports found in the out-dir's parent; an agent-case FLAKY in ≥3
+consecutive recorded runs is promoted to FAIL with kind
+`chronic-flake` — persistent boundary-oscillation is a real contract
+regression, not noise.
 
 ## R6. Model/effort pin resolution
 
@@ -175,11 +202,18 @@ assembled from the journal, so a partial run leaves a valid partial journal
 **Decision**: `conformance check` subcommand, no LLM: (a) every
 `packages/*/.apm/agents/*.agent.md` has ≥1 case dir or a `skips.yaml` entry;
 (b) no case/skip references a nonexistent agent; (c) every case's declared
-expectations match the source-derived contract slice (R2). Ships as the
-package's pytest suite too, so the existing per-package CI matrix runs it on
-any PR touching the package — no new CI wiring needed (consistent with the
-local-only-v1 clarify ruling; fleet-wide drift still surfaces on the next
-local sweep or when orc-qrt lands CI).
+expectations match the source-derived contract slice (R2). Two CI surfaces
+(critique finding 3 — fixture-rot defense; both deterministic and free, so
+within the local-only-v1 ruling which deferred only the *LLM* sweep;
+FR-009 explicitly permits per-PR deterministic checks):
+1. Ships as the package's pytest suite → per-package CI matrix runs it on
+   PRs touching this package.
+2. A repo-level `conformance-check` step in test.yml (alongside the existing
+   `agentic-lint` job, same shape) runs `check` whenever any
+   `packages/*/.apm/agents/*.agent.md` or `packages/agent-conformance/**`
+   changes — so editing an agent's contract in *another* package fails
+   per-PR when its fixture drifts, instead of waiting for the next manual
+   sweep.
 
 ## R10. Where the LLM suite hooks into maintainer flow
 
