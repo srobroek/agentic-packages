@@ -784,11 +784,11 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
 
     # Forbidden patterns
     for pat in assert_cfg.get("forbidden_patterns") or []:
-        try:
-            if re.search(pat, reply):
-                failures.append({"kind": "forbidden_pattern", "detail": f"forbidden pattern found: {pat!r}"})
-        except Exception:
-            failures.append({"kind": "regex_timeout", "detail": f"forbidden pattern error: {pat!r}"})
+        m = _timed_search(pat, reply, timeout=5)
+        if m is _TIMED_OUT:
+            failures.append({"kind": "regex_timeout", "detail": f"forbidden pattern timed out: {pat!r}"})
+        elif m is not None:
+            failures.append({"kind": "forbidden_pattern", "detail": f"forbidden pattern found: {pat!r}"})
 
     # Artifacts
     sandbox_path_str = entry.get("sandbox_path", "")
@@ -809,7 +809,8 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
             for fp in matched:
                 if fp.is_file():
                     for line in fp.read_text(encoding="utf-8", errors="replace").splitlines():
-                        if re.search(line_pattern, line):
+                        m = _timed_search(line_pattern, line, timeout=5)
+                        if m is not None and m is not _TIMED_OUT:
                             found = True
                             break
                 if found:
@@ -936,9 +937,10 @@ def cmd_assert(args: argparse.Namespace, repo_root: Path) -> int:
     failures = _run_assertions(entry, reply)
     passed = len(failures) == 0
 
-    # Redact and persist non-PASS replies
-    if not passed:
-        redacted = _redact_reply(reply)
+    # Redact every persisted reply in place — PASS replies also remain on
+    # disk in the run dir, and a conforming reply can still echo a secret.
+    redacted = _redact_reply(reply)
+    if redacted != reply:
         reply_path.write_text(redacted, encoding="utf-8")
 
     # Determine verdict
