@@ -241,6 +241,18 @@ as abandoned — freshness is a liveness signal.
 | CI probe chatter | ping/heartbeat | shepherd | TTL |
 | Dead-claim recovery | recovery | recovering actor | TTL |
 
+### Worktree reclamation (wipe-on-merge)
+
+When a git-kind node's worktree is created, the creator stamps a
+`[wisp:recovery] wipe-worktree <abs-path>` wisp and adds
+`bd dep add <wipe-wisp> <merge-bead>` so the wisp is **blocked by the merge
+bead**. When the merge bead closes (merged OR dismissed), the wisp unblocks;
+the next patrol/wake (pr-shepherd or orchestrator) runs `git worktree remove`
++ branch delete and closes the wisp. This makes worktree cleanup
+crash-safe: an abandoned run leaves its wipe wisps behind for the next patrol
+to reclaim, so no worktree is silently orphaned. Verified on bd 1.1.0 (wisp
+`blocks`-dep on a durable bead unblocks on close).
+
 Rules:
 
 - Wisps carry questions, decisions, logs, chatter — never work assignments.

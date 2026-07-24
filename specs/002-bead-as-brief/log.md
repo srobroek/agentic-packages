@@ -98,6 +98,31 @@ likely to change later. Append-only during the run.
   label unset (took a wrong-flag fallback); the contract evaluator blocked it
   with exactly `failed_checks:[handoff]`, nothing else. Fix → ALLOW. This is
   the whole thesis of the spec, demonstrated on a live agent.
+
+### New feature — wipe-worktree-on-merge (user request)
+- **[added to spec]** Worktree create stamps a `[wisp:recovery]
+  wipe-worktree <path>` wisp blocked by the merge bead (`dep add <wisp>
+  <merge-bead>`). Merge close (merged OR dismissed) unblocks it; next
+  patrol/wake removes the worktree + branch and closes the wisp. Crash-safe:
+  abandoned runs leave wipe wisps for the next patrol → no orphaned worktrees
+  (closes a real gap in current orchestrate). VERIFIED on bd 1.1.0 in the
+  starforge playground: wisp blocked while merge open, 0 open-blockers after
+  merge close. Folded into bead-as-brief.md WISPS section; N4/N5 scope.
+
+### Build progress
+- **[dead-claim recovery, live]** First N3 background agent died silently
+  (no files/commits/comments). TaskList showed it gone. Unclaimed + reopened
+  the bead; nothing lost (nothing persisted). This is US1 validation in the
+  wild: silent subagent death → durable bead → clean respawn. Switched to
+  observing completion directly rather than fire-and-forget.
+- **[directive] Build order locked:** N3 hooks → N4 fleet (real
+  domain-specialist def WITH delegation-first) → N5 pr-shepherd → N6 skill
+  rewrite. NO testing until N6. Then fuzz→break→harden until perfect +10%.
+  Then a grand orchestrated demo, all via OUR orchestrator (not the Workflow
+  tool — the point is to dogfood the orchestration). Then 2x the demo.
+- **[confirmed to user]** domain-specialist definition does NOT exist yet
+  (only the rules file); starforge used general-purpose stand-ins. N4 creates
+  the real definition with delegation-first in its contract.
 - **[human?] AGENT_TEAMS flag.** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is
   not in settings; warm-tier features (SendMessage wake, FIX-round resume)
   need it. I will add it to the project/global settings env during the hooks
