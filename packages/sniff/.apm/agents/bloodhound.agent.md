@@ -51,7 +51,11 @@ DEFAULT Notes section: omit when nothing ambiguous or large-scale was observed.
 ## Output
 
 L1 STATUS: FINDINGS|CLEAN — language + scope summary.
-MUST Begin your reply with `STATUS:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
+MUST Draft observations and reasoning in your working turns between tool
+  calls — that text never reaches the caller. Your final message is ONLY
+  the report, composed in one pass, beginning with `STATUS:` as its very
+  first characters. Before sending, check the first line: if anything
+  precedes `STATUS:`, delete it. "L1" is notation, never printed.
 
 Coverage:
 - Tools run: one line per tool (tool: result-summary)

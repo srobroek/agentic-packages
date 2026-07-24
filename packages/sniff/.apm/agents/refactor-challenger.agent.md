@@ -52,7 +52,11 @@ NOT Do not pad if the plan is sound.
 ## Output
 
 L1 VERDICT: KEEP|DOWNGRADE|DROP — counts (K keep / D downgrade / X drop), one line.
-MUST Begin your reply with `VERDICT:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
+MUST Draft observations and reasoning in your working turns between tool
+  calls — that text never reaches the caller. Your final message is ONLY
+  the report, composed in one pass, beginning with `VERDICT:` as its very
+  first characters. Before sending, check the first line: if anything
+  precedes `VERDICT:`, delete it. "L1" is notation, never printed.
    Per-finding table — # | finding | verdict.
    Dropped/downgraded rationale — one tight paragraph each; omit section if none.
    Back-compat hazards — omit if none.
