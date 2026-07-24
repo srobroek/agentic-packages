@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.3...agent-adversarial-challenger--v3.2.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** scan agents draft in working turns and compose the report in one pass ([#701](https://github.com/srobroek/agentic-packages/issues/701)) ([bf85043](https://github.com/srobroek/agentic-packages/commit/bf850438e20baea869e654a65a985f5257b58e97))
+
 ## [3.2.3](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.2...agent-adversarial-challenger--v3.2.3) (2026-07-24)
 
 
