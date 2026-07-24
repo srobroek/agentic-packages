@@ -44,8 +44,11 @@ CAPS_ENUM = re.compile(r"\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b")
 #   CAP 140w.
 #   CAP uncapped
 #   ≤ N words
+# The second regime's noun varies across the fleet ("with findings",
+# "with blockers", "with signals") — match any word so a contract like
+# "CAP 60 words clean, 220 words with signals" derives 60/220, not 60/60.
 _CAP_DUAL = re.compile(
-    r"\bCAP\s+(\d+)\s*w(?:ords?)?\s+clean[^·\d]*[·,]\s*(\d+)\s*w(?:ords?)?\s+with\s+findings",
+    r"\bCAP\s+(\d+)\s*w(?:ords?)?\s+clean[^·\d]*[·,]\s*(\d+)\s*w(?:ords?)?\s+with\s+\w+",
     re.I,
 )
 _CAP_SINGLE = re.compile(r"\bCAP\s+(\d+)\s*w(?:ords?)?[.\s]", re.I)

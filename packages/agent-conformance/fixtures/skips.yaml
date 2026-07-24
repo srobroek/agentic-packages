@@ -1,1 +1,25 @@
-skips: []
+skips:
+  - agent: workflow-coder
+    reason: >-
+      Requires live orchestrate run state (claimed bead, assigned node,
+      pushable remote worktree, bd DB with epic); faithful stub deferred — tracked for v2.
+  - agent: workflow-pull-worker
+    reason: >-
+      Requires live orchestrate run state (bd ready atomic claim, epic bead,
+      pull-worker.py helper, pushable remote); faithful stub deferred — tracked for v2.
+  - agent: workflow-worker
+    reason: >-
+      Requires live orchestrate run state (directed or pull-mode bd claim, isolated
+      worktree with remote, epic bead); faithful stub deferred — tracked for v2.
+  - agent: integration-gatekeeper
+    reason: >-
+      Requires live remote repository and bd merge-slot infrastructure (conflict-probe.sh,
+      gh PR/CI tooling, run-epoch bead); faithful stub deferred — tracked for v2.
+  - agent: workflow-reviewer
+    reason: >-
+      Requires live orchestrate run state (bead with metadata, pushed remote branch,
+      bd audit record write access); faithful stub deferred — tracked for v2.
+  - agent: ledger-scribe
+    reason: >-
+      Requires live bd database with populated run epic, node beads, and audit trail
+      (interactions.jsonl); sandbox.git cannot replicate bd state; deferred — tracked for v2.

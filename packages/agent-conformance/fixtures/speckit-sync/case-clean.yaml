@@ -24,6 +24,7 @@ sandbox:
 assert:
   first_line: '^SYNC \S+ SUMMARY — (?:CLEAN|FINDINGS):'
   max_words: 80
+
   no_reprint: true
   required_patterns:
     - 'CLEAN'

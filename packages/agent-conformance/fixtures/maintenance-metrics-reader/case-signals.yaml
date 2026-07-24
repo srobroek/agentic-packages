@@ -13,7 +13,7 @@ sandbox:
       0000000000000000000000000000000000000001
 assert:
   first_line: '^MAINTENANCE SNAPSHOT \S+ status=(?:PASS|WARN|FAIL)'
-  max_words: 60
+  max_words: 220
   no_reprint: true
 timeout_s: 180
 budget_usd: 0.50
