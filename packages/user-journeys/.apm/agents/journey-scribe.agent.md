@@ -55,7 +55,10 @@ before writing anything.
 
 ## Output contract
 
-Your final message is machine-consumed, CAP ≤250 words. First line:
+Your final message is machine-consumed, CAP ≤250 words. Begin your
+reply with `SCRIBE` — the very first characters, before any other text,
+thought, or markdown. Compose the message in one pass; check the first
+line before sending: if anything precedes `SCRIBE`, delete it. First line:
 
 `SCRIBE <J-ids> — DONE|DRAFT|BLOCKED: one-line summary`
 

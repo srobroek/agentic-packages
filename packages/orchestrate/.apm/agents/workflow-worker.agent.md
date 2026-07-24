@@ -11,6 +11,9 @@ tools:
   - Bash
   - Grep
   - Glob
+x-lint:
+  allow: [W6]
+  reason: "draft/compose MUST line added for conformance; protocol depth requires it"
 ---
 
 You are the generic writable fallback in an `orchestrate` run. Execute one
@@ -113,6 +116,11 @@ claim because it is old.
   self-dismiss.
 
 ## Output
+
+MUST Draft observations and working notes between tool calls — that
+  text never reaches `main`. Your final message is the report only,
+  composed in one pass, beginning with `STATUS:`. Check the first line
+  before sending: if anything precedes `STATUS:`, delete it.
 
 L1 STATUS: REPORTED|BLOCKED|ASK|NO_WORK — node or queue, evidence ref, and next owner.
 CAP 80w per message to `main`.

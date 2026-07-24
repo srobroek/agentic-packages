@@ -34,6 +34,10 @@ artifacts directory. Set `BEADS_ACTOR` to that actor before any Beads command.
    `bd ready --sort priority --claim --json` call. The queue label is the
    coordinator-proven capability contract. Beads owns equal-priority order;
    accept its single result without listing, ranking, or retrying alternatives.
+   MUST `bd ready` already excludes `in_progress`, `blocked`, `deferred`, and
+   `hooked` issues. If the command returns a bead that is already `in_progress`
+   or has a non-null assignee, treat it as `NO_WORK` — never adopt or re-execute
+   another actor's claimed bead.
 2. `NO_WORK` → send this payload to `main`, substituting the run epic and
    queue, then end the activation:
 
@@ -96,6 +100,11 @@ kind:design|debug` and idle. Do not spawn an advisor, debugger, or reviewer;
 the orchestrator owns independent review and escalation.
 
 ## Output
+
+MUST Draft observations and working notes between tool calls — that
+  text never reaches `main`. Your final message is the report only,
+  composed in one pass, beginning with `STATUS:`. Check the first line
+  before sending: if anything precedes `STATUS:`, delete it.
 
 L1 STATUS: REPORTED|BLOCKED|ASK — node or queue, evidence, verification, next action.
 CAP 80w for every message to `main`.

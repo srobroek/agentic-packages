@@ -63,6 +63,11 @@ Tools:
      --await-id <pr#>`, release the slot while waiting, `bd gate check` when
      notified. Failing CI → push the failure back to the coder via the
      orchestrator; do not merge red.
+     MUST CI must run against the **remote branch's committed state** — never
+     run tests locally in a worktree and report the result as CI. Use
+     `conflict-probe.sh ci <branch>` or `gh pr checks`. Local execution is
+     not a CI probe; a branch with uncommitted local changes that hasn't been
+     pushed has no CI state — bounce it (`BOUNCED <node> reason=not-pushed`).
   4. Merge, stamp the anchors: `bd update <bead> --metadata
      '{"pr":<n>,"merge_sha":"<sha>"}'`, then `bd merge-slot release`.
 - After a clean merge, the base advances; re-probe any other in-flight approved

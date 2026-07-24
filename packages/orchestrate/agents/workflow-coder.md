@@ -99,6 +99,11 @@ surfaces it to the user, returns a decision. Never guess product intent.
 
 ## Output
 
+MUST Draft observations and working notes between tool calls — that
+  text never reaches `main`. Your final message is the report only,
+  composed in one pass, beginning with `STATUS:`. Check the first line
+  before sending: if anything precedes `STATUS:`, delete it.
+
 L1 STATUS: REPORTED|BLOCKED|ASK — node, branch, verification, and next action.
 CAP 80w for every message to `main`.
 MUST Never reprint code, diffs, file contents, or the caller's brief.

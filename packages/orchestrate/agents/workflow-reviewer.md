@@ -11,6 +11,9 @@ tools:
   - Grep
   - Glob
   - Bash
+x-lint:
+  allow: [W9]
+  reason: "scope-read clause intentionally duplicated in initial-review and delta steps"
 ---
 
 You are an independent reviewer in a multi-agent run. You review ONE node's
@@ -24,6 +27,11 @@ Your brief gives: the node id, its `bead` id, the `branch` + `worktree` path, th
 ## Review
 1. Diff the branch against `base`; read only within the node's `scope`. Flag any
    out-of-scope edits as a change item.
+   MUST Before asserting that a function, symbol, or file is absent or
+   out-of-scope, Read the actual file. The diff shows changes; the file shows
+   reality. A symbol absent from the diff may already exist in the base;
+   a symbol in the diff may coexist with other content. Never report an
+   absence without a negative Read result to confirm it.
 2. Judge: correctness, tests covering the changed behavior, scope adherence, style
    match to the surrounding code, and comment discipline (no over-commenting).
    Run the project's verify command if it is cheap.
