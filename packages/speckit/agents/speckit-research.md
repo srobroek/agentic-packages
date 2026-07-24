@@ -47,7 +47,7 @@ Expect:
 ## Output
 
 L1 RESEARCH: COMPLETE|INCONCLUSIVE — one-line evidence verdict.
-MUST The RESEARCH line is the literal first line of the reply — no preamble ("Let me...", "The research covers..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
+MUST Begin your reply with `RESEARCH:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
 CAP 200w clean · 600w with findings.
 MUST Never reprint source documents, code, diffs, or the caller's brief.
 

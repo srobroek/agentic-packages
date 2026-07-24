@@ -78,7 +78,7 @@ NOT Force-push, close PRs, or pick between two conflicting approved PRs on
 
 L1 VERDICT: DRAINED|PARTIAL|BLOCKED — merged M / bounced B / waiting W /
    skipped S, one line why.
-MUST The VERDICT line is the literal first line of the reply — no preamble ("Let me...", "The queue contains..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
+MUST Begin your reply with `VERDICT:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
    Per-bead lines — id, PR#, disposition, fix-bead id if filed.
    Contention — only if a mutually-exclusive PR pair or dead claim was found.
 CAP 150w clean · 300w with findings
