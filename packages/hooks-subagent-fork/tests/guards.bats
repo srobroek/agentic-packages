@@ -32,6 +32,7 @@ run_guard() {
   fi
   status=$?
   decision="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null || true)"
+  reason="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecisionReason // empty' 2>/dev/null || true)"
 }
 
 # --- allow ------------------------------------------------------------------
@@ -46,8 +47,8 @@ run_guard() {
   run_guard '{"tool_name":"Agent","tool_input":{"task_name":"code-reviewer"}}'
   [ "$status" -eq 0 ]
   [ "$decision" = "deny" ]
-  printf '%s' "$output" | grep -q 'omitted'
-  printf '%s' "$output" | grep -q 'fork_turns="none"'
+  printf '%s' "$reason" | grep -q 'omitted'
+  printf '%s' "$reason" | grep -q 'fork_turns="none"'
 }
 
 @test "fork_turns none -> allow" {
@@ -80,8 +81,8 @@ run_guard() {
   run_guard '{"tool_name":"Agent","tool_input":{"task_name":"code-reviewer","fork_turns":"all"}}'
   [ "$status" -eq 0 ]
   [ "$decision" = "deny" ]
-  printf '%s' "$output" | grep -q 'fork_turns="none"'
-  printf '%s' "$output" | grep -q 'spawn_agent(task_name="code-reviewer", fork_turns="none")'
+  printf '%s' "$reason" | grep -q 'fork_turns="none"'
+  printf '%s' "$reason" | grep -q 'spawn_agent(task_name="code-reviewer", fork_turns="none")'
 }
 
 @test "fork_turns 4 (> default 3) -> deny" {
