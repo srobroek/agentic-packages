@@ -105,6 +105,7 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-serena/.apm/hooks/hooks-serena-claude-hooks.json": "target-specific compatibility",
     "packages/hooks-serena/.apm/hooks/hooks-serena-codex-hooks.json": "target-specific compatibility",
+    "packages/hooks-subagent-fork/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
     "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",

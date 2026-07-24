@@ -575,6 +575,20 @@
       "source": "./packages/hooks-serena"
     },
     {
+      "name": "hooks-subagent-fork",
+      "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Codex-only: Claude has no fork_turns concept, so the package does not target Claude at all. The hook fails open on malformed input.",
+      "version": "0.0.0",
+      "tags": [
+        "hooks",
+        "subagent",
+        "fork-turns",
+        "cost",
+        "codex"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/hooks-subagent-fork"
+    },
+    {
       "name": "hooks-subagent-model",
       "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
       "version": "1.0.0",

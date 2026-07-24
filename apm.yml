@@ -396,6 +396,15 @@ marketplace:
         - serena
         - semantic
         - lifecycle
+    - name: hooks-subagent-fork
+      source: ./packages/hooks-subagent-fork
+      category: project-lifecycle
+      tags:
+        - hooks
+        - subagent
+        - fork-turns
+        - cost
+        - codex
     - name: hooks-subagent-model
       source: ./packages/hooks-subagent-model
       category: project-lifecycle
