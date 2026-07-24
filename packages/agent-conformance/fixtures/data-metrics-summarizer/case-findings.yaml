@@ -1,0 +1,25 @@
+agent: data-metrics-summarizer
+regime: findings
+prompt: |
+  METRICS-SUMMARIZER node=n2
+  files:
+    - logs/errors.log
+  focus_prompt: top error messages by frequency
+  format: log
+  top_k: 5
+sandbox:
+  files:
+    logs/errors.log: |
+      2024-01-01T10:00:00Z ERROR ConnectionRefused host=db
+      2024-01-01T10:00:01Z ERROR ConnectionRefused host=db
+      2024-01-01T10:00:02Z ERROR Timeout op=query
+      2024-01-01T10:00:03Z ERROR ConnectionRefused host=db
+      2024-01-01T10:00:04Z WARN SlowQuery ms=4200
+assert:
+  first_line: '^METRICS-SUMMARIZER \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 220
+  no_reprint: true
+  required_patterns:
+    - 'logs/errors\.log'
+timeout_s: 120
+budget_usd: 0.50

@@ -1,0 +1,46 @@
+agent: journey-scribe
+regime: clean
+prompt: |
+  Journeys directory: $SANDBOX/journeys
+  Task: new journey
+  Authoring input: Create a journey for a user who runs `myapp init` to initialise a new project, observes a success message, and sees a new directory created.
+
+sandbox:
+  git: true
+  files:
+    journeys/FORMAT.md: |
+      # FORMAT.md — Journey format specification (normative)
+
+      ## Definition of ready
+      - [ ] id assigned from INDEX.md (next sequential)
+      - [ ] title descriptive
+      - [ ] status: draft or active
+      - [ ] surfaces listed
+      - [ ] interfaces listed
+      - [ ] at least one precondition
+      - [ ] at least one step with Do + Expect
+
+      ## Amendment authority
+      journey-scribe may amend: corrections (body-only, no version bump),
+      intended-changes (version bump + Δ entry with cited evidence).
+
+      ## Ids
+      Journey ids are J<N>. Step ids are S<N>. Precondition ids are P<N>.
+      Never renumber; insertions get letter suffixes (S3a).
+
+    journeys/README.md: |
+      # Journeys
+
+      ## Interface profiles
+      - cli: drive via command-line terminal
+
+    journeys/INDEX.md: |
+      | ID | Title | Version | Status |
+      |----|-------|---------|--------|
+
+assert:
+  first_line: '^SCRIBE J\S+ — (?:DONE|DRAFT|BLOCKED):'
+  max_words: 250
+  no_reprint: true
+timeout_s: 180
+budget_usd: 1.00

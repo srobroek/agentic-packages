@@ -1,0 +1,30 @@
+agent: reviewer-low
+regime: findings
+prompt: |
+  Review this diff against the acceptance criteria.
+
+  Acceptance criteria:
+  - The `divide` function must raise ValueError when divisor is zero.
+
+  Diff:
+  --- a/math_utils.py
+  +++ b/math_utils.py
+  @@ -1,4 +1,4 @@
+  -def divide(a, b):
+  +def divide(a, b):
+       if b == 0:
+  -        raise ZeroDivisionError("divisor is zero")
+  +        return None
+       return a / b
+sandbox:
+  files:
+    math_utils.py: |
+      def divide(a, b):
+          if b == 0:
+              return None
+          return a / b
+assert:
+  first_line: '^VERDICT: (?:APPROVE|CHANGES|ESCALATE)\b'
+  max_words: 180
+  no_reprint: true
+timeout_s: 120

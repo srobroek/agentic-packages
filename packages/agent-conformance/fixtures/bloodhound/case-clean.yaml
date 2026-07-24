@@ -1,0 +1,31 @@
+agent: bloodhound
+regime: clean
+prompt: |
+  Brief:
+  - Language: Python
+  - Scope: svc/
+  - Tools confirmed installed: ruff
+  - Language doc: references/languages/python.md (use standard Python smell list)
+
+  Ruff report (pre-run, do not re-run):
+    svc/processor.py:8:F841:warning:Local variable `unused` is assigned but never used
+
+  Scan for additional smells not caught by ruff.
+sandbox:
+  files:
+    svc/processor.py: |
+      def process(items):
+          unused = []
+          result = []
+          for item in items:
+              result.append(item)
+              result.append(item)
+          return result
+
+      def helper(x):
+          return x
+assert:
+  first_line: '^STATUS: (?:FINDINGS|CLEAN)\b'
+  max_words: uncapped
+  no_reprint: true
+timeout_s: 120

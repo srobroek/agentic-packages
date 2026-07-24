@@ -1,0 +1,31 @@
+agent: speckit-sync
+regime: clean
+prompt: |
+  scope: drift
+  Spec ID: SPEC-001
+  spec.md: $SANDBOX/feature/spec.md
+  plan.md: $SANDBOX/feature/plan.md
+  Implementation directories: $SANDBOX/src
+
+sandbox:
+  files:
+    feature/spec.md: |
+      # Spec: hello module
+      ## Functional Requirements
+      FR-1: The module exposes a `greet(name)` function returning "Hello, <name>!".
+    feature/plan.md: |
+      # Plan
+      ## Modules
+      - src/hello.py: implement greet function
+    src/hello.py: |
+      def greet(name):
+          return f"Hello, {name}!"
+
+assert:
+  first_line: '^SYNC \S+ SUMMARY — (?:CLEAN|FINDINGS):'
+  max_words: 80
+  no_reprint: true
+  required_patterns:
+    - 'CLEAN'
+timeout_s: 300
+budget_usd: 2.00

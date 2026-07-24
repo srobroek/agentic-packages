@@ -1,0 +1,14 @@
+agent: speckit-research
+regime: clean
+prompt: |
+  Library: PyYAML
+  Question: What is the safe way to load a YAML file in PyYAML to avoid
+  arbitrary code execution?
+  Context: SpecKit task T-001 — load fixture YAML files in the conformance
+  harness. Need the correct API call.
+  Source constraints: use official PyYAML docs only.
+assert:
+  first_line: '^RESEARCH: (?:COMPLETE|INCONCLUSIVE)\b'
+  max_words: 200
+  no_reprint: true
+timeout_s: 120

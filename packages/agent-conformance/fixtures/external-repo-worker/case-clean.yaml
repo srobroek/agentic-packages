@@ -1,0 +1,23 @@
+agent: external-repo-worker
+regime: clean
+prompt: |
+  External repo checkout path: /tmp/test-external-repo
+
+  In /tmp/test-external-repo/utils.py, rename `multiply` to `product`
+  and update the call in `main`. Verify: python utils.py should print 6.
+sandbox:
+  files:
+    utils.py: |
+      def multiply(a, b):
+          return a * b
+
+      def main():
+          print(multiply(2, 3))
+
+      if __name__ == "__main__":
+          main()
+assert:
+  first_line: '^Changed files:'
+  max_words: 100
+  no_reprint: true
+timeout_s: 120

@@ -1,0 +1,26 @@
+agent: adversarial-challenger
+regime: clean
+prompt: |
+  Brief: Claim that renaming `get_user` to `fetch_user` in svc/users.py
+  is a purely mechanical refactor with no behavioral change.
+
+  Observable facts:
+  - Only one call site exists in svc/users.py.
+  - The function body is unchanged.
+  - No external consumers reference this symbol.
+
+  Files:
+    svc/users.py defines fetch_user (renamed from get_user).
+    There are no other files.
+sandbox:
+  files:
+    svc/users.py: |
+      def fetch_user(uid):
+          return _db.lookup(uid)
+
+      result = fetch_user(42)
+assert:
+  first_line: '^Claim:'
+  max_words: 40
+  no_reprint: true
+timeout_s: 120

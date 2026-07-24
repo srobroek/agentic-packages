@@ -1,0 +1,63 @@
+agent: journey-validator
+regime: clean
+prompt: |
+  Validate journey J01 using the journeys directory at $SANDBOX/journeys.
+  Journey file: journeys/J01-login.md
+  Mode: full
+  Interface profile: cli
+sandbox:
+  git: true
+  files:
+    journeys/FORMAT.md: |
+      # FORMAT.md — Journey format specification
+
+      ## Amendment authority
+      journey-validator may amend: corrections (body-only, no bump), intended-changes (version bump + Δ entry with evidence).
+
+      ## Run file format
+      Frontmatter: journey_id, version, sha, result, steps[].
+      Body: evidence + triage per non-pass step.
+
+    journeys/README.md: |
+      # Journeys
+
+      ## Interface profiles
+      - cli: drive via command-line; no browser.
+
+      ## Intent evidence sources
+      - git log
+      - CHANGELOG.md
+
+    journeys/INDEX.md: |
+      | ID | Title | Version | Status |
+      |----|-------|---------|--------|
+      | J01 | Login | 1 | active |
+
+    journeys/J01-login.md: |
+      ---
+      id: J01
+      title: Login
+      version: 1
+      status: active
+      surfaces:
+        - auth
+      interfaces:
+        - cli
+      trace: []
+      ---
+
+      ## Preconditions
+      P1. The CLI binary is on PATH.
+
+      ## Steps
+      S1.
+      Do: run `myapp login --user test --password pass`
+      Expect: exit code 0
+      Expect (negative): no error message on stdout
+
+assert:
+  first_line: '^JOURNEY J\S+ v\S+ @\S+ — (?:PASS|FAIL|BLOCKED):'
+  max_words: 200
+  no_reprint: true
+timeout_s: 180
+budget_usd: 1.00
