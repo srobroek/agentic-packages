@@ -585,6 +585,13 @@ marketplace:
       tags:
         - mcp
         - web
+    - name: mcp-gitnexus
+      source: ./packages/mcp-gitnexus
+      category: mcp
+      tags:
+        - mcp
+        - code-intelligence
+        - knowledge-graph
     - name: mcp-mempalace
       source: ./packages/mcp-mempalace
       category: mcp
