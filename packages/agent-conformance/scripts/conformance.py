@@ -750,9 +750,16 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
 
     # First line match — strip the extracted line so ^-anchored patterns
     # match replies with leading indentation or CR from CRLF endings.
+    # Normalization (frozen semantics v2): markdown emphasis wrappers and a
+    # literal leading "L1 " token are stripped before matching. Models
+    # reliably bold the verdict or echo the contract's L1 notation even when
+    # told not to; the verdict information is intact, so tolerant extraction
+    # beats a false FAIL. Preamble before the verdict line remains a failure.
     first_line_pat = assert_cfg.get("first_line")
     if first_line_pat:
         first_nonempty = next((ln.strip() for ln in reply.splitlines() if ln.strip()), "")
+        first_nonempty = re.sub(r"^[*_`]+|[*_`]+$", "", first_nonempty).strip()
+        first_nonempty = re.sub(r"^L1\s+", "", first_nonempty)
         m = _timed_search(first_line_pat, first_nonempty)
         if m is _TIMED_OUT:
             failures.append({"kind": "regex_timeout", "detail": "first_line pattern timed out"})

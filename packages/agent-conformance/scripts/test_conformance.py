@@ -1052,3 +1052,43 @@ class TestCRLFAndLeadingWhitespace:
         assert not any(f["kind"] == "max_words" for f in failures), (
             "max_words failed — \\r may be inflating word count"
         )
+
+
+def test_first_line_markdown_emphasis_stripped():
+    """Bold/underscore/backtick wrappers around the verdict line must not fail."""
+    import conformance as c
+
+    entry = {
+        "assert": {"first_line": r"^VERDICT: (?:APPROVE|CHANGES)\b", "max_words": "uncapped"},
+        "_fixture_content": "",
+        "max_reply_bytes": 65536,
+    }
+    reply = "**VERDICT: APPROVE** — clean rename.\n" + "body " * 20
+    assert c._run_assertions(entry, reply) == []
+
+
+def test_first_line_literal_l1_prefix_stripped():
+    """A literally-echoed 'L1 ' notation token is tolerated."""
+    import conformance as c
+
+    entry = {
+        "assert": {"first_line": r"^STATUS: (?:FINDINGS|CLEAN)\b", "max_words": "uncapped"},
+        "_fixture_content": "",
+        "max_reply_bytes": 65536,
+    }
+    reply = "L1 STATUS: FINDINGS — Python, svc/\n" + "body " * 20
+    assert c._run_assertions(entry, reply) == []
+
+
+def test_first_line_preamble_still_fails():
+    """Narrative before the verdict line remains a first_line failure."""
+    import conformance as c
+
+    entry = {
+        "assert": {"first_line": r"^VERDICT: APPROVE\b", "max_words": "uncapped"},
+        "_fixture_content": "",
+        "max_reply_bytes": 65536,
+    }
+    reply = "Let me look at the sandbox first.\n\nVERDICT: APPROVE — fine.\n" + "body " * 15
+    kinds = [f["kind"] for f in c._run_assertions(entry, reply)]
+    assert "first_line" in kinds
