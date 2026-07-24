@@ -45,7 +45,7 @@
     {
       "name": "agent-conformance",
       "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports — no LLM required for the engine.",
-      "version": "0.1.0",
+      "version": "0.0.0",
       "tags": [
         "testing",
         "agents",
