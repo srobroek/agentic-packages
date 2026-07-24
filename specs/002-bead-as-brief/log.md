@@ -71,6 +71,30 @@ likely to change later. Append-only during the run.
 - **[later] yq dependency.** Evaluator shells to `yq` for YAML→JSON. yq is on
   PATH here and in toolchain-defaults, but the real hook must fail open if
   absent (it does) and CI must ensure yq is present. Flag for N3 packaging.
+
+### Live orchestration test (starforge) — DONE, 3 iterations
+- Full writeup: `validation-run/REPORT.md`; per-iteration journals
+  `iteration-1.md`, `iteration-2-3.md`; artifact + sample renders in
+  `validation-run/starforge-artifact/`.
+- **[HUMAN INPUT NEEDED] custom bead states.** bd `--status` rejects
+  `reported`/`approved`/`changes_requested`/etc. — only built-in states are
+  accepted. The v2 design assumes a rich node state machine. Two options:
+  (a) register custom statuses in bd (if it supports it — needs investigation),
+  or (b) keep the state machine entirely in `metadata.state` and treat bd
+  `status` as coarse (open/in_progress/closed). The evaluator already reads
+  `metadata.state` first, so (b) works today. RECOMMEND (b) unless bd gains
+  first-class custom states — but this is a real design decision, flagging.
+- **[finding] bd flag inconsistency** (create `-l/--labels` vs update
+  `--add-label`) and **ephemeral wisps hidden from `bd list`** (use
+  `bd mol wisp list`). Both must land in the generated contract blocks + the
+  doctrine discovery note (N4/N6 work).
+- **[finding→fixed] evaluator only fixture-tested missed the real bd JSON
+  shape** (array + separate comments). Fixed in live mode. Real build MUST
+  keep a live-shape test. Logged as the top recommendation.
+- **[validated] the enforcement guarantee is real:** N2 left its handoff
+  label unset (took a wrong-flag fallback); the contract evaluator blocked it
+  with exactly `failed_checks:[handoff]`, nothing else. Fix → ALLOW. This is
+  the whole thesis of the spec, demonstrated on a live agent.
 - **[human?] AGENT_TEAMS flag.** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is
   not in settings; warm-tier features (SendMessage wake, FIX-round resume)
   need it. I will add it to the project/global settings env during the hooks
