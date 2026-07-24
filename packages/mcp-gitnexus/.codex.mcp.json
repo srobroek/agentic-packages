@@ -1,0 +1,13 @@
+{
+  "gitnexus": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "gitnexus@latest",
+      "mcp"
+    ],
+    "env": {
+      "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
+    }
+  }
+}
