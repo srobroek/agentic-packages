@@ -177,7 +177,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "7.0.3",
+      "version": "7.0.4",
       "tags": [
         "bundle",
         "steering"
