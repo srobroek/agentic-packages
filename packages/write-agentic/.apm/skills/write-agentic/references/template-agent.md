@@ -40,7 +40,7 @@ MUST Never reprint code, diffs, file contents, or the caller's claim.
 ## Rules for authoring
 
 MUST Verdict enums in CAPS; every section conditional; cap stated in the contract.
-MUST State in the Output contract that the verdict line is the literal first line (no preamble, no markdown emphasis); "L1" is notation, never printed.
+MUST Phrase the first-line rule imperatively — `Begin your reply with \`VERDICT:\`` — not as a description; imperative openings survive model narration habits where passive rules do not. "L1" is notation, never printed.
 MUST Subagents never load steering — inline any rule the agent needs (code
   economy, comment density come free via SubagentStart inject; task-specific
   rules go in the body).
