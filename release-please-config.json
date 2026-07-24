@@ -92,6 +92,18 @@
         }
       ]
     },
+    "packages/agent-conformance": {
+      "release-type": "simple",
+      "component": "agent-conformance",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-explorer": {
       "release-type": "simple",
       "component": "agent-explorer",

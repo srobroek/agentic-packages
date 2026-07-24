@@ -43,6 +43,18 @@
       "source": "./packages/agent-coder-high"
     },
     {
+      "name": "agent-conformance",
+      "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports — no LLM required for the engine.",
+      "version": "0.1.0",
+      "tags": [
+        "testing",
+        "agents",
+        "conformance"
+      ],
+      "category": "engineering",
+      "source": "./packages/agent-conformance"
+    },
+    {
       "name": "agent-explorer",
       "description": "Read-only exploration agent for bounded code and configuration discovery.",
       "version": "2.0.0",

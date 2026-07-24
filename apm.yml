@@ -84,6 +84,13 @@ marketplace:
         - agent
         - codex
         - routing
+    - name: agent-conformance
+      source: ./packages/agent-conformance
+      category: engineering
+      tags:
+        - testing
+        - agents
+        - conformance
     - name: agent-explorer
       source: ./packages/agent-explorer
       category: code-intelligence
