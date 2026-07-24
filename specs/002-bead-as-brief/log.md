@@ -28,6 +28,49 @@ likely to change later. Append-only during the run.
   Plan: a `validation-run/` observations journal per iteration + a final
   mechanism-by-mechanism report (what worked, what broke, what surprised).
   Added to quickstart V7 as a deliverable.
+- **[decision] Not pouring the speckit-feature molecule for the build.** The
+  26-step formula has human gates (clarify-approval, analyze-approval,
+  verify-signoff) that would block autonomous progress — contradicts the
+  standing "don't pause to ask" directive. The design was already grilled to
+  completion, so clarify/analyze gates would be no-ops anyway. Tracking the
+  build as plain beads under an epic instead (the design doc itself sanctions
+  plain beads for tinyspec/direct work). speckit formula still applies to
+  future features; this one bootstrapped by hand.
+- **[decision] Build scope this session.** Full production system (≈15 rules
+  files × 2 runtimes, live hook install, skill rewrites, fleet deletions +
+  apm compile) is multi-day → beads. This session builds the KEYSTONE: the
+  rules-engine evaluator + conformance suite that makes the enforcement
+  guarantee (US2 / SC-002) real and testable, then runs the creative
+  orchestration test to exercise the bd primitive layer (beads/wisps/links/
+  gates/labels) the whole design rests on. Rationale: the convention layer is
+  bd-native and already works; the evaluator is the novel provable artifact.
+- **[superseded] orc-dc9** (prior-session verification bead) partially
+  obsolete: 4 of its 6 target agents are deleted by 002. Annotated,
+  unassigned, left open for the survivor sweep.
+
+### N1 doctrine — DONE
+- Added `packages/beads/.apm/context/beads.orchestration-doctrine.context.md`,
+  wired into the beads context WORKFLOWS index. Pure steering.
+
+### N2 rules-engine (KEYSTONE) — DONE, PROVEN
+- Built `packages/beads/scripts/rules-eval.sh` (SubagentStop evaluator, bash
+  3.2, fail-open, jq+yq), `domain-specialist.rules.yml`, and a 13-case
+  conformance suite `rules-eval-test.sh`. **13/13 pass.**
+- **[bug found+fixed] Greedy-sed label pattern bug.** Extracting the regex
+  from `require: label ~ "^agent:"` with `sed -E 's/^label ~ "?(.*)"?$/\1/'`
+  captured the trailing quote into the pattern (`^agent:"`), so the handoff
+  label check never matched → false blocks on otherwise-complete nodes. This
+  is EXACTLY the class in memory `hook-guard deblock policy` (regex/anchoring
+  fragility). Fixed with bash parameter expansion (`${req#label ~ }` then
+  strip quotes). Lesson for the real hooks build: prefer param-expansion over
+  sed for predicate parsing; the conformance suite caught it immediately —
+  vindicates rules-as-data + fixtures over hand-written per-agent checks.
+- **[decision] Fixture mode in the evaluator.** Added a `._bead` /
+  `._rules_file` payload path so the suite runs with no bd/live state. Keeps
+  SC-002 provable in CI (hooks-portability-ci) without a scratch beads DB.
+- **[later] yq dependency.** Evaluator shells to `yq` for YAML→JSON. yq is on
+  PATH here and in toolchain-defaults, but the real hook must fail open if
+  absent (it does) and CI must ensure yq is present. Flag for N3 packaging.
 - **[human?] AGENT_TEAMS flag.** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is
   not in settings; warm-tier features (SendMessage wake, FIX-round resume)
   need it. I will add it to the project/global settings env during the hooks

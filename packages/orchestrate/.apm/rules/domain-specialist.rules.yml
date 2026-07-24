@@ -1,0 +1,35 @@
+# Contract rules for domain-specialist (spec 002-bead-as-brief).
+# Single source of truth: the SubagentStop evaluator reads this, and the
+# "Your bead contract" block in the agent definition is generated from it at
+# compile time. Do not hand-edit the generated block.
+agent: domain-specialist
+tier: T1
+
+completion:
+  - check: branch
+    require: metadata.branch
+    when: git
+  - check: push
+    require: metadata.push
+    when: git
+  - check: output_ref
+    require: metadata.output_ref
+    when: artifact
+  - check: handoff
+    require: label ~ "^agent:"
+  - check: reported
+    require: comment.verb in [REPORTED]
+
+authority:
+  deny_states: [approved, changes_requested, merged, dismissed, closed]
+  deny_metadata: [merge_sha, pr]
+
+escape:
+  state: failed
+  require: comment.verb in [FAILED, BLOCKED]
+
+pause:
+  - open-escalation-wisp-linked-to-node
+
+bounce:
+  max_attempts: 3
