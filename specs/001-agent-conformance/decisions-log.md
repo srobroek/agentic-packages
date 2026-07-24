@@ -63,6 +63,11 @@ and on the gate beads.
 
 ## Open questions for the user
 
-- None blocking. FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now
-  depends on parallel Task-spawn batching inside one session; if real sweeps
-  exceed it, the fix is raising batch width, not architecture.
+- **Disk pressure (2026-07-24)**: the machine hit 100% full mid-run (ENOSPC),
+  then recovered to ~7 GiB free without intervention. Largest reclaimable
+  caches if it recurs: `~/Library/Caches/Mozilla.sccache` 13G,
+  `Homebrew` 3.8G (`brew cleanup`), `pip` 1.3G. Not deleted — user data,
+  needs your call.
+- FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now depends on parallel
+  Task-spawn batching inside one session; if real sweeps exceed it, the fix
+  is raising batch width, not architecture.
