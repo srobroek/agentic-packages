@@ -1,0 +1,98 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/universal-start.sh",
+            "statusMessage": "Injecting bead-as-brief claim contract...",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "domain-specialist",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
+            "statusMessage": "Evaluating domain-specialist bead contract...",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "workflow-reviewer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
+            "statusMessage": "Evaluating workflow-reviewer bead contract...",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "workflow-advisor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
+            "statusMessage": "Evaluating workflow-advisor bead contract...",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "workflow-researcher",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
+            "statusMessage": "Evaluating workflow-researcher bead contract...",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "ledger-scribe",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
+            "statusMessage": "Evaluating ledger-scribe bead contract...",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/universal-stop-net.sh",
+            "statusMessage": "Universal bead-contract net check...",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/orchestrator-claim-deny.sh",
+            "statusMessage": "Checking orchestrator claim-deny policy...",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
