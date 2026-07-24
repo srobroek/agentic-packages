@@ -284,7 +284,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "11.0.3",
+      "version": "11.0.4",
       "tags": [
         "bundle",
         "baseline"
@@ -911,7 +911,7 @@
     {
       "name": "mcp-gitnexus",
       "description": "MCP server package for GitNexus code-intelligence: knowledge-graph queries over an indexed repository (execution flows, symbol context, impact/blast radius, call-path tracing). Ships the server config with SHARP_IGNORE_GLOBAL_LIBVIPS=1 so the npx install never source-builds sharp against a host libvips, plus steering on when graph queries beat text search and semantic tools.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "tags": [
         "mcp",
         "code-intelligence",
