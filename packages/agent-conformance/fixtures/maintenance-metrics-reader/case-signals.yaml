@@ -1,0 +1,19 @@
+agent: maintenance-metrics-reader
+regime: findings
+prompt: |
+  Collect maintenance health signals for this repository.
+  scope: full repository
+  Report any stale branches, incomplete merge states, or worktree issues.
+sandbox:
+  git: true
+  files:
+    README.md: |
+      # Test repo
+    MERGE_HEAD: |
+      0000000000000000000000000000000000000001
+assert:
+  first_line: '^MAINTENANCE SNAPSHOT \S+ status=(?:PASS|WARN|FAIL)'
+  max_words: 220
+  no_reprint: true
+timeout_s: 180
+budget_usd: 0.50

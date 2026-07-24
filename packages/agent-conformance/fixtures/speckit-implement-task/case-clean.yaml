@@ -1,0 +1,25 @@
+agent: speckit-implement-task
+regime: clean
+prompt: |
+  Task ID: T-001
+  Description: Add a CHANGELOG.md placeholder file with "# Changelog" as the only line.
+  spec.md excerpt: "The repository must include a top-level CHANGELOG.md."
+  Worktree: $SANDBOX
+  Scope: CHANGELOG.md
+  Verification: check that CHANGELOG.md exists and contains "# Changelog"
+
+sandbox:
+  git: true
+  files:
+    spec.md: |
+      # Spec
+      FR-1: The repository includes CHANGELOG.md with a top-level heading.
+
+assert:
+  max_words: 400
+  no_reprint: true
+  required_patterns:
+    - '(?:PASS|BLOCKED|DELEGATE)'
+    - 'T-001'
+timeout_s: 180
+budget_usd: 1.00

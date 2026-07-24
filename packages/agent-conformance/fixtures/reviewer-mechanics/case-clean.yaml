@@ -1,0 +1,26 @@
+agent: reviewer-mechanics
+regime: clean
+prompt: |
+  MECH-REVIEW scope=svc/ base=main
+  Review the diff below. Acceptance criteria: rename add_item to append_item with no behavior change.
+
+  diff --git a/svc/store.py b/svc/store.py
+  --- a/svc/store.py
+  +++ b/svc/store.py
+  @@ -1,3 +1,3 @@
+  -def add_item(x):
+  +def append_item(x):
+       return x
+sandbox:
+  files:
+    svc/store.py: |
+      def append_item(x):
+          return x
+assert:
+  first_line: '^MECH-REVIEW \S+ verdict=(?:PASS|CHANGES)'
+  max_words: 40
+  no_reprint: true
+  required_patterns:
+    - 'verdict=PASS'
+timeout_s: 120
+budget_usd: 0.50

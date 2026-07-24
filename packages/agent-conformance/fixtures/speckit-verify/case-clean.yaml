@@ -1,0 +1,32 @@
+agent: speckit-verify
+regime: clean
+prompt: |
+  mode: requirements
+  Spec ID: SPEC-001
+  FEATURE_DIR: $SANDBOX/feature
+  spec.md: $SANDBOX/feature/spec.md
+  Implementation directories: $SANDBOX/src
+
+sandbox:
+  files:
+    feature/spec.md: |
+      # Spec: hello module
+      ## Functional Requirements
+      FR-1: The module exposes a `greet(name)` function that returns "Hello, <name>!".
+      FR-2: The function is importable from `hello.greet`.
+    src/hello.py: |
+      def greet(name):
+          return f"Hello, {name}!"
+
+assert:
+  first_line: '^VERIFY \S+ SUMMARY — (?:PASS|FINDINGS):'
+  max_words: 200
+  no_reprint: true
+  required_patterns:
+    - 'FR-1'
+    - 'FR-2'
+  artifacts:
+    - path: 'feature/verify-report.md'
+      line_pattern: '\| FR-[12] \| (?:VERIFIED|PARTIAL|WEAK|NOT_FOUND) \|'
+timeout_s: 300
+budget_usd: 2.00

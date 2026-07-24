@@ -1,0 +1,29 @@
+agent: workflow-advisor
+regime: clean
+prompt: |
+  BLOCKED node=n3 kind:design
+  Question: Should the config loader return None or raise KeyError when a required key is missing?
+  Context: svc/config.py:12 — loader currently returns None; callers at svc/app.py:45 do not check for None.
+
+sandbox:
+  files:
+    svc/config.py: |
+      def load(key):
+          return _store.get(key)
+    svc/app.py: |
+      from svc.config import load
+
+      def start():
+          host = load("host")
+          port = load("port")
+          return host, port
+
+assert:
+  first_line: '^ADVICE \S+'
+  max_words: 120
+  no_reprint: true
+  required_patterns:
+    - 'answer:'
+    - 'because:'
+timeout_s: 180
+budget_usd: 1.00

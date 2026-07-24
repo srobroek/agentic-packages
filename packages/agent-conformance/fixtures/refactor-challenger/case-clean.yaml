@@ -1,0 +1,28 @@
+agent: refactor-challenger
+regime: clean
+prompt: |
+  Brief (per finding):
+
+  Finding 1:
+  - File:line: svc/processor.py:6
+  - Smell: Duplicate code — item appended twice in loop
+  - Source: bloodhound reading
+  - Proposed refactoring: Replace double-append with a list comprehension
+    that flattens by repeating each element once.
+
+  Verify the smell is real and judge whether the proposed refactoring
+  earns its cost.
+sandbox:
+  files:
+    svc/processor.py: |
+      def process(items):
+          result = []
+          for item in items:
+              result.append(item)
+              result.append(item)
+          return result
+assert:
+  first_line: '^VERDICT: (?:KEEP|DOWNGRADE|DROP)\b'
+  max_words: uncapped
+  no_reprint: true
+timeout_s: 120

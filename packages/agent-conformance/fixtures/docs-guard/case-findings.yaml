@@ -1,0 +1,26 @@
+agent: docs-guard
+regime: findings
+prompt: |
+  DOCS-GUARD node=n2 scope=docs/
+  files:
+    - docs/guide.md
+  lint_report:
+    docs/guide.md:1:MD041:error:first line must be a top-level heading
+sandbox:
+  files:
+    docs/guide.md: |
+      ## Usage
+
+      ### Install
+
+      Run pip install.
+
+      ### Install
+assert:
+  first_line: '^DOCS-GUARD \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 160
+  no_reprint: true
+  required_patterns:
+    - 'docs/guide\.md'
+timeout_s: 120
+budget_usd: 0.50

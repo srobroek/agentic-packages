@@ -1,0 +1,27 @@
+agent: reviewer-low
+regime: clean
+prompt: |
+  Review this diff against the acceptance criteria.
+
+  Acceptance criteria:
+  - rename `get_user` to `fetch_user` everywhere; no behavior change.
+
+  Diff:
+  --- a/svc/users.py
+  +++ b/svc/users.py
+  @@ -10,7 +10,7 @@
+  -def get_user(uid):
+  +def fetch_user(uid):
+       return _db.lookup(uid)
+sandbox:
+  files:
+    svc/users.py: |
+      def fetch_user(uid):
+          return _db.lookup(uid)
+assert:
+  first_line: '^VERDICT: (?:APPROVE|CHANGES|ESCALATE)\b'
+  max_words: 100
+  no_reprint: true
+  forbidden_patterns:
+    - '^Findings'
+timeout_s: 120

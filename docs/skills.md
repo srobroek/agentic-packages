@@ -7,6 +7,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 <!-- BEGIN:skills -->
 | Skill | Description |
 | --- | --- |
+| `agent-conformance` | Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports — no LLM required for the engine. |
 | `agent-management` | Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets. |
 | `audit-steering` | Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste. |
 | `brownfield-project` | Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively. |

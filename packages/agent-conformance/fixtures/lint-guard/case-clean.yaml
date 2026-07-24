@@ -1,0 +1,19 @@
+agent: lint-guard
+regime: clean
+prompt: |
+  LINT-GUARD node=n1 scope=svc/
+  lint_report:
+    svc/app.py:99:E501:warning:line too long
+sandbox:
+  files:
+    svc/app.py: |
+      def hello():
+          return "world"
+assert:
+  first_line: '^LINT-GUARD \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 90
+  no_reprint: true
+  required_patterns:
+    - 'verdict=PASS'
+timeout_s: 120
+budget_usd: 0.50

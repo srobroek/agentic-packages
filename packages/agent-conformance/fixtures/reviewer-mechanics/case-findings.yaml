@@ -1,0 +1,26 @@
+agent: reviewer-mechanics
+regime: findings
+prompt: |
+  MECH-REVIEW scope=svc/ base=main
+  Review the diff below.
+
+  diff --git a/svc/calc.py b/svc/calc.py
+  --- a/svc/calc.py
+  +++ b/svc/calc.py
+  @@ -1,4 +1,4 @@
+  -def divide(a, b):
+  +def divide(a, b=0):
+       return a / b
+sandbox:
+  files:
+    svc/calc.py: |
+      def divide(a, b=0):
+          return a / b
+assert:
+  first_line: '^MECH-REVIEW \S+ verdict=(?:PASS|CHANGES)'
+  max_words: 120
+  no_reprint: true
+  required_patterns:
+    - 'verdict=CHANGES'
+timeout_s: 120
+budget_usd: 0.50

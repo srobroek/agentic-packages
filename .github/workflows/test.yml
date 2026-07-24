@@ -94,6 +94,44 @@ jobs:
           done
           exit $rc
 
+  # Deterministic agent-contract conformance gate (no LLM): coverage of every
+  # shipped agent by a fixture or reasoned skip, fixture validity, and drift
+  # between fixture expectations and the agent's declared contract. Guards
+  # against editing an agent's contract in ANY package without updating its
+  # conformance fixture. The LLM sweep itself never runs per-PR (FR-009 of
+  # specs/001-agent-conformance); this check is pure Python.
+  conformance-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.14"
+
+      - name: Run conformance check on agent or fixture changes
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # base can be empty on orphan/first-commit PRs; diff from root then.
+          if [ -z "$base" ]; then
+            base=$(git rev-list --max-parents=0 "$head" | tail -1)
+          fi
+          changed=$(git diff --name-only "$base" "$head" -- \
+            'packages/*/.apm/agents/*.agent.md' 'packages/agent-conformance/**' || true)
+          if [ -z "$changed" ]; then
+            echo "no agent or conformance changes"
+            exit 0
+          fi
+          pip install --quiet pyyaml
+          python3 packages/agent-conformance/scripts/conformance.py check
+
   test:
     needs: changed
     if: needs.changed.outputs.any == 'true'
@@ -207,7 +245,7 @@ jobs:
   # Passes when the matrix succeeded OR was legitimately skipped (no changed
   # package ships tests); fails only if a real test leg failed or was cancelled.
   tests-gate:
-    needs: [changed, test, agentic-lint]
+    needs: [changed, test, agentic-lint, conformance-check]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -220,10 +258,14 @@ jobs:
           CHANGED_RESULT: ${{ needs.changed.result }}
           TEST_RESULT: ${{ needs.test.result }}
           LINT_RESULT: ${{ needs.agentic-lint.result }}
+          CONFORMANCE_RESULT: ${{ needs.conformance-check.result }}
         run: |
-          echo "changed=$CHANGED_RESULT test=$TEST_RESULT agentic-lint=$LINT_RESULT"
+          echo "changed=$CHANGED_RESULT test=$TEST_RESULT agentic-lint=$LINT_RESULT conformance-check=$CONFORMANCE_RESULT"
           if [ "$LINT_RESULT" != "success" ]; then
             echo "::error::agentic-lint did not succeed ($LINT_RESULT)"; exit 1
+          fi
+          if [ "$CONFORMANCE_RESULT" != "success" ]; then
+            echo "::error::conformance-check did not succeed ($CONFORMANCE_RESULT)"; exit 1
           fi
           if [ "$CHANGED_RESULT" != "success" ]; then
             echo "::error::change-detection job did not succeed ($CHANGED_RESULT)"; exit 1

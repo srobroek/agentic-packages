@@ -3,6 +3,7 @@
   "packages/agent-adversarial-challenger": "3.2.1",
   "packages/agent-coder": "6.1.3",
   "packages/agent-coder-high": "2.0.0",
+  "packages/agent-conformance": "0.0.0",
   "packages/agent-explorer": "2.0.0",
   "packages/agent-external-repo-worker": "2.2.1",
   "packages/agent-management": "1.2.2",

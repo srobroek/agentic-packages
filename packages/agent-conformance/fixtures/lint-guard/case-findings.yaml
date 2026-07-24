@@ -1,0 +1,23 @@
+agent: lint-guard
+regime: findings
+prompt: |
+  LINT-GUARD node=n2 scope=svc/
+  lint_report:
+    svc/app.py:3:F401:warning:'os' imported but unused
+    svc/app.py:3:F401:warning:'os' imported but unused
+sandbox:
+  files:
+    svc/app.py: |
+      import os
+      import sys
+
+      def main():
+          print(sys.argv)
+assert:
+  first_line: '^LINT-GUARD \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 180
+  no_reprint: true
+  required_patterns:
+    - 'svc/app\.py:3'
+timeout_s: 120
+budget_usd: 0.50

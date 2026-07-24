@@ -1,0 +1,29 @@
+agent: reviewer-high
+regime: clean
+prompt: |
+  Review this diff against the acceptance criteria.
+
+  Acceptance criteria:
+  - The `hash_password` function must use bcrypt; no plaintext storage.
+
+  Diff:
+  --- a/auth.py
+  +++ b/auth.py
+  @@ -1,4 +1,6 @@
+  +import bcrypt
+  +
+   def hash_password(pw):
+  -    return pw
+  +    return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+sandbox:
+  files:
+    auth.py: |
+      import bcrypt
+
+      def hash_password(pw):
+          return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+assert:
+  first_line: '^VERDICT: (?:APPROVE|CHANGES|ESCALATE)\b'
+  max_words: 160
+  no_reprint: true
+timeout_s: 120
