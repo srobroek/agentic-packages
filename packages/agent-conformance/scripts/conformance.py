@@ -1214,8 +1214,8 @@ def build_parser() -> argparse.ArgumentParser:
     stage_p = sub.add_parser("stage", help="Stage sandboxes and emit run manifest")
     sel = stage_p.add_mutually_exclusive_group()
     sel.add_argument("--all", action="store_true", help="Stage all agents")
-    sel.add_argument("--agent", nargs="+", metavar="NAME", help="Stage specific agents by name")
-    sel.add_argument("--package", nargs="+", metavar="PKG", help="Stage agents from specific packages")
+    sel.add_argument("--agent", nargs="+", action="extend", metavar="NAME", help="Stage specific agents by name (repeatable)")
+    sel.add_argument("--package", nargs="+", action="extend", metavar="PKG", help="Stage agents from specific packages (repeatable)")
     stage_p.add_argument("--out-dir", metavar="PATH", help="Output directory (default: .conformance-runs/<ts>/)")
 
     # assert

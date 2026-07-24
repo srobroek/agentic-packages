@@ -687,3 +687,12 @@ def _fake_args(subcommand: str, **kwargs) -> object:
     ns.agent = kwargs.get("agent", None)
     ns.package = kwargs.get("package", None)
     return ns
+
+
+def test_stage_repeated_agent_flags_accumulate():
+    """Repeated --agent flags must extend, not overwrite (argparse footgun)."""
+    import conformance as c
+
+    parser = c.build_parser()
+    args = parser.parse_args(["stage", "--agent", "a-one", "--agent", "a-two"])
+    assert args.agent == ["a-one", "a-two"]
