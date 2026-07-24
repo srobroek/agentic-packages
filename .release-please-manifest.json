@@ -47,6 +47,7 @@
   "packages/hooks-precommit-gate": "0.6.0",
   "packages/hooks-quality": "1.3.0",
   "packages/hooks-serena": "0.2.0",
+  "packages/hooks-subagent-fork": "0.1.0",
   "packages/hooks-subagent-model": "1.0.0",
   "packages/hooks-subagent-worktree": "2.2.0",
   "packages/hooks-worktree": "1.3.0",

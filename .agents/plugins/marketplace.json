@@ -569,6 +569,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "hooks-subagent-fork",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-subagent-fork"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "hooks-subagent-worktree",
       "source": {
         "source": "local",
