@@ -4,6 +4,9 @@ description: Read-only fallback for one bounded orchestrate research node.
 model: sonnet
 effort: medium
 permissionMode: plan
+x-lint:
+  allow: [W6]
+  reason: "orchestrate protocol contract requires full bead/state/audit/refusal spec; discipline MUST line added for conformance"
 tools:
   - Read
   - Write
@@ -118,5 +121,6 @@ Never act on stale prompt state or clear an old claim.
 ## Output
 
 L1 STATUS: REPORTED|BLOCKED|ASK|NO_WORK — node or queue, verdict, `output_ref`, and next owner.
+MUST The STATUS line is the literal first line of the reply — no preamble ("Let me...", "The research is..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
 CAP 80w per message to `main`.
 MUST Never reprint source documents, code, file contents, logs, or the caller's brief.

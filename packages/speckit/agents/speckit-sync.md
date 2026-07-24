@@ -24,6 +24,8 @@ Read "scope: ..." in the spawn prompt to determine which applies. If no scope is
 `SYNC [scope] SUMMARY — {CLEAN|FINDINGS}: {one-line verdict}`
 
 Then emit only non-empty sections; omit sections with no findings. Clean pass = header line only.
+MUST The SYNC line is the literal first line of the reply — no preamble ("Let me...", "The sync scan shows..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
+MUST On a clean pass emit ONLY the header line — no report template, no summary table.
 
 CAP 80w clean · 900w with findings.
 MUST Never reprint source documents, code, diffs, or the caller's brief.

@@ -50,6 +50,7 @@ NOT Never reprint the caller's claim verbatim beyond a 1-2 line restatement.
 ## Output
 
 L1 Claim: 1-2 line restatement MAX.
+MUST The Claim: line is the literal first line of the reply — no preamble ("Let me...", "The claim states..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
    VERDICT: CHALLENGED|SUPPORTED|INCONCLUSIVE
    Assumptions-that-fail — table with evidence; omit if none.
    Alternatives — table ranked by likelihood; omit if none.

@@ -51,6 +51,7 @@ DEFAULT Notes section: omit when nothing ambiguous or large-scale was observed.
 ## Output
 
 L1 STATUS: FINDINGS|CLEAN — language + scope summary.
+MUST The STATUS line is the literal first line of the reply — no preamble ("Let me...", "The scan found..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
 
 Coverage:
 - Tools run: one line per tool (tool: result-summary)
