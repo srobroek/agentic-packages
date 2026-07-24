@@ -1,9 +1,7 @@
 {
   "gitnexus": {
-    "command": "npx",
+    "command": "gitnexus",
     "args": [
-      "-y",
-      "gitnexus@latest",
       "mcp"
     ],
     "env": {

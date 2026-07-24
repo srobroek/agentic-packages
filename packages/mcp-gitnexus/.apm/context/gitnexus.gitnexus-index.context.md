@@ -53,3 +53,20 @@ DEFAULT LadybugDB installs extensions per the policy env
   If `analyze` logs "FTS extension unavailable... load-only policy", run one
   analyze with `GITNEXUS_LBUG_EXTENSION_INSTALL=auto` to install it:
   `GITNEXUS_LBUG_EXTENSION_INSTALL=auto gitnexus analyze --embeddings`
+
+## Troubleshooting (battle-tested 2026-07-24)
+
+- **MCP "still connecting" / init timeout**: the npx server form cold-starts in
+  ~4s and can trip the client timeout. Use the global binary (`gitnexus mcp`,
+  <2s). Prereq `npm install -g gitnexus` (Node 25+: `npm i -g node-gyp` first;
+  machines with global libvips: prefix `SHARP_IGNORE_GLOBAL_LIBVIPS=1`).
+- **Silent hook enrichment / CLI segfault**: a stale `gitnexus mcp` or
+  `gitnexus analyze` process holding the LadybugDB lock makes queries no-op or
+  SIGSEGV (macOS arm64; upstream issue #1204 family). `ps aux | grep gitnexus`,
+  kill the holder, then `gitnexus analyze --force` if queries still fail. The
+  hook's silent-skip design masks this failure mode entirely.
+- **npx cache corruption**: interrupted installs leave `~/.npm/_npx/<hash>`
+  half-written (ENOTEMPTY on rename). Remove that directory and retry.
+- **FTS unavailable warnings**: extension installs per
+  `GITNEXUS_LBUG_EXTENSION_INSTALL` policy (`auto|load-only|never`); one
+  `auto` analyze run (the default for analyze) installs it — needs network.
