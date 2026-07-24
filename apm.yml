@@ -314,14 +314,6 @@ marketplace:
         - skill
         - lifecycle
         - handover
-    - name: headroom
-      source: ./packages/headroom
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - tokens
-        - compression
     - name: hooks-attribution-guard
       source: ./packages/hooks-attribution-guard
       category: project-lifecycle

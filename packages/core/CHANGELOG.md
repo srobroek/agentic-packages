@@ -1,5 +1,12 @@
 # Changelog
 
+## [11.0.5](https://github.com/srobroek/agentic-packages/compare/core--v11.0.4...core--v11.0.5) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([bfed431](https://github.com/srobroek/agentic-packages/commit/bfed4316c585e044acc06d44691ebb111326cece))
+
 ## [11.0.4](https://github.com/srobroek/agentic-packages/compare/core--v11.0.3...core--v11.0.4) (2026-07-24)
 
 

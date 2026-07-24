@@ -28,6 +28,11 @@ esac
 
 [ -d "$PRIMARY/.gitnexus" ] || exit 0
 
+# Guardrail: if ANY gitnexus analyze is already running for this repo, hold
+# off rather than start a second one — concurrent writers corrupt/quarantine
+# the LadybugDB. Never cancel a running analyze (mid-write kill risks
+# corruption). The background runner waits up to 15min for the running one to
+# finish, then reindexes once, so the tail merge of a train is still captured.
 LOCK="$PRIMARY/.gitnexus/reindex.lock"
 if [ -f "$LOCK" ]; then
   # stat -f %m (macOS) or stat -c %Y (Linux)
@@ -36,5 +41,12 @@ if [ -f "$LOCK" ]; then
 fi
 touch "$LOCK"
 
-nohup sh -c "cd '$PRIMARY' && gitnexus analyze >/dev/null 2>&1; rm -f '$LOCK'" >/dev/null 2>&1 &
+nohup sh -c "
+  for _i in \$(seq 1 90); do
+    pgrep -f 'gitnexus analyze' >/dev/null 2>&1 || break
+    sleep 10
+  done
+  cd '$PRIMARY' && gitnexus analyze >/dev/null 2>&1
+  rm -f '$LOCK'
+" >/dev/null 2>&1 &
 exit 0

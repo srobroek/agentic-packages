@@ -15,6 +15,7 @@
         "critique",
         "decision-review"
       ],
+      "category": "quality",
       "source": "./packages/agent-adversarial-challenger"
     },
     {
@@ -26,6 +27,7 @@
         "engineering",
         "implementation"
       ],
+      "category": "engineering",
       "source": "./packages/agent-coder"
     },
     {
@@ -37,6 +39,7 @@
         "codex",
         "routing"
       ],
+      "category": "engineering",
       "source": "./packages/agent-coder-high"
     },
     {
@@ -48,6 +51,7 @@
         "agents",
         "conformance"
       ],
+      "category": "engineering",
       "source": "./packages/agent-conformance"
     },
     {
@@ -59,6 +63,7 @@
         "codex",
         "routing"
       ],
+      "category": "code-intelligence",
       "source": "./packages/agent-explorer"
     },
     {
@@ -70,6 +75,7 @@
         "engineering",
         "repos"
       ],
+      "category": "engineering",
       "source": "./packages/agent-external-repo-worker"
     },
     {
@@ -81,6 +87,7 @@
         "maintenance",
         "apm"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agent-management"
     },
     {
@@ -92,6 +99,7 @@
         "codex",
         "routing"
       ],
+      "category": "engineering",
       "source": "./packages/agent-operator"
     },
     {
@@ -103,6 +111,7 @@
         "quality",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/agent-pr-reviewer"
     },
     {
@@ -114,6 +123,7 @@
         "quality",
         "triage"
       ],
+      "category": "quality",
       "source": "./packages/agent-quality-guards"
     },
     {
@@ -125,6 +135,7 @@
         "codex",
         "routing"
       ],
+      "category": "planning-product",
       "source": "./packages/agent-reasoner"
     },
     {
@@ -136,6 +147,7 @@
         "codex",
         "routing"
       ],
+      "category": "quality",
       "source": "./packages/agent-reviewer-high"
     },
     {
@@ -147,6 +159,7 @@
         "codex",
         "routing"
       ],
+      "category": "quality",
       "source": "./packages/agent-reviewer-low"
     },
     {
@@ -158,16 +171,18 @@
         "codex",
         "routing"
       ],
+      "category": "engineering",
       "source": "./packages/agent-worker"
     },
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "7.0.3",
+      "version": "7.0.4",
       "tags": [
         "bundle",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/agentic-maintenance"
     },
     {
@@ -179,6 +194,7 @@
         "maintenance",
         "steering"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/audit-steering"
     },
     {
@@ -191,6 +207,7 @@
         "coordination",
         "multi-agent"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/beads"
     },
     {
@@ -202,6 +219,7 @@
         "lifecycle",
         "brownfield"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/brownfield-project"
     },
     {
@@ -213,6 +231,7 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/catchup"
     },
     {
@@ -224,6 +243,7 @@
         "dotfiles",
         "chezmoi"
       ],
+      "category": "dotfiles",
       "source": "./packages/chezmoi-editor"
     },
     {
@@ -235,6 +255,7 @@
         "cmux",
         "terminal"
       ],
+      "category": "developer-tools",
       "source": "./packages/cmux"
     },
     {
@@ -245,6 +266,7 @@
         "bundle",
         "semantic"
       ],
+      "category": "code-intelligence",
       "source": "./packages/code-intelligence"
     },
     {
@@ -256,16 +278,18 @@
         "hooks",
         "reference"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/codex-hook-contract"
     },
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "11.0.4",
+      "version": "11.0.5",
       "tags": [
         "bundle",
         "baseline"
       ],
+      "category": "core",
       "source": "./packages/core"
     },
     {
@@ -276,6 +300,7 @@
         "bundle",
         "data"
       ],
+      "category": "data",
       "source": "./packages/data-ai"
     },
     {
@@ -287,6 +312,7 @@
         "planning",
         "analysis"
       ],
+      "category": "planning-product",
       "source": "./packages/debate"
     },
     {
@@ -300,6 +326,7 @@
         "audit",
         "cve"
       ],
+      "category": "security",
       "source": "./packages/dep-audit"
     },
     {
@@ -313,6 +340,7 @@
         "advisory",
         "cve"
       ],
+      "category": "code-intelligence",
       "source": "./packages/dep-update"
     },
     {
@@ -324,6 +352,7 @@
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/dependency-quality"
     },
     {
@@ -334,6 +363,7 @@
         "bundle",
         "diagrams"
       ],
+      "category": "diagrams",
       "source": "./packages/diagrams"
     },
     {
@@ -345,6 +375,7 @@
         "planning",
         "explanation"
       ],
+      "category": "planning-product",
       "source": "./packages/eli5"
     },
     {
@@ -356,6 +387,7 @@
         "maintenance",
         "discovery"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/find-tools"
     },
     {
@@ -366,6 +398,7 @@
         "bundle",
         "frontend"
       ],
+      "category": "frontend",
       "source": "./packages/frontend"
     },
     {
@@ -377,6 +410,7 @@
         "languages",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/go-quality"
     },
     {
@@ -388,6 +422,7 @@
         "planning",
         "goals"
       ],
+      "category": "planning-product",
       "source": "./packages/goal-writer"
     },
     {
@@ -399,19 +434,8 @@
         "lifecycle",
         "handover"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/handover"
-    },
-    {
-      "name": "headroom",
-      "description": "Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "maintenance",
-        "tokens",
-        "compression"
-      ],
-      "source": "./packages/headroom"
     },
     {
       "name": "hooks-attribution-guard",
@@ -422,6 +446,7 @@
         "git",
         "attribution"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-attribution-guard"
     },
     {
@@ -433,6 +458,7 @@
         "bash",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-bash-safety"
     },
     {
@@ -445,6 +471,7 @@
         "dotfiles",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-chezmoi-guard"
     },
     {
@@ -457,6 +484,7 @@
         "github",
         "issues"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-close-keywords"
     },
     {
@@ -468,6 +496,7 @@
         "git",
         "safety"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-safety"
     },
     {
@@ -479,6 +508,7 @@
         "git",
         "commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-git-workflow"
     },
     {
@@ -490,6 +520,7 @@
         "dependencies",
         "supply-chain"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-package-investigate"
     },
     {
@@ -502,6 +533,7 @@
         "portability",
         "testing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-portability-ci"
     },
     {
@@ -513,6 +545,7 @@
         "git",
         "pre-commit"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-precommit-gate"
     },
     {
@@ -524,6 +557,7 @@
         "quality",
         "lint"
       ],
+      "category": "quality",
       "source": "./packages/hooks-quality"
     },
     {
@@ -536,6 +570,7 @@
         "semantic",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-serena"
     },
     {
@@ -549,6 +584,7 @@
         "cost",
         "codex"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-fork"
     },
     {
@@ -562,6 +598,7 @@
         "cost",
         "routing"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-model"
     },
     {
@@ -575,6 +612,7 @@
         "isolation",
         "policy"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-subagent-worktree"
     },
     {
@@ -586,6 +624,7 @@
         "worktree",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/hooks-worktree"
     },
     {
@@ -596,6 +635,7 @@
         "bundle",
         "infrastructure"
       ],
+      "category": "infrastructure",
       "source": "./packages/infrastructure"
     },
     {
@@ -606,6 +646,7 @@
         "bundle",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-go"
     },
     {
@@ -616,6 +657,7 @@
         "bundle",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-python"
     },
     {
@@ -626,6 +668,7 @@
         "bundle",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-rust"
     },
     {
@@ -636,6 +679,7 @@
         "bundle",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/language-shell"
     },
     {
@@ -646,6 +690,7 @@
         "steering",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-go"
     },
     {
@@ -656,6 +701,7 @@
         "steering",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-python"
     },
     {
@@ -666,6 +712,7 @@
         "steering",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-rust"
     },
     {
@@ -676,6 +723,7 @@
         "steering",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-terraform"
     },
     {
@@ -686,6 +734,7 @@
         "steering",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-steering-typescript"
     },
     {
@@ -696,6 +745,7 @@
         "bundle",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/language-terraform"
     },
     {
@@ -706,6 +756,7 @@
         "bundle",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/language-typescript"
     },
     {
@@ -719,6 +770,7 @@
         "interactive",
         "setup"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/license-picker"
     },
     {
@@ -729,6 +781,7 @@
         "lsp",
         "go"
       ],
+      "category": "languages",
       "source": "./packages/lsp-go"
     },
     {
@@ -739,6 +792,7 @@
         "lsp",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/lsp-python"
     },
     {
@@ -749,6 +803,7 @@
         "lsp",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/lsp-rust"
     },
     {
@@ -759,6 +814,7 @@
         "lsp",
         "shell"
       ],
+      "category": "languages",
       "source": "./packages/lsp-shell"
     },
     {
@@ -769,6 +825,7 @@
         "lsp",
         "terraform"
       ],
+      "category": "languages",
       "source": "./packages/lsp-terraform"
     },
     {
@@ -779,6 +836,7 @@
         "lsp",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/lsp-typescript"
     },
     {
@@ -790,6 +848,7 @@
         "matt-pocock",
         "workflows"
       ],
+      "category": "planning-product",
       "source": "./packages/matt-skills"
     },
     {
@@ -800,6 +859,7 @@
         "mcp",
         "aggregation"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-1mcp"
     },
     {
@@ -810,6 +870,7 @@
         "mcp",
         "codebase"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-codebase-memory"
     },
     {
@@ -820,6 +881,7 @@
         "mcp",
         "docs"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-context7"
     },
     {
@@ -830,17 +892,19 @@
         "mcp",
         "web"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-fetcher"
     },
     {
       "name": "mcp-gitnexus",
       "description": "MCP server package for GitNexus code-intelligence: knowledge-graph queries over an indexed repository (execution flows, symbol context, impact/blast radius, call-path tracing). Ships the server config with SHARP_IGNORE_GLOBAL_LIBVIPS=1 so the npx install never source-builds sharp against a host libvips, plus steering on when graph queries beat text search and semantic tools.",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "tags": [
         "mcp",
         "code-intelligence",
         "knowledge-graph"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-gitnexus"
     },
     {
@@ -852,6 +916,7 @@
         "memory",
         "cross-session"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-mempalace"
     },
     {
@@ -862,6 +927,7 @@
         "mcp",
         "versions"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-package-version"
     },
     {
@@ -872,6 +938,7 @@
         "mcp",
         "browser"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-playwright"
     },
     {
@@ -882,6 +949,7 @@
         "mcp",
         "repomix"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-repomix"
     },
     {
@@ -892,6 +960,7 @@
         "mcp",
         "semantic"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-serena"
     },
     {
@@ -903,6 +972,7 @@
         "tauri",
         "testing"
       ],
+      "category": "mcp",
       "source": "./packages/mcp-tauri"
     },
     {
@@ -914,6 +984,7 @@
         "agent",
         "orchestration"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/orchestrate"
     },
     {
@@ -924,6 +995,7 @@
         "bundle",
         "planning"
       ],
+      "category": "planning-product",
       "source": "./packages/planning-product"
     },
     {
@@ -935,6 +1007,7 @@
         "frontend",
         "browser"
       ],
+      "category": "frontend",
       "source": "./packages/playwright"
     },
     {
@@ -948,6 +1021,7 @@
         "integration",
         "multi-agent"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/pr-shepherd"
     },
     {
@@ -958,6 +1032,7 @@
         "bundle",
         "slides"
       ],
+      "category": "presentation",
       "source": "./packages/presentation"
     },
     {
@@ -968,6 +1043,7 @@
         "bundle",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/project-lifecycle"
     },
     {
@@ -980,6 +1056,7 @@
         "setup",
         "scaffold"
       ],
+      "category": "project-lifecycle",
       "source": {
         "source": "github",
         "repo": "srobroek/project-setup",
@@ -996,6 +1073,7 @@
         "languages",
         "python"
       ],
+      "category": "languages",
       "source": "./packages/python-quality"
     },
     {
@@ -1009,6 +1087,7 @@
         "release-please",
         "ci-cd"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/release-please"
     },
     {
@@ -1021,6 +1100,7 @@
         "ci",
         "monitoring"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/release-queue-watch"
     },
     {
@@ -1031,6 +1111,7 @@
         "bundle",
         "resume"
       ],
+      "category": "resume",
       "source": "./packages/resume-cv"
     },
     {
@@ -1042,6 +1123,7 @@
         "lifecycle",
         "resume"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/resume-session"
     },
     {
@@ -1052,6 +1134,7 @@
         "bundle",
         "review"
       ],
+      "category": "quality",
       "source": "./packages/review"
     },
     {
@@ -1063,6 +1146,7 @@
         "languages",
         "rust"
       ],
+      "category": "languages",
       "source": "./packages/rust-quality"
     },
     {
@@ -1074,6 +1158,7 @@
         "secrets",
         "pre-commit"
       ],
+      "category": "security",
       "source": "./packages/secrets-scan"
     },
     {
@@ -1085,6 +1170,7 @@
         "lifecycle",
         "review"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/session-review"
     },
     {
@@ -1099,6 +1185,7 @@
         "code-smells",
         "tech-debt"
       ],
+      "category": "quality",
       "source": "./packages/sniff"
     },
     {
@@ -1109,6 +1196,7 @@
         "bundle",
         "speckit"
       ],
+      "category": "speckit",
       "source": "./packages/speckit"
     },
     {
@@ -1121,6 +1209,7 @@
         "workflow",
         "gates"
       ],
+      "category": "speckit",
       "source": "./packages/speckit-beads"
     },
     {
@@ -1132,6 +1221,7 @@
         "architecture",
         "design"
       ],
+      "category": "steering",
       "source": "./packages/steering-architecture"
     },
     {
@@ -1142,6 +1232,7 @@
         "steering",
         "backend"
       ],
+      "category": "steering",
       "source": "./packages/steering-backend"
     },
     {
@@ -1152,6 +1243,7 @@
         "steering",
         "data"
       ],
+      "category": "steering",
       "source": "./packages/steering-data"
     },
     {
@@ -1164,6 +1256,7 @@
         "commit",
         "workflow"
       ],
+      "category": "steering",
       "source": "./packages/steering-delivery"
     },
     {
@@ -1174,6 +1267,7 @@
         "steering",
         "docs"
       ],
+      "category": "steering",
       "source": "./packages/steering-docs-specs"
     },
     {
@@ -1184,6 +1278,7 @@
         "steering",
         "frontend"
       ],
+      "category": "steering",
       "source": "./packages/steering-frontend"
     },
     {
@@ -1194,6 +1289,7 @@
         "steering",
         "git"
       ],
+      "category": "steering",
       "source": "./packages/steering-git-workflow"
     },
     {
@@ -1206,6 +1302,7 @@
         "global",
         "apm"
       ],
+      "category": "steering",
       "source": "./packages/steering-global-bootstrap"
     },
     {
@@ -1216,6 +1313,7 @@
         "steering",
         "infrastructure"
       ],
+      "category": "steering",
       "source": "./packages/steering-infrastructure"
     },
     {
@@ -1229,6 +1327,7 @@
         "code-economy",
         "minimalism"
       ],
+      "category": "steering",
       "source": "./packages/steering-pragmatic"
     },
     {
@@ -1239,6 +1338,7 @@
         "steering",
         "structure"
       ],
+      "category": "steering",
       "source": "./packages/steering-project-structure"
     },
     {
@@ -1249,6 +1349,7 @@
         "steering",
         "speckit"
       ],
+      "category": "steering",
       "source": "./packages/steering-speckit"
     },
     {
@@ -1259,6 +1360,7 @@
         "steering",
         "routing"
       ],
+      "category": "steering",
       "source": "./packages/steering-subagent-routing"
     },
     {
@@ -1269,6 +1371,7 @@
         "steering",
         "toolchain"
       ],
+      "category": "steering",
       "source": "./packages/steering-toolchain-defaults"
     },
     {
@@ -1279,6 +1382,7 @@
         "steering",
         "tooling"
       ],
+      "category": "steering",
       "source": "./packages/steering-tools-scripts"
     },
     {
@@ -1290,6 +1394,7 @@
         "languages",
         "typescript"
       ],
+      "category": "languages",
       "source": "./packages/typescript-quality"
     },
     {
@@ -1302,6 +1407,7 @@
         "e2e",
         "quality"
       ],
+      "category": "quality",
       "source": "./packages/user-journeys"
     },
     {
@@ -1313,6 +1419,7 @@
         "quality",
         "verification"
       ],
+      "category": "quality",
       "source": "./packages/verify"
     },
     {
@@ -1324,6 +1431,7 @@
         "code-intelligence",
         "web"
       ],
+      "category": "code-intelligence",
       "source": "./packages/web-fetch"
     },
     {
@@ -1340,6 +1448,7 @@
         "services",
         "release-notes"
       ],
+      "category": "code-intelligence",
       "source": "./packages/whats-new"
     },
     {
@@ -1353,6 +1462,7 @@
         "isolation",
         "lifecycle"
       ],
+      "category": "project-lifecycle",
       "source": "./packages/worktrunk-writer"
     },
     {
@@ -1364,6 +1474,7 @@
         "maintenance",
         "authoring"
       ],
+      "category": "agentic-maintenance",
       "source": "./packages/write-agentic"
     },
     {
@@ -1375,6 +1486,7 @@
         "docs",
         "writing"
       ],
+      "category": "docs",
       "source": "./packages/write-docs"
     }
   ]
