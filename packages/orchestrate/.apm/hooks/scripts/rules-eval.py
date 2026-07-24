@@ -157,15 +157,22 @@ def main() -> None:
     if not bead:
         emit_allow()
 
-    # Locate rules file.
+    # Locate rules file. Per-agent file wins; otherwise the generic fallback
+    # (so one matcher-less SubagentStop hook covers every claiming agent —
+    # the "per-agent" distinction is data, not separate hook registrations,
+    # which also avoids double stop_attempts increments).
     if not rules_file:
         if not RULES_DIR:
             emit_allow()
         cand = os.path.join(RULES_DIR, f"{agent_type}.rules.json")
         if os.path.isfile(cand):
             rules_file = cand
+        else:
+            generic = os.path.join(RULES_DIR, "generic.rules.json")
+            if os.path.isfile(generic):
+                rules_file = generic
     if not rules_file or not os.path.isfile(rules_file):
-        emit_allow()  # unknown agent -> universal net handles fallback
+        emit_allow()  # no rules at all -> fail open
 
     try:
         with open(rules_file) as fh:

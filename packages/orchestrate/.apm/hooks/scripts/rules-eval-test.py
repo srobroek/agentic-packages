@@ -16,7 +16,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EVAL = os.path.join(HERE, "rules-eval.py")
-RULES = os.path.abspath(os.path.join(HERE, "..", "..", "orchestrate", ".apm", "rules"))
+RULES = os.path.abspath(os.path.join(HERE, "..", "..", "rules"))
 DS = os.path.join(RULES, "domain-specialist.rules.json")
 
 passed = 0
@@ -102,9 +102,14 @@ run("bounce at max_attempts", "allow", bead(id="t11", status="in_progress",
 
 run("no agent_type", "allow", {"session_id": "x"}, agent_type=None)
 
-# unknown agent: no forced rules file, and no rules JSON exists for it in
-# RULES_DIR -> per-agent evaluator defers to the universal net -> allow.
-run("unknown agent", "allow", bead(id="t12", status="in_progress"),
+# unknown agent WITH a claim but no per-agent rules file -> generic.rules.json
+# fallback applies (claim<->contract net) -> block on missing REPORTED.
+run("unknown agent -> generic net blocks", "block", bead(id="t12", status="in_progress"),
+    agent_type="totally-unknown-agent", rules_file=None)
+
+# unknown agent that DID report -> generic net satisfied -> allow.
+run("unknown agent reported -> allow", "allow",
+    bead(id="t13", status="in_progress", comments=[{"text": "REPORTED did the thing"}]),
     agent_type="totally-unknown-agent", rules_file=None)
 
 print()

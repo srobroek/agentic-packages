@@ -6,77 +6,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/universal-start.sh",
+            "command": "uv run --quiet ${PLUGIN_ROOT}/.apm/hooks/scripts/contract-start.py",
             "statusMessage": "Injecting bead-as-brief claim contract...",
-            "timeout": 10
+            "timeout": 30
           }
         ]
       }
     ],
     "SubagentStop": [
       {
-        "matcher": "domain-specialist",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
-            "statusMessage": "Evaluating domain-specialist bead contract...",
-            "timeout": 15
-          }
-        ]
-      },
-      {
-        "matcher": "workflow-reviewer",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
-            "statusMessage": "Evaluating workflow-reviewer bead contract...",
-            "timeout": 15
-          }
-        ]
-      },
-      {
-        "matcher": "workflow-advisor",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
-            "statusMessage": "Evaluating workflow-advisor bead contract...",
-            "timeout": 15
-          }
-        ]
-      },
-      {
-        "matcher": "workflow-researcher",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
-            "statusMessage": "Evaluating workflow-researcher bead contract...",
-            "timeout": 15
-          }
-        ]
-      },
-      {
-        "matcher": "ledger-scribe",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/per-agent-stop.sh",
-            "statusMessage": "Evaluating ledger-scribe bead contract...",
-            "timeout": 15
-          }
-        ]
-      },
-      {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/universal-stop-net.sh",
-            "statusMessage": "Universal bead-contract net check...",
-            "timeout": 15
+            "command": "RULES_DIR=${PLUGIN_ROOT}/.apm/rules uv run --quiet ${PLUGIN_ROOT}/.apm/hooks/scripts/rules-eval.py",
+            "statusMessage": "Evaluating bead contract...",
+            "timeout": 45
           }
         ]
       }
@@ -87,9 +32,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/.apm/hooks/scripts/orchestrator-claim-deny.sh",
-            "statusMessage": "Checking orchestrator claim-deny policy...",
-            "timeout": 10
+            "command": "uv run --quiet ${PLUGIN_ROOT}/.apm/hooks/scripts/orchestrator-claim-deny.py",
+            "statusMessage": "Checking orchestrator claim policy...",
+            "timeout": 30
           }
         ]
       }
