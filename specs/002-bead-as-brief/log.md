@@ -150,3 +150,27 @@ likely to change later. Append-only during the run.
   need it. I will add it to the project/global settings env during the hooks
   phase unless the user objects — flagging because it's an experimental-flag
   change to shared settings.
+
+### N7 fuzz + hardening + scaling
+- **[fuzz result] Engine held all 10 adversarial attacks** (authority bypass
+  via closed/merge_sha, verb-parse spoofing with mid-string/emoji tokens,
+  ^agent: regex-anchor bypass, null-metadata, escape-hatch spoofing, rules-path
+  traversal, 20k-comment payload). Initial 7 "findings" were a bug in the
+  FUZZER's own rules path (off-by-one ..), not the engine — every one blocked
+  correctly when tested directly.
+- **[hardening] misconfigured RULES_DIR now warns.** The fuzzer's path bug
+  revealed a real trap: a wrong RULES_DIR silently fails open → enforcement
+  invisibly disabled. rules-eval.py now writes a stderr warning when RULES_DIR
+  is set but has no *.rules.json, then still fails open (non-blocking).
+- **[env] disk filled to 100% mid-fuzz** (400+ uv subprocess runs on an
+  already-near-full data volume; not my churn — uv cache was only 511M). User
+  reclaimed ~16Gi. This is the Rust-scaling problem in miniature → see below.
+- **[spec addition, user-driven] Worktree resource scaling section.** N Rust
+  worktrees = N × multi-GB target/. Fix: shared CARGO_TARGET_DIR + sccache +
+  reclaim build output at `reported` (not merge — pushed branch is the durable
+  artifact) + orchestrator disk-backpressure governor (cap concurrent heavy
+  worktrees by free_disk/footprint; never wedge the machine). Folded into
+  bead-as-brief.md.
+- **[bug, rename fallout] conformance test pointed at domain-specialist.rules
+  .json** (renamed to coder.rules.json in N6) → fixture failed open → 7/14.
+  Fixed the stale DS ref. Not ENOSPC corruption as first suspected.

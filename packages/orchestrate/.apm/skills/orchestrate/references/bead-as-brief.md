@@ -253,6 +253,32 @@ crash-safe: an abandoned run leaves its wipe wisps behind for the next patrol
 to reclaim, so no worktree is silently orphaned. Verified on bd 1.1.0 (wisp
 `blocks`-dep on a durable bead unblocks on close).
 
+### Worktree resource scaling (heavy build trees — Rust, etc.)
+
+Per-worktree build output does not scale: N parallel Rust worktrees each grow
+a multi-GB `target/`, and the run can fill the disk (observed live). Four
+mechanisms, applied together:
+
+1. **Shared build cache.** Point every worktree at one build-output dir
+   (`CARGO_TARGET_DIR=<run>/shared-target` for Rust; the analogous env for
+   other toolchains) so the large shared-dependency artifacts are built once,
+   not per worktree. Cargo locks the dir per build — parallel worktrees
+   serialize their link step but share `deps/` (usually the bulk). Set it in
+   the coder's environment from run metadata.
+2. **Compiler cache.** `RUSTC_WRAPPER=sccache` (local or remote) dedupes
+   compilation units across worktrees and runs; complements the shared target.
+3. **Reclaim build output at `reported`, not merge.** The durable artifact is
+   the pushed branch, not the build tree. For git-kind nodes, `target/` and
+   other regenerable build dirs are reclaimable as soon as the node reports +
+   pushes; only the worktree *checkout* waits for the wipe-worktree wisp at
+   merge. The coder deletes its build output in its report step (or the
+   patrol does, keyed off `state=reported` + `push` present).
+4. **Disk backpressure (the governor).** The orchestrator treats disk as a
+   bounded resource: before spawning the Nth heavy-build worktree it checks
+   free space against a per-worktree estimate (metadata `build_footprint`) and
+   caps concurrency to `free / footprint`. A run must never wedge the machine
+   by over-spawning; log what was deferred.
+
 Rules:
 
 - Wisps carry questions, decisions, logs, chatter — never work assignments.
