@@ -150,3 +150,19 @@ run_guard() {
   output="$(printf '%s' '{"session_id":"s1"}' | bash "$INJECT")"
   [ -z "$output" ]
 }
+
+@test "fork_turns 0 -> allow (zero-turn boundary)" {
+  run_guard '{"tool_name":"Agent","tool_input":{"task_name":"x","fork_turns":0}}'
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "fork_turns json null -> deny (treated as omitted)" {
+  run_guard '{"tool_name":"Agent","tool_input":{"task_name":"x","fork_turns":null}}'
+  [ "$decision" = "deny" ]
+}
+
+@test "inject: digest respects SUBAGENT_FORK_GUARD_MAX override" {
+  output="$(printf '%s' '{"agent_id":"abc","agent_type":"coder"}' | env SUBAGENT_FORK_GUARD_MAX=7 bash "$INJECT")"
+  printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext' | grep -q 'above 7'
+}
