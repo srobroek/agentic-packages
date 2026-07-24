@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.13.3...pr-shepherd--v0.14.0) (2026-07-24)
+
+
+### Features
+
+* **pr-shepherd:** add generalized watch-queue dashboard script ([#687](https://github.com/srobroek/agentic-packages/issues/687)) ([4322e71](https://github.com/srobroek/agentic-packages/commit/4322e71a25d22c036bf0e2a5abd04524dd82d968))
+
+
+### Bug Fixes
+
+* **agents:** verdict line is the literal first line — no preamble, no markdown emphasis ([#688](https://github.com/srobroek/agentic-packages/issues/688)) ([0cef5d6](https://github.com/srobroek/agentic-packages/commit/0cef5d6698a0ee7b5f3337ef993a4bf9fb653e9a))
+
 ## [0.13.3](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.13.2...pr-shepherd--v0.13.3) (2026-07-23)
 
 

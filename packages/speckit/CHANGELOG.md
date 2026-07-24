@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.4](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.3...speckit--v8.1.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** verdict line is the literal first line — no preamble, no markdown emphasis ([#688](https://github.com/srobroek/agentic-packages/issues/688)) ([0cef5d6](https://github.com/srobroek/agentic-packages/commit/0cef5d6698a0ee7b5f3337ef993a4bf9fb653e9a))
+
 ## [8.1.3](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.2...speckit--v8.1.3) (2026-07-23)
 
 
