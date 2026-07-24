@@ -1,17 +1,17 @@
 skips:
   # orchestrate fleet (bead-as-brief v2 — requires live run state)
-  - agent: coder
+  - agent: builder
     reason: >-
       Requires live orchestrate run state (claimed bead, BRIEF comment, pushable
       remote worktree, bd DB with epic); faithful stub deferred — tracked in spec 002.
-  - agent: coder-low
-    reason: Same as coder (effort variant); deferred with the base definition.
-  - agent: coder-medium
-    reason: Same as coder (effort variant); deferred with the base definition.
-  - agent: coder-high
-    reason: Same as coder (effort variant); deferred with the base definition.
-  - agent: coder-xhigh
-    reason: Same as coder (effort variant); deferred with the base definition.
+  - agent: builder-low
+    reason: Same as builder (effort variant); deferred with the base definition.
+  - agent: builder-medium
+    reason: Same as builder (effort variant); deferred with the base definition.
+  - agent: builder-high
+    reason: Same as builder (effort variant); deferred with the base definition.
+  - agent: builder-xhigh
+    reason: Same as builder (effort variant); deferred with the base definition.
   - agent: reviewer
     reason: >-
       Requires live orchestrate run state (review wisp to claim, node bead with

@@ -23,11 +23,11 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # rules live at .apm/rules; HERE is .apm/hooks/scripts -> up TWO dirs.
-RULES = os.path.abspath(os.path.join(HERE, "..", "..", "rules"))
+RULES = os.path.abspath(os.path.join(HERE, "..", ".apm", "rules"))
 EVAL = os.path.join(HERE, "rules-eval.py")
 DENY = os.path.join(HERE, "orchestrator-claim-deny.py")
 START = os.path.join(HERE, "contract-start.py")
-DS = os.path.join(RULES, "coder.rules.json")
+DS = os.path.join(RULES, "builder.rules.json")
 
 findings = []
 runs = 0
@@ -107,7 +107,7 @@ def attack_vectors():
         b.update(kw)
         return b
 
-    def ev(bead_obj, agent="coder", rf=DS):
+    def ev(bead_obj, agent="builder", rf=DS):
         p = {"agent_type": agent, "_bead": bead_obj}
         if rf:
             p["_rules_file"] = rf

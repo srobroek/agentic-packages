@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-HOOKS = os.path.abspath(os.path.join(HERE, ".."))
+HOOKS = os.path.abspath(os.path.join(HERE, "..", ".apm", "hooks"))
 passed = 0
 failed = 0
 
