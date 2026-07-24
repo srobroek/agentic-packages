@@ -990,7 +990,10 @@ def _record_attempt(
     }
     if existing:
         record = dict(existing)
-        record["attempts"] = existing["attempts"] + [attempt_rec]
+        # Drop any prior entry for the same attempt number before appending so
+        # re-running assert for attempt N (e.g. after a reply is overwritten)
+        # never duplicates the record.
+        record["attempts"] = [a for a in existing["attempts"] if a["n"] != attempt_n] + [attempt_rec]
     else:
         record = {
             "agent": entry["agent"],
