@@ -177,7 +177,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "7.0.2",
+      "version": "7.0.3",
       "tags": [
         "bundle",
         "steering"
@@ -261,7 +261,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "8.1.2",
+      "version": "8.1.3",
       "tags": [
         "bundle",
         "semantic"
@@ -991,7 +991,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "4.2.1",
+      "version": "4.2.2",
       "tags": [
         "skill",
         "agent",
@@ -1051,7 +1051,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "4.2.3",
+      "version": "4.2.4",
       "tags": [
         "bundle",
         "lifecycle"
@@ -1142,7 +1142,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "5.0.1",
+      "version": "5.0.2",
       "tags": [
         "bundle",
         "review"
@@ -1215,7 +1215,7 @@
     {
       "name": "speckit-beads",
       "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "3.3.4",
+      "version": "3.3.5",
       "tags": [
         "speckit",
         "beads",
