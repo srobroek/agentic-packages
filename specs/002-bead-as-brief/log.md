@@ -123,6 +123,28 @@ likely to change later. Append-only during the run.
 - **[confirmed to user]** domain-specialist definition does NOT exist yet
   (only the rules file); starforge used general-purpose stand-ins. N4 creates
   the real definition with delegation-first in its contract.
+
+### N3–N5 build (Python engine)
+- **[decision, user-driven] Engine = Python via uv (PEP723), rules = JSON, no
+  bash shim.** Rewrote rules-eval.sh → rules-eval.py after bash hit greedy-sed
+  + JSON-shape bugs. Hooks invoke `uv run rules-eval.py` directly. 14/14
+  conformance + 10/10 hooks smoke green.
+- **[decision, user-driven] Engine co-located in orchestrate** (not beads) —
+  inert without the fleet. Doctrine steering stays in beads.
+- **[RESOLVED, user-driven] dep-cycle dissolved by making the in-run merge
+  role a native orchestrate agent.** Dependency direction is
+  orchestrate → pr-shepherd → beads, so the in-orchestrate merge actor cannot
+  live in / touch the standalone pr-shepherd package (cycle). FIX (user's
+  call): leave the standalone `pr-shepherd` package UNTOUCHED (reverted the N5
+  edits), and add `shepherd` as a NATIVE orchestrate agent using orchestrate's
+  own evaluator + rules. Two distinct actors, matching the original design's
+  in-run-lander vs global-daemon split: `shepherd` (in-run, orchestrate pkg)
+  and `pr-shepherd` (standalone repo-global daemon). No cycle, constitution-I
+  clean. shepherd.rules.json is T2; content-read-only lives in its definition +
+  git-safety.
+- **[decision] N4 domain-specialist = one base def + 4 generated effort
+  variants** (gen-specialist-variants.py). Agent spawns can't set effort, so
+  variants are the mechanism; one source of truth.
 - **[human?] AGENT_TEAMS flag.** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is
   not in settings; warm-tier features (SendMessage wake, FIX-round resume)
   need it. I will add it to the project/global settings env during the hooks
