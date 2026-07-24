@@ -1,5 +1,5 @@
 name: speckit-beads
-version: 3.3.4
+version: 3.3.5
 description: >-
   Beads-native SpecKit workflow: ships the speckit-feature bd formula (the
   SpecKit phase spine as a molecule DAG with human gates at clarify approval,
@@ -24,5 +24,5 @@ tags:
   - gates
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/speckit#>=8.1.4 <9.0.0
+    - srobroek/agentic-packages/packages/speckit#>=8.1.5 <9.0.0
     - srobroek/agentic-packages/packages/beads#>=0.6.2 <1.0.0

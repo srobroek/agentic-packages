@@ -1,5 +1,5 @@
 name: review
-version: 5.0.1
+version: 5.0.2
 description: >-
   Code review and verification toolkit: the verify skill and the PR reviewer
   agent. Language-specific quality checks live in the language-<lang> bundles.
@@ -14,4 +14,4 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/verify#>=2.1.0 <3.0.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.2 <4.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.3 <4.0.0

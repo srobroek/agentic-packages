@@ -1,5 +1,5 @@
 name: project-lifecycle
-version: 4.2.3
+version: 4.2.4
 description: >-
   Day-to-day project lifecycle workflows: resume work after interruption
   (catchup), write handovers, and run verification. Bundles the matching skills,
@@ -18,4 +18,4 @@ dependencies:
     - srobroek/agentic-packages/packages/handover#>=2.2.0 <3.0.0
     - srobroek/agentic-packages/packages/steering-git-workflow#>=2.3.2 <3.0.0
     - srobroek/agentic-packages/packages/verify#>=2.1.0 <3.0.0
-    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.2 <4.0.0
+    - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.3 <4.0.0

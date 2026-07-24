@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.3](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.2...agentic-maintenance--v7.0.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9efa212](https://github.com/srobroek/agentic-packages/commit/9efa2125f49d5091193e6712fdc050e9cf57be79))
+
 ## [7.0.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.1...agentic-maintenance--v7.0.2) (2026-07-24)
 
 
