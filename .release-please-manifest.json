@@ -14,7 +14,7 @@
   "packages/agent-reviewer-high": "2.0.0",
   "packages/agent-reviewer-low": "2.0.0",
   "packages/agent-worker": "2.0.0",
-  "packages/agentic-maintenance": "7.0.3",
+  "packages/agentic-maintenance": "7.0.4",
   "packages/audit-steering": "2.1.0",
   "packages/beads": "0.6.2",
   "packages/brownfield-project": "1.1.1",
