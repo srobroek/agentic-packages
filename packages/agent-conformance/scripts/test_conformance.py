@@ -649,9 +649,12 @@ class TestJournalReport:
             (d / "report.json").write_text(json.dumps(prior_report))
             return d
 
-        _make_run("run1", "FLAKY")
-        _make_run("run2", "FLAKY")
-        run3 = _make_run("run3", "FLAKY")
+        # Names must look like real run ids — the chronic-flake scan filters
+        # siblings to timestamp-shaped dirs so a custom --out-dir parent's
+        # unrelated directories are never read.
+        _make_run("20260101T000001Z", "FLAKY")
+        _make_run("20260101T000002Z", "FLAKY")
+        run3 = _make_run("20260101T000003Z", "FLAKY")
 
         args = _fake_args("report", out_dir=str(run3))
         import io, contextlib

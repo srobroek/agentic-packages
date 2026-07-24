@@ -665,28 +665,35 @@ def _normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _timed_search(pattern: str, text: str, timeout: int = 5) -> re.Match | None:
-    """Run re.search with a SIGALRM timeout. Returns None on timeout."""
-    result: list[re.Match | None] = [None]
-    timed_out = [False]
+_TIMED_OUT = object()  # sentinel: distinguishes timeout from no-match
 
-    def _handler(signum: int, frame: object) -> None:
-        timed_out[0] = True
-        raise TimeoutError("regex timeout")
 
-    old = signal.signal(signal.SIGALRM, _handler)
+def _timed_search(pattern: str, text: str, timeout: int = 5):
+    """Best-effort bounded re.search. Returns the sentinel _TIMED_OUT on timeout.
+
+    CPython only runs signal handlers between bytecode instructions, so
+    SIGALRM cannot interrupt a single catastrophic re.search mid-C-call.
+    The PRIMARY defenses are upstream: check-time pattern vetting
+    (_NESTED_QUANTIFIER + length bound) and the max_reply_bytes input cap.
+    This alarm remains as a tripwire for multi-call assertion loops, and is
+    skipped off the main thread (signal.signal raises ValueError there).
+    """
+    try:
+        old = signal.signal(signal.SIGALRM, _raise_timeout)
+    except ValueError:  # not on the main thread (e.g. pytest plugins/threads)
+        return re.search(pattern, text)
     try:
         signal.alarm(timeout)
-        result[0] = re.search(pattern, text)
+        return re.search(pattern, text)
     except TimeoutError:
-        pass
+        return _TIMED_OUT
     finally:
         signal.alarm(0)
         signal.signal(signal.SIGALRM, old)
 
-    if timed_out[0]:
-        return None
-    return result[0]
+
+def _raise_timeout(signum: int, frame: object) -> None:
+    raise TimeoutError("regex timeout")
 
 
 def _check_no_reprint(reply: str, fixture_content: str) -> bool:
@@ -742,14 +749,14 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
     if len(reply.encode("utf-8")) > max_reply_bytes:
         failures.append({"kind": "max_reply_bytes", "detail": f"{len(reply.encode())} > {max_reply_bytes}"})
 
-    # First line match
+    # First line match — strip the extracted line so ^-anchored patterns
+    # match replies with leading indentation or CR from CRLF endings.
     first_line_pat = assert_cfg.get("first_line")
     if first_line_pat:
-        first_nonempty = next((ln for ln in reply.splitlines() if ln.strip()), "")
+        first_nonempty = next((ln.strip() for ln in reply.splitlines() if ln.strip()), "")
         m = _timed_search(first_line_pat, first_nonempty)
-        if m is None and _NESTED_QUANTIFIER.search(first_line_pat):
-            # timed out
-            failures.append({"kind": "regex_timeout", "detail": f"first_line pattern timed out"})
+        if m is _TIMED_OUT:
+            failures.append({"kind": "regex_timeout", "detail": "first_line pattern timed out"})
         elif m is None:
             failures.append({"kind": "first_line", "detail": f"first non-empty line did not match pattern"})
 
@@ -770,17 +777,10 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
     # Required patterns
     for pat in assert_cfg.get("required_patterns") or []:
         m = _timed_search(pat, reply, timeout=5)
-        if m is None:
-            # Could be timeout or no match — check compiled
-            try:
-                if not re.search(pat, reply):
-                    failures.append({"kind": "required_pattern", "detail": f"pattern not found: {pat!r}"})
-                # else: timed out -> timeout failure
-                else:
-                    # timed out (signal raised None but compiled search succeeded with time)
-                    pass
-            except Exception:
-                failures.append({"kind": "regex_timeout", "detail": f"pattern timed out or error: {pat!r}"})
+        if m is _TIMED_OUT:
+            failures.append({"kind": "regex_timeout", "detail": f"pattern timed out: {pat!r}"})
+        elif m is None:
+            failures.append({"kind": "required_pattern", "detail": f"pattern not found: {pat!r}"})
 
     # Forbidden patterns
     for pat in assert_cfg.get("forbidden_patterns") or []:
@@ -902,6 +902,14 @@ def cmd_assert(args: argparse.Namespace, repo_root: Path) -> int:
         reply_path = base_reply
     else:
         reply_path = base_reply.parent / base_reply.name.replace("attempt1", f"attempt{attempt_n}")
+
+    # The manifest is user-supplied input; never read/write outside its own
+    # run directory (a tampered reply_path could otherwise target any file).
+    try:
+        reply_path.resolve().relative_to(out_dir.resolve())
+    except ValueError:
+        print(f"assert: reply_path escapes the run directory: {reply_path}", file=sys.stderr)
+        return 2
 
     # Read reply
     if not reply_path.exists():
@@ -1107,9 +1115,15 @@ def _check_chronic_flake(agent: str, case: str, out_dir: Path, current_verdict: 
     if not parent.exists():
         return current_verdict
 
-    # Sorted sibling run dirs (by name = timestamp)
+    # Sorted sibling RUN dirs only (name = run-id timestamp). A custom
+    # --out-dir may live beside unrelated directories; never read those.
+    run_id_re = re.compile(r"^\d{8}T\d{6}Z$")
     sibling_dirs = sorted(
-        [d for d in parent.iterdir() if d.is_dir() and d != out_dir],
+        [
+            d
+            for d in parent.iterdir()
+            if d.is_dir() and d != out_dir and run_id_re.match(d.name)
+        ],
         key=lambda d: d.name,
     )
     # Include current run — check the 3 most recent (excluding current, then add current)
