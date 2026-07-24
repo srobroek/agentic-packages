@@ -1,5 +1,5 @@
 name: toolchain-cache-policy
-version: 0.1.0
+version: 0.0.0
 description: >-
   Enforces one shared, bounded build/cache location per toolchain across all
   worktrees and clones, so N parallel agent worktrees cannot each grow a

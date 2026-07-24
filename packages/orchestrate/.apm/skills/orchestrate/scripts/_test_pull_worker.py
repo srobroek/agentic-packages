@@ -18,7 +18,7 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "pull-worker.py")
-AGENT = os.path.join(HERE, "../../../agents/coder.agent.md")
+AGENT = os.path.join(HERE, "../../../agents/builder.agent.md")
 SPEC = importlib.util.spec_from_file_location("pull_worker", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
@@ -266,17 +266,17 @@ class PullWorkerUnitTest(unittest.TestCase):
         self.assertEqual(seen["kwargs"]["timeout"], 15.0)
         self.assertEqual(seen["kwargs"]["env"]["BEADS_ACTOR"], "pull-python-1")
 
-    def test_coder_contract_is_bead_as_brief(self):
+    def test_builder_contract_is_bead_as_brief(self):
         # The former workflow-pull-worker folded into `coder`; validate the new
         # contract's load-bearing invariants, not the deleted prose.
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
-        self.assertIn("name: coder", agent)
+        self.assertIn("name: builder", agent)
         self.assertIn("CLAIM", agent)        # bead-as-brief activation
         self.assertIn("REPORTED", agent)     # handoff evidence
 
-    def test_coder_contract_forbids_close_and_merge_metadata(self):
+    def test_builder_contract_forbids_close_and_merge_metadata(self):
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
