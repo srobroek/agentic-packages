@@ -1,0 +1,17 @@
+{
+  "agent": "workflow-reviewer",
+  "tier": "T1",
+  "_comment": "Fresh per node (resume only within a node's fix rounds). Claims a review wisp; writes a verdict line on the node + a GitHub review; on approve closes the wisp and swaps needs-review:<dim> -> reviewed:<dim>. Never pushes code, never closes/merges the node, never writes coder metadata.",
+  "completion": [
+    { "check": "verdict", "require": "comment.verb in [REVIEW]" }
+  ],
+  "authority": {
+    "deny_states": ["closed", "merged"],
+    "deny_metadata": ["branch", "push", "merge_sha", "pr"]
+  },
+  "escape": {
+    "state": "blocked",
+    "require": "comment.verb in [FAILED, BLOCKED]"
+  },
+  "bounce": { "max_attempts": 3 }
+}

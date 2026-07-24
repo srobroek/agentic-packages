@@ -1,0 +1,17 @@
+{
+  "agent": "workflow-advisor",
+  "tier": "T1",
+  "_comment": "Claims an escalation wisp, writes exactly one ADVICE comment on it, exits. Touches nothing else — no node writes, no state, no labels, no metadata.",
+  "completion": [
+    { "check": "advice", "require": "comment.verb in [ADVICE]" }
+  ],
+  "authority": {
+    "deny_states": ["closed", "merged", "approved", "changes_requested"],
+    "deny_metadata": ["branch", "push", "merge_sha", "pr", "output_ref"]
+  },
+  "escape": {
+    "state": "blocked",
+    "require": "comment.verb in [FAILED, BLOCKED]"
+  },
+  "bounce": { "max_attempts": 3 }
+}

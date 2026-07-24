@@ -19,15 +19,8 @@ targets:
   - codex
 includes:
   - .apm/agents
-  - .apm/hooks/orchestrate-claude-hooks.json
-  - .apm/hooks/orchestrate-codex-hooks.json
-  - .apm/hooks/scripts/rules-eval.py
-  - .apm/hooks/scripts/rules-eval-test.py
-  - .apm/hooks/scripts/contract-start.py
-  - .apm/hooks/scripts/orchestrator-claim-deny.py
-  - .apm/hooks/scripts/hooks-smoke-test.py
-  - .apm/rules/domain-specialist.rules.json
-  - .apm/rules/generic.rules.json
+  - .apm/hooks
+  - .apm/rules
   - .apm/skills/orchestrate/SKILL.md
   - .apm/skills/orchestrate/references
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py

@@ -1,0 +1,19 @@
+{
+  "agent": "workflow-researcher",
+  "tier": "T1",
+  "_comment": "Read-only research node. Produces an artifact (output_ref under artifacts_dir), reports, hands off. Never writes git metadata or merge/verdict state — its restricted tool surface is why it stays a separate definition from domain-specialist.",
+  "completion": [
+    { "check": "output_ref", "require": "metadata.output_ref" },
+    { "check": "handoff",    "require": "label ~ ^agent:" },
+    { "check": "reported",   "require": "comment.verb in [REPORTED]" }
+  ],
+  "authority": {
+    "deny_states": ["closed", "merged", "approved"],
+    "deny_metadata": ["branch", "push", "merge_sha", "pr"]
+  },
+  "escape": {
+    "state": "blocked",
+    "require": "comment.verb in [FAILED, BLOCKED]"
+  },
+  "bounce": { "max_attempts": 3 }
+}
