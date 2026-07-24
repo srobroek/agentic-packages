@@ -68,10 +68,19 @@ else
   actor="${agent_id:-$agent_type}"
   command -v "$BD_BIN" >/dev/null 2>&1 || emit_allow
   claimed="$($BD_BIN list --assignee "$actor" --status in_progress --json 2>/dev/null || true)"
-  # No claim held -> no contract (claim⟺contract, no-claim direction) -> allow.
-  n="$(printf '%s' "$claimed" | jq 'length' 2>/dev/null || printf '0')"
+  # bd list returns an array; unwrap the first claim. No claim -> no contract
+  # (claim⟺contract, no-claim direction) -> allow.
+  n="$(printf '%s' "$claimed" | jq 'if type=="array" then length else 0 end' 2>/dev/null || printf '0')"
   [ "$n" = "0" ] || [ -z "$n" ] && emit_allow
   bead_json="$(printf '%s' "$claimed" | jq -c '.[0]' 2>/dev/null || true)"
+  # bd show/list carry no comments (only comment_count). Fetch them separately
+  # and splice into .comments so the accessors read one shape for both modes.
+  cid="$(printf '%s' "$bead_json" | jq -r '.id // empty' 2>/dev/null)"
+  if [ -n "$cid" ]; then
+    cjson="$($BD_BIN comments "$cid" --json 2>/dev/null || true)"
+    cjson="$(printf '%s' "$cjson" | jq -c 'if type=="array" then . else [] end' 2>/dev/null || printf '[]')"
+    bead_json="$(printf '%s' "$bead_json" | jq -c --argjson c "${cjson:-[]}" '.comments = $c' 2>/dev/null || printf '%s' "$bead_json")"
+  fi
 fi
 
 [ -z "$bead_json" ] && emit_allow
