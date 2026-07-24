@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.2...mcp-gitnexus--v1.1.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **mcp-gitnexus:** hold reindex while another analyze is running ([#708](https://github.com/srobroek/agentic-packages/issues/708)) ([764579e](https://github.com/srobroek/agentic-packages/commit/764579ea1b061a2f5f48da6b238cff1e76b170a7))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.1...mcp-gitnexus--v1.1.2) (2026-07-24)
 
 
