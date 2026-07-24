@@ -258,8 +258,11 @@ agent's fixtures execute; the report contains only that agent.
 - **Trigger cadence**: local pre-release invocation is the v1 interface. The
   runner is built automatable (FR-010), but wrapping it in scheduled CI is a
   deferred follow-up feature, tracked as its own bead.
-- **Credentials**: maintainers have Claude credentials available locally; the
-  harness does not manage or provision them.
+- **Credentials & billing**: the default execution path must be covered by a
+  maintainer's existing Claude subscription — it must not require
+  API-key (metered) billing. Metered execution is acceptable only as an
+  explicit opt-in (and for the deferred CI wrapper, `orc-qrt`). The harness
+  does not manage or provision credentials.
 - **Flake policy**: bounded retries (default 2 retries after first failure);
   pass-on-retry reports FLAKY and defaults to non-fatal exit.
 - **No-reprint threshold**: a reply reprints the fixture when it contains a

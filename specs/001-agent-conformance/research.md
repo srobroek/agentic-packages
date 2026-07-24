@@ -4,42 +4,62 @@ All NEEDS CLARIFICATION items from Technical Context resolved below.
 
 ## R1. Execution vehicle: how to run a shipped agent definition
 
-**Decision**: Thin custom runner (Python, stdlib + PyYAML) that invokes the
-`claude` CLI headless per case: `claude -p --safe-mode --system-prompt-file
-<agent-body> --model <pin> --effort <pin> --tools <frontmatter-tools>
---output-format json --no-session-persistence --max-budget-usd <cap>` with
-cwd set to a per-case sandbox directory.
+**Decision** *(revised 2026-07-24 — see decisions-log)*: split the harness
+into a deterministic engine and an in-session sweep driver.
+
+- **Engine** (`conformance.py`, Python stdlib + PyYAML): subcommands `check`
+  (coverage/drift, no LLM), `stage` (create per-case sandbox, emit a run
+  manifest: agent name, resolved pins, fixture prompt, sandbox path, reply
+  destination), `assert` (judge one captured reply file against its case →
+  CaseResult JSONL line), `report` (assemble report.json/md from the
+  journal). Everything except the model call itself.
+- **Sweep driver**: a Claude Code session following the package's
+  `/agent-conformance` skill. For each staged case the session spawns the
+  target agent **via the Task tool** — the exact production spawn path (the
+  installed agent definition, its pinned model/effort, SubagentStart
+  injection, guard hooks all active) — with the fixture prompt, saves the
+  subagent's final reply verbatim to the staged reply path, then calls
+  `assert`. Parallel Task spawns give the concurrency; the skill mandates
+  save-then-assert so no judgment is delegated to the LLM.
+- **Headless fallback** (`--engine headless`, opt-in): the previous
+  `claude -p --safe-mode --system-prompt-file …` design, retained for
+  API-key/CI environments only, deferred to the CI follow-up bead
+  (`orc-qrt`). Not the default and not required for v1 acceptance.
 
 **Rationale**:
-- Production agents run inside Claude Code; the `claude` CLI is the same
-  runtime stack, so a headless invocation with the agent body as system
-  prompt is the highest-fidelity reproduction available without a full
-  interactive session. The bead itself suggested "thin custom runner via
-  Claude Agent SDK" — the CLI *is* the SDK's execution engine and is already
-  a required ambient tool for every maintainer of this repo.
-- `--safe-mode` disables CLAUDE.md, hooks, plugins, skills, and MCP — the
-  fixture is the only context — while ambient auth (OAuth keychain or API
-  key) works normally. `--bare` was considered and rejected as the default
-  because it hard-requires `ANTHROPIC_API_KEY` and never reads OAuth/keychain,
-  which breaks the local maintainer path; the runner exposes it as an opt-in
-  for API-key environments.
-- `--output-format json` returns the reply plus usage metadata (cost,
-  duration, turns) in one parseable envelope.
-- `--max-budget-usd` per case is a hard cost guard complementing the
-  wall-clock timeout (FR-012).
+- **Billing constraint (user-reported, probe-confirmed)**: headless
+  `claude -p` bills the API meter (probe: $0.165 for a haiku ping), not the
+  subscription. In-session Task spawns are subscription-covered — a fleet
+  sweep must not cost API dollars for local maintainers.
+- **Fidelity is strictly better**: Task-tool spawn *is* how subagents run in
+  production. The headless reconstruction (system prompt file + tool flags)
+  was an approximation; this is the real path.
+- **Security**: the pre-implementation security review rated headless
+  `--safe-mode` HIGH-risk (guard hooks stripped while Bash-bearing agents run
+  unjailed). In-session spawns keep every PreToolUse guard active and stay
+  inside the session's permission model — the finding is eliminated rather
+  than mitigated.
+- The deterministic engine remains 100% pytest-coverable in CI (no LLM),
+  preserving the per-PR layer (R9).
 
 **Alternatives considered**:
-- **promptfoo**: assertion vocabulary fits, but it is a Node ecosystem
-  dependency, has no notion of `.agent.md` frontmatter (model/effort/tools
-  pins) or Claude Code agent semantics, and the repo's test stack is
-  bash/bats + python/pytest. Adapting it costs more than the thin runner.
-- **Claude Agent SDK (Python package)**: programmatic and supported, but adds
-  a heavyweight dependency for what is ultimately "spawn CLI, capture JSON";
-  the CLI path keeps the package dependency-free beyond PyYAML (already the
-  repo's CI baseline).
-- **Raw Anthropic API**: bypasses the Claude Code runtime (system-prompt
-  scaffolding, tool loop), so it would test the prompt text, not the shipped
-  agent — explicitly the weaker evidence the clarify session rejected.
+- **Headless CLI as default** (original design): rejected on billing (above);
+  survives as the opt-in engine for orc-qrt.
+- **promptfoo**: assertion vocabulary fits, but Node dependency, no notion of
+  `.agent.md` pins or Claude Code agent semantics, and no subscription-covered
+  execution path either.
+- **Claude Agent SDK (Python)**: same API-billing problem, plus a heavyweight
+  dependency for what the Task tool already does natively.
+- **Raw Anthropic API**: bypasses the Claude Code runtime entirely; weakest
+  evidence and API-billed.
+
+**Accepted tradeoff**: the sweep driver is an LLM session following a skill,
+so sweep orchestration itself is not a deterministic program. Mitigations:
+`stage` writes an explicit manifest (the session cannot silently drop a
+case — `report` fails on journal/manifest mismatch), `assert`/`report` are
+pure, and the reply file is the subagent's verbatim final message. This
+matches the repo's existing pattern of skill-driven verification
+(verify/pr-shepherd skills).
 
 ## R2. Contract extraction: source of truth for assertions
 
@@ -114,23 +134,30 @@ prominent report line.
 
 ## R6. Model/effort pin resolution
 
-**Decision**: read `model:` and `effort:` from agent frontmatter (the
-portable source of truth for the Claude runtime; `.apm/agent-models.yml` maps
-Codex only and is out of scope). Pass aliases (`haiku`/`sonnet`/`opus`)
-straight through to `--model` — the CLI resolves aliases to current IDs, so
-the harness never hardcodes model IDs. Agents without a `model:` pin inherit
-the parent's model in production; the runner uses a configurable default
-(`--default-model`, default `sonnet`) and stamps `model_source:
-inherited-default` in the report so these verdicts are visibly
-weaker-evidence. Explicit `--model` override (P3 iteration) stamps
-`model_source: override` (FR-008).
+**Decision**: in the default in-session engine, pins are honored by
+construction — the Task tool spawns the *installed* agent definition, whose
+frontmatter carries `model:`/`effort:`; the harness never re-resolves them.
+`stage` still parses the pins into the manifest so `report` can stamp
+`model`, `effort`, and `model_source: pinned` per case, and `check` verifies
+the installed agent registry contains every in-scope agent (a missing install
+is a staging error, not a FAIL). Agents without a `model:` pin inherit the
+spawning session's model in production and in the sweep alike —
+`model_source: inherited-session` marks these visibly weaker-evidence
+verdicts. A model override (P3 iteration) is a sweep-driver instruction
+(spawn with `model:` param); the reply manifest records `model_source:
+override` (FR-008). The headless fallback keeps the previous
+`--model`-alias-passthrough behavior for orc-qrt.
 
 ## R7. Concurrency and runtime budget
 
-**Decision**: bounded worker pool (default 4 concurrent CLI invocations,
-`--jobs` flag). 34 agents × ~1–2 cases × (10–60s per call) with 4 workers
-fits the 30-minute fleet budget (SC-002) with headroom for retries; a scoped
-single-agent run is 1–3 calls ≈ under 3 minutes (SC-005).
+**Decision**: the sweep driver spawns Task subagents in parallel batches
+(default 4 per batch, skill-specified). 34 agents × ~1–2 cases × (10–60s per
+spawn) in 4-wide batches fits the 30-minute fleet budget (SC-002) with
+headroom for retries; a scoped single-agent run is 1–3 spawns ≈ under 3
+minutes (SC-005). Cost control: subscription-covered spawns make the
+per-case `budget_usd` cap advisory in-session (recorded, not enforced); the
+headless engine enforces it via `--max-budget-usd` plus an aggregate
+`--max-run-budget-usd` (default $25) per the security review.
 
 ## R8. Report format and artifact persistence
 
@@ -157,5 +184,29 @@ local sweep or when orc-qrt lands CI).
 ## R10. Where the LLM suite hooks into maintainer flow
 
 **Decision**: documented pre-release step (quickstart + package README):
-`uv run conformance run --all` before cutting releases. No hook, no CI in
-this feature (clarify Q2 = C). Follow-up bead `orc-qrt` tracks CI wrapping.
+invoke the `/agent-conformance` skill in a Claude Code session (`sweep all`),
+which stages, spawns, asserts, and reports. No hook, no CI in this feature
+(clarify Q2 = C). Follow-up bead `orc-qrt` tracks CI wrapping via the
+headless engine.
+
+## R11. Security posture (from pre-implementation security review)
+
+Findings and dispositions (full text on bead orc-mol-q72):
+
+1. **HIGH — headless `--safe-mode` strips guard hooks while Bash-bearing
+   agents run unjailed** → eliminated for v1 by the in-session engine (guards
+   active, session permission model applies). For the orc-qrt headless
+   engine: default `--tools Read,Grep,Glob` (contract testing doesn't need
+   write/exec), `--permission-mode plan` when an agent's tools include Bash.
+2. **MED — path traversal via `sandbox.files` keys** → `check`/`stage`
+   validation: keys must be relative, no `..` segments, no leading `/`,
+   resolved path must stay under the sandbox root.
+3. **MED — credential leakage into persisted replies** → largely eliminated
+   in-session (guards + no raw key in env of spawned agent); additionally
+   `assert` scans replies for high-entropy token patterns and redacts before
+   persisting, flagging the case for human review.
+4. **LOW — no aggregate run budget** → in-session: advisory (subscription);
+   headless: `--max-run-budget-usd` default $25, aborts remaining cases.
+5. **LOW — regex catastrophic backtracking from fixture patterns** →
+   `check` rejects patterns exceeding a length/complexity bound;
+   `assert` wraps matching in a hard timeout (SIGALRM, 5s per pattern).

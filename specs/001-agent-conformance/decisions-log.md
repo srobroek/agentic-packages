@@ -33,6 +33,27 @@ and on the gate beads.
   `model_source: inherited-default` stamped — visible weaker evidence rather
   than a hard error, because production behavior is parent-inherited anyway.
 
+- **Checklist step run autonomously** (orc-mol-w31): implementation-readiness
+  checklist authored + self-evaluated 12/13; the open item (headless fidelity)
+  was mooted by the R1 pivot below.
+- **ARCHITECTURE PIVOT — execution vehicle** (2026-07-24, triggered by user):
+  user flagged that `claude -p` is not subscription-covered; probe confirmed
+  API metering ($0.165/haiku ping). R1 redesigned: deterministic engine
+  (`check`/`stage`/`assert`/`report`) + in-session sweep driver that spawns
+  installed agents via the Task tool (subscription-covered, production spawn
+  path, guard hooks active). Headless `claude -p` demoted to opt-in fallback,
+  deferred with CI to `orc-qrt`. Spec assumption "Credentials & billing"
+  updated; plan/cli/quickstart/T006/T007/T012 rewritten. Accepted tradeoff:
+  sweep orchestration is skill-driven (LLM session), mitigated by the
+  manifest no-dropped-case invariant and pure assert/report.
+- **Security review verdict CONDITIONAL, 5 findings** (bead orc-mol-q72):
+  HIGH (safe-mode strips guards) eliminated by the pivot; MED path-traversal
+  and MED credential-redaction folded into check/stage/assert (R11, T006,
+  T007); LOW aggregate budget + LOW regex DoS encoded in R11 and cli.md.
+  No blocking findings remain for the v1 design.
+
 ## Open questions for the user
 
-<!-- anything that genuinely needs human input lands here; none yet -->
+- None blocking. FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now
+  depends on parallel Task-spawn batching inside one session; if real sweeps
+  exceed it, the fix is raising batch width, not architecture.
