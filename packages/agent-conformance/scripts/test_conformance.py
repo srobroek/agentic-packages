@@ -13,16 +13,13 @@ from __future__ import annotations
 
 import json
 import sys
-import textwrap
 from pathlib import Path
 
-import pytest
 import yaml
 
 # Make conformance.py importable without installing the package.
 sys.path.insert(0, str(Path(__file__).parent))
 import conformance  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # Helpers for building fake repo trees
@@ -261,9 +258,9 @@ class TestCheckCoverage:
         make_skips(tmp_path, [])
         # No cases, no skips → should fail with violation
         args = _fake_args("check")
-        viol_lines = []
         # Capture stdout
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_check(args, tmp_path)
@@ -279,7 +276,8 @@ class TestCheckCoverage:
             frontmatter="name: my-agent\neffort: low",
         )
         make_skips(tmp_path, [{"agent": "my-agent", "reason": "requires live env that is infeasible for v1"}])
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_check(args=_fake_args("check"), repo_root=tmp_path)
@@ -297,7 +295,8 @@ class TestCheckCoverage:
             "agent": "real-agent", "regime": "clean",
             "prompt": "hello", "assert": {"max_words": 100},
         })
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_check(args=_fake_args("check"), repo_root=tmp_path)
@@ -318,7 +317,8 @@ class TestCheckCoverage:
         # Extra stale dir
         stale_dir = tmp_path / "packages" / "agent-conformance" / "fixtures" / "ghost-agent"
         stale_dir.mkdir(parents=True)
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_check(args=_fake_args("check"), repo_root=tmp_path)
@@ -336,7 +336,8 @@ class TestCheckCoverage:
             "agent": "capped-agent", "regime": "clean",
             "prompt": "hello", "assert": {"max_words": 999},  # wrong
         })
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_check(args=_fake_args("check"), repo_root=tmp_path)
@@ -542,7 +543,8 @@ class TestJournalReport:
         out_dir.mkdir()
         make_manifest(out_dir, [self._make_entry()])
         args = _fake_args("report", out_dir=str(out_dir))
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_report(args, tmp_path)
@@ -565,7 +567,8 @@ class TestJournalReport:
         }
         (out_dir / "journal.jsonl").write_text(json.dumps(record) + "\n")
         args = _fake_args("report", out_dir=str(out_dir))
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_report(args, tmp_path)
@@ -586,7 +589,8 @@ class TestJournalReport:
         }
         (out_dir / "journal.jsonl").write_text(json.dumps(record) + "\n")
         args = _fake_args("report", out_dir=str(out_dir))
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_report(args, tmp_path)
@@ -608,7 +612,8 @@ class TestJournalReport:
         }
         (out_dir / "journal.jsonl").write_text(json.dumps(record) + "\n")
         args = _fake_args("report", out_dir=str(out_dir), strict_flaky=True)
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             rc = conformance.cmd_report(args, tmp_path)
@@ -624,7 +629,7 @@ class TestJournalReport:
             d.mkdir()
             entry = {
                 "agent": "flaky-agent", "case": "case-clean", "regime": "clean",
-                "prompt": "x", "sandbox_path": "", "reply_path": f"replies/flaky-agent/case-clean-attempt1.txt",
+                "prompt": "x", "sandbox_path": "", "reply_path": "replies/flaky-agent/case-clean-attempt1.txt",
                 "model": None, "effort": None, "model_source": "inherited-session",
                 "timeout_s": 120, "max_reply_bytes": 65536, "budget_usd": 1.0,
                 "context_fingerprint": "abc",
@@ -657,10 +662,11 @@ class TestJournalReport:
         run3 = _make_run("20260101T000003Z", "FLAKY")
 
         args = _fake_args("report", out_dir=str(run3))
-        import io, contextlib
+        import contextlib
+        import io
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = conformance.cmd_report(args, tmp_path)
+            conformance.cmd_report(args, tmp_path)
 
         report = json.loads((run3 / "report.json").read_text())
         flaky_agent_case = next(

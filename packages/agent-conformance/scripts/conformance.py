@@ -22,7 +22,7 @@ import re
 import signal
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -342,7 +342,7 @@ def validate_case(case: dict, contract: dict, agent_name: str) -> list[str]:
         violations.append(f"{prefix}: {msg}")
 
     # Required fields
-    if not case.get("regime") in ("clean", "findings"):
+    if case.get("regime") not in ("clean", "findings"):
         v(f"regime must be 'clean' or 'findings', got {case.get('regime')!r}")
 
     if not case.get("prompt"):
@@ -561,7 +561,7 @@ def cmd_stage(args: argparse.Namespace, repo_root: Path) -> int:
     if args.out_dir:
         out_dir = Path(args.out_dir)
     else:
-        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         out_dir = repo_root / ".conformance-runs" / ts
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -585,7 +585,7 @@ def cmd_stage(args: argparse.Namespace, repo_root: Path) -> int:
         )
         return 2
 
-    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_iso = datetime.now(UTC).strftime("%Y-%m-%d")
     manifest_entries = []
     (out_dir / "sandboxes").mkdir(exist_ok=True)
     (out_dir / "replies").mkdir(exist_ok=True)
@@ -737,7 +737,6 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
     """Run all assertions. Return list of {kind, detail} failures."""
     failures: list[dict] = []
     assert_cfg = entry.get("assert", {}) or {}
-    regime = entry.get("regime", "clean")
 
     # Plausibility floor — handled as ERROR upstream, but check here too
     # (assert subcommand is the final authority on plausibility)
@@ -758,7 +757,7 @@ def _run_assertions(entry: dict, reply: str) -> list[dict]:
         if m is _TIMED_OUT:
             failures.append({"kind": "regex_timeout", "detail": "first_line pattern timed out"})
         elif m is None:
-            failures.append({"kind": "first_line", "detail": f"first non-empty line did not match pattern"})
+            failures.append({"kind": "first_line", "detail": "first non-empty line did not match pattern"})
 
     # Word cap
     max_words = assert_cfg.get("max_words")
@@ -928,7 +927,7 @@ def cmd_assert(args: argparse.Namespace, repo_root: Path) -> int:
         # Record as ERROR
         _record_attempt(
             out_dir, entry, existing, attempt_n, passed=False,
-            failures=[{"kind": "implausible-reply", "detail": f"reply too short"}],
+            failures=[{"kind": "implausible-reply", "detail": "reply too short"}],
             reply_path=str(reply_path), is_error=True,
         )
         return 2
@@ -1174,8 +1173,6 @@ def _render_report_md(report: dict) -> str:
         if c.get("model_source"):
             model_src += f"({c['model_source']})"
         words_val = "—"
-        # Compute words from last attempt reply if available
-        last_attempts = c.get("attempts", [])
         dur = f"{c.get('duration_s', 0) or 0:.1f}s" if c.get("duration_s") else "—"
         cost = f"${c.get('cost_usd', 0) or 0:.4f}" if c.get("cost_usd") else "—"
         lines.append(
