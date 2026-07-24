@@ -6,5 +6,7 @@
     "name": "Sjors Robroek"
   },
   "license": "Apache-2.0",
-  "mcpServers": "./.codex.mcp.json"
+  "skills": "./.apm/skills",
+  "mcpServers": "./.codex.mcp.json",
+  "hooks": "./hooks/hooks.json"
 }
