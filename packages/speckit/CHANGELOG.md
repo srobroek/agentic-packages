@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.5](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.4...speckit--v8.1.5) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
 ## [8.1.4](https://github.com/srobroek/agentic-packages/compare/speckit--v8.1.3...speckit--v8.1.4) (2026-07-24)
 
 
