@@ -12,6 +12,7 @@ Run:
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -705,3 +706,349 @@ def test_stage_repeated_agent_flags_accumulate():
     parser = c.build_parser()
     args = parser.parse_args(["stage", "--agent", "a-one", "--agent", "a-two"])
     assert args.agent == ["a-one", "a-two"]
+
+
+# ---------------------------------------------------------------------------
+# (a) _timed_search timeout path
+# ---------------------------------------------------------------------------
+
+
+class TestTimedSearch:
+    def test_timeout_returns_sentinel_on_catastrophic_backtrack(self):
+        """Catastrophic-backtracking pattern + long input must hit SIGALRM and return _TIMED_OUT.
+
+        We bypass _NESTED_QUANTIFIER validation here intentionally — the test is
+        exercising the *alarm tripwire*, not the upstream validator. Wall time is
+        bounded by the alarm (1s) plus test overhead, well under 7s.
+        """
+        import time
+
+        # (a+)+ against 'aaa...ab' forces exponential backtracking.
+        pattern = r"(a+)+$"
+        text = "a" * 40 + "b"
+        start = time.monotonic()
+        result = conformance._timed_search(pattern, text, timeout=1)
+        elapsed = time.monotonic() - start
+        assert result is conformance._TIMED_OUT, "expected _TIMED_OUT sentinel"
+        assert elapsed < 7, f"alarm did not fire in time: {elapsed:.1f}s"
+
+    def test_timeout_sentinel_propagates_as_regex_timeout_failure(self):
+        """_TIMED_OUT from _timed_search → regex_timeout failure kind via required_patterns."""
+        import unittest.mock as mock
+
+        catastrophic_entry = {
+            "agent": "t", "case": "c", "regime": "clean",
+            "sandbox_path": "", "reply_path": "",
+            "model": None, "effort": None, "model_source": "inherited-session",
+            "timeout_s": 120, "max_reply_bytes": 65536,
+            "assert": {
+                "max_words": 1000,
+                "required_patterns": [r"NEVER_MATCHES"],
+            },
+            "_fixture_content": "",
+        }
+        reply = "x " * 50  # plausible reply
+
+        # Patch _timed_search to always return the timeout sentinel.
+        with mock.patch.object(conformance, "_timed_search", return_value=conformance._TIMED_OUT):
+            failures = conformance._run_assertions(catastrophic_entry, reply)
+
+        assert any(f["kind"] == "regex_timeout" for f in failures), (
+            "expected regex_timeout failure when _timed_search returns _TIMED_OUT"
+        )
+
+    def test_off_main_thread_falls_back_to_plain_search(self):
+        """Off main thread, signal.signal raises ValueError; must fall back gracefully."""
+        import threading
+
+        results: list = []
+
+        def _worker():
+            # Simple pattern that should match without timing out.
+            result = conformance._timed_search(r"hello", "say hello world", timeout=5)
+            results.append(result)
+
+        t = threading.Thread(target=_worker)
+        t.start()
+        t.join(timeout=10)
+        assert not t.is_alive(), "thread did not finish"
+        assert len(results) == 1
+        match = results[0]
+        # Must not be the sentinel (timeout), must not raise, must return a match object.
+        assert match is not conformance._TIMED_OUT
+        assert match is not None, "expected a match object from plain re.search fallback"
+
+
+# ---------------------------------------------------------------------------
+# (b) cmd_assert end-to-end
+# ---------------------------------------------------------------------------
+
+
+def _build_assert_run(tmp_path: Path) -> tuple[Path, dict]:
+    """Build a minimal run directory with manifest + replies dir for cmd_assert tests."""
+    out_dir = tmp_path / "run1"
+    out_dir.mkdir()
+    (out_dir / "sandboxes").mkdir()
+    (out_dir / "replies").mkdir()
+    (out_dir / "replies" / "fake-agent").mkdir(parents=True)
+
+    entry = {
+        "agent": "fake-agent",
+        "case": "case-clean",
+        "regime": "clean",
+        "prompt": "Do the thing",
+        "sandbox_path": str(out_dir / "sandboxes" / "fake-agent" / "case-clean"),
+        "reply_path": str(out_dir / "replies" / "fake-agent" / "case-clean-attempt1.txt"),
+        "model": None,
+        "effort": None,
+        "model_source": "inherited-session",
+        "timeout_s": 120,
+        "max_reply_bytes": 65536,
+        "budget_usd": 1.0,
+        "context_fingerprint": "abc123",
+        "assert": {
+            "first_line": None,
+            "max_words": 200,
+            "no_reprint": False,
+            "required_patterns": [],
+            "forbidden_patterns": [],
+            "artifacts": [],
+        },
+        "_fixture_content": "",
+    }
+    make_manifest(out_dir, [entry])
+    return out_dir, entry
+
+
+def _good_reply() -> str:
+    return "Result: PASS. Everything checks out.\n" + "summary word " * 5
+
+
+class TestCmdAssertE2E:
+    def test_first_attempt_pass_exits_0(self, tmp_path):
+        out_dir, entry = _build_assert_run(tmp_path)
+        Path(entry["reply_path"]).write_text(_good_reply())
+
+        args = _fake_args(
+            "assert",
+            manifest=str(out_dir / "manifest.json"),
+            case="fake-agent/case-clean",
+            attempt=1,
+        )
+        rc = conformance.cmd_assert(args, tmp_path)
+        assert rc == 0
+
+        journal = conformance.load_journal(out_dir)
+        rec = journal["fake-agent/case-clean"]
+        assert rec["verdict"] == "PASS"
+        assert len(rec["attempts"]) == 1
+        assert rec["attempts"][0]["passed"] is True
+
+    def test_fail_then_pass_is_flaky(self, tmp_path):
+        out_dir, entry = _build_assert_run(tmp_path)
+        manifest = str(out_dir / "manifest.json")
+        case_key = "fake-agent/case-clean"
+        reply_dir = out_dir / "replies" / "fake-agent"
+
+        # Modify assertion to require a pattern that is absent in attempt 1.
+        data = json.loads((out_dir / "manifest.json").read_text())
+        data["cases"][0]["assert"]["required_patterns"] = ["MUST_APPEAR"]
+        (out_dir / "manifest.json").write_text(json.dumps(data))
+
+        # Attempt 1: missing pattern → fail
+        (reply_dir / "case-clean-attempt1.txt").write_text(_good_reply())
+        rc1 = conformance.cmd_assert(
+            _fake_args("assert", manifest=manifest, case=case_key, attempt=1), tmp_path
+        )
+        assert rc1 == 1
+
+        # Attempt 2: pattern present → pass → FLAKY
+        (reply_dir / "case-clean-attempt2.txt").write_text("MUST_APPEAR\n" + "word " * 20)
+        rc2 = conformance.cmd_assert(
+            _fake_args("assert", manifest=manifest, case=case_key, attempt=2), tmp_path
+        )
+        assert rc2 == 0
+
+        journal = conformance.load_journal(out_dir)
+        rec = journal[case_key]
+        assert rec["verdict"] == "FLAKY"
+        assert len(rec["attempts"]) == 2
+
+    def test_three_fails_is_fail(self, tmp_path):
+        out_dir, entry = _build_assert_run(tmp_path)
+        manifest = str(out_dir / "manifest.json")
+        case_key = "fake-agent/case-clean"
+        reply_dir = out_dir / "replies" / "fake-agent"
+
+        data = json.loads((out_dir / "manifest.json").read_text())
+        data["cases"][0]["assert"]["required_patterns"] = ["WILL_NEVER_APPEAR"]
+        (out_dir / "manifest.json").write_text(json.dumps(data))
+
+        for n in range(1, 4):
+            fname = f"case-clean-attempt{n}.txt"
+            (reply_dir / fname).write_text(_good_reply())
+            conformance.cmd_assert(
+                _fake_args("assert", manifest=manifest, case=case_key, attempt=n), tmp_path
+            )
+
+        journal = conformance.load_journal(out_dir)
+        rec = journal[case_key]
+        assert rec["verdict"] == "FAIL"
+
+    def test_missing_reply_file_exits_2(self, tmp_path):
+        out_dir, entry = _build_assert_run(tmp_path)
+        # Do NOT write the reply file.
+        args = _fake_args(
+            "assert",
+            manifest=str(out_dir / "manifest.json"),
+            case="fake-agent/case-clean",
+            attempt=1,
+        )
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            rc = conformance.cmd_assert(args, tmp_path)
+        assert rc == 2
+        assert "reply file not found" in buf.getvalue()
+
+    def test_reply_path_outside_run_dir_exits_2(self, tmp_path):
+        """Tampered manifest with reply_path outside the run directory → exit 2."""
+        out_dir, entry = _build_assert_run(tmp_path)
+        # Tamper the manifest so reply_path points outside out_dir.
+        data = json.loads((out_dir / "manifest.json").read_text())
+        data["cases"][0]["reply_path"] = str(tmp_path / "escape.txt")
+        (out_dir / "manifest.json").write_text(json.dumps(data))
+
+        import contextlib
+        import io
+        buf = io.StringIO()
+        args = _fake_args(
+            "assert",
+            manifest=str(out_dir / "manifest.json"),
+            case="fake-agent/case-clean",
+            attempt=1,
+        )
+        with contextlib.redirect_stderr(buf):
+            rc = conformance.cmd_assert(args, tmp_path)
+        assert rc == 2
+        assert "escapes" in buf.getvalue()
+
+    def test_repeated_same_attempt_does_not_duplicate(self, tmp_path):
+        """Asserting the same attempt number twice must not append a duplicate entry."""
+        out_dir, entry = _build_assert_run(tmp_path)
+        manifest = str(out_dir / "manifest.json")
+        case_key = "fake-agent/case-clean"
+        Path(entry["reply_path"]).write_text(_good_reply())
+
+        args = _fake_args("assert", manifest=manifest, case=case_key, attempt=1)
+
+        # First call.
+        conformance.cmd_assert(args, tmp_path)
+        # Second call with same attempt number.
+        conformance.cmd_assert(args, tmp_path)
+
+        journal = conformance.load_journal(out_dir)
+        rec = journal[case_key]
+        attempts_with_n1 = [a for a in rec["attempts"] if a["n"] == 1]
+        assert len(attempts_with_n1) == 1, (
+            f"attempt n=1 duplicated: got {len(attempts_with_n1)} entries"
+        )
+
+
+# ---------------------------------------------------------------------------
+# (c) stage git-init failure propagation
+# ---------------------------------------------------------------------------
+
+
+class TestStageGitInitFailure:
+    def test_git_unavailable_fails_loudly(self, tmp_path, monkeypatch):
+        """sandbox.git:true with git not on PATH must raise CalledProcessError or OSError."""
+        sandbox_dir = tmp_path / "sandbox"
+        (sandbox_dir).mkdir()
+        # Write at least one file so git add/commit are reachable.
+        sandbox_cfg = {"files": {"hello.txt": "hi"}, "git": True}
+
+        # Remove git from PATH entirely.
+        monkeypatch.setenv("PATH", str(tmp_path / "empty-bin"))
+
+        import pytest
+        with pytest.raises((subprocess.CalledProcessError, FileNotFoundError, OSError)):
+            conformance.stage_sandbox(sandbox_cfg, sandbox_dir / "inner")
+
+    def test_git_init_failure_does_not_silently_succeed(self, tmp_path, monkeypatch):
+        """After a git-init failure, the sandbox dir should not appear fully staged.
+
+        stage_sandbox must propagate the exception rather than swallowing it.
+        """
+        import unittest.mock as mock
+
+        sandbox_dir = tmp_path / "sandbox" / "case1"
+        sandbox_cfg = {"files": {"a.txt": "content"}, "git": True}
+
+        # Make git always fail.
+        def _fail(*args, **kwargs):
+            raise subprocess.CalledProcessError(1, args[0], stderr=b"simulated git failure")
+
+        with mock.patch("subprocess.run", side_effect=_fail):
+            import pytest
+            with pytest.raises(subprocess.CalledProcessError) as exc_info:
+                conformance.stage_sandbox(sandbox_cfg, sandbox_dir)
+
+        assert exc_info.value.returncode == 1
+
+
+# ---------------------------------------------------------------------------
+# (d) CRLF / leading-whitespace replies
+# ---------------------------------------------------------------------------
+
+
+class TestCRLFAndLeadingWhitespace:
+    def _entry_with_first_line_pat(self, pattern: str, extra_assert: dict | None = None) -> dict:
+        a = {"first_line": pattern, "max_words": 1000, "no_reprint": False,
+             "required_patterns": [], "forbidden_patterns": [], "artifacts": []}
+        if extra_assert:
+            a.update(extra_assert)
+        return {
+            "agent": "t", "case": "c", "regime": "clean",
+            "sandbox_path": "", "reply_path": "",
+            "model": None, "effort": None, "model_source": "inherited-session",
+            "timeout_s": 120, "max_reply_bytes": 65536,
+            "assert": a,
+            "_fixture_content": "",
+        }
+
+    def test_crlf_first_line_passes(self):
+        """first_line assertion must pass when reply uses CRLF line endings."""
+        entry = self._entry_with_first_line_pat(r"^VERDICT: PASS\b")
+        # Construct a CRLF reply.
+        reply = "VERDICT: PASS — all good\r\n" + "word " * 20
+        failures = conformance._run_assertions(entry, reply)
+        assert not any(f["kind"] == "first_line" for f in failures), (
+            "first_line failed on CRLF reply — strip() should remove \\r"
+        )
+
+    def test_leading_whitespace_first_line_passes(self):
+        """first_line assertion must pass when the reply first line has leading spaces."""
+        entry = self._entry_with_first_line_pat(r"^VERDICT: PASS\b")
+        reply = "   VERDICT: PASS — all good\n" + "word " * 20
+        failures = conformance._run_assertions(entry, reply)
+        assert not any(f["kind"] == "first_line" for f in failures), (
+            "first_line failed on reply with leading whitespace"
+        )
+
+    def test_crlf_word_count_unaffected(self):
+        """Word count must not be inflated by \\r characters in CRLF replies."""
+        # A reply with exactly 10 content words plus CRLF endings.
+        words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+        # Add padding to exceed plausibility floor.
+        padding = "pad " * 10
+        reply_crlf = " ".join(words) + "\r\n" + padding + "\r\n"
+        entry = self._entry_with_first_line_pat(
+            r"^one\b",
+            extra_assert={"max_words": 25},  # comfortably above 10+10 actual words
+        )
+        failures = conformance._run_assertions(entry, reply_crlf)
+        assert not any(f["kind"] == "max_words" for f in failures), (
+            "max_words failed — \\r may be inflating word count"
+        )
