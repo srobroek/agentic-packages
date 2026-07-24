@@ -1,5 +1,5 @@
 name: mcp-gitnexus
-version: 1.1.0
+version: 1.1.1
 description: >-
   MCP server package for GitNexus code-intelligence: knowledge-graph queries
   over an indexed repository (execution flows, symbol context, impact/blast
@@ -22,9 +22,6 @@ dependencies:
     - name: gitnexus
       registry: false
       transport: stdio
-      # Global binary (<2s start). The npx form (npx -y gitnexus@latest mcp)
-      # cold-starts in ~4s and intermittently trips MCP init timeouts; keep it
-      # only as a zero-install fallback. Prereq: npm install -g gitnexus.
       command: gitnexus
       args:
         - mcp
