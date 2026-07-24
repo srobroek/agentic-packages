@@ -1,6 +1,6 @@
 {
   "name": "orchestrate",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
   "author": {
     "name": "Sjors Robroek"

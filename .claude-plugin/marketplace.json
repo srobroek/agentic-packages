@@ -8,7 +8,7 @@
     {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
-      "version": "3.2.1",
+      "version": "3.2.2",
       "tags": [
         "agent",
         "adversarial",
@@ -45,7 +45,7 @@
     {
       "name": "agent-conformance",
       "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports — no LLM required for the engine.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "testing",
         "agents",
@@ -105,7 +105,7 @@
     {
       "name": "agent-pr-reviewer",
       "description": "Subagent that reviews pull requests for code quality, security, and best practices.",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "tags": [
         "agent",
         "quality",
@@ -911,7 +911,7 @@
     {
       "name": "mcp-gitnexus",
       "description": "MCP server package for GitNexus code-intelligence: knowledge-graph queries over an indexed repository (execution flows, symbol context, impact/blast radius, call-path tracing). Ships the server config with SHARP_IGNORE_GLOBAL_LIBVIPS=1 so the npx install never source-builds sharp against a host libvips, plus steering on when graph queries beat text search and semantic tools.",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "tags": [
         "mcp",
         "code-intelligence",
@@ -991,7 +991,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher, workflow-reviewer, workflow-advisor, integration-gatekeeper, and ledger-scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "4.1.2",
+      "version": "4.1.3",
       "tags": [
         "skill",
         "agent",
@@ -1026,7 +1026,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.13.3",
+      "version": "0.14.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1189,7 +1189,7 @@
     {
       "name": "sniff",
       "description": "Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code across 21 languages and formats, maps each finding to refactoring.guru smells, patterns, and techniques, stress-tests every recommendation with a built-in adversarial pragmatism critic, and produces a prioritized refactoring plan (impact, value, cost, severity, backwards-compatibility). Drives each language toolchain's own linters and analyzers (opportunistic, never required) with a guided first-run installer. Advisory by default; applies low-risk refactors only on explicit approval behind a verification re-run. Standalone: no APM dependencies.",
-      "version": "3.2.1",
+      "version": "3.2.2",
       "tags": [
         "skill",
         "agent",
@@ -1204,7 +1204,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "8.1.3",
+      "version": "8.1.4",
       "tags": [
         "bundle",
         "speckit"
@@ -1481,7 +1481,7 @@
     {
       "name": "write-agentic",
       "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
-      "version": "3.3.0",
+      "version": "3.3.1",
       "tags": [
         "skill",
         "maintenance",
