@@ -28,6 +28,7 @@ NOT Do not nitpick style that a formatter handles.
 ## Output
 
 L1 VERDICT: APPROVE|REQUEST-CHANGES|COMMENT — one sentence why.
+MUST The VERDICT line is the literal first line of the reply — no preamble ("Let me...", "The PR contains..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
    Blockers — only if present; file:line + why each is blocking.
    Suggestions — only if present.
    Strengths — only if notable; never mandatory.

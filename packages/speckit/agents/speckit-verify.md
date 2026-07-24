@@ -35,6 +35,8 @@ First line of output (stdout only):
 
 `VERIFY [mode] SUMMARY — {PASS|FINDINGS}: {one-line verdict}`
 
+MUST The VERIFY line is the literal first line of the reply — no preamble ("Let me...", "The verification found..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
+MUST Use exactly the verdict enum VERIFIED|PARTIAL|WEAK|NOT_FOUND in report rows — never synonyms like IMPLEMENTED or DONE.
 Then emit only non-empty sections; omit sections with no findings.
 Never reprint source documents, code, diffs, or the caller's brief.
 

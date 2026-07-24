@@ -51,7 +51,9 @@ NOT Do not pad if the plan is sound.
 
 ## Output
 
-L1 VERDICT: KEEP|DOWNGRADE|DROP per finding (table).
+L1 VERDICT: KEEP|DOWNGRADE|DROP — counts (K keep / D downgrade / X drop), one line.
+MUST The VERDICT line is the literal first line of the reply — no preamble ("Let me...", "The findings show..."), no markdown emphasis around it, and "L1" is notation for "first line", never printed.
+   Per-finding table — # | finding | verdict.
    Dropped/downgraded rationale — one tight paragraph each; omit section if none.
    Back-compat hazards — omit if none.
    Confirmed strong findings — omit if none.

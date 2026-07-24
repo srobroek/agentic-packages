@@ -1,5 +1,5 @@
 agent: speckit-research
-regime: clean
+regime: findings
 prompt: |
   Library: PyYAML
   Question: What is the safe way to load a YAML file in PyYAML to avoid
@@ -9,6 +9,6 @@ prompt: |
   Source constraints: use official PyYAML docs only.
 assert:
   first_line: '^RESEARCH: (?:COMPLETE|INCONCLUSIVE)\b'
-  max_words: 200
+  max_words: 600
   no_reprint: true
 timeout_s: 120
