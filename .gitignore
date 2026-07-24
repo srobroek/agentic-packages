@@ -58,3 +58,6 @@ reviews/
 .headroom/
 /.mcp.json
 /.worktrees/
+
+# Agent conformance run outputs (gitignored; see packages/agent-conformance)
+.conformance-runs/
