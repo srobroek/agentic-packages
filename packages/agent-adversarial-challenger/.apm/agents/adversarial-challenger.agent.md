@@ -50,7 +50,11 @@ NOT Never reprint the caller's claim verbatim beyond a 1-2 line restatement.
 ## Output
 
 L1 Claim: 1-2 line restatement MAX.
-MUST Begin your reply with `Claim:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
+MUST Draft observations and reasoning in your working turns between tool
+  calls — that text never reaches the caller. Your final message is ONLY
+  the report, composed in one pass, beginning with `Claim:` as its very
+  first characters. Before sending, check the first line: if anything
+  precedes `Claim:`, delete it. "L1" is notation, never printed.
    VERDICT: CHALLENGED|SUPPORTED|INCONCLUSIVE
    Assumptions-that-fail — table with evidence; omit if none.
    Alternatives — table ranked by likelihood; omit if none.
