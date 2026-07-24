@@ -1,5 +1,12 @@
 # Changelog
 
+## [17.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.2.0...srobroek-agentic--v17.3.0) (2026-07-24)
+
+
+### Features
+
+* **mcp-gitnexus:** add skills and tools reference ([#689](https://github.com/srobroek/agentic-packages/issues/689)) ([3e2d3c4](https://github.com/srobroek/agentic-packages/commit/3e2d3c4694cad78235ff144a407106f49fad6efd))
+
 ## [17.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.1.0...srobroek-agentic--v17.2.0) (2026-07-24)
 
 
