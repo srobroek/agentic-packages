@@ -164,6 +164,20 @@ def main() -> None:
     if not rules_file:
         if not RULES_DIR:
             emit_allow()
+        # Hardening: a RULES_DIR that is set but contains NO *.rules.json is
+        # almost certainly a misconfigured deployment (wrong path), not a
+        # legitimate unknown agent. Silently failing open would disable
+        # enforcement invisibly — the exact trap the N7 fuzzer's own path bug
+        # revealed. Warn on stderr (non-blocking; still fail open so a hook
+        # never wedges an agent) so the breakage is visible.
+        if not os.path.isdir(RULES_DIR) or not any(
+            f.endswith(".rules.json") for f in os.listdir(RULES_DIR)
+        ):
+            sys.stderr.write(
+                f"rules-eval: RULES_DIR={RULES_DIR!r} has no *.rules.json — "
+                "contract enforcement DISABLED for this stop (misconfig?).\n"
+            )
+            emit_allow()
         cand = os.path.join(RULES_DIR, f"{agent_type}.rules.json")
         if os.path.isfile(cand):
             rules_file = cand
@@ -172,7 +186,7 @@ def main() -> None:
             if os.path.isfile(generic):
                 rules_file = generic
     if not rules_file or not os.path.isfile(rules_file):
-        emit_allow()  # no rules at all -> fail open
+        emit_allow()  # no rules for this agent + no generic -> fail open
 
     try:
         with open(rules_file) as fh:
