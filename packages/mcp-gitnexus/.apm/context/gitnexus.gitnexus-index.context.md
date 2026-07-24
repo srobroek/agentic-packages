@@ -38,3 +38,18 @@ DEFAULT If `npx -y gitnexus@latest` fails with ENOTEMPTY/rename errors in
 NOT Do not run `gitnexus setup` in APM-managed environments — it writes MCP
   entries and hooks directly into editor configs, which this package owns
   declaratively instead.
+
+EMBEDDINGS AND SEARCH MODES
+MUST Default `gitnexus analyze` builds a BM25 index only — conceptual queries
+  (natural-language "how does checkout work") degrade badly without embeddings.
+  Always pass `--embeddings` for full semantic search:
+  `gitnexus analyze --embeddings`. The PostToolUse hook in this package passes
+  `--embeddings` automatically on reindex.
+DEFAULT LadybugDB installs extensions per the policy env
+  `GITNEXUS_LBUG_EXTENSION_INSTALL`:
+  - `auto` — installs FTS once (needs network); used during `analyze`.
+  - `load-only` — loads already-installed extensions; used during serve/MCP.
+  - `never` — disables extensions entirely.
+  If `analyze` logs "FTS extension unavailable... load-only policy", run one
+  analyze with `GITNEXUS_LBUG_EXTENSION_INSTALL=auto` to install it:
+  `GITNEXUS_LBUG_EXTENSION_INSTALL=auto gitnexus analyze --embeddings`
