@@ -866,6 +866,16 @@ marketplace:
       tags:
         - steering
         - tooling
+    - name: toolchain-cache-policy
+      source: ./packages/toolchain-cache-policy
+      category: project-lifecycle
+      tags:
+        - hooks
+        - cache
+        - disk
+        - worktree
+        - toolchain
+        - scaling
     - name: typescript-quality
       source: ./packages/typescript-quality
       category: languages

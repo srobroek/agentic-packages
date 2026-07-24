@@ -1,0 +1,10 @@
+{
+  "name": "toolchain-cache-policy",
+  "version": "0.1.0",
+  "description": "Enforces one shared, bounded build/cache location per toolchain across all worktrees and clones, so N parallel agent worktrees cannot each grow a multi-GB build tree and fill the disk. A SessionStart hook (1) writes shared cache env for cargo, sccache, uv, pip, go, npm, pnpm, bun, and gradle to CLAUDE_ENV_FILE, (2) enforces the cargo config target-dir (config files apply unconditionally), and (3) runs a disk-pressure GC that evicts regenerable build output (cargo target, go build cache) when free space drops below a floor, never touching module/package download stores. Fails open; advisory only. Claude SessionStart; Codex SessionStart parity.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "hooks": "./hooks/hooks.json"
+}
