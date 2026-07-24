@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.1...mcp-gitnexus--v1.1.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **mcp-gitnexus:** reindex debounce raised to 30min so writer cycles stop bouncing MCP connections ([#702](https://github.com/srobroek/agentic-packages/issues/702)) ([d2cf3b8](https://github.com/srobroek/agentic-packages/commit/d2cf3b857e570a584fbed65a9591e3bcf1bf55c5))
+
 ## [1.1.1](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.0...mcp-gitnexus--v1.1.1) (2026-07-24)
 
 
