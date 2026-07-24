@@ -76,6 +76,7 @@
   "packages/mcp-codebase-memory": "1.2.1",
   "packages/mcp-context7": "1.2.0",
   "packages/mcp-fetcher": "0.2.0",
+  "packages/mcp-gitnexus": "0.0.0",
   "packages/mcp-mempalace": "1.1.0",
   "packages/mcp-package-version": "1.2.0",
   "packages/mcp-playwright": "1.2.0",

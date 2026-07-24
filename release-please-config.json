@@ -968,6 +968,18 @@
         }
       ]
     },
+    "packages/mcp-gitnexus": {
+      "release-type": "simple",
+      "component": "mcp-gitnexus",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/mcp-mempalace": {
       "release-type": "simple",
       "component": "mcp-mempalace",

@@ -9,7 +9,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - **36 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **12 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **20 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **11 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 - **15 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
