@@ -488,18 +488,6 @@
         }
       ]
     },
-    "packages/headroom": {
-      "release-type": "simple",
-      "component": "headroom",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-attribution-guard": {
       "release-type": "simple",
       "component": "hooks-attribution-guard",

@@ -438,19 +438,6 @@
       "source": "./packages/handover"
     },
     {
-      "name": "headroom",
-      "description": "Run coding agents through Headroom to compress context and cut token usage (~60-95% fewer) and to read token-savings stats.",
-      "version": "1.1.0",
-      "tags": [
-        "skill",
-        "maintenance",
-        "tokens",
-        "compression"
-      ],
-      "category": "agentic-maintenance",
-      "source": "./packages/headroom"
-    },
-    {
       "name": "hooks-attribution-guard",
       "description": "Advises against AI authorship attribution in git commits (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers). Emits a non-blocking advisory (allow + additionalContext, exit 0) so the human stays the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not flagged. Cross-tool (Claude + Codex).",
       "version": "2.1.0",

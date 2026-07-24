@@ -36,7 +36,6 @@
   "packages/go-quality": "2.1.0",
   "packages/goal-writer": "1.1.0",
   "packages/handover": "2.2.0",
-  "packages/headroom": "1.1.0",
   "packages/hooks-attribution-guard": "2.1.0",
   "packages/hooks-bash-safety": "2.2.0",
   "packages/hooks-chezmoi-guard": "2.1.0",
