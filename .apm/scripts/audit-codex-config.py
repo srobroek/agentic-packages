@@ -109,6 +109,7 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
     "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
+    "packages/mcp-gitnexus/.apm/hooks/hooks.json": "native-required",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
     "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
