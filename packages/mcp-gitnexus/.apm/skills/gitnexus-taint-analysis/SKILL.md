@@ -1,6 +1,6 @@
 ---
 name: gitnexus-taint-analysis
-description: "Use when working on, reviewing, or extending GitNexus's CFG/taint/PDG subsystem (the `--pdg` layers), or when reasoning about source→sink data-flow findings. Examples: \"How does taint analysis work here?\", \"Why didn't explain find this flow?\", \"Add a new sink/source\", \"Review the interprocedural taint code\"."
+description: "Reason about CFG/taint/PDG source-to-sink data-flow findings from the --pdg layer."
 ---
 
 # CFG & Taint Analysis with GitNexus

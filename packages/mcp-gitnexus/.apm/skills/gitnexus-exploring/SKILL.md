@@ -1,6 +1,6 @@
 ---
 name: gitnexus-exploring
-description: "Use when the user asks how code works, wants to understand architecture, trace execution flows, or explore unfamiliar parts of the codebase. Examples: \"How does X work?\", \"What calls this function?\", \"Show me the auth flow\""
+description: "Understand architecture, trace execution flows, or explore unfamiliar code via the knowledge graph."
 ---
 
 # Exploring Codebases with GitNexus
