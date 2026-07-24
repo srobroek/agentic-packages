@@ -1,5 +1,5 @@
 name: hooks-subagent-fork
-version: 0.1.0
+version: 0.0.0
 description: >-
   PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose
   fork_turns is "all", omitted (Codex defaults omitted to a full-history
