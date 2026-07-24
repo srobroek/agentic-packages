@@ -1,9 +1,9 @@
 name: agent-conformance
-version: 0.0.0
+version: 1.0.0
 description: >-
   Deterministic conformance harness for agent contract testing: check coverage
-  and drift, stage per-case sandboxes, assert captured replies, and assemble
-  run reports — no LLM required for the engine.
+  and drift, stage per-case sandboxes, assert captured replies, and assemble run
+  reports — no LLM required for the engine.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
