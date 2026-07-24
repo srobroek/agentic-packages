@@ -5,12 +5,12 @@ needs to act and participate in the run — bead id, owned scope, base ref, run 
 id, artifacts path, deterministic commands, protocol pointers, tool guidance, and
 escalation rules — templates below.
 
-## Coder brief — copyable shape
+## Builder brief — copyable shape
 
 ```
 ASSIGN <node>
   title:    <one line>
-  bead:     <bead-id>                            # your node bead; BEADS_ACTOR=coder-<node>
+  bead:     <bead-id>                            # your node bead; BEADS_ACTOR=builder-<node>
   scope:    <globs you own; stay inside them>
   base:     <ref@sha>
   epic:     <epic-bead-id>
@@ -19,7 +19,7 @@ ASSIGN <node>
   commands:
     claim:  bd update <bead> --claim   THEN   bd update <bead> --metadata '{"branch":"<b>","worktree":"<abs>","base_sha":"<sha>"}'
     state:  bd set-state <bead> state=<name> --reason "<why>"
-    log:    bd audit record --actor coder-<node> --kind tool_call --tool-name orc.<verb> --issue-id <bead>
+    log:    bd audit record --actor builder-<node> --kind tool_call --tool-name orc.<verb> --issue-id <bead>
             + bd comment <bead> "<VERB> <node> …fields… output_ref=<artifact path>"
     verify: <project verify cmd, e.g. `just test` / `cargo test -p <crate>`>
   protocol: on block → BLOCKED kind:<design|debug> to main (do NOT spawn). After green:
@@ -30,7 +30,7 @@ ASSIGN <node>
   ASK:      raise ASK <node> for anything needing product intent not covered here.
 ```
 
-The coder's `--claim` + metadata stamp is the resumable record (assignee, branch,
+The builder's `--claim` + metadata stamp is the resumable record (assignee, branch,
 worktree, base) — see `references/lifecycle.md` (Resume) and the git-anchor
 contract in `references/beads-store.md`.
 
@@ -57,5 +57,5 @@ Escalate the reviewer a tier in the brief when the diff is complex or security-c
 
 Spawn a `advisor` (kind:design) or `debugger`/`general-purpose` (kind:debug)
 in a separately prepared Worktrunk worktree whenever it will invoke tools;
-with the coder's question verbatim + the minimal code context from its `BLOCKED`.
-Reply ADVICE back in one call, read-only; relay to the coder, then dismiss.
+with the builder's question verbatim + the minimal code context from its `BLOCKED`.
+Reply ADVICE back in one call, read-only; relay to the builder, then dismiss.

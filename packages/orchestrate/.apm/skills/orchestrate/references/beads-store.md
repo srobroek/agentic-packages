@@ -204,8 +204,8 @@ bd update <bead> --status <status>                    # only where status change
 |---|---|---|---|
 | `pending` | `open` | `state:pending` | orchestrator at `bd create` |
 | `ready` | `open` | — (derived, never stored) | `bd ready --label orc-node --parent <epic>` + clean `scope-check.py` |
-| `working` | `in_progress` | `state:working` | coder: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
-| `reported` | `in_progress` | `state:reported` | coder, after push |
+| `working` | `in_progress` | `state:working` | builder: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
+| `reported` | `in_progress` | `state:reported` | builder, after push |
 | `in_review` | `in_progress` | `state:in_review` | orchestrator at reviewer spawn |
 | `changes_requested` | `in_progress` | `state:changes_requested` | orchestrator on `REVIEW verdict=changes` |
 | `approved` | `in_progress` | `state:approved` | orchestrator on `REVIEW verdict=approve` |
@@ -231,8 +231,8 @@ the work physically lives. Two stamping points, no exceptions:
 
 | When | Who | Stamp |
 |---|---|---|
-| Claim (immediately after `--claim`) | coder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
-| Report (after push) | coder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
+| Claim (immediately after `--claim`) | builder | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
+| Report (after push) | builder | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
 Add a `repo` key when the node's work lands in a different repository than the
