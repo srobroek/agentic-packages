@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.0...mcp-gitnexus--v1.1.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **mcp-gitnexus:** MCP server fails to connect due to slow npx cold start ([#696](https://github.com/srobroek/agentic-packages/issues/696)) ([a22300e](https://github.com/srobroek/agentic-packages/commit/a22300e871294775d0c7373443a71565b7210751))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.0.0...mcp-gitnexus--v1.1.0) (2026-07-24)
 
 
