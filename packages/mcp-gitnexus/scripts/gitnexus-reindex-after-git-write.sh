@@ -32,7 +32,7 @@ LOCK="$PRIMARY/.gitnexus/reindex.lock"
 if [ -f "$LOCK" ]; then
   # stat -f %m (macOS) or stat -c %Y (Linux)
   age=$(( $(date +%s) - $(stat -f %m "$LOCK" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || echo 0) ))
-  [ "$age" -lt 120 ] && exit 0
+  [ "$age" -lt 1800 ] && exit 0
 fi
 touch "$LOCK"
 
