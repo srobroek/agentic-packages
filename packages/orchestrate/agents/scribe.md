@@ -4,7 +4,6 @@ description: >-
   Run-record reporter in an `orchestrate` run: queries beads and audit trail,
   writes only the end-of-run report artifact; never edits code or beads.
 model: haiku
-effort: low
 permissionMode: acceptEdits
 tools:
   - Read

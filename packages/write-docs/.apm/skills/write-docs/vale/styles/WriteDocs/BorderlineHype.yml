@@ -1,0 +1,10 @@
+# W3 in the retired slop-lint.py. Warning, not error: each of these has a
+# legitimate use, so the finding is a prompt to check, not a defect.
+extends: existence
+message: "borderline hype: %s — keep it only if a number or example backs it"
+level: warning
+link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/references/ai-tells.md
+ignorecase: true
+raw:
+  - '\b(simply|just works|easy to use|easily|intuitive(ly)?|flexible|'
+  - 'hassle[- ]free|out of the box|plug[- ]and[- ]play)\b'

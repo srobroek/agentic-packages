@@ -96,10 +96,10 @@ id = "security-review"
 title = "security review {{feature}}"
 type = "task"
 needs = ["checklist"]
-description = "Run /speckit.security-review (mandatory security review of plan/tasks). Parallel with critique."
+description = "Run /speckit.security-review.plan (mandatory security review of plan/tasks). Parallel with critique."
 
 [steps.metadata]
-execution_skill = "speckit.security-review"
+execution_skill = "speckit.security-review.plan"
 
 [[steps]]
 id = "analyze"

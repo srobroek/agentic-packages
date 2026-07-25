@@ -2,7 +2,6 @@
 name: data-metrics-summarizer
 description: Compacts scoped logs and metrics before orchestrate analysis.
 model: haiku
-effort: medium
 permissionMode: plan
 tools:
   - Read
