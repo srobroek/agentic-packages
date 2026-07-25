@@ -47,4 +47,4 @@ dependencies:
     - srobroek/agentic-packages/packages/pr-shepherd#>=0.14.1 <1.0.0
     - srobroek/agentic-packages/packages/agent-quality-guards#>=1.0.0 <2.0.0
     - srobroek/agentic-packages/packages/hooks-worktrunk#>=1.0.0 <2.0.0
-    - srobroek/agentic-packages/packages/worktrunk-writer#>=1.2.0 <2.0.0
+    - srobroek/agentic-packages/packages/worktrunk-writer#>=2.0.0 <3.0.0
