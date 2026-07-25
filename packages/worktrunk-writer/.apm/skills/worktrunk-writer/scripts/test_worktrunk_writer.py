@@ -675,8 +675,17 @@ class RuntimeHookTests(unittest.TestCase):
             "",
         )
 
-    def test_ordinary_agent_spawn_outside_the_protocol_is_untouched(self) -> None:
-        self.assertEqual(
+    def test_ordinary_agent_spawn_is_advised_not_denied(self) -> None:
+        """An unleased task-bearing spawn proceeds, carrying guidance.
+
+        Never a deny: a PreToolUse hook sees only free-form `subagent_type`
+        and prompt text, so it cannot tell a read-only child from a writing
+        one. Guessing is what got the hooks-subagent-worktree deny gate
+        reverted in 3bb87228. Steering is only a pointer the parent may not
+        follow, so this advisory is the one mechanical cue a parent outside
+        the protocol still receives.
+        """
+        decision = json.loads(
             self.invoke_hook(
                 {
                     "hook_event_name": "PreToolUse",
@@ -687,9 +696,30 @@ class RuntimeHookTests(unittest.TestCase):
                         "prompt": "Summarize the release notes.",
                     },
                 }
-            ),
-            "",
-        )
+            )
+        )["hookSpecificOutput"]
+        self.assertNotIn("permissionDecision", decision)
+        self.assertIn("worktrunk-writer", decision["additionalContext"])
+        self.assertIn("PREPARE", decision["additionalContext"])
+
+    def test_advisory_skips_calls_that_need_no_lease(self) -> None:
+        for label, tool, tool_input in (
+            ("resume by handle", "Agent", {"resume": "h1", "prompt": "continue"}),
+            ("continuation", "SendMessage", {"to": "a", "message": "go"}),
+            ("empty prompt", "Agent", {"subagent_type": "coder", "prompt": ""}),
+        ):
+            with self.subTest(label):
+                self.assertEqual(
+                    self.invoke_hook(
+                        {
+                            "hook_event_name": "PreToolUse",
+                            "tool_name": tool,
+                            "cwd": str(self.primary),
+                            "tool_input": tool_input,
+                        }
+                    ),
+                    "",
+                )
 
     def test_ordinary_continuation_outside_the_protocol_is_untouched(self) -> None:
         self.assertEqual(
