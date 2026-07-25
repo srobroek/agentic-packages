@@ -16,7 +16,7 @@
   "packages/agent-worker": "2.0.0",
   "packages/agentic-maintenance": "7.0.4",
   "packages/audit-steering": "2.1.0",
-  "packages/beads": "0.7.0",
+  "packages/beads": "0.8.0",
   "packages/brownfield-project": "1.1.1",
   "packages/catchup": "2.2.0",
   "packages/chezmoi-editor": "1.3.0",

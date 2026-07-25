@@ -22,7 +22,13 @@ class CompileError(ValueError):
 
 
 def instruction_files(module_root: Path) -> list[Path]:
-    return sorted(module_root.glob("**/.apm/instructions/*.md"))
+    # .apm-resolution-staging holds leaked rollback copies of the same packages
+    # (apm_cli/install/resolution_staging.py); walking them triples every pointer.
+    return sorted(
+        path
+        for path in module_root.glob("**/.apm/instructions/*.md")
+        if ".apm-resolution-staging" not in path.parts
+    )
 
 
 def instruction_body(path: Path) -> str | None:

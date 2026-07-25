@@ -11,6 +11,10 @@
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",
+      "path": "packages/beads"
+    },
+    {
+      "git": "srobroek/agentic-packages",
       "path": "packages/release-queue-watch"
     },
     {

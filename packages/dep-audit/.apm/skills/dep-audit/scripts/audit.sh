@@ -215,8 +215,45 @@ scan_osv() {
 
 # --- main ------------------------------------------------------------------
 
+usage() {
+  cat <<'EOF'
+usage: audit.sh [project-dir]   (defaults to the current directory)
+
+Detects each ecosystem present by lockfile/manifest and runs its native
+scanner. A missing scanner is reported with an install hint, not an error.
+
+  lockfile / manifest                                          scanner
+  pnpm-lock.yaml                                                pnpm audit
+  package-lock.json / npm-shrinkwrap.json                       npm audit
+  yarn.lock                                                     yarn npm audit (or npm audit)
+  poetry.lock / uv.lock / Pipfile.lock / requirements.txt /
+  pyproject.toml                                                pip-audit (or uvx pip-audit)
+  Cargo.lock / Cargo.toml                                       cargo audit
+  go.mod                                                        govulncheck ./...
+  any of the above (cross-ecosystem, supplemental)              osv-scanner
+
+install hints (only surfaced if the scanner is missing):
+  pip-audit:    pip install pip-audit  (or: uvx pip-audit)
+  cargo-audit:  cargo install cargo-audit
+  govulncheck:  go install golang.org/x/vuln/cmd/govulncheck@latest
+  osv-scanner:  https://google.github.io/osv-scanner/
+  npm/pnpm/yarn: install via Node.js / Corepack
+
+exit codes:
+  0  no HIGH/CRITICAL match (or nothing to scan / scanners unavailable)
+  1  at least one HIGH/CRITICAL vulnerability found
+  2  bad usage (target dir does not exist)
+EOF
+}
+
 main() {
   local target="${1:-.}"
+  case "$target" in
+    -h|--help)
+      usage
+      return 0
+      ;;
+  esac
   if [ ! -d "$target" ]; then
     note "dep-audit: '$target' is not a directory" >&2
     return 2

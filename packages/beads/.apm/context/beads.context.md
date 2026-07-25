@@ -65,6 +65,7 @@ MUST Model fan-in with an aggregate issue depending on each part, not comments.
 
 WORKFLOWS
 DEFAULT Read only the relevant workflow contract:
+- [Carriers: comments, decision beads, wisps, artifacts](beads.carriers.context.md)
 - [Lifecycle and gates](beads.lifecycle.context.md)
 - [Semantic audit and reporting](beads.audit.context.md)
 - [Formulas, molecules, bonds, and wisps](beads.composition.context.md)
