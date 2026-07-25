@@ -19,4 +19,4 @@ dependencies:
     - >-
       srobroek/agentic-packages/packages/hooks-package-investigate#>=1.1.1
       <2.0.0
-    - srobroek/agentic-packages/packages/dep-audit#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/dep-audit#>=2.1.2 <3.0.0
