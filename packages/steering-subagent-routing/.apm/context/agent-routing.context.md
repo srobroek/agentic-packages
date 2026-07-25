@@ -17,12 +17,6 @@ opt-in only — never auto-routed by steering or agents.
 
 Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
 
-Select agents by role match, not by hardcoded name: from the installed agent
-catalog, pick the agent whose description best matches the task's role at the
-tier above — semantic roles (coder, reviewer, explorer, operator, reasoner)
-over generic wrappers. This works with whatever catalog a project has
-installed, including third-party agents.
-
 NOT haiku for implementation tasks that are complex, ambiguous, or loosely
 scoped — measured (84-run matrix, 2026-07): haiku follows instruction-shaped
 bait 2/2 where opus/sonnet resist, violates output contracts 11-13/14, and
