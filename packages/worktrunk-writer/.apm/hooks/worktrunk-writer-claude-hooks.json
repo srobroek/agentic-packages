@@ -1,12 +1,34 @@
 {
   "hooks": {
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/context-handshake.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
+      {
+        "matcher": "Agent|SendMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/worktrunk-writer.py hook",
+            "timeout": 10
+          }
+        ]
+      },
       {
         "matcher": "Bash|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/worktrunk-writer.py hook",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/worktrunk-writer.py hook",
             "timeout": 10
           }
         ]

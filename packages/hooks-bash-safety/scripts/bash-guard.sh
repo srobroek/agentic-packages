@@ -43,8 +43,12 @@ if [[ -z "$command" || "$command" == "null" ]]; then
   exit 0
 fi
 
-# Normalize case once so the policy checks stay simple ($HOME -> $home, etc.).
-lowered="$(printf '%s' "$command" | tr '[:upper:]' '[:lower:]')"
+# Normalize case once so the policy checks stay simple ($HOME -> $home, etc.),
+# and fold raw NEWLINES to `;` — a newline separates commands exactly like a
+# semicolon, so without this a multi-line payload hid every verb from the
+# command-position anchor. Done with tr, NOT a bracket class: `[\n]` inside a
+# bash `=~` matches the literal letter n.
+lowered="$(printf '%s' "$command" | tr '\n' ';' | tr '[:upper:]' '[:lower:]')"
 
 # Decision helpers. The `2>/dev/null || true` before `exit 0` is load-bearing:
 # under `set -euo pipefail` a jq hiccup would otherwise exit NONZERO, which
@@ -73,7 +77,11 @@ warn() {
 # (; & | && ||) with optional surrounding spaces. Deliberately NOT bare
 # whitespace mid-string — matching on that is what makes a dangerous phrase
 # inside a quoted argument (echo "...") false-positive.
-cmd='(^[[:space:]]*|[[:space:]]*[;&|]+[[:space:]]*)'
+# A verb right after a `do`/`then`/`else`/`elif` keyword is also at command
+# position, but that branch is itself anchored to the start of the string or a
+# real separator: an unanchored keyword would match the WORD "do" inside quoted
+# prose (`git commit -m "... do rm -rf / done ..."`).
+cmd='(^[[:space:]]*|[[:space:]]*[;&|]+[[:space:]]*|(^|[;&|])[[:space:]]*(do|then|else|elif)[[:space:]]+)'
 
 # Optional leading command WRAPPERS and ENV-ASSIGNMENTS so a prefixed command is
 # still seen at command position: `sudo rm -rf /`, `FOO=bar rm -rf /`,
@@ -107,9 +115,15 @@ rmrf_b="rm[[:space:]]+(-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*)[[:space:]]+"
 # strips quotes and classifies the resolved path.
 q="['\"]?"
 
+# End-of-command anchor: EOL, whitespace, or a trailing `;`. Deliberately NOT
+# widened to `)` or `}` — those appear as ordinary characters in quoted prose and
+# would resurrect the benign-echo false positives the command anchor exists to
+# prevent.
+eoc='($|[[:space:]]|;)'
+
 # rm -rf / — also // and the literal /* token (`rm -rf /*` wipes everything under
 # root just like `rm -rf /`). Bundled flag, optional LEADING quote, prefix-aware.
-if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}/[/*]*($|[[:space:]]) ]]; then
+if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}/[/*]*${eoc} ]]; then
   deny "blocked by BS-4 (no rm -rf on filesystem root): refusing rm -rf / (wipes the root filesystem; unrecoverable)"
 fi
 
@@ -119,12 +133,12 @@ fi
 # git-recoverability model. The trailing class stops at `/`-then-EOL or
 # whitespace, NOT a deeper path.
 home_t="(~|\\\$home|\\\$\\{home\\})"
-if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}${home_t}(/?($|[[:space:]])) ]]; then
+if [[ "$lowered" =~ ${cmd}${sx}${rmrf_b}${q}${home_t}/?${eoc} ]]; then
   deny "blocked by BS-4 (no rm -rf on home root): refusing rm -rf on the home directory root (unrecoverable). If you meant a subdirectory, pass its explicit path."
 fi
 
 # mkfs and its filesystem-specific variants (mkfs.ext4, mkfs.xfs, ...).
-if [[ "$lowered" =~ ${cmd}${sx}mkfs(\.[a-z0-9]+)?([[:space:]]|$) ]]; then
+if [[ "$lowered" =~ ${cmd}${sx}mkfs(\.[a-z0-9]+)?${eoc} ]]; then
   deny "blocked by BS-5 (no mkfs): refusing mkfs (formats a filesystem; destroys all data on it)"
 fi
 

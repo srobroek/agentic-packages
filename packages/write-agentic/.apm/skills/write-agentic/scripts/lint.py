@@ -70,6 +70,26 @@ def words(s: str) -> int:
     return len(s.split())
 
 
+def _blank_code_spans(text: str) -> str:
+    """Replace fenced blocks and inline code with spaces, preserving offsets.
+
+    Content inside code is being shown, not asserted, so checks that judge intent
+    must not read it. Offsets are preserved so reported positions stay accurate.
+    """
+    out = list(text)
+
+    def blank(start: int, end: int) -> None:
+        for i in range(start, min(end, len(out))):
+            if out[i] != "\n":
+                out[i] = " "
+
+    for m in re.finditer(r"^[ \t]*(```+|~~~+)[^\n]*\n.*?^[ \t]*\1[^\n]*$", text, re.S | re.M):
+        blank(*m.span())
+    for m in re.finditer(r"(`+)(?:(?!\1).)*?\1", "".join(out), re.S):
+        blank(*m.span())
+    return "".join(out)
+
+
 def detect_kind(path: Path) -> str:
     n = path.name
     if n.startswith("template-"):
@@ -268,8 +288,11 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
         if not re.search(r"\]\(\.\./context/.*\.context\.md\)", body):
             err("E7", "pointer does not link a ../context/*.context.md file")
 
-    # E8 relative links resolve
-    for m in re.finditer(r"\]\((?!https?://)([^)#]+)\)", body):
+    # E8 relative links resolve. Scans with code spans blanked: a doc that
+    # DEMONSTRATES a link (`[x](../x.md)` as an example of good or bad practice)
+    # is not making that link, and flagging it makes any doc about linking
+    # unlintable.
+    for m in re.finditer(r"\]\((?!https?://)([^)#]+)\)", _blank_code_spans(body)):
         target = (path.parent / m.group(1)).resolve()
         if not target.exists():
             err("E8", f"broken link: {m.group(1)}")
