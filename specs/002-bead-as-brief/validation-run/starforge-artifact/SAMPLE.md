@@ -1,4 +1,4 @@
-# starforge — sample renders (the fun deliverable)
+# starforge -- sample renders (the fun deliverable)
 
 ```
 ╔══════════════════════════════════════════════════╗

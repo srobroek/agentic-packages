@@ -1,6 +1,6 @@
 ---
 name: pr-shepherd
-description: Drains the beads merge queue — checks gates, probes PRs, merges or bounces back. Triggers on /pr-shepherd, shepherd PRs, drain merge queue, land ready PRs.
+description: Drains the beads merge queue -- checks gates, probes PRs, merges or bounces back. Triggers on /pr-shepherd, shepherd PRs, drain merge queue, land ready PRs.
 ---
 
 # PR Shepherd
@@ -86,18 +86,18 @@ MUST Never close a work bead from `Tracks-Bead:` alone; only a matching
 NOT A gh:pr gate on a merge bead; use dependency edges for landing fan-in and
   a concrete gh:run gate only for CI.
 MUST Release the claim (`bd update <id> --assignee "" --status open`) whenever
-  the bead is not closed this pass — a parked claim starves other sessions.
-MUST Never fix code, rebase, or resolve conflicts — file a fix bead and bounce
+  the bead is not closed this pass -- a parked claim starves other sessions.
+MUST Never fix code, rebase, or resolve conflicts -- file a fix bead and bounce
   (references/bounce-back.md); gates own the wait, not your session.
 MUST Comment the pass outcome on the merge bead even when no action was taken.
 DEFAULT Merge method: repo convention (branch protection, CONTRIBUTING);
   squash when unstated.
-NOT Claiming a bead assigned to another actor — claim refusal IS the
+NOT Claiming a bead assigned to another actor -- claim refusal IS the
   coordination; dead-claim recovery rules live in the pr-shepherd steering.
-NOT Waiting in-session for CI or re-polling a pending PR — release and let the
+NOT Waiting in-session for CI or re-polling a pending PR -- release and let the
   next pass (or `bd gate check`) pick it up.
 
 OUTPUT
-L1 SHEPHERD PASS: merged M / bounced B / waiting W / skipped S — then one line
+L1 SHEPHERD PASS: merged M / bounced B / waiting W / skipped S -- then one line
    per bead: id, PR#, disposition, fix-bead id if filed.
 CAP 150w clean · 300w with bounces

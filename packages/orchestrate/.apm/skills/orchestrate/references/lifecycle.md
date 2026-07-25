@@ -22,7 +22,7 @@ pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─�
                                             (any state) ───────────────► failed
 ```
 
-Blocked workers stay in `working` — `BLOCKED` is a message, not a node state.
+Blocked workers stay in `working` -- `BLOCKED` is a message, not a node state.
 
 ## Transitions
 
@@ -60,12 +60,12 @@ merge requirement.
 
 | Class | Agents | Rule |
 |---|---|---|
-| Persistent | Shepherd, Scribe | spawned once, live the whole run, addressed via SendMessage — never polled |
+| Persistent | Shepherd, Scribe | spawned once, live the whole run, addressed via SendMessage -- never polled |
 | Task-scoped | Directed worker or Generic pull worker; independent reviewer | kept alive across fix rounds; reviewer re-reviews deltas; dismissed only after merge or approved non-git closure. Never re-spawn a fresh worker for a live claim |
 | Ephemeral | Researcher gatherers/synthesizer, Advisor/debugger, Tiebreaker | spawn → return → maybe resume for follow-ups |
 
 Stopped background subagents auto-resume on SendMessage. Never re-spawn a fresh
-agent for the same live claim — it loses context and may create a second writer.
+agent for the same live claim -- it loses context and may create a second writer.
 
 ## Resume after orchestrator compaction or crash
 

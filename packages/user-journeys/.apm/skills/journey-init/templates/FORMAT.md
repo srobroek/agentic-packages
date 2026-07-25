@@ -2,7 +2,7 @@
 
 Normative spec for every artifact under this journeys directory. Installed by
 `journey-init`; the copy in the repo is authoritative for that repo. Agents and
-humans read the same files — nothing here requires a runtime beyond a text
+humans read the same files -- nothing here requires a runtime beyond a text
 editor, `git`, and `python3` for the index/lint helper.
 
 ## Directory layout
@@ -26,7 +26,7 @@ editor, `git`, and `python3` for the index/lint helper.
 
 `journey.md` is always **current truth**: what the product is expected to do
 today, end to end, from the user's point of view. It is never a historical
-record — git is the historical record.
+record -- git is the historical record.
 
 ````markdown
 ---
@@ -77,7 +77,7 @@ never accept a gap on the user's behalf, and missing information is never
 invented. Unconfirmed gaps keep the journey in `draft`.
 
 - [ ] **Goal** names the actor's outcome and an observable definition of
-      "done" — not a feature description.
+      "done" -- not a feature description.
 - [ ] Every **Expect** is observable and falsifiable. "Works correctly",
       "handles gracefully", and other unfalsifiable phrasing are defects.
 - [ ] Every **success criterion** has a concrete target: a count, a
@@ -92,7 +92,7 @@ invented. Unconfirmed gaps keep the journey in `draft`.
 - [ ] `actors`, `surfaces`, and `interfaces` are filled; `trace` links the
       change records that informed authoring, or is explicitly empty.
 - [ ] Error and edge branches are explicitly scoped: covered in steps,
-      or listed under Known gaps as out of scope — never simply absent.
+      or listed under Known gaps as out of scope -- never simply absent.
 
 Promotion is event-driven: once the checklist holds, the first validation
 run in which every step passes records `draft` → `active` (the verify
@@ -108,7 +108,7 @@ with the human's blessing. Nothing else changes `status`.
   title edits.
 - Preconditions (`P<n>`), success criteria (`SC<n>`), and gaps (`G<n>`)
   follow the same stability rule.
-- Everything that refers to a step — deltas, run results, findings — cites
+- Everything that refers to a step -- deltas, run results, findings -- cites
   `J<id>/S<id>`.
 
 ### The three change species
@@ -117,10 +117,10 @@ with the human's blessing. Nothing else changes `status`.
 |---|---|---|---|---|---|
 | **Correction** | The doc misdescribed existing behavior | edit in place | nothing | unchanged | git commit `journey(J07): correct S2 ...` |
 | **Behavior delta** | The product intentionally changed | edit in place | one compact Δ entry | +1 | git + Δ entry until flushed |
-| **Run result** | What happened when validated | never touches journey.md | never | — | `runs/` file + reporter |
+| **Run result** | What happened when validated | never touches journey.md | never | -- | `runs/` file + reporter |
 
 A **correction** needs no ceremony because no one ever needs to be told "we
-once described this wrong" — fix the text, commit. A **behavior delta** needs
+once described this wrong" -- fix the text, commit. A **behavior delta** needs
 its Δ entry because the next validator and the next human reviewer must see
 what changed since the document was last trusted, with the evidence that the
 change was intended.
@@ -140,12 +140,12 @@ handful of recent deltas; the log cannot grow monotonically.
 
 ### Amendment authority (intent gating)
 
-An agent may amend a journey **only** when it can cite intent evidence — a
+An agent may amend a journey **only** when it can cite intent evidence -- a
 merged PR, spec, changelog entry, commit message, or an explicit user
 instruction stating the behavior changed on purpose. The evidence must
 itself STATE the behavior change: a commit that claims non-behavioral scope
 ("refactor", "cleanup") while its diff changes behavior is not intent
-evidence — it is grounds for suspicion. The evidence goes in the
+evidence -- it is grounds for suspicion. The evidence goes in the
 Δ entry. With no intent evidence, the journey stays unchanged, the run marks
 the step failing, and a finding is filed as `suspected-regression`. Agents
 never resolve `product-question` findings; those always go to a human.
@@ -176,7 +176,7 @@ Triage: suspected-regression — no intent evidence in merges since v3.
 Step result values: `pass | fail | blocked | skipped`. `blocked` means the
 step could not be attempted (environment, missing fixture, prior failure);
 `skipped` means deliberately out of scope for this run's mode. A step
-unreachable because an earlier step in the same run failed is `blocked` —
+unreachable because an earlier step in the same run failed is `blocked` --
 the defect is recorded once, on the step that owns it; journey-level impact
 shows in the run `result` and the success criteria, never by double-marking.
 
@@ -184,12 +184,12 @@ shows in the run `result` and the success criteria, never by double-marking.
 
 Every mismatch between journey and observed behavior gets exactly one triage:
 
-- `correction` — the doc was wrong about long-standing reality. Fix body.
-- `intended-change` — intent evidence found. Amend body + Δ entry, version+1.
-- `suspected-regression` — no intent evidence. File finding; journey unchanged.
-- `product-question` — reality and doc disagree and neither is clearly right;
+- `correction` -- the doc was wrong about long-standing reality. Fix body.
+- `intended-change` -- intent evidence found. Amend body + Δ entry, version+1.
+- `suspected-regression` -- no intent evidence. File finding; journey unchanged.
+- `product-question` -- reality and doc disagree and neither is clearly right;
   needs a human product decision. File finding flagged `product-decision`.
-- `environment` — the harness/fixture/driver failed, not the product. Record
+- `environment` -- the harness/fixture/driver failed, not the product. Record
   in the run file only; do not file to the tracker.
 
 ## Findings
@@ -230,11 +230,11 @@ human-approved (an agent may propose, only a human blesses):
 3. `runs/` is pruned to the newest `runs_keep` files (README frontmatter).
 4. `INDEX.md` is regenerated.
 
-Git retains everything deleted in steps 2–3.
+Git retains everything deleted in steps 2 to 3.
 
 ## INDEX.md
 
 Generated by the `journeys.py` helper (never hand-edited): one row per
-journey — id, title, status, version, surfaces, interfaces, last_reviewed,
+journey -- id, title, status, version, surfaces, interfaces, last_reviewed,
 last run date/result. It is the routing table for "which journeys does this
 change touch" and the first file an agent reads.

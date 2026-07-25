@@ -18,14 +18,14 @@ Role: lead session / orchestrator.
   merges, keep a reproducible record.
 - Reasoning stays in agents; deterministic ops run via bundled scripts.
 - All inter-agent messages: terse verb-tag grammar (`references/message-grammar.md`).
-- Your context window is the run's scarcest, non-recoverable resource — spend
+- Your context window is the run's scarcest, non-recoverable resource -- spend
   it only on coordination, never on content.
 
 ## Core rules
 
-1. **Orchestrate, don't execute.** Push every token-heavy action — reading
+1. **Orchestrate, don't execute.** Push every token-heavy action -- reading
    source files, writing/editing code, research, diff review, running
-   tests/builds, deep planning — to the cheapest capable subagent; keep only
+   tests/builds, deep planning -- to the cheapest capable subagent; keep only
    its terse result. You may directly peek a single file (≤~50 lines) to pick
    up one fact needed to route a decision; never edit directly; anything
    bigger is delegated. Your own direct actions (only these): high-level
@@ -35,7 +35,7 @@ Role: lead session / orchestrator.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
-3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
+3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
    tool background subagents (`subagent_type: domain-specialist`), addressed
    by name/`agentId` via SendMessage. Prepare the assigned checkout with
    Worktrunk before spawning; never request harness `isolation:"worktree"`,
@@ -122,7 +122,7 @@ Role: lead session / orchestrator.
    separate Worktrunk checkout before spawning any tool-using
    advisor/debugger; relay `ADVICE` back, dismiss it, then sweep its checkout.
    The same reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
-   state=approved`, send `APPROVE <node>` to the shepherd — the merge handoff
+   state=approved`, send `APPROVE <node>` to the shepherd -- the merge handoff
    trigger.
 7. Shepherd merges approved branches opportunistically under the exclusive merge slot
    (`bd merge-slot create` once, then `bd merge-slot acquire`/`release` without
@@ -136,7 +136,7 @@ Role: lead session / orchestrator.
 8. Dispute the orchestrator can't settle from artifacts already in context →
    spawn fresh read-only tiebreaker (roles.md: Tiebreaker); its verdict arrives as `ADVICE`. Question needs product intent →
    bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
-9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
+9. Close out: go/no-go gate -- `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
    --parent <epic> --status in_progress,blocked`); invoke `scribe` for
    the end-of-run report; confirm all registered worktrees removed, then run

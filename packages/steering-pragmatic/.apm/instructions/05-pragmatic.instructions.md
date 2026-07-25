@@ -1,5 +1,5 @@
 ---
-description: Always-loaded pragmatic working style — accuracy and calibration over agreeableness.
+description: Always-loaded pragmatic working style -- accuracy and calibration over agreeableness.
 ---
 
 For communication style, epistemic defaults, and how to handle uncertainty,

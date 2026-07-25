@@ -1,4 +1,4 @@
-# Feature Specification: Agent Regression Harness — Contract-Conformance Tests for Shipped Agents
+# Feature Specification: Agent Regression Harness -- Contract-Conformance Tests for Shipped Agents
 
 **Feature Branch**: `001-agent-conformance`
 
@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Agent regression harness: contract-conformance tests for shipped agents. The repo ships ~34 production agent definitions (.apm/agents/*.agent.md across packages) with zero behavioral tests. Build a harness that feeds canned task fixtures to each agent and asserts contract conformance deterministically: first-line verdict format (regex/enum), word caps, no-reprint rules, output-section presence. LLM-in-the-loop by design — run nightly or pre-release, not per-PR. Prior art: wshobson plugin-eval is authoring-quality scoring, orthogonal; its static checks already ported to write-agentic lint."
+**Input**: User description: "Agent regression harness: contract-conformance tests for shipped agents. The repo ships ~34 production agent definitions (.apm/agents/*.agent.md across packages) with zero behavioral tests. Build a harness that feeds canned task fixtures to each agent and asserts contract conformance deterministically: first-line verdict format (regex/enum), word caps, no-reprint rules, output-section presence. LLM-in-the-loop by design -- run nightly or pre-release, not per-PR. Prior art: wshobson plugin-eval is authoring-quality scoring, orthogonal; its static checks already ported to write-agentic lint."
 
 ## Context
 
@@ -32,8 +32,8 @@ reproducible.
 
 ### Session 2026-07-24
 
-- Q: Run each agent with its pinned model/effort, or one cheap model for cost? → A: Pinned models — the regression under guard is the shipped configuration; a scoped iteration run may override the model explicitly, but fleet/release sweeps always use the pins.
-- Q: How does the unattended run ship in v1? → A: Local-only in v1 — the suite ships as a locally invoked runner; CI automation (scheduled or manual) is deferred to a follow-up feature. The runner must not assume an interactive human (it is automatable), but no CI workflow is part of this spec.
+- Q: Run each agent with its pinned model/effort, or one cheap model for cost? → A: Pinned models -- the regression under guard is the shipped configuration; a scoped iteration run may override the model explicitly, but fleet/release sweeps always use the pins.
+- Q: How does the unattended run ship in v1? → A: Local-only in v1 -- the suite ships as a locally invoked runner; CI automation (scheduled or manual) is deferred to a follow-up feature. The runner must not assume an interactive human (it is automatable), but no CI workflow is part of this spec.
 - Q: Where does the harness live? → A: A new self-contained package (`packages/agent-conformance`), versioned and released like the other packages, reading other packages' agent sources read-only at run time.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -45,7 +45,7 @@ with one command. Every shipped agent is exercised against its fixture(s); the
 maintainer gets a per-agent pass/fail/flaky report and a stored artifact of
 each non-passing reply, and can decide whether the release proceeds.
 
-**Why this priority**: This is the core gap — 34 agents, zero behavioral
+**Why this priority**: This is the core gap -- 34 agents, zero behavioral
 tests. A single runnable sweep with trustworthy verdicts is the MVP; every
 other story builds on it.
 
@@ -73,7 +73,7 @@ verdict of PASS, FLAKY, FAIL, or SKIP (with reason).
 ### User Story 2 - Coverage completeness is enforced deterministically (Priority: P2)
 
 A contributor adds a new agent package (or renames an agent) without adding a
-conformance case. A deterministic, LLM-free check — runnable per-PR — fails
+conformance case. A deterministic, LLM-free check -- runnable per-PR -- fails
 and names the uncovered agent, so coverage cannot silently erode.
 
 **Why this priority**: Without a coverage gate the suite decays as the fleet
@@ -156,13 +156,13 @@ agent's fixtures execute; the report contains only that agent.
   human-readable reason; a deterministic coverage check MUST fail otherwise.
 - **FR-003**: A conformance case MUST supply a canned task fixture (the
   task-shaped input the parent would send) and MUST execute the agent's
-  actual shipped definition — same system prompt content, same pinned
-  model/effort — capturing the complete reply.
+  actual shipped definition -- same system prompt content, same pinned
+  model/effort -- capturing the complete reply.
 - **FR-004**: The system MUST assert, deterministically and reproducibly on
   the captured reply: (a) first-line verdict conformance via regex/enum
   derived from the agent's declared contract; (b) word-cap conformance for
   the regime the fixture drives (clean vs with-findings), skipped only for
-  contracts that declare uncapped; (c) no-reprint conformance — the reply
+  contracts that declare uncapped; (c) no-reprint conformance -- the reply
   contains no verbatim run of fixture-supplied content beyond a small
   threshold; (d) presence/absence of declared output sections, including
   conditional sections that must be absent when empty.
@@ -187,7 +187,7 @@ agent's fixtures execute; the report contains only that agent.
 - **FR-010**: The suite's deterministic components (its engine) MUST be
   non-interactive once invoked (no prompts, deterministic exit codes, report
   written to a predictable path) and MUST fail fast with an explicit
-  configuration error when the execution environment is unusable — so that a
+  configuration error when the execution environment is unusable -- so that a
   later feature can wrap the suite in scheduled automation. Shipping any CI
   workflow for the LLM sweep is out of scope for this feature.
 - **FR-011**: A deterministic consistency check MUST verify each case's
@@ -203,7 +203,7 @@ agent's fixtures execute; the report contains only that agent.
 ### Key Entities
 
 - **Agent contract**: the machine-checkable slice of an agent's declared
-  output rules — first-line pattern, cap regime(s), no-reprint rule,
+  output rules -- first-line pattern, cap regime(s), no-reprint rule,
   section list. Derived from the shipped `.agent.md`; the harness treats the
   agent file as the source of truth.
 - **Conformance case**: fixture (canned task input + any stub environment) +
@@ -243,7 +243,7 @@ agent's fixtures execute; the report contains only that agent.
 - **Packaging**: the harness ships as a new self-contained package
   (`packages/agent-conformance`) following the repository's package
   conventions, reading other packages' shipped agent sources read-only at
-  run time — consistent with the constitution's self-contained-packages
+  run time -- consistent with the constitution's self-contained-packages
   principle (no package reaches into another's internals at runtime; agent
   definitions are published contract surfaces, and the existing doc
   generators set the precedent for cross-package read-only scans).
@@ -260,7 +260,7 @@ agent's fixtures execute; the report contains only that agent.
   runner is built automatable (FR-010), but wrapping it in scheduled CI is a
   deferred follow-up feature, tracked as its own bead.
 - **Credentials & billing**: the default execution path must be covered by a
-  maintainer's existing Claude subscription — it must not require
+  maintainer's existing Claude subscription -- it must not require
   API-key (metered) billing. Metered execution is acceptable only as an
   explicit opt-in (and for the deferred CI wrapper, `orc-qrt`). The harness
   does not manage or provision credentials.

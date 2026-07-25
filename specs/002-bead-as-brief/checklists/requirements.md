@@ -35,11 +35,11 @@
   doc (`packages/orchestrate/.apm/skills/orchestrate/references/bead-as-brief.md`,
   bead orc-3v0) per the internal-docs rule against restating a linked source.
   "Content Quality: no implementation details" is read accordingly: the FRs
-  name the contracted behaviors (which are themselves the product — this
+  name the contracted behaviors (which are themselves the product -- this
   feature's users are orchestrator operators and agent authors), not their
   code-level realization.
 - Tool names that appear (bd, GitHub PRs, SubagentStop) are the feature's
-  domain objects, not implementation choices — this feature specifies
+  domain objects, not implementation choices -- this feature specifies
   contracts *about* those systems.
 - No [NEEDS CLARIFICATION] markers: all decisions were resolved in the
   design-session decision ledger recorded in the design doc before this spec

@@ -1,8 +1,8 @@
-# CI/CD pipelines — Sniff Reference
+# CI/CD pipelines -- Sniff Reference
 
 CI/CD workflow definitions: YAML used *functionally* to define pipelines, primarily
 **GitHub Actions** (with GitLab CI noted). This doc covers **pipeline semantics +
-security** — action pinning, least-privilege permissions, injection, timeouts,
+security** -- action pinning, least-privilege permissions, injection, timeouts,
 concurrency. The pure-YAML **format** layer (indentation, anchors, truthy, duplicate
 keys) is covered separately in `yaml.md`; reference that split and do not re-flag
 syntax here. Dominant concerns: security misconfig, reliability, maintainability.
@@ -22,14 +22,14 @@ Primary first. Exact invocation + machine-readable flag. Canonical detail in
 
 | Tool | Invocation | Covers | Tier | Installed via |
 |------|-----------|--------|------|---------------|
-| actionlint | **Run recipe:** from repo root, `actionlint -format '{{json .}}' -no-color`. **Flags are single-dash (Go flag pkg) — `-format`, NOT `--format`; `--format` is the "bad flag" that errors.** The `{{json .}}` arg must be quoted exactly as shown. With no path args it auto-discovers `.github/workflows/`; or pass explicit workflow files. **Exit:** 0 clean · 1 = problems (parse JSON) · 3 = usage error (bad flag) → INVALID, fix the flag. | workflow AST: bad syntax, invalid `needs`/`if`, expr typos; **embeds shellcheck** for `run:` steps | default-on | `install-tools.sh --install infra` |
+| actionlint | **Run recipe:** from repo root, `actionlint -format '{{json .}}' -no-color`. **Flags are single-dash (Go flag pkg) -- `-format`, NOT `--format`; `--format` is the "bad flag" that errors.** The `{{json .}}` arg must be quoted exactly as shown. With no path args it auto-discovers `.github/workflows/`; or pass explicit workflow files. **Exit:** 0 clean · 1 = problems (parse JSON) · 3 = usage error (bad flag) → INVALID, fix the flag. | workflow AST: bad syntax, invalid `needs`/`if`, expr typos; **embeds shellcheck** for `run:` steps | default-on | `install-tools.sh --install infra` |
 | zizmor | `zizmor --format json <workflow>` | GHA security dataflow: `pull_request_target` injection, `persist-credentials`, template injection | opt-in (security-only) | `install-tools.sh --install infra` |
 | pinact | `pinact run --check` | verifies every `uses:` is pinned to a full commit SHA | opt-in (mutating fixer + needs a token) | `install-tools.sh --install infra` |
 
 Notes: `actionlint` is the primary AST linter and already runs `shellcheck` over
 every `run:` body, so do not separately shellcheck a workflow. `zizmor` is the
 security specialist (the dataflow analyzer that catches injection and credential
-leaks — actionlint does **not** cover these). `pinact run --check` is a focused
+leaks -- actionlint does **not** cover these). `pinact run --check` is a focused
 gate for SHA pinning. GitLab CI has no equivalent of this trio; validate it with
 GitLab's own CI Lint API / schema validator (`glab ci lint` or the project's
 `/ci/lint` endpoint) and apply the semantic smells below by hand.
@@ -54,10 +54,10 @@ Beyond what tools flag. Each: what it looks like + the idiomatic alternative.
 
 ## Idioms & style authorities
 
-- GitHub Actions security hardening — https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
-- actionlint checks — https://github.com/rhysd/actionlint/blob/main/docs/checks.md
-- OpenSSF Scorecard (pinned-deps / token-permissions checks) — https://github.com/ossf/scorecard/blob/main/docs/checks.md
-- GitLab CI Lint reference — https://docs.gitlab.com/ee/ci/yaml/lint.html
+- GitHub Actions security hardening -- https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+- actionlint checks -- https://github.com/rhysd/actionlint/blob/main/docs/checks.md
+- OpenSSF Scorecard (pinned-deps / token-permissions checks) -- https://github.com/ossf/scorecard/blob/main/docs/checks.md
+- GitLab CI Lint reference -- https://docs.gitlab.com/ee/ci/yaml/lint.html
 - Key conventions: pin actions to a full commit SHA; set least-privilege
   `permissions:` (default `contents: read`); add `timeout-minutes` and
   `concurrency`; never run untrusted PR code via `pull_request_target` with
@@ -70,21 +70,21 @@ Beyond what tools flag. Each: what it looks like + the idiomatic alternative.
 | Duplicated steps across workflows/jobs | Duplicate Code (`/smells/duplicate-code`) | Extract a **reusable workflow** (`workflow_call`) or **composite action** |
 | One giant job doing build+test+lint+deploy | Long Method (`/smells/long-method`) | Split into separate jobs wired by `needs:` |
 
-The OO catalog maps **weakly** — most CI smells are pipeline-design + security
+The OO catalog maps **weakly** -- most CI smells are pipeline-design + security
 specific (pinning, permissions, injection) with no refactoring.guru analogue. Cite
 the GitHub security-hardening URL as the authority over forcing an OO mapping.
 
 ## Pragmatism notes (for the adversarial pass)
 
 - `@vN` tags are acceptable per team policy for *trusted first-party* actions
-  (`actions/checkout@v4`, `actions/setup-node@v4`) — the SHA-pinning smell weighs
+  (`actions/checkout@v4`, `actions/setup-node@v4`) -- the SHA-pinning smell weighs
   heaviest on *third-party* actions. Respect a documented allow-policy.
 - Not every workflow needs `concurrency`: a fast lint-only job or a manual
-  `workflow_dispatch` gains little — flag it on expensive or deploy workflows.
+  `workflow_dispatch` gains little -- flag it on expensive or deploy workflows.
 - A single-job workflow doesn't always need splitting; flag Long Method only when a
   job mixes unrelated concerns that should gate independently.
 - No-timeout is low-severity on a job that's intrinsically short; weight it up on
   jobs that can hang (integration tests, network waits, self-hosted).
-- Security smells here are rarely false positives — `pull_request_target` + untrusted
+- Security smells here are rarely false positives -- `pull_request_target` + untrusted
   checkout, script injection via `${{ }}` into `run:`, and over-broad `permissions:`
   enable real supply-chain compromise. **Weight them high; do not soften them.**

@@ -2,7 +2,7 @@
 
 ## SubagentStop (per-agent and universal)
 
-**Input (stdin JSON)** — fields used; all optional-tolerant (fail open):
+**Input (stdin JSON)** -- fields used; all optional-tolerant (fail open):
 
 | Field | Claude | Codex | Use |
 |---|---|---|---|
@@ -14,9 +14,9 @@
 **Claim resolution**: actor name embeds the claim identity
 (`<role>-<node-bead>` / `<role>-<domain>`); the hook queries
 `bd list --assignee <derived-actor> --json`. No claim → exit 0 silently
-(universal net) / exit 0 (per-agent — nothing to validate).
+(universal net) / exit 0 (per-agent -- nothing to validate).
 
-**Output (stdout JSON)** — Codex requires JSON; Claude accepts it:
+**Output (stdout JSON)** -- Codex requires JSON; Claude accepts it:
 
 Allow: `{}` (exit 0).
 
@@ -31,7 +31,7 @@ Block (exit 0 + decision, or exit 2 with reason on stderr for Claude):
 }
 ```
 
-Rules: diagnosis only — no remediation text (contract lives in the agent
+Rules: diagnosis only -- no remediation text (contract lives in the agent
 definition); failure-specific (only failed checks appear); `attempt` counts
 toward bounce.
 
@@ -54,7 +54,7 @@ Fires only when the session run-marker is set (orchestrate skill sets it at
 run start; env var + marker file probe). Matches `bd` commands carrying
 `--claim` / claim-equivalent forms. Decision: deny with self-correction text
 ("orchestrators route; dispatch to a worker"). Without run-marker: allow
-silently. Codex: advisory-strength (partial interception) — accepted.
+silently. Codex: advisory-strength (partial interception) -- accepted.
 
 ## Attachment matrix
 

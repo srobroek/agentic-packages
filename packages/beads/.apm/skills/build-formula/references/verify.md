@@ -35,13 +35,13 @@ advice is wrong.
 
 ## The assertion set
 
-Run per supported selection, **including all-options-off** — the case nobody tests.
+Run per supported selection, **including all-options-off** -- the case nobody tests.
 
 | # | Assertion | Catches |
 |---|---|---|
 | 1 | Step count matches expectation | Wrong condition wiring |
 | 2 | Every declared `needs` edge present after pour | A typo'd step id |
-| 3 | **Every step with a declared `needs` has ≥1 `blocks` edge** | The anchor violation — the costliest silent failure |
+| 3 | **Every step with a declared `needs` has ≥1 `blocks` edge** | The anchor violation -- the costliest silent failure |
 | 4 | `Gate:` bead count and ids per selection | A lost human approval |
 | 5 | Every gate `type` ∈ `human｜timer｜gh:run｜gh:pr` | The orphan-gate stall |
 | 6 | A redeclared step still carries its parent's gate and condition | The override trap |
@@ -87,5 +87,5 @@ A real pour writes beads. Never assert against a live project database.
 ```
 
 The root is `(from <formula>)` with no dot; every step is `(from <formula>.<step-id>)`; every gate is
-`.gate-<step-id>`. Count on the dot, not on the name — that off-by-one is easy to write and it makes an
+`.gate-<step-id>`. Count on the dot, not on the name -- that off-by-one is easy to write and it makes an
 expected-count assertion wrong rather than the formula.

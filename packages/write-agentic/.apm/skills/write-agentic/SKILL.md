@@ -31,6 +31,6 @@ One workflow for three asset kinds. Pick the template, author at source, lint.
 
 MUST Enums in CAPS (`PASS|PARTIAL|FAIL`); decision tables as `situation → choice`.
 MUST No hedge words on normative lines (lint list); replace with an observable condition.
-MUST No model names in prose — tier routing lives in steering-subagent-routing.
+MUST No model names in prose -- tier routing lives in steering-subagent-routing.
 DEFAULT Gotchas/env-facts may stay single sentences when a table would lose the trap.
-NOT User-facing text (reports, PR bodies) — never keyword prefixes.
+NOT User-facing text (reports, PR bodies) -- never keyword prefixes.

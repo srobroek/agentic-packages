@@ -1,4 +1,4 @@
-# Beads Orchestration Doctrine — claim⟺contract, wisps, links, labels, gates
+# Beads Orchestration Doctrine -- claim⟺contract, wisps, links, labels, gates
 
 Cross-package doctrine for multi-agent runs on beads. Orchestrate and speckit
 consume this; they do not restate it. Primitives are defined in
@@ -25,10 +25,10 @@ MUST Keep bead metadata to machine-checkable scalars that a rule, a spawn
   decision, or a landing step reads. Narrative goes in comments.
 DEFAULT A healthy node's durable comment thread stays small (BRIEF, one
   REPORTED, verdict lines, closing summary); process chatter rides wisps.
-NOT Mirror state-machine state or verdicts into metadata — one source of
+NOT Mirror state-machine state or verdicts into metadata -- one source of
   truth per fact.
 
-## WISPS — role vocabulary
+## WISPS -- role vocabulary
 
 MUST Route ephemeral coordination through wisps typed by lifetime, not by
   name; the title prefix carries the role.
@@ -50,7 +50,7 @@ DEFAULT Touch a long-lived open wisp each cycle: a 24h-untouched open wisp is
 DEFAULT `bd promote` a wisp whose content proves durable rather than widening
   its TTL; content worth over 7 days is not wisp content.
 
-## GRAPH LINKS — provenance
+## GRAPH LINKS -- provenance
 
 MUST Use dependencies (`blocks`, parent) to shape the ready frontier; use
   graph links to carry provenance and conversation, never to schedule.
@@ -64,7 +64,7 @@ MUST Use dependencies (`blocks`, parent) to shape the ready frontier; use
 DEFAULT Discover linked wisps via `bd show <bead>` links, not metadata
   pointers; when a wisp burns its link dies with it.
 
-## LABELS — declaration, not enforcement
+## LABELS -- declaration, not enforcement
 
 MUST Treat labels as declarations queried with `bd list --label-any`; merge
   safety derives from the dependency graph, never from a label.
@@ -90,7 +90,7 @@ NOT Count dimensions in any actor. Readiness is a `bd ready` answer.
 MUST Park async waits on native gates, not custom holds: `human` (approval,
   ASK), `timer` (recurring drain cycles), `gh:run` (CI), `gh:pr` (external PR
   merge). A gate blocks the bead until `bd gate check` or `bd gate resolve`.
-MUST Never place a `gh:pr` gate on a merge bead — it deadlocks the integrator
+MUST Never place a `gh:pr` gate on a merge bead -- it deadlocks the integrator
   queue; gate the dependent work bead instead.
 DEFAULT Tick gates from the coordinator wake and the shepherd patrol
   (`bd gate check --type=gh`); gates never self-resolve.

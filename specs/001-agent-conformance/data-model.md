@@ -1,4 +1,4 @@
-# Data Model — Agent Conformance Harness
+# Data Model -- Agent Conformance Harness
 
 ## AgentContract (derived, in-memory)
 
@@ -19,7 +19,7 @@ Never persisted; the agent file is the source of truth.
 
 Derivation rules (mirrors write-agentic lint idioms):
 - CAPS enum regex `\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b` locates verdict enums.
-- `CAP <N>w clean · <M>w with findings` → dual caps (the second regime noun varies: findings, blockers, signals — any word matches); `CAP <N>w`/`CAP <N> words` →
+- `CAP <N>w clean · <M>w with findings` → dual caps (the second regime noun varies: findings, blockers, signals -- any word matches); `CAP <N>w`/`CAP <N> words` →
   single; `CAP uncapped` → uncapped=true; `≤ <N> words` prose forms → single cap.
 - Agents whose Output section defies derivation (structured lines, prose caps)
   still parse to partial contracts; the case YAML supplies the rest, and
@@ -34,17 +34,17 @@ Derivation rules (mirrors write-agentic lint idioms):
 | `agent` | str | ✔ | must match a discovered agent name |
 | `regime` | `clean` \| `findings` | ✔ | which cap regime the fixture drives |
 | `prompt` | str | ✔ | the task message sent to the agent |
-| `sandbox.files` | map[path→content] | – | staged into fresh temp dir before run |
-| `sandbox.git` | bool | – | `git init` + commit staged files (default false) |
-| `assert.first_line` | str (regex) | – | anchored at first non-empty reply line; omit for prose contracts (check warns when both case and derived contract lack it) |
+| `sandbox.files` | map[path→content] | -- | staged into fresh temp dir before run |
+| `sandbox.git` | bool | -- | `git init` + commit staged files (default false) |
+| `assert.first_line` | str (regex) | -- | anchored at first non-empty reply line; omit for prose contracts (check warns when both case and derived contract lack it) |
 | `assert.max_words` | int \| `uncapped` | ✔ | for the declared regime |
-| `assert.no_reprint` | bool | – | default true |
-| `assert.required_patterns` | list[regex] | – | section/structure presence |
-| `assert.forbidden_patterns` | list[regex] | – | e.g. findings section absent in clean regime |
-| `assert.artifacts` | list[{path, line_pattern}] | – | side-effect files (FR-005) |
-| `timeout_s` | int | – | default 120; in-session: driver instruction + assert checks capture duration |
-| `max_reply_bytes` | int | – | default 65536; assert checks reply file size post-capture, ERROR on breach (FR-012) |
-| `budget_usd` | float | – | default 1.00 |
+| `assert.no_reprint` | bool | -- | default true |
+| `assert.required_patterns` | list[regex] | -- | section/structure presence |
+| `assert.forbidden_patterns` | list[regex] | -- | e.g. findings section absent in clean regime |
+| `assert.artifacts` | list[{path, line_pattern}] | -- | side-effect files (FR-005) |
+| `timeout_s` | int | -- | default 120; in-session: driver instruction + assert checks capture duration |
+| `max_reply_bytes` | int | -- | default 65536; assert checks reply file size post-capture, ERROR on breach (FR-012) |
+| `budget_usd` | float | -- | default 1.00 |
 
 Validation (in `check` mode, LLM-free):
 - `agent` resolves; regex fields compile; `regime` matches a derivable cap

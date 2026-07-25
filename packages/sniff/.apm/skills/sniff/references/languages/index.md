@@ -1,7 +1,7 @@
 # Language & Format Index
 
 Route each detected **target** to its self-contained reference doc. "Target"
-means any sniffable surface — a programming language, a config/data format, an
+means any sniffable surface -- a programming language, a config/data format, an
 API contract, OR an infra target (Terraform, Dockerfile, Kubernetes, CI). The
 directory is named `languages/` for history, but it holds docs for ALL of these;
 treat infra/config/contract docs as first-class, not afterthoughts. In step 1,
@@ -9,7 +9,7 @@ map the detected stack to these docs; load (or hand to a `bloodhound`) only the
 docs for targets actually present.
 
 Each doc is independent and follows `_template.md`. To add a language, copy the
-template, fill it, and add a row here — nothing else in the package needs to
+template, fill it, and add a row here -- nothing else in the package needs to
 change.
 
 ## Core languages
@@ -50,7 +50,7 @@ change.
 
 ## Infrastructure (functional implementations of a format)
 
-These cover the *semantic* smells of a tool that uses YAML/HCL — distinct from
+These cover the *semantic* smells of a tool that uses YAML/HCL -- distinct from
 the pure-format docs above (the format-vs-functional split).
 
 | Target | Doc | Detect by |

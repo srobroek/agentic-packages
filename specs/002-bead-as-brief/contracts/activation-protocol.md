@@ -12,14 +12,14 @@
 
 Nothing else. Any task data in a spawn prompt is a contract violation of
 FR-002. The orchestrator MAY append runtime-only details the bead cannot
-carry (e.g. "teams flag off — poll, don't wait").
+carry (e.g. "teams flag off -- poll, don't wait").
 
 ## Actor naming (claim-derivation dependency)
 
 `<role>-<node-bead>` (node-scoped) · `<role>-<domain>[-n]` (specialist) ·
 `advisor-<wisp-id>` · `pr-shepherd-<repo>` · children `<parent>.<k>` (never
 claim). The universal Stop hook derives the claim query from the assignee
-name — naming is load-bearing.
+name -- naming is load-bearing.
 
 ## Wake protocol
 
@@ -29,7 +29,7 @@ name — naming is load-bearing.
 3. Respawned actor reads: bead metadata → BRIEF → durable comments → worklog
    wisp thread (via links). Resume point = last CHECKPOINT.
 4. No live waiting: blocked actors write the escalation wisp, checkpoint, and
-   exit (pause state) — or bounded-poll (60s tick, 15–30min cap) on
+   exit (pause state) -- or bounded-poll (60s tick, 15 to 30min cap) on
    non-resume runtimes.
 5. Freshness rule: prefer respawn over resume after ~2 rounds on the same
    node or post-compaction.

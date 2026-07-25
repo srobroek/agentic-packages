@@ -16,9 +16,9 @@ NOT Deploy, publish, accept risk, or absorb unrelated cleanup.
 
 ## Output
 
-L1 VERDICT: COMPLETE|BLOCKED|ESCALATE — one sentence why.
-   Changed files — paths only.
-   Verification — command + PASS|FAIL.
-   Risks — only if material.
+L1 VERDICT: COMPLETE|BLOCKED|ESCALATE -- one sentence why.
+   Changed files -- paths only.
+   Verification -- command + PASS|FAIL.
+   Risks -- only if material.
 CAP 160w clean · 240w with blockers.
 MUST Never reprint code, diffs, or file contents.

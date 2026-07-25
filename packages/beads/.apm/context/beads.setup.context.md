@@ -11,5 +11,5 @@ NOT Copies of product lifecycle hooks, managed instruction blocks, skill, or
   Git-hook shims in APM.
 DEFAULT Project setup follows the repository's Beads version; global setup is
   for repositories that do not install project integration, not redundancy.
-NOT `bd preflight` as an application quality gate — Beads 1.1.0 hard-codes
+NOT `bd preflight` as an application quality gate -- Beads 1.1.0 hard-codes
   checks for the Beads Go repository; use repository-owned quality commands.

@@ -25,7 +25,7 @@ When `bd where` succeeds in the repo, task state lives in beads, not the file. F
 - Active Beads: each active bead ID with one line on where its work stopped
 - Next Session Prompt additionally directs the next session to `bd show <ids>`, `bd ready`, and `bd list --status in_progress`
 
-Omit Changed Areas, Complete, Incomplete, Blockers, and Verification sections — those are bead state. Do not duplicate task lists or status tables into the file.
+Omit Changed Areas, Complete, Incomplete, Blockers, and Verification sections -- those are bead state. Do not duplicate task lists or status tables into the file.
 
 ## Non-beads repos (full layout)
 

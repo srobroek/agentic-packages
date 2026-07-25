@@ -1,9 +1,9 @@
-# Fixture Case Schema — `fixtures/<agent>/case-<slug>.yaml`
+# Fixture Case Schema -- `fixtures/<agent>/case-<slug>.yaml`
 
 Authoritative field reference in [data-model.md](../data-model.md)
 (ConformanceCase). This contract adds the worked example and authoring rules.
 
-## Example — clean regime, reviewer-low
+## Example -- clean regime, reviewer-low
 
 ```yaml
 agent: reviewer-low
@@ -36,7 +36,7 @@ timeout_s: 120
 budget_usd: 0.50
 ```
 
-## Example — findings regime with artifact assertion, lint-guard
+## Example -- findings regime with artifact assertion, lint-guard
 
 ```yaml
 agent: lint-guard
@@ -65,7 +65,7 @@ timeout_s: 120
 - One case file per regime you exercise; name `case-clean.yaml`,
   `case-findings.yaml`, or `case-<scenario>.yaml`.
 - `assert.first_line` is optional (omit for prose contracts like ledger-scribe);
-  when present it and `assert.max_words` MUST match the agent's declared contract — `check` cross-validates against the derived contract and fails
+  when present it and `assert.max_words` MUST match the agent's declared contract -- `check` cross-validates against the derived contract and fails
   on drift (FR-011). When the contract is underivable (prose caps), the case
   is the encoding of record; keep it faithful.
 - Fixture content must be self-contained and small: a fixture is a *probe*,

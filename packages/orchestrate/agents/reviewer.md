@@ -36,7 +36,7 @@ Your brief gives: the node id, its `bead` id, the `branch` + `worktree` path, th
    match to the surrounding code, and comment discipline (no over-commenting).
    Run the project's verify command if it is cheap.
 3. Report `REVIEW <node> verdict=approve|changes` to `main` in ≤ 80 words:
-   - `changes`: a numbered list of exact items, each `file:line — problem —
+   - `changes`: a numbered list of exact items, each `file:line -- problem --
      required action`, plus a one-line `ok:` of what is sound. Reference
      findings by path:line; never reprint the diff.
    - `approve`: `items: 0` and a one-line `ok:` note.
@@ -47,6 +47,6 @@ Your brief gives: the node id, its `bead` id, the `branch` + `worktree` path, th
 
 ## Stay alive for the delta
 After reporting `changes`, END YOUR TURN and wait. When the orchestrator relays
-the coder's re-report you are resumed with your context — re-review ONLY the delta
+the coder's re-report you are resumed with your context -- re-review ONLY the delta
 and send `REVIEW <node> verdict=approve` (or another `changes`). You are dismissed
 on approval; do not re-review the whole branch again.

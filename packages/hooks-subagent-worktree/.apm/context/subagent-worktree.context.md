@@ -1,16 +1,16 @@
 # Subagent worktree isolation
 
 A `PreToolUse:Agent` hook posts a **non-blocking advisory** (full text in the
-hook's own heredoc) on every subagent spawn that has not declared isolation —
+hook's own heredoc) on every subagent spawn that has not declared isolation --
 never a deny, just a reminder to choose deliberately. Silent once `isolation`
 is set on the call.
 
 Nuance the advisory doesn't cover: several writers of a **different** repo, on
-private paths, still corrupt each other if they share one external checkout —
+private paths, still corrupt each other if they share one external checkout --
 give each its own path, same rule as sharing a worktree.
 
 A committed `worktree-<name>` branch is safe to merge, cherry-pick, or review
-afterward — only isolated subagents need this; one editing the shared tree
+afterward -- only isolated subagents need this; one editing the shared tree
 directly leaves its changes in your checkout as usual.
 
 ## You own concurrency safety

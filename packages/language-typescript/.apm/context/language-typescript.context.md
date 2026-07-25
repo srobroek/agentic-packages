@@ -1,5 +1,5 @@
 ---
-description: typescript react frontend architecture index — route to component layout, state/data, contract boundary, type safety
+description: typescript react frontend architecture index -- route to component layout, state/data, contract boundary, type safety
 ---
 
 # TypeScript Architecture Index
@@ -15,8 +15,8 @@ standardization. Load only the relevant topic:
 | generated bindings, dispatch seam, envelope unwrap, conformance test | [Contract boundary](ts.architecture.contract-boundary.context.md) |
 | generated-union maps, `satisfies` allow-lists, boundary validation | [Type safety & validation](ts.architecture.type-safety-validation.context.md) |
 
-The server side of the contract boundary — command registration, binding export,
-and the CI codegen drift gate — lives in the `language-rust` contract boundary
+The server side of the contract boundary -- command registration, binding export,
+and the CI codegen drift gate -- lives in the `language-rust` contract boundary
 doc.
 
 Opinionated picks (styling/theming, testing, build/tooling) live in the

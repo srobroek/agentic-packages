@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Agent Regression Harness — Contract-Conformance Tests for Shipped Agents
+# Specification Quality Checklist: Agent Regression Harness -- Contract-Conformance Tests for Shipped Agents
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-07-24

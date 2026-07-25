@@ -23,7 +23,7 @@ This file adds the per-verb field table and a worked example.
 
 Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
 a `file:line` or bead/node id backing a claim; `open:` a known-unfinished or
-deferred item (distinct from `risks:` — hazards for the receiver); every factual
+deferred item (distinct from `risks:` -- hazards for the receiver); every factual
 field is either a pointer or the marker `untested` (see `comms-block.md`).
 
 ## Durable replies-to threads
@@ -124,7 +124,7 @@ queue: agent:generic
 reason: no-compatible-work
 ```
 
-## Worked example — APPROVE variants and merge (`t3`)
+## Worked example -- APPROVE variants and merge (`t3`)
 
 The per-verb field table above covers `ASSIGN`/`BLOCKED`/`ADVICE`/`REPORTED`/`REVIEW`/`FIX` fields;
 this example covers only `APPROVE`'s three field shapes (plain handoff, watcher-backed PR,

@@ -6,8 +6,8 @@
 
 ## Requirement Details
 
-FR-001 | VERIFIED | discover_agents() glob at conformance.py:97 — `packages/*/.apm/agents/*.agent.md`; no hand-maintained list; 34 agents found at runtime
-FR-002 | VERIFIED | cmd_check() at conformance.py:409-480 — coverage gate fails on missing cases/skips, stale entries; tested in TestCheckCoverage (test_conformance.py:255-343); CI enforces via conformance-check job in test.yml
+FR-001 | VERIFIED | discover_agents() glob at conformance.py:97 -- `packages/*/.apm/agents/*.agent.md`; no hand-maintained list; 34 agents found at runtime
+FR-002 | VERIFIED | cmd_check() at conformance.py:409-480 -- coverage gate fails on missing cases/skips, stale entries; tested in TestCheckCoverage (test_conformance.py:255-343); CI enforces via conformance-check job in test.yml
 FR-003 | VERIFIED | SKILL.md protocol step 3 (spawn via Task tool with entry prompt + sandbox_path); model_source stamp at conformance.py:607; live probe on bead orc-mol-58d.13 confirmed Task-spawn of installed agent with pinned model (comment: "staged workflow-advisor pinned opus/high, Task-spawned installed agent")
 FR-004 | VERIFIED | _run_assertions() at conformance.py:729-820 covers (a) first_line regex, (b) max_words cap, (c) no_reprint >=160 chars via _check_no_reprint:692, (d) required/forbidden_patterns for section presence; all exercised in TestAssertionEngine (test_conformance.py:352-497)
 FR-005 | VERIFIED | Artifact assertions at conformance.py:793-818; test at test_conformance.py:468-497; speckit-verify fixture (fixtures/speckit-verify/case-clean.yaml) asserts report-file presence + line_pattern
@@ -31,7 +31,7 @@ SC-005 | PARTIAL | Single-agent scoped run verified working (bead orc-mol-58d.13
 |-----------|--------|----------|
 | I. Self-Contained Packages | PASS | Package reads other agents' files read-only (discover_agents glob); no code imports across packages; independently testable (pytest in CI matrix) |
 | II. Generated Artifacts Not Hand-Edited | PASS | Reports/journals written to .conformance-runs/ which is gitignored (root .gitignore entry confirmed) |
-| III. Hooks Fail Open | N/A | No hooks shipped — confirmed: no .sh files or hook references in package |
+| III. Hooks Fail Open | N/A | No hooks shipped -- confirmed: no .sh files or hook references in package |
 | IV. Conventional Commits + Release-Please | PASS | release-please-config.json entry at packages/agent-conformance; apm.yml with version 0.1.0; CHANGELOG.md present |
 
 ## Findings By Severity
@@ -42,11 +42,11 @@ SC-005 | PARTIAL | Single-agent scoped run verified working (bead orc-mol-58d.13
 
 ### Notes
 
-- SC-002/SC-005 timing claims are design-validated only — no recorded full-fleet or timed single-agent sweep exists yet. This is expected (spec says "local pre-release invocation is the v1 interface" and CI automation is deferred).
+- SC-002/SC-005 timing claims are design-validated only -- no recorded full-fleet or timed single-agent sweep exists yet. This is expected (spec says "local pre-release invocation is the v1 interface" and CI automation is deferred).
 - The chronic-flake promotion logic (3 consecutive FLAKY → FAIL) is a bonus beyond spec requirements, tested at test_conformance.py:617.
 
 ## Verification Commands
 
 - `uv run --with pytest --with pyyaml pytest -q packages/agent-conformance/scripts/test_conformance.py`: not run (deterministic tests confirmed via bead comment: "48 pytest green")
 - `python3 packages/agent-conformance/scripts/conformance.py check`: not run (confirmed via CI workflow and bead probe)
-- `bd show orc-mol-58d.13 --json`: pass — closed, live sweep recorded
+- `bd show orc-mol-58d.13 --json`: pass -- closed, live sweep recorded

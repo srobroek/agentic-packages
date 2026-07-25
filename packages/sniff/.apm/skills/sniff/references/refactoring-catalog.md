@@ -16,7 +16,7 @@ two URL shapes the site actually uses:
 **Hybrid index + fetch:** this file is the index. When a finding needs the full
 step-by-step mechanics (numbered steps, before/after), fetch the specific
 technique's page URL with the web-fetch / fetcher tool. Do **not** fetch on every
-finding — the index is enough to name and justify most fixes. Do not paste large
+finding -- the index is enough to name and justify most fixes. Do not paste large
 verbatim copies of the site's prose into reports; cite the URL.
 
 Top-level index pages:
@@ -33,7 +33,7 @@ Top-level index pages:
 23 smells across 6 categories. Each smell links to its own page; the
 "recommended refactorings" name techniques from the technique reference below.
 
-### Bloaters — `/refactoring/smells/bloaters`
+### Bloaters -- `/refactoring/smells/bloaters`
 Code, methods, and classes that have grown to unmanageable size.
 
 | Smell | URL | Recommended refactorings |
@@ -44,7 +44,7 @@ Code, methods, and classes that have grown to unmanageable size.
 | Long Parameter List | `/smells/long-parameter-list` | Replace Parameter with Method Call; Preserve Whole Object; Introduce Parameter Object |
 | Data Clumps | `/smells/data-clumps` | Extract Class; Introduce Parameter Object; Preserve Whole Object |
 
-### Object-Orientation Abusers — `/refactoring/smells/oo-abusers`
+### Object-Orientation Abusers -- `/refactoring/smells/oo-abusers`
 Incomplete or incorrect application of OO principles.
 
 | Smell | URL | Recommended refactorings |
@@ -54,7 +54,7 @@ Incomplete or incorrect application of OO principles.
 | Refused Bequest | `/smells/refused-bequest` | Push Down Method; Push Down Field; Replace Inheritance with Delegation |
 | Alternative Classes with Different Interfaces | `/smells/alternative-classes-with-different-interfaces` | Rename Method; Move Method; Extract Superclass |
 
-### Change Preventers — `/refactoring/smells/change-preventers`
+### Change Preventers -- `/refactoring/smells/change-preventers`
 One change forces many cascading changes elsewhere.
 
 | Smell | URL | Recommended refactorings |
@@ -63,7 +63,7 @@ One change forces many cascading changes elsewhere.
 | Shotgun Surgery | `/smells/shotgun-surgery` | Move Method; Move Field; Inline Class |
 | Parallel Inheritance Hierarchies | `/smells/parallel-inheritance-hierarchies` | Move Method; Move Field |
 
-### Dispensables — `/refactoring/smells/dispensables`
+### Dispensables -- `/refactoring/smells/dispensables`
 Pointless or unneeded code whose absence makes the code cleaner.
 
 | Smell | URL | Recommended refactorings |
@@ -75,7 +75,7 @@ Pointless or unneeded code whose absence makes the code cleaner.
 | Dead Code | `/smells/dead-code` | Delete the code; Inline Class; Collapse Hierarchy |
 | Speculative Generality | `/smells/speculative-generality` | Collapse Hierarchy; Inline Class; Remove Parameter; Rename Method |
 
-### Couplers — `/refactoring/smells/couplers`
+### Couplers -- `/refactoring/smells/couplers`
 Excessive coupling between classes.
 
 | Smell | URL | Recommended refactorings |
@@ -85,7 +85,7 @@ Excessive coupling between classes.
 | Message Chains | `/smells/message-chains` | Hide Delegate; Extract Method; Move Method |
 | Middle Man | `/smells/middle-man` | Remove Middle Man; Inline Method; Replace Delegation with Inheritance |
 
-### Other — `/refactoring/smells/other`
+### Other -- `/refactoring/smells/other`
 Smells that fit no other group.
 
 | Smell | URL | Recommended refactorings |
@@ -96,10 +96,10 @@ Smells that fit no other group.
 
 ## Refactoring techniques (full catalog, by intent)
 
-66 techniques across 6 groups. Each row is its own page (flat URL — prepend
+66 techniques across 6 groups. Each row is its own page (flat URL -- prepend
 `https://refactoring.guru`). Fetch the specific page for the numbered mechanics.
 
-### Composing Methods — `/refactoring/techniques/composing-methods`
+### Composing Methods -- `/refactoring/techniques/composing-methods`
 Streamline methods, remove code duplication.
 
 | Technique | URL |
@@ -114,7 +114,7 @@ Streamline methods, remove code duplication.
 | Replace Method with Method Object | `/replace-method-with-method-object` |
 | Substitute Algorithm | `/substitute-algorithm` |
 
-### Moving Features Between Objects — `/refactoring/techniques/moving-features-between-objects`
+### Moving Features Between Objects -- `/refactoring/techniques/moving-features-between-objects`
 Move responsibilities between classes safely.
 
 | Technique | URL |
@@ -128,7 +128,7 @@ Move responsibilities between classes safely.
 | Introduce Foreign Method | `/introduce-foreign-method` |
 | Introduce Local Extension | `/introduce-local-extension` |
 
-### Organizing Data — `/refactoring/techniques/organizing-data`
+### Organizing Data -- `/refactoring/techniques/organizing-data`
 Cleaner handling of data; replace primitives with objects.
 
 | Technique | URL |
@@ -149,7 +149,7 @@ Cleaner handling of data; replace primitives with objects.
 | Replace Type Code with State/Strategy | `/replace-type-code-with-state-strategy` |
 | Replace Subclass with Fields | `/replace-subclass-with-fields` |
 
-### Simplifying Conditional Expressions — `/refactoring/techniques/simplifying-conditional-expressions`
+### Simplifying Conditional Expressions -- `/refactoring/techniques/simplifying-conditional-expressions`
 Decompose and clarify conditional logic.
 
 | Technique | URL |
@@ -163,7 +163,7 @@ Decompose and clarify conditional logic.
 | Introduce Null Object | `/introduce-null-object` |
 | Introduce Assertion | `/introduce-assertion` |
 
-### Simplifying Method Calls — `/refactoring/techniques/simplifying-method-calls`
+### Simplifying Method Calls -- `/refactoring/techniques/simplifying-method-calls`
 Make method calls simpler and easier to understand.
 
 | Technique | URL |
@@ -183,7 +183,7 @@ Make method calls simpler and easier to understand.
 | Replace Error Code with Exception | `/replace-error-code-with-exception` |
 | Replace Exception with Test | `/replace-exception-with-test` |
 
-### Dealing with Generalization — `/refactoring/techniques/dealing-with-generalization`
+### Dealing with Generalization -- `/refactoring/techniques/dealing-with-generalization`
 Move features along inheritance hierarchies; trade inheritance for delegation.
 
 | Technique | URL |
@@ -209,11 +209,11 @@ For a finding, cite: the **smell** (with its page URL), the **chosen
 refactoring** (with its own technique page URL), and one line of justification.
 Example:
 
-> `parser.go:88` — **Long Method** (`/smells/long-method`, 140 lines, ccn 22).
+> `parser.go:88` -- **Long Method** (`/smells/long-method`, 140 lines, ccn 22).
 > Apply **Extract Method** (`/extract-method`) to lift the token-classification
 > block into `classifyToken`.
 
-Cross-check every mapping against the language doc's idioms — the language-correct
+Cross-check every mapping against the language doc's idioms -- the language-correct
 fix sometimes differs from the generic OO catalog (e.g. Go favors a small
 function and early returns over polymorphism; Rust favors enums + `match` over a
 State pattern). The `refactor-challenger` will attack mismatches.

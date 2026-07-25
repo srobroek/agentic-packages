@@ -28,7 +28,7 @@ triage.
 
 ## Who validates
 
-Spawn one `journey-validator` agent per journey — the complete validation
+Spawn one `journey-validator` agent per journey -- the complete validation
 procedure (driving, evidence, triage, intent-gated amendment, run file,
 findings) is owned by that agent's definition, not restated here. Respect
 profile `exclusive: true`: serialize journeys sharing an exclusive profile;
@@ -39,7 +39,7 @@ the rest run in parallel.
   (`.claude/agents/journey-validator.md`, or `agents/journey-validator.md`
   in this package) and follow it verbatim.
 - Never validate a journey your own context authored or amended in this
-  conversation — that is self-review. Hand it to a validator agent or
+  conversation -- that is self-review. Hand it to a validator agent or
   report that first validation needs a fresh context.
 
 ## Coordinator duties
@@ -47,7 +47,7 @@ the rest run in parallel.
 1. **Resolve scope and inputs.** Which journeys; for each, the profile from
    its `interfaces:` and README.md. Pass each validator: journey path,
    journeys dir, run mode (`full` or `changed-only(S…)`), profile name, and
-   the repo's commit convention (in fan-out: validators do not commit — you
+   the repo's commit convention (in fan-out: validators do not commit -- you
    commit once per wave).
 2. **Aggregate.** Collect the validators' structured results. With the
    local tracker and parallel validators, id assignment is single-writer:
@@ -59,14 +59,14 @@ the rest run in parallel.
 4. **Reindex once** per wave: `python3 <journeys-dir>/journeys.py index
    <journeys-dir>` (the helper lives in the journeys directory), then lint.
 5. **Commit** journeys-dir changes as
-   `journey(J<id>): validate v<version> — <result>` — unless the caller or
+   `journey(J<id>): validate v<version> — <result>` -- unless the caller or
    repo workflow forbids committing; then leave uncommitted and say so.
 
 ## Close the loop
 
 Report per-journey results, amendments (with evidence), findings filed.
-Then offer next actions — never auto-run them when invoked directly:
+Then offer next actions -- never auto-run them when invoked directly:
 `journey-consolidate` when green with Δ entries or when `runs/` exceeds
-README `runs_keep` (retention is enforced only at consolidation — say so);
+README `runs_keep` (retention is enforced only at consolidation -- say so);
 the fix loop per README `fix_loop` for regressions (`journey-campaign`
 owns the autonomous loop).

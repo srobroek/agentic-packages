@@ -75,11 +75,11 @@ project scaffold.
 ## Rules
 
 MUST No broad scaffold unless the user explicitly asks for one.
-MUST Do not treat APM package selection as the first step — understand purpose and requirements first.
+MUST Do not treat APM package selection as the first step -- understand purpose and requirements first.
 MUST Never edit generated runtime copies directly during retrofit.
 MUST Ask only for requirements absent from README/docs/specs/CI where the answer changes which tooling or steering gets installed.
 DEFAULT Use `srobroek-agentic` as the first-pass marketplace for brownfield migrations, but let `find-tools` own marketplace registration, browsing, and adopt/trial/reject classification.
-- Keep discovery bounded — enough shared understanding for retrofit choices, not a full product specification unless the user asks.
+- Keep discovery bounded -- enough shared understanding for retrofit choices, not a full product specification unless the user asks.
 - Preserve existing package managers, CI, build commands, docs, and issue workflow unless the user chooses a migration.
 - Treat project-local generated assets as APM-owned.
 - Do not select packages directly except for baseline repair. Use `find-tools` for reusable tool recommendations.
