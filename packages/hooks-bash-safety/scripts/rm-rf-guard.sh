@@ -87,7 +87,16 @@ root="${root%/}"; [[ -z "$root" ]] && root="/"
 # match failed, silently letting a wrapper-prefixed `rm -rf /` through.
 _wrap='(sudo|doas|env|time|nice|command|exec|xargs|stdbuf|nohup|setsid|ionice)[[:space:]]+(-[^[:space:]]+[[:space:]]+([^-][^[:space:]]*[[:space:]]+)?)*'
 _envasgn='([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*'
-rm_args="$(printf '%s' "$command" | grep -oE "(^|[;&|])[[:space:]]*(${_envasgn}|${_wrap})*rm[[:space:]]+[^;&|]*" | head -n1 || true)"
+# Command position also follows a subshell/brace-group opener `( {` and the loop
+# and conditional keywords, so `for i in 1; do rm -rf / ; done`, `if true; then
+# rm -rf / ; fi` and `{ rm -rf / ; }` reach the verb. Both the opener and the
+# keyword are themselves anchored to start-of-string or a real separator: as a
+# bare [;&|(){}] class or an unanchored `do`, they would match the punctuation and
+# the WORD inside quoted prose (`git commit -m "... { rm -rf /; } ..."`),
+# reintroducing the benign-echo false positives this anchoring exists to prevent.
+# The target run stops at `(){}` too, so a trailing `)` / `}` is not a target.
+_open='([({][[:space:]]*|(do|then|else|elif)[[:space:]]+)?'
+rm_args="$(printf '%s' "$command" | grep -oE "(^|[;&|])[[:space:]]*${_open}[[:space:]]*(${_envasgn}|${_wrap})*rm[[:space:]]+[^;&|(){}]*" | head -n1 || true)"
 [[ -z "$rm_args" ]] && exit 0
 
 # Tokenize on ALL whitespace (space, tab) — not just space — so a tab-separated
@@ -119,7 +128,10 @@ fi
 # Everything after `rm` that is not an option = the target paths. Strip the
 # command-position prefix (separator + leading whitespace + wrappers/env-assigns)
 # up to and including the `rm` token, then tokenize on all whitespace.
-targets="$(printf '%s' "$rm_args" | sed -E "s/^[;&|]?[[:space:]]*(${_envasgn}|${_wrap})*rm[[:space:]]+//" | tr '[:space:]' '\n' | grep -vE '^-' || true)"
+# The strip must accept the SAME leading alternation the extractor matched
+# (`$_open`) or the opener survives as a bogus first target: `{ rm -rf /etc ; }`
+# would be reported as deleting `{`.
+targets="$(printf '%s' "$rm_args" | sed -E "s/^[;&|]?[[:space:]]*${_open}[[:space:]]*(${_envasgn}|${_wrap})*rm[[:space:]]+//" | tr '[:space:]' '\n' | grep -vE '^-' || true)"
 display_targets="$(printf '%s' "$targets" | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
 
 # Emit a decision and exit. We emit only "deny" (block; reason fed to the model,

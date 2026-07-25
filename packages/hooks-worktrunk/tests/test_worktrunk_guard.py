@@ -50,6 +50,17 @@ SPEC.loader.exec_module(guard)
             "wt switch --create <branch> --execute=claude",
         ),
         ("env claude -w fix-auth", "/wt-switch-create"),
+        # P4a: quoting splits every token a substring prefilter could match.
+        ('git work"tree" add -b feat/auth /tmp/auth', "wt switch --create feat/auth"),
+        ("gh pr  checkout 123", "wt switch pr:123"),
+        ("gh 'pr' \"checkout\" 123", "wt switch pr:123"),
+        # P4b: timeout/setsid/flock wrappers.
+        ("timeout 5 git worktree add /tmp/x", "wt switch --create <branch>"),
+        ("timeout -k 10 30s git worktree add /tmp/x", "wt switch --create <branch>"),
+        ("timeout --signal=KILL 5 git worktree list", "wt list"),
+        ("setsid git worktree list", "wt list"),
+        ("flock /tmp/lock git worktree add /tmp/x", "wt switch --create <branch>"),
+        ("flock -w 5 /tmp/lock git worktree prune", "wt step prune"),
     ],
 )
 def test_direct_worktree_management_is_denied(command: str, expected: str) -> None:
@@ -73,25 +84,52 @@ def test_direct_worktree_management_is_denied(command: str, expected: str) -> No
         "gh pr view 42",
         "claude --model opus",
         "printf '%s\\n' 'claude --worktree example'",
+        "timeout 5 wt switch --create feat/auth",
+        "flock /tmp/lock echo git worktree add",
+        "setsid echo git worktree list",
     ],
 )
 def test_non_management_commands_are_silent(command: str) -> None:
     assert guard.scan_command(command) is None
 
 
-def run_guard(payload: object | str) -> subprocess.CompletedProcess[str]:
+@pytest.fixture
+def wt_on_path(tmp_path: Path) -> str:
+    """PATH carrying a stub `wt`, so the guard's environment gate is satisfied.
+
+    CI runners have no Worktrunk install; without a stub every end-to-end deny
+    assertion would pass through the environment gate instead of denying.
+    """
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    stub = bin_dir / "wt"
+    stub.write_text("#!/bin/sh\nexit 0\n")
+    stub.chmod(0o755)
+    return f"{bin_dir}:{os.environ.get('PATH', '')}"
+
+
+def run_guard(
+    payload: object | str,
+    *,
+    path: str | None = None,
+) -> subprocess.CompletedProcess[str]:
     stdin = payload if isinstance(payload, str) else json.dumps(payload)
+    env = {**os.environ}
+    if path is not None:
+        env["PATH"] = path
     return subprocess.run(
         [sys.executable, str(GUARD_PATH)],
         input=stdin,
         capture_output=True,
         text=True,
+        env=env,
+        cwd=str(PACKAGE),
         check=False,
     )
 
 
-def test_object_payload_emits_cross_runtime_deny_contract() -> None:
-    result = run_guard({"tool_input": {"command": "git worktree list"}})
+def test_object_payload_emits_cross_runtime_deny_contract(wt_on_path: str) -> None:
+    result = run_guard({"tool_input": {"command": "git worktree list"}}, path=wt_on_path)
     assert result.returncode == 0
     output = json.loads(result.stdout)
     decision = output["hookSpecificOutput"]
@@ -100,15 +138,32 @@ def test_object_payload_emits_cross_runtime_deny_contract() -> None:
     assert "wt list" in decision["permissionDecisionReason"]
 
 
-def test_string_payload_is_supported() -> None:
-    result = run_guard({"tool_input": "git worktree prune"})
+def test_string_payload_is_supported(wt_on_path: str) -> None:
+    result = run_guard({"tool_input": "git worktree prune"}, path=wt_on_path)
     assert result.returncode == 0
     assert json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
 
 
 @pytest.mark.parametrize("payload", ["", "not-json", "[]", '{"tool_input": {}}'])
-def test_unusable_payload_fails_open(payload: str) -> None:
-    result = run_guard(payload)
+def test_unusable_payload_fails_open(payload: str, wt_on_path: str) -> None:
+    result = run_guard(payload, path=wt_on_path)
+    assert result.returncode == 0
+    assert result.stdout == ""
+
+
+def test_absent_wt_binary_is_silent(tmp_path: Path) -> None:
+    empty_bin = tmp_path / "empty"
+    empty_bin.mkdir()
+    result = run_guard({"tool_input": {"command": "git worktree list"}}, path=str(empty_bin))
+    assert result.returncode == 0
+    assert result.stdout == ""
+
+
+def test_outside_a_work_tree_is_silent(tmp_path: Path, wt_on_path: str) -> None:
+    result = run_guard(
+        {"cwd": str(tmp_path), "tool_input": {"command": "git worktree list"}},
+        path=wt_on_path,
+    )
     assert result.returncode == 0
     assert result.stdout == ""
 

@@ -24,16 +24,10 @@ Recover the current project state from an existing handover before rebuilding co
 
 ## Rules
 
-- Prefer handover evidence over memory and broad rediscovery, but do not trust stale paths or commands without checking them.
 - In beads repos, beads is the source of truth for task status; never restate a handover's task status as current without checking the bead.
-- In beads repos, do not rebuild task lists from git or the handover when `bd ready`/`bd list` already answer the question.
 - Beads steps degrade silently: if `bd` is missing or `bd where` fails, catchup behaves exactly as in a non-beads repo.
 - Use `--json` on bd commands whose output you parse; set `BD_JSON_ENVELOPE=1` only in scripts that need the stable enveloped schema.
-- Do not overwrite or revert existing work while catching up.
 - Never commit handover files; they are ephemeral local state.
-- Do not summarize a handover as a substitute for following it when the user asked to continue.
-- Keep recovery factual: what was found, what still applies, what changed, and the next action.
-- Fall back to git/spec/file inspection only when no suitable handover exists.
 - Use memory only after handovers and live repo evidence, and label memory-derived facts unless verified locally.
 - Load minimal repo-local steering before acting on the selected handover.
 - Resolve repo-relative paths from the handover against the current verified checkout; surface recorded/current root mismatches before editing.

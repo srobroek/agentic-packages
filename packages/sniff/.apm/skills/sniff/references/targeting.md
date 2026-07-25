@@ -131,7 +131,7 @@ class** in `tooling.md`; scope by class:
 
 ### Concrete per-tool scoping
 
-- ruff: `ruff check --select … --output-format json <files>`
+- ruff: `ruff check --output-format json <files>` (see `languages/python.md` for rule-selection flags — never bare `--select`, it discards project config)
 - eslint: `npx eslint --format json <files>`
 - shellcheck: `shellcheck -f json <files>`
 - semgrep: `semgrep --config <ruleset> --json <files-or-dirs>`

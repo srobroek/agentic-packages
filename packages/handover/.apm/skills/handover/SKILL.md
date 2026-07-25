@@ -35,7 +35,7 @@ MUST In beads repos, list the active bead IDs in the handover so catchup can jum
 MUST Beads steps degrade silently: if `bd` is missing or `bd where` fails, produce exactly the non-beads handover.
 MUST Include enough metadata for selection: repo root, worktree path, branch, timestamp, and task/spec/issue identifiers when present.
 MUST Include a copy-pastable Next Session Prompt.
-MUST Include Blockers, Verification / Commands, Runtime State, and Avoid / Do Not Redo sections, even when they say `None known`, `Not run`, or `None` — except in beads repos, where Blockers and Verification live in beads and only Runtime State and Avoid / Do Not Redo remain in the file.
+MUST Include Blockers, Verification / Commands, Runtime State, and Avoid / Do Not Redo sections, even when they say `None known`, `Not run`, or `None`.
 MUST Before handing off, commit and push completed work to its remote branch — a handover is not a substitute for pushing. Never leave completed work only as uncommitted local state, especially in a disposable (`/tmp`) worktree.
 MUST Record exact file paths and next steps, not vague summaries.
 MUST Do not store secrets, tokens, or raw credential values.

@@ -51,7 +51,7 @@ TRIGGER
 | automated release PR | ignore by branch/label product anchors; title is not an anchor |
 | already merged | verify terminal-branch landing, close merge bead, then reconcile ready closing work |
 | closed without merge | set merge bead `state:failed`, status blocked, comment; dependent work remains blocked |
-| clean + checks green + approved | `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
+| clean + checks green + approved | LOAD references/landing-contract.md, then `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |
@@ -68,6 +68,9 @@ TRIGGER
    `Tracks-Bead:` never closes.
 11. Repeat step 6 until nothing is claimable, then report; `bd dolt push` per
    beads steering when beads changed.
+
+Running under `release-queue-watch` instead of a stateless poll? LOAD
+references/queue-watcher.md before handling any watcher record.
 
 ## Rules
 

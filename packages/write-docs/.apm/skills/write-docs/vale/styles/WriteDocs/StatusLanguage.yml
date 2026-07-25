@@ -1,0 +1,15 @@
+# E1 in the retired slop-lint.py. Runtime-state uses of "currently" (currently
+# running/active/…) are legitimate present-tense description, not doc status.
+extends: existence
+message: "status language: %s — state what the artifact does at HEAD"
+level: error
+link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/SKILL.md
+ignorecase: true
+raw:
+  - '\b(under construction|work[- ]in[- ]progress|WIP|coming soon|Draft|'
+  - 'being (specified|designed|implemented|built)|not yet (implemented|supported|available)|'
+  - 'will (eventually|later|soon)\b|to be (implemented|defined|determined)|TBD|TODO|'
+  - 'for now|at the moment|'
+  - 'currently(?! (running|active|open|connected|executing|loaded|mounted))|'
+  - 'as of (now|writing|today)|'
+  - 'planned( for)?|on the roadmap|in (a )?future (release|version)|stay tuned)\b'

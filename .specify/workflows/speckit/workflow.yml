@@ -80,7 +80,7 @@ steps:
       args: "{{ inputs.feature_name }}"
 
   - id: security-review
-    command: speckit.security-review
+    command: speckit.security-review.plan
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.feature_name }}"
