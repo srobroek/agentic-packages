@@ -154,7 +154,7 @@ anchor until the shepherd confirms GitHub.
 - `opened` or `updated` on an unapproved node is informational. Persist the
   resolver's atomic `queue_lifecycle_ack`; do not wake a merge actor.
 - A stale failure is a no-op after revalidation. Confirmed failure routes back
-  to the builder. For a confirmed external merge, the approved head must still
+  to the domain-specialist. For a confirmed external merge, the approved head must still
   equal GitHub's head; the shepherd passes the actual merge SHA to N7's
   `verify-landed` transaction and closes only after final-base ancestry or
   exact-content proof. Confirmed close-without-merge is reported to the

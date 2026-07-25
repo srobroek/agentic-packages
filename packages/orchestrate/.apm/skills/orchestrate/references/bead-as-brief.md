@@ -127,7 +127,7 @@ working; they never idle live waiting for another agent.
 | T0 | orchestrator (main session) | Never claims — deny hook | Spawner + observer; all residual authority (create, close, dismiss, unclaim, deps, gates, shells, BRIEF) |
 | T1 | domain-specialist, workflow-reviewer, workflow-advisor, workflow-researcher | One durable claim at a time | Full: checklist + authority + bounce |
 | T2 | pr-shepherd, ledger-scribe | Many beads over time; lease wisps | Per-transaction authority; zero claims held at exit |
-| T3 | coder, parallel-coder, pr-reviewer, external-repo-worker, speckit-implement-task, journey-scribe, journey-validator | Conditional | Contract binds iff a claim is held; silent otherwise |
+| T3 | builder, parallel-builder, pr-reviewer, external-repo-worker, speckit-implement-task, journey-scribe, journey-validator | Conditional | Contract binds iff a claim is held; silent otherwise |
 | T4 | Explore, Plan, guards, scouts, everything else | Never | None — no rules file, no hook |
 
 Claim rules:
@@ -269,14 +269,14 @@ mechanisms, applied together:
    other toolchains) so the large shared-dependency artifacts are built once,
    not per worktree. Cargo locks the dir per build — parallel worktrees
    serialize their link step but share `deps/` (usually the bulk). Set it in
-   the coder's environment from run metadata.
+   the builder's environment from run metadata.
 2. **Compiler cache.** `RUSTC_WRAPPER=sccache` (local or remote) dedupes
    compilation units across worktrees and runs; complements the shared target.
 3. **Reclaim build output at `reported`, not merge.** The durable artifact is
    the pushed branch, not the build tree. For git-kind nodes, `target/` and
    other regenerable build dirs are reclaimable as soon as the node reports +
    pushes; only the worktree *checkout* waits for the wipe-worktree wisp at
-   merge. The coder deletes its build output in its report step (or the
+   merge. The builder deletes its build output in its report step (or the
    patrol does, keyed off `state=reported` + `push` present).
 4. **Disk backpressure (the governor).** The orchestrator treats disk as a
    bounded resource: before spawning the Nth heavy-build worktree it checks
@@ -338,7 +338,7 @@ burns, its links die with it.
 5. **Aggregation is the dep graph.** The merge bead is ready exactly when the
    last review wisp closes. The reviewer whose close unblocks it runs
    `gh pr ready` (idempotent; races are benign). No actor counts dimensions.
-6. **Fix rounds are barriered and batched.** The coder wakes only when every
+6. **Fix rounds are barriered and batched.** The builder wakes only when every
    dimension's round verdict is in; one fix series addresses the union of all
    open wisps' items. Re-review covers only still-open dimensions.
 7. **Scope-retrigger.** A fix diff intersecting an approved dimension's
@@ -400,7 +400,7 @@ every patrol; the orchestrator runs `bd gate check` at every wake.
 | Specialist → researcher (bounded question) | Escalation wisp; researcher claims and answers on it |
 | Anyone → researcher (artifact-producing) | `discovered-from` bead; T0 triages and spawns; output is durable (`output_ref`) |
 | Anyone → ledger | `[wisp:ledger]` wisp, fire-and-forget; scribe drains in batch on its timer gate; final drain at run end by T0 |
-| Reviewer → coder fixes | Review wisp (material) + node verdict line + GitHub review |
+| Reviewer → builder fixes | Review wisp (material) + node verdict line + GitHub review |
 | Anyone → human | ASK: escalation wisp + human gate |
 
 No agent ever blocks live on another agent. Waiting = checkpoint + exit
@@ -511,11 +511,11 @@ the DAG.
 
 | Thing | Convention | Example |
 |---|---|---|
-| Domain specialist | `<role>-<domain>[-n]` | `coder-frontend`, `coder-api-2` |
+| Domain specialist | `<role>-<domain>[-n]` | `builder-frontend`, `builder-api-2` |
 | Node-scoped actor | `<role>-<node-bead>` | `reviewer-code-orc-ab3` |
 | Advisor | `advisor-<wisp-id>` | `advisor-orc-w12` |
 | Shepherd | `pr-shepherd-<repo>` | `pr-shepherd-agentic-packages` |
-| Children | `<parent>.<k>` | `coder-frontend.3` |
+| Children | `<parent>.<k>` | `builder-frontend.3` |
 | Wisps | `[wisp:<type>] <subject>` | `[wisp:review] orc-ab3: security` |
 
 Name the domain, not the task (the name must hold on resume #8). Node-scoped
@@ -532,7 +532,7 @@ epic bead.
 - [ ] Rules files exist for all T1/T2/T3 contract-holders; the evaluator
       passes a conformance suite covering every predicate; agent definitions
       carry compile-generated contract blocks that match their rules file.
-- [ ] Per-agent SubagentStop blocks an incomplete coder exit on both runtimes
+- [ ] Per-agent SubagentStop blocks an incomplete builder exit on both runtimes
       and force-allows with BOUNCE + unassign + counter reset at attempt 3.
 - [ ] Universal Start/Stop net: an unlisted agent that claims a bead gets the
       generic contract; one that claims nothing is untouched.
@@ -542,7 +542,7 @@ epic bead.
       any actor.
 - [ ] Draft-PR flow: shepherd never sees a draft; reviewer undraft is the
       only promotion path.
-- [ ] Escalation wisp round-trip (coder→advisor) with content never passing
+- [ ] Escalation wisp round-trip (builder→advisor) with content never passing
       through T0; wisp burns at node close; no dangling dep edges.
 - [ ] Ledger wisps drain in batch on a timer gate; the epic run record is the
       only durable output.

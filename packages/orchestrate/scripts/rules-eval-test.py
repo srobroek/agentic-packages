@@ -17,13 +17,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 EVAL = os.path.join(HERE, "rules-eval.py")
 RULES = os.path.abspath(os.path.join(HERE, "..", ".apm", "rules"))
-DS = os.path.join(RULES, "builder.rules.json")
+DS = os.path.join(RULES, "domain-specialist.rules.json")
 
 passed = 0
 failed = 0
 
 
-def run(name, want, bead, agent_type="builder", rules_file=DS):
+def run(name, want, bead, agent_type="domain-specialist", rules_file=DS):
     global passed, failed
     payload = {"agent_type": agent_type, "_bead": bead}
     if rules_file:
