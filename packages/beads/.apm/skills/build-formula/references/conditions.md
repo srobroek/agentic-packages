@@ -1,6 +1,6 @@
 # Conditional steps and the anchor rule
 
-`condition` is **undocumented** — zero hits across the published docs — and fully functional on
+`condition` is **undocumented** -- zero hits across the published docs -- and fully functional on
 bd 1.1.0. The parser leaks its own grammar:
 
 ```
@@ -120,7 +120,7 @@ Drop `build` from `report`'s `needs` and the all-off selection silently runs `re
 pre-declare every optional step, and every join must name every optional predecessor up front.
 
 A stage that did not exist when the formula was written needs a child formula that **redeclares the
-join** — which drops that step's gate and condition. So:
+join** -- which drops that step's gate and condition. So:
 
 | Situation | Approach |
 |---|---|
@@ -128,7 +128,7 @@ join** — which drops that step's gate and condition. So:
 | Third-party or plugin-provided stages | Generate a formula per run with computed joins |
 | Both | Static baseline plus a generated child adding only discovered stages |
 
-Generating is not the default — it adds a file lifecycle, a naming contract, and a gitignore question.
+Generating is not the default -- it adds a file lifecycle, a naming contract, and a gitignore question.
 Reach for it when the set is genuinely open.
 
 ## Assertions

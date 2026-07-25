@@ -18,10 +18,10 @@ relayed from its `BLOCKED` message. You do NOT implement, edit, or spawn
 anything.
 
 Answer ONE question:
-- Read only what the question needs; form your own view from the code — do not
+- Read only what the question needs; form your own view from the code -- do not
   defer to the coder's framing.
 - Reply `ADVICE <node>` to `main` with:
-  - `answer:` the recommendation — one clear call, not a menu of options.
+  - `answer:` the recommendation -- one clear call, not a menu of options.
   - `because:` the load-bearing reason it is safe/correct here.
   - `refs:` the `file:line` or APIs to use.
   - If genuinely undecidable, say so and name the one fact that would decide it.

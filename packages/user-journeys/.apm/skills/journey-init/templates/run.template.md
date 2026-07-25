@@ -11,8 +11,8 @@ findings: []
 ---
 
 <!-- One section per non-pass step:
-## S<id> — FAIL|BLOCKED
+## S<id> -- FAIL|BLOCKED
 Expected ... Observed ... Evidence: ...
-Triage: <correction|intended-change|suspected-regression|product-question|environment> — <rationale>
+Triage: <correction|intended-change|suspected-regression|product-question|environment> -- <rationale>
 → <amendment made / finding filed / nothing>
 -->

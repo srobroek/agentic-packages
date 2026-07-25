@@ -1,5 +1,5 @@
 ---
-description: rust architecture conventions index — route to crate boundaries, domain modeling, contract boundary, safe mutation
+description: rust architecture conventions index -- route to crate boundaries, domain modeling, contract boundary, safe mutation
 ---
 
 # Rust Architecture Index

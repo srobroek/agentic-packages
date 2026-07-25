@@ -7,7 +7,7 @@ description: rust error code registry audit append-only wire error thiserror map
 ## Error Codes & Wire Contract
 
 Scope: codes crossing the wire. Internal error *types* stay per-module scope (see
-`language-rust`'s domain-modeling context) — one registry of external codes is not
+`language-rust`'s domain-modeling context) -- one registry of external codes is not
 one enum of internal errors.
 
 | Rule | Detail |

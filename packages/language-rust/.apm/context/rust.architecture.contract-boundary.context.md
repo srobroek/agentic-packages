@@ -6,7 +6,7 @@ description: rust dto contract boundary generated bindings codegen drift guard c
 
 - Generated cross-language bindings are authoritative: commit them and fail CI on
   `git diff --exit-code` after regeneration. This is the ONE drift gate for the
-  whole generated surface — the TypeScript side consumes it, it does not repeat
+  whole generated surface -- the TypeScript side consumes it, it does not repeat
   it.
 - Registered command/operation names must equal client invoke targets exactly.
   Never rename an invoke target; encode the rule as a CI-failing test (for

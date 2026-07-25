@@ -47,7 +47,7 @@ the observed head is current.
 
 Handle the result as follows:
 
-1. `status=resolved` — apply every `requiredMetadata` field in one `bd update`.
+1. `status=resolved` -- apply every `requiredMetadata` field in one `bd update`.
    This creates `shepherd_event` plus `shepherd_event_pending` before handoff.
 2. Start the targeted shepherd pass, then stamp
    `shepherd_event_sent=<eventKey>`. The pass claims the exact bead before any
@@ -55,9 +55,9 @@ Handle the result as follows:
 3. Revalidate the PR, follow the normal decision table, and comment the outcome.
    After that durable outcome, stamp `shepherd_event_ack=<eventKey>`. A bead
    closed by the outcome needs no separate ack.
-4. `status=replay` — apply any emitted metadata, refresh the bead, and replay
+4. `status=replay` -- apply any emitted metadata, refresh the bead, and replay
    only a pending or sent event. `status=duplicate` already has a matching ack.
-5. `status=ignored` — do nothing. `reason=orchestrate-owned` must stay with the
+5. `status=ignored` -- do nothing. `reason=orchestrate-owned` must stay with the
    orchestrator. Invalid, stale, unmatched, or ambiguous records are logged and
    never guessed.
 

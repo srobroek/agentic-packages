@@ -8,7 +8,7 @@ anti-patterns that keep a release stuck forever.
 **Fix the root cause, not the symptom.** release-please matches merged-but-untagged
 release PRs by the `autorelease: pending` label **plus** the branch name. Faking a
 tag (`gh release create`) or flipping a label to `tagged` masks the state for
-exactly one release — the next merged release PR re-enters the abort loop
+exactly one release -- the next merged release PR re-enters the abort loop
 (canonical demonstration: googleapis/release-please#1946). The user story this
 skill was written for is exactly this: manual releases botched the loop
 indefinitely because they never fixed why release-please could not tag.
@@ -31,9 +31,9 @@ transient GitHub Actions incident.
 titles default to `chore(main): release X.Y.Z`, or correct the merged PR's title
 to exactly the expected pattern). Then **remove the stale `autorelease: pending`
 label** from the offending merged PR and re-run. Removing `pending` is the
-documented unstick — the *opposite* of flipping it to `tagged`.
+documented unstick -- the *opposite* of flipping it to `tagged`.
 
-## Merged release PR never tagged — `PR component: undefined ...` (#1205)
+## Merged release PR never tagged -- `PR component: undefined ...` (#1205)
 
 **Symptom.** In release-please-action **v5.0.0** (embedding CLI ~17.6.0), a
 single-package `node` repo with `include-component-in-tag: false` and
@@ -46,7 +46,7 @@ tags it**. Logs:
 ```
 
 Recurs on every push. **#1205 is OPEN, no maintainer fix.** (Note: `17.6.0` is the
-embedded CLI version; the *action* is `v5.0.0` — the two artifacts have different
+embedded CLI version; the *action* is `v5.0.0` -- the two artifacts have different
 version lines.)
 
 **Root cause (confirmed in `src/strategies/base.ts`).** `getComponent()` returns
@@ -62,8 +62,8 @@ undefined` and the standalone-PR guard aborts without tagging.
 1. **Documented recovery to unstick each merge:** `gh release create
    v<version> --target <merge-sha>` and relabel the merged PR from
    `autorelease: pending` to `autorelease: tagged`. (This is the ONE case where a
-   manual release is the sanctioned workaround — because the tool literally cannot
-   tag — but it must be repeated every release until the config is fixed.)
+   manual release is the sanctioned workaround -- because the tool literally cannot
+   tag -- but it must be repeated every release until the config is fixed.)
 2. **Config workaround:** set the package `component` to a **non-empty** value
    equal to the derived name, so both sides of the comparison align (confirmed for
    the sibling nested-path bug #2214).
@@ -71,12 +71,12 @@ undefined` and the standalone-PR guard aborts without tagging.
    plugin so the component branch survives and the guard matches; the tag is
    unchanged (`v<version>`, since `include-component-in-tag: false` drops the
    component from the tag either way). Mechanistically sound from source but **not
-   documented, not tested in #1205, not maintainer-confirmed** — treat as a
+   documented, not tested in #1205, not maintainer-confirmed** -- treat as a
    hypothesis, not a known fix, and it changes PR ergonomics to one-PR-per-component.
 
 > Robust avoidance for a genuine single-package repo: use a single **root `.`
 > component** with `include-component-in-tag: false` so no component is ever
-> derived — there is nothing for `getBranchComponent()` to mismatch.
+> derived -- there is nothing for `getBranchComponent()` to mismatch.
 
 ## The many-component `separate-pull-requests: true` cascade
 
@@ -87,7 +87,7 @@ hit duplicate-tag failures or version drift.
 
 **Root cause / reality.** The manifest updater rewrites **only** the merged
 component's own key and preserves the others, and release-please regenerates open
-PRs against HEAD each run — so conflicts are **not guaranteed** (large Google
+PRs against HEAD each run -- so conflicts are **not guaranteed** (large Google
 monorepos run `true` in production). But with many components, concurrent PRs
 *can* develop real merge friction, and closing a PR mid-drain can leave that
 component's version ahead of the manifest (drift).
@@ -119,15 +119,15 @@ required checks.
 
 **Fix.** Pass a PAT / GitHub App token via `token:` (see `publishing.md`, Fix B).
 For monorepos with path-filtered required checks, a check that doesn't run stays
-pending and blocks the merge — make a single unscoped aggregator the only required
+pending and blocks the merge -- make a single unscoped aggregator the only required
 check.
 
 ## `skip-github-release` never flips the label (#1561)
 
 **Symptom.** Release PR merges, label stays `pending`, next run aborts.
 
-**Root cause.** `skip-github-release: true` stops creation of the GitHub Release —
-which is what tags and flips the label — so it never leaves `pending`.
+**Root cause.** `skip-github-release: true` stops creation of the GitHub Release --
+which is what tags and flips the label -- so it never leaves `pending`.
 
 **Fix.** Don't set `skip-github-release` unless you tag elsewhere. For annotated
 tags, let release-please create the release then convert the tag in a follow-up
@@ -154,10 +154,10 @@ pattern is fixed.
 **Symptom.** Each run pulls the entire history into the changelog; logs
 `⚠ No latest release pull request found` then the untagged-PR abort.
 
-**Root cause.** The release tag/commit is not reachable on the target branch —
+**Root cause.** The release tag/commit is not reachable on the target branch --
 caused by squash/rebase changing SHAs, force-pushes, **moving package paths**, or
 a `last-release-sha` pointing off-branch. (This is intrinsic to git tagging, not a
-release-please bug — a path move invalidates pre-move tags.)
+release-please bug -- a path move invalidates pre-move tags.)
 
 **Fix.** Keep the release tag/commit reachable on the target branch; keep
 `.release-please-manifest.json` accurate; remove any stale off-branch
@@ -173,7 +173,7 @@ proposes an unexpected starting version.
 walks all history and assumes a default initial version.
 
 **Fix.** Add top-level **`"bootstrap-sha": "<full-sha>"`** (one commit before the
-first you want included) to bound the first-run changelog — it is ignored on all
+first you want included) to bound the first-run changelog -- it is ignored on all
 subsequent runs once a release-please PR has merged, and can be removed. And/or
 seed the version by adding `{ "path/to/pkg": "1.1.1" }` to
 `.release-please-manifest.json` on the default branch. `initial-version` sets the
@@ -188,17 +188,17 @@ only** and need **full** SHAs.
 2. **Fix the actual root cause** (most often a title-pattern mismatch; also
    `skip-github-release`, detached tag, `GITHUB_TOKEN` authoring, or a GHA incident).
 3. **Remove the stale `autorelease: pending`** (or `autorelease: triggered`) label
-   from the offending merged PR — the documented unstick.
+   from the offending merged PR -- the documented unstick.
 4. **Re-run:** GitHub **App** users add the `release-please:force-run` label to the
    merged PR; **Action** users **retry the failed workflow run** (force-run is
    App-only).
 
 **Config fix not taking effect on an open release PR?** release-please **reuses**
 an already-open release-PR branch and does **not** re-run `extra-files` updaters
-against a corrected config — it only appends manifest/CHANGELOG commits. So after
+against a corrected config -- it only appends manifest/CHANGELOG commits. So after
 fixing config, **close the stale release PR and delete its
 `release-please--branches--*` branch** to force a fresh, correct run. Release state
-lives in the manifest, tags, and labels — not the branch — so deleting the branch
+lives in the manifest, tags, and labels -- not the branch -- so deleting the branch
 is safe.
 
 **Closed-then-reopened release PR.** On close it gets `autorelease:closed`; on
@@ -213,22 +213,22 @@ release-please release-pr --token=$GITHUB_TOKEN --repo-url=<owner>/<repo> --debu
 ```
 
 (add `--trace`) shows which merged PR it considers pending and why the build
-produced nothing — without opening PRs or tagging.
+produced nothing -- without opening PRs or tagging.
 
 ## Anti-patterns (do NOT do these on a managed repo)
 
-- `gh release create` to "finish" a release — masks state, re-breaks on the next
+- `gh release create` to "finish" a release -- masks state, re-breaks on the next
   merge. (Only exception: the documented #1205 workaround, repeated every release
   until config is fixed.)
 - Hand-flipping `autorelease: pending` → `autorelease: tagged`.
 - Hand-editing manifest **versions** outside the documented bootstrap case.
-- Expecting a "Do not merge" label to be honored — that is not a release-please
+- Expecting a "Do not merge" label to be honored -- that is not a release-please
   feature; its equivalent is `autorelease: snooze`.
-- Treating `autorelease: published` as auto-managed — release-please never sets it.
+- Treating `autorelease: published` as auto-managed -- release-please never sets it.
 
 ## Not release-please's fault (don't chase these as RP bugs)
 
-- **Path moves invalidating pre-move tags** — intrinsic to git's tagging model.
-- **`GITHUB_TOKEN` not firing required checks / downstream workflows** — a GitHub
+- **Path moves invalidating pre-move tags** -- intrinsic to git's tagging model.
+- **`GITHUB_TOKEN` not firing required checks / downstream workflows** -- a GitHub
   Actions platform rule; the fix is a PAT/App token or same-job gating
   (`publishing.md`), not a release-please config change.

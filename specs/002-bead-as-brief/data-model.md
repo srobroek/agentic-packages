@@ -35,11 +35,11 @@ undrafted + all blockers closed.
 
 | Our name | bd `--wisp-type` | TTL class | Claimable |
 |---|---|---|---|
-| `[wisp:review] <node>: <dim>` | escalation | 7d | yes — reviewer |
-| `[wisp:escalation] <node>: <q>` | escalation | 7d | yes — advisor/researcher |
+| `[wisp:review] <node>: <dim>` | escalation | 7d | yes -- reviewer |
+| `[wisp:escalation] <node>: <q>` | escalation | 7d | yes -- advisor/researcher |
 | `[wisp:worklog] <node>` | gc_report | 24h | no |
 | `[wisp:ledger] <event>` | gc_report | 24h | no (scribe closes) |
-| `[wisp:patrol] sheepdog <repo>` | patrol | 24h | yes — shepherd (lease) |
+| `[wisp:patrol] sheepdog <repo>` | patrol | 24h | yes -- shepherd (lease) |
 | probe chatter | ping/heartbeat | 6h | no |
 | recovery | recovery | 7d | per protocol |
 
@@ -65,14 +65,14 @@ Native bd blocker. `human` (ASK/approval) · `timer` (scribe cycle) ·
 ### Label
 `agent:<role>` (routing) · `needs-review:<dim>` (add: planner/any T1; remove:
 approving reviewer via swap, orchestrator via retrigger) · `reviewed:<dim>`.
-Declarative only — merge safety derives from the dep graph, never labels.
+Declarative only -- merge safety derives from the dep graph, never labels.
 
-## State machine (node) — DERIVED, not stored
+## State machine (node) -- DERIVED, not stored
 
 bd has exactly five built-in statuses: `open`, `in_progress`, `blocked`,
 `deferred`, `closed` (`--claim` sets `in_progress`). The design's richer
 lifecycle phases are **not** custom statuses and are **not** mirrored into
-metadata — each is derived from the built-in status plus labels, gates, and
+metadata -- each is derived from the built-in status plus labels, gates, and
 review-wisp closure (single source of truth per fact):
 
 | Design phase | Derived from |
@@ -110,5 +110,5 @@ kind at exit; claim-holders spawned only by T0; children never claim.
 
 `relates-to` (node↔wisp, node↔domain) · `discovered-from` (follow-up work,
 fix beads) · `caused-by` (bounce/recovery) · `supersedes` (re-planning) ·
-`duplicates` (dedup) · `replies-to` (wisp threads; CLI support unverified —
+`duplicates` (dedup) · `replies-to` (wisp threads; CLI support unverified --
 fallback relates-to + chronological comments).

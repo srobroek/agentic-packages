@@ -1,4 +1,4 @@
-# Decisions & Escalations Log — 001-agent-conformance
+# Decisions & Escalations Log -- 001-agent-conformance
 
 Autonomy grant (2026-07-24): user instructed "continue working autonomously
 and resolve human gates yourself; record all questions, ambiguities, issues,
@@ -30,13 +30,13 @@ and on the gate beads.
   fixture content = reprint. Word caps enforced exactly (no grace). These are
   now frozen assertion semantics per spec assumption.
 - **Unpinned agents** (plan R6): run on `--default-model sonnet` with
-  `model_source: inherited-default` stamped — visible weaker evidence rather
+  `model_source: inherited-default` stamped -- visible weaker evidence rather
   than a hard error, because production behavior is parent-inherited anyway.
 
 - **Checklist step run autonomously** (orc-mol-w31): implementation-readiness
   checklist authored + self-evaluated 12/13; the open item (headless fidelity)
   was mooted by the R1 pivot below.
-- **ARCHITECTURE PIVOT — execution vehicle** (2026-07-24, triggered by user):
+- **ARCHITECTURE PIVOT -- execution vehicle** (2026-07-24, triggered by user):
   user flagged that `claude -p` is not subscription-covered; probe confirmed
   API metering ($0.165/haiku ping). R1 redesigned: deterministic engine
   (`check`/`stage`/`assert`/`report`) + in-session sweep driver that spawns
@@ -52,16 +52,16 @@ and on the gate beads.
   T007); LOW aggregate budget + LOW regex DoS encoded in R11 and cli.md.
   No blocking findings remain for the v1 design.
 
-- **Critique verdict PROCEED-WITH-CHANGES, 7 findings — all adopted** (bead
+- **Critique verdict PROCEED-WITH-CHANGES, 7 findings -- all adopted** (bead
   orc-mol-uf5): driver-corruption defense (verbatim-write mandate + reply
   plausibility floor), context-inheritance made observable
   (context_fingerprint), fixture-rot defense (repo-level deterministic
-  conformance-check CI step, new T014 — within FR-009 since no LLM),
+  conformance-check CI step, new T014 -- within FR-009 since no LLM),
   per-segment no-reprint matching, first_line now optional for prose
   contracts, chronic-flake→FAIL promotion, word-count pinned to
   `len(reply.split())`.
 
-- **Implementation progress** (2026-07-24): T001–T008 (engine, 47 pytest
+- **Implementation progress** (2026-07-24): T001--T008 (engine, 47 pytest
   green), T012 (sweep-driver SKILL.md), T014 (per-PR conformance-check gate
   in test.yml, wired into tests-gate) landed on branch 001-agent-conformance.
   T009/T010/T011 (fixtures + skips, all 34 agents) delegated to two parallel
@@ -79,12 +79,12 @@ and on the gate beads.
   the second incident). Active growers observed: `~/.finch/.disks` 3.4G,
   `~/.mempalace/palace/chroma.sqlite3` 688M. Largest reclaimable caches if it
   recurs: `~/Library/Caches/Mozilla.sccache` 13G, `Homebrew` 3.8G
-  (`brew cleanup`), `pip` 1.3G. Not deleted — user data, needs your call.
+  (`brew cleanup`), `pip` 1.3G. Not deleted -- user data, needs your call.
   Project-side scan was clean: no stale worktrees (`git worktree prune`
   no-op, `~/personal/dev/.worktrees` empty, repo `.git` 15M), no merged-stale
   local branches; remote branches `worktree-worktree-93356` (7 unmerged
   commits), `bot/reconcile-internal-pins` (3), `renovate/pytest-9.x` (1) all
-  carry unmerged work — deleting them is a user call, savings negligible.
+  carry unmerged work -- deleting them is a user call, savings negligible.
 - FYI: the fleet sweep's wall-clock (SC-002 < 30 min) now depends on parallel
   Task-spawn batching inside one session; if real sweeps exceed it, the fix
   is raising batch width, not architecture.

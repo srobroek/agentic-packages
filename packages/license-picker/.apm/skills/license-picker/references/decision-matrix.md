@@ -10,7 +10,7 @@ First match wins (most specific first).
 → **Apache-2.0** (or MIT)
 
 Rationale: copyleft on template files contaminates generated user projects.
-The output of a template tool must be unencumbered. No exceptions — even if
+The output of a template tool must be unencumbered. No exceptions -- even if
 the user "wants copyleft", explain the output contamination problem first.
 
 If the user insists on protecting the template ENGINE: suggest a split license

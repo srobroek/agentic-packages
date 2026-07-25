@@ -4,7 +4,7 @@ The point of these recipes: **never read a rendered web page to discover a
 version number, a tag list, or a changelog.** Every fact below has a machine
 endpoint that returns small, structured output. Run the command, read a few
 lines, move on. Reserve web fetching / browsing for genuine prose (a migration
-guide, a blog explaining a breaking change) — not for data you can query.
+guide, a blog explaining a breaking change) -- not for data you can query.
 
 You decide *which* recipe applies (which ecosystem, which host) and adapt the
 commands. They are a cookbook, not a fixed pipeline. All are read-only.
@@ -15,7 +15,7 @@ plain-`curl` variant and say so in the report's Coverage section.
 
 ---
 
-## Step A — resolve the current version (no network)
+## Step A -- resolve the current version (no network)
 
 Use `scripts/detect.sh [dir]` to list the repo's declared dependencies as
 `ecosystem<TAB>name<TAB>version` (offline, no toolchain). Pick your target's row.
@@ -38,10 +38,10 @@ If the user already stated the current version, skip this.
 
 ---
 
-## Step B — resolve the latest version + source repo (registry APIs)
+## Step B -- resolve the latest version + source repo (registry APIs)
 
 One `curl | jq` per ecosystem. Each returns the latest version, the version
-list, and the upstream repo URL — the three things you need to scope the span.
+list, and the upstream repo URL -- the three things you need to scope the span.
 A descriptive `-A` user-agent is **required** by some registries (crates.io
 rejects requests without one).
 
@@ -100,14 +100,14 @@ echo "$REPO" | sed -E 's#^git\+##; s#^ssh://git@#https://#; s#^git://#https://#;
 
 ---
 
-## Step C — fetch the changes (host-agnostic first, then enrichment)
+## Step C -- fetch the changes (host-agnostic first, then enrichment)
 
 Order of trust: the project's **migration guide** > **release notes** >
 **CHANGELOG** > **commit log**. The first is prose (fetch it as a page); the
-last three are queryable. Cover the whole span — changes accumulate across every
+last three are queryable. Cover the whole span -- changes accumulate across every
 intermediate version, not just the endpoints.
 
-### C1 — CHANGELOG + commit log from git (works for ANY host)
+### C1 -- CHANGELOG + commit log from git (works for ANY host)
 
 This is the host-agnostic core: it needs only `git` and the clone URL from Step
 B, so it works for GitHub, GitLab, Bitbucket, Codeberg, sr.ht, or a private
@@ -139,10 +139,10 @@ rm -rf "$TMP"
 ```
 
 `!` after the type, or a `BREAKING CHANGE:` body trailer, marks a breaking
-change — a *signal*, not ground truth. Read the actual diff for anything
+change -- a *signal*, not ground truth. Read the actual diff for anything
 load-bearing: `$G show <sha>` or `$G diff $FROM..$TO -- <path>`.
 
-### C2 — curated release notes (host API enrichment)
+### C2 -- curated release notes (host API enrichment)
 
 Release notes live in the host's API, not in git. Fetch only those whose tag
 falls in the span; don't page through everything.
@@ -168,18 +168,18 @@ curl -fsSL "https://codeberg.org/api/v1/repos/<owner>/<repo>/releases" \
   | jq -r '.[] | "## \(.tag_name)\n\(.body)\n"'
 ```
 
-### C3 — when there's no changelog and no releases
+### C3 -- when there's no changelog and no releases
 
-Some projects ship neither. Then the commit log (C1) is the primary source —
+Some projects ship neither. Then the commit log (C1) is the primary source --
 classify it and read the breaking/feat commits' diffs directly. Say so in the
 report: "no CHANGELOG or releases; summary derived from the commit log."
 
 ---
 
-## Step D — prose sources (only when needed)
+## Step D -- prose sources (only when needed)
 
 For a major bump, the migration guide is the payload and it's usually prose, not
-data. *Now* a targeted web fetch is justified — fetch the specific
+data. *Now* a targeted web fetch is justified -- fetch the specific
 "Upgrading to vN" / "Migration" page, not the docs home. Find its URL from the
 repo (`UPGRADING.md`, `MIGRATING.md`, `docs/`) or the release notes' links
 rather than searching blind:
@@ -192,20 +192,20 @@ Prefer the project's own guide over third-party blogs; flag blogs as derivative.
 
 ---
 
-## Step E — services, technologies, platforms, model families
+## Step E -- services, technologies, platforms, model families
 
 Services rarely have semver or a single git repo. "What's new" is a **dated
 announcement stream**. The mistake to avoid is asking a model to browse a
-vendor's marketing pages — most vendors publish a machine-readable feed or API.
+vendor's marketing pages -- most vendors publish a machine-readable feed or API.
 Pull it, filter to the user's window, group, and cite by date.
 
 Order of preference: vendor change **feed/API** (RSS/Atom/JSON) > vendor
 release-notes **repo** (use step C on it) > a single release-notes **page**
 (step D, prose). Note many vendor docs release-notes pages are **client-rendered
-(JS)** and return placeholder HTML to `curl` — when that happens, switch to the
+(JS)** and return placeholder HTML to `curl` -- when that happens, switch to the
 feed/API or to web-fetch, don't try to scrape the empty shell.
 
-### AWS — service announcements (incl. Bedrock, EC2, S3, …)
+### AWS -- service announcements (incl. Bedrock, EC2, S3, …)
 
 The "What's New" feed carries every service; filter by keyword in the title.
 
@@ -229,7 +229,7 @@ service's docs). For the SDKs, treat them as versioned software (step B/C): e.g.
 
 ### Anthropic / Claude
 
-Prefer the repo's **`claude-api`** skill for model IDs, pricing, and migration —
+Prefer the repo's **`claude-api`** skill for model IDs, pricing, and migration --
 it's the curated source. For the live model list:
 
 ```sh
@@ -240,7 +240,7 @@ curl -fsSL https://api.anthropic.com/v1/models \
 ```
 
 The docs release-notes page (`docs.anthropic.com/en/release-notes/api`) is
-JS-rendered — fetch it with a browser/web-fetch capability, not `curl`, or rely
+JS-rendered -- fetch it with a browser/web-fetch capability, not `curl`, or rely
 on the models API + `claude-api` skill.
 
 ### OpenAI
@@ -252,7 +252,7 @@ curl -fsSL https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_AP
 # Changelog/release notes pages are prose — step D.
 ```
 
-### Google Cloud — per-service release-notes feeds
+### Google Cloud -- per-service release-notes feeds
 
 GCP publishes a release-notes XML feed per service:
 
@@ -265,7 +265,7 @@ r=ET.fromstring(sys.stdin.read()); ns={"a":"http://www.w3.org/2005/Atom"}; \
  for e in r.findall(".//a:entry",ns)][:40]'
 ```
 
-### Microsoft Azure — updates feed
+### Microsoft Azure -- updates feed
 
 ```sh
 curl -fsSL "https://www.microsoft.com/releasecommunications/api/v2/azure/rss" \
@@ -286,7 +286,7 @@ content-type) and cache the URL in the report's Sources.
 
 ## Coverage discipline
 
-Always end knowing — and reporting — which of these ran and which didn't.
+Always end knowing -- and reporting -- which of these ran and which didn't.
 *Software:* current version (lockfile vs. range vs. user-supplied), latest
 (registry), release notes (present per-tag? or only some?), CHANGELOG (found? at
 which tag?), commit log (tags resolved?), migration guide (exists?).

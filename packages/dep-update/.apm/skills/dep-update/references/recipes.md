@@ -4,20 +4,20 @@
 the rust/go endpoints, the apply commands per package manager, the changelog
 fetch order, and the `answers.toml` key names.
 
-All version data comes from machine-readable JSON endpoints — never scrape
+All version data comes from machine-readable JSON endpoints -- never scrape
 rendered HTML for a version number. Reserve web-fetch for changelog prose
 (migration guides, breaking-change posts) that has no structured endpoint.
 
 ## Registry endpoints not in research.sh
 
-Go modules (advisory only — no apply):
+Go modules (advisory only -- no apply):
 
 ```sh
 curl -fsSL "https://proxy.golang.org/<module>/@latest"   # {"Version":"v1.2.3","Time":"..."}
 curl -fsSL "https://proxy.golang.org/<module>/@v/list"   # newline-separated tags
 ```
 
-Rust / crates.io (advisory only — no apply): `max_stable_version` and
+Rust / crates.io (advisory only -- no apply): `max_stable_version` and
 `repository` live under `.crate` in
 
 ```sh
@@ -35,8 +35,8 @@ curl -fsSL -A 'dep-update-skill (+https://github.com/srobroek/agentic-packages)'
 | `bun.lock` / `bun.lockb` | node | `bun add "name@ver"` | |
 | `yarn.lock` | node | `yarn add "name@ver"` | |
 | `package-lock.json` / `npm-shrinkwrap.json` | node | `npm install "name@ver"` | |
-| `Cargo.lock` / `Cargo.toml` | rust | `cargo update -p name --precise ver` | Advisory only — never applied by this skill |
-| `go.sum` / `go.mod` | go | `go get module@ver && go mod tidy` | Advisory only — never applied by this skill |
+| `Cargo.lock` / `Cargo.toml` | rust | `cargo update -p name --precise ver` | Advisory only -- never applied by this skill |
+| `go.sum` / `go.mod` | go | `go get module@ver && go mod tidy` | Advisory only -- never applied by this skill |
 
 Node package manager precedence: `[module.lang-ts].package_manager` in
 `answers.toml` first, else lockfile order `pnpm-lock.yaml` →

@@ -1,4 +1,4 @@
-# Implementation Plan: Agent Regression Harness — Contract-Conformance Tests
+# Implementation Plan: Agent Regression Harness -- Contract-Conformance Tests
 
 **Branch**: `001-agent-conformance` | **Date**: 2026-07-24 | **Spec**: [spec.md](spec.md)
 
@@ -9,13 +9,13 @@
 Ship `packages/agent-conformance`: a deterministic Python engine
 (`check`/`stage`/`assert`/`report`) plus a skill-driven in-session sweep.
 The engine derives each agent's declared contract, validates fixture
-coverage and drift (no LLM — runs in the per-package CI matrix as pytest),
+coverage and drift (no LLM -- runs in the per-package CI matrix as pytest),
 stages per-case sandboxes with run manifests, judges captured replies
 (first-line verdict regex, word caps per regime, no-reprint threshold,
 section presence, side-effect artifacts), and assembles reports. The sweep
 driver is a Claude Code session following the package's `/agent-conformance`
-skill: it spawns each target agent via the Task tool — the production spawn
-path, subscription-covered, guard hooks active — saves the verbatim reply,
+skill: it spawns each target agent via the Task tool -- the production spawn
+path, subscription-covered, guard hooks active -- saves the verbatim reply,
 and invokes `assert`. Headless `claude -p` execution is an opt-in fallback
 deferred with CI to `orc-qrt` (API-billed; see R1 revision). LLM sweeps are
 local-only in v1.
@@ -30,17 +30,17 @@ installed (sweep driver; subscription-covered); PyYAML (CI baseline); pytest
 for the deterministic suite. `claude` CLI headless is opt-in fallback only
 (orc-qrt). No new runtime deps.
 
-**Storage**: files — YAML fixtures in-package; JSONL journal + JSON/MD
+**Storage**: files -- YAML fixtures in-package; JSONL journal + JSON/MD
 reports under a gitignored `.conformance-runs/` output dir
 
 **Testing**: pytest for contract-extraction/assertion/coverage units
-(deterministic, no LLM — runs in the per-package CI matrix); the LLM sweep is
+(deterministic, no LLM -- runs in the per-package CI matrix); the LLM sweep is
 itself the product and is exercised manually
 
 **Target Platform**: macOS + Linux dev machines (bash 3.2/BSD floor
-irrelevant — runner is Python; any shell entry point must honor it)
+irrelevant -- runner is Python; any shell entry point must honor it)
 
-**Project Type**: single package — `packages/agent-conformance` (clarify Q3)
+**Project Type**: single package -- `packages/agent-conformance` (clarify Q3)
 
 **Performance Goals**: full-fleet sweep < 30 min wall-clock (SC-002);
 single-agent scoped run < 3 min (SC-005); default 4-wide Task-spawn batches
@@ -49,24 +49,24 @@ single-agent scoped run < 3 min (SC-005); default 4-wide Task-spawn batches
 assert time (FR-012; monetary budget advisory in-session, enforced only in
 the headless fallback); engine non-interactive (FR-010); fixtures
 repo-local, no network beyond the LLM call (FR-013); LLM sweep never a
-required PR check — deterministic `check` may gate per-PR (FR-009)
+required PR check -- deterministic `check` may gate per-PR (FR-009)
 
 **Scale/Scope**: 34 agents across 13 packages today; discovery-driven
 (FR-001) so the count floats with the fleet
 
 ## Constitution Check
 
-*GATE: evaluated pre-Phase-0 and re-checked post-design — PASS on both.*
+*GATE: evaluated pre-Phase-0 and re-checked post-design -- PASS on both.*
 
 - **I. Self-Contained Packages**: PASS. New package is independently
   installable/testable/releasable. It reads other packages' `.agent.md`
-  files read-only at runtime — same cross-package read precedent as the doc
+  files read-only at runtime -- same cross-package read precedent as the doc
   generators; agent definitions are published contract surfaces, not
   internals. No package imports another's code.
 - **II. Generated Artifacts Are Not Hand-Edited**: PASS. Reports/journals are
   run outputs in a gitignored directory, never committed. Fixtures are
   hand-authored sources, not generated artifacts.
-- **III. Hooks Fail Open**: N/A — no hooks shipped.
+- **III. Hooks Fail Open**: N/A -- no hooks shipped.
 - **IV. Conventional Commits and Release-Please**: PASS. Standard package
   layout (`apm.yml`, `CHANGELOG.md`) picked up by the generated
   release-please config on regen.

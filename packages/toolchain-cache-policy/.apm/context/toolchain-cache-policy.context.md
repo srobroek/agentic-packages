@@ -14,7 +14,7 @@ MUST Cargo final/link output is absent from this policy. Worktrunk creates one
 NOT Set `CARGO_TARGET_DIR` or a global Cargo `[build].target-dir`.
 
 BOUNDED, NOT JUST SHARED
-MUST A shared cache still grows unbounded without eviction — that is the trap
+MUST A shared cache still grows unbounded without eviction -- that is the trap
   that fills disks despite sharing. The hook runs a disk-pressure GC: below the
   free-space floor (default 25 GiB, `CACHE_POLICY_FLOOR_GIB`) it evicts
   regenerable sccache and Go build-cache output, then stops when above the

@@ -2,7 +2,7 @@
 
 Copy from these; they are production configs, verified against the repos.
 
-## Single package — `googleapis/release-please` (its own config)
+## Single package -- `googleapis/release-please` (its own config)
 
 `release-type: node`, `include-component-in-tag: false`, one root `.` package,
 plain `vX.Y.Z` tags.
@@ -18,15 +18,15 @@ plain `vX.Y.Z` tags.
 
 <https://github.com/googleapis/release-please/blob/main/release-please-config.json>
 
-## Large monorepo, one combined PR — `googleapis/google-cloud-node`
+## Large monorepo, one combined PR -- `googleapis/google-cloud-node`
 
-~229–380 packages, **`separate-pull-requests: false`** (one combined release PR),
+~229 to 380 packages, **`separate-pull-requests: false`** (one combined release PR),
 `bump-minor-pre-major: true`, `initial-version: "0.1.0"`, `sentence-case` plugin,
 per-package overrides mostly empty `{}`.
 
 <https://github.com/googleapis/google-cloud-node/blob/main/release-please-config.json>
 
-## Monorepo, one PR per component — `GoogleCloudPlatform/cloud-foundation-toolkit`
+## Monorepo, one PR per component -- `GoogleCloudPlatform/cloud-foundation-toolkit`
 
 The canonical **`separate-pull-requests: true`** example: `tag-separator: "/"`,
 `include-component-in-tag: true`, per-package `release-type: "go"`,
@@ -35,14 +35,14 @@ The canonical **`separate-pull-requests: true`** example: `tag-separator: "/"`,
 
 <https://github.com/GoogleCloudPlatform/cloud-foundation-toolkit/blob/main/release-please-config.json>
 
-## Single package with `extra-files` XML — `GoogleCloudPlatform/functions-framework-dotnet`
+## Single package with `extra-files` XML -- `GoogleCloudPlatform/functions-framework-dotnet`
 
 Root `.` config with an `xml`/`xpath` `extra-files` updater and a full custom
 `changelog-sections` list.
 
 <https://github.com/GoogleCloudPlatform/functions-framework-dotnet/blob/main/release-please-config.json>
 
-## This repo — `srobroek/agentic-packages` (117-package `simple` manifest)
+## This repo -- `srobroek/agentic-packages` (117-package `simple` manifest)
 
 The reference case for a **language-agnostic monorepo** that release-please does
 not natively understand. Highlights:
@@ -60,7 +60,7 @@ not natively understand. Highlights:
 - `release-please.yml` authors the PR with a **fine-grained PAT** (not
   `GITHUB_TOKEN`) so required checks run, and amends generated version-derived
   artifacts onto the release branch. `release.yml` fires on the `*-v*` tag push
-  (the PAT-authored tag DOES trigger it — Fix B in `publishing.md`).
+  (the PAT-authored tag DOES trigger it -- Fix B in `publishing.md`).
 
 <https://github.com/srobroek/agentic-packages/blob/main/release-please-config.json>
 

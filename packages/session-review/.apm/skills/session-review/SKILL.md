@@ -5,14 +5,14 @@ description: Audit the ending session for corrections, lessons, and follow-up wo
 
 # Session Review
 
-Audit the session for patterns worth capturing. This skill diagnoses — it does
+Audit the session for patterns worth capturing. This skill diagnoses -- it does
 not write rules, edit steering files, or persist memory directly.
 
 ## Steps
 
 1. Review the session for user corrections and discoveries the user would not find in docs or code comments.
 2. Scan changed files for unresolved TODO/FIXME markers without corresponding issues.
-3. Flag patterns that should become steering rules, hooks, or skills — but do not create them.
+3. Flag patterns that should become steering rules, hooks, or skills -- but do not create them.
 4. Separate what should carry forward versus be dropped.
 5. Present findings. Ask before persisting each item:
    - If a memory tool is available, write there.

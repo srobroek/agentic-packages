@@ -12,7 +12,7 @@ agent's playbook for using it.
 1. **Probe.** `scripts/install-tools.sh --probe`. It prints, per bundle, which
    tools are installed and which are missing (with an install hint each).
 2. **Propose the full set; the user deselects.** Do not dump raw probe output
-   and ask "install all?", and do not offer depth tiers (lean/full/custom) —
+   and ask "install all?", and do not offer depth tiers (lean/full/custom) --
    that is the blocking-checkpoint violation `workflow.md` Step 2 forbids: every
    viable tool for the detected stack is pre-selected **default-on**; the user
    trims, they don't opt in. Present a decision shaped like:
@@ -41,8 +41,8 @@ agent's playbook for using it.
 | `security` | trivy, checkov, gitleaks | When IaC/containers/secrets are in scope |
 | `rust` | clippy (rustup), cargo-machete | Rust repos |
 | `go` | golangci-lint | Go repos |
-| `python` | ruff, vulture, pylint, mypy, pyright | Python repos (ruff is primary; pylint adds design smells, mypy/pyright type smells — pick whichever the repo configures) |
-| `js-ts` | eslint, knip, biome | JS/TS repos (project-local — see note) |
+| `python` | ruff, vulture, pylint, mypy, pyright | Python repos (ruff is primary; pylint adds design smells, mypy/pyright type smells -- pick whichever the repo configures) |
+| `js-ts` | eslint, knip, biome | JS/TS repos (project-local -- see note) |
 | `shell` | shellcheck, shfmt | Shell scripts |
 | `sql` | sqlfluff | SQL |
 | `css` | stylelint | CSS/SCSS (project-local) |

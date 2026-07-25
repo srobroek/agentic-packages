@@ -19,11 +19,11 @@ releasable unit and therefore no release. Prefixes that bump a version:
 > "We highly recommend that you use squash-merges when merging pull requests."
 
 With a squash-merge, the **squash commit message (the PR title/body) is what
-release-please parses.** A non-conventional squash title yields no release — and
+release-please parses.** A non-conventional squash title yields no release -- and
 is a common cause of "the release PR reappears after I merged it." Keep PR titles
 conventional. Linear history also keeps the changelog, bisect, and revert clean.
 
-## Multiple changes in one commit — footers at the bottom
+## Multiple changes in one commit -- footers at the bottom
 
 > "Release Please allows you to represent multiple changes in a single commit,
 > using footers. Important: The additional messages must be added to the bottom
@@ -39,7 +39,7 @@ fix(utils): unicode no longer throws exception
   Source-Link: googleapis/googleapis@5e0dcb2
 ```
 
-## Force a specific version — `Release-As:` footer (preferred)
+## Force a specific version -- `Release-As:` footer (preferred)
 
 > "When a commit to the main branch has `Release-As: x.x.x` (case insensitive) in
 > the commit body, Release Please will open a new pull request for the specified
@@ -66,14 +66,14 @@ the override applies to).
 1. Land `feat`/`fix`/`deps` commits on the default branch (squash-merge,
    conventional titles).
 2. release-please opens/updates the release PR (`autorelease: pending`).
-3. **Merge the release PR** — do not edit its title or labels by hand.
+3. **Merge the release PR** -- do not edit its title or labels by hand.
 4. release-please tags the merge commit, creates the GitHub Release, flips the
    label to `autorelease: tagged`; your publish job runs from that.
 
 ## What you must NEVER do manually (on a managed repo)
 
 - Never `gh release create` or `git tag vX.Y.Z` to "finish" a release-please
-  release — it perpetuates the stuck loop (see `pitfalls-recovery.md`).
+  release -- it perpetuates the stuck loop (see `pitfalls-recovery.md`).
 - Never flip `autorelease: pending` → `autorelease: tagged` by hand.
 - Never edit the release-PR title to something the parser can't read.
 - Never hand-edit `.release-please-manifest.json` versions except the documented

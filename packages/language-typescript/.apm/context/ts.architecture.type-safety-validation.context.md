@@ -10,7 +10,7 @@ description: typescript generated union exhaustive map satisfies boundary valida
   compile error until handled; use `Partial<Record<…>>` only to override a
   subset.
 - Keep runtime allow-lists in sync with the union via
-  `as const satisfies readonly Union[]` — `satisfies` checks membership without
+  `as const satisfies readonly Union[]` -- `satisfies` checks membership without
   widening the literal types away.
 - Apply a schema validator **only** at trust boundaries: external HTTP/IPC
   responses typed `unknown`, query-param and form parsing, config read from disk.

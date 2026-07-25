@@ -16,7 +16,7 @@ NOT Interpret requirements, redesign behavior, or perform destructive actions.
 
 ## Output
 
-L1 VERDICT: COMPLETE|BLOCKED — one sentence why.
-   Command — only if useful; command + exit status.
+L1 VERDICT: COMPLETE|BLOCKED -- one sentence why.
+   Command -- only if useful; command + exit status.
 CAP 70w.
 MUST Never reprint code, diffs, or file contents.

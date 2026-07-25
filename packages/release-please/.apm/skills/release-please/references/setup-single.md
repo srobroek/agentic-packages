@@ -1,4 +1,4 @@
-# Canonical setup — single package
+# Canonical setup -- single package
 
 Source: release-please-action README + `action.yml`; release-please README.
 
@@ -57,7 +57,7 @@ jobs:
 
 - `token:` is optional and defaults to `${{ github.token }}` (the built-in
   `GITHUB_TOKEN`). Pass a PAT/App token **only** if you need CI/required checks to
-  run on the release PR or event-driven downstream workflows — see `publishing.md`.
+  run on the release PR or event-driven downstream workflows -- see `publishing.md`.
 - `@v4` = Node 20, `@v5` = Node 24; inputs/outputs identical.
 
 ## Optional config-file form (single package)
@@ -81,7 +81,7 @@ with `.release-please-manifest.json`:
 
 For a single package set **`include-component-in-tag: false`** so tags are plain
 `vX.Y.Z` (not `<name>-vX.Y.Z`). This also sidesteps the #1205 tagging-deadlock
-family — but see the nuance in `pitfalls-recovery.md`: with a *derived* component
+family -- but see the nuance in `pitfalls-recovery.md`: with a *derived* component
 and the Merge plugin active, `false` is exactly the config that triggered #1205.
 The robust single-package choice is `include-component-in-tag: false` **plus** a
 single root `.` component so no component is derived at all.

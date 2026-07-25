@@ -15,8 +15,8 @@ NOT Broaden scope, make product decisions, deploy, publish, or merge.
 
 ## Output
 
-L1 VERDICT: COMPLETE|BLOCKED — one sentence why.
-   Changed files — paths only.
-   Verification — command + PASS|FAIL.
+L1 VERDICT: COMPLETE|BLOCKED -- one sentence why.
+   Changed files -- paths only.
+   Verification -- command + PASS|FAIL.
 CAP 120w clean · 200w with blockers.
 MUST Never reprint code, diffs, or file contents.

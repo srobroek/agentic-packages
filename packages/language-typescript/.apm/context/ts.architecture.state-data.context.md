@@ -11,7 +11,7 @@ description: react state management server client separation query facade error 
 - Expose `QueryState<T> = { data: T | undefined; loading: boolean; error: string |
   null }` from store modules. Do NOT leak library-internal result shapes (raw
   `QueryObserverResult`, Apollo `ApolloQueryResult`) into component props or
-  context values — that couples every consumer to the data library.
+  context values -- that couples every consumer to the data library.
 - Normalise errors once: one `errMessage(unknown): string` with structural guards
   and an ordered fallback chain, one `isContractError(unknown)` type guard, one
   build-checked `code → message` map. Both query and mutation layers import from

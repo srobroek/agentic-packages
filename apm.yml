@@ -31,7 +31,7 @@ scripts:
   slop-lint: >-
     bash -c 'genre="${SLOP_GENRE:-consumer}"; paths="${SLOP_LINT_PATHS:-$(git
     ls-files "*.md" | grep -v "^.audit-" | grep -v
-    "write-docs/.*/tests/fixtures/")}"; bash
+    "write-docs/.*/tests/fixtures/" | grep -v "CHANGELOG.md$")}"; bash
     packages/write-docs/.apm/skills/write-docs/scripts/slop-lint.sh --genre
     "$genre" $paths'
   audit-codex-config: uv run --script .apm/scripts/audit-codex-config.py

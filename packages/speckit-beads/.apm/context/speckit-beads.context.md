@@ -8,10 +8,10 @@ MUST Copy `formulas/speckit-feature.formula.toml` from this package into
   `.beads/formulas/` (or `~/.beads/formulas/`), then verify with
   `bd formula show speckit-feature --json`.
 
-SPEC START — RECALL PARKED WORK
-MUST At spec start (/speckit.specify), query parked work — `bd list
+SPEC START -- RECALL PARKED WORK
+MUST At spec start (/speckit.specify), query parked work -- `bd list
   --status deferred --json` plus open beads labeled deferred (`bd query
-  "label=deferred AND status!=closed" --json`) — and surface the hits to
+  "label=deferred AND status!=closed" --json`) -- and surface the hits to
   the user for inclusion before writing the spec.
 
 IMPLEMENT ROUTING
@@ -23,11 +23,11 @@ MOLECULE PER FEATURE
 MUST Pour one molecule per spec dir:
   `bd mol pour speckit-feature --var feature=<NNN-slug>`.
 MUST After pour, tag the root: `bd update <root-id> --spec-id <NNN-slug>
-  --metadata '{"spec_dir":"specs/<NNN-slug>"}'` — one spec dir = one root.
+  --metadata '{"spec_dir":"specs/<NNN-slug>"}'` -- one spec dir = one root.
 DEFAULT Track position with `bd mol current <root-id>`; run `bd gate check`
   at phase boundaries.
 
-TASKS PHASE — tasks.md IS NEVER AUTHORED
+TASKS PHASE -- tasks.md IS NEVER AUTHORED
 MUST When /speckit.tasks instructs writing specs/*/tasks.md, create beads
   instead (a PreToolUse hook denies the write): each task becomes
   `bd create "T00N <title>" --parent <implement-step-id> --spec-id <NNN-slug>
@@ -63,4 +63,4 @@ MUST Work steps via `bd update <id> --claim` → do the work →
 
 WHEN NOT TO USE
 DEFAULT Tinyspec or bugfix scale (one-paragraph change): plain beads or no
-  tracking — do not pour the formula.
+  tracking -- do not pour the formula.
