@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript--v2.1.1...language-steering-typescript--v3.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
 ## [2.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-typescript--v2.1.0...language-steering-typescript--v2.1.1) (2026-07-25)
 
 
