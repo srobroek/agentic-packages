@@ -84,7 +84,7 @@ For each FR and SC:
 3. Verify file, symbol, route, UI, config, or data-model evidence.
 4. Verify tests or other executable checks where the requirement implies behavior.
 5. Check edge cases called out by the spec.
-6. Classify as **IMPLEMENTED**, **PARTIAL**, **MISSING**, **DIVERGED**, or **INCONCLUSIVE**.
+6. Classify as **VERIFIED**, **PARTIAL**, **MISSING**, **DIVERGED**, or **INCONCLUSIVE**.
 
 ### Known Risk Patterns
 
@@ -100,7 +100,7 @@ For each FR and SC:
 ## Verify Spec Summary
 - Spec: {id}
 - Requirements checked: N
-- Implemented: N | Partial: N | Missing: N | Diverged: N | Inconclusive: N
+- Verified: N | Partial: N | Missing: N | Diverged: N | Inconclusive: N
 
 ## Requirement Details
 | ID | Status | Evidence | Gap |

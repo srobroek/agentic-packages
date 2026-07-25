@@ -70,7 +70,7 @@ Role: lead session / orchestrator.
    frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
    brief. Teammates are not subagents either; include it in their briefs.
 8. **Durable state, on-demand reporters.** The shepherd is the
-   only persistent service. Invoke `audit-reporter` on demand for a bounded
+   only persistent service. Invoke `scribe` on demand for a bounded
    status or close-out report; it reads Beads and exits. State lives in Beads,
    never in a process or a second graph.
 
@@ -101,9 +101,9 @@ Role: lead session / orchestrator.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
    Match task→agent via `references/roles.md`. Bundle roles: `domain-specialist`,
    `reviewer`, `advisor`, `shepherd`,
-   `audit-reporter`. Non-code roles → built-ins (`Explore`, `general-purpose`);
+   `scribe`. Non-code roles → built-ins (`Explore`, `general-purpose`);
    broad research → fan-out/fan-in in `roles.md`.
-4. Spawn `shepherd` once; invoke `audit-reporter` on demand with
+4. Spawn `shepherd` once; invoke `scribe` on demand with
    the epic id and artifacts path for status or close-out reporting.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): create
@@ -138,7 +138,7 @@ Role: lead session / orchestrator.
    bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
 9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
-   --parent <epic> --status in_progress,blocked`); invoke `audit-reporter` for
+   --parent <epic> --status in_progress,blocked`); invoke `scribe` for
    the end-of-run report; confirm all registered worktrees removed, then run
    `worktree-sweep.sh --prune <primary-repo-path>` and resolve every refused
    path before declaring cleanup complete. Clean run-local build artifacts.

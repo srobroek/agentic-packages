@@ -2,7 +2,6 @@
 name: reviewer-mechanics
 description: Mechanical reviewer for branch diffs. Performs strict diff smoke checks (format hygiene, acceptance criteria presence, and obvious invariant breaks) without changing code.
 model: haiku
-effort: low
 permissionMode: plan
 tools:
   - Read
