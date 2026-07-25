@@ -4,9 +4,7 @@ Opinionated Rust defaults. Keep existing project choices unless the task is
 explicitly about setup, migration, or standardization. Load only the relevant
 topic:
 
-- [Tooling](rust.tooling.context.md)
-- [CI](rust.ci.context.md)
-- [Libraries](rust.libraries.context.md)
+- [CI](rust.ci.context.md) — cache keys, gate structure, supply chain
 - [Persistence](rust.persistence.context.md) — DB-as-record, repository boundary,
   CAS-in-transaction, numbered migrations
 - [Workspace](rust.workspace.context.md) — workspace lints, feature-gated dev

@@ -6,9 +6,13 @@ description: rust error code registry audit append-only wire error thiserror map
 
 ## Error Codes & Wire Contract
 
+Scope: codes crossing the wire. Internal error *types* stay per-module scope (see
+`language-rust`'s domain-modeling context) — one registry of external codes is not
+one enum of internal errors.
+
 | Rule | Detail |
 |------|--------|
-| **Central Registry** | One error-code enum with per-variant `#[serde(rename = "dotted.code")]`; never `rename_all` |
+| **Central Registry** | One error-*code* enum for the wire, per-variant `#[serde(rename = "dotted.code")]`; never `rename_all` |
 | **Export** | Generate client bindings from registry; lock with round-trip golden test |
 | **No Orphan** | Domain crates use `thiserror`; edge boundary only converts via small free-function mappers |
 | **Wire Envelope** | code + severity (error/warn/info) + retryable (bool) + recovery actions + field errors |

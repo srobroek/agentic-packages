@@ -116,7 +116,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
-    "packages/mcp-gitnexus/.apm/hooks/hooks.json": "native-required",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
     "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
     "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",

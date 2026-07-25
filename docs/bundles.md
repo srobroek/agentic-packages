@@ -21,8 +21,8 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^ |
 | `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure` |
-| `language-go` | Go toolkit | `go-quality`, `language-steering-go`, `lsp-go` |
-| `language-python` | Python toolkit | `python-quality`, `language-steering-python`, `lsp-python` |
+| `language-go` | Go toolkit | `go-quality`, `lsp-go` |
+| `language-python` | Python toolkit | `python-quality`, `lsp-python` |
 | `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `lsp-rust` |
 | `language-shell` | Shell scripting toolkit with Shell LSP | `lsp-shell` |
 | `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `lsp-terraform` |

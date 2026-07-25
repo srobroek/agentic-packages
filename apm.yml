@@ -467,30 +467,12 @@ marketplace:
       tags:
         - bundle
         - shell
-    - name: language-steering-go
-      source: ./packages/language-steering-go
-      category: languages
-      tags:
-        - steering
-        - go
-    - name: language-steering-python
-      source: ./packages/language-steering-python
-      category: languages
-      tags:
-        - steering
-        - python
     - name: language-steering-rust
       source: ./packages/language-steering-rust
       category: languages
       tags:
         - steering
         - rust
-    - name: language-steering-terraform
-      source: ./packages/language-steering-terraform
-      category: languages
-      tags:
-        - steering
-        - terraform
     - name: language-steering-typescript
       source: ./packages/language-steering-typescript
       category: languages
@@ -585,13 +567,6 @@ marketplace:
       tags:
         - mcp
         - web
-    - name: mcp-gitnexus
-      source: ./packages/mcp-gitnexus
-      category: mcp
-      tags:
-        - mcp
-        - code-intelligence
-        - knowledge-graph
     - name: mcp-mempalace
       source: ./packages/mcp-mempalace
       category: mcp

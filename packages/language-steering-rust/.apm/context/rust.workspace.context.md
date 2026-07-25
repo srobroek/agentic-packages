@@ -25,4 +25,5 @@ description: rust workspace lints feature gate dev surface dev-dependencies laye
 ## See Also
 
 - `rust.ci.context.md` — CI caching, matrix gates
-- `rust.tooling.context.md` — rustfmt, clippy, nextest, coverage
+- `toolchain-defaults.languages.context.md` (`steering-toolchain-defaults`) —
+  rustfmt, clippy, nextest, coverage
