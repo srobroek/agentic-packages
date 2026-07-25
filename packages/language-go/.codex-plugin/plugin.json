@@ -1,6 +1,6 @@
 {
   "name": "language-go",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
   "author": {
     "name": "Sjors Robroek"
