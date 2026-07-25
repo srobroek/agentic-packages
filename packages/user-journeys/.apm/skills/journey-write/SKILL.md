@@ -14,8 +14,7 @@ than one journey; do it inline for a single journey. If the
 `journey-scribe` agent type is not available in this environment, draft
 inline under the same boundaries. Elicitation always
 happens HERE, in the main context — subagents cannot question the user.
-The scribe receives the answers and returns open questions; it never
-invents missing information.
+The scribe receives the answers and returns open questions.
 
 ## Gather authoring input
 
@@ -42,7 +41,7 @@ sense — never stall a journey waiting for documents that don't exist.
 In a headless context with no question channel (e.g. running as a
 subagent), owner-supplied statements from the invocation stand in for
 grilling answers; anything they don't cover goes to your report as an open
-question — the no-unconfirmed-gaps rule still applies, so never guess.
+question.
 
 Grill with AskUserQuestion, up to 4 questions per round:
 
@@ -66,7 +65,7 @@ gap in one final question — provide the missing information, or explicitly
 accept each ambiguity. Only a user-confirmed ambiguity becomes a **Known
 gaps** entry (recorded with "accepted by user, <date>"); an unconfirmed
 gap keeps the journey at `status: draft` with the open questions in your
-report. Missing information is never invented and never accepted on the
+report. MUST never invent missing information or accept an ambiguity on the
 user's behalf.
 
 ## The definition-of-ready audit

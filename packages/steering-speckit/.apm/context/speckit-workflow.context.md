@@ -45,7 +45,5 @@ MUST Record non-trivial hard-to-reverse decisions as MADR records under
 | Change fits one paragraph and needs no full lifecycle | tinyspec |
 
 CLOSEOUT
-MUST Complete automated review, QA, security, cleanup, and drift checks before
-  requesting closeout approval.
 MUST Close the feature root after its final step and follow the active Beads
   authority policy for the single terminal sync.

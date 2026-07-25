@@ -35,37 +35,15 @@ rarely the intent. Resolve the chosen target in Step 0.5.
 
 ### Debug mode (orthogonal toggle — combine with any scope mode)
 
-Off by default. Turn ON **only when the user explicitly asks to debug the sniff
-run itself** — e.g. "debug the sniff", "run sniff verbose/in debug mode", "show
-me how sniff is working / what sniff is doing", "why did sniff keep/drop this
-file or finding". Do **NOT** trigger on a bare "debug", "verbose", or "-v" with
-no reference to sniff, and do **NOT** trigger because the user is debugging their
-own code — the request must be about sniff's own behavior. When uncertain, ask;
-don't assume. Debug changes **only what is narrated, never what is decided** —
-same findings, same safety rules, just the reasoning made visible. When ON,
-surface a short `[debug]` line at each step:
+Off by default. Turn ON only when the request is about **sniff's own behavior**
+("debug the sniff", "why did sniff drop this file?") — not when the user is
+debugging their own code.
 
-- **Step 1** — the raw file count, each reduction rule that fired and the count it
-  removed (e.g. `[debug] dropped 205 under archive/, 3 generated (header marker), 1 lockfile → 16 first-party`), the detected languages with the file that triggered each, and (if it fires) the empty-set early-exit reasoning.
-- **Step 2** — the full `--probe` output, and for each tool the analysis-class +
-  why it will/won't run; the depth chosen.
-- **Step 3** — for every tool: the **exact command run** (absolutized paths), its
-  **exit code**, finding count, and for any skipped tool the precise reason
-  (not-installed / SHIM / global-class-scoped / covered-by-meta-linter). Show
-  output that was filtered out by the reduced-set intersection.
-- **Step 4** — inline vs. fan-out decision and why (file/LOC counts vs.
-  threshold, sub-agent status); for each `bloodhound` spawn, the language + scope
-  it was given.
-- **Step 5** — the smell → refactoring.guru mapping chosen per finding, and any
-  catalog page fetched.
-- **Step 6** — each KEEP/DOWNGRADE/DROP verdict **with its one-line reason**
-  (which pragmatism note or evidence drove it), inline-vs-spawn for the critic.
-- **Step 7** — the value÷cost ordering rationale and, if applying, the exact edit
-  + the verification command and its result.
-
-Keep `[debug]` lines terse (one or two per step); they annotate the normal
-report, they don't replace it. In non-debug runs, omit all of this — the report
-stays clean.
+Debug changes only what is narrated, never what is decided: same findings, same
+safety rules. Add one or two terse `[debug]` lines per step annotating the
+decision that step made — which reduction rules fired and their counts, the exact
+command and exit code per tool (and the reason for each skip), the inline-vs-
+fan-out basis, and the reason behind each KEEP/DOWNGRADE/DROP verdict.
 
 ## Step 0.5 — Resolve the target scope
 
@@ -128,11 +106,9 @@ the probe counts as missing — do not try to use it.)
 
 The interactive flow — **mandatory, blocking checkpoint. Do NOT begin detection
 (Step 3) until the user has confirmed the tool set.** The model is **propose the
-full thorough set, user deselects** — NOT "pick a depth". A thorough refactor
-audit wants broad coverage, so every viable tool for the detected stack is
-pre-selected ON by default; the user trims, they don't opt in. ("I judged the
-installed tools adequate and proceeded" is the exact failure that skipped CSS /
-knip / madge on a full run — not allowed.)
+full thorough set, user deselects** — NOT "pick a depth" and NOT "the installed
+tools looked adequate". Every viable tool for the detected stack is pre-selected
+ON by default; the user trims, they don't opt in.
 
 1. Run `scripts/install-tools.sh --probe`.
 2. **Enumerate EVERY viable tool for each detected TARGET** — this means every

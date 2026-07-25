@@ -8,7 +8,4 @@ Use root `infrastructure/` for shared platform and IaC. Keep service-local
 deployment config with the owning deployable when it is not shared platform
 state.
 
-Terraform or OpenTofu is the baseline. Prefer official or vendor modules first,
-maintained community modules second, and custom thin wrappers last.
-
 Infrastructure toolchain defaults: see steering-toolchain-defaults (infrastructure context).

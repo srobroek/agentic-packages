@@ -23,37 +23,14 @@ review".
 2. Otherwise run `scripts/audit.sh` from the project root. It detects the
    ecosystem(s), dispatches to each available scanner, prints each scanner's
    output, and ends with a summary.
-3. Read the summary: it lists ecosystems detected, scanners that ran, scanners
-   that were unavailable (with install hints), and the HIGH/CRITICAL count.
-4. Report findings to the user grouped by severity. Lead with CRITICAL/HIGH,
-   then MEDIUM/LOW. Name the package, the advisory/CVE id, the affected and
-   fixed version ranges where the scanner provides them.
-5. Be explicit about coverage: state which ecosystems were scanned, and which
-   were detected but skipped because the scanner was not installed. Do not
-   imply an ecosystem is clean when its scanner never ran.
+3. Report findings grouped by severity. Name the package, the advisory/CVE id,
+   and the affected and fixed version ranges where the scanner provides them.
 
 ## Ecosystem -> scanner mapping
 
-| Lockfile / manifest                         | Scanner                          |
-|---------------------------------------------|----------------------------------|
-| `pnpm-lock.yaml`                            | `pnpm audit`                     |
-| `package-lock.json` / `npm-shrinkwrap.json` | `npm audit`                      |
-| `yarn.lock`                                 | `yarn npm audit` (or `npm audit`)|
-| `poetry.lock` / `uv.lock` / `Pipfile.lock` / `requirements.txt` / `pyproject.toml` | `pip-audit` (or `uvx pip-audit`) |
-| `Cargo.lock` / `Cargo.toml`                 | `cargo audit`                    |
-| `go.mod`                                    | `govulncheck ./...`              |
-| any of the above (cross-ecosystem)          | `osv-scanner` (supplemental)     |
-
-Each scanner is guarded with `command -v`. A missing scanner is reported with
-an install hint, not treated as a failure.
-
-## Install hints (only if a scanner is missing)
-
-- `pip-audit`: `pip install pip-audit` (or run ad hoc with `uvx pip-audit`)
-- `cargo audit`: `cargo install cargo-audit`
-- `govulncheck`: `go install golang.org/x/vuln/cmd/govulncheck@latest`
-- `osv-scanner`: https://google.github.io/osv-scanner/
-- `npm` / `pnpm` / `yarn`: install via Node.js / Corepack
+Run `scripts/audit.sh --help` for the full lockfile-to-scanner mapping and
+install hints. Each scanner is guarded with `command -v`; a missing scanner is
+reported with an install hint, not treated as a failure.
 
 ## Steering
 

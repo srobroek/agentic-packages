@@ -24,9 +24,8 @@ One workflow for three asset kinds. Pick the template, author at source, lint.
    non-triggers, install target, script/reference needs, external overlap.
 3. LOAD the matching template and follow it exactly.
 4. Run `scripts/lint.sh <file>` → fix every ERROR; justify or fix WARNs.
-5. Review: triggers concrete · description ≤25 words · no hedges on MUST/DEFAULT/NOT lines
-   (lint catches the lexicon) · output contract has verdict line + word cap (agents) ·
-   references one level deep.
+5. Review what lint cannot judge: are the triggers phrases a user would type, and
+   is every reference one level deep?
 
 ## Format rules (all kinds)
 
