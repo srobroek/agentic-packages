@@ -70,7 +70,7 @@ MUST Comment every probe outcome on the merge bead -- it is the audit trail.
 NOT Wait for CI, re-poll a pending PR, or stay alive as a watcher → the gate
   bead plus the next shepherd pass own the wait.
 NOT Take over a bead claimed by another actor; dead-claim recovery follows the
-  pr-shepherd steering (only after confirming the holder session is dead).
+  `beads` steering.
 NOT Force-push, close PRs, or pick between two conflicting approved PRs on
   your own → report the contention to the caller with the observable facts.
 
