@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,53 @@ from typing import Any
 
 class ContractError(RuntimeError):
     pass
+
+
+CONTEXT_ACK_RE = re.compile(r"^WAIT context=(?P<context>\S+)$")
+WORKTRUNK_VAR_KEY_RE = re.compile(r"^[A-Za-z0-9-]+$")
+RUNTIME_BINDINGS_KEY = "runtime-bindings"
+LEGACY_RUNTIME_BINDINGS_KEY = "runtime_bindings"
+RESOURCE_TOKEN = r"[A-Za-z0-9][A-Za-z0-9._:-]*"
+QUEUE_TOKEN = r"[A-Za-z0-9][A-Za-z0-9._:=+-]*"
+GENERIC_WAIT_RE = re.compile(
+    r"^WAIT checkout=(?P<checkout>/[^\n]+)\n"
+    r"Do not invoke tools or start work\.\n"
+    r"The controlling parent will send your task after binding your Worktrunk lease\.$"
+)
+RESOURCE_WAIT_RE = re.compile(
+    rf"^WAIT checkout=(?P<checkout>/[^\n]+)\n"
+    rf"RESOURCE {RESOURCE_TOKEN}\n"
+    r"Do not invoke tools or start work\.\n"
+    rf"The controlling parent will release you with exactly CLAIM {RESOURCE_TOKEN}\.$"
+)
+QUEUE_WAIT_RE = re.compile(
+    rf"^WAIT checkout=(?P<checkout>/[^\n]+)\n"
+    rf"QUEUE {QUEUE_TOKEN}\n"
+    r"Do not invoke tools or start work\.\n"
+    rf"The controlling parent will release you with exactly CLAIM queue:{QUEUE_TOKEN}\.$"
+)
+SPAWN_TOOLS = {"Agent", "spawn_agent", "agents.spawn_agent"}
+CONTINUATION_TOOLS = {
+    "SendMessage",
+    "send_message",
+    "agents.send_message",
+    "followup_task",
+    "agents.followup_task",
+    "send_input",
+    "agents.send_input",
+    "multi_agent_v1send_input",
+    "resume_agent",
+    "agents.resume_agent",
+    "multi_agent_v1resume_agent",
+}
+MUTATION_TOOLS = {
+    "Bash",
+    "apply_patch",
+    "functions.apply_patch",
+    "Edit",
+    "Write",
+    "MultiEdit",
+}
 
 
 def run(
@@ -35,11 +83,41 @@ def run(
     return result
 
 
+def normalize_inventory(payload: Any) -> list[dict[str, Any]]:
+    """Return a flat item list from either Worktrunk JSON schema.
+
+    Schema 2 wraps items in an envelope and nests worktree facts; schema 1 is
+    a bare array with those facts at the top level. Callers read a single
+    shape, so schema-2 items are flattened onto the schema-1 field names.
+    """
+    if isinstance(payload, dict):
+        items = payload.get("items")
+        if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
+            raise ContractError("Worktrunk inventory envelope has no JSON array of items")
+        flattened = []
+        for item in items:
+            merged = dict(item)
+            worktree = item.get("worktree")
+            if isinstance(worktree, dict):
+                if isinstance(worktree.get("path"), str):
+                    merged["path"] = worktree["path"]
+                merged["is_main"] = bool(worktree.get("main"))
+            flattened.append(merged)
+        return flattened
+    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+        raise ContractError("Worktrunk inventory is not a JSON array of items")
+    return payload
+
+
 def wt_inventory(repo: Path, *, full: bool = False) -> list[dict[str, Any]]:
     command = [
         "wt",
         "-C",
         str(repo),
+        # Pin the schema so a future Worktrunk default flip cannot change the
+        # parsed shape underneath the contract.
+        "--config-set",
+        "list.json-schema=2",
         "list",
         "--format=json",
         "--branches",
@@ -50,13 +128,14 @@ def wt_inventory(repo: Path, *, full: bool = False) -> list[dict[str, Any]]:
         payload = json.loads(run(command).stdout)
     except json.JSONDecodeError as error:
         raise ContractError(f"Worktrunk returned invalid JSON: {error}") from error
-    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
-        raise ContractError("Worktrunk inventory is not a JSON array of items")
-    return payload
+    return normalize_inventory(payload)
 
 
 def item_path(item: dict[str, Any]) -> Path | None:
     value = item.get("path")
+    if not value:
+        worktree = item.get("worktree")
+        value = worktree.get("path") if isinstance(worktree, dict) else None
     return Path(value).resolve() if value else None
 
 
@@ -116,7 +195,50 @@ def bound_contexts(item: dict[str, Any]) -> set[str]:
             decoded = []
         if isinstance(decoded, list):
             contexts.update(value for value in decoded if isinstance(value, str) and value)
+    contexts.update(binding["context"] for binding in runtime_bindings(item))
     return contexts
+
+
+def runtime_bindings(item: dict[str, Any]) -> list[dict[str, str]]:
+    variables = worktrunk_vars(item)
+    raw = variables.get(RUNTIME_BINDINGS_KEY)
+    if raw is None:
+        raw = variables.get(LEGACY_RUNTIME_BINDINGS_KEY)
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            raw = []
+    bindings: list[dict[str, str]] = []
+    if isinstance(raw, list):
+        for value in raw:
+            if not isinstance(value, dict):
+                continue
+            handle = value.get("handle")
+            context = value.get("context")
+            if isinstance(handle, str) and handle and isinstance(context, str) and context:
+                bindings.append({"handle": handle, "context": context})
+    return bindings
+
+
+def bound_handles(item: dict[str, Any]) -> set[str]:
+    return {binding["handle"] for binding in runtime_bindings(item)}
+
+
+def parse_context_ack(value: str) -> str:
+    match = CONTEXT_ACK_RE.fullmatch(value.strip())
+    if not match:
+        raise ContractError("context acknowledgement must be exactly WAIT context=<runtime-id>")
+    return match.group("context")
+
+
+def bound_resource(item: dict[str, Any]) -> str | None:
+    variables = worktrunk_vars(item)
+    for key in ("resource", "bead"):
+        value = variables.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 
 def beads_active(repo: Path) -> bool:
@@ -167,6 +289,37 @@ def active_bead_conflicts(repo: Path, bead: str, branch: str, path: Path) -> lis
     return conflicts
 
 
+def validate_bead_worktree(metadata: dict[str, Any], expected: Path, bead: str) -> None:
+    anchors = {key: metadata.get(key) for key in ("worktree", "worktree_path") if metadata.get(key)}
+    if not anchors:
+        raise ContractError(
+            f"Bead {bead} metadata worktree is missing; expected {str(expected.resolve())!r}"
+        )
+    for key, value in anchors.items():
+        if Path(str(value)).resolve() != expected.resolve():
+            raise ContractError(
+                f"Bead {bead} metadata {key}={value!r}; expected {str(expected.resolve())!r}"
+            )
+
+
+def validate_bead_artifacts(metadata: dict[str, Any], worktree: Path, bead: str) -> None:
+    if metadata.get("execution_kind") != "artifact":
+        return
+    value = metadata.get("artifacts_dir")
+    if not isinstance(value, str) or not Path(value).is_absolute():
+        raise ContractError(
+            f"Bead {bead} requires an absolute artifacts_dir outside its disposable worktree"
+        )
+    artifacts = Path(value).resolve()
+    try:
+        artifacts.relative_to(worktree.resolve())
+    except ValueError:
+        return
+    raise ContractError(
+        f"Bead {bead} artifacts_dir must be outside its disposable worktree: {artifacts}"
+    )
+
+
 def assert_bead_lease_available(
     repo: Path,
     bead: str,
@@ -208,7 +361,7 @@ def assert_bead_lease_available(
 
     for item in inventory:
         variables = worktrunk_vars(item)
-        if variables.get("bead") != bead:
+        if bound_resource(item) != bead:
             continue
         if path is None:
             raise ContractError(
@@ -227,6 +380,63 @@ def assert_bead_lease_available(
         conflicts = active_bead_conflicts(repo, bead, branch, path)
         if conflicts:
             raise ContractError("active Beads share this branch or path: " + ", ".join(conflicts))
+    return issue
+
+
+def assert_activation_resource_available(
+    repo: Path,
+    resource: str,
+    actor: str,
+    branch: str,
+    lease: str,
+    inventory: list[dict[str, Any]],
+    path: Path,
+    *,
+    handle: str,
+    context: str,
+) -> dict[str, Any]:
+    issue = one_bead(repo, resource)
+    if issue.get("status") != "open":
+        raise ContractError(
+            f"activation resource {resource} status is {issue.get('status')!r}; expected open"
+        )
+    if issue.get("assignee") not in {None, ""}:
+        raise ContractError(
+            f"activation resource {resource} is already claimed by "
+            f"{issue.get('assignee')!r}; keep it unassigned until worker claim"
+        )
+    metadata = issue.get("metadata") or {}
+    validate_bead_worktree(metadata, path, resource)
+    validate_bead_artifacts(metadata, path, resource)
+    expected = {
+        "branch": branch,
+        "actor": actor,
+        "lease_token": lease,
+    }
+    for key, value in expected.items():
+        if metadata.get(key) != value:
+            raise ContractError(
+                f"activation resource {resource} metadata {key}={metadata.get(key)!r}; "
+                f"expected {value!r}"
+            )
+    for key, value in (("runtime_handle", handle), ("runtime_context", context)):
+        existing = metadata.get(key)
+        if existing and existing != value:
+            raise ContractError(
+                f"activation resource {resource} metadata {key}={existing!r}; refusing {value!r}"
+            )
+    for item in inventory:
+        joined = bound_resource(item)
+        if joined != resource:
+            continue
+        if item.get("branch") != branch or item_path(item) != path.resolve():
+            raise ContractError(
+                f"activation resource {resource} is already joined to "
+                f"Worktrunk branch {item.get('branch')!r}"
+            )
+    conflicts = active_bead_conflicts(repo, resource, branch, path)
+    if conflicts:
+        raise ContractError("active Beads share this branch or path: " + ", ".join(conflicts))
     return issue
 
 
@@ -252,16 +462,15 @@ def validate(
             raise ContractError(
                 f"Worktrunk var {key}={variables.get(key)!r}; expected {expected!r}"
             )
-    if bead and variables.get("bead") not in {None, bead}:
-        raise ContractError(
-            f"Worktrunk var bead={variables.get('bead')!r}; expected {bead!r}"
-        )
+    joined_resource = bound_resource(item)
+    if bead and joined_resource not in {None, bead}:
+        raise ContractError(f"Worktrunk resource={joined_resource!r}; expected {bead!r}")
     if not variables.get("actor") or not variables.get("lease"):
         raise ContractError("writer worktree is missing actor or lease vars")
 
     conflicts: list[str] = []
-    if check_beads and beads_active(repo) and (bead or variables.get("bead")):
-        bead_id = bead or str(variables["bead"])
+    if check_beads and beads_active(repo) and (bead or joined_resource):
+        bead_id = bead or str(joined_resource)
         issue = assert_bead_lease_available(
             repo,
             bead_id,
@@ -272,34 +481,28 @@ def validate(
             path,
         )
         metadata = issue.get("metadata") or {}
+        validate_bead_worktree(metadata, path, bead_id)
+        validate_bead_artifacts(metadata, path, bead_id)
         expected_metadata = {
             "branch": branch,
-            "worktree": str(path.resolve()),
-            "worktree_path": str(path.resolve()),
+            "actor": variables["actor"],
+            "lease_token": variables["lease"],
         }
-        if variables.get("bead"):
-            expected_metadata.update(
-                {"actor": variables["actor"], "lease_token": variables["lease"]}
-            )
         for key, expected in expected_metadata.items():
             actual = metadata.get(key)
-            if key in {"worktree", "worktree_path"} and actual:
-                matches = Path(str(actual)).resolve() == Path(str(expected)).resolve()
-            else:
-                matches = actual == expected
-            if not matches:
+            if actual != expected:
                 raise ContractError(
                     f"Bead {bead_id} metadata {key}={actual!r}; expected {expected!r}"
                 )
 
     return {
         "status": "valid",
-        "inventory_contract": "worktrunk-0.62-array",
+        "inventory_contract": "worktrunk-schema-2",
         "branch": branch,
         "path": str(path.resolve()),
         "actor": variables["actor"],
         "lease": variables["lease"],
-        "bead": bead or variables.get("bead"),
+        "bead": bead or joined_resource,
         "conflicts": conflicts,
     }
 
@@ -307,6 +510,10 @@ def validate(
 def set_var(repo: Path, branch: str, key: str, value: str | None) -> None:
     if value is None:
         return
+    if not WORKTRUNK_VAR_KEY_RE.fullmatch(key):
+        raise ContractError(
+            f"invalid Worktrunk variable key {key!r}; keys use only letters, digits, and hyphens"
+        )
     run(
         [
             "wt",
@@ -390,21 +597,17 @@ def rollback_created_worktree(
 
 def prepare(args: argparse.Namespace) -> dict[str, Any]:
     repo = Path(args.repo).resolve()
+    if getattr(args, "bead", None):
+        raise ContractError(
+            "prepare is parent-managed and does not accept --bead; keep the activation "
+            "resource unassigned and stamp the returned anchors before spawning"
+        )
     for name in ("branch", "base", "source", "actor", "lease", "runtime", "agent"):
         if not getattr(args, name).strip():
             raise ContractError(f"--{name} must not be empty")
     if shutil.which("wt") is None:
         raise ContractError("wt is not installed")
     initial_inventory = wt_inventory(repo)
-    if beads_active(repo) and args.bead:
-        assert_bead_lease_available(
-            repo,
-            args.bead,
-            args.actor,
-            args.branch,
-            args.lease,
-            initial_inventory,
-        )
     command = ["wt", "-C", str(repo)]
     if args.worktree_path:
         command.extend(["--config-set", f"worktree-path={json.dumps(args.worktree_path)}"])
@@ -461,23 +664,11 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             ).stdout
         )
 
-        if beads_active(repo) and args.bead:
-            assert_bead_lease_available(
-                repo,
-                args.bead,
-                args.actor,
-                actual_branch,
-                args.lease,
-                created_inventory,
-                path,
-            )
-
         projected = {
             "lease": args.lease,
             "actor": args.actor,
             "runtime": args.runtime,
             "agent": args.agent,
-            "bead": args.bead,
             "run": args.run,
             "node": args.node,
         }
@@ -496,79 +687,66 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             raise ContractError(f"{error}; rollback failed: {rollback_error}") from error
         raise
 
-    try:
-        if beads_active(repo) and args.bead:
-            assert_bead_lease_available(
-                repo,
-                args.bead,
-                args.actor,
-                actual_branch,
-                args.lease,
-                wt_inventory(repo),
-                path,
-            )
-            metadata = {
-                "branch": actual_branch,
-                "worktree": str(path),
-                "worktree_path": str(path),
-                "base_sha": base_sha,
-                "runtime": args.runtime,
-                "agent": args.agent,
-                "actor": args.actor,
-                "lease_token": args.lease,
-                "copy_ignored": copied,
-            }
-            if args.model:
-                metadata["model"] = args.model
-            if args.effort:
-                metadata["effort"] = args.effort
-            run(
-                [
-                    "bd",
-                    "-C",
-                    str(repo),
-                    "update",
-                    args.bead,
-                    "--metadata",
-                    json.dumps(metadata, separators=(",", ":")),
-                ],
-                env={**os.environ, "BEADS_ACTOR": args.actor},
-            )
-            result = validate(repo, path, actor=args.actor, lease=args.lease, bead=args.bead)
-        result.update(
-            {
-                "status": "ready",
-                "base_sha": base_sha,
-                "copy_ignored": copied,
-                "logs": str(log_root / "wt" / "logs"),
-            }
-        )
-        return result
-    except ContractError as error:
-        rollback_error = rollback_created_worktree(repo, args.branch, initial_inventory, path)
-        if rollback_error:
-            raise ContractError(f"{error}; rollback failed: {rollback_error}") from error
-        raise
+    result.update(
+        {
+            "status": "ready",
+            "base_sha": base_sha,
+            "copy_ignored": copied,
+            "logs": str(log_root / "wt" / "logs"),
+        }
+    )
+    return result
 
 
 def bind(args: argparse.Namespace) -> dict[str, Any]:
     repo = Path(args.repo).resolve()
     path = Path(args.path).resolve()
-    context = args.context.strip()
-    if not context:
-        raise ContractError("--context must not be empty")
+    if getattr(args, "bead", None):
+        raise ContractError(
+            "bind does not accept claimed --bead state; pass the unclaimed --resource "
+            "or omit task-system integration"
+        )
+    if getattr(args, "context", None):
+        raise ContractError(
+            "bind requires --ack from the actor completion notification; "
+            "a raw context or spawn handle is not handshake evidence"
+        )
+    ack = str(getattr(args, "ack", None) or "").strip()
+    if not ack:
+        raise ContractError(
+            "bind requires --ack from the actor completion notification; "
+            "do not infer runtime context from the spawn handle"
+        )
+    context = parse_context_ack(ack)
+    handle = str(getattr(args, "handle", None) or "").strip()
+    if not handle:
+        raise ContractError("bind requires the parent-visible routing handle from the spawn result")
+    resource = str(getattr(args, "resource", None) or "").strip() or None
     inventory = wt_inventory(repo)
     result = validate(
         repo,
         path,
         actor=args.actor,
         lease=args.lease,
-        bead=args.bead,
         inventory=inventory,
     )
     item = find_item(inventory, path=path)
     branch = str(item["branch"])
     variables = worktrunk_vars(item)
+    if resource:
+        if not beads_active(repo):
+            raise ContractError("--resource requires an active Beads workspace")
+        assert_activation_resource_available(
+            repo,
+            resource,
+            args.actor,
+            branch,
+            args.lease,
+            inventory,
+            path,
+            handle=handle,
+            context=context,
+        )
     for other in inventory:
         if other is item:
             continue
@@ -576,28 +754,60 @@ def bind(args: argparse.Namespace) -> dict[str, Any]:
             raise ContractError(
                 f"runtime context {context!r} is already bound to branch {other.get('branch')!r}"
             )
+        if handle in bound_handles(other):
+            raise ContractError(
+                f"runtime handle {handle!r} is already bound to branch {other.get('branch')!r}"
+            )
+    bindings = runtime_bindings(item)
+    for binding in bindings:
+        if binding["handle"] == handle and binding["context"] != context:
+            raise ContractError(f"runtime handle {handle!r} is already bound to another context")
+        if binding["context"] == context and binding["handle"] != handle:
+            raise ContractError(f"runtime context {context!r} is already bound to another handle")
+    if {"handle": handle, "context": context} not in bindings:
+        bindings.append({"handle": handle, "context": context})
     contexts = bound_contexts(item)
     contexts.add(context)
+    set_var(
+        repo,
+        branch,
+        RUNTIME_BINDINGS_KEY,
+        json.dumps(
+            sorted(bindings, key=lambda value: (value["context"], value["handle"])),
+            separators=(",", ":"),
+            sort_keys=True,
+        ),
+    )
+    if resource:
+        set_var(repo, branch, "resource", resource)
     if not variables.get("context"):
         set_var(repo, branch, "context", context)
     set_var(repo, branch, "contexts", json.dumps(sorted(contexts), separators=(",", ":")))
-    if beads_active(repo) and args.bead:
-        assert_bead_lease_available(
-            repo, args.bead, args.actor, branch, args.lease, inventory, path
-        )
+    if resource:
         run(
             [
                 "bd",
                 "-C",
                 str(repo),
                 "update",
-                args.bead,
+                resource,
                 "--metadata",
-                json.dumps({"runtime_context": context}, separators=(",", ":")),
+                json.dumps(
+                    {"runtime_handle": handle, "runtime_context": context},
+                    separators=(",", ":"),
+                ),
             ],
-            env={**os.environ, "BEADS_ACTOR": args.actor},
+            env=os.environ.copy(),
         )
-    result.update({"status": "bound", "context": context, "contexts": sorted(contexts)})
+    result.update(
+        {
+            "status": "bound",
+            "handle": handle,
+            "context": context,
+            "contexts": sorted(contexts),
+            "resource": resource,
+        }
+    )
     return result
 
 
@@ -613,12 +823,194 @@ def runtime_context(payload: dict[str, Any]) -> str | None:
     return None
 
 
+def allocation_checkout(prompt: str) -> Path | None:
+    normalized = prompt.strip()
+    for pattern in (GENERIC_WAIT_RE, RESOURCE_WAIT_RE, QUEUE_WAIT_RE):
+        match = pattern.fullmatch(normalized)
+        if match:
+            return Path(match.group("checkout")).resolve()
+    return None
+
+
+def runtime_recipient(tool_input: dict[str, Any]) -> str:
+    for key in (
+        "resume",
+        "resume_id",
+        "to",
+        "recipient",
+        "target",
+        "agent_id",
+        "id",
+        "thread_id",
+    ):
+        value = tool_input.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def leased_items(inventory: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [item for item in inventory if worktrunk_vars(item).get("lease")]
+
+
+def orchestration_active(cwd: Path) -> bool:
+    if os.environ.get("ORCHESTRATE_RUN"):
+        return True
+    marker = os.environ.get("ORCHESTRATE_MARKER_FILE")
+    if marker:
+        return Path(marker).is_file()
+    return (cwd / ".orchestration" / ".active-run").is_file()
+
+
+def protocol_engaged(
+    payload: dict[str, Any],
+    inventory: list[dict[str, Any]],
+    cwd: Path,
+    *,
+    expected_lease: str | None = None,
+) -> bool:
+    """Report whether this caller is inside the writer protocol.
+
+    The hook is repository-global, so it must stay inert for ordinary
+    delegation: a repository that merely contains writer leases does not put
+    every unrelated agent under the contract. Enforcement engages only on
+    positive evidence -- an operator opt-in, an external writer stamp, a
+    caller whose runtime context already holds a lease, a caller running
+    inside a leased checkout, an allocation that speaks the WAIT grammar, or
+    an active orchestration run that owns the whole handshake.
+    """
+    if expected_lease or os.environ.get("WORKTRUNK_WRITER_ENFORCE"):
+        return True
+    context = runtime_context(payload)
+    if context and any(context in bound_contexts(item) for item in inventory):
+        return True
+    if containing_item(leased_items(inventory), cwd) is not None:
+        return True
+    tool_input = payload.get("tool_input")
+    tool_input = tool_input if isinstance(tool_input, dict) else {}
+    prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
+    if allocation_checkout(prompt) is not None:
+        return True
+    return orchestration_active(cwd)
+
+
+def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[str, Any]:
+    matches = [item for item in inventory if handle in bound_handles(item)]
+    if len(matches) > 1:
+        raise ContractError(f"runtime handle {handle!r} is bound more than once")
+    if not matches:
+        raise ContractError(
+            f"runtime handle {handle!r} has no writer lease; load worktrunk-writer "
+            "and complete its context handshake before resuming the agent"
+        )
+    return matches[0]
+
+
+def assert_spawn_allocation(
+    tool_input: dict[str, Any], inventory: list[dict[str, Any]]
+) -> dict[str, Any]:
+    handle = runtime_recipient(tool_input)
+    if handle:
+        return assert_bound_handle(inventory, handle)
+    prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
+    checkout = allocation_checkout(prompt)
+    if checkout is None:
+        raise ContractError(
+            "tool-using agent spawn is not parent-prepared; the parent must load "
+            "worktrunk-writer and complete its PREPARE, WAIT, notification, and BIND "
+            "sequence before task delivery; the child cannot establish its own lease"
+        )
+    item = containing_item(inventory, checkout)
+    variables = worktrunk_vars(item) if item else {}
+    if item is None or item_path(item) != checkout or not variables.get("lease"):
+        raise ContractError("agent WAIT checkout is not a prepared writer lease")
+    if not variables.get("actor"):
+        raise ContractError("agent WAIT checkout has no writer actor")
+    return item
+
+
+def leading_cd_target(command: str, cwd: Path) -> Path | None:
+    first_line = next((line.strip() for line in command.splitlines() if line.strip()), "")
+    if not first_line:
+        return None
+    lexer = shlex.shlex(first_line, posix=True, punctuation_chars=";&|")
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return None
+    segment: list[str] = []
+    for token in tokens:
+        if token in {";", "&&", "||", "&", "|"}:
+            break
+        segment.append(token)
+    if segment[:1] != ["cd"]:
+        return None
+    args = segment[1:]
+    if args[:1] == ["--"]:
+        args = args[1:]
+    if len(args) != 1 or args[0] in {"", "-"}:
+        return None
+    target = Path(args[0])
+    return (target if target.is_absolute() else cwd / target).resolve()
+
+
+def bash_redirection_targets(command: str, cwd: Path) -> list[Path]:
+    base = leading_cd_target(command, cwd) or cwd
+    targets: list[Path] = []
+    heredoc_end = ""
+    for line in command.splitlines():
+        if heredoc_end:
+            if line.strip() == heredoc_end:
+                heredoc_end = ""
+            continue
+        lexer = shlex.shlex(line, posix=True, punctuation_chars=";&|<>")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        try:
+            tokens = list(lexer)
+        except ValueError:
+            continue
+        index = 0
+        while index < len(tokens):
+            token = tokens[index]
+            if token in {"<<", "<<<"}:
+                if token == "<<" and index + 1 < len(tokens):
+                    heredoc_end = tokens[index + 1]
+                index += 2
+                continue
+            if ">" not in token or token.startswith("<<"):
+                index += 1
+                continue
+            if index + 1 >= len(tokens):
+                break
+            raw = tokens[index + 1]
+            if raw == "&" and index + 2 < len(tokens):
+                index += 3
+                continue
+            if raw.startswith("&") or raw.isdigit():
+                index += 2
+                continue
+            target = Path(raw)
+            targets.append((target if target.is_absolute() else base / target).resolve())
+            index += 2
+    return targets
+
+
 def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
     tool = payload.get("tool_name") or payload.get("tool")
     raw_targets: list[str | Path] = []
-    if tool in {"apply_patch", "functions.apply_patch"}:
+    if tool == "Bash":
+        command = tool_input.get("command")
+        if isinstance(command, str):
+            checkout = leading_cd_target(command, cwd)
+            if checkout:
+                raw_targets.append(checkout)
+            raw_targets.extend(bash_redirection_targets(command, cwd))
+    elif tool in {"apply_patch", "functions.apply_patch"}:
         command = tool_input.get("command")
         if isinstance(command, str):
             matches = re.findall(
@@ -637,17 +1029,50 @@ def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
             and edit["file_path"]
         )
     if not raw_targets:
-        raw_targets.append(
-            tool_input.get("workdir")
-            or tool_input.get("file_path")
-            or tool_input.get("path")
-            or cwd
-        )
+        target = tool_input.get("workdir") or tool_input.get("file_path") or tool_input.get("path")
+        raw_targets.append(target or cwd)
     targets = []
     for raw in raw_targets:
         target = Path(str(raw).strip())
         targets.append(target if target.is_absolute() else cwd / target)
     return targets
+
+
+def artifact_target_allowed(repo: Path, item: dict[str, Any], target: Path) -> bool:
+    resource = bound_resource(item)
+    if not resource:
+        return False
+    issue = one_bead(repo, resource)
+    variables = worktrunk_vars(item)
+    metadata = issue.get("metadata") or {}
+    if issue.get("status") != "in_progress" or issue.get("assignee") != variables.get("actor"):
+        raise ContractError(f"artifact resource {resource} has no live claim for this actor")
+    if metadata.get("execution_kind") != "artifact":
+        return False
+    worktree = item_path(item)
+    if worktree is None:
+        raise ContractError("writer worktree has no path")
+    validate_bead_worktree(metadata, worktree, resource)
+    validate_bead_artifacts(metadata, worktree, resource)
+    expected = {
+        "branch": item.get("branch"),
+        "actor": variables.get("actor"),
+        "lease_token": variables.get("lease"),
+    }
+    for key, value in expected.items():
+        if metadata.get(key) != value:
+            raise ContractError(
+                f"Bead {resource} metadata {key}={metadata.get(key)!r}; expected {value!r}"
+            )
+    runtime = metadata.get("runtime_context")
+    if runtime and runtime not in bound_contexts(item):
+        raise ContractError(f"artifact resource {resource} has a different runtime context")
+    artifacts = Path(str(metadata["artifacts_dir"])).resolve()
+    try:
+        relative = target.resolve().relative_to(artifacts)
+    except ValueError:
+        return False
+    return bool(relative.parts)
 
 
 def assert_runtime_lease(
@@ -657,11 +1082,10 @@ def assert_runtime_lease(
     *,
     expected_lease: str | None = None,
     expected_actor: str | None = None,
+    repo: Path | None = None,
 ) -> dict[str, Any] | None:
     context = runtime_context(payload)
-    bound = [
-        item for item in inventory if context and context in bound_contexts(item)
-    ]
+    bound = [item for item in inventory if context and context in bound_contexts(item)]
     if len(bound) > 1:
         raise ContractError(f"runtime context {context!r} is bound more than once")
     if context and not bound:
@@ -670,6 +1094,8 @@ def assert_runtime_lease(
     item = containing_item(inventory, target)
     variables = worktrunk_vars(item) if item else {}
     if item is None or not variables.get("lease"):
+        if bound and repo and artifact_target_allowed(repo, bound[0], target):
+            return bound[0]
         if expected_lease or bound:
             raise ContractError("writer mutation targets an unleased checkout")
         return None
@@ -713,17 +1139,9 @@ def hook() -> int:
     if payload.get("hook_event_name") != "PreToolUse":
         return 0
     tool = payload.get("tool_name") or payload.get("tool")
-    if tool not in {
-        "Bash",
-        "apply_patch",
-        "functions.apply_patch",
-        "Edit",
-        "Write",
-        "MultiEdit",
-    }:
+    if tool not in SPAWN_TOOLS | CONTINUATION_TOOLS | MUTATION_TOOLS:
         return 0
     cwd = Path(payload.get("cwd") or os.getcwd()).resolve()
-    targets = mutation_targets(payload, cwd)
     repo = cwd
     if not repo.exists() or shutil.which("wt") is None:
         return 0
@@ -749,6 +1167,23 @@ def hook() -> int:
         if not expected_lease and not runtime_context(payload):
             return 0
         return hook_deny(error)
+    if not protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease):
+        return 0
+    tool_input = payload.get("tool_input")
+    tool_input = tool_input if isinstance(tool_input, dict) else {}
+    try:
+        if tool in SPAWN_TOOLS:
+            assert_spawn_allocation(tool_input, inventory)
+            return 0
+        if tool in CONTINUATION_TOOLS:
+            handle = runtime_recipient(tool_input)
+            if not handle:
+                raise ContractError("agent continuation has no runtime handle")
+            assert_bound_handle(inventory, handle)
+            return 0
+    except ContractError as error:
+        return hook_deny(error)
+    targets = mutation_targets(payload, cwd)
     try:
         for target in targets:
             item = assert_runtime_lease(
@@ -757,6 +1192,7 @@ def hook() -> int:
                 target,
                 expected_lease=expected_lease,
                 expected_actor=expected_actor,
+                repo=repo,
             )
             if item is None:
                 continue
@@ -782,8 +1218,9 @@ def parser() -> argparse.ArgumentParser:
     for name in ("repo", "branch", "base", "source", "actor", "lease", "agent"):
         prep.add_argument(f"--{name}", required=True)
     prep.add_argument("--runtime", required=True, choices=("claude", "codex"))
-    for name in ("bead", "run", "node", "model", "effort"):
+    for name in ("run", "node", "model", "effort"):
         prep.add_argument(f"--{name}")
+    prep.add_argument("--bead", help=argparse.SUPPRESS)
     prep.add_argument(
         "--worktree-path",
         help="Run-scoped Worktrunk path template override for sandbox reachability",
@@ -795,9 +1232,13 @@ def parser() -> argparse.ArgumentParser:
     check.add_argument("--lease")
     check.add_argument("--bead")
     binding = sub.add_parser("bind")
-    for name in ("repo", "path", "actor", "lease", "context"):
+    for name in ("repo", "path", "actor", "lease"):
         binding.add_argument(f"--{name}", required=True)
-    binding.add_argument("--bead")
+    binding.add_argument("--ack")
+    binding.add_argument("--handle")
+    binding.add_argument("--resource")
+    binding.add_argument("--context", help=argparse.SUPPRESS)
+    binding.add_argument("--bead", help=argparse.SUPPRESS)
     fleet = sub.add_parser("inventory")
     fleet.add_argument("--repo", required=True)
     fleet.add_argument("--full", action="store_true")
