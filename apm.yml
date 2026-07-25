@@ -378,14 +378,6 @@ marketplace:
         - hooks
         - dependencies
         - supply-chain
-    - name: hooks-portability-ci
-      source: ./packages/hooks-portability-ci
-      category: project-lifecycle
-      tags:
-        - ci
-        - hooks
-        - portability
-        - testing
     - name: hooks-precommit-gate
       source: ./packages/hooks-precommit-gate
       category: project-lifecycle

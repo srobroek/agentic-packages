@@ -124,74 +124,12 @@ queue: agent:generic
 reason: no-compatible-work
 ```
 
-## Worked example — one node (`t3`) end to end
+## Worked example — APPROVE variants and merge (`t3`)
 
-**Assign**
-```
-to: domain-specialist-t3   summary: "assign node t3 auth-token refactor"
-ASSIGN t3
-  title:    Refactor auth token validation into middleware
-  bead:     orc-7f3a.3
-  scope:    src/auth/**, tests/auth/**
-  base:     main @ 3f9a1c2
-  epic:     orc-7f3a
-  artifacts: /home/…/.orchestration/run-7f3a/artifacts/
-  deps:     t1(done), t2(done)
-  commands: checkout=parent stamped Worktrunk branch/worktree/base_sha metadata;
-            claim=bd update orc-7f3a.3 --claim + verify checkout anchors;
-            state=bd set-state orc-7f3a.3 state=<s>; log=bd audit record + bd comment
-  protocol: on block → BLOCKED to main (don't spawn). green → commit+push, state=reported, REPORTED to main, stay alive.
-```
-
-**Blocked → orchestrator brokers an advisor** (the domain-specialist spawns no peer)
-```
-to: main        summary: "blocked on token refresh race"
-BLOCKED t3
-  kind:    design
-  need:    Concurrent refresh can double-issue tokens. (a) mutex around refresh vs
-           (b) single-flight dedupe by jti — which is safe here?
-  context: src/auth/refresh.rs:40-88; tests/auth/refresh_test.rs
-```
-```
-to: domain-specialist-t3    summary: "advice on t3: single-flight dedupe"   # main → domain-specialist
-ADVICE t3
-  answer:  Use (b) single-flight keyed by jti.
-  because: multi-proc refresh; in-proc mutex won't serialize.
-  refs:    existing jti store.
-```
-
-**Report (then stays alive)**
-```
-to: main        summary: "t3 reported, green, awaiting review"
-REPORTED t3
-  branch:   domain-specialist/t3-auth-middleware
-  worktree: /home/…/tmp/worktrees/repo/orc-run-t3
-  commits:  a1b2c3d refactor→middleware; d4e5f6a single-flight refresh
-  changed:  src/auth/middleware.rs, src/auth/refresh.rs, tests/auth/*
-  verify:   green (cargo test -p auth = 41 passed; clippy+fmt clean)
-  risks:    validate_token signature changed — callers in src/api/** updated in scope
-  log:      /home/…/worktrees/t3/.scratch.md
-  status:   alive, awaiting REVIEW
-```
-
-**Review → fix → approve**
-```
-to: main   summary: "t3 review: 2 changes"
-REVIEW t3  verdict: changes  items: 2
-  1. src/auth/middleware.rs:52 — error swallows underlying cause; propagate it
-  2. tests/auth/refresh_test.rs — add the concurrent double-refresh regression test
-  ok: structure, naming, single-flight approach sound
-```
-```
-to: domain-specialist-t3   summary: "apply 2 review fixes on t3"
-FIX t3
-  items: 1) propagate error at middleware.rs:52  2) add double-refresh regression test
-  reviewer: reviewer-t3 (kept alive; re-reviews delta)
-```
-```
-to: main   summary: "t3 approved"
-REVIEW t3  verdict: approve  note: both items resolved; delta re-reviewed
-```
+The per-verb field table above covers `ASSIGN`/`BLOCKED`/`ADVICE`/`REPORTED`/`REVIEW`/`FIX` fields;
+this example covers only `APPROVE`'s three field shapes (plain handoff, watcher-backed PR,
+lifecycle wake-up) and the terminal `MERGED`, since those vary by scenario in ways the table
+compresses.
 
 **Handoff to the shepherd**
 ```
