@@ -14,6 +14,7 @@ Codes:
   E2 slop lexicon           (all genres)   "seamlessly", "blazingly fast", "leverage", ...
   E3 internal references    (consumer)     specs/, ADR-, constitution, "extracted from", ...
   E4 history narration      (consumer, internal)  "previously", "renamed from", ...
+  E5 chat-session leakage   (all genres)   "As an AI", cutoff disclaimers, oaicite, ...
   W1 long prose block       (all genres)   paragraph > 80 words
   W2 emoji in heading       (all genres)
   W3 borderline hype        (all genres)   "simply", "intuitive", "just works", ...
@@ -68,6 +69,24 @@ HISTORY_NARRATION = re.compile(
 BORDERLINE_HYPE = re.compile(
     r"\b(simply|just works|easy to use|easily|intuitive(ly)?|flexible|"
     r"hassle[- ]free|out of the box|plug[- ]and[- ]play)\b",
+    re.I,
+)
+
+# Assistant output pasted into a shipped document. Unlike the lexicon rules this
+# is never a style judgement -- a cutoff disclaimer or a tool artifact in a doc
+# is always a defect -- so it is an ERROR in every genre. No published Vale
+# style covers it (checked tbhb/vale-ai-tells: SycophancyMarkers is praise only,
+# SelfReference is cross-references only).
+CHAT_LEAKAGE = re.compile(
+    r"(\bas an AI\b|\bas a large language model\b|\bI'?m an AI\b|"
+    r"\bas of my (last )?(update|knowledge cut[- ]?off)\b|"
+    r"\bmy (training data|knowledge) (only )?(goes up to|extends to|cut[- ]?off)\b|"
+    r"\bI (cannot|can'?t|am unable to) (browse|access the internet|provide)\b|"
+    r"\bI (apologi[sz]e|hope this helps)\b|\bfeel free to ask\b|"
+    r"\bthis section would (contain|describe|explain)\b|"
+    r"\b(insert|your) [a-z ]{3,20} here\b|\bTODO: (add|write|fill)\b|"
+    r"oaicite|contentReference|\[cite:\s*\d+\]|grok_card|"
+    r"【\d+†[^】]*】)",  # 【4†source】 citation artifact
     re.I,
 )
 
@@ -182,6 +201,7 @@ def lint(path: Path, genre: str) -> list[tuple[str, str, int, str]]:
     checks: list[tuple[str, str, re.Pattern, str]] = [
         ("ERROR", "E1", STATUS_LANGUAGE, "status language"),
         ("ERROR", "E2", SLOP_LEXICON, "slop lexicon"),
+        ("ERROR", "E5", CHAT_LEAKAGE, "chat-session leakage"),
     ]
     if genre == "consumer":
         checks.append(("ERROR", "E3", INTERNAL_REFS, "internal reference"))

@@ -157,6 +157,46 @@ def test_history_allowed_in_change_genre(tmp_path):
     assert "E4" not in codes(found)
 
 
+# --- E5 chat-session leakage -------------------------------------------------
+
+
+def test_chat_leakage_self_identification(tmp_path):
+    found = run(tmp_path, "As an AI, I cannot verify that claim.\n")
+    assert "E5" in codes(found)
+
+
+def test_chat_leakage_cutoff_disclaimer(tmp_path):
+    found = run(tmp_path, "As of my last update, the endpoint was stable.\n")
+    assert "E5" in codes(found)
+
+
+def test_chat_leakage_placeholder_text(tmp_path):
+    assert "E5" in codes(run(tmp_path, "This section would describe the schema.\n"))
+    assert "E5" in codes(run(tmp_path, "Insert your API token here.\n"))
+
+
+def test_chat_leakage_tool_artifacts(tmp_path):
+    for artifact in ("oaicite", "contentReference", "[cite: 4]", "【4†source】"):
+        found = run(tmp_path, f"See the reference {artifact} for details.\n")
+        assert "E5" in codes(found), artifact
+
+
+def test_chat_leakage_fires_in_every_genre(tmp_path):
+    # Unlike the lexicon rules, leaked assistant output is never house style.
+    for genre in ("consumer", "internal", "change"):
+        found = run(tmp_path, "As an AI, I cannot browse.\n", genre=genre)
+        assert "E5" in codes(found), genre
+
+
+def test_chat_leakage_ignores_legitimate_prose(tmp_path):
+    doc = (
+        "The agent cannot write outside its scope.\n\n"
+        "Update the manifest as of each release.\n\n"
+        "This section describes the schema.\n"
+    )
+    assert "E5" not in codes(run(tmp_path, doc))
+
+
 # --- W1 / W2 / W3 warnings ---------------------------------------------------
 
 

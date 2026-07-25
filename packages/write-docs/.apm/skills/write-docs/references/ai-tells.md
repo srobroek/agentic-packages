@@ -48,6 +48,9 @@ Weight everything in the next two sections above any word list.
 | Anaphora abuse | "They assume that... They assume that... They assume that..." | Say it once; merge the objects |
 | Analogy-stack authority | "Apple didn't build Uber. Facebook didn't build Spotify." | One apt comparison, or none |
 | Invented concept label | "the supervision paradox", "workload creep" coined mid-doc and never defined | Use the plain description; coin nothing |
+| Cataphoric numbered lead-in | Announcing a count before enumerating: "Three pillars support this", "falls into three categories" | Let the list carry its own length; cut the forecast |
+| Hollow acknowledgment | Naming a problem then declining to solve it: "names the risk without addressing it", "all diagnosis, no treatment" | Solve it, or cut the paragraph that raises it |
+| Absolute assertion | "the only way to", "the single most important", "make no mistake" | State the claim with its actual scope. The mirror of hedge stacking — over-commitment reads as generated too |
 | Think-of-it-as reflex | "Think of it like a highway system for data" | Explain the actual mechanism once; cut the teacher voice |
 | Bold-lead-in bullet symmetry | `**Speed:** one sentence` × 6, identical shape, near-zero content | Merge into prose or keep only bullets with distinct substance |
 | Hedge stacking | "can help to potentially reduce" | One verb; commit or cut the claim |
@@ -97,6 +100,25 @@ voice, not a word — synonym-swapping does not remove it.
   qualifier-then-immediate-reassurance stacks — chat-approval training
   leaking into shipped prose. Fix: delete; then audit the surrounding text,
   which came from the same session.
+- Figurative-verb verdict: judgement delivered as metaphor rather than claim —
+  "the point lands", "the argument holds", "stays quiet about", "punches above
+  its weight", "the abstraction earns its keep". The construction carries the
+  verdict so no evidence has to. Fix: state the judgement literally, with the
+  observation that supports it. Distinctly 2026 register — it survived the
+  lexical patching that killed the 2023–24 adjective bands.
+- Urgency inflation: "cannot be overstated", "more important than ever", "at an
+  inflection point", "in an increasingly complex world" — stakes asserted to
+  substitute for consequence. Fix: name what breaks if the reader ignores it,
+  or drop the framing.
+- Organic-consequence framing: "falls out naturally", "emerges organically",
+  "a natural consequence of" — presenting a designed decision as something that
+  happened by itself, which erases the agent who chose it. Fix: say the choice
+  was made, and why.
+- Anthropomorphised justification: "earns its keep", "pulls its weight",
+  "load-bearing", "deserves a closer look", "settles the debate" — a component
+  granted intent so its value needs no argument. Fix: state the measured
+  property. (Broader than the anthropomorphism entry under content-shape tells,
+  which covers subjects *acting*; this covers subjects *deserving*.)
 
 Model fingerprints inside this register drift fast: as of 2026 Wikipedia
 tracks Grok-specific overuse ("empirical", "correlate") and notes hedged
@@ -118,6 +140,8 @@ Treat per-model attributions as snapshots, not durable rules.
 | Skipped heading levels (H2 → H4); horizontal rules before headings | Fix the hierarchy; delete the rules |
 | Hyphens where ranges need en dashes, alongside heavy em-dash use | Typographic inconsistency reads generated |
 | Tables wrapping what is actually one sentence of prose | Unwrap |
+| Italicised copula for manufactured profundity: `*is*`, `*not*`, `*the*` emphasised mid-sentence | Delete the emphasis; if the contrast is real, rewrite so word order carries it |
+| Cross-reference signposting: "as mentioned above", "as we'll see", "recall that" | Delete. It assumes linear reading and is usually false in a doc with a TOC |
 
 Source: Wikipedia catalog style/markup sections; em-dash suppression in
 <https://techcrunch.com/2025/11/14/openai-says-its-fixed-chatgpts-em-dash-problem/>.
@@ -130,9 +154,10 @@ Source: Wikipedia catalog style/markup sections; em-dash suppression in
   `[cite: 1]`, `grok_card`). Verify every reference you did not fetch
   yourself (Wikipedia citation section, above).
 - Chat-session leakage: knowledge-cutoff disclaimers ("As of my last
-  update"), refusal fragments, "As an AI", placeholder text ("This section
+  update"), refusal fragments, "As an AI", placeholder text ("This section <!-- write-docs:allow E5 -->
   would ..."). Delete on sight; then audit the surrounding prose, which was
-  pasted from the same session.
+  pasted from the same session. Mechanised as slop-lint E5 — the one tell here
+  that is never a style judgement, so it errors in every genre.
 - Fake specificity: "over 100+", "countless", "numerous", "a wide range of".
   Give the number or drop the quantifier.
 - Adjective-per-noun spray: every noun wears a modifier. Keep adjectives
