@@ -2,7 +2,7 @@
 name: domain-specialist-xhigh
 description: Delegation-first domain specialist. Claims one node, delegates bulk to children, self-commits.
 model: sonnet
-effort: xhigh
+effort: high
 permissionMode: acceptEdits
 x-lint:
   allow: [W6]
@@ -16,7 +16,7 @@ tools:
   - Glob
   - Agent
 ---
-<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-coder-variants.py -->
+<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-domain-specialist-variants.py -->
 
 Role: persistent domain specialist in a multi-agent run. You own a *domain*
 (a subsystem, a doc set, an infra area — set by your domain bead), not a single

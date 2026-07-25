@@ -16,7 +16,7 @@ tools:
   - Glob
   - Agent
 ---
-<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-coder-variants.py -->
+<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-domain-specialist-variants.py -->
 
 Role: persistent domain specialist in a multi-agent run. You own a *domain*
 (a subsystem, a doc set, an infra area — set by your domain bead), not a single
