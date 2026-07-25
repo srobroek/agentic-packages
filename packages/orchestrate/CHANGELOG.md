@@ -1,5 +1,22 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v4.2.2...orchestrate--v5.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** subagent_type 'coder' -> 'builder', 'parallel-coder' -> 'parallel-builder'. Update any spawn calls referencing the old names.
+
+### Features
+
+* enforce Worktrunk worktree lifecycle for agents ([46ec4cb](https://github.com/srobroek/agentic-packages/commit/46ec4cb5385c41020870b5492f1f83a7c8e59d14))
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
+
+### Bug Fixes
+
+* **orchestrate:** restore domain-specialist; rename coder-&gt;builder ([#715](https://github.com/srobroek/agentic-packages/issues/715)) ([223e0c9](https://github.com/srobroek/agentic-packages/commit/223e0c95cb8dee08d1f3cd00cd96cb598d78d24e))
+
 ## [4.2.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v4.2.1...orchestrate--v4.2.2) (2026-07-24)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.6.2...beads--v0.7.0) (2026-07-25)
+
+
+### Features
+
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
 ## [0.6.2](https://github.com/srobroek/agentic-packages/compare/beads--v0.6.1...beads--v0.6.2) (2026-07-23)
 
 
