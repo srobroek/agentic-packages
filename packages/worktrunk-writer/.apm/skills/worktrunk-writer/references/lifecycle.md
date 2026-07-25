@@ -27,10 +27,17 @@ fails after creation, `prepare` removes that new checkout with
 any rollback error.
 
 Parent-prepared Beads flows omit `--bead`. The parent stamps the returned
-branch/path/base anchors before spawn, binds the runtime, and authorizes only
-the agent's T0 claim plus validation. After claiming, the agent validates its
+branch, canonical `worktree`, base, stable actor, and lease before spawn,
+waits for the tool-free `WAIT context=<id>` acknowledgement, and binds that
+hook-visible context together with the parent-visible routing handle. It
+stamps `runtime_handle` and `runtime_context`, then releases the actor with
+only `CLAIM {id}`. After claiming under `metadata.actor`, the agent validates its
 actor and lease against Worktrunk and its branch/path against the Bead. A
-self-managed caller may supply `--bead` only after the exact actor claims it.
+`prepare` and `bind` reject `--bead` outright: activation state reaches
+Worktrunk only through `bind --resource`, which requires an unclaimed resource.
+For `execution_kind=artifact`, validation also requires an absolute
+`artifacts_dir` outside the leased checkout. Disposable checkouts never own
+durable run evidence.
 If the parent's anchor stamp fails, it removes the prepared checkout before
 retrying or spawning.
 
@@ -46,8 +53,8 @@ interactive checkouts. Writer readiness never depends on that hook:
 
 | Runtime | Agent launch |
 |---|---|
-| Claude | Give the agent the existing absolute path. Do not request harness-managed worktree isolation. Bind its returned agent ID before releasing the wait-only brief. |
-| Codex | Give the agent the existing absolute path. Bind its returned agent ID, then set each command workdir and every write target beneath the path. |
+| Claude | Allocate the existing absolute path. Record the routing handle and wait for `WAIT context=<id>`, then bind both identities. Every Bash call starts with `cd -- <path>` because Agent has no checkout `cwd` field. |
+| Codex | Allocate the existing absolute path, bind the routing handle and hook context, then set each command workdir and every write target beneath the path. |
 
 Every tool-using agent gets a unique actor, lease, and Worktrunk path, including
 read-only reviewers and auditors. A reviewer uses a short-lived unique
@@ -56,22 +63,39 @@ reporting evidence. It uses a separate review Bead when durable tracking is
 needed; it never reuses the writer's Bead. A subagent that never invokes a tool
 needs no worktree.
 
-Preparation and explicit validation reject duplicate active Beads. The parent
-spawns a wait-only harness agent and binds its returned ID. The bound agent may
-claim and validate; repository tools remain blocked by protocol until
-validation passes. The `PreToolUse` lease hook joins `agent_id` or
-`subagent_id` to the Worktrunk `context`/`contexts` vars, so it rejects a
-missing lease, wrong checkout, reused context, or mismatched lease. A
+Preparation and explicit validation reject duplicate active Beads. The
+PreToolUse spawn hook rejects a first task-bearing spawn and names this skill,
+so a non-orchestrate parent cannot accidentally create an unleased tool user.
+The parent spawns a wait-only harness agent whose bootstrap names its
+post-bind release authority. The SubagentStart hook exposes the hook-visible
+context without a tool call. The parent binds it with the returned routing
+handle, stamps both identities on any activation resource, and only then
+resumes the agent.
+The bound agent may claim and validate; repository tools remain blocked by
+protocol until validation passes. The `PreToolUse` lease hook joins `agent_id` or
+`subagent_id` through the context binding; parent resume and message calls
+join through the routing handle. It rejects a missing lease, wrong checkout,
+reused identity, or mismatched lease. A
+Claude Bash call from the inherited parent directory must begin with an
+explicit `cd -- <leased-path>`; the hook validates that leading target.
+For a claimed `execution_kind=artifact` resource, direct file tools may also
+write beneath its exact external `artifacts_dir`. Bash output redirections
+are parsed as mutation targets and must remain beneath the leased checkout or
+that artifact directory. Other external paths remain denied. A
 claim-holder may bind wait-only implementation children to its own path and
 lease; those children do not receive a Bead or lifecycle authority.
+The routing handle and hook context may be equal, but equality is never
+assumed.
 External launchers set
 `WORKTRUNK_WRITER_LEASE` and `WORKTRUNK_WRITER_ACTOR`. Primary human operations
 in an unleased checkout remain outside the contract.
 
 ## Inventory contract
 
-`inventory` runs `wt list --format=json --branches`. Worktrunk 0.62 returns a
-top-level array; each checked-out item carries top-level `branch` and `path`.
+`inventory` pins `list.json-schema=2` and runs
+`wt list --format=json --branches`. Worktrunk returns an envelope whose `items`
+array carries `branch` and, for each checked-out item, `worktree.path`. The
+schema-1 top-level array is still accepted as compatibility residue.
 `--full` adds forge and CI data and may use the network. Consumers must reject
 any other shape and join a task to exactly one item by both branch and absolute
 path. Activity markers are advisory presence only.

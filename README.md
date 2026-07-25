@@ -157,9 +157,9 @@ direct server map rather than Claude's `mcpServers` wrapper.
 
 ### ⚠️ Steering packages do NOT work via native `/plugin` install
 
-This is the one gotcha. Claude/Codex plugin components are **skills, agents, hooks, MCP servers** — there is **no native component for rules / instructions / always-on steering**. A plugin's `CLAUDE.md` is not loaded, and skills are model-invoked (loaded only on demand), so they can't carry always-on guidance.
+This is the one gotcha. Claude/Codex plugin components are **skills, agents, hooks, MCP servers** -- there is **no native component for rules / instructions / always-on steering**. A plugin's `CLAUDE.md` is not loaded, and skills are model-invoked (loaded only on demand), so they can't carry always-on guidance.
 
-Consequence: installing a **steering** package (`steering-*`, `language-steering-*`) — or the steering *content* inside a few mixed packages — via native `/plugin install` / `codex plugin add` installs only metadata and any other supported components; it contributes no rules. Steering is delivered only by the APM CLI, which maps `.apm/instructions` to Claude rules and compiled Codex `AGENTS.md`:
+Consequence: installing a **steering** package (`steering-*`, `language-steering-*`) -- or the steering *content* inside a few mixed packages -- via native `/plugin install` / `codex plugin add` installs only metadata and any other supported components; it contributes no rules. Steering is delivered only by the APM CLI, which maps `.apm/instructions` to Claude rules and compiled Codex `AGENTS.md`:
 
 ```bash
 apm install steering-pragmatic@srobroek-agentic --target claude,codex
@@ -246,7 +246,7 @@ User-scope support varies by runtime: **fully supported for `claude`, `codex`, a
 
 **Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
 
-> **Caveat — symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
+> **Caveat -- symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
 
 ---
 
@@ -257,12 +257,12 @@ When a release retires or renames packages (see each release's CHANGELOG), refre
 **Global (per machine):**
 
 ```bash
-apm update --global --yes    # bare form ONLY — the single-package form
+apm update --global --yes    # bare form ONLY -- the single-package form
                              # ("apm update --global <pkg>") plans "1 updated,
                              # N removed" and prunes every other global package
 ```
 
-Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` — never hand-edit installed copies; APM skips locally-modified files on every future install.
+Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` -- never hand-edit installed copies; APM skips locally-modified files on every future install.
 
 **Per project:**
 
@@ -274,9 +274,9 @@ apm compile                       # refresh AGENTS.md / CLAUDE.md
 
 Then check for stragglers:
 
-1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` — stale references in project-local steering or docs; edit them out.
-2. `ls .claude/skills/` — orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
-3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed — `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
+1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` -- stale references in project-local steering or docs; edit them out.
+2. `ls .claude/skills/` -- orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
+3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed -- `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
 
 ---
 
@@ -307,8 +307,9 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 `compilation.strategy: distributed` (set in `apm.yml`) places scoped instructions next to the code they apply to via `applyTo:` globs; `single-file` collapses everything into one root file.
 
-<!-- write-docs:allow E3 -->
+<!-- vale WriteDocs.InternalRefs = NO -->
 `--no-constitution` excludes any SpecKit `memory/constitution.md` block -- both the `<!-- SPEC-KIT CONSTITUTION -->` markers and the constitution body -- from a clean compile. (An existing block already on disk is preserved, not regenerated.)
+<!-- vale WriteDocs.InternalRefs = YES -->
 
 ---
 
@@ -368,14 +369,14 @@ fill in the content; [`templates/README.md`](templates/README.md) documents the
 canonical layout and the per-type gotchas. Then:
 
 1. Create `packages/<name>/apm.yml` (`type:` one of `skill | instructions | hooks | hybrid`; explicit `target`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Agent packages use `type: hybrid`; use `target: all` for portable task agents and `target: codex` for Codex-only raw/semantic profiles. Add `.apm/agent-models.yml` beside every agent source so post-deploy injection can restore the Codex model and reasoning effort. Use `type: hooks` for a package whose only primitive is hooks.
-2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** — `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** — an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
+2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** -- `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** -- an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
 3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
 
 Gotchas worth knowing:
 
 - **`build-artifacts` needs `pyyaml`.** The generator scripts import `yaml`; if your toolchain Python lacks it, run them via `uv run --with pyyaml python3 .apm/scripts/<script>.py`. CI gets it transitively from `pip install apm-cli`.
 - **Root `apm.yml` uses `targets:` (a list), not `target: all`.** `apm pack` (0.17.x) rejects the `all` scalar; the list form (`targets: [claude, codex]`) matches the marketplace `outputs:` block and is what pack/compile both accept.
-- **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge — so a bundle that depends on a new package must land **after** that package is released.
+- **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge -- so a bundle that depends on a new package must land **after** that package is released.
 
 **Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and fail loudly when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
 
