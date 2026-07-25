@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.4...agentic-maintenance--v8.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([6eee221](https://github.com/srobroek/agentic-packages/commit/6eee221e133ea777bec62030374ea3f3e43b01fd))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [7.0.4](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.3...agentic-maintenance--v7.0.4) (2026-07-24)
 
 

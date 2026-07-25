@@ -1,5 +1,5 @@
 name: toolchain-cache-policy
-version: 1.0.0
+version: 1.0.1
 description: >-
   Shares bounded package-manager and compiler caches across worktrees without
   redirecting mutable dependencies or branch output into machine-global

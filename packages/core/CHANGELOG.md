@@ -1,5 +1,17 @@
 # Changelog
 
+## [11.1.0](https://github.com/srobroek/agentic-packages/compare/core--v11.0.5...core--v11.1.0) (2026-07-25)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([5781282](https://github.com/srobroek/agentic-packages/commit/57812825a102bbfbc1738860e2f3210e97975889))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [11.0.5](https://github.com/srobroek/agentic-packages/compare/core--v11.0.4...core--v11.0.5) (2026-07-24)
 
 

@@ -1,5 +1,5 @@
 name: code-intelligence
-version: 8.1.3
+version: 8.1.4
 description: >-
   Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR
   reviewer agent, and project-structure steering.

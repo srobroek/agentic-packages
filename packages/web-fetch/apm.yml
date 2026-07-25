@@ -1,5 +1,5 @@
 name: web-fetch
-version: 2.1.0
+version: 2.1.1
 description: >-
   Retrieve current or URL-specific information from the web with source-aware
   tool routing for fetching, browsing, citing, and verifying online.

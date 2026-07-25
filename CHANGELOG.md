@@ -1,5 +1,36 @@
 # Changelog
 
+## [19.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v18.0.0...srobroek-agentic--v19.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* deny unmanaged agent worktrees and route the native worktree lifecycle through Worktrunk ([#725](https://github.com/srobroek/agentic-packages/issues/725))
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724))
+* **write-docs:** requires the vale binary on PATH (mise use -g vale, or brew install vale). Suppression syntax changes from <!-- write-docs:allow E2 --> to Vale's <!-- vale WriteDocs.SlopLexicon = NO --> off/on pairs, which are block-scoped rather than line-scoped.
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729))
+
+### Features
+
+* deny unmanaged agent worktrees and route the native worktree lifecycle through Worktrunk ([#725](https://github.com/srobroek/agentic-packages/issues/725)) ([cc5e4d1](https://github.com/srobroek/agentic-packages/commit/cc5e4d145d50d5aa668cb6ce35d71443d3405966))
+* **write-docs:** check documentation prose with Vale instead of a bespoke linter ([#721](https://github.com/srobroek/agentic-packages/issues/721)) ([43fc7f7](https://github.com/srobroek/agentic-packages/commit/43fc7f766c6f4a9c6317a71f18ba33ff3fbf507c))
+
+
+### Bug Fixes
+
+* close three guard bypasses and eight broken agent references ([#722](https://github.com/srobroek/agentic-packages/issues/722)) ([cbc6875](https://github.com/srobroek/agentic-packages/commit/cbc6875f53b3b048f4fe882bad69305a04e47bc3))
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729)) ([e2292c6](https://github.com/srobroek/agentic-packages/commit/e2292c6c568f801fb96d70df3afffc923e6cc767))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
+
+### Chores
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724)) ([6897316](https://github.com/srobroek/agentic-packages/commit/6897316695052c14b4055e3f8350d5ec1d7327cf))
+
 ## [18.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.3.0...srobroek-agentic--v18.0.0) (2026-07-25)
 
 

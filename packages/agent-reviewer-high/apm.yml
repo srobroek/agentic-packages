@@ -1,5 +1,5 @@
 name: agent-reviewer-high
-version: 2.0.0
+version: 2.0.1
 description: >-
   Adversarial read-only reviewer for security-sensitive and broad-impact
   changes.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.5](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.4...project-lifecycle--v4.2.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [4.2.4](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.3...project-lifecycle--v4.2.4) (2026-07-24)
 
 

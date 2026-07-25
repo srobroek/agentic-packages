@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.3...mcp-gitnexus--v2.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724))
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+
+### Chores
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724)) ([6897316](https://github.com/srobroek/agentic-packages/commit/6897316695052c14b4055e3f8350d5ec1d7327cf))
+
 ## [1.1.3](https://github.com/srobroek/agentic-packages/compare/mcp-gitnexus--v1.1.2...mcp-gitnexus--v1.1.3) (2026-07-24)
 
 

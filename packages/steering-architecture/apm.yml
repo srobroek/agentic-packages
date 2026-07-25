@@ -1,5 +1,5 @@
 name: steering-architecture
-version: 2.1.0
+version: 2.1.1
 description: >-
   Cross-cutting design steering: compose over fork, keep generic cores
   case-agnostic, and make structural invariants a verifiable diff guard. Opt-in

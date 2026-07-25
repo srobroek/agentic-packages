@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/dep-audit--v2.1.0...dep-audit--v2.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/dep-audit--v2.0.0...dep-audit--v2.1.0) (2026-07-16)
 
 

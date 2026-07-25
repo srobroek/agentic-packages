@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.1.0...mcp-mempalace--v1.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/mcp-mempalace--v1.0.2...mcp-mempalace--v1.1.0) (2026-07-22)
 
 

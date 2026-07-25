@@ -1,6 +1,6 @@
 {
   "name": "agent-worker",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Bounded implementation worker for changes without a more specific coding role.",
   "author": {
     "name": "Sjors Robroek"
