@@ -1,6 +1,6 @@
 # Report & Journal Schema
 
-## `journal.jsonl` — one CaseResult per line, appended as cases complete
+## `journal.jsonl` -- one CaseResult per line, appended as cases complete
 
 ```json
 {"agent":"reviewer-low","case":"case-clean","verdict":"PASS",
@@ -42,7 +42,7 @@ Invariants:
 
 ## `report.md`
 
-Human summary: totals line, then one table row per agent-case —
-`| agent | case | verdict | model(source) | words | duration | cost |` —
+Human summary: totals line, then one table row per agent-case --
+`| agent | case | verdict | model(source) | words | duration | cost |` --
 followed by a failures section quoting `failed_assertions` details and
 `reply_path` links, and the skip table with reasons. No raw replies inline.

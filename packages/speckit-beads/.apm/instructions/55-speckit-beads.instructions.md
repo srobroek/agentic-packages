@@ -1,5 +1,5 @@
 ---
-description: Beads-backed SpecKit workflow — formula, molecules, and task-state rules.
+description: Beads-backed SpecKit workflow -- formula, molecules, and task-state rules.
 applyTo: "{.specify/**,specs/**,.beads/**,**/spec.md,**/tasks.md}"
 ---
 

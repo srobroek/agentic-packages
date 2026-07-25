@@ -1,4 +1,4 @@
-# Gates — human decisions and external waits
+# Gates -- human decisions and external waits
 
 A gate makes "do not proceed without X" a bead in the DAG rather than a convention an agent must recall.
 
@@ -15,7 +15,7 @@ type = "human"
 
 `[steps.gate]` must be a TOML **table**, not a string.
 
-At pour a gated step yields **two** beads — the step, and `Gate: <type>` with id
+At pour a gated step yields **two** beads -- the step, and `Gate: <type>` with id
 `<formula>.gate-<step-id>`:
 
 ```
@@ -31,7 +31,7 @@ At pour a gated step yields **two** beads — the step, and `Gate: <type>` with 
 | `timer` | elapsed `timeout` | `bd gate check` |
 | `gh:run` | a GitHub Actions workflow | `bd gate check` via `gh run view` |
 | `gh:pr` | a PR merge | `bd gate check` via `gh pr view` |
-| ~~`bead`~~ | — | **DEAD.** Multi-rig routing removed; permanently open |
+| ~~`bead`~~ | -- | **DEAD.** Multi-rig routing removed; permanently open |
 
 Four fields:
 
@@ -49,7 +49,7 @@ id = "release.yml"
 timeout = "30m"
 ```
 
-Verified: `timeout` survives cook, and a `timer` gate auto-resolves —
+Verified: `timeout` survives cook, and a `timer` gate auto-resolves --
 `bd gate check` reported `resolved - timer expired 2s ago`.
 
 ## An unrecognised type stalls silently
@@ -63,7 +63,7 @@ Checked 0 gates: 0 resolved, 0 escalated, 0 errors
 ```
 
 **Skipped, not errored.** The step waits forever under automation with nothing reporting why.
-`bd gate resolve <id>` still closes it by hand, so it is a stall rather than a deadlock — but the cause
+`bd gate resolve <id>` still closes it by hand, so it is a stall rather than a deadlock -- but the cause
 is invisible. Assert the vocabulary in CI; the tool will not.
 
 ## Nothing runs `bd gate check`
@@ -79,7 +79,7 @@ There is **no daemon**. Three patterns exist and no more:
 `bd hooks` installs git hooks only; the Claude and Codex integrations install `SessionStart` to
 `bd prime` only. **Decide the runner before designing a non-`human` gate**, or it is decoration.
 
-`bd gate check --escalate` marks failed `gh:*` gates for attention — that is what makes a CI-bounce path
+`bd gate check --escalate` marks failed `gh:*` gates for attention -- that is what makes a CI-bounce path
 work.
 
 ## Resume
@@ -88,7 +88,7 @@ Discovery-based: **`bd ready --gated`**.
 
 Two traps. `bd mol ready --gated` errors with `unknown flag: --gated` even though the binary's own help
 documents that form. And `--gated` returns a molecule only when the gate is closed **and every other
-predecessor is closed** — probed: resolving a gate whose step still had an open non-gate predecessor left
+predecessor is closed** -- probed: resolving a gate whose step still had an open non-gate predecessor left
 `bd ready --gated` reporting `No molecules ready for gate-resume dispatch`. A dispatcher polling only
 `--gated` misses work that became ready by the ordinary path. Poll `bd ready` too.
 

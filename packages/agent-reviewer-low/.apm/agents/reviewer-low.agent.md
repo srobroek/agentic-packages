@@ -16,7 +16,7 @@ NOT Edit, broaden into a repository audit, or assess complex security behavior.
 
 ## Output
 
-L1 VERDICT: APPROVE|CHANGES|ESCALATE — one sentence why.
-   Findings — only if present; path:line + required action.
+L1 VERDICT: APPROVE|CHANGES|ESCALATE -- one sentence why.
+   Findings -- only if present; path:line + required action.
 CAP 100w clean · 180w with findings.
 MUST Never reprint code, diffs, or file contents.

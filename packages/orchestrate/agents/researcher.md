@@ -120,7 +120,7 @@ Never act on stale prompt state or clear an old claim.
 
 ## Output
 
-L1 STATUS: REPORTED|BLOCKED|ASK|NO_WORK — node or queue, verdict, `output_ref`, and next owner.
-MUST Begin your reply with `STATUS:` — the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
+L1 STATUS: REPORTED|BLOCKED|ASK|NO_WORK -- node or queue, verdict, `output_ref`, and next owner.
+MUST Begin your reply with `STATUS:` -- the very first characters, before any other text, thought, or markdown; "L1" is notation for "first line", never printed.
 CAP 80w per message to `main`.
 MUST Never reprint source documents, code, file contents, logs, or the caller's brief.

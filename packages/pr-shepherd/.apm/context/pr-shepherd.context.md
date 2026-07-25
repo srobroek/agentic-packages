@@ -8,11 +8,11 @@ MUST Before `gh pr create`, create one open, unassigned merge bead labeled
 MUST For every `Closes-Bead: <work>` add `bd dep add <work> <merge-bead>`.
   One work bead may depend on many merge beads; one merge bead may block many.
   `Tracks-Bead` adds no blocking edge.
-NOT A gh:pr gate blocking a merge bead — deadlocks integrator queue.
+NOT A gh:pr gate blocking a merge bead -- deadlocks integrator queue.
   A gh:run gate may block merge work for CI.
 DEFAULT `bd graph` for fan-in/fan-out; `bd ready` for dependency satisfaction;
   `bd swarm validate <epic>` for structural validation.
-MUST `state:approved` freezes closing edges — never add a late edge to approved
+MUST `state:approved` freezes closing edges -- never add a late edge to approved
   or closed work automatically; record the mismatch for human resolution.
 
 AUTHOR LIFECYCLE
@@ -21,9 +21,9 @@ MUST PR authorship rules (draft creation, promotion criteria, Beads body
   "Beads linkage").
 MUST Authors push branch/PR, write residual context onto their bead per beads
   SESSION CLOSE, set to reported/approved, release claim, and exit. Never stay
-  alive waiting for CI or merge — the merge bead plus shepherd own the wait.
+  alive waiting for CI or merge -- the merge bead plus shepherd own the wait.
 
-SHEPHERD PASS (stateless — any session, /loop, or cron)
+SHEPHERD PASS (stateless -- any session, /loop, or cron)
 DEFAULT `bd gate check` then drain `bd ready --label agent:integrator
   --unassigned --json`; per bead: probe PR eligibility before claiming;
   ignore drafts and automated release PRs, otherwise claim, probe
@@ -67,5 +67,5 @@ MUST One `bd merge-slot create` per repo (idempotent); `acquire` without
   path. A held slot ends this pass for that PR.
 
 DEAD CLAIMS
-MUST Claim refusal = live holder — skip. Force-release only after confirming
+MUST Claim refusal = live holder -- skip. Force-release only after confirming
   holder session is dead (no activity since before your session started).

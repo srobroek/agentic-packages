@@ -3,7 +3,7 @@
 ## Prerequisites & setup
 
 - Node 20+, Rust/Cargo, and the Tauri CLI available.
-- Add the `tauri-plugin-mcp-bridge` crate and enable `withGlobalTauri` — dev
+- Add the `tauri-plugin-mcp-bridge` crate and enable `withGlobalTauri` -- dev
   builds only; see the safety rule in
   [the index](tauri.tauri-mcp-index.context.md).
 - The app must be **running** for the MCP tools to connect; the bridge listens on
@@ -13,7 +13,7 @@
 
 `withGlobalTauri` injects the `window.__TAURI__` global into the webview,
 exposing the full Tauri API (`invoke`, `event`, …) on `window` without importing
-`@tauri-apps/api`. The MCP bridge **needs** it — it drives the webview by
+`@tauri-apps/api`. The MCP bridge **needs** it -- it drives the webview by
 executing JS against `window.__TAURI__`. Frontends that reach the backend through
 generated bindings (e.g. tauri-specta) never use the global at runtime, so
 production does not need it.

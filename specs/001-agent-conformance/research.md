@@ -1,10 +1,10 @@
-# Phase 0 Research — Agent Regression Harness
+# Phase 0 Research -- Agent Regression Harness
 
 All NEEDS CLARIFICATION items from Technical Context resolved below.
 
 ## R1. Execution vehicle: how to run a shipped agent definition
 
-**Decision** *(revised 2026-07-24 — see decisions-log)*: split the harness
+**Decision** *(revised 2026-07-24 -- see decisions-log)*: split the harness
 into a deterministic engine and an in-session sweep driver.
 
 - **Engine** (`conformance.py`, Python stdlib + PyYAML): subcommands `check`
@@ -15,9 +15,9 @@ into a deterministic engine and an in-session sweep driver.
   journal). Everything except the model call itself.
 - **Sweep driver**: a Claude Code session following the package's
   `/agent-conformance` skill. For each staged case the session spawns the
-  target agent **via the Task tool** — the exact production spawn path (the
+  target agent **via the Task tool** -- the exact production spawn path (the
   installed agent definition, its pinned model/effort, SubagentStart
-  injection, guard hooks all active) — with the fixture prompt, saves the
+  injection, guard hooks all active) -- with the fixture prompt, saves the
   subagent's final reply verbatim to the staged reply path, then calls
   `assert`. Parallel Task spawns give the concurrency; the skill mandates
   save-then-assert so no judgment is delegated to the LLM.
@@ -29,7 +29,7 @@ into a deterministic engine and an in-session sweep driver.
 **Rationale**:
 - **Billing constraint (user-reported, probe-confirmed)**: headless
   `claude -p` bills the API meter (probe: $0.165 for a haiku ping), not the
-  subscription. In-session Task spawns are subscription-covered — a fleet
+  subscription. In-session Task spawns are subscription-covered -- a fleet
   sweep must not cost API dollars for local maintainers.
 - **Fidelity is strictly better**: Task-tool spawn *is* how subagents run in
   production. The headless reconstruction (system prompt file + tool flags)
@@ -37,7 +37,7 @@ into a deterministic engine and an in-session sweep driver.
 - **Security**: the pre-implementation security review rated headless
   `--safe-mode` HIGH-risk (guard hooks stripped while Bash-bearing agents run
   unjailed). In-session spawns keep every PreToolUse guard active and stay
-  inside the session's permission model — the finding is eliminated rather
+  inside the session's permission model -- the finding is eliminated rather
   than mitigated.
 - The deterministic engine remains 100% pytest-coverable in CI (no LLM),
   preserving the per-PR layer (R9).
@@ -56,7 +56,7 @@ into a deterministic engine and an in-session sweep driver.
 **Accepted tradeoff**: the sweep driver is an LLM session following a skill,
 so sweep orchestration itself is not a deterministic program. Mitigations:
 `stage` writes an explicit manifest (the session cannot silently drop a
-case — `report` fails on journal/manifest mismatch), `assert`/`report` are
+case -- `report` fails on journal/manifest mismatch), `assert`/`report` are
 pure, and the reply file is the subagent's verbatim final message. Driver
 integrity hardening (critique HIGH-1): SKILL.md mandates writing the Task
 result to `reply_path` directly with no editing, summarizing, or reformat;
@@ -66,7 +66,7 @@ skill-driven verification (verify/pr-shepherd skills).
 
 **Context inheritance is accepted fidelity, made observable** (critique
 HIGH-2): Task spawns inherit the session's injection stack (SubagentStart
-inject, guard hooks) exactly as production spawns do — that *is* the shipped
+inject, guard hooks) exactly as production spawns do -- that *is* the shipped
 configuration under test; "fixture is the only context" applies to
 task-shaped input, not the runtime preamble. To make environment-induced
 drift diagnosable, `stage` records a `context_fingerprint` in the manifest
@@ -80,17 +80,17 @@ drift rather than contract drift.
 **Decision**: Two-layer approach. (1) Each conformance case YAML declares the
 concrete expectations (first-line regex, cap words, regime). (2) A
 deterministic, LLM-free `check` mode re-derives the declarable slice from the
-agent source — first-line pattern from the `## Output` section's `L1`/verdict
-line, cap regime from the `CAP` line, no-reprint rule presence — and fails on
+agent source -- first-line pattern from the `## Output` section's `L1`/verdict
+line, cap regime from the `CAP` line, no-reprint rule presence -- and fails on
 mismatch with the case file (FR-011, SC-004).
 
 **Rationale**: Pure source-derivation is brittle (contracts are prose-adjacent:
 `LINT-GUARD <node> verdict=PASS|WARN|BLOCK items=<N>` vs `L1 VERDICT:
-APPROVE|CHANGES — one sentence why` vs ledger-scribe's "Answer queries in ≤
+APPROVE|CHANGES -- one sentence why` vs ledger-scribe's "Answer queries in ≤
 100 words"). Pure hand-declaration drifts. Declaring in the fixture and
 cross-checking against source catches both failure modes and keeps the agent
 file authoritative. The extraction reuses the parsing idioms already proven in
-`packages/write-agentic/.../lint.py` (CAPS enum regex, CAP-line detection) —
+`packages/write-agentic/.../lint.py` (CAPS enum regex, CAP-line detection) --
 patterns, not imports, to respect package self-containment.
 
 **Alternatives considered**: full auto-derivation (rejected: ~6 of 34 contracts
@@ -118,12 +118,12 @@ checks a directory-listing exercise.
 
 **Decision** *(refined per critique findings 4, 5, 7)*:
 - **First line**: regex match against the first non-empty line of the reply.
-  Optional — prose-contract agents (e.g. ledger-scribe) have no L1 pattern;
+  Optional -- prose-contract agents (e.g. ledger-scribe) have no L1 pattern;
   when both the case omits `assert.first_line` and the derived contract has
   none, `check` warns (not fails) and the assertion is skipped.
 - **Word cap**: `len(reply.split())` (Python semantics: split on any
   whitespace run; `path:line` is one token) ≤ declared cap for the fixture's
-  regime; skipped when the contract declares uncapped. No grace multiplier —
+  regime; skipped when the contract declares uncapped. No grace multiplier --
   caps are the contract; production parsers budget on the stated numbers.
 - **No-reprint**: fixture content (prompt + staged files) is segmented at
   line boundaries; fail only if the reply contains a verbatim run of ≥160
@@ -137,39 +137,39 @@ checks a directory-listing exercise.
 - **Side-effect artifacts** (FR-005): fixture declares expected files
   (path glob + per-line verdict regex), checked in the sandbox after the run.
 - **Reply plausibility floor**: a reply file under 50 bytes for a non-trivial
-  case is ERROR (`implausible-reply`), not judged — defends against the
+  case is ERROR (`implausible-reply`), not judged -- defends against the
   sweep driver truncating or paraphrasing a save (critique HIGH-1).
 
 **Rationale**: every assertion is a pure function of (reply, fixture,
-declared contract) — reproducible offline against persisted artifacts.
+declared contract) -- reproducible offline against persisted artifacts.
 
 ## R5. Verdicts, retries, flake policy
 
 **Decision**: PASS / FLAKY / FAIL / ERROR / SKIP as specified (FR-006).
 Default 2 retries after first failure; a retry is a fresh spawn (fresh
-sample), assertion layer identical. FLAKY = any retry passed — semantically
+sample), assertion layer identical. FLAKY = any retry passed -- semantically
 "this agent's contract holds probabilistically, not reliably", which is
 exactly the signal wanted for prompt-tightening even though each sample is
 independent. ERROR = spawn failure, missing/implausible reply, timeout at
-the transport layer, config failure — never counted as an agent regression.
+the transport layer, config failure -- never counted as an agent regression.
 Exit code: 0 all PASS/SKIP; 1 any FAIL; 2 any ERROR; FLAKY configurable
 (`--strict-flaky` → exit 1), default exit 0 with prominent report line.
 **Flake escalation** (critique finding 6): `report` compares against prior
 run reports found in the out-dir's parent; an agent-case FLAKY in ≥3
 consecutive recorded runs is promoted to FAIL with kind
-`chronic-flake` — persistent boundary-oscillation is a real contract
+`chronic-flake` -- persistent boundary-oscillation is a real contract
 regression, not noise.
 
 ## R6. Model/effort pin resolution
 
 **Decision**: in the default in-session engine, pins are honored by
-construction — the Task tool spawns the *installed* agent definition, whose
+construction -- the Task tool spawns the *installed* agent definition, whose
 frontmatter carries `model:`/`effort:`; the harness never re-resolves them.
 `stage` still parses the pins into the manifest so `report` can stamp
 `model`, `effort`, and `model_source: pinned` per case, and `check` verifies
 the installed agent registry contains every in-scope agent (a missing install
 is a staging error, not a FAIL). Agents without a `model:` pin inherit the
-spawning session's model in production and in the sweep alike —
+spawning session's model in production and in the sweep alike --
 `model_source: inherited-session` marks these visibly weaker-evidence
 verdicts. A model override (P3 iteration) is a sweep-driver instruction
 (spawn with `model:` param); the reply manifest records `model_source:
@@ -179,9 +179,9 @@ override` (FR-008). The headless fallback keeps the previous
 ## R7. Concurrency and runtime budget
 
 **Decision**: the sweep driver spawns Task subagents in parallel batches
-(default 4 per batch, skill-specified). 34 agents × ~1–2 cases × (10–60s per
+(default 4 per batch, skill-specified). 34 agents × ~1 to 2 cases × (10 to 60s per
 spawn) in 4-wide batches fits the 30-minute fleet budget (SC-002) with
-headroom for retries; a scoped single-agent run is 1–3 spawns ≈ under 3
+headroom for retries; a scoped single-agent run is 1 to 3 spawns ≈ under 3
 minutes (SC-005). Cost control: subscription-covered spawns make the
 per-case `budget_usd` cap advisory in-session (recorded, not enforced); the
 headless engine enforces it via `--max-budget-usd` plus an aggregate
@@ -204,7 +204,7 @@ assembled from the journal, so a partial run leaves a valid partial journal
 `packages/*/.apm/agents/*.agent.md` has ≥1 case dir or a `skips.yaml` entry;
 (b) no case/skip references a nonexistent agent; (c) every case's declared
 expectations match the source-derived contract slice (R2). Two CI surfaces
-(critique finding 3 — fixture-rot defense; both deterministic and free, so
+(critique finding 3 -- fixture-rot defense; both deterministic and free, so
 within the local-only-v1 ruling which deferred only the *LLM* sweep;
 FR-009 explicitly permits per-PR deterministic checks):
 1. Ships as the package's pytest suite → per-package CI matrix runs it on
@@ -212,7 +212,7 @@ FR-009 explicitly permits per-PR deterministic checks):
 2. A repo-level `conformance-check` step in test.yml (alongside the existing
    `agentic-lint` job, same shape) runs `check` whenever any
    `packages/*/.apm/agents/*.agent.md` or `packages/agent-conformance/**`
-   changes — so editing an agent's contract in *another* package fails
+   changes -- so editing an agent's contract in *another* package fails
    per-PR when its fixture drifts, instead of waiting for the next manual
    sweep.
 
@@ -228,20 +228,20 @@ headless engine.
 
 Findings and dispositions (full text on bead orc-mol-q72):
 
-1. **HIGH — headless `--safe-mode` strips guard hooks while Bash-bearing
+1. **HIGH -- headless `--safe-mode` strips guard hooks while Bash-bearing
    agents run unjailed** → eliminated for v1 by the in-session engine (guards
    active, session permission model applies). For the orc-qrt headless
    engine: default `--tools Read,Grep,Glob` (contract testing doesn't need
    write/exec), `--permission-mode plan` when an agent's tools include Bash.
-2. **MED — path traversal via `sandbox.files` keys** → `check`/`stage`
+2. **MED -- path traversal via `sandbox.files` keys** → `check`/`stage`
    validation: keys must be relative, no `..` segments, no leading `/`,
    resolved path must stay under the sandbox root.
-3. **MED — credential leakage into persisted replies** → largely eliminated
+3. **MED -- credential leakage into persisted replies** → largely eliminated
    in-session (guards + no raw key in env of spawned agent); additionally
    `assert` scans every persisted reply (PASS included) for high-entropy
    token patterns and redacts before writing.
-4. **LOW — no aggregate run budget** → in-session: advisory (subscription);
+4. **LOW -- no aggregate run budget** → in-session: advisory (subscription);
    headless: `--max-run-budget-usd` default $25, aborts remaining cases.
-5. **LOW — regex catastrophic backtracking from fixture patterns** →
+5. **LOW -- regex catastrophic backtracking from fixture patterns** →
    `check` rejects patterns exceeding a length/complexity bound;
    `assert` wraps matching in a hard timeout (SIGALRM, 5s per pattern).

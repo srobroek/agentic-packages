@@ -2,7 +2,7 @@
 
 Rules for repositories where beads mirror out to GitHub issues.
 
-MUST Mirror with `bd github push <ids>`, never by hand-creating the issue —
+MUST Mirror with `bd github push <ids>`, never by hand-creating the issue --
   the push records the `External:` back-link on the bead, so a hand-made issue
   leaves the two unlinked. `--dry-run` first.
 DEFAULT Supply credentials per invocation
@@ -14,7 +14,7 @@ MUST Expect mirrored issues to carry bd's OWN label scheme (`priority::medium`,
   repo with its own vocabulary (`priority-p2`, `spec:NNN`, component labels)
   will not match, so mirrored issues drop out of every existing triage query
   while looking correctly filed.
-NOT Hand-correcting those labels on GitHub — `bd github push` REPLACES the whole
+NOT Hand-correcting those labels on GitHub -- `bd github push` REPLACES the whole
   label set from bd on every sync, so any manual fix is silently undone the next
   time that bead is pushed (verified 2026-07-20: labels applied via `gh api`
   were wiped by the next push, twice). `bd update` has no `--label` flag, so the

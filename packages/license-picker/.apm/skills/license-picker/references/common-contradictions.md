@@ -2,7 +2,7 @@
 
 When the user's stated goals conflict, surface the contradiction explicitly
 rather than silently compromising. Present it as "you want X and Y, but they
-pull in opposite directions — which matters more?"
+pull in opposite directions -- which matters more?"
 
 ## 1. "I want reciprocity" + "I want zero adoption friction"
 
@@ -16,7 +16,7 @@ you must choose which you value more.
 
 ## 2. "Not too strong copyleft" + "forks should stay open"
 
-**The conflict:** file-level copyleft (MPL) has a new-file loophole — forks can
+**The conflict:** file-level copyleft (MPL) has a new-file loophole -- forks can
 add closed features alongside your open files. Only strong copyleft (GPL/AGPL)
 prevents this. "Not too strong" and "forks stay open" are incompatible demands.
 
@@ -58,7 +58,7 @@ Which role are you optimizing for?"
 **The conflict:** Apache provides zero reciprocity. If the user previously said
 they value reciprocity, "Apache should be sufficient" contradicts that.
 
-**Resolution:** push back directly — "sufficient for what? You said X bothers
+**Resolution:** push back directly -- "sufficient for what? You said X bothers
 you, and Apache permits exactly X. Either the principle is softer than stated,
 or the license doesn't match your values. Which is it?" Force the user to
 resolve the ambiguity rather than leaving it vague.

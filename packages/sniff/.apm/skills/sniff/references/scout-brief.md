@@ -1,13 +1,13 @@
 # Bloodhound Brief Template
 
-Use this to construct the prompt for each `bloodhound` agent spawned in step 4 —
+Use this to construct the prompt for each `bloodhound` agent spawned in step 4 --
 one per language slice in the fan-out plan (a language may be split across
 several hounds by subtree). Fill every field. Pass **facts only**: the language,
 the scope, the handed Step-3 findings, and the language-doc path. Do not pass
-your own hypotheses about what is wrong — bloodhound finds independently.
+your own hypotheses about what is wrong -- bloodhound finds independently.
 
 Spawn the hounds in parallel (single message, multiple Agent calls) per the
-fan-out plan from workflow.md Step 4 — one per language as the floor, but a large
+fan-out plan from workflow.md Step 4 -- one per language as the floor, but a large
 language is split across several hounds by subtree/crate/dir, each with its own
 narrowed Scope. The agent is read-only.
 
@@ -64,9 +64,9 @@ raw findings.
 - **Hand findings, don't re-run.** Each Brief carries that slice's Step-3 tool
   findings (config-correct); the hound verifies + adds the reading layer. Only
   populate "Tools to run YOURSELF" when Step 3 did not cover a tool for this
-  language — and if you do, tell the hound to confirm availability with
+  language -- and if you do, tell the hound to confirm availability with
   `command -v` / `runnable` and prefer ground truth (a `SHIM` counts as missing),
   so a stale list doesn't silently drop a smell dimension.
-- **Scope tightly.** Pass real paths, not "the whole repo" — for a split language,
+- **Scope tightly.** Pass real paths, not "the whole repo" -- for a split language,
   the specific subtree this hound owns. Keeps the scan focused and findings
   locatable, and stops two hounds covering the same files.

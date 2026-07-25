@@ -1,7 +1,7 @@
-# Terraform / HCL — Sniff Reference
+# Terraform / HCL -- Sniff Reference
 
 Terraform infrastructure-as-code: `.tf` / `.tf.json` files, modules, provider
-and backend config. This is a *functional* config format — the dominant concerns
+and backend config. This is a *functional* config format -- the dominant concerns
 are security misconfiguration, reliability (state/lifecycle), and maintainability
 (duplication, hardcoding), not syntax.
 
@@ -20,19 +20,19 @@ Primary first. Exact invocation + machine-readable flag. Canonical detail in
 
 | Tool | Invocation | Covers | Tier | Installed via |
 |------|-----------|--------|------|---------------|
-| tflint | **Run recipe.** Either `cd` to the module dir and run `tflint --format json`, or from the repo root run `tflint --recursive --format json` to walk every module. Run `tflint --init` first to load the provider ruleset (AWS/GCP/Azure). Auto-reads `.tflint.hcl` for enabled plugins/rules (project config governs). **Exit:** 0 = clean · 2 = issues found → parse the JSON `issues[]` (each has `rule`/`message`/`range`) · 1 = a tflint error (bad config, plugin load failure) = INVALID, never "clean". **Gotcha:** without `--init` the provider rules are silently absent — coverage gap, not a clean run. | provider-aware rules: deprecated syntax, unpinned providers, invalid instance types, unused declarations, naming | default-on | `install-tools.sh --install infra` |
-| terraform fmt | **Run recipe.** `terraform fmt -check -recursive` from repo root — `-check` reports drift without rewriting, `-recursive` descends into submodules; it prints the paths of mis-formatted files. **Exit:** 0 = all canonical · non-zero = drift (the listed files are the finding, advisory style only) · a parse error on malformed HCL = INVALID. Built-in toolchain, no config. | canonical formatting (style); built-in toolchain | default-on | bundled toolchain |
-| terraform validate | **Run recipe.** `terraform validate -json` from inside the module dir — it validates type/reference correctness against an **initialized** module, so `terraform init` (or `-backend=false`) must have run first. **Exit:** 0 = valid (read `valid`/`diagnostics` in the JSON) · 1 = validation diagnostics → parse `diagnostics[]`. **Gotcha:** if the module is not initialized, validate errors out — do NOT report that as a finding; note "validate skipped, module not initialized" as a coverage gap and lean on tflint instead (CI often lacks init). | type/reference validity within an initialized module; built-in toolchain | default-on | bundled toolchain |
-| trivy | **Run recipe (opt-in, security).** `trivy config --format json <dir>` from repo root — `<dir>` is the Terraform root/module dir (trivy walks it for `.tf`). No tflint-style init needed; reads `.trivyignore` for suppressions. **Exit:** by default 0 even with findings unless `--exit-code 1` is set — so **do not infer clean from exit 0**; parse the JSON `Results[].Misconfigurations[]` (each has `ID`/`Severity`/`Message`) · a scan/parse crash = INVALID. Security pass, not a code smell. | IaC misconfig: open ingress, public buckets, missing encryption, IAM `*` | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
-| checkov | **Run recipe (opt-in, security).** `checkov -d <dir> -o json` from repo root — `-d` points at the Terraform dir (recurses). Reads `.checkov.yaml` for skips/config if present. **Exit:** 0 = no failed checks · non-zero = failed checks → parse the JSON `results.failed_checks[]` (`check_id`/`check_name`/`file_path`) · a crash = INVALID. Overlaps trivy heavily; reserve checkov for benchmark-grade policy runs. | deep policy checks (1000+ rules): CIS benchmarks, encryption, logging | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
+| tflint | **Run recipe.** Either `cd` to the module dir and run `tflint --format json`, or from the repo root run `tflint --recursive --format json` to walk every module. Run `tflint --init` first to load the provider ruleset (AWS/GCP/Azure). Auto-reads `.tflint.hcl` for enabled plugins/rules (project config governs). **Exit:** 0 = clean · 2 = issues found → parse the JSON `issues[]` (each has `rule`/`message`/`range`) · 1 = a tflint error (bad config, plugin load failure) = INVALID, never "clean". **Gotcha:** without `--init` the provider rules are silently absent -- coverage gap, not a clean run. | provider-aware rules: deprecated syntax, unpinned providers, invalid instance types, unused declarations, naming | default-on | `install-tools.sh --install infra` |
+| terraform fmt | **Run recipe.** `terraform fmt -check -recursive` from repo root -- `-check` reports drift without rewriting, `-recursive` descends into submodules; it prints the paths of mis-formatted files. **Exit:** 0 = all canonical · non-zero = drift (the listed files are the finding, advisory style only) · a parse error on malformed HCL = INVALID. Built-in toolchain, no config. | canonical formatting (style); built-in toolchain | default-on | bundled toolchain |
+| terraform validate | **Run recipe.** `terraform validate -json` from inside the module dir -- it validates type/reference correctness against an **initialized** module, so `terraform init` (or `-backend=false`) must have run first. **Exit:** 0 = valid (read `valid`/`diagnostics` in the JSON) · 1 = validation diagnostics → parse `diagnostics[]`. **Gotcha:** if the module is not initialized, validate errors out -- do NOT report that as a finding; note "validate skipped, module not initialized" as a coverage gap and lean on tflint instead (CI often lacks init). | type/reference validity within an initialized module; built-in toolchain | default-on | bundled toolchain |
+| trivy | **Run recipe (opt-in, security).** `trivy config --format json <dir>` from repo root -- `<dir>` is the Terraform root/module dir (trivy walks it for `.tf`). No tflint-style init needed; reads `.trivyignore` for suppressions. **Exit:** by default 0 even with findings unless `--exit-code 1` is set -- so **do not infer clean from exit 0**; parse the JSON `Results[].Misconfigurations[]` (each has `ID`/`Severity`/`Message`) · a scan/parse crash = INVALID. Security pass, not a code smell. | IaC misconfig: open ingress, public buckets, missing encryption, IAM `*` | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
+| checkov | **Run recipe (opt-in, security).** `checkov -d <dir> -o json` from repo root -- `-d` points at the Terraform dir (recurses). Reads `.checkov.yaml` for skips/config if present. **Exit:** 0 = no failed checks · non-zero = failed checks → parse the JSON `results.failed_checks[]` (`check_id`/`check_name`/`file_path`) · a crash = INVALID. Overlaps trivy heavily; reserve checkov for benchmark-grade policy runs. | deep policy checks (1000+ rules): CIS benchmarks, encryption, logging | opt-in (security pass, not a smell) | `install-tools.sh --install security` |
 
 Notes: `tflint` is the provider-aware meta-linter (init plugins with `tflint --init`
 to load the AWS/GCP/Azure ruleset); it plus `terraform fmt -check` and
 `terraform validate` are the default-on correctness/style pass. `trivy config` and
 `checkov` are the **security** pass (opt-in, not smell): they overlap heavily on
-misconfig — run both on a deep pass, but if one is present trivy is faster and
+misconfig -- run both on a deep pass, but if one is present trivy is faster and
 covers the same top-severity findings; reserve checkov for benchmark-grade policy
-runs. **tfsec is deprecated — its rules folded into `trivy config`; use trivy, not
+runs. **tfsec is deprecated -- its rules folded into `trivy config`; use trivy, not
 tfsec.** `terraform validate` only checks an *initialized* module (`terraform init`
 must have run); skip in CI where init is unavailable and lean on tflint instead.
 
@@ -56,9 +56,9 @@ Beyond what tools flag. Each: what it looks like + the idiomatic alternative.
 
 ## Idioms & style authorities
 
-- Terraform Style Guide — https://developer.hashicorp.com/terraform/language/style
-- Module structure & standard module layout — https://developer.hashicorp.com/terraform/language/modules/develop/structure
-- tflint ruleset (AWS) — https://github.com/terraform-linters/tflint-ruleset-aws/tree/master/docs/rules
+- Terraform Style Guide -- https://developer.hashicorp.com/terraform/language/style
+- Module structure & standard module layout -- https://developer.hashicorp.com/terraform/language/modules/develop/structure
+- tflint ruleset (AWS) -- https://github.com/terraform-linters/tflint-ruleset-aws/tree/master/docs/rules
 - Key conventions: pin provider versions and commit the lock file; factor repeated
   infra into modules with explicit `variable`/`output` (every one documented);
   use `for_each` over `count` for keyed resources to avoid reindex churn; keep all
@@ -79,7 +79,7 @@ fix is composition + `for_each`, not inheritance.
 
 ## Pragmatism notes (for the adversarial pass)
 
-- Not every repeated block needs a module. Two uses is borderline — a module pays
+- Not every repeated block needs a module. Two uses is borderline -- a module pays
   off at 3+ call sites or when the block has real internal variation. Premature
   modularization adds indirection (Speculative Generality, `/smells/speculative-generality`).
 - `count` is fine and idiomatic for simple N-identical-replicas (`count = 3`); the
@@ -90,4 +90,4 @@ fix is composition + `for_each`, not inheritance.
 - A single local-state throwaway/sandbox module legitimately skips remote backend;
   weight the "no remote state" smell by whether the code looks production-bound.
 - Security smells (public `0.0.0.0/0` ingress on admin ports, IAM `*:*`, plaintext
-  secrets) are rarely false positives — weight them high in the severity column.
+  secrets) are rarely false positives -- weight them high in the severity column.

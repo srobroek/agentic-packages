@@ -19,7 +19,7 @@ recommending agent names that may not be installed in the consuming project.
 The inherit-by-default subagent_type list (agent types with no pinned model:
 `general-purpose`, `Explore`, `Plan`, `claude`, `fork`) is overridable per
 project via the `SUBAGENT_MODEL_GUARD_INHERIT_TYPES` environment variable
-(comma-separated) without a package release — set it when a project defines
+(comma-separated) without a package release -- set it when a project defines
 its own unpinned custom agent types that should also be gated, or to shrink
 the list if a project's `general-purpose` usage is intentionally cheap.
 

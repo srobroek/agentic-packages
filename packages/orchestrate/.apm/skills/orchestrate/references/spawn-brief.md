@@ -1,9 +1,9 @@
 # Writing an agent brief
 
 Every subagent starts with fresh context. The brief must carry everything the agent
-needs to act and participate in the run — bead id, owned scope, base ref, run epic
+needs to act and participate in the run -- bead id, owned scope, base ref, run epic
 id, artifacts path, deterministic commands, protocol pointers, tool guidance, and
-escalation rules — templates below.
+escalation rules -- templates below.
 
 ## Prepare the checkout before spawning
 
@@ -44,7 +44,7 @@ matching role prefix. Create reviewer and advisor branches from the writer
 branch so they see the exact candidate commit. Stamp the role anchors before
 spawn.
 
-## Domain-specialist brief — copyable shape
+## Domain-specialist brief -- copyable shape
 
 ```
 ASSIGN <node>
@@ -114,7 +114,7 @@ Create a review branch with
 `Review node <node> (bead <bead-id>): writer branch <b>; your read-only branch
 <review-b> at Worktrunk path <review-wt> (base <ref>). Scope <globs>. Report
 REVIEW <node> verdict=approve|changes; for changes give a numbered list, each`
-file:line — problem — required action `(one clause each). Log the verdict as
+file:line -- problem -- required action `(one clause each). Log the verdict as
 an audit record + bead comment. Kept alive to re-review the delta only.`
 Escalate the reviewer a tier in the brief when the diff is complex or security-critical.
 

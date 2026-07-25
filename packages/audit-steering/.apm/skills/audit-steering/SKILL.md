@@ -7,7 +7,7 @@ description: Audit and optimize agent-facing markdown for drift, duplication, an
 
 Audit agent configuration surfaces for issues, then apply R1-R7 rewrites to fix them.
 
-## Phase 1 — Audit (find issues)
+## Phase 1 -- Audit (find issues)
 
 1. **Lint scan**: Run `agnix --show-fixes` on config directories. Categorize findings as real errors, false positives, or auto-fixable.
 2. **Hook efficiency**: Count hooks per event type. Flag unconditional Bash hooks, duplicate references, prompt-type hooks doing pure string checks.
@@ -18,7 +18,7 @@ Audit agent configuration surfaces for issues, then apply R1-R7 rewrites to fix 
 7. **AGENTS.md minimality**: Root `AGENTS.md` should stay minimal when APM owns detail; scoped `AGENTS.md` files should be path-specific.
 8. **Claude rules scope**: Claude rules should not duplicate large global content.
 
-## Phase 2 — Optimize (fix issues)
+## Phase 2 -- Optimize (fix issues)
 
 Apply R1-R7 rewrites to files flagged in Phase 1. LOAD `references/rules.md` for the exact checks.
 

@@ -1,5 +1,5 @@
 ---
-description: Always-loaded git workflow policy — branching, shipping, merging.
+description: Always-loaded git workflow policy -- branching, shipping, merging.
 ---
 
 For branch discipline, merge-vs-PR choice, merge flags, and pre-push checks,

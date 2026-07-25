@@ -19,12 +19,12 @@ T009 | VERIFIED | 28 fixture dirs exist under fixtures/, each with case-*.yaml
 T010 | VERIFIED | every case-*.yaml contains agent/regime/prompt/assert fields
 T011 | VERIFIED | skips.yaml has 6 entries, each reason >= 21 words (all > 10)
 T012 | PARTIAL | SKILL.md exists at packages/agent-conformance/.apm/skills/agent-conformance/SKILL.md with sweep protocol; registered in apm.yml and release-please-config.json; NOT installed to .apm/skills/agent-conformance/ at repo root (skill not globally available without `apm install`)
-T013 | VERIFIED | (no T013 in scope — numbered T001-T012,T014; task count 14 via bead children covers engine subtasks within T002-T007)
+T013 | VERIFIED | (no T013 in scope -- numbered T001-T012,T014; task count 14 via bead children covers engine subtasks within T002-T007)
 T014 | VERIFIED | .github/workflows/test.yml has conformance-check job, wired into tests-gate needs array with result evaluation
 
 ## Partial Completions
 
-**T012** — The skill source exists inside the package at the correct location for APM packaging (packages/agent-conformance/.apm/skills/agent-conformance/SKILL.md). It is registered in apm.yml marketplace and release-please-config.json. However, the skill is not installed at the repo-root .apm/skills/ directory, meaning it is only available after `apm install`. This is standard APM behavior (source vs installed), so the partial classification is soft — the artifact is authored and registered but not yet deployed to the working tree's skill index.
+**T012** -- The skill source exists inside the package at the correct location for APM packaging (packages/agent-conformance/.apm/skills/agent-conformance/SKILL.md). It is registered in apm.yml marketplace and release-please-config.json. However, the skill is not installed at the repo-root .apm/skills/ directory, meaning it is only available after `apm install`. This is standard APM behavior (source vs installed), so the partial classification is soft -- the artifact is authored and registered but not yet deployed to the working tree's skill index.
 
 ## Source Inconsistencies
 

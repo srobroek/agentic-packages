@@ -9,12 +9,12 @@ Branching:
 
 Shipping (choose one, confirm if ambiguous):
 
-- PR (`gh pr create`) — default for anything reviewed or outward-facing.
+- PR (`gh pr create`) -- default for anything reviewed or outward-facing.
   Agent-authored PRs start as drafts (`gh pr create --draft`). Promote with
   `gh pr ready` only after implementation, local validation, and required
   agent review are complete and no known blocker remains.
   Body: what changed, why, test plan. One close keyword per issue line.
-- Local merge to main — only when the user asks or the repo has no PR flow.
+- Local merge to main -- only when the user asks or the repo has no PR flow.
   Use `git merge --no-ff` for feature branches; pass an explicit strategy
   flag to `gh pr merge` (`--squash`/`--merge`/`--rebase`).
 
@@ -68,4 +68,4 @@ skip for docs, tests, CI, and no-behavior refactors.
 Session cadence (enforced by stop-hook):
 
 MUST GW-1: commit all tracked changes before ending a session.
-MUST GW-2: push all committed work before ending — commits on an unpushed branch may be lost.
+MUST GW-2: push all committed work before ending -- commits on an unpushed branch may be lost.

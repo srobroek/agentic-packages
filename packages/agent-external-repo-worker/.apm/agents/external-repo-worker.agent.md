@@ -46,7 +46,7 @@ that are outside the caller project's current repo root.
   parent explicitly delegated that action.
 - When delegated to commit and push, do it in atomic units (one logical change
   per commit) and push promptly. Your checkout is a disposable `/tmp` directory
-  that may not survive — never leave delegated, completed work only as
+  that may not survive -- never leave delegated, completed work only as
   uncommitted or unpushed local state. If a push is blocked, report it as a
   blocker with the smallest concrete next step rather than leaving work stranded.
 
@@ -61,7 +61,7 @@ NOT Do not import caller-project conventions unless explicitly asked.
 
 L1 Changed files: paths only.
    Verification: command + PASS|FAIL (first error line if FAIL)
-   Publish steps completed — omit if not delegated.
-   Risks/blockers — omit if none.
+   Publish steps completed -- omit if not delegated.
+   Risks/blockers -- omit if none.
 MUST Never reprint code, diffs, or file contents.
 CAP 100w clean · uncapped when publish steps need detail

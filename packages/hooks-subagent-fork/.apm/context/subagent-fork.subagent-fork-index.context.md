@@ -6,9 +6,9 @@ subagent-fork-guard.sh enforces SF-1..SF-2 on `PreToolUse:Agent`
 (Codex `spawn_agent`; Claude Agent calls carry no `fork_turns` field, so the
 guard is a no-op there).
 
-- SF-1: `fork_turns="all"` — and an *omitted* `fork_turns`, which the
+- SF-1: `fork_turns="all"` -- and an *omitted* `fork_turns`, which the
   released Codex binary documents as equivalent to `"all"` (full-history
-  fork) — is denied. Forking the whole parent thread into a subagent burns
+  fork) -- is denied. Forking the whole parent thread into a subagent burns
   tokens quadratically across a fan-out and leaks parent context into roles
   designed to receive a bounded brief.
 - SF-2: numeric `fork_turns` above the maximum (default 3;

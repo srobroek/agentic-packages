@@ -10,7 +10,7 @@ description: TypeScript monorepo pnpm workspace tsconfig layering eslint flat co
 |---------|----------|
 | Root layout | Keep root private; add `packageManager` field; define `packages` glob. |
 | Internal deps | `workspace:*` protocol for cross-package imports. |
-| Scripts | `pnpm -r --if-present <script>` — packages opt in by defining the script. |
+| Scripts | `pnpm -r --if-present <script>` -- packages opt in by defining the script. |
 
 ## Type Checking & Bundling
 

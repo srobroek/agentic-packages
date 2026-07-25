@@ -34,5 +34,5 @@ NOT Use Smee; `cli/gh-webhook` is the local development transport.
 NOT Treat webhook delivery as complete state; Octokit REST reconciliation remains active.
 
 OUTPUT
-L1 WATCHER ACTIVE — signed events, REST reconciliation, and <N> merge slot(s)
+L1 WATCHER ACTIVE -- signed events, REST reconciliation, and <N> merge slot(s)
 CAP 100w clean · 180w with findings

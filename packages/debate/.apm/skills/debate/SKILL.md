@@ -84,7 +84,7 @@ the Process above.
 
 The prose Process above is the default. When the user asks for orchestration or dynamic workflows,
 the research fan-out and devil's advocate become a single Workflow instead of manual subagent
-launches. Same phases, same outputs — only the orchestration moves into a script. Workflows are a
+launches. Same phases, same outputs -- only the orchestration moves into a script. Workflows are a
 Claude-only feature; where unavailable, follow the prose Process.
 
 Shape (author the script inline; do not vendor it):

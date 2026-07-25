@@ -24,11 +24,11 @@ in their actual constraints, and provides implementation steps.
 
 Ask the user (use AskUserQuestion for structured input):
 
-1. **Project type** — library/dependency, application/tool, template/scaffolding,
+1. **Project type** -- library/dependency, application/tool, template/scaffolding,
    config/prompts, or framework?
-2. **Language/ecosystem** — Rust, Python, TypeScript, Go, C/embedded, other?
+2. **Language/ecosystem** -- Rust, Python, TypeScript, Go, C/embedded, other?
    (This determines linking model and ecosystem conventions.)
-3. **Distribution model** — published package (crates.io/PyPI/npm), standalone
+3. **Distribution model** -- published package (crates.io/PyPI/npm), standalone
    binary, SaaS/hosted, or source-only?
 
 ### Phase 2: Establish the threat model
@@ -39,13 +39,13 @@ Ask (these determine copyleft strength):
    - Someone forking and shipping a closed competitor
    - Companies using your code without sharing bug fixes
    - Someone wrapping it as a paid hosted service
-   - None of the above — just want attribution
+   - None of the above -- just want attribution
    - Unsure / want to understand options
 
-5. **Substitutability** — are there drop-in alternatives to your project that
+5. **Substitutability** -- are there drop-in alternatives to your project that
    someone could use instead of accepting your license terms?
 
-6. **Commercial goals** — do you want to keep dual commercial licensing as an
+6. **Commercial goals** -- do you want to keep dual commercial licensing as an
    option? (This determines whether a CLA is needed.)
 
 ### Phase 3: Recommend
@@ -59,7 +59,7 @@ logic. Present:
 - Any runner-up alternatives and why they're weaker for this case
 
 **Push back** if the user's stated principle contradicts their stated constraints
-(e.g., "I want reciprocity" + "I want zero friction" — those conflict; surface
+(e.g., "I want reciprocity" + "I want zero friction" -- those conflict; surface
 it). LOAD references/common-contradictions.md for named contradiction patterns.
 
 ### Phase 4: Validate
@@ -71,7 +71,7 @@ Before finalizing:
    LGPL, flag it)
 3. If the project is embedded: confirm no dynamic-linker requirements
 4. If templates/scaffolding: warn about output contamination if copyleft selected
-5. Check ecosystem norms — LOAD references/ecosystem-norms.md and validate the
+5. Check ecosystem norms -- LOAD references/ecosystem-norms.md and validate the
    recommendation against the relevant language section
 
 ### Phase 5: Implement
@@ -95,8 +95,8 @@ Offer to execute (with user confirmation):
 - Always surface contradictions between stated goals rather than silently picking
   a compromise.
 - Validate against real constraints (static linking, dynamic linkers, ecosystem
-  conventions) — don't recommend LGPL for Rust.
+  conventions) -- don't recommend LGPL for Rust.
 - If the user already has a license and asks about changing: check for external
   contributors first (git log for non-bot/non-owner authors). If present, warn
   about consent requirements.
-- LOAD references/decision-matrix.md for consistency — don't freeform the recommendation.
+- LOAD references/decision-matrix.md for consistency -- don't freeform the recommendation.

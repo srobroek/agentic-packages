@@ -22,7 +22,7 @@ agent reconstructs the leftoff state without loading full history.
   started in one worktree therefore does not appear under another worktree's
   encoded dir.
 - `git worktree list --porcelain` returns the **whole** worktree family from any
-  member — the main checkout (always listed first) and every linked worktree —
+  member -- the main checkout (always listed first) and every linked worktree --
   so the result is identical whether the skill starts in the main repo or in a
   linked worktree. Both of the user's cases ("started in a worktree" / "started
   in the parent") reduce to: enumerate the family, scan every member.
@@ -48,12 +48,12 @@ agent reconstructs the leftoff state without loading full history.
 
 ### Claude (`type` field per line)
 - `user`: `message.content` is a string (real prompt) **or** a list of blocks. A
-  list containing a `tool_result` block is tool output, not a user turn — the
+  list containing a `tool_result` block is tool output, not a user turn -- the
   scripts attach a truncated result to the preceding assistant tool instead of
   treating it as a prompt.
 - `assistant`: `message.content` is a list of blocks: `text`, `thinking`
   (filtered unless `--include-thinking`), and `tool_use` (`name` + `input`).
-- `ai-title`: `aiTitle` — a short human title for the session (used as the list
+- `ai-title`: `aiTitle` -- a short human title for the session (used as the list
   title when present).
 - Each record also carries `cwd`, `gitBranch`, `version`, and `timestamp`.
 - Other types (`mode`, `permission-mode`, `attachment`, `file-history-snapshot`,
@@ -89,7 +89,7 @@ committed first) before the session list:
   time, the commit subject, and a `✎ dirty` flag when
   `git status --porcelain` reports uncommitted changes.
 - A recently-committed or dirty worktree is a strong hint for where work is
-  ongoing — pair it with the session list's `↳ left off:` to pick the right
+  ongoing -- pair it with the session list's `↳ left off:` to pick the right
   thread. `--no-git` skips this block.
 
 ## Filtering (what the scripts strip)
@@ -109,13 +109,13 @@ would exceed it, rendering stops and the footer says so.
 
 To go further back, the footer prints the exact next command using `--offset`
 (turns to skip from the newest) and `--turns` (window size). Page back **only**
-until the leftoff state is clear — never to the start of the session.
+until the leftoff state is clear -- never to the start of the session.
 
 ## Resume cost reporting
 
 Both scripts end with an estimated **uncached** token count for what they
 emitted (~4 chars/token). Because each window is freshly generated, all of it is
-uncached input — that figure is the real context cost of the resume. The agent
+uncached input -- that figure is the real context cost of the resume. The agent
 sums the windows it actually read and reports the total against the full
 transcript size, which is the whole point: a few thousand tokens instead of the
 entire history.
@@ -123,12 +123,12 @@ entire history.
 ## Script reference
 
 - `list-sessions.py [--project PATH] [--agent claude|codex|all] [--limit N]
-  [--no-worktrees] [--no-git] [--json]` — selectable table, newest first, across
+  [--no-worktrees] [--no-git] [--json]` -- selectable table, newest first, across
   all worktrees of the repo by default; precedes it with a per-worktree git
   activity block when more than one worktree exists. `--no-worktrees` scans only
   the current checkout; `--no-git` drops the git block; `--json` emits
   `{project, worktrees[], sessions[]}` for machine output.
 - `read-session.py (--session ID | --file PATH) [--project PATH] [--agent ...]
-  [--turns N] [--offset M] [--max-chars N] [--include-thinking]` — filtered,
+  [--turns N] [--offset M] [--max-chars N] [--include-thinking]` -- filtered,
   newest-first window with metadata, latest plan, and a paging footer. A bare
   `--session` id resolves across every worktree of the repo.

@@ -23,7 +23,7 @@
 - [x] Interrupted-run behavior specified (JSONL journal + report rebuild)
 - [x] No new runtime dependencies beyond PyYAML (already CI baseline)
 - [x] Constitution check passed pre- and post-design (plan.md)
-- [x] Execution fidelity: resolved by the R1 pivot — the sweep spawns
+- [x] Execution fidelity: resolved by the R1 pivot -- the sweep spawns
   installed agents via the Task tool, the production path itself; the
   headless-proxy fidelity question is mooted for v1 (deferred with orc-qrt).
 

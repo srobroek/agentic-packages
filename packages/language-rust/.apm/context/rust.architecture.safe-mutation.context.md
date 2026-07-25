@@ -7,7 +7,7 @@ description: rust mutation apply audit TOCTOU CAS freshness symlink traversal le
 For side-effecting operations behind a plan/approve/apply flow:
 
 - Approval is a token re-verified at apply time, not a boolean stored at review
-  time. A stale token MUST error rather than proceed — the gap between review and
+  time. A stale token MUST error rather than proceed -- the gap between review and
   apply is where TOCTOU bugs live.
 - Revalidate item freshness with a size plus mtime compare-and-swap at apply
   time; a changed item pauses the plan rather than applying to stale state.

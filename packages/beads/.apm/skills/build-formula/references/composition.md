@@ -1,4 +1,4 @@
-# Composition — extends, fragments, and four traps
+# Composition -- extends, fragments, and four traps
 
 ```toml
 extends = ["parent-formula", "another-parent"]
@@ -34,7 +34,7 @@ Error: steps[4]: duplicate id "specify" (first defined at steps[0])
 ```
 
 `extends = ["a", "b"]` where both `a` and `b` extend a common base. So **fragments must not extend the
-baseline** — keep them flat.
+baseline** -- keep them flat.
 
 ### 4. A fragment referencing a parent step fails standalone
 
@@ -53,7 +53,7 @@ Fragments are flat and **needs-free**; the composing formula owns every join edg
 | Top formula | `extends = [baseline, ...selected fragments]`, and owns **every** join edge by redeclaring it |
 
 Edges are rewired by **redeclaration at generation time**, not by a bond call. When a stage is absent the
-top formula names only the surviving predecessors — and must still satisfy the anchor rule.
+top formula names only the surviving predecessors -- and must still satisfy the anchor rule.
 
 ## Bond is not a layering mechanism
 
@@ -70,7 +70,7 @@ $ bd mol bond mol-pbase mol-pfrag --dry-run
 
 The prefix requirement is undocumented. But bond joins **root-to-root** as a sibling subtree and cannot
 rewire an inherited step's `needs`, so it does not give step-level splicing. `--attach` takes issue and
-proto IDs only — never formula names, prefix or not.
+proto IDs only -- never formula names, prefix or not.
 
 Reach for bond when you want two independent graphs to run under one root, not when you want to weave
 steps into an existing sequence.
@@ -111,7 +111,7 @@ the same not-found message, so the error names the wrong formula.
 ## `bd mol distill` is not a migration path
 
 `bd mol distill <epic> <name>` extracts a draft formula from a hand-built epic, and it is the cheapest way
-to start. But it **drops `metadata`, `notes`, `assignee`, `gate` and `condition`** — 5 of 8 step fields —
+to start. But it **drops `metadata`, `notes`, `assignee`, `gate` and `condition`** -- 5 of 8 step fields --
 and re-slugifies step ids.
 
 Treat its output as a first draft of the DAG shape and re-add every field by hand. Never use it to

@@ -101,14 +101,14 @@ A short table of what to add and why:
 user can drop in — not just the rule name. Examples:
 
 ```toml
-# pyproject.toml — enforce the magic-number + complexity smells found above
+# pyproject.toml -- enforce the magic-number + complexity smells found above
 [tool.ruff.lint]
 extend-select = ["PLR2004", "C901"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLR2004"]            # fixed literals are expected in tests
 ```
 ```toml
-# Cargo.toml — set the complexity bar repo-wide
+# Cargo.toml -- set the complexity bar repo-wide
 [lints.clippy]
 cognitive_complexity = "warn"
 ```
@@ -142,11 +142,11 @@ line calls). Listed, not mixed into the plan above — the user chose the scope.
 
 ## Rules for filling it in
 
-- The **Dropped & downgraded** section is not optional in full mode — it shows
+- The **Dropped & downgraded** section is not optional in full mode -- it shows
   the pragmatism filter worked and explains what was deliberately not flagged.
 - Never mark a finding `mechanical` if its back-compat cell is anything but
   `safe`. Public-surface changes are at least `assisted`.
 - If nothing survives the adversarial pass, say the codebase is clean on the
-  dimensions checked and list the coverage gaps — do not invent findings.
+  dimensions checked and list the coverage gaps -- do not invent findings.
 - The "Applied this run" table appears only when the user approved applying and
   the mode was not plan-only.

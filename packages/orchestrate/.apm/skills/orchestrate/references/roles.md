@@ -14,7 +14,7 @@ starting point, refined by what the catalog actually offers.
 | **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → reviewer when rule intent is disputed |
 | **Maintenance-metrics-reader** | `maintenance-metrics-reader` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → researcher when a root cause is ambiguous |
 | **Reviewer-mechanics** | `reviewer-mechanics` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → reviewer on deeper correctness questions |
-| **Domain-specialist** | `domain-specialist` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the domain-specialist — on a reasoning block it raises `BLOCKED` |
+| **Domain-specialist** | `domain-specialist` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the domain-specialist -- on a reasoning block it raises `BLOCKED` |
 | **Reviewer** | `reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Advisor** | `advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Shepherd** | `shepherd` (bundled) | **mid tier** medium | **persistent** | → top tier only if merge reasoning is genuinely gnarly |
@@ -27,11 +27,11 @@ Workflow roles ship **bundled** with this package (domain-specialist, reviewer, 
 when the catalog has them.
 
 "Persistent" means the role is always available for the run, not that it is one
-never-restarted process — recycle the Shepherd to shed context (see
+never-restarted process -- recycle the Shepherd to shed context (see
 `references/lifecycle.md`). The orchestrator never executes work directly; see
 SKILL.md Core rules.
 
-## Capabilities & access — what each role may do
+## Capabilities & access -- what each role may do
 
 | Role | Writes | Spawns | Runs in | Notes |
 |---|---|---|---|---|
@@ -44,7 +44,7 @@ SKILL.md Core rules.
 | Domain-specialist | its `scope` only | bound throwaway children | parent-prepared Worktrunk checkout | children share its bound path but never claim, commit, push, or manage worktrees; on block → `BLOCKED kind:design\|debug` |
 | Reviewer | nothing (read-only) | nothing | separate Worktrunk checkout created from writer branch | logs `review` verdict as audit record + bead comment |
 | Advisor | nothing (read-only) | nothing | separate Worktrunk checkout when using tools | one `ADVICE`, then exits |
-| Shepherd | integration branch / merges (remote) | nothing | remote-side (`gh`, merge-tree probes) — no worktree | merge + push authority only; never mutates local trees |
+| Shepherd | integration branch / merges (remote) | nothing | remote-side (`gh`, merge-tree probes) -- no worktree | merge + push authority only; never mutates local trees |
 | Scribe | nothing (read-only) | nothing | reads beads db + artifacts | never in the write path |
 | Researcher | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | returns a terse findings digest |
 | Tiebreaker | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | binding `ADVICE`, logged |
@@ -73,10 +73,10 @@ worker nests (SKILL.md core rule 5).
 The orchestrator owns research decomposition and never reads raw sources itself.
 
 - **Narrow question:** one Researcher (`Explore`, cheap tier), returns a terse digest.
-- **Broad research — fan-out then fan-in:**
+- **Broad research -- fan-out then fan-in:**
   1. **Fan-out:** the orchestrator spawns several cheap **cheap-tier gatherers** in
      parallel, each scoped to one source, slice, or sub-question. Each returns a
-     terse findings digest (facts + `refs`, not prose) — nothing raw.
+     terse findings digest (facts + `refs`, not prose) -- nothing raw.
   2. **Fan-in:** the orchestrator hands all digests to **one mid-tier synthesizer**
      that dedupes, resolves conflicts, and returns a single synthesis with
      citations.
@@ -85,7 +85,7 @@ The orchestrator owns research decomposition and never reads raw sources itself.
      genuinely contradictory or high-stakes.
 
 Gatherers are read-only and spawn nothing; the fan-out width is the orchestrator's
-call (bound it to the sources that matter — log what was skipped).
+call (bound it to the sources that matter -- log what was skipped).
 
 ## Escalation ladder
 
