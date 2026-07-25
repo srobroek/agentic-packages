@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/agent-reviewer-high--v2.0.0...agent-reviewer-high--v2.0.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-reviewer-high--v1.1.0...agent-reviewer-high--v2.0.0) (2026-07-23)
 
 
