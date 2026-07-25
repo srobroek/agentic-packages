@@ -1,6 +1,6 @@
 {
   "name": "playwright",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
   "author": {
     "name": "Sjors Robroek"

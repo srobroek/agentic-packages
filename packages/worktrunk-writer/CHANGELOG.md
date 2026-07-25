@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v1.2.0...worktrunk-writer--v2.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729))
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* **worktrunk-writer:** advise unleased delegation and stop overstating the gate ([#730](https://github.com/srobroek/agentic-packages/issues/730)) ([f122e2a](https://github.com/srobroek/agentic-packages/commit/f122e2a15699dfda808ccf9e0e3f8fe2d00b08d0))
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729)) ([e2292c6](https://github.com/srobroek/agentic-packages/commit/e2292c6c568f801fb96d70df3afffc923e6cc767))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v1.1.0...worktrunk-writer--v1.2.0) (2026-07-25)
 
 

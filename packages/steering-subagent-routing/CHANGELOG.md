@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.3](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.2...steering-subagent-routing--v3.2.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [3.2.2](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.1...steering-subagent-routing--v3.2.2) (2026-07-23)
 
 

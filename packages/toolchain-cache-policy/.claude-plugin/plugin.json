@@ -1,6 +1,6 @@
 {
   "name": "toolchain-cache-policy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
   "author": {
     "name": "Sjors Robroek"

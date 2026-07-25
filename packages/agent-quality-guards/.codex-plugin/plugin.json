@@ -1,6 +1,6 @@
 {
   "name": "agent-quality-guards",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read-only quality-guard subagents for bounded triage: docs-guard checks scoped documentation and documentation lint findings, lint-guard validates and normalizes lint reports, data-metrics-summarizer compacts large logs and metrics, maintenance-metrics-reader snapshots repository maintenance health (stale branches, worktrees, lock states), and reviewer-mechanics smoke-checks scoped diffs for mechanical issues. All five reply with bounded, capped verdict lines and never edit files.",
   "author": {
     "name": "Sjors Robroek"

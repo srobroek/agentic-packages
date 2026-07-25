@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/write-docs--v1.2.2...write-docs--v2.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **write-docs:** requires the vale binary on PATH (mise use -g vale, or brew install vale). Suppression syntax changes from <!-- write-docs:allow E2 --> to Vale's <!-- vale WriteDocs.SlopLexicon = NO --> off/on pairs, which are block-scoped rather than line-scoped.
+
+### Features
+
+* **write-docs:** check documentation prose with Vale instead of a bespoke linter ([#721](https://github.com/srobroek/agentic-packages/issues/721)) ([43fc7f7](https://github.com/srobroek/agentic-packages/commit/43fc7f766c6f4a9c6317a71f18ba33ff3fbf507c))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.2.2](https://github.com/srobroek/agentic-packages/compare/write-docs--v1.2.1...write-docs--v1.2.2) (2026-07-22)
 
 

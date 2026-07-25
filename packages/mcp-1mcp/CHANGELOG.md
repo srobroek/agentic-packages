@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.4...mcp-1mcp--v1.0.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.0.4](https://github.com/srobroek/agentic-packages/compare/mcp-1mcp--v1.0.3...mcp-1mcp--v1.0.4) (2026-07-22)
 
 

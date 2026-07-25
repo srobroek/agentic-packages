@@ -1,5 +1,5 @@
 name: agent-quality-guards
-version: 1.0.0
+version: 1.0.1
 description: >-
   Read-only quality-guard subagents for bounded triage: docs-guard checks scoped
   documentation and documentation lint findings, lint-guard validates and
