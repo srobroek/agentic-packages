@@ -19,11 +19,9 @@ recovery writes.
 | `merge_sha` | GitHub merge commit, stamped immediately after merge |
 
 A `gh:run` gate stores its run id and the same `head_sha`. Gate resolution is
-advisory. Validate it with:
-
-```bash
-scripts/landing-contract.sh check-run <repo> <run-id> <head-sha>
-```
+advisory; run `scripts/landing-contract.sh` with no arguments for the exact
+argument shape of every subcommand (`check-run`, `check-pr`, `land`,
+`acquire-slot`/`release-slot`, `recover-*`, `ready-ids`).
 
 `check-pr` reads current PR state directly. Approval mode is `github` by
 default. An orchestrated adapter may pass `external` only after a durable
@@ -42,13 +40,8 @@ independent approval names the exact head. Both modes reject requested changes.
 
 ## Landing transaction
 
-```bash
-scripts/landing-contract.sh land \
-  <merge-bead> <repo> <pr> <pr-base> <landing-base> \
-  <base-sha> <head-sha> <merge|rebase|squash> [github|external]
-```
-
-The transaction:
+`land` (see `scripts/landing-contract.sh` usage for its exact arguments)
+performs the transaction:
 
 1. Creates the repository merge slot and acquires under stable identity
    `pr-shepherd:<repo>#<pr>@<head_sha>` without bypassing earlier waiters.
@@ -91,21 +84,12 @@ merged, cancelled, bounced, or dead work closes only that generation. A later
 attempt for the same terminal holder must pass `requeue`, which creates the
 next deterministic generation. A new head naturally has a new stable holder.
 
-The explicit controls are:
-
-```bash
-scripts/landing-contract.sh acquire-slot <holder> [attempts] [seconds] [resume|requeue]
-scripts/landing-contract.sh release-slot <holder> [terminal|retryable]
-```
+The explicit controls are `acquire-slot` and `release-slot` (see usage for
+arguments).
 
 Do not delete a quiet receipt. After proving a session dead or a PR cancelled,
-cite the evidence and use the matching recovery command:
-
-```bash
-scripts/landing-contract.sh recover-claim <merge-bead> <dead-actor> <evidence-ref> [waiter-holder]
-scripts/landing-contract.sh recover-slot <merge-bead> <dead-holder> <evidence-ref>
-scripts/landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-ref>
-```
+cite the evidence and use the matching recovery command: `recover-claim`,
+`recover-slot`, or `recover-waiter` (see usage for arguments).
 
 Each command refuses unsafe changed ownership and records a comment plus audit
 event. With `waiter-holder`, claim recovery releases only the dead generation's

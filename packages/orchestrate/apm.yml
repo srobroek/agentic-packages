@@ -42,6 +42,7 @@ includes:
   - .apm/skills/orchestrate/scripts/worktree-sweep.sh
 dependencies:
   apm:
+    - srobroek/agentic-packages/packages/beads#>=0.8.0 <1.0.0
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
     - srobroek/agentic-packages/packages/pr-shepherd#>=0.14.1 <1.0.0
     - srobroek/agentic-packages/packages/agent-quality-guards#>=1.0.0 <2.0.0

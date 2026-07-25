@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# check.sh: run TypeScript/JavaScript format, lint, and type-check via the
+# first available package manager (pnpm, then bun, then npx), falling back to
+# a globally installed biome/tsc. Warns and exits 0 if none is available.
+#
+# Usage: check.sh [--help]
+
+case "${1:-}" in
+  -h|--help)
+    cat <<'EOF'
+usage: check.sh
+
+Runs biome check + tsc --noEmit via the first available runner:
+  1. pnpm exec / bunx / npx --yes   (first package manager found on PATH)
+  2. globally installed biome (and tsc if present)
+  3. otherwise: warn and exit 0 -- fall back to project-native package.json
+     scripts or eslint manually
+
+See fix.sh for the narrower auto-fix counterpart (biome check --write only).
+EOF
+    exit 0
+    ;;
+esac
+
 if [ ! -f package.json ]; then
   echo "Warning: no package.json found; skipping TypeScript checks." >&2
   exit 0

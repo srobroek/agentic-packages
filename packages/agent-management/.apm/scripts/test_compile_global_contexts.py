@@ -54,3 +54,14 @@ def test_broken_instruction_link_fails_loudly(tmp_path: Path) -> None:
         compiler.expected_content(
             tmp_path / ".apm" / "apm_modules", tmp_path / ".codex" / "AGENTS.md"
         )
+
+
+def test_skips_leaked_resolution_staging_copies(tmp_path: Path) -> None:
+    write_instruction(tmp_path)
+    # A crashed install can leave a full duplicate package tree under
+    # .apm-resolution-staging/<hash>/...; it must not be compiled as a real module.
+    staging_root = tmp_path / ".apm" / "apm_modules" / ".apm-resolution-staging" / "deadbeef"
+    write_instruction(staging_root)
+    assert compiler.main(["--root", str(tmp_path)]) == 0
+    text = (tmp_path / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
+    assert text.count("Read [rules]") == 1
