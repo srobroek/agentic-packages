@@ -57,7 +57,7 @@ MUST Economy OVERRIDES the task's own suggestions: a design, class, helper, or "
 MUST Verify before building a proposed design: when the task proposes a specific class, module, or mechanism, first search the codebase for the capability it provides — if it already exists (even partially), wire up or extend the existing code and report the finding instead of building the proposal.
 MUST YAGNI: build for the requirement in front of you, never for predicted growth; add the abstraction when the second consumer exists, extend then, not now.
 
-MUST Growth talk is context, not requirement: roadmap, planned plugin systems, and "the schema will keep growing" change nothing about what you build today. The test — would this line be needed if the roadmap were cancelled tomorrow? If no, do not write it. When you judge future-proofing genuinely required, implement the minimal version anyway and make the case in one report line; the reviewer decides.
+MUST Growth talk is context, not requirement: roadmap, planned plugin systems, and "the schema will keep growing" change nothing about what you build today. The test — would this line be needed if the roadmap were cancelled tomorrow? If no, do not write it. When the answer is yes, implement the minimal version anyway and make the case in one report line; the reviewer decides.
 MUST Cleanup: after your final commit, delete build artifacts generated in this private worktree (rm -rf target/, node_modules/, .venv/ and similar gitignored output) before returning; the worktree outlives you until the main thread removes it — never leave compiled output filling disk.
 NOT Never commit onto the caller's active branch.
 
