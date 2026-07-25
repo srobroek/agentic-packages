@@ -17,6 +17,18 @@ BEADS_STORE = REFERENCES / "beads-store.md"
 LIFECYCLE = REFERENCES / "lifecycle.md"
 MESSAGE_GRAMMAR = REFERENCES / "message-grammar.md"
 
+# The carrier table and the promotion rule are generic beads doctrine and live in
+# the beads package, which orchestrate depends on. Orchestrate maps its run model
+# onto those carriers rather than redefining them, so the invariant is asserted
+# against the beads source when this repo provides it, and skipped when
+# orchestrate is checked out alone.
+_PKGS = HERE.parents[4] if len(HERE.parents) > 4 else None
+CARRIERS = (
+    _PKGS / "beads" / ".apm" / "context" / "beads.carriers.context.md"
+    if _PKGS
+    else None
+)
+
 
 class PolicyError(ValueError):
     pass
@@ -176,9 +188,29 @@ class DecisionPolicyContractTest(unittest.TestCase):
         cls.lifecycle = LIFECYCLE.read_text(encoding="utf-8")
         cls.grammar = MESSAGE_GRAMMAR.read_text(encoding="utf-8")
 
+    def test_orchestrate_defers_carrier_doctrine_to_the_beads_package(self):
+        """Orchestrate must POINT at the carrier doctrine, not restate it.
+
+        Restating it is how the two copies drift. beads is installable without
+        orchestrate; orchestrate is not usable without beads.
+        """
+        pointer = section(
+            self.store,
+            "## Coordination and policy carriers",
+            "## Prerequisite (checked once, at run start)",
+        )
+        self.assertIn("beads.carriers.context.md", pointer)
+        self.assertIn("Orchestrate adds no carrier of its own", pointer)
+        # The doctrine itself must NOT be duplicated here.
+        self.assertNotIn("| Work-bead comment |", pointer)
+
+    @unittest.skipUnless(
+        CARRIERS is not None and CARRIERS.is_file(),
+        "beads package not present in this checkout",
+    )
     def test_carrier_table_and_promotion_boundary_are_cross_file_invariants(self):
         carrier = section(
-            self.store,
+            CARRIERS.read_text(encoding="utf-8"),
             "## Coordination and policy carriers",
             "## Local decision comments",
         )
@@ -196,9 +228,18 @@ class DecisionPolicyContractTest(unittest.TestCase):
         self.assertIn("Acknowledgement or compaction never deletes", carrier)
         self.assertIn("does not require Gas Town", self.grammar)
 
-    def test_documented_records_have_complete_schemas(self):
+    @unittest.skipUnless(
+        CARRIERS is not None and CARRIERS.is_file(),
+        "beads package not present in this checkout",
+    )
+    def test_local_decision_record_schema_is_complete(self):
+        # LOCAL_DECISION moved to the beads package with the carrier doctrine.
         self.assertEqual(
-            schema_fields(self.store, "## Local decision comments", "LOCAL_DECISION"),
+            schema_fields(
+                CARRIERS.read_text(encoding="utf-8"),
+                "## Local decision comments",
+                "LOCAL_DECISION",
+            ),
             {
                 "owner",
                 "scope",
@@ -209,6 +250,8 @@ class DecisionPolicyContractTest(unittest.TestCase):
                 "revisit",
             },
         )
+
+    def test_documented_records_have_complete_schemas(self):
         self.assertEqual(
             schema_fields(
                 self.lifecycle,
@@ -226,12 +269,14 @@ class DecisionPolicyContractTest(unittest.TestCase):
             {"owner", "scope", "evidence", "unknown", "default", "bounds", "revisit"},
         )
 
+    @unittest.skipUnless(
+        CARRIERS is not None and CARRIERS.is_file(),
+        "beads package not present in this checkout",
+    )
     def test_decision_links_are_nonblocking_and_disposition_is_explicit(self):
-        decision = section(
-            self.store,
-            "## Cross-boundary decision beads",
-            "## Prerequisite",
-        )
+        # Cross-boundary decision beads moved to the beads package.
+        text = CARRIERS.read_text(encoding="utf-8")
+        decision = text[text.index("## Cross-boundary decision beads"):]
         self.assertIn("decision_owner", decision)
         self.assertIn("acceptance:", decision)
         self.assertIn("decision_disposition", decision)

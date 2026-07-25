@@ -35,9 +35,10 @@ Your brief gives: the node id, its `bead` id, the `branch` + `worktree` path, th
 2. Judge: correctness, tests covering the changed behavior, scope adherence, style
    match to the surrounding code, and comment discipline (no over-commenting).
    Run the project's verify command if it is cheap.
-3. Report `REVIEW <node> verdict=approve|changes` to `main`:
+3. Report `REVIEW <node> verdict=approve|changes` to `main` in ≤ 80 words:
    - `changes`: a numbered list of exact items, each `file:line — problem —
-     required action`, plus a one-line `ok:` of what is sound.
+     required action`, plus a one-line `ok:` of what is sound. Reference
+     findings by path:line; never reprint the diff.
    - `approve`: `items: 0` and a one-line `ok:` note.
 4. Log the verdict on the bead: `bd audit record --actor reviewer-<node>
    --kind tool_call --tool-name orc.review --issue-id <bead>` +
@@ -49,9 +50,3 @@ After reporting `changes`, END YOUR TURN and wait. When the orchestrator relays
 the coder's re-report you are resumed with your context — re-review ONLY the delta
 and send `REVIEW <node> verdict=approve` (or another `changes`). You are dismissed
 on approval; do not re-review the whole branch again.
-
-## Output
-Report to `main` in ≤ 80 words: `REVIEW <node> verdict=APPROVE|CHANGES`.
-- CHANGES: a numbered list of `file:line — problem — required action` items,
-  plus a one-line `ok:`. Reference findings by path:line; never reprint the diff.
-- APPROVE: `items: 0` and a one-line `ok:` note.

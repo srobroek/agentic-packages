@@ -35,13 +35,17 @@ steps:
     command: speckit.cleanup.run
     integration: "{{ inputs.integration }}"
 
+  # speckit.sync.analyze/.conflicts are not slash commands; drift/conflict
+  # detection is the speckit-sync AGENT (scope: drift | scope: conflicts).
+  # type: prompt is the existing non-command step shape, reused here rather
+  # than inventing a new step type.
   - id: sync
-    command: speckit.sync.analyze
-    integration: "{{ inputs.integration }}"
+    type: prompt
+    prompt: "Spawn the speckit-sync agent with scope: drift in a fresh context for feature {{ inputs.feature_name }}."
 
   - id: sync-conflicts
-    command: speckit.sync.conflicts
-    integration: "{{ inputs.integration }}"
+    type: prompt
+    prompt: "Spawn the speckit-sync agent with scope: conflicts in a fresh context for feature {{ inputs.feature_name }}."
 
   - id: retro
     command: speckit.retro.run

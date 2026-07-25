@@ -2,9 +2,13 @@
 # package-investigate.sh — PreToolUse hook on Bash.
 #
 # When the agent is about to ADD/INSTALL a dependency, nudge it (non-blocking,
-# additionalContext) to investigate the package BEFORE committing to it:
-# trustworthiness, maintenance, quality, popularity — and weigh alternatives.
-# For update/upgrade/remove, a lighter nudge (review the change; no discovery).
+# additionalContext) to run a supply-chain screen BEFORE committing to it —
+# typosquat/abandonment/deprecation — and check current facts via registry/
+# web/context7 rather than training memory, which can predate a compromise.
+# Maintenance-quality and alternatives judgement is already always-loaded
+# steering (steering-pragmatic's code-economy table); this hook adds only what
+# a frontier model's training data cannot supply. For update/upgrade/remove, a
+# lighter nudge (review the change; no discovery).
 #
 # WHY a command hook (not a prompt/agent hook): agent/prompt hooks BLOCK the turn
 # and cannot run async (only `command` hooks support async). A command hook is
@@ -57,12 +61,11 @@ add_re="${b}(pnpm[[:space:]]+(add|install)|npm[[:space:]]+(install|i|add)|yarn[[
 chg_re="${b}(pnpm[[:space:]]+(update|up|remove)|npm[[:space:]]+(update|upgrade|uninstall|remove|rm)|yarn[[:space:]]+(up|upgrade|remove)|bun[[:space:]]+(update|remove)|uv[[:space:]]+(remove|lock|sync)|pip3?[[:space:]]+uninstall|poetry[[:space:]]+(update|remove)|cargo[[:space:]]+(update|upgrade|remove)|go[[:space:]]+mod[[:space:]]+tidy|bundle[[:space:]]+(update|remove)|composer[[:space:]]+(update|remove))([[:space:]]|$)"
 
 if [[ "$lc" =~ $add_re ]]; then
-  emit "Before adding this dependency, investigate it and report briefly: \
-1) Trustworthiness — reputable author/org, no typosquat, sane permissions; \
-2) Maintenance — recent releases, open-issue health, not abandoned/deprecated; \
-3) Quality & popularity — downloads/stars, used by credible projects, docs/tests; \
-4) Alternatives — is there a better-maintained or stdlib/already-present option, or is a dependency even warranted? \
-Use the package registry / web / context7 to check current facts (don't rely on memory). If it's clearly fine, say so in one line and proceed; if there's a concern or a better alternative, raise it before installing."
+  emit "Before adding this dependency, screen it: reputable author/org, no \
+typosquat, not abandoned/deprecated. Use the package registry / web / \
+context7 to check current facts — training data can predate a compromise or \
+deprecation. If it's clearly fine, say so in one line and proceed; if there's \
+a concern, raise it before installing."
 fi
 
 if [[ "$lc" =~ $chg_re ]]; then

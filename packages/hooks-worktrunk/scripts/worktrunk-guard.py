@@ -6,9 +6,12 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 
 CONTROL = {";", "&&", "||", "|", "&", "\n", "(", ")", "{", "}"}
 PREFIX_KEYWORDS = {"if", "then", "elif", "while", "until", "do", "!", "{"}
@@ -276,6 +279,21 @@ def unwrap_command(words: list[Token], index: int) -> int:
             )
         elif head == "nice":
             index = skip_options(words, index + 1, {"-n", "--adjustment"})
+        elif head == "timeout":
+            # First positional is the duration, not the wrapped command.
+            index = skip_options(words, index + 1, {"-k", "--kill-after", "-s", "--signal"}) + 1
+        elif head == "setsid":
+            index = skip_options(words, index + 1, set())
+        elif head == "flock":
+            # First positional is the lock file or directory.
+            index = (
+                skip_options(
+                    words,
+                    index + 1,
+                    {"-w", "--wait", "--timeout", "-E", "--conflict-exit-code"},
+                )
+                + 1
+            )
         elif head == "ionice":
             index = skip_options(words, index + 1, {"-c", "-n", "-p", "-p", "-u"})
         elif head == "stdbuf":
@@ -470,9 +488,9 @@ def analyze_segment(words: list[Token]) -> Violation | None:
 
 
 def scan_command(command: str) -> Violation | None:
-    lowered = command.lower()
-    if "worktree" not in lowered and "pr checkout" not in lowered and "claude -w" not in lowered:
-        return None
+    # No substring prefilter: every candidate token (worktree, pr, checkout) is
+    # splittable by the quoting this lexer exists to normalise, so a prefilter is
+    # itself the bypass (`git work"tree" add`, `gh pr  checkout`).
     lexer = ShellLexer(command)
     tokens, nested = lexer.lex()
     for group in segments(tokens):
@@ -498,10 +516,33 @@ def command_from_payload(payload: object) -> str:
     return ""
 
 
+def worktrunk_enforceable(payload: object) -> bool:
+    """Whether this environment can act on the guidance the guard would give.
+
+    Denying `git worktree` where `wt` is absent, or outside a work tree, is a hard
+    stall: the caller has no route to the suggested command. Mirrors the gates in
+    worktrunk-writer.py's `hook`. Behaviour is unchanged wherever both are present.
+    """
+    if shutil.which("wt") is None:
+        return False
+    cwd = payload.get("cwd") if isinstance(payload, dict) else None
+    repo = Path(cwd or os.getcwd())
+    if not repo.exists():
+        return False
+    return not subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--is-inside-work-tree"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    ).returncode
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, OSError):
+        return 0
+    if not worktrunk_enforceable(payload):
         return 0
     violation = scan_command(command_from_payload(payload))
     if violation is None:

@@ -307,6 +307,69 @@ run_guard() {
   [ "$decision" = "deny" ]
 }
 
+# --- bash-guard.sh: newline / shell-keyword command position ----------------
+# A raw NEWLINE is a command separator exactly like `;`, and a verb after a
+# `do`/`then`/`else`/`elif` keyword is at command position too. Both were absent
+# from the anchor's separator class, so these payloads reached the shell.
+
+@test "bash-guard: rm -rf / on a second LINE -> deny (newline is a separator)" {
+  run_guard "$BASH_GUARD" "$(mk_obj "$(printf 'cd /tmp\nrm -rf /\n')")"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-4")' >/dev/null
+}
+
+@test "bash-guard: mkfs on a second LINE -> deny" {
+  run_guard "$BASH_GUARD" "$(mk_obj "$(printf 'echo hi\nmkfs.ext4 /dev/disk2\n')")"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-5")' >/dev/null
+}
+
+@test "bash-guard: rm -rf / inside a for-loop body (do ... done) -> deny" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'for i in 1; do rm -rf / ; done')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-4")' >/dev/null
+}
+
+@test "bash-guard: rm -rf / inside an if body (then ... fi) -> deny" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'if true; then rm -rf / ; fi')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-4")' >/dev/null
+}
+
+@test "bash-guard: rm -rf \$HOME in a loop body -> deny" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'for i in 1; do rm -rf $HOME ; done')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-4")' >/dev/null
+}
+
+@test "bash-guard: trailing ; terminates the target token -> deny" {
+  # The old end-anchor was ($|[[:space:]]), which a trailing `;` cannot satisfy.
+  run_guard "$BASH_GUARD" "$(mk_obj 'rm -rf /;')"
+  [ "$decision" = "deny" ]
+}
+
+# --- bash-guard.sh: quoted prose containing braces/keywords must NOT deny ----
+# These pin the reason the anchor is NOT widened to a bare [;&|(){}] class: a
+# brace or a `do`/`done` word inside a quoted argument is text, not a command.
+
+@test "bash-guard: commit message quoting a braced rm -rf -> allow" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'git commit -m "guard blocks { rm -rf /; } forms"')"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bash-guard: commit message quoting do/done around rm -rf -> allow" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'git commit -m "guard blocks do rm -rf / done forms"')"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bash-guard: commit message quoting a parenthesised rm -rf -> allow" {
+  run_guard "$BASH_GUARD" "$(mk_obj 'git commit -m "guard blocks ( rm -rf / ) subshells"')"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 # --- bash-guard.sh: malformed stdin ----------------------------------------
 
 @test "bash-guard: empty stdin -> exit 0, no decision" {
@@ -564,6 +627,50 @@ run_guard() {
   run_guard "$RM_GUARD" "$(mk_obj "ls -la")"
   [ "$status" -eq 0 ]
   [ -z "$decision" ]
+}
+
+# --- rm-rf-guard.sh: shell-keyword / brace command position -----------------
+# `(){}` and the loop/conditional keywords were missing from the extractor's
+# command-position class, so a catastrophic rm inside a compound list was never
+# extracted. The deny REASON is asserted too: patching the extractor without the
+# lockstep sed strip leaves a leading `{` tokenised as a delete target, which
+# still denies but names the wrong path.
+
+@test "rm-rf-guard: rm -rf / inside a for-loop body -> deny naming /" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'for i in 1; do rm -rf / ; done')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-8")' >/dev/null
+  printf '%s' "$output" | jq -e ".hookSpecificOutput.permissionDecisionReason | test(\"'/'\")" >/dev/null
+}
+
+@test "rm-rf-guard: rm -rf / inside an if body -> deny naming /" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'if true; then rm -rf / ; fi')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e ".hookSpecificOutput.permissionDecisionReason | test(\"'/'\")" >/dev/null
+}
+
+@test "rm-rf-guard: rm -rf /etc inside a brace group -> deny naming /etc" {
+  run_guard "$RM_GUARD" "$(mk_cwd '{ rm -rf /etc ; }')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e ".hookSpecificOutput.permissionDecisionReason | test(\"'/etc'\")" >/dev/null
+}
+
+@test "rm-rf-guard: rm -rf / inside a subshell -> deny naming /" {
+  run_guard "$RM_GUARD" "$(mk_cwd '(rm -rf /)')"
+  [ "$decision" = "deny" ]
+  printf '%s' "$output" | jq -e ".hookSpecificOutput.permissionDecisionReason | test(\"'/'\")" >/dev/null
+}
+
+# --- rm-rf-guard.sh: quoted prose containing braces/keywords -> no deny ------
+
+@test "rm-rf-guard: commit message quoting a braced rm -rf -> no deny" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'git commit -m "guard blocks { rm -rf /; } forms"')"
+  [ "$decision" != "deny" ]
+}
+
+@test "rm-rf-guard: commit message quoting do/done around rm -rf -> no deny" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'git commit -m "guard blocks do rm -rf / done forms"')"
+  [ "$decision" != "deny" ]
 }
 
 # --- rule-ID citation: denial messages must cite the rule that blocked them --

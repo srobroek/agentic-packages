@@ -52,7 +52,7 @@ Then invoke the skill (it is self-describing -- ask the agent to "set up SpecKit
 1. `specify init --here --integration codex --script sh` -- scaffolds `.specify/` (constitution, feature dirs, workflow state).
 2. Registers the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
 3. Installs and enables the required extension set (including `agent-assign`).
-4. Installs the workflow definitions `speckit`, `speckit-quality`, `speckit-full` via `specify workflow add` from the package's own `workflows/` dir. These are this repo's opinionated definitions, not upstream catalog entries -- the `speckit` one overrides the upstream `Full SDD Cycle` that `specify init` bundles. Since spec-kit 0.11.x, workflows are a first-class primitive (`specify workflow`), not extensions.
+4. Provisions the beads workflow: the `speckit-feature` formula from `speckit-beads` is the phase DAG (human gates included), replacing the `specify workflow` primitive this package used to ship. Any leftover `speckit`/`speckit-quality`/`speckit-full` `specify workflow` definitions from earlier package versions are removed as part of this step.
 
 **Manual setup** -- if you prefer to drive `specify` yourself:
 
