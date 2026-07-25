@@ -242,6 +242,15 @@ do not reopen the completed bead or rewrite its terminal evidence.
 
 ## Worktree and cleanup
 
-Sweep after fan-in, per the global worktree rule. The artifacts directory and
-Beads database are never swept. Stop repository watchers before removing
-run-local process state. Non-git nodes have no worktree to sweep.
+Every tool-using agent creates its worktree with `wt switch --create <branch>`,
+never raw `git worktree add`. Worktrunk manages the path, fires `post-start`
+hooks (including the per-repo shared cargo target-dir hook), and keeps the
+worktree registered for cleanup. See `references/worktree-contract.md` for the
+full lifecycle, the `.config/wt.toml` hook template, and the dgit push rule.
+
+Sweep after fan-in: `wt remove <branch>` (primary) or `worktree-sweep.sh`
+(fallback). Call `worktree-sweep.sh --prune <repo-path>` to reclaim orphaned
+physical dirs under the harness prefix that pin disk without git registration.
+The artifacts directory and Beads database are never swept. Stop repository
+watchers before removing run-local process state. Non-git nodes have no
+worktree to sweep.

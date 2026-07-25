@@ -41,11 +41,15 @@ Role: lead session / orchestrator.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
    unsure whether the trigger is met → use subagents.
-4. **Every tool user runs in Worktrunk.** Implementation, reviewers, auditors,
-   and advisors that invoke tools must use a separately prepared Worktrunk
-   worktree and record its branch/path on the bead. Conversational agents that
-   use no tools and the primary human are exempt. Writers self-commit, push,
-   and report branch + worktree path.
+4. **Every tool user runs in a Worktrunk-managed worktree.** Implementation,
+   reviewers, auditors, and advisors that invoke tools must create their
+   worktree with `wt switch --create <branch>` (never raw `git worktree add`),
+   record the resulting path on the bead, and push via `dgit` (Code Defender
+   blocks direct GitHub push). Worktrunk fires `post-start` hooks at create,
+   including the per-repo shared cargo target-dir hook (see
+   `references/worktree-contract.md`). Conversational agents that use no tools
+   and the primary human are exempt. The primary checkout is shared — never
+   commit or edit inside it.
 5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Domain-specialist
    blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
    idles; you broker a `advisor` (or debugger, per `roles.md`) and
@@ -98,11 +102,13 @@ Role: lead session / orchestrator.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
    background `domain-specialist` subagent (`subagent_type: domain-specialist`,
-   Worktrunk-prepared worktree) with brief per `references/spawn-brief.md` (bead
-   id, scope, base, epic id, artifacts path, protocol). The domain-specialist claims its
-   bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
-   metadata — the resumable record. (teammates: see Rule 7). Agents record
-   their own audit events + comments.
+   Worktrunk-managed worktree via `wt switch --create`) with brief per
+   `references/spawn-brief.md` (bead id, scope, base, epic id, artifacts path,
+   protocol, worktree-contract pointer). The domain-specialist creates its
+   worktree with `wt switch --create`, claims its bead atomically
+   (`bd update <bead> --claim`), and stamps branch/worktree metadata — the
+   resumable record. (teammates: see Rule 7). Agents record their own audit
+   events + comments.
 6. On `REPORTED`: set `state:in_review` and spawn `reviewer` against
    branch/worktree. Relay `REVIEW` findings via SendMessage to domain-specialist's
    `agentId` as `FIX` (resumes same domain-specialist; never a new one). On `BLOCKED`:
@@ -124,7 +130,9 @@ Role: lead session / orchestrator.
 9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
    --parent <epic> --status in_progress,blocked`); invoke `audit-reporter` for
-   the end-of-run report; confirm all worktrees removed, build artifacts cleaned.
+   the end-of-run report; confirm all Worktrunk worktrees removed (`wt list`
+   should show no run worktrees); run `worktree-sweep.sh --prune <repo-path>`
+   to reclaim any orphaned physical dirs; clean build artifacts.
 
 ## References & scripts
 
@@ -138,6 +146,7 @@ Role: lead session / orchestrator.
 | `references/beads-store.md` | the state store: epic/node beads, state mapping, git-anchor contract, audit, merge-slot, gates |
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
+| `references/worktree-contract.md` | Worktrunk-based worktree lifecycle, per-repo shared cargo target-dir hook (`.config/wt.toml`), dgit push rule, orphan cleanup |
 | Scripts | `scope-check.py` · `discover-agents.py` · `conflict-probe.sh` ·
   `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
   `_test_*.py` self-tests) |
