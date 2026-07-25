@@ -9,10 +9,7 @@ Language steering (`language-steering-<lang>`) carries the opinionated default s
 <!-- BEGIN:steering -->
 | Steering Package | Description |
 | --- | --- |
-| `language-steering-go` | Opt-in opinionated Go defaults: prefer the standard library, urfave/cli for CLIs, koanf for layered config. Install to adopt these picks; the language-go package carries the non-opinionated structural conventions. |
-| `language-steering-python` | Opt-in opinionated Python defaults: tooling (uv, Ruff, pytest, pyright) and libraries (FastAPI, Pydantic, Litestar). Install to adopt these picks; the language-python package carries the non-opinionated structural conventions. |
 | `language-steering-rust` | Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions. |
-| `language-steering-terraform` | Opt-in opinionated Terraform and HCL defaults: module preference order, remote state with locking, version pinning, and plan/validate discipline. Install to adopt these picks; the language-terraform package carries the non-opinionated structural conventions. |
 | `language-steering-typescript` | Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions. |
 | `steering-architecture` | Cross-cutting design steering: compose over fork, keep generic cores case-agnostic, and make structural invariants a verifiable diff guard. Opt-in steering. |
 | `steering-backend` | Opinionated backend conventions: service/function/worker runtime shape, API and cross-boundary contract rules, and background-job (queue, event, scheduled) patterns. Opt-in steering. |

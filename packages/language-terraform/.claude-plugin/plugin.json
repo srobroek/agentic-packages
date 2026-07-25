@@ -1,16 +1,12 @@
 {
   "name": "language-terraform",
   "version": "3.0.0",
-  "description": "Terraform and HCL toolkit: opinionated Terraform steering. No dedicated quality skill yet.",
+  "description": "Terraform and HCL toolkit: the Terraform LSP.",
   "author": {
     "name": "Sjors Robroek"
   },
   "license": "Apache-2.0",
   "dependencies": [
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/language-steering-terraform"
-    },
     {
       "git": "srobroek/agentic-packages",
       "path": "packages/lsp-terraform"

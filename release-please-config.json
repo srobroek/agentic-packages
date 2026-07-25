@@ -740,45 +740,9 @@
         }
       ]
     },
-    "packages/language-steering-go": {
-      "release-type": "simple",
-      "component": "language-steering-go",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-steering-python": {
-      "release-type": "simple",
-      "component": "language-steering-python",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/language-steering-rust": {
       "release-type": "simple",
       "component": "language-steering-rust",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-steering-terraform": {
-      "release-type": "simple",
-      "component": "language-steering-terraform",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -959,18 +923,6 @@
     "packages/mcp-fetcher": {
       "release-type": "simple",
       "component": "mcp-fetcher",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-gitnexus": {
-      "release-type": "simple",
-      "component": "mcp-gitnexus",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

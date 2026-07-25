@@ -4,8 +4,6 @@ Opinionated TypeScript and JavaScript defaults. Keep existing project choices
 unless the task is explicitly about setup, migration, or standardization. Load
 only the relevant topic:
 
-- [Tooling and package managers](typescript.tooling.context.md)
-- [Libraries and contracts](typescript.libraries.context.md)
 - [Styling and theming](typescript.styling-theming.context.md) — two-layer CSS
   tokens, data-theme theming, density axis, component naming
 - [Testing](typescript.testing.context.md) — layered pyramid, jsdom shims, IPC
