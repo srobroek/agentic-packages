@@ -7,7 +7,8 @@ DEFAULT A claim-holder may explicitly bind throwaway child contexts to its own p
 NOT Use harness worktree isolation, raw `git worktree`, or an unbound shared checkout.
 
 LEASE
-MUST Run the `worktrunk-writer` skill before delegation; its hook rejects task-bearing first spawns until a prepared checkout is allocated.
+MUST Run the `worktrunk-writer` skill before delegation; nothing else starts the contract. Its hook advises an unleased task-bearing spawn but cannot deny one, because a spawn payload does not say whether the child will write.
+MUST Treat enforcement as binding once the protocol starts: a bound runtime context, a leased checkout, and a `WAIT` allocation are all policed, and cross-lease access is rejected.
 MUST Bind the parent-visible runtime handle and hook-visible context acknowledgement before task delivery; the identities are not interchangeable.
 MUST A Beads-backed agent use its bound T0 action only to claim and validate; repository tools start after validation.
 MUST Keep every command or write inside the returned path.

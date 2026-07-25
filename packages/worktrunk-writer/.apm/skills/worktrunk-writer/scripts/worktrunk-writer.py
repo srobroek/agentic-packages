@@ -1131,6 +1131,46 @@ def hook_deny(error: ContractError) -> int:
     return 0
 
 
+def hook_advise(message: str) -> int:
+    """Allow the call, but put guidance in front of the model.
+
+    Enforcement engages only once a caller is inside the writer protocol, so
+    the parent that most needs the contract -- one that never followed the
+    steering pointer -- is the one no gate reaches. An advisory restores a
+    mechanical cue without denying ordinary delegation.
+    """
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "additionalContext": message,
+                }
+            }
+        )
+    )
+    return 0
+
+
+SPAWN_ADVISORY = (
+    "worktrunk-writer: this spawn delivers a task to an agent with no prepared "
+    "Worktrunk lease, so the child shares this checkout and its work gets no "
+    "lifecycle record. If it will edit the repository, load the worktrunk-writer "
+    "skill and complete PREPARE -> WAIT -> BIND -> CLAIM first. A read-only or "
+    "non-tool-using child needs no lease."
+)
+
+
+def advises_spawn(tool_input: dict[str, Any]) -> bool:
+    """Report whether a spawn should carry the unleased-delegation advisory."""
+    if runtime_recipient(tool_input):
+        return False
+    prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
+    if not prompt.strip():
+        return False
+    return allocation_checkout(prompt) is None
+
+
 def hook() -> int:
     try:
         payload = json.load(sys.stdin)
@@ -1167,10 +1207,12 @@ def hook() -> int:
         if not expected_lease and not runtime_context(payload):
             return 0
         return hook_deny(error)
-    if not protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease):
-        return 0
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
+    if not protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease):
+        if tool in SPAWN_TOOLS and advises_spawn(tool_input):
+            return hook_advise(SPAWN_ADVISORY)
+        return 0
     try:
         if tool in SPAWN_TOOLS:
             assert_spawn_allocation(tool_input, inventory)

@@ -22,7 +22,7 @@ TRIGGER
    Do not invoke tools or start work.
    The controlling parent will send your task after binding your Worktrunk lease.
    ```
-   A protocol-owning package may extend this canonical WAIT with its resource identity and release verb. The pre-spawn hook rejects task-bearing first spawns and unprepared paths.
+   A protocol-owning package may extend this canonical WAIT with its resource identity and release verb. The pre-spawn hook rejects an unprepared path and a task-bearing spawn once the protocol is engaged; before that it can only advise, so allocate deliberately.
 3. Record the parent-visible spawn handle. The waiting actor replies exactly `WAIT context={hook-visible-id}` through the `SubagentStart` handshake without invoking a tool. Bind both identities without `--bead`: `scripts/worktrunk-writer.py bind --repo {repo} --path {path} --actor {actor} --lease {token} --handle {runtime-handle} --ack 'WAIT context={hook-visible-id}'`. Require `status=bound`.
 4. Store `runtime_handle` and `runtime_context` on a Beads activation resource and read both back. Resume an ordinary agent with its task, or send exactly `CLAIM {id}` for bead-as-brief activation. An Agent resume is admitted only for a bound handle; bead-as-brief SendMessage is guarded by its orchestration package.
 5. The agent validates with `scripts/worktrunk-writer.py validate --repo {repo} --path {path} --actor {actor} --lease {token} [--bead {id}]` before repository tools. When the harness has no `cwd` field, every Bash call starts with `cd -- {path}`; file tools use absolute paths beneath it. Artifact nodes also require an absolute `artifacts_dir` outside the leased checkout. File writes and Bash output redirections outside the checkout and stamped artifact directory are denied.
