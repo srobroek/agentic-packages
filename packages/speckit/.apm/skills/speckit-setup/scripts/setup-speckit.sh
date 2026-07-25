@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Bootstrap a SpecKit project: scaffold .specify/, register the community
 # extension catalog, install + enable the required extension set, register their
-# command files for the requested integration, and install the workflow
-# definitions. Idempotent -- safe to re-run.
+# command files for the requested integration, and provision the beads
+# workflow (the phase DAG). Idempotent -- safe to re-run.
 #
 # This is the single source of truth for the spec-kit side of SpecKit setup.
 # The global `project-setup` skill delegates here (after `apm install speckit`)
@@ -33,7 +33,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKFLOW_ROOT="$SCRIPT_DIR/workflows"
 
 INTEGRATION=""        # empty => auto-detect (resolve_primary_integration below)
 RENDER_FOR=""         # empty => render for the primary only
@@ -152,14 +151,13 @@ EXTENSIONS=(
   tinyspec
 )
 
-# Workflow definitions, installed via the `workflow` primitive (since spec-kit
-# 0.11.x workflows are a first-class primitive, NOT extensions -- they do not
-# resolve through `extension add`). All three ship in this package under
-# workflows/<id>/workflow.yml and are installed from those local dirs:
-#   speckit          -- our gated override of the upstream Full SDD Cycle
-#   speckit-quality  -- post-implementation QA cycle
-#   speckit-full     -- spec -> implement -> QA in one run
-WORKFLOWS=(speckit speckit-quality speckit-full)
+# Legacy `specify workflow` definitions (the `workflow` primitive, not an
+# extension) that older versions of this package installed via `specify
+# workflow add` from a bundled workflows/<id>/workflow.yml. The beads
+# `speckit-feature` formula is now the phase DAG (see step 5 below), so these
+# are removed rather than reinstalled -- kept here only so upgrades clean up
+# after themselves.
+LEGACY_WORKFLOWS=(speckit speckit-quality speckit-full)
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found on PATH" >&2; exit 1; }; }
 need specify
@@ -350,25 +348,19 @@ for target in "${RENDER_LIST[@]}"; do
   fi
 done
 
-echo "==> 5/6 install workflow definitions from local dirs: ${WORKFLOWS[*]}"
-for wf in "${WORKFLOWS[@]}"; do
-  wf_dir="$WORKFLOW_ROOT/$wf"
-  if [ ! -f "$wf_dir/workflow.yml" ]; then
-    echo "    WARN: workflow asset missing for $wf at $wf_dir -- skipping" >&2
-    continue
-  fi
-  # Replace any existing definition so our opinionated overrides win over the
-  # version spec-kit bundles at init (e.g. the upstream `speckit` workflow).
-  if specify workflow list 2>/dev/null | grep -qw "$wf"; then
-    echo "    ~ $wf (replacing existing)"
+# Remove any legacy `specify workflow` definitions from earlier package versions
+# (no numbered step -- this is cleanup, not an install). The beads formula
+# below is the phase DAG now; a stale workflow.yml left over from before would
+# otherwise be a second, unmaintained source of the same ordering.
+_wf_list="$(specify workflow list 2>/dev/null || true)"
+for wf in "${LEGACY_WORKFLOWS[@]}"; do
+  if printf '%s\n' "$_wf_list" | grep -qw "$wf"; then
+    echo "    removing legacy workflow definition: $wf"
     specify workflow remove "$wf" </dev/null >/dev/null 2>&1 || true
-  else
-    echo "    + $wf"
   fi
-  specify workflow add "$wf_dir" </dev/null
 done
 
-echo "==> 6/7 provision beads workflow (speckit-beads formula)"
+echo "==> 5/6 provision beads workflow (speckit-beads formula)"
 # Workflow state lives in beads (bd). speckit-gate (PyPI, gates.yaml) is
 # retired/archived; the speckit-beads package supplies a bd formula whose
 # poured molecule IS the phase DAG (human gates included). Guard: skip
@@ -415,7 +407,7 @@ else
   echo "          Re-run setup-speckit.sh once bd is available to enable the workflow molecule." >&2
 fi
 
-echo "==> 7/7 ignore generated status-report artefact"
+echo "==> 6/6 ignore generated status-report artefact"
 # The status-report extension (/speckit.status-report.show) regenerates
 # specs/spec-status.md on every run despite its read-only catalog tag. It is a
 # derived report, not a tracked spec artefact (spec.md/plan.md/tasks.md ARE
