@@ -1,5 +1,5 @@
 name: dependency-quality
-version: 4.0.1
+version: 4.0.2
 description: >-
   Dependency hygiene bundle: nudges to investigate a dependency before adding it
   and audits the lockfile for known CVEs. Manifest-edit and latest-version
