@@ -19,7 +19,7 @@ agents:
   domain-specialist-xhigh:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: xhigh
+      reasoning_effort: high
   reviewer:
     codex:
       model: gpt-5.6-sol
