@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/srobroek/agentic-packages/compare/chezmoi-editor--v1.3.1...chezmoi-editor--v1.3.2) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
 ## [1.3.1](https://github.com/srobroek/agentic-packages/compare/chezmoi-editor--v1.3.0...chezmoi-editor--v1.3.1) (2026-07-25)
 
 

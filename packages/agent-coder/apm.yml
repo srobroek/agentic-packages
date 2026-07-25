@@ -1,5 +1,5 @@
 name: agent-coder
-version: 7.0.1
+version: 7.0.2
 description: >-
   Implementation subagents for bounded code changes, tests, and refactors within
   a defined scope. Ships `coder` (edits the caller's tree directly; the parent
