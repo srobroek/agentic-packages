@@ -1483,7 +1483,7 @@
     },
     {
       "name": "worktrunk-writer",
-      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk 0.62 JSON-array fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
+      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
       "version": "1.2.0",
       "tags": [
         "worktrunk",
