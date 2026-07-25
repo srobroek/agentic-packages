@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/language-go--v4.0.1...language-go--v5.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
 ## [4.0.1](https://github.com/srobroek/agentic-packages/compare/language-go--v4.0.0...language-go--v4.0.1) (2026-07-25)
 
 

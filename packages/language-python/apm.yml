@@ -1,5 +1,5 @@
 name: language-python
-version: 4.0.1
+version: 5.0.0
 description: >-
   Python toolkit: the python-quality skill, opinionated Python steering, and
   Python LSP.
