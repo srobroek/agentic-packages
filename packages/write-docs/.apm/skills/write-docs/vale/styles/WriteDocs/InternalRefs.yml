@@ -1,0 +1,18 @@
+# E3 in the retired slop-lint.py.
+#
+# Default scope, deliberately NOT `raw`. The original scanned whole lines so a
+# spec path inside a markdown link target would still be caught, but measured on
+# this corpus that cost 5 false positives per README -- `--no-constitution` in a
+# command example, `.specify/` inside a code span -- against one real prose hit.
+# Link targets are already validated by lychee in CI (.github/workflows/lint.yml),
+# which resolves them rather than pattern-matching, so this rule stays on prose
+# and leaves link paths to the tool that owns them.
+extends: existence
+message: "internal reference: %s — consumer docs describe the released artifact only"
+level: error
+link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/references/consumer-docs.md
+ignorecase: true
+raw:
+  - '(\bspecs?/|\.specify/|\bADRs?\b|\bADR[- ]?\d+|\bconstitution\b|'
+  - '\bdesign doc(ument)?\b|per the spec\b|as specified in\b|'
+  - 'extracted from\b|mirrors (the )?\w+ (package|repo)|aligned with\b)'

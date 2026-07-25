@@ -572,18 +572,6 @@
         }
       ]
     },
-    "packages/hooks-portability-ci": {
-      "release-type": "simple",
-      "component": "hooks-portability-ci",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-precommit-gate": {
       "release-type": "simple",
       "component": "hooks-precommit-gate",

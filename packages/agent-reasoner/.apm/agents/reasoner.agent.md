@@ -1,6 +1,6 @@
 ---
 name: reasoner
-effort: xhigh
+effort: high
 description: Resolves one exceptional architecture, policy, or adversarial reasoning
   question without implementation ownership.
 ---

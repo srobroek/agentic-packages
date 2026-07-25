@@ -464,10 +464,12 @@ One agent definition, parameterized at spawn — never per-trade definitions.
   sub-specialists is the signal to split the domain. Every claim-holder
   receives a distinct Worktrunk checkout.
 - **Effort variants:** Agent spawn calls carry `model` but not effort. The
-  package compiles `domain-specialist-{low,medium,high,xhigh}` from one
-  source (effort frontmatter is the only difference; one shared rules file).
-  Codex variants set `model_reasoning_effort`. T0's tier table maps
-  `complexity_tier` → (variant, model).
+  package compiles `domain-specialist-{low,medium,xhigh}` from one source
+  (effort frontmatter is the only difference; one shared rules file). The base
+  `domain-specialist` is the `high` tier; `-xhigh` also pins `effort: high`,
+  because above `high` measured effort ladders show no capability gain and a
+  tool-use regression. Codex variants set `model_reasoning_effort`. T0's tier
+  table maps `complexity_tier` → (variant, model).
 
 ### Standard profiles
 

@@ -147,6 +147,7 @@ plugin manifests do not support every APM component type.
 | `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
 | `hooks-precommit-gate` | Partial | Simple commit/push commands are covered; install real pre-commit hooks for tool-independent enforcement. |
 | `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
+| `hooks-worktrunk` | Partial | Both PreToolUse guards work; the WorktreeCreate/WorktreeRemove provider is Claude-only because Codex has no worktree lifecycle events. Use `wt` commands directly. |
 | `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
 | `language-python` | Partial | All APM members except native pyright LSP integration work; run pyright directly and use code MCP tools. |
 | `language-rust` | Partial | All APM members except native rust-analyzer integration work; use cargo check/clippy and code MCP tools. |

@@ -72,16 +72,42 @@ is_read_only_shell_command() {
   # 5. Every segment (split on | ; & && ||) must lead with a known reader. &&/||
   #    become two adjacent delimiters -> an empty middle segment, which is
   #    skipped, so a single tr on |;& covers the two-char operators too.
-  local seg first normalized
+  local seg first normalized stripped
   normalized="$(printf '%s' "$sanitized" | tr '|;&' '\n')"
   while IFS= read -r seg; do
     # Trim leading whitespace, an optional `env` prefix, and any VAR=val prefixes.
     seg="$(printf '%s' "$seg" | sed -E 's/^[[:space:]]+//; s/^env[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*//')"
     [ -z "$seg" ] && continue
+
+    # Peel leading shell KEYWORDS and block punctuation so a reader inside a loop
+    # or conditional body is judged on its own verb, not on `do`/`then`. The verb
+    # behind the keyword still has to be a known reader, so no write path widens.
+    while :; do
+      stripped="$(printf '%s' "$seg" | sed -E 's/^(if|then|else|elif|fi|until|do|done|case|esac|\{|\}|!)([[:space:]]+|$)//')"
+      [ "$stripped" = "$seg" ] && break
+      seg="$stripped"
+    done
+    [ -z "$seg" ] && continue
+
+    # A `for VAR in <words>` header and a `<file` input redirect are DATA, not
+    # commands: there is no verb to classify and nothing is written. Skip the
+    # segment. The loop BODY is a separate segment and must still lead with a
+    # reader, so this does not widen the write path.
+    case "$seg" in
+      for[[:space:]]*|while[[:space:]]*)
+        if printf '%s' "$seg" | grep -Eq '^(for|while)[[:space:]]+[A-Za-z_][A-Za-z0-9_]*[[:space:]]+in([[:space:]]|$)'; then
+          continue
+        fi
+        # `while read line` etc: drop the keyword and classify the verb behind it.
+        seg="$(printf '%s' "$seg" | sed -E 's/^(for|while)[[:space:]]+//')"
+        ;;
+      '<'*) continue ;;
+    esac
+    [ -z "$seg" ] && continue
     first="$(printf '%s' "$seg" | sed -E 's/[[:space:]].*$//')"
     first="${first##*/}"  # /usr/bin/grep -> grep
     case "$first" in
-      cat|sed|head|tail|less|more|bat|rg|grep|egrep|fgrep|fd|find|ls|eza|tree|wc|jq|yq|stat|file|pwd|realpath|readlink|echo|printf|test|\[|true|false|dirname|basename|sort|uniq|cut|column|diff|comm)
+      cat|sed|head|tail|less|more|bat|rg|grep|egrep|fgrep|fd|find|ls|eza|tree|wc|jq|yq|stat|file|pwd|realpath|readlink|echo|printf|test|\[|true|false|dirname|basename|sort|uniq|cut|column|diff|comm|cd|pushd|popd|read|shift|:)
         continue
         ;;
       python|python[0-9]|python[0-9].[0-9]|python[0-9].[0-9][0-9]|node|bash|sh)

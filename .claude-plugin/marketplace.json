@@ -524,19 +524,6 @@
       "source": "./packages/hooks-package-investigate"
     },
     {
-      "name": "hooks-portability-ci",
-      "description": "CI gate that runs shipped hook scripts through the real portability failure modes the audits found: bash 3.2 parse errors (;;& fallthrough, mapfile), GNU-only sed/grep constructs (\\b word boundaries, lazy quantifiers), and string-form tool_input payloads that crash jq. Reports a summary and exits non-zero on any failure. Invoked on demand or wired into CI.",
-      "version": "0.5.0",
-      "tags": [
-        "ci",
-        "hooks",
-        "portability",
-        "testing"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/hooks-portability-ci"
-    },
-    {
       "name": "hooks-precommit-gate",
       "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory — the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
       "version": "0.6.0",
@@ -629,7 +616,7 @@
     },
     {
       "name": "hooks-worktrunk",
-      "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, while steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
+      "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
       "version": "1.0.0",
       "tags": [
         "hooks",
@@ -1483,7 +1470,7 @@
     },
     {
       "name": "worktrunk-writer",
-      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk 0.62 JSON-array fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
+      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
       "version": "1.2.0",
       "tags": [
         "worktrunk",
@@ -1509,7 +1496,7 @@
     },
     {
       "name": "write-docs",
-      "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a deterministic slop/status-language linter, plus a SubagentStart hook that injects the same documentation discipline into every subagent.",
+      "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a Vale prose gate (house style plus the pinned vale-ai-tells package) and a SubagentStart hook that injects the same documentation discipline into every subagent. Requires the vale binary on PATH.",
       "version": "1.2.2",
       "tags": [
         "skill",

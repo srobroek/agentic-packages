@@ -2,7 +2,7 @@
 name: adversarial-challenger
 description: Read-only adversarial challenger. Stress-tests any claim, plan, design, or decision. Give it the claim plus observable facts; it returns evidence-backed counter-arguments.
 model: opus
-effort: xhigh
+effort: high
 permissionMode: plan
 maxTurns: 25
 ---
