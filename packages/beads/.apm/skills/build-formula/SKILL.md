@@ -1,6 +1,6 @@
 ---
 name: build-formula
-description: Use when authoring a bd formula, deciding whether repeatable work should be a formula at all, or debugging one that pours the wrong DAG. Covers conditional steps, gates, the anchor rule, composition, and the assertions that catch silent failures.
+description: Use when authoring a bd formula, choosing whether work should be a formula at all, or debugging one that pours the wrong DAG.
 ---
 
 # Build a bd formula
