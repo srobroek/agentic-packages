@@ -643,7 +643,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "go"
@@ -654,7 +654,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "python"
@@ -665,7 +665,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "rust"
@@ -687,7 +687,7 @@
     {
       "name": "language-steering-rust",
       "description": "Opt-in opinionated Rust defaults: cargo/clippy/rustfmt, thiserror for libraries, anyhow for binaries, clap for CLIs. Install to adopt these picks; the language-rust package carries the non-opinionated structural conventions.",
-      "version": "2.1.1",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "rust"
@@ -698,7 +698,7 @@
     {
       "name": "language-steering-typescript",
       "description": "Opt-in opinionated TypeScript and JavaScript defaults: tooling (Bun, pnpm, Vitest) and contracts (Zod, OpenAPI). Install to adopt these picks; the language-typescript package carries the non-opinionated structural conventions.",
-      "version": "2.1.1",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "typescript"
@@ -720,7 +720,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and TypeScript LSP.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "tags": [
         "bundle",
         "typescript"
@@ -1323,7 +1323,7 @@
     {
       "name": "steering-toolchain-defaults",
       "description": "Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project.",
-      "version": "2.1.2",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "toolchain"
@@ -1345,7 +1345,7 @@
     {
       "name": "toolchain-cache-policy",
       "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
-      "version": "1.0.1",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "cache",
