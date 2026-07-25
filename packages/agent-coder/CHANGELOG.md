@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/agent-coder--v6.1.3...agent-coder--v7.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** subagent_type 'coder' -> 'builder', 'parallel-coder' -> 'parallel-builder'. Update any spawn calls referencing the old names.
+
+### Bug Fixes
+
+* **orchestrate:** restore domain-specialist; rename coder-&gt;builder ([#715](https://github.com/srobroek/agentic-packages/issues/715)) ([223e0c9](https://github.com/srobroek/agentic-packages/commit/223e0c95cb8dee08d1f3cd00cd96cb598d78d24e))
+
 ## [6.1.3](https://github.com/srobroek/agentic-packages/compare/agent-coder--v6.1.2...agent-coder--v6.1.3) (2026-07-23)
 
 

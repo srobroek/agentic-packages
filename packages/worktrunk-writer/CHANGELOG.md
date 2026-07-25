@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v1.1.0...worktrunk-writer--v1.2.0) (2026-07-25)
+
+
+### Features
+
+* enforce Worktrunk worktree lifecycle for agents ([46ec4cb](https://github.com/srobroek/agentic-packages/commit/46ec4cb5385c41020870b5492f1f83a7c8e59d14))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v1.0.0...worktrunk-writer--v1.1.0) (2026-07-23)
 
 

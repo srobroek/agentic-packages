@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.3...write-agentic--v3.4.0) (2026-07-25)
+
+
+### Features
+
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
 ## [3.3.3](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.2...write-agentic--v3.3.3) (2026-07-24)
 
 
