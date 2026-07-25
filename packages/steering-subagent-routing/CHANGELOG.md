@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.3...steering-subagent-routing--v3.2.4) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
 ## [3.2.3](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.2...steering-subagent-routing--v3.2.3) (2026-07-25)
 
 

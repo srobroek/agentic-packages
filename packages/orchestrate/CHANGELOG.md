@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v6.0.0...orchestrate--v6.0.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* **orchestrate:** accept worktrunk-writer 2.x ([#732](https://github.com/srobroek/agentic-packages/issues/732)) ([af245d7](https://github.com/srobroek/agentic-packages/commit/af245d7beb14521c37c6d21bac751e12309d2c63))
+
 ## [6.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v5.0.0...orchestrate--v6.0.0) (2026-07-25)
 
 
