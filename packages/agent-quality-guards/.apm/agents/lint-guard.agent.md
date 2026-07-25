@@ -2,7 +2,6 @@
 name: lint-guard
 description: Validates scoped lint findings before orchestrate review.
 model: haiku
-effort: high
 permissionMode: plan
 tools:
   - Read
