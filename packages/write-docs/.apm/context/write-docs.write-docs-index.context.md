@@ -1,21 +1,22 @@
 # Write Docs
 
 Condensed doc-writing rules. The write-docs skill owns the full genre
-references and the slop-lint script; use it when available. When de-slopping
+references and the prose gate; invoke the skill rather than its linter directly,
+since the patterns cannot reach the register judgement. When de-slopping
 prose or reviewing AI-drafted text, load the skill's `references/ai-tells.md`
-— AI-generation markers paired with rewrite moves. If its Last-researched
+-- AI-generation markers paired with rewrite moves. If its Last-researched
 date is over ~12 months old, flag that the lexical sections need a research
 refresh before relying on them.
 
 All genres:
 
-MUST State what the artifact does — never effort, intent, process, or journey.
+MUST State what the artifact does -- never effort, intent, process, or journey.
 MUST Delete any adjective you cannot back with a number, benchmark, or feature list.
 MUST One idea per sentence; lists and tables over prose paragraphs.
 NOT Status language: "under construction", "WIP", "coming soon", "currently", "for now", "planned", "being specified".
 NOT Slop lexicon: "seamlessly", "robust", "powerful", "comprehensive", "leverage", "blazingly fast", "battle-tested", emoji headings.
 
-Consumer surfaces (README, docs/ — read by users of the artifact):
+Consumer surfaces (README, docs/ -- read by users of the artifact):
 
 MUST Write for the released artifact: every sentence verifiable against code at HEAD; no target states or roadmap.
 MUST Every example is copy-paste runnable and has a matching executable test under `examples/`.
@@ -30,5 +31,5 @@ NOT Hand-editing CHANGELOG.md in repos where release-please or changesets genera
 
 Internal surfaces (specs, ADRs, constitutions, CONTRIBUTING, runbooks):
 
-DEFAULT Internal references allowed — link, do not restate.
+DEFAULT Internal references allowed -- link, do not restate.
 MUST Same prose discipline as consumer surfaces; structured status metadata allowed, status narration in body prose is not.

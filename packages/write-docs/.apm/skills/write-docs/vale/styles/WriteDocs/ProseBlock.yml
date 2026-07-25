@@ -1,0 +1,11 @@
+# W1 in the retired slop-lint.py. `%d`, not `%s`: occurrence populates an int and
+# `%s` renders it as `%!s(int=N)`. Vale's paragraph scope replaces the old
+# line-prefix heuristic, which miscounted wrapped list-item continuations and
+# markdown syntax as prose words.
+extends: occurrence
+message: "prose block of %d words > 80 — convert to a list or table"
+level: warning
+link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/SKILL.md
+scope: paragraph
+max: 80
+token: '\b(\w+)\b'

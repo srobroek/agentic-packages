@@ -28,6 +28,16 @@ scripts:
     .apm/scripts/render-docs.py all && apm run build-marketplace
   install: apm install --target claude,codex
   audit-agentic-assets: uv run --script .apm/scripts/audit-agentic-assets.py
+  # Prose gate for scripts and CI only. Agents invoke the write-docs SKILL
+  # instead: it also carries the non-deterministic review the linter cannot do.
+  #
+  # apm run forwards no arguments, so the target comes from SLOP_LINT_PATHS
+  # (default: tracked *.md outside the audit dir) and the genre from SLOP_GENRE.
+  slop-lint: >-
+    bash -c 'genre="${SLOP_GENRE:-consumer}";
+    paths="${SLOP_LINT_PATHS:-$(git ls-files "*.md" | grep -v "^.audit-")}";
+    bash packages/write-docs/.apm/skills/write-docs/scripts/slop-lint.sh
+    --genre "$genre" $paths'
   audit-codex-config: uv run --script .apm/scripts/audit-codex-config.py
   sanitize-codex-hooks: python3 .apm/scripts/sanitize-codex-hooks.py
   sanitize-claude-hooks: python3 .apm/scripts/sanitize-claude-hooks.py
