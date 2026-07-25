@@ -1,3 +1,9 @@
+<!-- vale off -->
+<!-- This catalogue quotes and demonstrates the tells it documents, so every
+     lexical rule in both styles fires on it by construction. Linting is off for
+     the whole file rather than per rule, which would need extending each time an
+     entry is added. Prose discipline here is a review job, not a lint job. -->
+
 # AI Tells
 
 Last researched: 2026-07.
