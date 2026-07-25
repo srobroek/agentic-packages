@@ -36,19 +36,19 @@ SKILL.md Core rules.
 
 | Role | Writes | Spawns | Runs in | Notes |
 |---|---|---|---|---|
-| Orchestrator | no code | **everything; sole dismisser** | lead session | coordination + deterministic scripts only |
-| Docs-guard | nothing (read-only) | nothing | reads scope | flags low-signal doc issues before merge review |
-| Data-metrics-summarizer | nothing (read-only) | nothing | reads scope | compacts logs/telemetry into bounded, prompt-driven summaries |
-| Lint-guard | nothing (read-only) | nothing | reads scope | triages lint artifacts and classifies likely false positives |
-| Maintenance-metrics-reader | nothing (read-only) | nothing | reads repo metadata + scoped trees | emits `MAINTENANCE SNAPSHOT <scope> status=PASS\|WARN\|FAIL` with top signals and evidence |
-| Reviewer-mechanics | nothing (read-only) | nothing | reads scope diff only | emits `MECH-REVIEW <scope> verdict=PASS\|CHANGES` with deterministic `file:line` findings |
-| Domain-specialist | its `scope` only | **nothing** | own git worktree | commits + pushes its branch; on block → `BLOCKED kind:design\|debug` to `main` |
-| Reviewer | nothing (read-only) | nothing | reads branch/worktree | logs `review` verdict as audit record + bead comment |
-| Advisor | nothing (read-only) | nothing | reads code | one `ADVICE`, then exits |
+| Orchestrator | no code | **everything; sole dismisser** | lead session | prepares every role checkout with Worktrunk; coordination + deterministic scripts only |
+| Docs-guard | nothing (read-only) | nothing | own Worktrunk checkout when using tools | flags low-signal doc issues before merge review |
+| Data-metrics-summarizer | nothing (read-only) | nothing | artifact-only, or own Worktrunk checkout when reading the repo | compacts logs/telemetry into bounded, prompt-driven summaries |
+| Lint-guard | nothing (read-only) | nothing | own Worktrunk checkout when using tools | triages lint artifacts and classifies likely false positives |
+| Maintenance-metrics-reader | nothing (read-only) | nothing | own Worktrunk checkout when reading repo metadata or trees | emits `MAINTENANCE SNAPSHOT <scope> status=PASS\|WARN\|FAIL` with top signals and evidence |
+| Reviewer-mechanics | nothing (read-only) | nothing | own Worktrunk checkout | emits `MECH-REVIEW <scope> verdict=PASS\|CHANGES` with deterministic `file:line` findings |
+| Domain-specialist | its `scope` only | bound throwaway children | parent-prepared Worktrunk checkout | children share its bound path but never claim, commit, push, or manage worktrees; on block → `BLOCKED kind:design\|debug` |
+| Reviewer | nothing (read-only) | nothing | separate Worktrunk checkout created from writer branch | logs `review` verdict as audit record + bead comment |
+| Advisor | nothing (read-only) | nothing | separate Worktrunk checkout when using tools | one `ADVICE`, then exits |
 | Shepherd | integration branch / merges (remote) | nothing | remote-side (`gh`, merge-tree probes) — no worktree | merge + push authority only; never mutates local trees |
 | Scribe | nothing (read-only) | nothing | reads beads db + artifacts | never in the write path |
-| Researcher | nothing (read-only) | nothing | reads sources/code | returns a terse findings digest |
-| Tiebreaker | nothing (read-only) | nothing | reads the dispute | binding `ADVICE`, logged |
+| Researcher | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | returns a terse findings digest |
+| Tiebreaker | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | binding `ADVICE`, logged |
 
 ## Specialist dispatch
 
@@ -63,8 +63,11 @@ SKILL.md Core rules.
 These specialists preprocess bounded evidence. A semantic correctness decision
 still belongs to `reviewer`, a researcher, or an advisor.
 
-**Only the orchestrator spawns or dismisses agents; no worker nests** — even
-where the platform would allow it (flat tree — SKILL.md core rule 5).
+**Only the orchestrator spawns or dismisses claim-holders, reviewers, and
+advisors.** A domain-specialist may nest bounded throwaway implementation
+children in its own prepared checkout. It binds every child runtime to the
+same Worktrunk actor/lease, and collects the child before reporting. No other
+worker nests (SKILL.md core rule 5).
 
 ## Researcher fan-out / fan-in
 

@@ -6,11 +6,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 from typing import Any
 
 
@@ -26,8 +26,7 @@ def run(
         cwd=cwd,
         env=env,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if result.returncode:
@@ -36,13 +35,11 @@ def run(
     return result
 
 
-def wt_inventory(repo: Path, *, full: bool = False) -> dict[str, Any]:
+def wt_inventory(repo: Path, *, full: bool = False) -> list[dict[str, Any]]:
     command = [
         "wt",
         "-C",
         str(repo),
-        "--config-set",
-        "list.json-schema=2",
         "list",
         "--format=json",
         "--branches",
@@ -53,22 +50,25 @@ def wt_inventory(repo: Path, *, full: bool = False) -> dict[str, Any]:
         payload = json.loads(run(command).stdout)
     except json.JSONDecodeError as error:
         raise ContractError(f"Worktrunk returned invalid JSON: {error}") from error
-    if payload.get("schema") != 2 or not isinstance(payload.get("items"), list):
-        raise ContractError("Worktrunk inventory is not schema 2")
+    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+        raise ContractError("Worktrunk inventory is not a JSON array of items")
     return payload
 
 
 def item_path(item: dict[str, Any]) -> Path | None:
-    value = (item.get("worktree") or {}).get("path")
+    value = item.get("path")
     return Path(value).resolve() if value else None
 
 
 def find_item(
-    payload: dict[str, Any], *, branch: str | None = None, path: Path | None = None
+    payload: list[dict[str, Any]],
+    *,
+    branch: str | None = None,
+    path: Path | None = None,
 ) -> dict[str, Any]:
     resolved = path.resolve() if path else None
     matches = []
-    for item in payload["items"]:
+    for item in payload:
         if branch is not None and item.get("branch") != branch:
             continue
         if resolved is not None and item_path(item) != resolved:
@@ -76,16 +76,14 @@ def find_item(
         matches.append(item)
     if len(matches) != 1:
         anchor = f"branch={branch!r} path={str(resolved)!r}"
-        raise ContractError(
-            f"expected one Worktrunk item for {anchor}; found {len(matches)}"
-        )
+        raise ContractError(f"expected one Worktrunk item for {anchor}; found {len(matches)}")
     return matches[0]
 
 
-def containing_item(payload: dict[str, Any], path: Path) -> dict[str, Any] | None:
+def containing_item(payload: list[dict[str, Any]], path: Path) -> dict[str, Any] | None:
     resolved = path.resolve()
     matches: list[tuple[int, dict[str, Any]]] = []
-    for item in payload["items"]:
+    for item in payload:
         root = item_path(item)
         if root is None:
             continue
@@ -100,6 +98,25 @@ def containing_item(payload: dict[str, Any], path: Path) -> dict[str, Any] | Non
 def worktrunk_vars(item: dict[str, Any]) -> dict[str, Any]:
     value = item.get("vars")
     return value if isinstance(value, dict) else {}
+
+
+def bound_contexts(item: dict[str, Any]) -> set[str]:
+    variables = worktrunk_vars(item)
+    contexts = set()
+    legacy = variables.get("context")
+    if isinstance(legacy, str) and legacy:
+        contexts.add(legacy)
+    raw = variables.get("contexts")
+    if isinstance(raw, list):
+        contexts.update(value for value in raw if isinstance(value, str) and value)
+    elif isinstance(raw, str) and raw:
+        try:
+            decoded = json.loads(raw)
+        except json.JSONDecodeError:
+            decoded = []
+        if isinstance(decoded, list):
+            contexts.update(value for value in decoded if isinstance(value, str) and value)
+    return contexts
 
 
 def beads_active(repo: Path) -> bool:
@@ -156,7 +173,7 @@ def assert_bead_lease_available(
     actor: str,
     branch: str,
     lease: str,
-    inventory: dict[str, Any],
+    inventory: list[dict[str, Any]],
     path: Path | None = None,
 ) -> dict[str, Any]:
     issue = one_bead(repo, bead)
@@ -170,31 +187,35 @@ def assert_bead_lease_available(
         )
 
     metadata = issue.get("metadata") or {}
-    if path is None and (metadata.get("lease_token") or metadata.get("worktree_path")):
+    if path is None and (
+        metadata.get("lease_token") or metadata.get("worktree") or metadata.get("worktree_path")
+    ):
         raise ContractError(f"Bead {bead} already has an active writer lease")
     expected = {"branch": branch, "lease_token": lease}
     if path is not None:
+        expected["worktree"] = str(path.resolve())
         expected["worktree_path"] = str(path.resolve())
     for key, value in expected.items():
         existing = metadata.get(key)
-        if existing and existing != value:
-            raise ContractError(
-                f"Bead {bead} already has {key}={existing!r}; refusing {value!r}"
-            )
+        if (
+            existing
+            and key in {"worktree", "worktree_path"}
+            and Path(str(existing)).resolve() != Path(str(value)).resolve()
+        ):
+            raise ContractError(f"Bead {bead} already has {key}={existing!r}; refusing {value!r}")
+        if existing and key not in {"worktree", "worktree_path"} and existing != value:
+            raise ContractError(f"Bead {bead} already has {key}={existing!r}; refusing {value!r}")
 
-    for item in inventory["items"]:
+    for item in inventory:
         variables = worktrunk_vars(item)
         if variables.get("bead") != bead:
             continue
         if path is None:
             raise ContractError(
-                f"Bead {bead} is already joined to Worktrunk branch "
-                f"{item.get('branch')!r}"
+                f"Bead {bead} is already joined to Worktrunk branch {item.get('branch')!r}"
             )
         existing_path = item_path(item)
-        if item.get("branch") != branch or (
-            path is not None and existing_path != path.resolve()
-        ):
+        if item.get("branch") != branch or (path is not None and existing_path != path.resolve()):
             raise ContractError(
                 f"Bead {bead} is already joined to Worktrunk branch "
                 f"{item.get('branch')!r} at {str(existing_path)!r}"
@@ -205,9 +226,7 @@ def assert_bead_lease_available(
     if path is not None:
         conflicts = active_bead_conflicts(repo, bead, branch, path)
         if conflicts:
-            raise ContractError(
-                "active Beads share this branch or path: " + ", ".join(conflicts)
-            )
+            raise ContractError("active Beads share this branch or path: " + ", ".join(conflicts))
     return issue
 
 
@@ -219,7 +238,7 @@ def validate(
     lease: str | None = None,
     bead: str | None = None,
     check_beads: bool = True,
-    inventory: dict[str, Any] | None = None,
+    inventory: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     payload = inventory or wt_inventory(repo)
     item = find_item(payload, path=path)
@@ -227,12 +246,16 @@ def validate(
     if not branch:
         raise ContractError("writer worktree has no branch")
     variables = worktrunk_vars(item)
-    required = {"actor": actor, "lease": lease, "bead": bead}
+    required = {"actor": actor, "lease": lease}
     for key, expected in required.items():
         if expected is not None and variables.get(key) != expected:
             raise ContractError(
                 f"Worktrunk var {key}={variables.get(key)!r}; expected {expected!r}"
             )
+    if bead and variables.get("bead") not in {None, bead}:
+        raise ContractError(
+            f"Worktrunk var bead={variables.get('bead')!r}; expected {bead!r}"
+        )
     if not variables.get("actor") or not variables.get("lease"):
         raise ContractError("writer worktree is missing actor or lease vars")
 
@@ -251,25 +274,32 @@ def validate(
         metadata = issue.get("metadata") or {}
         expected_metadata = {
             "branch": branch,
+            "worktree": str(path.resolve()),
             "worktree_path": str(path.resolve()),
-            "actor": variables["actor"],
-            "lease_token": variables["lease"],
         }
+        if variables.get("bead"):
+            expected_metadata.update(
+                {"actor": variables["actor"], "lease_token": variables["lease"]}
+            )
         for key, expected in expected_metadata.items():
             actual = metadata.get(key)
-            if actual != expected:
+            if key in {"worktree", "worktree_path"} and actual:
+                matches = Path(str(actual)).resolve() == Path(str(expected)).resolve()
+            else:
+                matches = actual == expected
+            if not matches:
                 raise ContractError(
                     f"Bead {bead_id} metadata {key}={actual!r}; expected {expected!r}"
                 )
 
     return {
         "status": "valid",
-        "schema": 2,
+        "inventory_contract": "worktrunk-0.62-array",
         "branch": branch,
         "path": str(path.resolve()),
         "actor": variables["actor"],
         "lease": variables["lease"],
-        "bead": variables.get("bead"),
+        "bead": bead or variables.get("bead"),
         "conflicts": conflicts,
     }
 
@@ -312,6 +342,52 @@ def walk_values(value: Any):
         yield value
 
 
+def rollback_created_worktree(
+    repo: Path,
+    branch: str,
+    initial_inventory: list[dict[str, Any]],
+    path: Path | None,
+) -> str | None:
+    initial_paths = {item_path(item) for item in initial_inventory if item_path(item)}
+    candidates: list[Path] = []
+    if path and path not in initial_paths:
+        candidates.append(path)
+    else:
+        try:
+            current = wt_inventory(repo)
+        except ContractError as error:
+            return f"cannot inspect Worktrunk inventory: {error}"
+        for item in current:
+            candidate = item_path(item)
+            if (
+                item.get("branch") == branch
+                and candidate
+                and candidate not in initial_paths
+                and not item.get("is_main")
+            ):
+                candidates.append(candidate)
+    candidates = list(dict.fromkeys(candidates))
+    if not candidates:
+        return None
+    if len(candidates) != 1:
+        return f"expected one new checkout for {branch!r}; found {len(candidates)}"
+    try:
+        run(
+            [
+                "wt",
+                "-C",
+                str(repo),
+                "remove",
+                "--foreground",
+                "--force-delete",
+                str(candidates[0]),
+            ]
+        )
+    except ContractError as error:
+        return str(error)
+    return None
+
+
 def prepare(args: argparse.Namespace) -> dict[str, Any]:
     repo = Path(args.repo).resolve()
     for name in ("branch", "base", "source", "actor", "lease", "runtime", "agent"):
@@ -331,9 +407,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         )
     command = ["wt", "-C", str(repo)]
     if args.worktree_path:
-        command.extend(
-            ["--config-set", f"worktree-path={json.dumps(args.worktree_path)}"]
-        )
+        command.extend(["--config-set", f"worktree-path={json.dumps(args.worktree_path)}"])
     command.extend(
         [
             "switch",
@@ -345,113 +419,136 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             "--format=json",
         ]
     )
-    run(command)
-    created_inventory = wt_inventory(repo)
-    item = find_item(created_inventory, branch=args.branch)
-    path = item_path(item)
-    if path is None or not path.is_dir() or not os.access(path, os.W_OK):
-        raise ContractError("created Worktrunk path is not writable")
-    checked_out = run(
-        ["git", "-C", str(path), "branch", "--show-current"]
-    ).stdout.strip()
-    if checked_out != args.branch:
-        raise ContractError(
-            f"created path checks out {checked_out!r}, not {args.branch!r}"
+    path: Path | None = None
+    try:
+        try:
+            switch_result = json.loads(run(command).stdout)
+        except json.JSONDecodeError as error:
+            raise ContractError(f"Worktrunk switch returned invalid JSON: {error}") from error
+        if not isinstance(switch_result, dict):
+            raise ContractError("Worktrunk switch did not return a JSON object")
+        actual_branch = switch_result.get("branch")
+        raw_path = switch_result.get("path")
+        if actual_branch != args.branch or not isinstance(raw_path, str) or not raw_path:
+            raise ContractError(
+                "Worktrunk switch returned unexpected anchors: "
+                f"branch={actual_branch!r} path={raw_path!r}"
+            )
+        path = Path(raw_path).resolve()
+        created_inventory = wt_inventory(repo)
+        find_item(created_inventory, branch=actual_branch, path=path)
+        if not path.is_dir() or not os.access(path, os.W_OK):
+            raise ContractError("created Worktrunk path is not writable")
+        checked_out = run(["git", "-C", str(path), "branch", "--show-current"]).stdout.strip()
+        if checked_out != actual_branch:
+            raise ContractError(f"created path checks out {checked_out!r}, not {actual_branch!r}")
+        base_sha = run(["git", "-C", str(path), "rev-parse", "HEAD"]).stdout.strip()
+        copied = copy_result(
+            run(
+                [
+                    "wt",
+                    "-C",
+                    str(repo),
+                    "step",
+                    "copy-ignored",
+                    "--from",
+                    args.source,
+                    "--to",
+                    actual_branch,
+                    "--require-include",
+                    "--format=json",
+                ]
+            ).stdout
         )
-    base_sha = run(["git", "-C", str(path), "rev-parse", "HEAD"]).stdout.strip()
-    copied = copy_result(
-        run(
-            [
-                "wt",
-                "-C",
-                str(repo),
-                "step",
-                "copy-ignored",
-                "--from",
-                args.source,
-                "--to",
-                args.branch,
-                "--require-include",
-                "--format=json",
-            ]
-        ).stdout
-    )
 
-    if beads_active(repo) and args.bead:
-        assert_bead_lease_available(
-            repo,
-            args.bead,
-            args.actor,
-            args.branch,
-            args.lease,
-            created_inventory,
-            path,
-        )
+        if beads_active(repo) and args.bead:
+            assert_bead_lease_available(
+                repo,
+                args.bead,
+                args.actor,
+                actual_branch,
+                args.lease,
+                created_inventory,
+                path,
+            )
 
-    projected = {
-        "lease": args.lease,
-        "actor": args.actor,
-        "runtime": args.runtime,
-        "agent": args.agent,
-        "bead": args.bead,
-        "run": args.run,
-        "node": args.node,
-    }
-    for key, value in projected.items():
-        set_var(repo, args.branch, key, value)
-
-    log_root = Path(
-        run(["git", "-C", str(repo), "rev-parse", "--git-common-dir"]).stdout.strip()
-    )
-    if not log_root.is_absolute():
-        log_root = (repo / log_root).resolve()
-    if beads_active(repo) and args.bead:
-        assert_bead_lease_available(
-            repo,
-            args.bead,
-            args.actor,
-            args.branch,
-            args.lease,
-            wt_inventory(repo),
-            path,
-        )
-        metadata = {
-            "branch": args.branch,
-            "worktree_path": str(path),
-            "base_sha": base_sha,
+        projected = {
+            "lease": args.lease,
+            "actor": args.actor,
             "runtime": args.runtime,
             "agent": args.agent,
-            "actor": args.actor,
-            "lease_token": args.lease,
-            "copy_ignored": copied,
+            "bead": args.bead,
+            "run": args.run,
+            "node": args.node,
         }
-        if args.model:
-            metadata["model"] = args.model
-        if args.effort:
-            metadata["effort"] = args.effort
-        run(
-            [
-                "bd",
-                "-C",
-                str(repo),
-                "update",
-                args.bead,
-                "--metadata",
-                json.dumps(metadata, separators=(",", ":")),
-            ],
-            env={**os.environ, "BEADS_ACTOR": args.actor},
-        )
+        for key, value in projected.items():
+            set_var(repo, actual_branch, key, value)
 
-    result = validate(repo, path, actor=args.actor, lease=args.lease, bead=args.bead)
-    result.update(
-        {
-            "status": "ready",
-            "base_sha": base_sha,
-            "copy_ignored": copied,
-            "logs": str(log_root / "wt" / "logs"),
-        }
-    )
-    return result
+        log_root = Path(
+            run(["git", "-C", str(repo), "rev-parse", "--git-common-dir"]).stdout.strip()
+        )
+        if not log_root.is_absolute():
+            log_root = (repo / log_root).resolve()
+        result = validate(repo, path, actor=args.actor, lease=args.lease, check_beads=False)
+    except ContractError as error:
+        rollback_error = rollback_created_worktree(repo, args.branch, initial_inventory, path)
+        if rollback_error:
+            raise ContractError(f"{error}; rollback failed: {rollback_error}") from error
+        raise
+
+    try:
+        if beads_active(repo) and args.bead:
+            assert_bead_lease_available(
+                repo,
+                args.bead,
+                args.actor,
+                actual_branch,
+                args.lease,
+                wt_inventory(repo),
+                path,
+            )
+            metadata = {
+                "branch": actual_branch,
+                "worktree": str(path),
+                "worktree_path": str(path),
+                "base_sha": base_sha,
+                "runtime": args.runtime,
+                "agent": args.agent,
+                "actor": args.actor,
+                "lease_token": args.lease,
+                "copy_ignored": copied,
+            }
+            if args.model:
+                metadata["model"] = args.model
+            if args.effort:
+                metadata["effort"] = args.effort
+            run(
+                [
+                    "bd",
+                    "-C",
+                    str(repo),
+                    "update",
+                    args.bead,
+                    "--metadata",
+                    json.dumps(metadata, separators=(",", ":")),
+                ],
+                env={**os.environ, "BEADS_ACTOR": args.actor},
+            )
+            result = validate(repo, path, actor=args.actor, lease=args.lease, bead=args.bead)
+        result.update(
+            {
+                "status": "ready",
+                "base_sha": base_sha,
+                "copy_ignored": copied,
+                "logs": str(log_root / "wt" / "logs"),
+            }
+        )
+        return result
+    except ContractError as error:
+        rollback_error = rollback_created_worktree(repo, args.branch, initial_inventory, path)
+        if rollback_error:
+            raise ContractError(f"{error}; rollback failed: {rollback_error}") from error
+        raise
 
 
 def bind(args: argparse.Namespace) -> dict[str, Any]:
@@ -472,20 +569,18 @@ def bind(args: argparse.Namespace) -> dict[str, Any]:
     item = find_item(inventory, path=path)
     branch = str(item["branch"])
     variables = worktrunk_vars(item)
-    existing = variables.get("context")
-    if existing and existing != context:
-        raise ContractError(
-            f"writer worktree is already bound to runtime context {existing!r}"
-        )
-    for other in inventory["items"]:
+    for other in inventory:
         if other is item:
             continue
-        if worktrunk_vars(other).get("context") == context:
+        if context in bound_contexts(other):
             raise ContractError(
-                f"runtime context {context!r} is already bound to branch "
-                f"{other.get('branch')!r}"
+                f"runtime context {context!r} is already bound to branch {other.get('branch')!r}"
             )
-    set_var(repo, branch, "context", context)
+    contexts = bound_contexts(item)
+    contexts.add(context)
+    if not variables.get("context"):
+        set_var(repo, branch, "context", context)
+    set_var(repo, branch, "contexts", json.dumps(sorted(contexts), separators=(",", ":")))
     if beads_active(repo) and args.bead:
         assert_bead_lease_available(
             repo, args.bead, args.actor, branch, args.lease, inventory, path
@@ -502,7 +597,7 @@ def bind(args: argparse.Namespace) -> dict[str, Any]:
             ],
             env={**os.environ, "BEADS_ACTOR": args.actor},
         )
-    result.update({"status": "bound", "context": context})
+    result.update({"status": "bound", "context": context, "contexts": sorted(contexts)})
     return result
 
 
@@ -557,7 +652,7 @@ def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
 
 def assert_runtime_lease(
     payload: dict[str, Any],
-    inventory: dict[str, Any],
+    inventory: list[dict[str, Any]],
     target: Path,
     *,
     expected_lease: str | None = None,
@@ -565,9 +660,7 @@ def assert_runtime_lease(
 ) -> dict[str, Any] | None:
     context = runtime_context(payload)
     bound = [
-        item
-        for item in inventory["items"]
-        if context and worktrunk_vars(item).get("context") == context
+        item for item in inventory if context and context in bound_contexts(item)
     ]
     if len(bound) > 1:
         raise ContractError(f"runtime context {context!r} is bound more than once")
@@ -581,13 +674,11 @@ def assert_runtime_lease(
             raise ContractError("writer mutation targets an unleased checkout")
         return None
 
-    if not variables.get("actor") or not variables.get("context"):
+    if not variables.get("actor") or not bound_contexts(item):
         raise ContractError("writer worktree is missing actor or runtime context")
     if context:
-        if variables["context"] != context:
-            raise ContractError(
-                f"runtime context {context!r} does not own this writer worktree"
-            )
+        if context not in bound_contexts(item):
+            raise ContractError(f"runtime context {context!r} does not own this writer worktree")
     elif expected_lease:
         if variables["lease"] != expected_lease:
             raise ContractError("writer process lease does not match this worktree")

@@ -59,9 +59,11 @@ Write the route before dispatch so recovery never has to infer it from prose.
 | `agent:<queue>` label | compatible generic queue; absent from directed work |
 
 `execution_evidence=git` means tracked files change, even when the task is
-documentation or configuration. It requires a worktree, commit, push, and
-shepherd integration. Other evidence modes require an `output_ref` or
-verifiable external-state reference and never require an empty commit.
+documentation or configuration. It requires a parent-prepared Worktrunk
+checkout, commit, push, and shepherd integration. Harness isolation and raw
+`git worktree` creation are not valid substitutes. Other evidence modes
+require an `output_ref` or verifiable external-state reference and never
+require an empty commit.
 
 ## Dispatch ready work
 

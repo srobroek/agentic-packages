@@ -108,6 +108,7 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-subagent-fork/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
+    "packages/hooks-worktrunk/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
     "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",

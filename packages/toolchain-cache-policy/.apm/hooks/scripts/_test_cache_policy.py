@@ -29,11 +29,14 @@ def check(name, cond, detail=""):
 
 
 def run(root, envfile, floor, extra=None):
-    env = {**os.environ, "CACHE_POLICY_ROOT": root, "CACHE_POLICY_FLOOR_GIB": str(floor)}
+    env = {**os.environ, "CACHE_POLICY_FLOOR_GIB": str(floor)}
+    env.pop("CACHE_POLICY_ROOT", None)
+    if root:
+        env["CACHE_POLICY_ROOT"] = root
     if envfile:
         env["CLAUDE_ENV_FILE"] = envfile
     env.update(extra or {})
-    p = subprocess.run(["uv", "run", "--quiet", SCRIPT],
+    p = subprocess.run([sys.executable, SCRIPT],
                        input='{"hook_event_name":"SessionStart"}',
                        capture_output=True, text=True, env=env, timeout=120)
     try:
@@ -52,25 +55,79 @@ with tempfile.TemporaryDirectory() as td:
     out, _ = run(root, envfile, floor=0)
     check("returns applied", out.get("cache_policy") == "applied", str(out))
     content = Path(envfile).read_text()
-    for key in ("CARGO_TARGET_DIR", "UV_CACHE_DIR", "GOCACHE", "GOMODCACHE",
-                "npm_config_cache", "BUN_INSTALL_CACHE_DIR", "SCCACHE_DIR"):
+    for key in ("UV_CACHE_DIR", "GOCACHE", "GOMODCACHE", "npm_config_cache",
+                "pnpm_config_store_dir", "BUN_INSTALL_CACHE_DIR", "SCCACHE_DIR",
+                "GRADLE_USER_HOME", "NUGET_PACKAGES", "GOLANGCI_LINT_CACHE",
+                "TRIVY_CACHE_DIR", "RESTIC_CACHE_DIR"):
         check(f"env has {key}", f"export {key}=" in content)
-    check("env points cargo target under root", root in content)
+    check("env never sets a global cargo target", "CARGO_TARGET_DIR" not in content)
+    check("Go modules use the managed directory name",
+          f'export GOMODCACHE="{root}/go-modules"' in content)
+
+    # Rust incremental output is disabled only when sccache will replace it.
+    fake_bin = Path(td) / "bin"
+    fake_bin.mkdir()
+    fake_sccache = fake_bin / "sccache"
+    fake_sccache.write_text("#!/bin/sh\nexit 0\n")
+    fake_sccache.chmod(0o755)
+    sccache_envfile = os.path.join(td, "sccache-env.sh")
+    Path(sccache_envfile).write_text("")
+    run(root, sccache_envfile, floor=0, extra={"PATH": str(fake_bin)})
+    sccache_content = Path(sccache_envfile).read_text()
+    check("sccache configures the Rust compiler wrapper",
+          f'export RUSTC_WRAPPER="{fake_sccache}"' in sccache_content)
+    check("sccache disables incompatible Cargo incremental output",
+          'export CARGO_INCREMENTAL="0"' in sccache_content)
+
+    no_sccache_envfile = os.path.join(td, "no-sccache-env.sh")
+    Path(no_sccache_envfile).write_text("")
+    run(root, no_sccache_envfile, floor=0, extra={"PATH": ""})
+    no_sccache_content = Path(no_sccache_envfile).read_text()
+    check("missing sccache leaves RUSTC_WRAPPER unset",
+          "RUSTC_WRAPPER" not in no_sccache_content)
+    check("missing sccache leaves Cargo incremental behavior unchanged",
+          "CARGO_INCREMENTAL" not in no_sccache_content)
+
+    # The managed machine cache root is the default unless explicitly overridden.
+    development_root = os.path.join(td, "development")
+    default_envfile = os.path.join(td, "default-env.sh")
+    Path(default_envfile).write_text("")
+    out, _ = run(
+        None,
+        default_envfile,
+        floor=0,
+        extra={"DEVELOPMENT_CACHE_HOME": development_root},
+    )
+    check("DEVELOPMENT_CACHE_HOME is the default root",
+          out.get("root") == development_root, str(out))
+
+    fallback_home = os.path.join(td, "fallback-home")
+    fallback_envfile = os.path.join(td, "fallback-env.sh")
+    Path(fallback_envfile).write_text("")
+    out, _ = run(
+        None,
+        fallback_envfile,
+        floor=0,
+        extra={"HOME": fallback_home, "DEVELOPMENT_CACHE_HOME": ""},
+    )
+    check("home cache is the final fallback",
+          out.get("root") == os.path.join(fallback_home, ".cache", "development"),
+          str(out))
 
     # 2. no GC above floor
     out, _ = run(root, envfile, floor=0)
     check("no GC when above floor", not any("PRESSURE" in a for a in out.get("actions", [])))
 
-    # 3. GC wipes regenerable cargo target under pressure, recreates it empty
-    junk = Path(root) / "cargo-target" / "junk"
+    # 3. GC wipes regenerable sccache under pressure, recreates it empty
+    junk = Path(root) / "sccache" / "junk"
     junk.mkdir(parents=True, exist_ok=True)
     (junk / "big").write_bytes(b"x" * (5 * 1024 * 1024))
     out, _ = run(root, envfile, floor=10 ** 9)  # impossible floor -> force GC
     acts = " ".join(out.get("actions", []))
     check("GC detected pressure", "PRESSURE" in acts, acts)
-    check("GC wiped cargo target", "wiped shared cargo target" in acts, acts)
-    check("cargo target recreated empty", (Path(root) / "cargo-target").is_dir()
-          and not any((Path(root) / "cargo-target").iterdir()))
+    check("GC wiped sccache", "wiped sccache" in acts, acts)
+    check("sccache recreated empty", (Path(root) / "sccache").is_dir()
+          and not any((Path(root) / "sccache").iterdir()))
 
     # 4. disable knob
     out, _ = run(root, envfile, floor=0, extra={"CACHE_POLICY_DISABLE": "1"})

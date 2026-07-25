@@ -30,6 +30,7 @@ includes:
   - .apm/skills/orchestrate/scripts/_test_resolve_queue_dispatch.py
   - .apm/skills/orchestrate/scripts/_test_scope_check.py
   - .apm/skills/orchestrate/scripts/_test_thread_message.py
+  - .apm/skills/orchestrate/scripts/_test_worktree_sweep.py
   - .apm/skills/orchestrate/scripts/conflict-probe.sh
   - .apm/skills/orchestrate/scripts/discover-agents.py
   - .apm/skills/orchestrate/scripts/inject-comms.sh
@@ -44,3 +45,5 @@ dependencies:
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
     - srobroek/agentic-packages/packages/pr-shepherd#>=0.14.1 <1.0.0
     - srobroek/agentic-packages/packages/agent-quality-guards#>=1.0.0 <2.0.0
+    - srobroek/agentic-packages/packages/hooks-worktrunk#>=0.1.0 <1.0.0
+    - srobroek/agentic-packages/packages/worktrunk-writer#>=1.2.0 <2.0.0

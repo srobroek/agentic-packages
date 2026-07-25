@@ -226,20 +226,28 @@ Semantics that fall out of the status column:
 
 ## Git-anchor metadata contract
 
-Every node bead carries git anchors in metadata so any session can find where
-the work physically lives. Two stamping points, no exceptions:
+Every node bead carries Worktrunk anchors in metadata so any session can find
+where the work physically lives. The orchestrator creates the checkout with
+`wt switch --create <branch> --base <base> --no-cd --format=json` and stores
+the returned branch/path before spawning. Never infer the path from the user
+template and never request harness worktree isolation.
 
 | When | Who | Stamp |
 |---|---|---|
-| Claim (immediately after `--claim`) | domain-specialist | `bd update <bead> --metadata '{"branch":"<branch>","worktree":"<abs path>","base_sha":"<sha>"}'` |
+| Writer checkout prepared | orchestrator | `bd update <bead> --metadata '{"branch":"<wt branch>","worktree":"<wt abs path>","base_sha":"<sha>"}'` |
+| Tool-using reviewer prepared | orchestrator | `bd update <bead> --metadata '{"review_branch":"<wt branch>","review_worktree":"<wt abs path>"}'` |
+| Tool-using advisor/debugger prepared | orchestrator | `bd update <bead> --metadata '{"advisor_branch":"<wt branch>","advisor_worktree":"<wt abs path>"}'` |
+| Claim (immediately after `--claim`) | domain-specialist | verify `branch`/`worktree` match the brief; refuse and report an anchor mismatch |
 | Report (after push) | domain-specialist | `--set-metadata pushed=origin/<branch>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
 Add a `repo` key when the node's work lands in a different repository than the
 run epic's. `--metadata` merges with existing keys (verified on bd 1.1.0), so
-stamps never clobber `node`/`scope`. `worktree` is an ephemeral pointer, valid
-while the node is in flight; `branch`/`pushed`/`pr`/`merge_sha` are the durable
-anchors that survive worktree teardown.
+stamps never clobber `node`/`scope`. Role worktree keys are ephemeral pointers,
+valid while their actors are in flight. Branch, pushed, PR, and merge anchors
+survive checkout teardown. Reuse `review_*` for the retained reviewer across
+fix rounds; overwrite `advisor_*` only after the prior advisor checkout is
+swept.
 
 ## Ready front + scope disjointness
 

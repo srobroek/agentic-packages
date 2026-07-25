@@ -429,6 +429,16 @@ marketplace:
         - hooks
         - worktree
         - lifecycle
+    - name: hooks-worktrunk
+      source: ./packages/hooks-worktrunk
+      category: project-lifecycle
+      tags:
+        - hooks
+        - worktrunk
+        - worktree
+        - git
+        - claude
+        - codex
     - name: infrastructure
       source: ./packages/infrastructure
       category: infrastructure
