@@ -1,0 +1,14 @@
+# E2 in the retired slop-lint.py.
+extends: existence
+message: "slop lexicon: %s — delete it or replace it with a measurable claim"
+level: error
+link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/SKILL.md
+ignorecase: true
+raw:
+  - '\b(seamless(ly)?|effortless(ly)?|blazing(ly)?([- ]fast)?|cutting[- ]edge|'
+  - 'state[- ]of[- ]the[- ]art|game[- ]chang\w+|revolutioni[sz]\w+|supercharg\w+|'
+  - 'unleash\w*|empower\w*|delve\w*|elevat(e|ing) your|'
+  - 'robust|powerful|comprehensive|best[- ]in[- ]class|world[- ]class|'
+  - 'battle[- ]tested|production[- ]grade|feature[- ]rich|rich set of|'
+  - 'leverag(e|es|ed|ing)|elegant(ly)?|'
+  - 'streamlin\w+|turbocharg\w+|next[- ]generation|next[- ]gen)\b'

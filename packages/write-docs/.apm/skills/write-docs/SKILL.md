@@ -1,6 +1,6 @@
 ---
 name: write-docs
-description: Invoke before writing or reviewing a README, docs, PR/release text, spec, ADR, or CONTRIBUTING — even when documentation is one step of a larger task.
+description: Invoke before writing or reviewing a README, docs, PR/release text, spec, ADR, or CONTRIBUTING -- even when documentation is one step of a larger task.
 ---
 
 # Write Docs
@@ -12,6 +12,12 @@ TRIGGER
 + writing specs, ADRs, constitutions, CONTRIBUTING, runbooks (internal genre)
 - authoring skills, steering, or agent definitions → write-agentic
 - code comments and docstrings → language conventions
+
+MUST This skill is the entry point for slop linting. An agent invokes the skill,
+never the linter directly: the linter is deterministic pattern-matching and this
+skill also carries the judgement the patterns cannot reach (the ai-tells register
+and counter-signal analysis). Scripts and CI may call `apm run slop-lint` inside
+this repo.
 
 ## Genre → reference
 
@@ -32,15 +38,18 @@ sections need a research refresh before relying on them.
 1. Classify the doc with the genre table; LOAD that reference before writing.
 2. Author or rewrite against the genre rules plus the shared rules below.
 3. Run `scripts/slop-lint.sh --genre <consumer|change|internal> <file>` → fix
-   every ERROR; fix or justify each WARN in one line.
+   every ERROR; fix or justify each WARN in one line. The path is relative to
+   this skill, so it resolves wherever the package installed. Needs `vale` on
+   PATH (`mise use -g vale`); the script prints the install hint and exits 2 if
+   it is missing.
 4. Verify: every claim holds against code at HEAD · every consumer example has
    a runnable test under `examples/` · lint exits 0.
 
 ## Rules (all genres)
 
-MUST State what the artifact does — never effort, intent, process, or journey.
+MUST State what the artifact does -- never effort, intent, process, or journey.
 MUST Delete any adjective you cannot back with a number, benchmark, or feature list.
 MUST One idea per sentence; lists and tables over prose paragraphs.
 NOT Status language: "under construction", "WIP", "coming soon", "currently", "for now", "planned", "being specified".
-NOT Slop lexicon — scripts/slop-lint.py owns the banned list; prose never restates it.
-NOT History narration in a doc body ("previously", "we changed X to Y") — deltas belong to the change-comms genre only.
+NOT Slop lexicon -- the WriteDocs Vale style owns the banned list; prose never restates it.
+NOT History narration in a doc body ("previously", "we changed X to Y") -- deltas belong to the change-comms genre only.
