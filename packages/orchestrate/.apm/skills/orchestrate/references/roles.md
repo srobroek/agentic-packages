@@ -19,7 +19,6 @@ starting point, refined by what the catalog actually offers.
 | **Advisor** | `advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Shepherd** | `shepherd` (bundled) | **mid tier** medium | **persistent** | → top tier only if merge reasoning is genuinely gnarly |
 | **Scribe** | `scribe` (bundled) | **cheap tier** low, read-only | ephemeral | escalate to mid if issue interpretation is ambiguous |
-| **Audit reporter** | `audit-reporter` (bundled) | **cheap tier** low, read-only | **ephemeral** | — |
 | **Tiebreaker** | `general-purpose` (fresh) | **top tier** high, read-only | ephemeral, gated | → xhigh only if genuinely complex |
 
 Workflow roles ship **bundled** with this package (domain-specialist, reviewer, advisor, shepherd, scribe); quality-guard roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the `agent-quality-guards` dependency; the remaining routes are built-in agents (`Explore`,
