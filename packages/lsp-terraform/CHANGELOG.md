@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/srobroek/agentic-packages/compare/lsp-terraform--v0.4.0...lsp-terraform--v0.4.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/lsp-terraform--v0.3.0...lsp-terraform--v0.4.0) (2026-07-22)
 
 

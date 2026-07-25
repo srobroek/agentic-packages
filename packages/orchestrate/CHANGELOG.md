@@ -1,5 +1,35 @@
 # Changelog
 
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v5.0.0...orchestrate--v6.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724))
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723))
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([6eee221](https://github.com/srobroek/agentic-packages/commit/6eee221e133ea777bec62030374ea3f3e43b01fd))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* close three guard bypasses and eight broken agent references ([#722](https://github.com/srobroek/agentic-packages/issues/722)) ([cbc6875](https://github.com/srobroek/agentic-packages/commit/cbc6875f53b3b048f4fe882bad69305a04e47bc3))
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723)) ([7ce15d2](https://github.com/srobroek/agentic-packages/commit/7ce15d2f601c232b1e8f2aff6e09706547d48849))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
+
+### Chores
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724)) ([6897316](https://github.com/srobroek/agentic-packages/commit/6897316695052c14b4055e3f8350d5ec1d7327cf))
+
 ## [5.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v4.2.2...orchestrate--v5.0.0) (2026-07-25)
 
 

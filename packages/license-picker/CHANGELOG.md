@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/srobroek/agentic-packages/compare/license-picker--v1.3.0...license-picker--v1.3.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/license-picker--v1.2.0...license-picker--v1.3.0) (2026-07-22)
 
 
