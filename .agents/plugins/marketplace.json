@@ -593,6 +593,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "hooks-worktrunk",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-worktrunk"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "infrastructure",
       "source": {
         "source": "local",

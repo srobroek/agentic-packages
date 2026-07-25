@@ -252,8 +252,10 @@ When a git-kind node's worktree is created, the creator stamps a
 `[wisp:recovery] wipe-worktree <abs-path>` wisp and adds
 `bd dep add <wipe-wisp> <merge-bead>` so the wisp is **blocked by the merge
 bead**. When the merge bead closes (merged OR dismissed), the wisp unblocks;
-the next patrol/wake (pr-shepherd or orchestrator) runs `git worktree remove`
-+ branch delete and closes the wisp. This makes worktree cleanup
+the next patrol/wake (pr-shepherd or orchestrator) runs
+`worktree-sweep.sh`, which uses `wt list` + `wt remove`, and closes the wisp.
+Raw `git worktree` lifecycle commands and harness-created worktrees are
+prohibited. This makes worktree cleanup
 crash-safe: an abandoned run leaves its wipe wisps behind for the next patrol
 to reclaim, so no worktree is silently orphaned. Verified on bd 1.1.0 (wisp
 `blocks`-dep on a durable bead unblocks on close).
@@ -261,28 +263,32 @@ to reclaim, so no worktree is silently orphaned. Verified on bd 1.1.0 (wisp
 ### Worktree resource scaling (heavy build trees — Rust, etc.)
 
 Per-worktree build output does not scale: N parallel Rust worktrees each grow
-a multi-GB `target/`, and the run can fill the disk (observed live). Four
-mechanisms, applied together:
+a multi-GB `target/`, and the run can fill the disk (bead
+`astro-plan-ki35`). Four mechanisms apply together:
 
-1. **Shared build cache.** Point every worktree at one build-output dir
-   (`CARGO_TARGET_DIR=<run>/shared-target` for Rust; the analogous env for
-   other toolchains) so the large shared-dependency artifacts are built once,
-   not per worktree. Cargo locks the dir per build — parallel worktrees
-   serialize their link step but share `deps/` (usually the bulk). Set it in
-   the builder's environment from run metadata.
+1. **Repository-scoped build target.** The global Worktrunk `pre-start` hook
+   materializes an ignored, marker-owned `.cargo/config.toml` in each Rust
+   checkout. Worktrunk renders `{{ primary_worktree_path }}` and the pre-start
+   command persists `<primary_worktree_path>/target` as the absolute
+   `build.target-dir`, so the primary checkout and every linked worktree
+   converge without mixing unrelated repositories. The hook refuses to
+   overwrite an existing Cargo config; that repository must configure the
+   target in its project hook or tracked config. A hook-only
+   `CARGO_TARGET_DIR` export is insufficient because later build shells do not
+   inherit it.
+   Project hooks own analogous tool-specific output settings when the tool has
+   no safe global static configuration.
 2. **Compiler cache.** `RUSTC_WRAPPER=sccache` (local or remote) dedupes
    compilation units across worktrees and runs; complements the shared target.
-3. **Reclaim build output at `reported`, not merge.** The durable artifact is
-   the pushed branch, not the build tree. For git-kind nodes, `target/` and
-   other regenerable build dirs are reclaimable as soon as the node reports +
-   pushes; only the worktree *checkout* waits for the wipe-worktree wisp at
-   merge. The builder deletes its build output in its report step (or the
-   patrol does, keyed off `state=reported` + `push` present).
+3. **Warm worktree-local state by copy-on-write.** A repository may allowlist
+   safe ignored dependency/build trees in `.worktreeinclude`; global
+   `post-start` runs `wt step copy-ignored --require-include`. Python virtual
+   environments and mutable runtime state stay worktree-local.
 4. **Disk backpressure (the governor).** The orchestrator treats disk as a
    bounded resource: before spawning the Nth heavy-build worktree it checks
-   free space against a per-worktree estimate (metadata `build_footprint`) and
-   caps concurrency to `free / footprint`. A run must never wedge the machine
-   by over-spawning; log what was deferred.
+   free space against the repository target plus a per-worktree estimate
+   (metadata `build_footprint`) and caps concurrency to `free / footprint`.
+   A run must never wedge the machine by over-spawning; log what was deferred.
 
 Rules:
 
@@ -446,17 +452,17 @@ One agent definition, parameterized at spawn — never per-trade definitions.
   first. Never a second durable claim; children must be collected before
   the node reports.
 - **Delegation-first:** the specialist's window is for domain knowledge;
-  implementation bulk goes to children. Self-code small deltas and FIX rounds
-  (the warm head applying its own review feedback is the point); delegate
-  bulk edits, test-fix loops, wide reading. The specialist routes child
-  models (haiku/sonnet-low for mechanical work).
-- **Children:** push-driven, prompt-briefed, one-shot. Never claim, never
-  touch beads/PRs/pushes. May be resumed within one node for a follow-up
-  pass; none survives its node. Named `<parent>.<k>` for log attribution.
+  implementation bulk goes to children. Self-code small deltas and FIX rounds;
+  delegate bulk edits, test-fix loops, and wide reading.
+- **Children:** prompt-briefed and one-shot. They edit only inside the
+  specialist's prepared Worktrunk checkout after the specialist binds each
+  returned child ID to its path/actor/lease. They never claim, touch
+  Beads/PRs/pushes, or manage worktrees. None survives its node.
 - **Parallelism:** more simultaneous nodes in one domain than a serial
   specialist can pipeline → T0 spawns `<role>-<domain>-2`. Never
   sub-specialists: only T0 creates claim-holders; a domain that seems to need
-  sub-specialists is the signal to split the domain.
+  sub-specialists is the signal to split the domain. Every claim-holder
+  receives a distinct Worktrunk checkout.
 - **Effort variants:** Agent spawn calls carry `model` but not effort. The
   package compiles `domain-specialist-{low,medium,high,xhigh}` from one
   source (effort frontmatter is the only difference; one shared rules file).

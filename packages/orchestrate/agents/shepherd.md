@@ -60,9 +60,10 @@ a 24h-stale sheepdog signals your death for recovery.
    slot on every exit path. A held slot ends this pass for that PR.
 4. **Worktree reclamation**: closing the merge bead unblocks its
    `[wisp:recovery] wipe-worktree <path>` wisp (stamped at worktree creation,
-   blocked by this merge bead). Reclaim the worktree (`git worktree remove` +
-   branch delete) and close the wisp. Crash-safe: an abandoned run leaves wipe
-   wisps for the next patrol.
+   blocked by this merge bead). Reclaim it through the orchestrate
+   `worktree-sweep.sh` helper (`wt list` + `wt remove`) and close the wisp.
+   Never run raw `git worktree` lifecycle commands. Crash-safe: an abandoned
+   run leaves wipe wisps for the next patrol.
 
 ## Bounce (content problem you cannot fix)
 
@@ -77,3 +78,11 @@ it never claims. The coder closing the fix re-readies the merge.
 
 Claim refusal = live holder → skip. Force-release only after confirming the
 holding session is dead (no activity since before your session started).
+
+## Output
+
+Begin your final reply with `VERDICT: LANDED|BOUNCED|IDLE|BLOCKED — <reason>`.
+Include the merge bead, PR, merge SHA, and reclaimed Worktrunk path only when
+present.
+CAP 100w.
+MUST Never reprint code, diffs, file contents, or bead JSON.

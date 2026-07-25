@@ -107,7 +107,7 @@ def test_sanitize_preserves_valid_timeout() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "timeout": 10,
                         }
                     ]
@@ -125,7 +125,7 @@ def test_sanitize_preserves_valid_timeout() -> None:
 def test_sanitize_preserves_current_codex_tool_matchers() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     config = {
@@ -232,7 +232,7 @@ def test_sanitize_resolves_relative_script_from_config_workspace(
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     config = {
@@ -252,7 +252,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "async": True,
                         }
                     ]
@@ -261,7 +261,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "timeout": 30,
                         }
                     ]
@@ -283,7 +283,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
             "hooks": [
                 {
                     "type": "command",
-                    "command": "/bin/true",
+                    "command": sys.executable,
                     "timeout": 30,
                 }
             ]
@@ -295,7 +295,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
 def test_sanitize_deduplicates_legacy_group_and_keeps_apm_owner() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     legacy_group = {

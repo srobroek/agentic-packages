@@ -41,7 +41,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer` |
 | `speckit-beads` | Beads-native SpecKit workflow | `speckit`, `beads` |
-| `toolchain-cache-policy` | Enforces one shared, bounded build/cache location per toolchain across all worktrees and clones, so N parallel agent worktrees cannot each grow a multi-GB build tree and fill the disk | self-contained |
+| `toolchain-cache-policy` | Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories | self-contained |
 <!-- END:bundles -->
 
 ## How bundles work

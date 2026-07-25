@@ -137,12 +137,13 @@ ASSIGN t3
   epic:     orc-7f3a
   artifacts: /home/…/.orchestration/run-7f3a/artifacts/
   deps:     t1(done), t2(done)
-  commands: claim=bd update orc-7f3a.3 --claim + stamp branch/worktree/base_sha metadata;
+  commands: checkout=parent stamped Worktrunk branch/worktree/base_sha metadata;
+            claim=bd update orc-7f3a.3 --claim + verify checkout anchors;
             state=bd set-state orc-7f3a.3 state=<s>; log=bd audit record + bd comment
   protocol: on block → BLOCKED to main (don't spawn). green → commit+push, state=reported, REPORTED to main, stay alive.
 ```
 
-**Blocked → orchestrator brokers an advisor** (the domain-specialist spawns nothing)
+**Blocked → orchestrator brokers an advisor** (the domain-specialist spawns no peer)
 ```
 to: main        summary: "blocked on token refresh race"
 BLOCKED t3
@@ -164,7 +165,7 @@ ADVICE t3
 to: main        summary: "t3 reported, green, awaiting review"
 REPORTED t3
   branch:   domain-specialist/t3-auth-middleware
-  worktree: /home/…/.claude/worktrees/t3
+  worktree: /home/…/tmp/worktrees/repo/orc-run-t3
   commits:  a1b2c3d refactor→middleware; d4e5f6a single-flight refresh
   changed:  src/auth/middleware.rs, src/auth/refresh.rs, tests/auth/*
   verify:   green (cargo test -p auth = 41 passed; clippy+fmt clean)

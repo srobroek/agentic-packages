@@ -36,20 +36,28 @@ Role: lead session / orchestrator.
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
 3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: domain-specialist`,
-   `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
+   tool background subagents (`subagent_type: domain-specialist`), addressed
+   by name/`agentId` via SendMessage. Prepare the assigned checkout with
+   Worktrunk before spawning; never request harness `isolation:"worktree"`,
+   which bypasses Worktrunk paths and hooks.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
    unsure whether the trigger is met → use subagents.
-4. **Every tool user runs in Worktrunk.** Implementation, reviewers, auditors,
-   and advisors that invoke tools must use a separately prepared Worktrunk
-   worktree and record its branch/path on the bead. Conversational agents that
-   use no tools and the primary human are exempt. Writers self-commit, push,
-   and report branch + worktree path.
-5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Domain-specialist
-   blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
-   idles; you broker a `advisor` (or debugger, per `roles.md`) and
-   relay `ADVICE` back.
+4. **Every writer and tool user runs in Worktrunk.** Implementation agents and
+   domain specialists always use a parent-prepared Worktrunk checkout.
+   Reviewers, auditors, researchers, and advisors that invoke tools use their
+   own read-only Worktrunk checkout. Record each assigned branch/path on the
+   node bead. Conversational agents that use no tools, remote-only shepherds,
+   and the primary human are exempt. Writers self-commit, push, and report the
+   Worktrunk-provided branch + path. Use the `worktrunk-writer` dependency's
+   prepare/bind/validate contract; never substitute raw Git or harness
+   isolation when it refuses a lease.
+5. **Flat claim-holder tree.** Only you spawn claim-holding specialists,
+   reviewers, and advisors. A domain-specialist may spawn throwaway children
+   inside its prepared Worktrunk checkout; they never claim Beads, manage
+   worktrees, commit, or push. A specialist blocked on reasoning sends
+   `BLOCKED <node> kind:design|debug`; you broker the advisor and relay
+   `ADVICE`.
 6. **You own review per code node; resume domain-specialists, never re-spawn.** Per
    code-writing node: spawn a `reviewer` against the domain-specialist's branch.
    Domain-specialist ends its turn after `REPORTED` → becomes a resumable background
@@ -68,13 +76,15 @@ Role: lead session / orchestrator.
 
 ## Workflow
 
-1. Check the prerequisite: `bd` (beads CLI) on PATH — it is the run's state
-   store (`references/beads-store.md`). Missing → stop, tell the user to
-   install beads; there is no fallback store. No database yet → `bd init
-   --stealth --prefix orc`. Create the run epic bead (metadata: run id,
-   primary branch, base sha, artifacts dir) and the artifacts dir outside
-   every worktree: `<primary>/.orchestration/run-<id>/artifacts/`; gitignore
-   it; broadcast the epic id + artifacts path to every agent.
+1. Check the prerequisites: `bd` (run state), `wt` (all local checkout
+   lifecycle), and the package dependency's `worktrunk-writer` skill. Missing
+   `bd` → stop; there is no fallback store. Missing `wt` or the writer contract
+   → stop; raw Git or harness-created worktrees are not fallbacks. No database
+   yet → `bd init --stealth --prefix orc`. Create the run epic bead (metadata:
+   run id, primary branch, base sha, artifacts dir) and the artifacts directory
+   outside every worktree:
+   `<primary>/.orchestration/run-<id>/artifacts/`; gitignore it; broadcast the
+   epic id + artifacts path to every agent.
 2. Plan & decompose yourself at high level; delegate deep planning (read-only
    `Plan`) or speccing (`speckit-*`) for work spanning >3 tasks with
    cross-cutting deps or an unfamiliar subsystem. Beads-managed external
@@ -96,26 +106,31 @@ Role: lead session / orchestrator.
 4. Spawn `shepherd` once; invoke `audit-reporter` on demand with
    the epic id and artifacts path for status or close-out reporting.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
-   `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
-   background `domain-specialist` subagent (`subagent_type: domain-specialist`,
-   Worktrunk-prepared worktree) with brief per `references/spawn-brief.md` (bead
-   id, scope, base, epic id, artifacts path, protocol). The domain-specialist claims its
-   bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
-   metadata — the resumable record. (teammates: see Rule 7). Agents record
-   their own audit events + comments.
-6. On `REPORTED`: set `state:in_review` and spawn `reviewer` against
-   branch/worktree. Relay `REVIEW` findings via SendMessage to domain-specialist's
-   `agentId` as `FIX` (resumes same domain-specialist; never a new one). On `BLOCKED`:
-   spawn `advisor`/debugger, relay `ADVICE` back, dismiss it. Same
-   reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
-   state=approved`, send `APPROVE <node>` to the shepherd — the merge
-   handoff trigger.
+   `scope-check.py --candidate <bead> --epic <epic>` per candidate): create
+   the writer checkout through `worktrunk-writer prepare` without `--bead`.
+   Stamp the returned branch/path/base anchors on the unclaimed node Bead,
+   spawn the wait-only `domain-specialist` without harness isolation, then bind
+   its runtime ID. Release only the T0 claim/validate instructions. The agent
+   claims atomically, validates the stamped checkout with `--bead`, then may
+   use repository tools. See `references/spawn-brief.md`. Agents record their
+   own audit events + comments.
+6. On `REPORTED`: create a separate reviewer branch/worktree from the writer
+   branch with Worktrunk, stamp `review_branch`/`review_worktree`, set
+   `state:in_review`, and spawn `reviewer` there. Relay `REVIEW` findings via
+   SendMessage to the domain-specialist's `agentId` as `FIX` (resumes the same
+   domain-specialist; never a new one). On `BLOCKED`: prepare and stamp a
+   separate Worktrunk checkout before spawning any tool-using
+   advisor/debugger; relay `ADVICE` back, dismiss it, then sweep its checkout.
+   The same reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
+   state=approved`, send `APPROVE <node>` to the shepherd — the merge handoff
+   trigger.
 7. Shepherd merges approved branches opportunistically under the exclusive merge slot
    (`bd merge-slot create` once, then `bd merge-slot acquire`/`release` without
    `--wait`), conflict-guarded
    (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`
    + `bd gate check`; pushes conflicts back to domain-specialists. Dismiss domain-specialist only
-   after its node merges; sweep its worktree. At recycle points
+   after its node merges; sweep every role checkout through
+   `worktree-sweep.sh`. At recycle points
    (`references/lifecycle.md`), check run spend vs budget; over → finish
    in-flight work, stop fanning out.
 8. Dispute the orchestrator can't settle from artifacts already in context →
@@ -124,7 +139,9 @@ Role: lead session / orchestrator.
 9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
    --parent <epic> --status in_progress,blocked`); invoke `audit-reporter` for
-   the end-of-run report; confirm all worktrees removed, build artifacts cleaned.
+   the end-of-run report; confirm all registered worktrees removed, then run
+   `worktree-sweep.sh --prune <primary-repo-path>` and resolve every refused
+   path before declaring cleanup complete. Clean run-local build artifacts.
 
 ## References & scripts
 

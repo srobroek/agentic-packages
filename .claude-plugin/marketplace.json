@@ -628,6 +628,21 @@
       "source": "./packages/hooks-worktree"
     },
     {
+      "name": "hooks-worktrunk",
+      "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, while steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
+      "version": "0.0.0",
+      "tags": [
+        "hooks",
+        "worktrunk",
+        "worktree",
+        "git",
+        "claude",
+        "codex"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/hooks-worktrunk"
+    },
+    {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering.",
       "version": "4.0.0",
@@ -1387,7 +1402,7 @@
     },
     {
       "name": "toolchain-cache-policy",
-      "description": "Enforces one shared, bounded build/cache location per toolchain across all worktrees and clones, so N parallel agent worktrees cannot each grow a multi-GB build tree and fill the disk. A SessionStart hook (1) writes shared cache env for cargo, sccache, uv, pip, go, npm, pnpm, bun, and gradle to CLAUDE_ENV_FILE, (2) enforces the cargo config target-dir (config files apply unconditionally), and (3) runs a disk-pressure GC that evicts regenerable build output (cargo target, go build cache) when free space drops below a floor, never touching module/package download stores. Fails open; advisory only. Claude SessionStart; Codex SessionStart parity.",
+      "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
       "version": "0.0.0",
       "tags": [
         "hooks",
@@ -1468,7 +1483,7 @@
     },
     {
       "name": "worktrunk-writer",
-      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, exposes schema-2 fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
+      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk 0.62 JSON-array fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
       "version": "1.1.0",
       "tags": [
         "worktrunk",

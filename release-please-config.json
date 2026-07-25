@@ -668,6 +668,18 @@
         }
       ]
     },
+    "packages/hooks-worktrunk": {
+      "release-type": "simple",
+      "component": "hooks-worktrunk",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/infrastructure": {
       "release-type": "simple",
       "component": "infrastructure",

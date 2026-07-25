@@ -11,7 +11,6 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-
 SCRIPT = Path(__file__).with_name("discover-agents.py")
 SPEC = importlib.util.spec_from_file_location("discover_agents", SCRIPT)
 assert SPEC and SPEC.loader
@@ -184,7 +183,7 @@ class DiscoverAgentsTest(unittest.TestCase):
         agents = {agent["name"]: agent for agent in self.collect(package_agents)}
 
         self.assertEqual(agents["domain-specialist"]["model"], "sonnet")
-        self.assertIn("Agent", str(agents["domain-specialist"]["tools"]))  # delegates to children
+        self.assertIn("Agent", str(agents["domain-specialist"]["tools"]))
         self.assertEqual(agents["researcher"]["model"], "sonnet")
         self.assertIn("WebSearch", str(agents["researcher"]["tools"]))
         self.assertEqual(agents["shepherd"]["model"], "sonnet")

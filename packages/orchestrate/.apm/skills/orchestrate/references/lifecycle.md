@@ -31,7 +31,7 @@ Blocked workers stay in `working` — `BLOCKED` is a message, not a node state.
 | `pending → ready` | `bd ready --label orc-node --parent <epic>` reports the node, no gate is open, scope is clean, and routing envelope is complete |
 | `ready → working` | directed worker atomically claims its assigned bead with `bd update <bead> --claim`, or generic worker atomically claims the first compatible queue bead with filtered `bd ready --claim` |
 | `reported → in_review` | worker reports declared evidence; orchestrator spawns a different compatible reviewer |
-| `working` (blocked) | worker sends `BLOCKED kind:design\|debug`, idles, and spawns nothing; orchestrator brokers and relays `ADVICE` |
+| `working` (blocked) | worker sends `BLOCKED kind:design\|debug`, idles, and spawns no peer/advisor; orchestrator brokers and relays `ADVICE` |
 | `changes_requested → working` | same worker applies exactly the `FIX` items; same reviewer re-reviews the delta |
 | `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; shepherd invokes N7's shared landing transaction, which revalidates identity/CI, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
@@ -74,6 +74,11 @@ agent for the same live claim — it loses context and may create a second write
    --status in_progress --json`. Each recovery record carries exact actor in
    `assignee`, directed or generic mode in `execution_dispatch`, branch/worktree
    or non-git resource scope, and the fine-grained `state:` label.
+   Confirm every stamped checkout through `wt list --format=json`. A recorded
+   branch without a worktree is recovered with `wt switch <branch> --no-cd
+   --format=json`; update the bead if Worktrunk returns a different path.
+   Never replace a missing checkout with harness isolation or
+   `git worktree add`.
 3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
    shepherd. Resume the N7 landing transaction, or use its evidence-gated
    recovery command after proving the exact actor lease is dead.
@@ -242,6 +247,23 @@ do not reopen the completed bead or rewrite its terminal evidence.
 
 ## Worktree and cleanup
 
-Sweep after fan-in, per the global worktree rule. The artifacts directory and
-Beads database are never swept. Stop repository watchers before removing
-run-local process state. Non-git nodes have no worktree to sweep.
+Sweep after fan-in, per the global Worktrunk rule:
+
+- Registered checkouts are inspected with `wt list` and removed with
+  `wt remove` through `worktree-sweep.sh`; raw `git worktree` lifecycle
+  commands are prohibited.
+- Reviewer/advisor/debugger branches are disposable and use
+  `worktree-sweep.sh --discard-branch <path>` after their actor is dismissed.
+- A broken harness directory that is no longer registered is moved out of the
+  harness root into quarantine. Unknown or dirty paths are refused.
+- The dirty primary checkout, artifacts directory, Beads database, and the
+  repository-shared build target are never swept.
+- At run end, after all known role checkouts are dismissed or reclaimed, run
+  `worktree-sweep.sh --prune <primary-repo-path>`. Exit 1 means at least one
+  dirty, valid-but-unregistered, unknown, or symlink path was refused; inspect
+  those paths and keep the run open instead of forcing deletion.
+
+Stop repository watchers before removing run-local process state. Non-git
+nodes have no worktree to sweep. This cleanup contract and the per-repository
+build target address the disk/orphan failure recorded in bead
+`astro-plan-ki35`.

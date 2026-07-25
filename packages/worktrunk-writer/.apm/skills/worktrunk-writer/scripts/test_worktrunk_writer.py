@@ -5,13 +5,13 @@ import importlib.util
 import io
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
-
 
 SCRIPT = Path(__file__).with_name("worktrunk-writer.py")
 SPEC = importlib.util.spec_from_file_location("worktrunk_writer", SCRIPT)
@@ -24,20 +24,18 @@ class InventoryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name).resolve()
-        self.payload = {
-            "schema": 2,
-            "items": [
-                {
-                    "branch": "agent/task",
-                    "worktree": {"path": str(self.root)},
-                    "vars": {
-                        "actor": "codex-writer-a1",
-                        "lease": "lease-a1",
-                        "bead": "demo-1",
-                    },
-                }
-            ],
-        }
+        self.payload = [
+            {
+                "branch": "agent/task",
+                "path": str(self.root),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "codex-writer-a1",
+                    "lease": "lease-a1",
+                    "bead": "demo-1",
+                },
+            }
+        ]
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -52,9 +50,7 @@ class InventoryTests(unittest.TestCase):
 
     def test_containing_item_accepts_nested_command_path(self) -> None:
         nested = self.root / "src" / "module"
-        self.assertEqual(
-            MODULE.containing_item(self.payload, nested)["branch"], "agent/task"
-        )
+        self.assertEqual(MODULE.containing_item(self.payload, nested)["branch"], "agent/task")
 
     def test_containing_item_rejects_a_different_checkout(self) -> None:
         self.assertIsNone(MODULE.containing_item(self.payload, Path("/var/tmp/other")))
@@ -118,41 +114,41 @@ class RuntimeHookTests(unittest.TestCase):
         self.claude.mkdir()
         self.codex.mkdir()
         self.reviewer.mkdir()
-        self.inventory = {
-            "schema": 2,
-            "items": [
-                {"branch": "main", "worktree": {"path": str(self.primary)}},
-                {
-                    "branch": "writer/claude",
-                    "worktree": {"path": str(self.claude)},
-                    "vars": {
-                        "actor": "claude-actor",
-                        "lease": "claude-lease",
-                        "context": "claude-agent-1",
-                        "bead": "demo-1",
-                    },
+        self.inventory = [
+            {"branch": "main", "path": str(self.primary), "kind": "worktree"},
+            {
+                "branch": "writer/claude",
+                "path": str(self.claude),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "claude-actor",
+                    "lease": "claude-lease",
+                    "context": "claude-agent-1",
+                    "bead": "demo-1",
                 },
-                {
-                    "branch": "writer/codex",
-                    "worktree": {"path": str(self.codex)},
-                    "vars": {
-                        "actor": "codex-actor",
-                        "lease": "codex-lease",
-                        "context": "codex-agent-2",
-                        "bead": "demo-2",
-                    },
+            },
+            {
+                "branch": "writer/codex",
+                "path": str(self.codex),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "codex-actor",
+                    "lease": "codex-lease",
+                    "context": "codex-agent-2",
+                    "bead": "demo-2",
                 },
-                {
-                    "branch": "review/security-reviewer-3",
-                    "worktree": {"path": str(self.reviewer)},
-                    "vars": {
-                        "actor": "reviewer-actor",
-                        "lease": "reviewer-lease",
-                        "context": "reviewer-agent-3",
-                    },
+            },
+            {
+                "branch": "review/security-reviewer-3",
+                "path": str(self.reviewer),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "reviewer-actor",
+                    "lease": "reviewer-lease",
+                    "context": "reviewer-agent-3",
                 },
-            ],
-        }
+            },
+        ]
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -168,9 +164,7 @@ class RuntimeHookTests(unittest.TestCase):
 
     def test_unbound_harness_subagent_is_denied_in_primary_checkout(self) -> None:
         with self.assertRaises(MODULE.ContractError):
-            MODULE.assert_runtime_lease(
-                {"agent_id": "unbound-agent"}, self.inventory, self.primary
-            )
+            MODULE.assert_runtime_lease({"agent_id": "unbound-agent"}, self.inventory, self.primary)
 
     def test_unbound_readonly_reviewer_bash_is_denied(self) -> None:
         output = self.invoke_hook(
@@ -182,9 +176,7 @@ class RuntimeHookTests(unittest.TestCase):
                 "tool_input": {"workdir": str(self.primary), "command": "git status"},
             }
         )
-        self.assertEqual(
-            json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny"
-        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_bound_readonly_reviewer_can_inspect_own_worktree(self) -> None:
         output = self.invoke_hook(
@@ -210,6 +202,15 @@ class RuntimeHookTests(unittest.TestCase):
         )
         self.assertEqual(item["branch"], "writer/codex")
 
+    def test_explicitly_bound_child_shares_parent_worktree(self) -> None:
+        self.inventory[1]["vars"]["contexts"] = json.dumps(
+            ["claude-agent-1", "claude-child-1"]
+        )
+        item = MODULE.assert_runtime_lease(
+            {"agent_id": "claude-child-1"}, self.inventory, self.claude
+        )
+        self.assertEqual(item["branch"], "writer/claude")
+
     def test_external_writer_actor_mismatch_is_denied(self) -> None:
         with self.assertRaises(MODULE.ContractError):
             MODULE.assert_runtime_lease(
@@ -221,11 +222,9 @@ class RuntimeHookTests(unittest.TestCase):
             )
 
     def test_unbound_writer_worktree_is_denied(self) -> None:
-        self.inventory["items"][1]["vars"].pop("context")
+        self.inventory[1]["vars"].pop("context")
         with self.assertRaises(MODULE.ContractError):
-            MODULE.assert_runtime_lease(
-                {"agent_id": "claude-agent-1"}, self.inventory, self.claude
-            )
+            MODULE.assert_runtime_lease({"agent_id": "claude-agent-1"}, self.inventory, self.claude)
 
     def invoke_hook(self, payload: dict, env: dict[str, str] | None = None) -> str:
         stdout = io.StringIO()
@@ -265,9 +264,7 @@ class RuntimeHookTests(unittest.TestCase):
                 },
             }
         )
-        self.assertEqual(
-            json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny"
-        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_codex_apply_patch_payload_allows_bound_checkout(self) -> None:
         output = self.invoke_hook(
@@ -298,9 +295,7 @@ class RuntimeHookTests(unittest.TestCase):
                 },
             }
         )
-        self.assertEqual(
-            json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny"
-        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_primary_human_apply_patch_payload_is_silent(self) -> None:
         output = self.invoke_hook(
@@ -329,9 +324,7 @@ class RuntimeHookTests(unittest.TestCase):
                 "WORKTRUNK_WRITER_ACTOR": "wrong-actor",
             },
         )
-        self.assertEqual(
-            json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny"
-        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_external_bash_payload_denies_missing_actor(self) -> None:
         output = self.invoke_hook(
@@ -343,9 +336,49 @@ class RuntimeHookTests(unittest.TestCase):
             },
             {"WORKTRUNK_WRITER_LEASE": "claude-lease"},
         )
-        self.assertEqual(
-            json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny"
-        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+
+class BindingTests(unittest.TestCase):
+    def test_bind_adds_child_context_without_replacing_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            path = repo / "writer"
+            path.mkdir()
+            inventory = [
+                {
+                    "branch": "writer/a",
+                    "path": str(path),
+                    "vars": {
+                        "actor": "writer-actor",
+                        "lease": "lease-a",
+                        "context": "parent-agent",
+                    },
+                }
+            ]
+            writes: list[tuple[str, str]] = []
+
+            def capture(_repo, _branch, key, value):
+                writes.append((key, value))
+
+            args = SimpleNamespace(
+                repo=str(repo),
+                path=str(path),
+                actor="writer-actor",
+                lease="lease-a",
+                context="child-agent",
+                bead=None,
+            )
+            with (
+                patch.object(MODULE, "wt_inventory", return_value=inventory),
+                patch.object(MODULE, "beads_active", return_value=False),
+                patch.object(MODULE, "set_var", side_effect=capture),
+            ):
+                result = MODULE.bind(args)
+
+            self.assertEqual(result["contexts"], ["child-agent", "parent-agent"])
+            self.assertNotIn(("context", "child-agent"), writes)
+            self.assertIn(("contexts", '["child-agent","parent-agent"]'), writes)
 
 
 class HookManifestTests(unittest.TestCase):
@@ -369,7 +402,7 @@ class BeadsLeaseTests(unittest.TestCase):
             "assignee": "writer-actor",
             "metadata": {},
         }
-        self.inventory = {"schema": 2, "items": []}
+        self.inventory: list[dict[str, object]] = []
         self.original_one = MODULE.one_bead
         self.original_conflicts = MODULE.active_bead_conflicts
         MODULE.one_bead = lambda *_args, **_kwargs: self.issue
@@ -404,15 +437,197 @@ class BeadsLeaseTests(unittest.TestCase):
             self.assert_available()
 
     def test_same_bead_on_another_worktree_is_rejected(self) -> None:
-        self.inventory["items"].append(
+        self.inventory.append(
             {
                 "branch": "writer/other",
-                "worktree": {"path": "/tmp/writer-other"},
+                "path": "/tmp/writer-other",
+                "kind": "worktree",
                 "vars": {"bead": "demo-1", "lease": "other-lease"},
             }
         )
         with self.assertRaises(MODULE.ContractError):
             self.assert_available()
+
+    def test_post_claim_validation_accepts_parent_stamped_anchors(self) -> None:
+        self.issue["metadata"] = {
+            "branch": "writer/a",
+            "worktree": str(self.path),
+            "worktree_path": str(self.path),
+        }
+        inventory = [
+            {
+                "branch": "writer/a",
+                "path": str(self.path),
+                "vars": {"actor": "writer-actor", "lease": "lease-a"},
+            }
+        ]
+        with patch.object(MODULE, "beads_active", return_value=True):
+            result = MODULE.validate(
+                Path("/tmp"),
+                self.path,
+                actor="writer-actor",
+                lease="lease-a",
+                bead="demo-1",
+                inventory=inventory,
+            )
+        self.assertEqual(result["status"], "valid")
+        self.assertEqual(result["bead"], "demo-1")
+
+    def test_post_claim_validation_rejects_unclaimed_bead(self) -> None:
+        self.issue["assignee"] = None
+        self.issue["metadata"] = {
+            "branch": "writer/a",
+            "worktree": str(self.path),
+            "worktree_path": str(self.path),
+        }
+        inventory = [
+            {
+                "branch": "writer/a",
+                "path": str(self.path),
+                "vars": {"actor": "writer-actor", "lease": "lease-a"},
+            }
+        ]
+        with (
+            patch.object(MODULE, "beads_active", return_value=True),
+            self.assertRaises(MODULE.ContractError),
+        ):
+            MODULE.validate(
+                Path("/tmp"),
+                self.path,
+                actor="writer-actor",
+                lease="lease-a",
+                bead="demo-1",
+                inventory=inventory,
+            )
+
+
+class PrepareRollbackTests(unittest.TestCase):
+    def test_copy_failure_removes_the_new_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp) / "repo"
+            path = Path(temp) / "writer"
+            repo.mkdir()
+            path.mkdir()
+            resolved_path = path.resolve()
+            item = {"branch": "writer/a", "path": str(path), "is_main": False}
+            commands: list[list[str]] = []
+
+            def fake_run(argv, **_kwargs):
+                commands.append(argv)
+                if "switch" in argv:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        json.dumps({"branch": "writer/a", "path": str(path)}),
+                        "",
+                    )
+                if argv[:3] == ["git", "-C", str(resolved_path)] and "branch" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "writer/a\n", "")
+                if argv[:3] == ["git", "-C", str(resolved_path)] and "rev-parse" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "abc123\n", "")
+                if "copy-ignored" in argv:
+                    raise MODULE.ContractError("copy failed")
+                if "remove" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "", "")
+                raise AssertionError(argv)
+
+            args = SimpleNamespace(
+                repo=str(repo),
+                branch="writer/a",
+                base="origin/main",
+                source="main",
+                actor="writer-actor",
+                lease="lease-a",
+                runtime="codex",
+                agent="builder",
+                bead=None,
+                run=None,
+                node=None,
+                model=None,
+                effort=None,
+                worktree_path=None,
+            )
+            with (
+                patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+                patch.object(MODULE, "beads_active", return_value=False),
+                patch.object(MODULE, "wt_inventory", side_effect=[[], [item]]),
+                patch.object(MODULE, "run", side_effect=fake_run),
+                self.assertRaisesRegex(MODULE.ContractError, "copy failed"),
+            ):
+                MODULE.prepare(args)
+
+            removals = [command for command in commands if "remove" in command]
+            self.assertEqual(len(removals), 1)
+            self.assertIn("--foreground", removals[0])
+            self.assertIn("--force-delete", removals[0])
+            self.assertEqual(removals[0][-1], str(resolved_path))
+
+    def test_bead_stamp_failure_removes_the_new_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp) / "repo"
+            path = Path(temp) / "writer"
+            common = repo / ".git"
+            repo.mkdir()
+            path.mkdir()
+            common.mkdir()
+            resolved_path = path.resolve()
+            item = {"branch": "writer/a", "path": str(path), "is_main": False}
+            commands: list[list[str]] = []
+
+            def fake_run(argv, **_kwargs):
+                commands.append(argv)
+                if "switch" in argv:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        json.dumps({"branch": "writer/a", "path": str(path)}),
+                        "",
+                    )
+                if argv[:3] == ["git", "-C", str(resolved_path)] and "branch" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "writer/a\n", "")
+                if argv[:3] == ["git", "-C", str(resolved_path)] and "rev-parse" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "abc123\n", "")
+                if argv[:3] == ["git", "-C", str(repo.resolve())]:
+                    return subprocess.CompletedProcess(argv, 0, f"{common}\n", "")
+                if "copy-ignored" in argv:
+                    return subprocess.CompletedProcess(argv, 0, '{"copied":0}', "")
+                if argv and argv[0] == "bd":
+                    raise MODULE.ContractError("bead stamp failed")
+                if "remove" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "", "")
+                return subprocess.CompletedProcess(argv, 0, "", "")
+
+            args = SimpleNamespace(
+                repo=str(repo),
+                branch="writer/a",
+                base="origin/main",
+                source="main",
+                actor="writer-actor",
+                lease="lease-a",
+                runtime="codex",
+                agent="builder",
+                bead="demo-1",
+                run=None,
+                node=None,
+                model=None,
+                effort=None,
+                worktree_path=None,
+            )
+            with (
+                patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+                patch.object(MODULE, "beads_active", return_value=True),
+                patch.object(MODULE, "assert_bead_lease_available"),
+                patch.object(MODULE, "validate", return_value={"status": "valid"}),
+                patch.object(MODULE, "wt_inventory", side_effect=[[], [item], [item]]),
+                patch.object(MODULE, "run", side_effect=fake_run),
+                self.assertRaisesRegex(MODULE.ContractError, "bead stamp failed"),
+            ):
+                MODULE.prepare(args)
+
+            removals = [command for command in commands if "remove" in command]
+            self.assertEqual(len(removals), 1)
+            self.assertIn("--force-delete", removals[0])
+            self.assertEqual(removals[0][-1], str(resolved_path))
 
 
 if __name__ == "__main__":

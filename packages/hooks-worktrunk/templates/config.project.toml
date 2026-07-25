@@ -1,0 +1,23 @@
+# Project config: .config/wt.toml
+# The user-level Worktrunk config owns repository-independent Cargo setup,
+# mise trust, and allowlisted copy-ignored warm starts. Add only this
+# repository's operational hooks here.
+
+[commit.generation]
+template-append = """
+- Use the repository's established commit-message convention.
+- Describe the behavior change, not the implementation process.
+"""
+
+[aliases]
+branches = "wt list --branches {{ args }}"
+copy = "wt step copy-ignored --require-include {{ args }}"
+logs = "wt config state logs get {{ args }}"
+
+# Enable these entries when this repository has an npm-compatible dev command.
+#
+# [post-start]
+# server = "wt step tether -- npm run dev -- --port {{ branch | hash_port }}"
+#
+# [list]
+# url = "http://localhost:{{ branch | hash_port }}"
