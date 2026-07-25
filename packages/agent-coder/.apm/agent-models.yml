@@ -1,10 +1,10 @@
 version: 1
 agents:
-  coder:
+  builder:
     codex:
       model: gpt-5.6-luna
       reasoning_effort: high
-  parallel-coder:
+  parallel-builder:
     codex:
       model: gpt-5.6-luna
       reasoning_effort: high
