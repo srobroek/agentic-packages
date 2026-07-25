@@ -1,6 +1,6 @@
 {
   "name": "diagrams",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
   "author": {
     "name": "Sjors Robroek"

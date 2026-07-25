@@ -1,6 +1,6 @@
 {
   "name": "language-rust",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
   "author": {
     "name": "Sjors Robroek"
