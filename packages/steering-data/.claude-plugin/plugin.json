@@ -1,6 +1,6 @@
 {
   "name": "steering-data",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Opinionated data conventions: data ownership, database assets, migrations, pipelines, and notebook practices. Opt-in steering.",
   "author": {
     "name": "Sjors Robroek"

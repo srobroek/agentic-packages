@@ -1,5 +1,5 @@
 name: steering-git-workflow
-version: 2.3.3
+version: 2.3.4
 description: >-
   Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge
   flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a

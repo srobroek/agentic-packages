@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.4](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.3...steering-git-workflow--v2.3.4) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
 ## [2.3.3](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.2...steering-git-workflow--v2.3.3) (2026-07-25)
 
 

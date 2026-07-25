@@ -1,5 +1,5 @@
 name: audit-steering
-version: 2.1.1
+version: 2.1.2
 description: >-
   Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale
   files, and token waste.
