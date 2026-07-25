@@ -37,6 +37,5 @@ source first; do not edit the rendered live target as the durable fix.
 
 ## References
 
-- Read `references/conventions.md` when choosing file naming patterns, prefixes,
-  or editing rules.
+- Read `references/conventions.md` when choosing file naming prefixes.
 - Read `references/secrets.md` when handling secret values.

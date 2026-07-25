@@ -40,8 +40,8 @@ Beads linkage (when `bd where` succeeds):
 Before push: run the project's test/verify command if code changed; report
 failures instead of pushing over them.
 
-Before merge: destination confirmed, checks green, no uncommitted work left,
-ask about deleting the merged branch.
+Before merge: confirm the destination. After merge: ask about deleting the
+merged branch.
 
 Verifying work landed:
 

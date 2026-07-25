@@ -25,7 +25,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `language-python` | Python toolkit | `python-quality`, `lsp-python` |
 | `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `lsp-rust` |
 | `language-shell` | Shell scripting toolkit with Shell LSP | `lsp-shell` |
-| `language-terraform` | Terraform and HCL toolkit | `lsp-terraform` |
+| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `lsp-terraform` |
 | `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `lsp-typescript` |
 | `lsp-go` | Go LSP server | external packages |
 | `lsp-python` | Python LSP server | external packages |

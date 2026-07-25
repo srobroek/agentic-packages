@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.4](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.3...code-intelligence--v8.1.4) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [8.1.3](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.2...code-intelligence--v8.1.3) (2026-07-24)
 
 

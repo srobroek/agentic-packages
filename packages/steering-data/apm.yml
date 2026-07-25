@@ -1,5 +1,5 @@
 name: steering-data
-version: 1.1.0
+version: 1.1.1
 description: >-
   Opinionated data conventions: data ownership, database assets, migrations,
   pipelines, and notebook practices. Opt-in steering.

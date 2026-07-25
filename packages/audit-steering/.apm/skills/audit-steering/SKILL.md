@@ -20,16 +20,16 @@ Audit agent configuration surfaces for issues, then apply R1-R7 rewrites to fix 
 
 ## Phase 2 — Optimize (fix issues)
 
-Apply R1-R7 rewrites to files flagged in Phase 1. LOAD `references/rules.md` for rationale and application guidance.
+Apply R1-R7 rewrites to files flagged in Phase 1. LOAD `references/rules.md` for the exact checks.
 
 | Rule | What |
 |------|------|
 | R1 | `description` in YAML frontmatter on every file |
-| R2 | Imperative tone, no model names, no vendor paths, frame as actions |
-| R3 | Tables for mappings, bullets for rules, no prose paragraphs |
-| R4 | Consistent section structure per file type |
+| R2 | Imperative tone, no model names, frame as actions |
+| R3 | Tables for mappings, bullets for rules |
+| R4 | `write-agentic`'s templates + `lint.py` own the per-kind format contract |
 | R5 | Relative paths for files, backticks for skill/agent names |
-| R6 | Under 50 lines; split oversized files |
+| R6 | `lint.py`'s per-kind line caps; split oversized files |
 | R7 | Index files as routing tables, detail in referenced files |
 
 Measure before and after: LOAD `references/measurement.md` for token estimation and report format.
@@ -52,5 +52,5 @@ Measure before and after: LOAD `references/measurement.md` for token estimation 
 | File | When to load |
 |------|--------------|
 | `references/checklist.md` | Phase 1: full audit pass |
-| `references/rules.md` | Phase 2: R1-R7 rationale and application |
+| `references/rules.md` | Phase 2: R1-R7 checks |
 | `references/measurement.md` | Phase 2: token estimation and report format |

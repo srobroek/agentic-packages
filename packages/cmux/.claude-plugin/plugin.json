@@ -1,6 +1,6 @@
 {
   "name": "cmux",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "cmux terminal control bundle: vendored user-facing skills that teach agents to drive and configure the cmux macOS terminal via its socket CLI -- topology and routing (windows, workspaces, panes, surfaces), customization, settings, socket policy, Ghostty rendering config, keyboard shortcuts, diagnostics, and shared behavior. Contributor skills (architecture, backend, release, testing) are omitted. Third-party (manaflow-ai/cmux publishes no APM/marketplace manifest); referenced as raw GitHub skill paths, same pattern as the other external bundles.",
   "author": {
     "name": "Sjors Robroek"

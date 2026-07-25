@@ -1,5 +1,5 @@
 name: cmux
-version: 1.1.0
+version: 1.1.1
 description: >-
   cmux terminal control bundle: vendored user-facing skills that teach agents to
   drive and configure the cmux macOS terminal via its socket CLI -- topology and

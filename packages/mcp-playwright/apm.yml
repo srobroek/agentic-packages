@@ -1,5 +1,5 @@
 name: mcp-playwright
-version: 1.2.0
+version: 1.2.1
 description: >-
   MCP server package for Playwright, providing browser automation and in-browser
   UI verification.

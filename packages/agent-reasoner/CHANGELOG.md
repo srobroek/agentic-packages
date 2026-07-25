@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-reasoner--v2.0.0...agent-reasoner--v3.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723))
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723)) ([7ce15d2](https://github.com/srobroek/agentic-packages/commit/7ce15d2f601c232b1e8f2aff6e09706547d48849))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-reasoner--v1.1.0...agent-reasoner--v2.0.0) (2026-07-23)
 
 

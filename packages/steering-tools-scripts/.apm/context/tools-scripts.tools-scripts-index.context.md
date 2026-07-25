@@ -9,11 +9,7 @@ and easy for agents to run.
 Use `tools/` for maintained CLIs, generators, MCP server implementations, and
 reusable developer tooling.
 
-Project orchestration is composable:
-
-- `just` for task aliases and repeatable workflows.
-- `mise` for language and tool versions.
-- `moon` for larger monorepo task orchestration.
+Task-runner defaults (`just`, `mise`, `moon`): see steering-toolchain-defaults.
 
 Keep generated outputs and caches out of source unless the project explicitly
 tracks them.

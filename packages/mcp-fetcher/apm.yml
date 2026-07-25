@@ -1,5 +1,5 @@
 name: mcp-fetcher
-version: 0.2.0
+version: 0.2.1
 description: >-
   MCP server package for Fetcher, providing direct web-page retrieval for coding
   agents.

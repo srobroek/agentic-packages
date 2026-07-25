@@ -1,6 +1,6 @@
 {
   "name": "brownfield-project",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Retrofit an existing repository into APM-managed agentic tooling without broad scaffolding. Use when onboarding, ingesting, or repairing a brownfield repo, especially when the agent must first discover project purpose, requirements, and workflow needs interactively.",
   "author": {
     "name": "Sjors Robroek"

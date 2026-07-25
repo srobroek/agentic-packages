@@ -1,6 +1,6 @@
 {
   "name": "audit-steering",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste.",
   "author": {
     "name": "Sjors Robroek"

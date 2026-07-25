@@ -1,5 +1,5 @@
 name: write-docs
-version: 1.2.2
+version: 2.0.0
 description: >-
   Author and review READMEs, consumer docs, PR descriptions, and internal docs:
   objective, example-backed, written for the released artifact, and slop-free.

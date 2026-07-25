@@ -1,15 +1,15 @@
 name: hooks-worktrunk
-version: 1.0.0
+version: 2.0.0
 description: >-
   Enforces Worktrunk as the worktree-management interface for Claude and Codex.
   A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout
   commands with the equivalent wt command, a PreToolUse:Agent guard denies
   harness isolation:"worktree" in favor of a parent-prepared checkout, and
   Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree
-  lifecycle through wt. Steering and config templates
-  cover official plugins, agent checkout isolation, lifecycle hook ownership,
-  repository-scoped build targets, copy-ignored warm starts, deterministic
-  dev-server ports, aliases, and LLM commit generation.
+  lifecycle through wt. Steering and config templates cover official plugins,
+  agent checkout isolation, lifecycle hook ownership, repository-scoped build
+  targets, copy-ignored warm starts, deterministic dev-server ports, aliases,
+  and LLM commit generation.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

@@ -1,5 +1,5 @@
 name: release-queue-watch
-version: 0.6.1
+version: 0.6.2
 description: >-
   Runs a signed local GitHub webhook receiver that emits deterministic PR
   lifecycle records, tracks agent-owned priority and merge-slot state, and

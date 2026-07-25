@@ -1,6 +1,6 @@
 {
   "name": "language-python",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
   "author": {
     "name": "Sjors Robroek"
