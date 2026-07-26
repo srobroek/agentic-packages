@@ -8,7 +8,7 @@ starting point, refined by what the catalog actually offers.
 | Role | Agent (default → alternatives) | Model / effort | Persistence | Escalation |
 |---|---|---|---|---|
 | **Orchestrator** | you (lead session) | your session model | whole run | delegate deep planning / disputes |
-| **Researcher** | `researcher` (bundled) -> `Explore`, `speckit-research` | **cheap tier** low/med | per claimed node or wisp | -> mid tier when one synthesis is contradictory |
+| **Researcher** | `researcher` (bundled) -> `Explore`, `speckit-research` | **cheap tier** low/med, read-only | per claimed node or wisp | -> mid tier when one synthesis is contradictory |
 | **Docs-guard** | `docs-guard` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → reviewer when policy or meaning is disputed |
 | **Data-metrics-summarizer** | `data-metrics-summarizer` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → researcher when interpretation is required |
 | **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → reviewer when rule intent is disputed |
@@ -22,7 +22,10 @@ starting point, refined by what the catalog actually offers.
 | **Tiebreaker** | `general-purpose` (fresh) | **top tier** high, read-only | ephemeral, gated | → xhigh only if genuinely complex |
 
 Claim-holder roles bundled here are domain-specialist, researcher, reviewer,
-advisor, shepherd, and scribe. The in-run shepherd uses landing safeguards
+advisor, shepherd, and scribe. A node with `execution_kind=artifact` must go to a
+writable role -- in practice `domain-specialist` -- because the writer hook denies
+the artifact write from a read-only role, and the node cannot recover by itself.
+Route a read-only role only when the node's deliverable is its reported result. The in-run shepherd uses landing safeguards
 from the `pr-shepherd` dependency; the dependency's standalone agent remains
 the repository-global queue drainer. Quality-guard roles come from
 `agent-quality-guards`; remaining routes are built-ins. The package does not assume
