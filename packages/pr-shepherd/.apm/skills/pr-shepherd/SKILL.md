@@ -36,6 +36,11 @@ TRIGGER
 6. Drain loop: `bd ready --label agent:integrator --unassigned --json`; probe
    eligibility before claiming with `scripts/merge-probe.sh eligibility`.
    Draft/release → ignore without mutation.
+   `metadata.integration_owner` naming another actor (`orchestrate`) → ignore
+   without mutation while that run is live; its own shepherd is mid-flight on this
+   PR. The query filters by label only, so this check is what keeps the two merge
+   actors apart. Take such a bead only once the run is terminal — that recovery is
+   yours, an active merge is not.
    Otherwise `bd update <id> --claim`; on "already claimed" skip it.
 7. Probe from the bead's metadata anchors `{pr, branch, base_sha, repo}`
    after `git fetch`:

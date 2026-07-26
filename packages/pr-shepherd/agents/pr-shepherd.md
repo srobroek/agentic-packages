@@ -31,7 +31,9 @@ the same pass; document nothing outside bead comments.
    human-resolution mismatch, not an automatic mutation.
 4. `bd gate check`, then `bd merge-slot create` (idempotent).
 5. Drain `bd ready --label agent:integrator --unassigned --json`: re-probe
-   eligibility before claim; ignore draft/release PRs without mutation. Claim
+   eligibility before claim; ignore draft/release PRs without mutation, and ignore
+   a bead whose `metadata.integration_owner` names another actor (`orchestrate`)
+   while that run is live -- its own shepherd is mid-flight. Claim
    eligible work with `bd update <id> --claim` (skip on refusal), probe from metadata
    anchors `{pr, branch, base_sha, repo}` using the pr-shepherd skill's
    `scripts/merge-probe.sh` (`conflicts`, `pr`), decide per the skill's
