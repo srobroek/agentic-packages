@@ -1,5 +1,17 @@
 # Changelog
 
+## [10.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.0...orchestrate--v10.0.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **orchestrate:** park external gates and gate decomposition on swarm validate ([#751](https://github.com/srobroek/agentic-packages/issues/751)) ([4489e41](https://github.com/srobroek/agentic-packages/commit/4489e41c63dac3428e52705efd9ee5e4d9818690))
+
+
+### Documentation
+
+* **orchestrate:** say that an artifact node needs a writable role ([#749](https://github.com/srobroek/agentic-packages/issues/749)) ([ddc6d40](https://github.com/srobroek/agentic-packages/commit/ddc6d4087850d4455c3612bd3a71b41c21f42c6e))
+
 ## [10.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v9.0.0...orchestrate--v10.0.0) (2026-07-26)
 
 
