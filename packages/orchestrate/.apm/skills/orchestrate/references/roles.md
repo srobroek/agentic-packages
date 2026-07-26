@@ -14,7 +14,7 @@ starting point, refined by what the catalog actually offers.
 | **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → reviewer when rule intent is disputed |
 | **Maintenance-metrics-reader** | `maintenance-metrics-reader` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → researcher when a root cause is ambiguous |
 | **Reviewer-mechanics** | `reviewer-mechanics` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → reviewer on deeper correctness questions |
-| **Domain-specialist** | `domain-specialist` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the domain-specialist — on a reasoning block it raises `BLOCKED` |
+| **Domain-specialist** | `domain-specialist` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | do **not** upgrade the domain-specialist -- on a reasoning block it raises `BLOCKED` |
 | **Reviewer** | `reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Advisor** | `advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Shepherd** | `shepherd` (bundled) | **mid tier** high | persistent for one run | -> top tier only for an evidence dispute it cannot resolve |
@@ -30,11 +30,11 @@ the repository-global queue drainer. Quality-guard roles come from
 when the catalog has them.
 
 "Persistent" means the role is always available for the run, not that it is one
-never-restarted process — recycle the Shepherd to shed context (see
+never-restarted process -- recycle the Shepherd to shed context (see
 `references/lifecycle.md`). The orchestrator never executes work directly; see
 SKILL.md Core rules.
 
-## Capabilities & access — what each role may do
+## Capabilities & access -- what each role may do
 
 | Role | Writes | Spawns | Runs in | Notes |
 |---|---|---|---|---|
@@ -78,7 +78,7 @@ itself. Every gatherer or synthesizer gets a complete research bead and is
 activated only by its claim verb.
 
 - **Narrow question:** one Researcher (`Explore`, cheap tier), returns a terse digest.
-- **Broad research — fan-out then fan-in:**
+- **Broad research -- fan-out then fan-in:**
   1. **Fan-out:** create one scoped research node per source or sub-question.
      Each gatherer claims its node and writes cited artifact evidence.
   2. **Fan-in:** create a synthesis node depending on every gatherer. The
@@ -89,7 +89,7 @@ activated only by its claim verb.
      genuinely contradictory or high-stakes.
 
 Gatherers are read-only and spawn nothing; the fan-out width is the orchestrator's
-call (bound it to the sources that matter — log what was skipped).
+call (bound it to the sources that matter -- log what was skipped).
 
 ## Escalation ladder
 

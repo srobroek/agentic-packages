@@ -2,7 +2,7 @@
 
 A run's DAG, node state, and audit trail live in the project's beads database
 (the `bd` CLI). One database is shared by every worktree automatically, so
-agents in isolated worktrees read/write live state with plain `bd` commands —
+agents in isolated worktrees read/write live state with plain `bd` commands --
 no shared-path bookkeeping. Artifacts (full briefs/reports) are files under
 `<primary>/.orchestration/run-<id>/artifacts/`; bead comments reference them
 by absolute path.
@@ -188,9 +188,9 @@ bd dep cycles                 # must stay clean
 
 The label MUST be `orc-node` (hyphen, plain label). `bd set-state` owns the
 `state:` label dimension: each transition deletes the previous `state:<value>`
-label, adds the new one, and emits an event bead — the transition record.
+label, adds the new one, and emits an event bead -- the transition record.
 
-## State mapping — 11-state enum → bead status + `state:` label
+## State mapping -- 11-state enum → bead status + `state:` label
 
 Beads statuses are coarse and drive `bd ready`; the `state:` label carries the
 review-round sub-state. Both are set in one place per transition:
@@ -203,7 +203,7 @@ bd update <bead> --status <status>                    # only where status change
 | Enum state | Bead status | `state:` label | Set by / how |
 |---|---|---|---|
 | `pending` | `open` | `state:pending` | orchestrator at `bd create` |
-| `ready` | `open` | — (derived, never stored) | `bd ready --label orc-node --parent <epic>` + clean `scope-check.py` |
+| `ready` | `open` | -- (derived, never stored) | `bd ready --label orc-node --parent <epic>` + clean `scope-check.py` |
 | `working` | `in_progress` | `state:working` | domain-specialist: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
 | `reported` | `in_progress` | `state:reported` | domain-specialist, after push |
 | `in_review` | `in_progress` | `state:in_review` | orchestrator at reviewer spawn |
@@ -217,7 +217,7 @@ bd update <bead> --status <status>                    # only where status change
 Semantics that fall out of the status column:
 
 - **Deps clear on `closed`.** A dependent becomes ready only once its
-  upstreams are `merged`/`dismissed` — it always starts from a base containing
+  upstreams are `merged`/`dismissed` -- it always starts from a base containing
   the upstream's merged code.
 - **`failed` = `blocked` status** → never satisfies a dependency, never
   reappears in `bd ready`. Stranded downstream = `bd dep tree <bead>`.
@@ -315,6 +315,6 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 
 A beads-managed SpecKit molecule (`bd swarm create <epic>`, `bd ready --mol`)
 already IS a dependency-aware run DAG. When such a molecule drives the work,
-use its step beads as the run's node beads — do not build a second graph on
+use its step beads as the run's node beads -- do not build a second graph on
 top. Add the `orc-node` label + `scope` metadata to the step beads so
 `scope-check.py`, the state mapping, and the anchor contract apply unchanged.
