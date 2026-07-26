@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v4.0.0...speckit-beads--v5.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit-beads:** steps carry `metadata.skill_hints` instead of `metadata.execution_skill`. Re-pour molecules or update consumers that read the old key; already-poured beads keep whatever key they were poured with.
+
+### Features
+
+* **speckit-beads:** unify step routing on skill_hints and wire wisps ([#763](https://github.com/srobroek/agentic-packages/issues/763)) ([fa0b4d5](https://github.com/srobroek/agentic-packages/commit/fa0b4d585c0456cafd8da8959b33fcde69ca5c4f))
+
 ## [4.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v3.4.0...speckit-beads--v4.0.0) (2026-07-25)
 
 

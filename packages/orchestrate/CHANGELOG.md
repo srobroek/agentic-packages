@@ -1,5 +1,12 @@
 # Changelog
 
+## [11.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v11.0.0...orchestrate--v11.0.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **orchestrate:** ship the run-activation scripts as executable ([#762](https://github.com/srobroek/agentic-packages/issues/762)) ([54f1d1f](https://github.com/srobroek/agentic-packages/commit/54f1d1fd21995be8e2a277ee07fa38379e21c11a))
+
 ## [11.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.2...orchestrate--v11.0.0) (2026-07-26)
 
 
