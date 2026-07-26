@@ -124,7 +124,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(sent_before_ack_crash["deliveryState"], "sent")
         self.assertEqual(acknowledged["status"], "duplicate")
 
-    def test_untracked_migration_is_normalized_before_gatekeeper_handoff(self):
+    def test_untracked_migration_is_normalized_before_shepherd_handoff(self):
         key = f"owner/repo#42@{'a' * 40}"
         migration_node = node(queue_dispatch=key)
 
@@ -250,7 +250,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(result["eventType"], "pr-lifecycle")
         self.assertEqual(result["node"], "orc-run.1")
         self.assertEqual(result["transition"], "failed")
-        self.assertTrue(result["wakeGatekeeper"])
+        self.assertTrue(result["wakeShepherd"])
         self.assertEqual(
             result["requiredMetadata"],
             {
@@ -268,7 +268,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         result = MODULE.resolve(lifecycle("updated"), [unapproved])
 
         self.assertEqual(result["status"], "resolved")
-        self.assertFalse(result["wakeGatekeeper"])
+        self.assertFalse(result["wakeShepherd"])
         self.assertEqual(
             result["requiredMetadata"]["queue_lifecycle_ack"],
             "owner/repo#42#updated#opaque",
@@ -316,7 +316,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["status"], "replay")
         self.assertEqual(result[0]["deliveryState"], "pending")
-        self.assertTrue(result[0]["wakeGatekeeper"])
+        self.assertTrue(result[0]["wakeShepherd"])
 
     def test_normalizes_unapproved_nonterminal_lifecycle_to_ack(self):
         key = "owner/repo#42#updated#opaque"
@@ -329,7 +329,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
 
         result = MODULE.replay_unacknowledged_lifecycles([unapproved])[0]
 
-        self.assertFalse(result["wakeGatekeeper"])
+        self.assertFalse(result["wakeShepherd"])
         self.assertEqual(result["requiredMetadata"], {"queue_lifecycle_ack": key})
 
     def test_lifecycle_head_change_is_observed_not_trusted(self):
@@ -400,7 +400,7 @@ class ResolveQueueDispatchTest(unittest.TestCase):
         result = MODULE.resolve(event, [node()])
 
         self.assertEqual(result["transition"], "merged")
-        self.assertTrue(result["wakeGatekeeper"])
+        self.assertTrue(result["wakeShepherd"])
         self.assertNotIn("dispatchKey", result)
 
     def test_rejects_malformed_lifecycle(self):

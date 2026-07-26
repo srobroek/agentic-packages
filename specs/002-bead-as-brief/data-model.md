@@ -1,8 +1,7 @@
 # Data Model: Bead-as-Brief Orchestration Contracts
 
-Authoritative definitions live in the design doc
-(`packages/orchestrate/.apm/skills/orchestrate/references/bead-as-brief.md`);
-this file indexes them for planning and validation.
+Authoritative definitions live in [design.md](design.md). This file indexes
+them for planning and validation.
 
 ## Entities
 
@@ -11,10 +10,10 @@ One unit of run work. Durable, synced.
 
 | Field group | Keys | Writer |
 |---|---|---|
-| Planning | `scope`, `base_ref`, `base_sha`, `execution_kind`, `artifacts_dir`, `model?`, `complexity_tier`, `tool_hints?`, `skill_hints?` | planner node / orchestrator at creation |
-| Claim | `branch`, `worktree`, `execution_dispatch`, `execution_agent` | claiming agent |
+| Planning | `scope`, `base_ref`, `base_sha`, `execution_task_kind`, `execution_kind`, `artifacts_dir`, `model?`, `complexity_tier`, `tool_hints?`, `skill_hints?` | planner node / orchestrator at creation |
+| Activation | `actor`, `branch`, `worktree`, `lease_token`, `runtime_handle`, `runtime_context`, `execution_dispatch`, `execution_agent` | orchestrator before release |
 | Delivery | `push` (git kind) · `output_ref` (artifact/comment kinds) | claiming agent |
-| Landing | `merge_sha`, `pr` | pr-shepherd |
+| Landing | `merge_sha`, `pr` | bundled run shepherd or standalone pr-shepherd |
 | Counters | `stop_attempts`, `review_round` | hooks (reset at bounce) |
 
 Comments (durable thread, ≤6 healthy): BRIEF · REPORTED · verdict lines
@@ -35,11 +34,11 @@ undrafted + all blockers closed.
 
 | Our name | bd `--wisp-type` | TTL class | Claimable |
 |---|---|---|---|
-| `[wisp:review] <node>: <dim>` | escalation | 7d | yes -- reviewer |
-| `[wisp:escalation] <node>: <q>` | escalation | 7d | yes -- advisor/researcher |
+| `[wisp:review] <node>: <dim>` | escalation | 7d | yes — reviewer |
+| `[wisp:escalation] <node>: <q>` | escalation | 7d | yes — advisor/researcher |
 | `[wisp:worklog] <node>` | gc_report | 24h | no |
 | `[wisp:ledger] <event>` | gc_report | 24h | no (scribe closes) |
-| `[wisp:patrol] sheepdog <repo>` | patrol | 24h | yes -- shepherd (lease) |
+| `[wisp:patrol] sheepdog <repo>` | patrol | 24h | yes — shepherd (lease) |
 | probe chatter | ping/heartbeat | 6h | no |
 | recovery | recovery | 7d | per protocol |
 
@@ -65,14 +64,14 @@ Native bd blocker. `human` (ASK/approval) · `timer` (scribe cycle) ·
 ### Label
 `agent:<role>` (routing) · `needs-review:<dim>` (add: planner/any T1; remove:
 approving reviewer via swap, orchestrator via retrigger) · `reviewed:<dim>`.
-Declarative only -- merge safety derives from the dep graph, never labels.
+Declarative only — merge safety derives from the dep graph, never labels.
 
-## State machine (node) -- DERIVED, not stored
+## State machine (node) — DERIVED, not stored
 
 bd has exactly five built-in statuses: `open`, `in_progress`, `blocked`,
 `deferred`, `closed` (`--claim` sets `in_progress`). The design's richer
 lifecycle phases are **not** custom statuses and are **not** mirrored into
-metadata -- each is derived from the built-in status plus labels, gates, and
+metadata — each is derived from the built-in status plus labels, gates, and
 review-wisp closure (single source of truth per fact):
 
 | Design phase | Derived from |
@@ -97,11 +96,12 @@ escape-hatch exit is `status=blocked` + a FAILED/BLOCKED comment.
 |---|---|---|
 | T0 orchestrator | create/close/dismiss beads, shells, gates, deps, BRIEF, label retrigger | claim anything |
 | domain-specialist | claim-scope metadata, delivery fields, `agent:*` + `needs-review:*` add, REPORTED/CHECKPOINT/FAILED, merge-bead create + dep | close, approve, merge states; merge metadata |
-| workflow-reviewer | verdict lines, wisp fill/close, label swap, `gh pr review`/`ready` | node code metadata, push, merge, `gh pr edit` |
-| workflow-advisor | claimed wisp content only | any node/durable write |
-| workflow-researcher | `output_ref`, REPORTED, wisp answers | git metadata, merge/approve states |
-| ledger-scribe | epic run record, ledger-wisp close | any node write |
-| pr-shepherd | PR state (`ready`→probe→merge), `merge_sha`/`pr`, merge-bead close, fix beads, sheepdog | PR content, push, `gh pr edit`, unassign of work beads |
+| reviewer | verdict lines, wisp fill/close, label swap, `gh pr review`/`ready` | node code metadata, push, merge, `gh pr edit` |
+| advisor | claimed wisp content plus promoted node summary | node state, delivery, or review mutation |
+| researcher | `output_ref`, REPORTED, wisp answers plus promoted summary | push, merge, or approval state |
+| scribe | epic run record, query/ledger-wisp close | work-node mutation |
+| run shepherd | one run's PR state (`ready`→probe→merge), `merge_sha`/`pr`, merge-bead close, fix beads, sheepdog, run cleanup | PR content, push, `gh pr edit`, repository-global queue ownership |
+| pr-shepherd | cross-run recovery and repository-global queue drain under the same landing safeguards | PR content, push, `gh pr edit`, a queue held by a live run shepherd |
 
 Claim invariants: ≤1 durable claim per actor; wisps exempt; 0 claims of any
 kind at exit; claim-holders spawned only by T0; children never claim.
@@ -110,5 +110,5 @@ kind at exit; claim-holders spawned only by T0; children never claim.
 
 `relates-to` (node↔wisp, node↔domain) · `discovered-from` (follow-up work,
 fix beads) · `caused-by` (bounce/recovery) · `supersedes` (re-planning) ·
-`duplicates` (dedup) · `replies-to` (wisp threads; CLI support unverified --
+`duplicates` (dedup) · `replies-to` (wisp threads; CLI support unverified —
 fallback relates-to + chronological comments).

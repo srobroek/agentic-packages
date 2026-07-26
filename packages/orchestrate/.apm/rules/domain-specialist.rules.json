@@ -6,7 +6,8 @@
     { "check": "branch",     "require": "metadata.branch",         "when": "git" },
     { "check": "push",       "require": "metadata.push",           "when": "git" },
     { "check": "output_ref", "require": "metadata.output_ref",     "when": "artifact" },
-    { "check": "handoff",    "require": "label ~ ^agent:" },
+    { "check": "artifact_path", "require": "artifact.output_ref contained", "when": "artifact" },
+    { "check": "handoff",    "require": "label ~ ^agent:reviewer$", "when": "git" },
     { "check": "reported",   "require": "comment.verb in [REPORTED]" }
   ],
   "authority": {

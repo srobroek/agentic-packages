@@ -19,8 +19,9 @@ import re
 import signal
 import subprocess
 import sys
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence, TextIO
+from typing import Any, TextIO
 
 EVIDENCE_MODES = {"artifact", "comment", "external", "git"}
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
@@ -87,9 +88,7 @@ def make_contract(args: argparse.Namespace) -> QueueContract:
     _slug(args.actor, "actor")
     if args.evidence not in EVIDENCE_MODES:
         raise PullWorkerError("arguments", "unsupported evidence mode")
-    capabilities = tuple(
-        sorted({_slug(item, "capability") for item in args.capability})
-    )
+    capabilities = tuple(sorted({_slug(item, "capability") for item in args.capability}))
     return QueueContract(
         epic=args.epic,
         queue=queue,
@@ -116,9 +115,9 @@ def build_claim_command(bd_command: str, contract: QueueContract) -> list[str]:
         "--label",
         contract.queue_label,
         "--metadata-field",
-        f"execution_kind={contract.task_kind}",
+        f"execution_task_kind={contract.task_kind}",
         "--metadata-field",
-        f"execution_evidence={contract.evidence}",
+        f"execution_kind={contract.evidence}",
         "--unassigned",
         "--sort",
         "priority",
@@ -220,9 +219,7 @@ def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
             bead=bead,
         )
     other_queues = sorted(
-        label
-        for label in label_set
-        if label.startswith("agent:") and label != contract.queue_label
+        label for label in label_set if label.startswith("agent:") and label != contract.queue_label
     )
     if other_queues:
         raise PullWorkerError(
@@ -241,14 +238,14 @@ def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
             bead=bead,
         )
     scope = _string_list(metadata.get("scope"), "metadata.scope", bead)
-    if metadata.get("execution_kind") != contract.task_kind:
+    if metadata.get("execution_task_kind") != contract.task_kind:
         raise PullWorkerError(
             "routing_envelope",
             "claimed issue task kind does not match the queue activation",
             reconcile_required=True,
             bead=bead,
         )
-    if metadata.get("execution_evidence") != contract.evidence:
+    if metadata.get("execution_kind") != contract.evidence:
         raise PullWorkerError(
             "routing_envelope",
             "claimed issue evidence does not match the queue activation",
@@ -308,8 +305,8 @@ def validate_claim(issue: Any, contract: QueueContract) -> dict[str, Any]:
             "commit_required": git_evidence,
             "output_ref_required": not git_evidence,
         },
-        "execution_evidence": contract.evidence,
-        "execution_kind": contract.task_kind,
+        "execution_kind": contract.evidence,
+        "execution_task_kind": contract.task_kind,
         "ordering": {
             "policy": "priority",
             "tie_break": "beads-ready-order",
@@ -400,9 +397,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args = _parser().parse_args(argv)
         if not math.isfinite(args.timeout) or args.timeout <= 0:
             raise PullWorkerError("arguments", "timeout must be positive")
-        result = run_claim(
-            make_contract(args), bd_command=args.bd, timeout=args.timeout
-        )
+        result = run_claim(make_contract(args), bd_command=args.bd, timeout=args.timeout)
     except StopRequested:
         _emit(
             {

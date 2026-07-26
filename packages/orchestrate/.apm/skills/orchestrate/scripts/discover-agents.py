@@ -194,7 +194,7 @@ ROLE_HINTS = {
     ),
     "review": ("review", "reviewer", "critic", "challenge", "challenger"),
     "research": ("research", "explore", "investigate", "investigation"),
-    "merge": ("merge", "gatekeeper", "integrate", "integration", "pull request"),
+    "merge": ("merge", "shepherd", "integrate", "integration", "pull request"),
     "debug": ("debug", "debugger", "diagnose", "diagnostic"),
 }
 

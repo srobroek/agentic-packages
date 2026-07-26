@@ -1,40 +1,42 @@
-ORCHESTRATION COMMS PROTOCOL -- active run. Follow exactly.
+ORCHESTRATION COMMS PROTOCOL - active run. Follow exactly.
 
-Envelope (SendMessage): `to`=<name|main>, `summary`=5 to 10 words, `message`=ONE
-VERB + node id + labeled fields. Omit empty fields -- never write "none".
+Activation: a claim-holder receives only `CLAIM {bead-or-wisp-id}` or
+`CLAIM queue:{filter}`. Read the BRIEF, metadata, comments, and linked wisps
+before acting. Never treat prompt-carried task details as authority.
 
-Verbs (12): ASSIGN BLOCKED ADVICE REPORTED REVIEW FIX CONFLICT APPROVE MERGED
-DISMISS ASK NO_WORK. A tiebreaker's binding call arrives as ADVICE. `NO_WORK`
-reports one generic activation that found no compatible bead and mirrors to
-the run epic.
-Mirror every verb to beads: `bd audit record --actor <you> --kind tool_call
---tool-name orc.<verb-lowercase> --issue-id <bead>` + `bd comment <bead>
-"<VERB> <node> …fields…"`. Set BEADS_ACTOR to your actor name.
+Envelope (harness wake): `to`={actor}, `summary`=5-10 words,
+`message`=ONE verb plus a resource id. The wake is only a doorbell. Task,
+question, review, and decision content stays on Beads.
 
-Proof: every claim carries a pointer -- `file:line`, a command result, or a
-bead/node id -- or the marker `untested`. Cite prior facts by ref; never
-restate or paste content.
+Verbs (11): BLOCKED ADVICE REPORTED REVIEW FIX CONFLICT APPROVE MERGED DISMISS
+ASK NO_WORK. A tiebreaker's binding result is ADVICE. Mirror each material
+verb to the affected bead or wisp with the acting identity. Set `BEADS_ACTOR`
+and `BD_ACTOR` to `metadata.actor` on every mutating Beads process.
 
-Scratch: working notes go to a scratch file in your worktree; cite it as
-`log:` in reports. Reason at the depth the task needs -- terseness governs
-what you WRITE (wire messages, bead comments, session text ≤1 line), not how
-you think. Never trade correctness for brevity; never pad.
+Proof: every factual claim carries a `file:line`, command result, bead/wisp id,
+or `untested`. Cite prior facts by reference; never paste them into a relay.
+
+Scratch: working notes go to the node's worklog wisp or an artifact path.
+Terseness governs wire messages and comments, not reasoning depth.
 
 Delivery:
 - Harness notification is an advisory immediate wake.
-- A Beads message thread is the durable source for the active run.
-- Use `scripts/thread-message.py` for send, reply, inbox, show, and acknowledge.
-- Every message stores actor, assignee, run, and work-bead identity.
-- A root replies to the work bead. A reply replies to one open message.
-- Acknowledge closes only that message.
-- Inbox/show/thread/ack remain available after work closes; send/reply require
-  an open run and active work bead.
-- Resolved decisions remain comments or decision beads.
-- Send/reply retries create another message after a prior success. Reconcile
-  the returned id or inbox before retrying.
-- Acknowledge is idempotent.
+- The Beads wisp/thread is the P2P source for active-run communication.
+- Material local outcomes are promoted to the work-bead comment.
+- Cross-bead policy becomes a linked decision bead before action.
+- Acknowledge or burn a wisp only after required promotion and dependency use.
+- A retry after ambiguous send reconciles the returned id or inbox first.
 
-Spawning: none. Blocked -- design call or stuck-red debug (not a lookup)? Send
-`BLOCKED <node> kind:<design|debug>` to `main`, then idle. Need product intent
-not in your brief? Send `ASK <node>` to `main`. Everything else routes through
-the orchestrator.
+Spawning:
+- A domain specialist may spawn bounded, contract-free implementation
+  children in its bound checkout. Children never claim, commit, push, manage
+  worktrees, or spawn another writer.
+- Every other actor spawns nothing. A child never spawns.
+
+Blocked:
+- Design/debug uncertainty creates an escalation wisp linked to the node.
+  The orchestrator wakes an advisor; the advisor and specialist exchange
+  content on that wisp without orchestrator relay.
+- Product intent creates an ASK escalation wisp and human gate.
+- No actor waits live on a peer. Checkpoint and exit, or use the bounded poll
+  allowed by the runtime contract.

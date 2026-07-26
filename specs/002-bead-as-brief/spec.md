@@ -6,23 +6,29 @@
 
 **Status**: Draft
 
-**Input**: User description: "bead-as-brief orchestrate v2: all task data lives on node beads (metadata schema + BRIEF comment), spawn prompts carry only CLAIM verbs; claim⟺contract enforced by per-agent SubagentStop rules engine; actor tier taxonomy; wisps for ephemeral coordination; graph links for provenance; needs-review:/reviewed: label flow with dep-graph verdict aggregation; draft-PR landing via pr-shepherd only; gates for human approval, scribe timer, CI; SendMessage wake with respawn fallback; planner as high-tier node separate from routing orchestrator. Full accepted design in packages/orchestrate/.apm/skills/orchestrate/references/bead-as-brief.md (bead orc-3v0)"
+**Input**: User description: "bead-as-brief orchestrate v2: all task data lives on node beads (metadata schema + BRIEF comment), spawn prompts carry only CLAIM verbs; claim⟺contract enforced by per-agent SubagentStop rules engine; actor tier taxonomy; wisps for ephemeral coordination; graph links for provenance; needs-review:/reviewed: label flow with dep-graph verdict aggregation; draft-PR landing via pr-shepherd only; gates for human approval, scribe timer, CI; SendMessage wake with respawn fallback; planner as high-tier node separate from routing orchestrator. Full accepted design in specs/002-bead-as-brief/design.md (bead orc-3v0)"
 
-**Design authority**: The accepted architecture -- every mechanism, schema, and decision -- lives in `packages/orchestrate/.apm/skills/orchestrate/references/bead-as-brief.md` (bead orc-3v0). This spec frames the work for planning and does not restate that design; where the two disagree, the design doc wins.
+**Design authority**: The accepted architecture lives in [design.md](design.md) (bead orc-3v0). This spec defines testable behavior and does not restate the design.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Crash-resumable task handoff (Priority: P1)
 
-An orchestrator operator runs a multi-agent implementation. Every task's instructions, scope, and progress live on its bead, so any agent that dies mid-task -- or any wake that silently becomes a respawn -- recovers by reading the bead and its work-log thread. No task instruction ever exists only in a prompt.
+An orchestrator operator runs a multi-agent implementation. Every task's instructions, scope, and progress live on its bead, so any agent that dies mid-task — or any wake that silently becomes a respawn — recovers by reading the bead and its work-log thread. No task instruction ever exists only in a prompt.
 
 **Why this priority**: This is the foundation every other story builds on; without bead-resident briefs, contracts and wake fallbacks have nothing to validate or recover from.
 
-**Independent Test**: Create a node bead with BRIEF + metadata, spawn an agent with only `CLAIM <bead-id>`, kill it mid-task, respawn with the same verb, and verify the replacement continues from the last checkpoint without any information from the first agent's prompt.
+**Independent Test**: Create a node bead with BRIEF and metadata, allocate an
+agent with the canonical WAIT bootstrap, bind its runtime, activate it with
+only `CLAIM <bead-id>`, kill it mid-task, and verify a replacement continues
+from the last checkpoint without information from the first agent's prompt.
 
 **Acceptance Scenarios**:
 
-1. **Given** a node bead with BRIEF comment and complete metadata, **When** an agent is spawned with only a CLAIM verb, **Then** it performs the task without any task data in its prompt.
+1. **Given** a node bead with BRIEF comment and complete metadata, **When** an
+   agent receives the canonical WAIT bootstrap and a later exact CLAIM
+   activation, **Then** it performs the task without task data in either
+   message.
 2. **Given** an agent killed mid-task after writing checkpoints to its work-log wisp, **When** a replacement claims the same bead, **Then** it resumes from the last checkpoint and delivers the node.
 3. **Given** an orchestrator whose agent handle expired, **When** it attempts a wake, **Then** the respawn path recovers the node with no loss of durable state.
 
@@ -68,7 +74,7 @@ A node requiring several review lenses (code, security, QA) is reviewed by one f
 
 ### User Story 4 - Single landing path via pr-shepherd (Priority: P3)
 
-All merges -- node branches into an integration base, integration branches into main, external PRs -- flow through one landing path: draft PRs, merge beads, the per-repo shepherd, and the merge slot. The shepherd manages PR state and audit only; it never edits content.
+All merges — node branches into an integration base, integration branches into main, external PRs — flow through one landing path: draft PRs, merge beads, the per-repo shepherd, and the merge slot. The shepherd manages PR state and audit only; it never edits content.
 
 **Why this priority**: Consolidating landing removes a whole agent (integration-gatekeeper) and its drift risk, but only pays off once contracts and review exist.
 
@@ -85,7 +91,7 @@ All merges -- node branches into an integration base, integration branches into 
 
 ### User Story 5 - Ephemeral coordination without context waste (Priority: P2)
 
-Operational chatter -- checkpoints, advice threads, review working notes, ledger events, CI probes -- rides ephemeral wisps that burn after use, so durable bead threads stay short (~5 comments for a healthy node) and every future reader pays only for evidence, not process noise. Blocked agents never idle live; they checkpoint and exit (or bounded-poll on runtimes without resume), and the orchestrator wakes the counterpart when the answer lands.
+Operational chatter — checkpoints, advice threads, review working notes, ledger events, CI probes — rides ephemeral wisps that burn after use, so durable bead threads stay short (~5 comments for a healthy node) and every future reader pays only for evidence, not process noise. Blocked agents never idle live; they checkpoint and exit (or bounded-poll on runtimes without resume), and the orchestrator wakes the counterpart when the answer lands.
 
 **Why this priority**: Context economy is the design's running cost; it makes long runs affordable but the system functions (expensively) without it.
 
@@ -115,8 +121,13 @@ Operational chatter -- checkpoints, advice threads, review working notes, ledger
 
 ### Functional Requirements
 
-- **FR-001**: Node beads MUST carry all task data (metadata schema + BRIEF comment) sufficient for a fresh agent to execute the node from only a CLAIM verb.
-- **FR-002**: Spawn prompts for every orchestrate role MUST contain no task data beyond the activation verb and target id.
+- **FR-001**: Node beads MUST carry all task data (metadata schema + BRIEF
+  comment) sufficient for a fresh agent to execute the node after an exact
+  CLAIM activation.
+- **FR-002**: Claim-holder allocation prompts MUST contain only the canonical
+  WAIT bootstrap with the resource id and optional checkout. Activation
+  messages MUST contain only `CLAIM <resource-id>` or
+  `CLAIM queue:<filter>`. Neither message may contain task data.
 - **FR-003**: Every agent holding a durable-bead claim MUST be bound by its role's completion checklist and authority matrix at stop time; agents holding no claim MUST be exempt from all bead contracts.
 - **FR-004**: Role contracts MUST be declared as data (per-agent rules files) evaluated by one shared evaluator; the prose contract in each agent definition MUST be generated from the same rules file at compile time.
 - **FR-005**: Contract blocks MUST report structured, failure-specific diagnostics without remediation text; `state=failed` plus a FAILED/BLOCKED comment MUST be an unconditional exit; the third blocked stop MUST bounce (force-allow, BOUNCE evidence, unassign, counter reset in one act).
@@ -147,10 +158,10 @@ Operational chatter -- checkpoints, advice threads, review working notes, ledger
 ### Measurable Outcomes
 
 - **SC-001**: An orchestrate run killed at any point resumes from bead state alone with zero lost durable decisions, demonstrated across at least one overnight gap.
-- **SC-002**: 100% of contract-bound agents that exit cleanly leave their bead checklist-complete or explicitly failed/bounced -- no silent empty exits -- measured over a full multi-node run.
-- **SC-003**: A healthy node's durable thread is ≤ 6 comments at close (BRIEF, REPORTED, verdict lines, closing summary); all other traffic demonstrably rides wisps that no longer exist after run cleanup.
+- **SC-002**: 100% of contract-bound agents that exit cleanly leave their bead checklist-complete or explicitly failed/bounced — no silent empty exits — measured over a full multi-node run.
+- **SC-003**: A healthy node's durable thread is ≤ 6 comments at close (BRIEF, REPORTED, verdict lines, closing summary); all other traffic demonstrably rides wisps burned during run cleanup.
 - **SC-004**: No landing occurs without every declared review dimension approved, across a run including at least one multi-dimension node and one scope-retrigger.
-- **SC-005**: The orchestrator's own context at run end contains no relayed task content -- spot-checked by transcript review -- and routine routing runs on the design doc's routing tier.
+- **SC-005**: The orchestrator's own context at run end contains no relayed task content — spot-checked by transcript review — and routine routing runs on the design doc's routing tier.
 - **SC-006**: The same run definition completes on a resume-capable runtime and (fresh-per-node) on a non-resume runtime with identical durable outcomes.
 - **SC-007**: Agent definition count in the orchestrate package decreases by three (four removed, one added) with no orphaned references in skills, docs, or steering.
 

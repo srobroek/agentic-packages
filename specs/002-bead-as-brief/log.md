@@ -1,4 +1,4 @@
-# 002-bead-as-brief -- autonomous run log
+# 002-bead-as-brief — autonomous run log
 
 Purpose: everything out of the ordinary, ambiguous, human-input-worthy, or
 likely to change later. Append-only during the run.
@@ -6,7 +6,7 @@ likely to change later. Append-only during the run.
 ## 2026-07-24
 
 - **[info] Agent context pointer stale by design.** `speckit-agent-context-update`
-  wrote CLAUDE.md pointing at `specs/001-agent-conformance/plan.md` -- 002 has no
+  wrote CLAUDE.md pointing at `specs/001-agent-conformance/plan.md` — 002 has no
   plan.md yet. Rerun after `/speckit-plan` produces one.
 - **[human?] Push path.** Direct `git push` is blocked by Code Defender on this
   machine (unapproved external repo); pushes go through `dgit`. Worked, but if
@@ -14,7 +14,7 @@ likely to change later. Append-only during the run.
   the same path. May need to teach subagent briefs `dgit push` or run pushes
   from the primary session.
 - **[ambiguity] Planner tier.** Spec's own doctrine says planning runs
-  opus/fable-class high. This session is Fable -- the planner-node role is
+  opus/fable-class high. This session is Fable — the planner-node role is
   fulfilled by the main session this run; recording that we're consciously NOT
   spawning a separate planner node for the plan phase (bootstrap exception:
   the orchestrate v2 machinery this spec builds yet to host it).
@@ -23,14 +23,14 @@ likely to change later. Append-only during the run.
   real-world test of the new machinery. This doubles as SC-001..SC-007
   validation. Will design the test project when the machinery is runnable.
 - **[directive] Validation-run observability writeup.** User: during the live
-  test, keep a dedicated log beyond the normal orchestrator role -- do beads
-  work, do wisps work, do agents behave per contract -- and produce a writeup.
+  test, keep a dedicated log beyond the normal orchestrator role — do beads
+  work, do wisps work, do agents behave per contract — and produce a writeup.
   Plan: a `validation-run/` observations journal per iteration + a final
   mechanism-by-mechanism report (what worked, what broke, what surprised).
   Added to quickstart V7 as a deliverable.
 - **[decision] Not pouring the speckit-feature molecule for the build.** The
   26-step formula has human gates (clarify-approval, analyze-approval,
-  verify-signoff) that would block autonomous progress -- contradicts the
+  verify-signoff) that would block autonomous progress — contradicts the
   standing "don't pause to ask" directive. The design was already grilled to
   completion, so clarify/analyze gates would be no-ops anyway. Tracking the
   build as plain beads under an epic instead (the design doc itself sanctions
@@ -48,11 +48,11 @@ likely to change later. Append-only during the run.
   obsolete: 4 of its 6 target agents are deleted by 002. Annotated,
   unassigned, left open for the survivor sweep.
 
-### N1 doctrine -- DONE
+### N1 doctrine — DONE
 - Added `packages/beads/.apm/context/beads.orchestration-doctrine.context.md`,
   wired into the beads context WORKFLOWS index. Pure steering.
 
-### N2 rules-engine (KEYSTONE) -- DONE, PROVEN
+### N2 rules-engine (KEYSTONE) — DONE, PROVEN
 - Built `packages/beads/scripts/rules-eval.sh` (SubagentStop evaluator, bash
   3.2, fail-open, jq+yq), `domain-specialist.rules.yml`, and a 13-case
   conformance suite `rules-eval-test.sh`. **13/13 pass.**
@@ -63,7 +63,7 @@ likely to change later. Append-only during the run.
   is EXACTLY the class in memory `hook-guard deblock policy` (regex/anchoring
   fragility). Fixed with bash parameter expansion (`${req#label ~ }` then
   strip quotes). Lesson for the real hooks build: prefer param-expansion over
-  sed for predicate parsing; the conformance suite caught it immediately --
+  sed for predicate parsing; the conformance suite caught it immediately —
   vindicates rules-as-data + fixtures over hand-written per-agent checks.
 - **[decision] Fixture mode in the evaluator.** Added a `._bead` /
   `._rules_file` payload path so the suite runs with no bd/live state. Keeps
@@ -72,13 +72,13 @@ likely to change later. Append-only during the run.
   PATH here and in toolchain-defaults, but the real hook must fail open if
   absent (it does) and CI must ensure yq is present. Flag for N3 packaging.
 
-### Live orchestration test (starforge) -- DONE, 3 iterations
+### Live orchestration test (starforge) — DONE, 3 iterations
 - Full writeup: `validation-run/REPORT.md`; per-iteration journals
   `iteration-1.md`, `iteration-2-3.md`; artifact + sample renders in
   `validation-run/starforge-artifact/`.
-- **[RESOLVED -- no custom states, no metadata.state] bead lifecycle.** bd has
+- **[RESOLVED — no custom states, no metadata.state] bead lifecycle.** bd has
   exactly 5 built-in statuses: open, in_progress, blocked, deferred, closed.
-  Re-examined the design's 8 named phases: 7 are redundant -- already carried
+  Re-examined the design's 8 named phases: 7 are redundant — already carried
   by gates (waiting_human), the review-wisp dep graph (approved,
   changes_requested), labels + a REPORTED comment (reported/in_review), or
   closed-with-reason (merged/dismissed/failed). None need a custom status or a
@@ -86,7 +86,7 @@ likely to change later. Append-only during the run.
   rule). FIX APPLIED: evaluator now reads built-in `status` only; rules file
   escape=blocked, deny_states=[closed]; fixtures use built-in statuses;
   data-model documents the derived phase→signal mapping. 13/13 still green.
-  This SIMPLIFIED the design -- the earlier "human input needed" flag is void.
+  This SIMPLIFIED the design — the earlier "human input needed" flag is void.
 - **[finding] bd flag inconsistency** (create `-l/--labels` vs update
   `--add-label`) and **ephemeral wisps hidden from `bd list`** (use
   `bd mol wisp list`). Both must land in the generated contract blocks + the
@@ -99,15 +99,15 @@ likely to change later. Append-only during the run.
   with exactly `failed_checks:[handoff]`, nothing else. Fix → ALLOW. This is
   the whole thesis of the spec, demonstrated on a live agent.
 
-### New feature -- wipe-worktree-on-merge (user request)
+### New feature — wipe-worktree-on-merge (user request)
 - **[added to spec]** Worktree create stamps a `[wisp:recovery]
-  wipe-worktree <path>` wisp blocked by the merge bead (`dep add <wisp>
-  <merge-bead>`). Merge close (merged OR dismissed) unblocks it; next
+  wipe-worktree PATH` wisp blocked by the merge bead (`dep add WISP
+  MERGE_BEAD`). Merge close (merged OR dismissed) unblocks it; next
   patrol/wake removes the worktree + branch and closes the wisp. Crash-safe:
   abandoned runs leave wipe wisps for the next patrol → no orphaned worktrees
   (closes a real gap in current orchestrate). VERIFIED on bd 1.1.0 in the
   starforge playground: wisp blocked while merge open, 0 open-blockers after
-  merge close. Folded into bead-as-brief.md WISPS section; N4/N5 scope.
+  merge close. Folded into `design.md` WISPS section; N4/N5 scope.
 
 ### Build progress
 - **[dead-claim recovery, live]** First N3 background agent died silently
@@ -119,17 +119,17 @@ likely to change later. Append-only during the run.
   domain-specialist def WITH delegation-first) → N5 pr-shepherd → N6 skill
   rewrite. NO testing until N6. Then fuzz→break→harden until perfect +10%.
   Then a grand orchestrated demo, all via OUR orchestrator (not the Workflow
-  tool -- the point is to dogfood the orchestration). Then 2x the demo.
+  tool — the point is to dogfood the orchestration). Then 2x the demo.
 - **[confirmed to user]** domain-specialist definition does NOT exist yet
   (only the rules file); starforge used general-purpose stand-ins. N4 creates
   the real definition with delegation-first in its contract.
 
-### N3--N5 build (Python engine)
+### N3–N5 build (Python engine)
 - **[decision, user-driven] Engine = Python via uv (PEP723), rules = JSON, no
   bash shim.** Rewrote rules-eval.sh → rules-eval.py after bash hit greedy-sed
   + JSON-shape bugs. Hooks invoke `uv run rules-eval.py` directly. 14/14
   conformance + 10/10 hooks smoke green.
-- **[decision, user-driven] Engine co-located in orchestrate** (not beads) --
+- **[decision, user-driven] Engine co-located in orchestrate** (not beads) —
   inert without the fleet. Doctrine steering stays in beads.
 - **[RESOLVED, user-driven] dep-cycle dissolved by making the in-run merge
   role a native orchestrate agent.** Dependency direction is
@@ -148,7 +148,7 @@ likely to change later. Append-only during the run.
 - **[human?] AGENT_TEAMS flag.** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is
   not in settings; warm-tier features (SendMessage wake, FIX-round resume)
   need it. I will add it to the project/global settings env during the hooks
-  phase unless the user objects -- flagging because it's an experimental-flag
+  phase unless the user objects — flagging because it's an experimental-flag
   change to shared settings.
 
 ### N7 fuzz + hardening + scaling
@@ -156,21 +156,21 @@ likely to change later. Append-only during the run.
   via closed/merge_sha, verb-parse spoofing with mid-string/emoji tokens,
   ^agent: regex-anchor bypass, null-metadata, escape-hatch spoofing, rules-path
   traversal, 20k-comment payload). Initial 7 "findings" were a bug in the
-  FUZZER's own rules path (off-by-one ..), not the engine -- every one blocked
+  FUZZER's own rules path (off-by-one ..), not the engine — every one blocked
   correctly when tested directly.
 - **[hardening] misconfigured RULES_DIR now warns.** The fuzzer's path bug
   revealed a real trap: a wrong RULES_DIR silently fails open → enforcement
   invisibly disabled. rules-eval.py now writes a stderr warning when RULES_DIR
   is set but has no *.rules.json, then still fails open (non-blocking).
 - **[env] disk filled to 100% mid-fuzz** (400+ uv subprocess runs on an
-  already-near-full data volume; not my churn -- uv cache was only 511M). User
+  already-near-full data volume; not my churn — uv cache was only 511M). User
   reclaimed ~16Gi. This is the Rust-scaling problem in miniature → see below.
 - **[spec addition, user-driven] Worktree resource scaling section.** N Rust
   worktrees = N × multi-GB target/. Fix: shared CARGO_TARGET_DIR + sccache +
-  reclaim build output at `reported` (not merge -- pushed branch is the durable
+  reclaim build output at `reported` (not merge — pushed branch is the durable
   artifact) + orchestrator disk-backpressure governor (cap concurrent heavy
   worktrees by free_disk/footprint; never wedge the machine). Folded into
-  bead-as-brief.md.
+  `design.md`.
 - **[bug, rename fallout] conformance test pointed at domain-specialist.rules
   .json** (renamed to coder.rules.json in N6) → fixture failed open → 7/14.
   Fixed the stale DS ref. Not ENOSPC corruption as first suspected.

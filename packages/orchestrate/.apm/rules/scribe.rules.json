@@ -1,7 +1,10 @@
 {
   "agent": "scribe",
   "tier": "T2",
-  "_comment": "T2 persistent batch consumer: drains ledger wisps on a timer gate, folds them into the epic run record, closes them. Per-transaction authority only — no completion checklist on a specific node claim; the enforced invariant is that it never mutates node beads and holds no claim at exit. deny_states/deny_metadata block any accidental node-state or delivery-metadata write.",
+  "_comment": "Claims one query wisp, writes the report, promotes its REPORTED reference to the linked epic, closes the query, and exits with no claim.",
+  "completion": [
+    { "check": "reported", "require": "linked.comment.verb in [REPORTED, BLOCKED]" }
+  ],
   "authority": {
     "deny_states": ["merged", "approved", "changes_requested"],
     "deny_metadata": ["branch", "push", "merge_sha", "pr", "output_ref"]

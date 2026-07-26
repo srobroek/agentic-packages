@@ -7,7 +7,7 @@
   },
   "license": "Apache-2.0",
   "skills": "./.apm/skills",
-  "hooks": "./hooks/hooks.json",
+  "hooks": "./hooks/claude-hooks.json",
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",

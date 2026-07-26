@@ -1,10 +1,10 @@
 {
   "agent": "shepherd",
   "tier": "T2",
-  "_comment": "In-run merge shepherd (distinct from the standalone pr-shepherd daemon). Per-transaction authority: claims one merge bead, lands or bounces, releases. Enforced at stop: holds zero claims. It legitimately writes merge_sha/pr and closes merge beads (its job — NOT denied). deny_states blocks it from setting review-verdict states on work beads; deny_metadata blocks coder delivery fields. Content-read-only (no push/edit) is unenforceable at the bead layer — it lives in the agent definition + git-safety hooks.",
+  "_comment": "In-run merge shepherd (distinct from the standalone pr-shepherd daemon). Per-transaction authority: claims one merge bead, lands or bounces, releases. Enforced at stop: holds zero claims. It legitimately writes merge_sha/pr and closes merge beads. deny_states blocks review verdicts. deny_metadata omits branch/base_sha because those are pre-existing merge-bead anchors and the evaluator cannot attribute field authorship.",
   "authority": {
     "deny_states": ["approved", "changes_requested", "reported"],
-    "deny_metadata": ["branch", "worktree", "base_sha", "output_ref"]
+    "deny_metadata": ["worktree", "output_ref"]
   },
   "escape": {
     "state": "blocked",

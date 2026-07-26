@@ -6,7 +6,7 @@ the project already has one, otherwise build the default runtime DAG.
 
 Owning the plan means owning the **decisions and the graph**, not doing the deep
 reading yourself. Push codebase exploration and any large planning pass to
-read-only agents (`Explore`, `Plan`) and keep only their conclusions -- the
+read-only agents (`Explore`, `Plan`) and keep only their conclusions — the
 orchestrator stays lean so its context lasts the whole run.
 
 ## Decide the planning system
@@ -15,7 +15,7 @@ orchestrator stays lean so its context lasts the whole run.
   the actual **speccing** to its agents (`speckit-research`, `speckit-implement-task`,
   the `speckit-*` verify/sync agents). Use *that* system's graph/tasks as the unit
   of work and **skip the default decomposition below**. A beads-managed SpecKit
-  molecule (`bd swarm create <epic>`) already IS a dependency-aware run DAG --
+  molecule (`bd swarm create <epic>`) already IS a dependency-aware run DAG —
   label its step beads `orc-node` and add `scope` metadata rather than building
   a second graph on top (`references/beads-store.md`). Questions the spec agents
   raise during speccing/grilling bubble to you as `ASK` and then to the user.
@@ -27,16 +27,16 @@ orchestrator stays lean so its context lasts the whole run.
 
 ## Default DAG decomposition
 
-The DAG is per-project and runtime-mutable -- you add nodes/edges and agents update
+The DAG is per-project and runtime-mutable — you add nodes/edges and agents update
 state live. It is NOT a static authored graph.
 
 1. Split the work into tasks small enough for one worker. Give every task a
    disjoint `scope`: tracked-file globs for git work, or canonical artifact and
    resource prefixes for non-git work. Serialize overlapping scopes with a
    dependency.
-2. One child bead per task under the run epic: `bd create "<id>: <desc>"
-   --parent <epic> --labels orc-node --metadata '<routing-envelope>'`.
-3. Encode dependencies: `bd dep add <dependent> <dependency>` -- the dependency
+2. One child bead per task under the run epic: `bd create "{id}: {desc}"
+   --parent {epic} --labels orc-node --metadata '{routing-envelope}'`.
+3. Encode dependencies: `bd dep add <dependent> <dependency>` — the dependency
    must close before the dependent becomes ready. `bd dep cycles` must stay
    clean (bd also rejects cycle-creating edges at add time).
 4. Drive execution off `bd ready --label orc-node --parent <epic> --json`.
@@ -50,20 +50,19 @@ Write the route before dispatch so recovery never has to infer it from prose.
 | Field | Value |
 |---|---|
 | `scope` metadata | owned tracked-file globs or canonical non-git resource prefixes; never empty |
-| `execution_kind` metadata | stable task kind such as `code`, `docs`, `research`, `review`, or `operations` |
+| `execution_task_kind` metadata | stable routing kind such as `code`, `docs`, `research`, `review`, or `operations` |
 | `execution_capabilities` metadata | JSON list of required capability slugs |
 | `cap:<slug>` labels | one label per required capability; mirrors the metadata for queue admission |
-| `execution_evidence` metadata | `git`, `artifact`, `comment`, or `external` |
+| `execution_kind` metadata | `git`, `artifact`, `comment`, or `external` |
 | `execution_agent` metadata | selected agent type when directed; absent before generic pull |
 | `execution_dispatch` metadata | `explicit`, `specialist`, or `generic` |
 | `agent:<queue>` label | compatible generic queue; absent from directed work |
 
-`execution_evidence=git` means tracked files change, even when the task is
-documentation or configuration. It requires a parent-prepared Worktrunk
-checkout, commit, push, and shepherd integration. Harness isolation and raw
-`git worktree` creation are not valid substitutes. Other evidence modes
-require an `output_ref` or verifiable external-state reference and never
-require an empty commit.
+`execution_kind=git` means tracked files change, even when the task is
+documentation or configuration. It requires commit, push, and shepherd
+integration through the Worktrunk writer contract. Other evidence modes require
+an `output_ref` or verifiable external-state reference and never require an
+empty commit.
 
 ## Dispatch ready work
 
@@ -71,14 +70,14 @@ Apply one route only, in this order:
 
 1. **Explicit actor:** a bead with an assignee goes only to that actor. Confirm
    its declared task kinds, capabilities, access, and scope are compatible,
-   then send the bead-specific brief. An incompatible explicit assignment
+   then send only `CLAIM {bead-id}`. An incompatible explicit assignment
    remains pinned and unclaimed. Automatic correction may update only
    evidence-backed routing-envelope fields; it never changes the assignee. An
    actor change requires explicit release/requeue or coordinator/human
    reassignment under the handoff and dead-claim recovery contracts.
 2. **Specialist:** for an unassigned bead, choose the narrowest catalogued
    specialist whose task kinds and capabilities cover the routing envelope.
-   Set its actor as assignee before sending the brief.
+   Stamp its actor before sending only `CLAIM {bead-id}`.
 3. **Generic pull:** use only when no compatible specialist is selected. Admit
    the bead to one `agent:<queue>` whose declared task kinds and capabilities
    cover every requirement. Leave it unassigned.
@@ -87,7 +86,8 @@ A generic worker claims the first ready bead in its admitted queue atomically:
 
 ```
 bd ready --parent <epic> --label orc-node --label agent:<queue> \
-  --metadata-field execution_kind=<kind> --unassigned --sort priority \
+  --metadata-field execution_task_kind=<kind> \
+  --metadata-field execution_kind=<evidence> --unassigned --sort priority \
   --claim --json
 ```
 
@@ -106,7 +106,7 @@ kind:design` so the coordinator can repair the route.
 
 ## Merge order is not encoded
 
-Do not encode merge order in the graph -- you cannot predict which coders finish
+Do not encode merge order in the graph — you cannot predict which coders finish
 when. Approved branches integrate under the exclusive merge slot
 (`bd merge-slot acquire` without `--wait`); a held slot is advisory, so report
 the holder, defer, and retry. Order follows successful acquisition, not a queue
@@ -124,7 +124,7 @@ the shepherd's slot waiters remain the integration order after admission.
 Good scopes are the single most important planning decision:
 - Prefer directory-level ownership (`src/auth/**`) over scattering one node across
   many trees.
-- If two tasks must touch the same file, they are not concurrent -- give one a
+- If two tasks must touch the same file, they are not concurrent — give one a
   dependency on the other (`bd dep add`) so the ready front serializes them.
 - Shared contracts/interfaces that several nodes depend on should be their own
   early node that the others depend on.

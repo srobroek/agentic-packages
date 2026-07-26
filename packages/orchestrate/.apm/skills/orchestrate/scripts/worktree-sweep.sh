@@ -27,17 +27,38 @@ command -v "$PYTHON_BIN" >/dev/null 2>&1 || die "python3 is not available"
 read_inventory() {
 	local anchor="$1"
 	local output
-	if ! output="$("$WT_BIN" -C "$anchor" list --format=json 2>/dev/null)"; then
+	# Pin the JSON schema so a future Worktrunk default flip cannot change the
+	# parsed shape underneath this sweep.
+	if ! output="$("$WT_BIN" -C "$anchor" --config-set 'list.json-schema=2' list --format=json 2>/dev/null)"; then
 		die "wt list failed for: $anchor"
 	fi
-	if ! printf '%s' "$output" | "$PYTHON_BIN" -c '
+	# Flatten the schema-2 envelope to the flat rows the rest of this script reads.
+	if ! output="$(printf '%s' "$output" | "$PYTHON_BIN" -c '
 import json
 import sys
 
 try:
-    rows = json.load(sys.stdin)
+    payload = json.load(sys.stdin)
 except (json.JSONDecodeError, TypeError) as error:
     raise SystemExit(f"invalid JSON: {error}")
+if isinstance(payload, dict):
+    rows = payload.get("items")
+    if not isinstance(rows, list):
+        raise SystemExit("inventory envelope has no items array")
+    flattened = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise SystemExit("inventory contains a non-object item")
+        merged = dict(row)
+        worktree = row.get("worktree")
+        if isinstance(worktree, dict):
+            if "path" in worktree:
+                merged["path"] = worktree["path"]
+            merged["is_main"] = bool(worktree.get("main"))
+        flattened.append(merged)
+    rows = flattened
+else:
+    rows = payload
 if not isinstance(rows, list):
     raise SystemExit("inventory is not an array")
 for row in rows:
@@ -45,7 +66,8 @@ for row in rows:
         raise SystemExit("inventory contains a non-object item")
     if "path" in row and not isinstance(row["path"], str):
         raise SystemExit("inventory path is not a string")
-'; then
+json.dump(rows, sys.stdout)
+')"; then
 		die "wt list returned invalid inventory for: $anchor"
 	fi
 	printf '%s' "$output"
