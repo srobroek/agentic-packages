@@ -178,8 +178,9 @@ bd info >/dev/null 2>&1 || bd init --stealth --prefix orc
 ```
 EPIC=$(bd create "orchestrate run-<id>" --type epic --silent \
   --metadata '{"run_id":"run-<id>","primary_branch":"main","base_sha":"<sha>","artifacts":"<abs>/.orchestration/run-<id>/artifacts"}')
-# For multi-node runs, persist the returned handle from `bd swarm create "$EPIC"`
-# as metadata key `swarm`; later status/validation reads that handle.
+# `bd swarm validate "$EPIC" --json` gates the structure and needs no marker.
+# Only create a marker (`bd swarm create "$EPIC"`, handle -> metadata key `swarm`)
+# when coordinator discovery or an external scheduler needs a durable handle.
 T1=$(bd create "t1: <desc>" --parent "$EPIC" --labels orc-node --silent \
   --metadata '{"node":"t1","scope":["src/auth/**"]}')
 bd dep add "$T3" "$T1"        # t3 depends on t1

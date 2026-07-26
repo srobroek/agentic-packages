@@ -15,7 +15,7 @@ orchestrator stays lean so its context lasts the whole run.
   the actual **speccing** to its agents (`speckit-research`, `speckit-implement-task`,
   the `speckit-*` verify/sync agents). Use *that* system's graph/tasks as the unit
   of work and **skip the default decomposition below**. A beads-managed SpecKit
-  molecule (`bd swarm create <epic>`) already IS a dependency-aware run DAG --
+  molecule already IS a dependency-aware run DAG --
   label its step beads `orc-node` and add `scope` metadata rather than building
   a second graph on top (`references/beads-store.md`). Questions the spec agents
   raise during speccing/grilling bubble to you as `ASK` and then to the user.

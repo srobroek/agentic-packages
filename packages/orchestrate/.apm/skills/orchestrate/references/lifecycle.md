@@ -37,6 +37,7 @@ escalation wisp, not stored as a node state.
 | `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies shared pr-shepherd identity/CI safeguards, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
+| `waiting_gate` | only an external machine gate remains (CI, release workflow, release PR checks, a long reviewer); orchestrator parks the node with the awaited identifier and resume instruction, never polls it, and exits when nothing else is ready |
 | `failed` | unrecoverable; set `state:failed` plus status `blocked`, log the error, and surface it |
 
 ## Completion paths
@@ -195,6 +196,26 @@ into a work-bead comment or decision bead, resolves the human gate when one
 exists, and follows the stored `resume` instruction. A started node returns to
 `state=working`, status `in_progress`, and the same agent. An unstarted node
 returns to `state=pending`, status `open`, and normal dispatch.
+
+## Waiting on an external machine gate
+
+The same rule applies when the wait is on a machine rather than a person: a CI
+run, a release workflow, a release PR's checks, or a long-running reviewer. The
+orchestrator does not poll it and does not hold the session open for it.
+
+Park the node instead. Record what is being awaited on the bead with
+`bd set-state <bead> state=waiting_gate --reason "<what is awaited and how to
+resume>"`, add `bd gate create --type=<ci|release|review> --blocks <bead>` when
+the wait has an external identifier worth storing, then continue unrelated nodes
+from `bd ready`. When nothing else is ready and only external waits remain, write
+the run report and exit; the gate bead plus the next pass own the wait.
+
+This is the rule `pr-shepherd` already states for itself -- never re-poll a
+pending PR or stay alive as a watcher. Two campaign runs violated it on the final
+release node: each polled a release workflow and a package-executing reviewer
+until the stream aborted, leaving that node `in_progress` even though every PR,
+tag and release had already landed correctly. A run whose only remaining work is
+an external wait must terminate with a clean record, not an aborted stream.
 
 ## Reversible local defaults
 
