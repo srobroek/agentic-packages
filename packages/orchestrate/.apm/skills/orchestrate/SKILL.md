@@ -73,6 +73,14 @@ Role: lead session / orchestrator.
    `pr-shepherd` drains the repository-global queue across runs. Scribes drain
    ledger wisps on demand or at their timer boundary. No process or second
    graph is authoritative.
+9. **Never wait on an external gate; park it.** CI, release workflows, release
+   PR checks, and long-running reviewers are gates, not work. Do not poll one
+   and do not hold the session open for one: park the node with
+   `state=waiting_gate`, record what is awaited and how to resume, then take the
+   next `bd ready` node. When only external waits remain, write the run report
+   and exit -- the gate bead and the next pass own the wait. A run that ends
+   mid-stream because the lead sat on a release gate has failed its record even
+   when the release itself landed. See `references/lifecycle.md`.
 
 ## Workflow
 
@@ -103,11 +111,20 @@ Role: lead session / orchestrator.
    (label `orc-node`, disjoint `scope` globs in metadata), deps via
    `bd dep add`; `bd dep cycles` must stay clean. See
    `references/planning.md`.
-   When a run has more than one dependent node, create one durable Beads swarm
-   for the epic (`bd swarm create <epic>`), record its returned molecule handle
-   on the epic metadata, and use `bd swarm validate <epic>` plus
-   `bd swarm status <epic>` for health checks. The swarm is the DAG runtime;
-   never recreate it in `graph.py`, JSON, or an in-memory ledger.
+   The epic and its dependency edges ARE the run DAG; never recreate it in
+   `graph.py`, JSON, or an in-memory ledger.
+   Then gate on structure before dispatching anything: run
+   `bd swarm validate <epic> --json`, stop on `swarmable=false`, and treat every
+   entry in `warnings` as a finding to resolve or explicitly accept -- external
+   dependencies, disconnected nodes, multiple endpoints, and empty graphs all
+   surface there while `swarmable` still reads true. It needs no swarm marker, so
+   it runs on a bare epic. `bd swarm status <epic>` is a coarse progress view
+   only; it omits external blockers, gates, and deferral, so never treat it as
+   proof a run is healthy.
+   Follow `beads` steering on `bd swarm create`: create a marker only when
+   durable coordinator discovery, coordinator replacement, or an external
+   scheduler needs a discoverable handle -- not for an ordinary run and not to
+   make the epic persistent, which it already is.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
    Match task→agent via `references/roles.md`. Bundled claim-holder roles are
    `domain-specialist`, `researcher`, `reviewer`, `advisor`, `shepherd`, and
