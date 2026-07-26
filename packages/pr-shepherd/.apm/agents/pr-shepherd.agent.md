@@ -30,6 +30,17 @@ the same pass; document nothing outside bead comments.
    `state:approved` freezes the DAG. A late edge to approved/closed work is a
    human-resolution mismatch, not an automatic mutation.
 4. `bd gate check`, then `bd merge-slot create` (idempotent).
+4b. Claim the repository sheepdog per repository you are about to drain:
+   `landing-contract.sh acquire-sheepdog <repo>`. Exit 75 (`SHEEPDOG_HELD`) means
+   another drain already owns that repository -- skip it, do not wait, and do not
+   claim any of its merge beads. Touch it each cycle (`touch-sheepdog`) and
+   `release-sheepdog` on every exit path. The wisp is derived from the repository
+   name, so it is case-insensitive and needs no registry. It separates drains from
+   each other; `metadata.integration_owner` is the separate boundary that keeps you
+   off a live orchestrate run's PRs. A stale sheepdog is recovery evidence, not
+   permission: take over only through `recover-sheepdog <repo> <dead-holder>
+   <evidence-ref> <audit-bead>`, which refuses unless the holder is the one you
+   observed dead.
 5. Drain `bd ready --label agent:integrator --unassigned --json`: re-probe
    eligibility before claim; ignore draft/release PRs without mutation, and ignore
    a bead whose `metadata.integration_owner` names another actor (`orchestrate`)

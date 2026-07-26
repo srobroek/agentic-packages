@@ -48,7 +48,8 @@ jobs:
           have_tests=""
           # shellcheck disable=SC2086
           for p in $changed_pkgs; do
-            if find "$p" \( -name '*.bats' -o -name 'test_*.py' -o -name '_test_*.py' \) | grep -q .; then
+            if find "$p" \( -name '*.bats' -o -name 'test_*.py' -o -name '_test_*.py' \
+              -o -name '_test_*.sh' \) | grep -q .; then
               have_tests="$have_tests $p"
             fi
           done
@@ -222,6 +223,21 @@ jobs:
             done
           else
             echo "no _test_*.py harnesses in $PKG"
+          fi
+
+      - name: Run standalone _test_*.sh harnesses
+        run: |
+          # The .py step above has a .sh counterpart: bash assertion harnesses named
+          # _test_*.sh. Nothing ran them, so pr-shepherd shipped a 126-line sheepdog
+          # spec against five verbs that did not exist and CI stayed green.
+          harnesses=$(find "$PKG" -name '_test_*.sh' 2>/dev/null || true)
+          if [ -n "$harnesses" ]; then
+            for h in $harnesses; do
+              echo "harness: $h"
+              bash "$h"
+            done
+          else
+            echo "no _test_*.sh harnesses in $PKG"
           fi
 
       - name: Generated-artifact drift gate (build_nodes.py --check)

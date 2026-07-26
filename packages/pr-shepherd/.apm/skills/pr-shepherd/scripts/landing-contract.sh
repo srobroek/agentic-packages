@@ -1483,6 +1483,174 @@ recover_claim() {
     "$merge_bead" "$dead_actor" "${waiter_holder:-none}" "$evidence" "$key"
 }
 
+canonical_repo() {
+  # GitHub treats Owner/Repo and owner/repo as one repository, so both the wisp id and its
+  # title must fold case -- otherwise two shepherds patrol the same repo under two ids.
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+sheepdog_wisp() {
+  local repo="$1"
+  local digest prefix
+
+  # One shepherd per repository, addressable without a registry: the id is derived
+  # from the repository name, so any actor computes the same wisp independently.
+  digest="$(printf 'sheepdog\0%s\0' "$(canonical_repo "$repo")" | git hash-object --stdin)" ||
+    fail "cannot derive sheepdog digest"
+  prefix="$(bd where --json | jq -er '.prefix | select(type == "string" and length > 0)')" ||
+    fail "cannot resolve beads prefix"
+  printf '%s-wisp-%s\n' "$prefix" "${digest:0:12}"
+}
+
+sheepdog_title() {
+  printf '[wisp:patrol] sheepdog %s\n' "$(canonical_repo "$1")"
+}
+
+sheepdog_record() {
+  local wisp="$1"
+
+  BD_JSON_ENVELOPE=1 bd show "$wisp" --json 2>/dev/null | jq -ce '.data[0]' 2>/dev/null
+}
+
+ensure_merge_slot() {
+  # acquire and release fail until the slot issue exists. `check` does NOT fail -- it exits 0
+  # reporting {"available": false, "error": "not found"} -- so a missing slot is
+  # indistinguishable from a held one unless that field is read. Creating it here keeps slot
+  # lifecycle in the contract that owns the slot, and is idempotent.
+  if slot_state | jq -e '.error == "not found"' >/dev/null 2>&1; then
+    bd merge-slot create >/dev/null 2>&1 || true
+  fi
+}
+
+ensure_sheepdog_wisp() {
+  local wisp="$1"
+  local repo="$2"
+
+  if sheepdog_record "$wisp" >/dev/null; then
+    return 0
+  fi
+  bd create "$(sheepdog_title "$repo")" --ephemeral --wisp-type patrol \
+    --id "$wisp" --silent >/dev/null 2>&1 ||
+    sheepdog_record "$wisp" >/dev/null ||
+    fail "cannot create sheepdog wisp $wisp"
+}
+
+acquire_sheepdog() {
+  local repo="$1"
+  local actor wisp record status holder
+
+  actor="$(current_actor)"
+  wisp="$(sheepdog_wisp "$repo")"
+  ensure_merge_slot
+  ensure_sheepdog_wisp "$wisp" "$repo"
+  record="$(sheepdog_record "$wisp")" || fail "cannot inspect sheepdog $wisp"
+  status="$(printf '%s' "$record" | jq -r '.status')"
+  holder="$(printf '%s' "$record" | jq -r '.assignee // ""')"
+
+  if [[ "$status" == in_progress && -n "$holder" && "$holder" != "$actor" ]]; then
+    printf 'SHEEPDOG_HELD repo=%s wisp=%s holder=%s\n' "$repo" "$wisp" "$holder"
+    exit "$EXIT_SLOT_QUEUED"
+  fi
+
+  # A terminal wisp is a finished -- or crashed -- generation. Its stale assignee is what
+  # refuses the next claim, not its status, so both are cleared before the handover.
+  if [[ "$status" == closed ]] || { [[ -n "$holder" ]] && [[ "$holder" != "$actor" ]]; }; then
+    bd update "$wisp" --status open >/dev/null 2>&1 ||
+      fail "cannot reopen sheepdog $wisp for the next generation"
+    bd update "$wisp" --assignee "" >/dev/null 2>&1 ||
+      fail "cannot clear the previous sheepdog holder on $wisp"
+  fi
+
+  bd update "$wisp" --claim >/dev/null 2>&1 || {
+    record="$(sheepdog_record "$wisp")" || fail "cannot re-inspect sheepdog $wisp"
+    holder="$(printf '%s' "$record" | jq -r '.assignee // ""')"
+    printf 'SHEEPDOG_HELD repo=%s wisp=%s holder=%s\n' "$repo" "$wisp" "${holder:-unknown}"
+    exit "$EXIT_SLOT_QUEUED"
+  }
+  printf 'SHEEPDOG_ACQUIRED repo=%s wisp=%s holder=%s\n' "$repo" "$wisp" "$actor"
+}
+
+validate_sheepdog_owner() {
+  local wisp="$1"
+  local actor="$2"
+  local record holder
+
+  record="$(sheepdog_record "$wisp")" || fail "sheepdog $wisp does not exist"
+  holder="$(printf '%s' "$record" | jq -r '.assignee // ""')"
+  [[ "$holder" == "$actor" ]] ||
+    fail "sheepdog $wisp is not owned by $actor (holder ${holder:-none})"
+  printf '%s\n' "$record"
+}
+
+touch_sheepdog() {
+  local repo="$1"
+  local actor wisp
+
+  actor="$(current_actor)"
+  wisp="$(sheepdog_wisp "$repo")"
+  validate_sheepdog_owner "$wisp" "$actor" >/dev/null
+  # The heartbeat must not mutate ownership; it only refreshes recency for staleness triage.
+  bd update "$wisp" --set-metadata "sheepdog_touched_by=$actor" >/dev/null ||
+    fail "cannot record sheepdog heartbeat on $wisp"
+  printf 'SHEEPDOG_TOUCHED repo=%s wisp=%s holder=%s\n' "$repo" "$wisp" "$actor"
+}
+
+release_sheepdog() {
+  local repo="$1"
+  local actor wisp
+
+  actor="$(current_actor)"
+  wisp="$(sheepdog_wisp "$repo")"
+  validate_sheepdog_owner "$wisp" "$actor" >/dev/null
+
+  # Releasing while another holder is mid-transition would let a second shepherd start
+  # patrolling against a half-applied landing. Report contention; never force it.
+  if ! slot_state | slot_available; then
+    printf 'SHEEPDOG_WAITING repo=%s wisp=%s holder=%s slot=%s\n' \
+      "$repo" "$wisp" "$actor" "$(slot_state | slot_holder)"
+    exit "$EXIT_SLOT_QUEUED"
+  fi
+
+  bd close "$wisp" --reason "sheepdog patrol released by $actor" >/dev/null ||
+    fail "cannot close sheepdog $wisp"
+  bd update "$wisp" --assignee "" >/dev/null 2>&1 ||
+    fail "cannot clear the sheepdog holder on $wisp"
+  printf 'SHEEPDOG_RELEASED repo=%s wisp=%s holder=%s\n' "$repo" "$wisp" "$actor"
+}
+
+recover_sheepdog() {
+  local repo="$1"
+  local dead_holder="$2"
+  local evidence="$3"
+  local audit_bead="$4"
+  local actor wisp record holder key
+
+  [[ -n "$evidence" ]] || fail "sheepdog recovery requires an evidence reference"
+  actor="$(current_actor)"
+  [[ "$actor" != "$dead_holder" ]] || fail "successor must differ from the dead holder"
+  wisp="$(sheepdog_wisp "$repo")"
+  record="$(sheepdog_record "$wisp")" || fail "sheepdog $wisp does not exist"
+  holder="$(printf '%s' "$record" | jq -r '.assignee // ""')"
+
+  # Recovery is only ever a takeover from the holder the caller observed dead. Any other
+  # holder means the observation is stale, and stealing the lease would run two shepherds.
+  [[ "$holder" == "$dead_holder" ]] ||
+    fail "sheepdog $wisp no longer belongs to $dead_holder (holder ${holder:-none})"
+
+  key="$(recovery_key sheepdog "$dead_holder" "$evidence")" ||
+    fail "cannot derive sheepdog recovery key"
+  bd update "$wisp" --status open >/dev/null 2>&1 ||
+    fail "cannot reopen sheepdog $wisp for recovery"
+  bd update "$wisp" --assignee "" >/dev/null 2>&1 ||
+    fail "cannot clear the dead sheepdog holder on $wisp"
+  bd update "$wisp" --claim >/dev/null 2>&1 ||
+    fail "cannot claim sheepdog $wisp after recovery"
+  comment_once "$audit_bead" "recovery_receipt=$key" \
+    "RECOVERED recovery_receipt=$key kind=sheepdog subject=$dead_holder evidence=$evidence"
+  printf 'SHEEPDOG_RECOVERED repo=%s wisp=%s holder=%s dead=%s evidence=%s receipt=%s\n' \
+    "$repo" "$wisp" "$actor" "$dead_holder" "$evidence" "$key"
+}
+
 ready_ids() {
   bd ready --label agent:integrator --unassigned --json | jq -r '.[].id'
 }
@@ -1501,6 +1669,10 @@ usage() {
     '       landing-contract.sh recover-slot <merge-bead> <dead-holder> <evidence-ref>' \
     '       landing-contract.sh recover-waiter <merge-bead> <dead-waiter> <evidence-ref>' \
     '       landing-contract.sh recover-claim <merge-bead> <dead-actor> <evidence-ref> [waiter-holder]' \
+    '       landing-contract.sh acquire-sheepdog <repo>' \
+    '       landing-contract.sh touch-sheepdog <repo>' \
+    '       landing-contract.sh release-sheepdog <repo>' \
+    '       landing-contract.sh recover-sheepdog <repo> <dead-holder> <evidence-ref> <audit-bead>' \
     '       landing-contract.sh ready-ids'
 }
 
@@ -1559,6 +1731,22 @@ recover-waiter)
 recover-claim)
   [[ $# -ge 3 && $# -le 4 ]] || fail "recover-claim expects 3-4 arguments"
   recover_claim "$@"
+  ;;
+acquire-sheepdog)
+  [[ $# -eq 1 ]] || fail "acquire-sheepdog expects 1 argument"
+  acquire_sheepdog "$@"
+  ;;
+touch-sheepdog)
+  [[ $# -eq 1 ]] || fail "touch-sheepdog expects 1 argument"
+  touch_sheepdog "$@"
+  ;;
+release-sheepdog)
+  [[ $# -eq 1 ]] || fail "release-sheepdog expects 1 argument"
+  release_sheepdog "$@"
+  ;;
+recover-sheepdog)
+  [[ $# -eq 4 ]] || fail "recover-sheepdog expects 4 arguments"
+  recover_sheepdog "$@"
   ;;
 ready-ids)
   [[ $# -eq 0 ]] || fail "ready-ids expects no arguments"
