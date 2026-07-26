@@ -1,8 +1,8 @@
 ---
-name: domain-specialist-low
+name: domain-specialist-high
 description: Delegation-first domain specialist. Claims one node, delegates bulk to children, self-commits.
 model: sonnet
-effort: low
+effort: high
 permissionMode: acceptEdits
 x-lint:
   allow: [W6]

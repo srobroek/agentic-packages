@@ -1,171 +1,131 @@
 # Message grammar
 
-Envelope, verb list, register, proof/ref rules, and the no-spawning rule: see
-`references/comms-block.md` (canonical, auto-injected into every subagent).
-This file adds the per-verb field table and a worked example.
+The canonical envelope, proof rule, and spawning boundary live in
+`references/comms-block.md`. This reference defines activation and P2P message
+fields.
+
+## Activation
+
+| Target | Entire activation message |
+|---|---|
+| Directed node | `CLAIM {node-bead-id}` |
+| Generic queue | `CLAIM queue:{label-filter}` |
+| Review | `CLAIM {review-wisp-id}` |
+| Advice or bounded research question | `CLAIM {escalation-wisp-id}` |
+| Ledger drain | `CLAIM {query-wisp-id}` |
+| Fix or conflict recovery | `CLAIM {same-node-id}` |
+
+Runtime-only wait and checkout binding happen before activation. No task field,
+command, role assignment, review item, or question appears in the activation.
 
 ## Verbs
 
-| Verb | From → To | Carries |
+| Verb | Direct route | Carries |
 |---|---|---|
-| `ASSIGN` | orch → domain-specialist | node, title, scope, base, store, deps, commands, protocol |
-| `BLOCKED` | domain-specialist → orch | node, `kind:design\|debug`, the question + minimal code context |
-| `ADVICE` | advisor → orch → domain-specialist | node, answer, rationale, refs (orch relays) |
-| `REPORTED` | domain-specialist → orch | node, verify, plus branch+commit(s)/PR for git evidence or `output_ref` for non-git evidence |
-| `REVIEW` | reviewer → orch | node, verdict(approve\|changes), numbered items, what's ok |
-| `FIX` | orch → domain-specialist | node, the exact items to address, reviewer id |
-| `CONFLICT` | shepherd → domain-specialist | node, with(node), files, required action |
-| `APPROVE` | orch → shepherd | node, branch, base; watcher wake-ups carry source, repo, PR, head, plus dispatch or lifecycle receipt fields |
-| `MERGED` | shepherd → orch | node, sha, base, verify_after_merge |
-| `DISMISS` | orch → domain-specialist | node (approved + merged; safe to exit) |
-| `ASK` | any → orch | node, one exact nonempty question, impact, waiting actor, resume condition |
-| `NO_WORK` | generic worker → orch | run epic, queue activation, `reason:no-compatible-work` |
+| `BLOCKED` | specialist -> escalation wisp | node, kind, exact question, minimal refs |
+| `ADVICE` | advisor -> escalation wisp | one recommendation, reason, refs |
+| `REPORTED` | claim-holder -> work bead | evidence ref, verification, next route |
+| `REVIEW` | reviewer -> node + review wisp | dimension, round, verdict, item count |
+| `FIX` | reviewer -> review wisp | numbered required actions with refs |
+| `CONFLICT` | shepherd -> merge/fix bead | PR/head, files, required outcome |
+| `APPROVE` | reviewer/queue sensor -> merge bead | approved head and readiness identity |
+| `MERGED` | shepherd -> merge bead | PR, merge SHA, final-base proof |
+| `DISMISS` | lifecycle owner -> work bead | terminal disposition and cleanup ref |
+| `ASK` | any actor -> escalation wisp | one product-intent question and impact |
+| `NO_WORK` | generic actor -> run epic | queue and `reason:no-compatible-work` |
 
-Field vocabulary (any verb): `log:` pointer to your scratch file; `ref:`/`refs:`
-a `file:line` or bead/node id backing a claim; `open:` a known-unfinished or
-deferred item (distinct from `risks:` -- hazards for the receiver); every factual
-field is either a pointer or the marker `untested` (see `comms-block.md`).
+The orchestrator may wake the destination actor after one of these writes. It
+does not copy the content into the harness message.
 
-## Durable replies-to threads
+## Thread identity
 
-`scripts/thread-message.py` uses Beads 1.1.0 message wisps and native
-`replies-to` dependencies. It does not require Gas Town, a daemon, or a poll
-loop. Every success and failure is one JSON envelope on stdout.
-
-Message metadata contains these fields:
+`scripts/thread-message.py` stores:
 
 | Field | Meaning |
 |---|---|
-| `actor` | sender identity and `BEADS_ACTOR` used for the create |
-| `assignee` | recipient identity; matches the Beads assignee field |
+| `actor` | stable sender identity and Beads mutation actor |
+| `assignee` | stable recipient identity |
 | `run` | run epic id |
-| `bead` | work bead id under the run epic |
+| `bead` | affected work bead |
 | `protocol` | `replies-to` |
 
-A root message has one `replies-to` edge to its work bead. A reply has one
-`replies-to` edge to an open message in the same run and work bead. Replies may
-branch. The helper rejects missing, deleted, non-message, wrong-run,
-wrong-bead, self-referential, and cyclic parents.
+A root message links to the work bead. A reply links to one open message in the
+same run and work bead. Replies may branch. Inbox discovery validates the
+actor, run, resource, and parent before exposing a message.
+
+Harness delivery remains advisory. Inbox, show, thread rendering, and
+acknowledgement remain available after the work bead closes. Send and reply
+require an open run and active work bead.
+
+## Material outcomes
+
+A message is material when it changes scope, route, ordering, acceptance
+evidence, disposition, policy, or a human answer. Before acting:
+
+1. Promote a bead-local result to an actor-attributed work-bead comment.
+2. Promote a cross-bead or shared-contract result to a linked decision bead.
+3. Read the promoted record and links back.
+4. Cite that record in the action or terminal report.
+
+An artifact is evidence only until a durable record cites it.
+A material message not promoted has no policy effect.
+The threading path does not require Gas Town, a daemon, or a polling loop.
+
+## Evidence shapes
+
+`REPORTED` accepts exactly one:
+
+- Git: branch, pushed SHA, draft PR/merge bead, and verification.
+- Artifact: absolute `output_ref` under `artifacts_dir` and verification.
+- Comment: exact comment or audit-event reference and verification.
+- External: resource identity, read-back evidence, and verification.
+
+An empty generic activation reports:
 
 ```text
-python3 scripts/thread-message.py send \
-  --actor orchestrator --assignee domain-specialist-t3 --run orc-7f3a --bead orc-7f3a.3 \
-  --subject "Review requested" --body "Read the node report."
-
-python3 scripts/thread-message.py reply \
-  --actor domain-specialist-t3 --assignee orchestrator --run orc-7f3a --bead orc-7f3a.3 \
-  --parent orc-wisp-abc --subject "Report ready" --body "See output_ref."
-
-python3 scripts/thread-message.py inbox \
-  --actor domain-specialist-t3 --run orc-7f3a --bead orc-7f3a.3
-
-python3 scripts/thread-message.py show --message orc-wisp-abc --thread
-
-python3 scripts/thread-message.py acknowledge --actor domain-specialist-t3 --run orc-7f3a \
-  --bead orc-7f3a.3 --message orc-wisp-abc
-```
-
-- Inbox discovery uses `bd list --include-infra --type message --assignee
-  <actor> --status open`. Normal work lists exclude messages.
-- Inbox output keeps validated messages under `messages` and malformed or
-  legacy records under `invalid`. One invalid record does not hide valid
-  messages.
-- Acknowledgement validates the recipient and message type before closing the
-  message. It never closes the linked work bead or a parent message.
-- Inbox, show, thread rendering, and acknowledgement remain available after
-  the work bead closes. Send and reply require an open run and an active work
-  bead.
-
-Harness notification remains the immediate wake path. Failure to notify does
-not remove the Beads message. The recipient reads its inbox after resume.
-
-Message wisps retain coordination for the active run and may be compacted
-after acknowledgement. They do not store durable decisions. The authoritative
-carrier table is in `references/beads-store.md`.
-
-A message is material when its outcome changes a choice, default, scope,
-route, ordering, acceptance evidence, disposition, human answer, or later
-work. Before acting or closing from a material message:
-
-1. Promote a bead-local outcome to an actor-attributed work-bead comment.
-2. Promote a cross-bead, cross-agent, cross-package, shared-contract,
-   ordering, or later-work outcome to a linked `decision` bead.
-3. Read the promoted record and every non-blocking `relates-to`/`validates`
-   link back from Beads.
-4. Cite that durable record in the action or terminal report.
-
-A material message not promoted has no policy effect. Acknowledgement,
-compaction, or a lost harness wake never erases the promoted source of truth.
-An artifact or `output_ref` is evidence only until a comment or decision bead
-cites it. A human answer received in a thread is promoted before the stored
-`waiting_human` resume instruction runs. Late messages for closed work follow
-the late-evidence and follow-up rules in `references/lifecycle.md`.
-
-`send` and `reply` are create operations. Each successful retry creates a new
-message. A caller records the returned message id, then checks `inbox` or
-`show` before retrying an ambiguous failure. `acknowledge` is idempotent and
-reports `already_closed:true` for a duplicate acknowledgement.
-
-## Evidence and empty activations
-
-`REPORTED` accepts exactly one of these evidence shapes:
-
-- Git commit: `branch`, `commit` or `commits`, and `verify`.
-- Git pull request: `branch`, `pr`, and `verify`.
-- Non-git: `output_ref` and `verify`.
-
-A generic activation that loses a claim race or finds no compatible work does
-not claim another bead. Its epic, queue, and reason fields are nonempty:
-
-```text
-NO_WORK queue:generic
-epic: orc-7f3a
-queue: agent:generic
+NO_WORK queue:{queue-name}
+epic: {run-epic-id}
+queue: agent:{queue-name}
 reason: no-compatible-work
 ```
 
-## Worked example -- APPROVE variants and merge (`t3`)
+## Worked flow
 
-The per-verb field table above covers `ASSIGN`/`BLOCKED`/`ADVICE`/`REPORTED`/`REVIEW`/`FIX` fields;
-this example covers only `APPROVE`'s three field shapes (plain handoff, watcher-backed PR,
-lifecycle wake-up) and the terminal `MERGED`, since those vary by scenario in ways the table
-compresses.
-
-**Handoff to the shepherd**
-```
-to: shepherd  summary: "t3 approved, ready to integrate"
-APPROVE t3
-branch: domain-specialist/t3-auth-middleware
-base: main @ 3f9a1c2
-```
-
-A watcher-backed PR uses the same verb after deterministic dispatch resolution:
-
-```
-APPROVE t3
-branch: domain-specialist/t3-auth-middleware
-base: main @ 3f9a1c2
-source: release-queue-watch
-repo: owner/repo
-pr: 42
-head: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-dispatch: owner/repo#42@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-```
-
-A lifecycle wake-up uses the same verb but cannot enter the merge path:
+The orchestrator first writes the node metadata and `BRIEF`, prepares and
+binds its checkout, then sends:
 
 ```text
-APPROVE t3
-branch: domain-specialist/t3-auth-middleware
-base: main @ 3f9a1c2
-source: release-queue-watch-lifecycle
-repo: owner/repo
-pr: 42
-head: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-transition: failed
-lifecycle: owner/repo#42#failed#opaque
+CLAIM orc-run.3
 ```
+
+The specialist reads the bead and linked domain context. When blocked, it
+creates an escalation wisp and writes:
+
+```text
+BLOCKED orc-run.3 kind:design
+question: choose the safe refresh serialization strategy
+refs: src/auth/refresh.rs:40
 ```
-to: main   summary: "t3 merged"
-MERGED t3  sha: 9c8b7a6  base: main  verify_after_merge: green
+
+The orchestrator wakes an advisor with only:
+
+```text
+CLAIM orc-wisp-advice
 ```
+
+The advisor answers on that wisp:
+
+```text
+ADVICE orc-run.3
+answer: use single-flight keyed by token id
+because: the service has multiple processes
+refs: src/auth/refresh.rs:40
+```
+
+The specialist reads the answer from the wisp, finishes, and reports on the
+node. The orchestrator creates all review wisps, binds reviewers, and activates
+each by wisp id. A reviewer requesting changes writes `REVIEW` on the node and
+`FIX` items on its wisp. The specialist is woken with `CLAIM orc-run.3`, reads
+the open review wisps, fixes the union, and reports again. The final reviewer
+closes its wisp, swaps the review label, and makes the draft PR ready. The
+unblocked merge bead is then claimed by the shepherd.

@@ -13,16 +13,19 @@ still learn the rule the SubagentStop net will enforce.
 Contract: emits {"hookSpecificOutput": {"additionalContext": "..."}} or {} .
 Never blocks. Fails open. Invoked directly via `uv run` (no bash shim).
 """
+
 import json
 import sys
 
 NOTICE = (
     "Bead contract (bead-as-brief): if you CLAIM a bead in this workspace, you "
-    "are bound by its contract until you stop. Before stopping you must leave a "
-    "REPORTED comment (or, if genuinely stuck, set the bead status=blocked and "
-    "leave a FAILED/BLOCKED comment — always a valid exit). Never close, "
-    "approve, or merge a node you did not own, and never write merge_sha/pr. "
-    "A SubagentStop hook enforces this and will block an incomplete exit."
+    "are bound by its contract until you stop. Follow the role-specific contract "
+    "in your agent definition; when none exists, the generic exit requires a "
+    "REPORTED comment. A genuine failure may set status=blocked and leave a "
+    "FAILED/BLOCKED comment. Never close, approve, or merge a resource outside "
+    "your role authority. A new claim-holder runtime starts with WAIT only; a "
+    "later exact CLAIM message releases it after binding. A SubagentStop hook "
+    "enforces the active contract."
 )
 
 
@@ -37,9 +40,12 @@ def main():
     if not (payload.get("agent_id") or payload.get("agent_type")):
         sys.stdout.write("{}\n")
         return
-    sys.stdout.write(json.dumps({
-        "hookSpecificOutput": {"hookEventName": "SubagentStart", "additionalContext": NOTICE}
-    }) + "\n")
+    sys.stdout.write(
+        json.dumps(
+            {"hookSpecificOutput": {"hookEventName": "SubagentStart", "additionalContext": NOTICE}}
+        )
+        + "\n"
+    )
 
 
 if __name__ == "__main__":

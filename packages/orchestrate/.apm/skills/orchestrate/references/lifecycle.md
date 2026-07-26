@@ -9,7 +9,7 @@ status per the mapping table in `references/beads-store.md`.
 ```
                  ┌────────── ASK (question) ──► waiting_human ──(answer)──┐
                  │                                                         ▼
-pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─► working ─► reported ─► in_review
+pending ─ready─► working ─(BLOCKED wisp→advisor ADVICE)─► working ─► reported ─► in_review
    ▲ bd ready +                                                             │
    │ scope/route clean                          changes_requested ◄─────────┤ verdict=changes
    │                                                    │                   │ verdict=approve
@@ -22,25 +22,26 @@ pending ─ready─► working ─(BLOCKED→orch brokers advisor→ADVICE)─�
                                             (any state) ───────────────► failed
 ```
 
-Blocked workers stay in `working` -- `BLOCKED` is a message, not a node state.
+Blocked workers keep the node in `working`. `BLOCKED` is written on an
+escalation wisp, not stored as a node state.
 
 ## Transitions
 
 | Transition | Trigger |
 |---|---|
 | `pending → ready` | `bd ready --label orc-node --parent <epic>` reports the node, no gate is open, scope is clean, and routing envelope is complete |
-| `ready → working` | directed worker atomically claims its assigned bead with `bd update <bead> --claim`, or generic worker atomically claims the first compatible queue bead with filtered `bd ready --claim` |
-| `reported → in_review` | worker reports declared evidence; orchestrator spawns a different compatible reviewer |
-| `working` (blocked) | worker sends `BLOCKED kind:design\|debug`, idles, and spawns no peer/advisor; orchestrator brokers and relays `ADVICE` |
-| `changes_requested → working` | same worker applies exactly the `FIX` items; same reviewer re-reviews the delta |
-| `approved → merged` | git evidence only: orchestrator sends `APPROVE`; lifecycle events may wake revalidation, but only an exact ready dispatch enters the watcher-backed merge path; shepherd invokes N7's shared landing transaction, which revalidates identity/CI, serializes on the merge slot, proves the final base, releases, and closes |
+| `ready → working` | directed worker receives only `CLAIM {bead-id}` and claims under `metadata.actor`; generic worker atomically claims one compatible queue bead |
+| `reported → in_review` | worker reports declared evidence; orchestrator creates every review-wisp shell, stamps each runtime, and activates reviewers by wisp id |
+| `working` (blocked) | worker writes `BLOCKED` on a linked escalation wisp and exits or continues independent work; an advisor claims and answers that wisp directly |
+| `changes_requested → working` | same worker re-claims its node, reads all open review wisps, and applies the union of FIX items |
+| `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies shared pr-shepherd identity/CI safeguards, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
 | `failed` | unrecoverable; set `state:failed` plus status `blocked`, log the error, and surface it |
 
 ## Completion paths
 
-The node's `execution_evidence` selects the terminal path, not whether its
+The node's `execution_kind` selects the terminal path, not whether its
 subject sounds technical.
 
 | Evidence | Required completion proof | Terminal owner |
@@ -60,38 +61,48 @@ merge requirement.
 
 | Class | Agents | Rule |
 |---|---|---|
-| Persistent | Shepherd, Scribe | spawned once, live the whole run, addressed via SendMessage -- never polled |
-| Task-scoped | Directed worker or Generic pull worker; independent reviewer | kept alive across fix rounds; reviewer re-reviews deltas; dismissed only after merge or approved non-git closure. Never re-spawn a fresh worker for a live claim |
-| Ephemeral | Researcher gatherers/synthesizer, Advisor/debugger, Tiebreaker | spawn → return → maybe resume for follow-ups |
+| Run patrol | shepherd | one run and repository; restartable from Beads and GitHub |
+| Global patrol | pr-shepherd | cross-run repository recovery and queue drain |
+| Task-scoped | directed or generic worker; independent reviewer | activated by claim; resume is an optimization and respawn reads bead plus wisps |
+| Ephemeral | Researcher gatherers/synthesizer, Advisor/debugger, Tiebreaker, Scribe | claim one node or wisp, report there, release, exit |
 
-Stopped background subagents auto-resume on SendMessage. Never re-spawn a fresh
-agent for the same live claim -- it loses context and may create a second writer.
+Stopped background subagents may resume on a content-free wake. A dead handle
+is respawned under the same stable actor with only `CLAIM {same-resource}`.
+Never run two actors against the same live claim.
+
+A `BOUNCE` comment invalidates that actor attempt. Repair the durable envelope,
+start a fresh WAIT-only runtime, bind and stamp it, then activate it with the
+separate CLAIM message. Do not continue the bounced handle, manually supply
+missing contract data, or accept its later evidence.
 
 ## Resume after orchestrator compaction or crash
 
 1. Find the run epic: `bd list --type epic --json` and match metadata `run_id`.
-2. Read in-flight nodes with `bd list --label orc-node --parent <epic>
+2. Read in-flight nodes with `bd list --label orc-node --parent {epic}
    --status in_progress --json`. Each recovery record carries exact actor in
    `assignee`, directed or generic mode in `execution_dispatch`, branch/worktree
    or non-git resource scope, and the fine-grained `state:` label.
    Confirm every stamped checkout through `wt list --format=json`. A recorded
-   branch without a worktree is recovered with `wt switch <branch> --no-cd
+   branch without a worktree is recovered with `wt switch {branch} --no-cd
    --format=json`; update the bead if Worktrunk returns a different path.
-   Never replace a missing checkout with harness isolation or
-   `git worktree add`.
+   An unassigned `in_progress` node with `REPORTED` and
+   `agent:reviewer` is a valid review handoff; an unassigned `in_progress`
+   node without that evidence is inconsistent.
 3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
    shepherd. Resume the N7 landing transaction, or use its evidence-gated
    recovery command after proving the exact actor lease is dead.
-4. Resume every live assignee by messaging its recovered handle. Never route an
-   assigned bead to a generic queue. Treat an unassigned `in_progress` bead as
+4. Resume every live assignee with `CLAIM {same-resource}` to its recovered
+   handle. If that handle is dead, respawn the same actor and use the same
+   activation. Never route an assigned bead to a generic queue. Treat an
+   unassigned `in_progress` bead without the reported handoff evidence as
    inconsistent and run dead-claim recovery before redispatch.
 5. Restart each GitHub repository watcher with `--slots=1`. Replay every node
    whose current `queue_dispatch` or `queue_lifecycle` lacks its matching ack;
    pending or sent receipts identify the last completed delivery step. Only a
    matching ack suppresses replay. Normalize key-only migration records before
    SendMessage by stamping a pending receipt. Route records unmatched to the
-   run once through pr-shepherd. The shepherd resumes acknowledged, approved,
-   unmerged nodes from its startup scan; see
+   run once through standalone pr-shepherd. The run shepherd resumes
+   acknowledged, approved, unmerged nodes from its startup scan; see
    `references/queue-watcher.md`.
 
 ## Dead-claim recovery
@@ -115,8 +126,8 @@ bd update <bead> --assignee "" --status open
 bd set-state <bead> state=pending --reason "dead claim verified; redispatch"
 ```
 
-5. For directed recovery, assign the replacement actor before sending its
-   recovery brief. For generic recovery, restore one compatible
+5. For directed recovery, stamp the replacement actor and runtime context
+   before sending only `CLAIM {bead-id}`. For generic recovery, restore one compatible
    `agent:<queue>` and leave the bead unassigned. The replacement claims
    atomically and receives every preserved anchor.
 
@@ -131,16 +142,18 @@ That safe default prevents two workers from mutating the same scope.
   orchestrator replans with a replacement node or abandons the subtree; it does
   not leave the graph silently stalled.
 
-## Recycle persistent infra to shed context
+## Recycle runtime processes
 
-The Shepherd and Scribe are restartable at a quiescent point because Beads
-and git are the source of truth.
+Every process is restartable because Beads, wisps, GitHub, and pushed branches
+are the source of truth.
 
-- **Shepherd:** recycle after a merge completes and the slot is released,
-  never during conflict negotiation.
-- **Scribe:** read-only; restartable anytime.
-- **Task workers:** never recycle mid-node. Their in-progress reasoning belongs
-  to the claimed node. Dismiss after its terminal path.
+- **Run shepherd:** restart from its run epic after the merge slot is released,
+  never during a landing transaction.
+- **Standalone pr-shepherd:** use only for repository-global recovery or queue
+  drain when no live run shepherd owns the sheepdog.
+- **Scribe:** one query wisp per drain or report; no persistent context.
+- **Task workers:** resume while the handle is fresh; otherwise respawn the
+  same actor on the same claim and recover from node plus worklog.
 
 ## Human-in-the-loop and safe autonomy
 
@@ -183,51 +196,22 @@ exists, and follows the stored `resume` instruction. A started node returns to
 `state=working`, status `in_progress`, and the same agent. An unstarted node
 returns to `state=pending`, status `open`, and normal dispatch.
 
-## Durable ambiguity and autonomous defaults
+## Reversible local defaults
 
-Every unresolved choice uses this complete record before action:
+Before applying a reversible bead-local default, write a provisional
+`LOCAL_DECISION` comment using the contract in `references/beads-store.md`.
+Its objective `revisit` trigger defines when the default becomes stale.
 
-```text
-AMBIGUITY
-owner: <one actor accountable for review>
-scope: <work bead and exact resources>
-evidence: <known file:line, bead, command result, or searched-none>
-unknown: <fact or intent that remains unresolved>
-default: <chosen reversible local action>
-bounds: <downside, rollback point, and prohibited effects>
-revisit: <objective event, evidence change, dependency transition, or RFC3339>
-```
-
-Empty fields are invalid. `revisit` is objective: `later`, `if needed`, and
-elapsed time without a named deadline are invalid. The default cannot exceed
-the autonomy conditions above.
-
-Local ambiguity is a comment on the affected bead. Cross-bead, cross-agent,
-cross-package, shared-contract, ordering, or later-work impact is a decision
-bead under the run epic with metadata keys `ambiguity_owner`,
-`ambiguity_scope`, `ambiguity_evidence`, `ambiguity_unknown`,
-`ambiguity_default`, `ambiguity_bounds`, and `ambiguity_revisit`. Link affected
-and validating work with non-blocking `relates-to` and `validates` edges as
-defined in `references/beads-store.md`.
-
-| Situation | Safe recorded result |
-|---|---|
-| exact assignee conflicts with another route | preserve the assignee; no other worker claims |
-| capability, access, or scope compatibility is unknown | do not dispatch or claim; revisit on named catalog or owner evidence |
-| specialist and generic routes both match | choose the compatible specialist |
-| generic queue has several ready beads | atomic priority claim; never cherry-pick |
-| tracked-file versus artifact evidence is unclear | tracked mutation → `git`; read-only result → inspectable artifact |
-| dead-claim evidence is incomplete | keep the claim and anchors |
-| a local reversible implementation detail lacks evidence | record the bounded default and its evidence-triggered revisit |
-| product intent, cross-boundary uncertainty, or unsafe effect is unresolved | `waiting_human`; never infer consent |
+A choice affecting another bead, agent, package, shared contract, ordering
+rule, or later work uses a decision bead instead. Product intent, unsafe
+effects, and unresolved cross-boundary choices enter `waiting_human`.
 
 ## Revisit, conflict, and late evidence
 
 At the recorded trigger, the owner re-reads the cited evidence before any
-further use of the default. A fired trigger makes the default stale until the
-owner adds an `AMBIGUITY_RESOLVED` comment with the prior record id, new
-evidence, disposition, and resulting action. Routing changes only while the
-bead is unassigned.
+further use of the default. The owner supersedes the provisional comment with
+an accepted `LOCAL_DECISION`, creates a decision bead, or enters
+`waiting_human`. Routing changes only while the bead is unassigned.
 
 A local choice that changes gets a new comment referencing the old comment; no
 comment is edited or erased. A cross-boundary change gets a replacement
@@ -254,7 +238,7 @@ Sweep after fan-in, per the global Worktrunk rule:
   commands are prohibited.
 - Reviewer/advisor/debugger branches are disposable and use
   `worktree-sweep.sh --discard-branch <path>` after their actor is dismissed.
-- A broken harness directory that is no longer registered is moved out of the
+- A broken, unregistered harness directory is moved out of the
   harness root into quarantine. Unknown or dirty paths are refused.
 - The dirty primary checkout, artifacts directory, Beads database, and the
   repository-shared build target are never swept.

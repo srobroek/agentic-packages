@@ -1,13 +1,13 @@
 {
   "agent": "advisor",
   "tier": "T1",
-  "_comment": "Claims an escalation wisp, writes exactly one ADVICE comment on it, exits. Touches nothing else — no node writes, no state, no labels, no metadata.",
+  "_comment": "Claims one escalation wisp and promotes one ADVICE or BLOCKED summary to its linked node before exit.",
   "completion": [
-    { "check": "advice", "require": "comment.verb in [ADVICE]" }
+    { "check": "advice", "require": "linked.comment.verb in [ADVICE, BLOCKED]" }
   ],
   "authority": {
-    "deny_states": ["closed", "merged", "approved", "changes_requested"],
-    "deny_metadata": ["branch", "push", "merge_sha", "pr", "output_ref"]
+    "deny_states": ["merged", "approved", "changes_requested"],
+    "deny_metadata": ["push", "merge_sha", "pr", "output_ref"]
   },
   "escape": {
     "state": "blocked",

@@ -1,6 +1,6 @@
 # Contract: Activation & Communication Protocol
 
-## Spawn prompts (complete grammar)
+## Activation messages
 
 | Target | Prompt |
 |---|---|
@@ -10,26 +10,59 @@
 | Advice/research question | `CLAIM <escalation-wisp-id>` |
 | Ledger drain | `CLAIM <query-wisp-id>` or resume |
 
-Nothing else. Any task data in a spawn prompt is a contract violation of
-FR-002. The orchestrator MAY append runtime-only details the bead cannot
-carry (e.g. "teams flag off -- poll, don't wait").
+Nothing else. Any task or runtime mechanics in an activation message violate
+FR-002.
+
+## Allocation prompts
+
+A claim-holder starts with one exact wait-only bootstrap. A checkout-backed
+resource uses:
+
+```text
+WAIT checkout=<absolute-worktree>
+RESOURCE <bead-or-wisp-id>
+Do not invoke tools or start work.
+The controlling parent will release you with exactly CLAIM <bead-or-wisp-id>.
+```
+
+The resource must exist and remain unclaimed. A checkout-backed resource must
+already carry its canonical worktree and lease. The orchestrator binds and
+stamps the returned runtime before sending the separate activation message.
+No task data, runtime mechanics appendix, or combined WAIT plus CLAIM message
+is valid.
+
+The spawn result supplies `runtime_handle`, used by the parent for resume and
+message routing. The SubagentStart handshake supplies a tool-free
+`WAIT context=<runtime_context>` acknowledgement. The parent binds the context
+to the lease, stamps both identities, reads them back, then sends CLAIM to the
+handle. Equal values are valid but never assumed.
+
+A queue actor also receives a checkout:
+
+```text
+WAIT checkout=<absolute-worktree>
+QUEUE <label-filter>
+Do not invoke tools or start work.
+The controlling parent will release you with exactly CLAIM queue:<label-filter>.
+```
 
 ## Actor naming (claim-derivation dependency)
 
 `<role>-<node-bead>` (node-scoped) · `<role>-<domain>[-n]` (specialist) ·
-`advisor-<wisp-id>` · `pr-shepherd-<repo>` · children `<parent>.<k>` (never
-claim). The universal Stop hook derives the claim query from the assignee
-name -- naming is load-bearing.
+`advisor-<wisp-id>` · `shepherd-<run>-<repo>` (in-run) ·
+`pr-shepherd-<repo>` (repository-global) · children `<parent>.<k>` (never
+claim). The universal Stop hook derives the claim query from the assignee name
+- naming is load-bearing.
 
 ## Wake protocol
 
 1. Probe capability at run start (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`).
-2. Wake = `SendMessage(agent_id)` → on dead handle → respawn
+2. Wake = `SendMessage(runtime_handle)` → on dead handle → respawn
    `CLAIM <same-bead>` under the same actor name.
 3. Respawned actor reads: bead metadata → BRIEF → durable comments → worklog
    wisp thread (via links). Resume point = last CHECKPOINT.
 4. No live waiting: blocked actors write the escalation wisp, checkpoint, and
-   exit (pause state) -- or bounded-poll (60s tick, 15 to 30min cap) on
+   exit (pause state) — or bounded-poll (60s tick, 15–30min cap) on
    non-resume runtimes.
 5. Freshness rule: prefer respawn over resume after ~2 rounds on the same
    node or post-compaction.
@@ -47,11 +80,17 @@ name -- naming is load-bearing.
 
 ## Landing protocol
 
-Agent: merge bead (open, unassigned, `agent:integrator`) + `bd dep add
-<work> <merge-bead>` → draft PR with `Merge-Bead:` in body → report.
-Shepherd: ignore drafts → on ready+unblocked: claim → probe → slot → merge →
-stamp → close → release. Content problems: fix bead + park + release, never
-edit.
+1. Agent creates an open, unassigned `agent:integrator` merge bead and adds
+   `bd dep add <work> <merge-bead>`.
+2. Agent opens a draft PR with `Merge-Bead:` in the body, then reports.
+3. The bundled run shepherd ignores drafts. On ready and unblocked, it claims,
+   probes through the shared safeguards, acquires the slot, merges, stamps,
+   closes, and releases.
+4. Content problems become a fix bead plus park and release, never an edit.
+5. Both shepherd lifecycles acquire, touch, and release the deterministic
+   repository sheepdog through the dependency-owned landing executable.
+6. The standalone pr-shepherd uses the transaction only for repository-global
+   drain or recovery when no live run shepherd holds that lease.
 
 ## Ledger protocol
 

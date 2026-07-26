@@ -1,6 +1,6 @@
 # Contract: Rules File Schema
 
-Path convention: `<package>/.apm/rules/<agent>.rules.yml`, deployed alongside
+Path convention: `<package>/.apm/rules/<agent>.rules.json`, deployed alongside
 the agent definition. One file per contract-holding agent (T1/T2/T3).
 
 ```yaml
@@ -14,7 +14,7 @@ tier: T1|T2|T3                      # enforcement mode selector
 completion:
   - check: <slug>                   # stable id, appears in deny reports
     require: <predicate>
-    when: <kind>                    # optional: git|artifact|comment|external
+    when: <kind-or-list>            # optional: execution kind or wisp type
 
 # Authority — violations reported at stop (and deniable at write time where a
 # runtime intercepts; defense-in-depth only)
@@ -44,6 +44,7 @@ bounce:
 | metadata key exists | `metadata.<key>` |
 | label matches | `label ~ "<regex>"` |
 | comment verb exists | `comment.verb in [<VERB>, ...]` |
+| linked comment verb exists | `linked.comment.verb in [<VERB>, ...]` |
 | state in set | `state in [<state>, ...]` |
 | wisp state | `wisp(<selector>).open` / `.closed` |
 
@@ -52,9 +53,9 @@ predicate type is a schema version bump.
 
 ## Consumers
 
-1. **Evaluator** (`packages/beads/.apm/scripts/rules-eval.sh`): stdin = hook
-   payload JSON; loads the rules file for `agent_type`; resolves the claimed
-   bead by assignee-name convention; emits the hook decision JSON.
+1. **Evaluator** (`packages/orchestrate/scripts/rules-eval.py`): stdin = hook
+   payload JSON; loads the rules file for `agent_type`; resolves the stamped
+   activation resource; emits the hook decision JSON.
 2. **Compile-time generator** (build step): renders the "Your bead contract"
    section into the agent definition from the same file. Generated block is
    marked and never hand-edited (constitution II).
