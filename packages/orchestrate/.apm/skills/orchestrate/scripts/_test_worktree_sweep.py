@@ -197,11 +197,32 @@ exit 2
         self.assertTrue(candidate.exists())
 
     def test_invalid_inventory_is_fatal(self) -> None:
+        """A shape that is neither a schema-1 array nor a schema-2 envelope."""
         worktree = self.root / "registered"
         worktree.mkdir()
-        result = self.run_sweep(worktree, rows={"items": []})
+        result = self.run_sweep(worktree, rows={"schema": 2})
         self.assertEqual(result.returncode, 2)
         self.assertIn("invalid inventory", result.stderr)
+
+    def test_empty_schema_two_envelope_is_valid_but_unregistered(self) -> None:
+        """An envelope with no items is well-formed; the path is just unknown."""
+        worktree = self.root / "registered"
+        worktree.mkdir()
+        result = self.run_sweep(worktree, rows={"schema": 2, "items": []})
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("not registered with Worktrunk", result.stderr)
+
+    def test_schema_two_envelope_resolves_a_linked_worktree(self) -> None:
+        worktree = self.root / "registered"
+        worktree.mkdir()
+        result = self.run_sweep(
+            worktree,
+            rows={
+                "schema": 2,
+                "items": [{"worktree": {"path": str(worktree), "main": False}}],
+            },
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_wt_list_failure_is_fatal(self) -> None:
         worktree = self.root / "registered"
