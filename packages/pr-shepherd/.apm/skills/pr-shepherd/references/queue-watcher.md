@@ -1,22 +1,27 @@
 # Event-driven queue handoff
 
-`release-queue-watch` is a read-only sensor. It emits verified lifecycle and
-readiness records; the shepherd remains the only generic merge consumer and
-still revalidates GitHub, uses Beads gates, probes conflicts, and acquires the
+The shepherd's side of the watcher handoff. `release-queue-watch` owns the sensor
+itself: start mechanics, record shapes, transition semantics, and `lifecycleKey`
+are defined once in its `references/runtime.md`. Read that for the emitter
+contract; this file covers only what the shepherd does with a record.
+
+The shepherd is the only *generic* merge consumer. An orchestrate run's own
+integration shepherd owns that run's PRs; see orchestrate's `queue-watcher.md`
+for the run-scoped side of the same precedence rule. The shepherd still
+revalidates GitHub, uses Beads gates, probes conflicts, and acquires the
 repository merge slot.
 
 ## Ownership and routing
 
-Run one watcher per repository with one notification slot and REST
-reconciliation enabled. Start it with `pnpm --silent start`; consume stdout
-NDJSON plus structured stderr errors. Process records serially and do not read
-the next line until the current receipt is persisted.
+Start the watcher as `release-queue-watch` documents, with one notification slot.
+Process records serially and do not read the next line until the current receipt
+is persisted.
 
-An exact active `orchestrate` node owns its PR. The orchestrator resolves the
-record first. Only an unmatched record may be offered to the shepherd resolver.
-If a corresponding merge bead exists, stamp `integration_owner=orchestrate` so
-a standalone consumer also refuses it. This precedence prevents a gatekeeper
-and shepherd from racing to merge the same PR.
+An exact active `orchestrate` node owns its PR, and the orchestrator resolves the
+record first; only an unmatched record reaches the shepherd resolver. If a
+corresponding merge bead exists, stamp `integration_owner=orchestrate` so a
+standalone consumer also refuses it. This precedence prevents a gatekeeper and
+shepherd from racing to merge the same PR.
 
 | Watcher record | Shepherd action |
 |---|---|
