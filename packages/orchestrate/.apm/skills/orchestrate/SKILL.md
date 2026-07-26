@@ -112,6 +112,11 @@ Role: lead session / orchestrator.
    Match task→agent via `references/roles.md`. Bundled claim-holder roles are
    `domain-specialist`, `researcher`, `reviewer`, `advisor`, `shepherd`, and
    `scribe`. Broad research uses the fan-out/fan-in route in `roles.md`.
+   Dispatch only those roles or a read-only ephemeral helper: during an active
+   run a task-bearing spawn of any other agent type is denied, because its
+   activation cannot be verified. A stale agent from an older release still
+   resolves in the harness, so `discover-agents.py` lists what the harness
+   offers, not what this contract recognises.
 4. Prepare one dedicated integration Worktrunk checkout and spawn one bundled
    `shepherd` patrol per GitHub repository for this run. It
    follows the shared `pr-shepherd` landing contract but keeps run-scoped
