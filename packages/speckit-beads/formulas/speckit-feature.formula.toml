@@ -27,17 +27,17 @@ type = "task"
 description = "Run /speckit.specify to create specs/{{feature}}/spec.md."
 
 [steps.metadata]
-execution_skill = "speckit.specify"
+skill_hints = "speckit.specify"
 
 [[steps]]
 id = "clarify"
 title = "clarify {{feature}}"
 type = "task"
 needs = ["specify"]
-description = "Run /speckit.clarify (interactive) and encode answers into spec.md."
+description = "Run /speckit.clarify (interactive). Carry each open question on its own escalation wisp (bd create \"[wisp:escalation] <step-id>: <q>\" --ephemeral --wisp-type escalation, linked relates-to this step); encode every answer into spec.md, then burn the wisp. The spec is the durable record."
 
 [steps.metadata]
-execution_skill = "speckit.clarify"
+skill_hints = "speckit.clarify"
 execution_mode = "interactive"
 
 [[steps]]
@@ -45,7 +45,7 @@ id = "clarify-approval"
 title = "clarify approval {{feature}}"
 type = "task"
 needs = ["clarify"]
-description = "Human sign-off on the clarified spec. Close the gate only after the user approves interactively."
+description = "Human sign-off on the clarified spec. Close the gate only after the user approves interactively. Nudge a stalled gate with a ping wisp; only bd gate resolve closes the gate."
 
 [steps.gate]
 type = "human"
@@ -58,7 +58,7 @@ needs = ["clarify-approval"]
 description = "Run /speckit.plan to produce plan.md and design artifacts."
 
 [steps.metadata]
-execution_skill = "speckit.plan"
+skill_hints = "speckit.plan"
 
 [[steps]]
 id = "checklist"
@@ -68,7 +68,7 @@ needs = ["tasks"]
 description = "Run /speckit.checklist (interactive requirements-quality gate)."
 
 [steps.metadata]
-execution_skill = "speckit.checklist"
+skill_hints = "speckit.checklist"
 execution_mode = "interactive"
 
 [[steps]]
@@ -79,7 +79,7 @@ needs = ["plan"]
 description = "Run /speckit.tasks, then create the task breakdown as child beads of the implement step (bd create --parent <implement-id> --spec-id {{feature}}). Never write specs/{{feature}}/tasks.md; the write is denied."
 
 [steps.metadata]
-execution_skill = "speckit.tasks"
+skill_hints = "speckit.tasks"
 
 [[steps]]
 id = "critique"
@@ -89,7 +89,7 @@ needs = ["checklist"]
 description = "Run /speckit.critique.run (mandatory plan + task quality gate). Parallel with security-review."
 
 [steps.metadata]
-execution_skill = "speckit.critique.run"
+skill_hints = "speckit.critique.run"
 
 [[steps]]
 id = "security-review"
@@ -99,17 +99,17 @@ needs = ["checklist"]
 description = "Run /speckit.security-review.plan (mandatory security review of plan/tasks). Parallel with critique."
 
 [steps.metadata]
-execution_skill = "speckit.security-review.plan"
+skill_hints = "speckit.security-review.plan"
 
 [[steps]]
 id = "analyze"
 title = "analyze {{feature}}"
 type = "task"
 needs = ["critique", "security-review"]
-description = "Run /speckit.analyze (interactive cross-artifact risk analysis). Task state comes from bd list --spec-id {{feature}}, not tasks.md."
+description = "Run /speckit.analyze (interactive cross-artifact risk analysis). Task state comes from bd list --spec-id {{feature}}, not tasks.md. Carry unresolved findings on escalation wisps and encode the resolution into spec.md or plan.md before burning them."
 
 [steps.metadata]
-execution_skill = "speckit.analyze"
+skill_hints = "speckit.analyze"
 execution_mode = "interactive"
 
 [[steps]]
@@ -117,7 +117,7 @@ id = "analyze-approval"
 title = "analyze approval {{feature}}"
 type = "task"
 needs = ["analyze"]
-description = "Human sign-off on analysis findings. Close the gate only after the user approves interactively."
+description = "Human sign-off on analysis findings. Close the gate only after the user approves interactively. Nudge a stalled gate with a ping wisp; only bd gate resolve closes the gate."
 
 [steps.gate]
 type = "human"
@@ -130,7 +130,7 @@ needs = ["analyze-approval"]
 description = "Run /speckit.agent-assign.assign to map implementation task beads to agents."
 
 [steps.metadata]
-execution_skill = "speckit.agent-assign.assign"
+skill_hints = "speckit.agent-assign.assign"
 
 [[steps]]
 id = "validate"
@@ -140,17 +140,17 @@ needs = ["assign"]
 description = "Run /speckit.agent-assign.validate to confirm every assigned agent exists."
 
 [steps.metadata]
-execution_skill = "speckit.agent-assign.validate"
+skill_hints = "speckit.agent-assign.validate"
 
 [[steps]]
 id = "implement"
 title = "implement {{feature}}"
 type = "task"
 needs = ["validate"]
-description = "Run /speckit.agent-assign.execute. Implementation task beads are children of this step; work them via bd ready -> bd update <id> --claim -> bd close <id> --reason."
+description = "Run /speckit.agent-assign.execute. Implementation task beads are children of this step; work them via bd ready -> bd update <id> --claim -> bd close <id> --reason. Per-file progress and retries ride a [wisp:worklog] gc_report wisp linked relates-to this step; the step thread keeps the outcome only."
 
 [steps.metadata]
-execution_skill = "speckit.agent-assign.execute"
+skill_hints = "speckit.agent-assign.execute"
 
 [[steps]]
 id = "verify-tasks"
@@ -183,7 +183,7 @@ id = "verify-signoff"
 title = "verify sign-off {{feature}}"
 type = "task"
 needs = ["verify"]
-description = "Final human sign-off on the verification reports. Close the gate only after the user approves interactively."
+description = "Final human sign-off on the verification reports. Close the gate only after the user approves interactively. Nudge a stalled gate with a ping wisp; only bd gate resolve closes the gate."
 
 [steps.gate]
 type = "human"
@@ -193,10 +193,10 @@ id = "review"
 title = "review {{feature}}"
 type = "task"
 needs = ["verify-signoff"]
-description = "Run /speckit.review.run (full review cycle); route findings through fix-findings."
+description = "Run /speckit.review.run (full review cycle); route findings through fix-findings. Multi-dimension or cross-model review: create one review-wisp shell per dimension plus a blocks edge from the downstream step to each, before spawning any reviewer."
 
 [steps.metadata]
-execution_skill = "speckit.review.run"
+skill_hints = "speckit.review.run"
 
 [[steps]]
 id = "qa"
@@ -206,7 +206,7 @@ needs = ["review"]
 description = "Run /speckit.qa.run; failures route through fix-findings."
 
 [steps.metadata]
-execution_skill = "speckit.qa.run"
+skill_hints = "speckit.qa.run"
 
 [[steps]]
 id = "code-review"
@@ -216,7 +216,7 @@ needs = ["qa"]
 description = "Run /speckit.review.code as a subagent. Parallel with security-review-post."
 
 [steps.metadata]
-execution_skill = "speckit.review.code"
+skill_hints = "speckit.review.code"
 execution_mode = "subagent"
 
 [[steps]]
@@ -227,7 +227,7 @@ needs = ["qa"]
 description = "Run /speckit.security-review.branch as a subagent. Parallel with code-review."
 
 [steps.metadata]
-execution_skill = "speckit.security-review.branch"
+skill_hints = "speckit.security-review.branch"
 execution_mode = "subagent"
 
 [[steps]]
@@ -238,7 +238,7 @@ needs = ["code-review", "security-review-post"]
 description = "Run /speckit.cleanup (post-implementation quality gate) on the main thread."
 
 [steps.metadata]
-execution_skill = "speckit.cleanup"
+skill_hints = "speckit.cleanup"
 
 [[steps]]
 id = "sync-drift"
@@ -274,7 +274,7 @@ needs = ["sync-drift", "sync-conflicts"]
 description = "Run /speckit.retro.run."
 
 [steps.metadata]
-execution_skill = "speckit.retro.run"
+skill_hints = "speckit.retro.run"
 
 [[steps]]
 id = "docs-update"
