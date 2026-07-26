@@ -42,7 +42,7 @@ graph TD
     N1 --> RW["review wisp<br/>one dimension"]
     N1 --> EW["escalation wisp<br/>BLOCKED / ASK"]
     N1 --> WL["worklog wisp"]
-    N3 --> MB["merge bead<br/>agent:integrator · unparented"]
+    N3 --> MB["merge bead<br/>agent:integrator · no parent"]
     RW --> AR["artifact file<br/>cited by absolute path"]
 ```
 
