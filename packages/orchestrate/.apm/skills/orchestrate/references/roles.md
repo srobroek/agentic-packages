@@ -25,9 +25,10 @@ Claim-holder roles bundled here are domain-specialist, researcher, reviewer,
 advisor, shepherd, and scribe. A node with `execution_kind=artifact` must go to a
 writable role -- in practice `domain-specialist` -- because the writer hook denies
 the artifact write from a read-only role, and the node cannot recover by itself.
-Route a read-only role only when the node's deliverable is its reported result. The in-run shepherd uses landing safeguards
-from the `pr-shepherd` dependency; the dependency's standalone agent remains
-the repository-global queue drainer. Quality-guard roles come from
+Route a read-only role only when the node's deliverable is its reported result. The in-run shepherd owns its own landing
+safeguards; `pr-shepherd` is a separate tool, not a dependency, and remains the
+repository-global queue drainer. They coordinate only through the
+`integration_owner` metadata contract. Quality-guard roles come from
 `agent-quality-guards`; remaining routes are built-ins. The package does not assume
 `code-reviewer`/`adversarial-challenger` exist; those are optional upgrades
 when the catalog has them.

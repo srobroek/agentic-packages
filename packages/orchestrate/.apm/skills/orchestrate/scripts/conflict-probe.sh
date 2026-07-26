@@ -6,8 +6,9 @@
 # leaves merge ordering to successful merge-slot acquisition and pushback from
 # these facts instead of guessing.
 #
-# Sibling: packages/pr-shepherd/.apm/skills/pr-shepherd/scripts/merge-probe.sh
-# carries a trimmed copy of `conflicts`; keep the extraction logic in sync.
+# This script is self-contained on purpose: orchestrate and pr-shepherd are separate
+# tools, so nothing here may reach into another package's scripts at runtime. The two
+# merge actors coordinate through the `integration_owner` metadata contract instead.
 #
 # Usage:
 #   conflict-probe.sh conflicts <base-ref> <branch-ref>
@@ -16,12 +17,6 @@
 #       -> do A and B touch overlapping files vs base? exit 0 disjoint, 1 overlap
 #   conflict-probe.sh ci <pr-number|branch>
 #       -> prints `gh pr checks` summary; exit follows gh (needs gh + network)
-#   conflict-probe.sh land <landing-contract arguments, without approval mode>
-#       -> delegates to pr-shepherd's shared landing transaction in external mode
-#   conflict-probe.sh verify-landed <landing-contract arguments>
-#       -> delegates to pr-shepherd's shared final-base proof
-#   conflict-probe.sh check-run <repo> <run-id> <head-sha>
-#       -> delegates to pr-shepherd's exact-head CI validation
 set -euo pipefail
 
 die() {
@@ -32,19 +27,6 @@ command -v git >/dev/null || die "git not found"
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-landing_contract() {
-  local candidate
-
-  if [[ -n "${ORCHESTRATE_LANDING_CONTRACT:-}" ]]; then
-    candidate="$ORCHESTRATE_LANDING_CONTRACT"
-  elif [[ -x "$script_dir/../../pr-shepherd/scripts/landing-contract.sh" ]]; then
-    candidate="$script_dir/../../pr-shepherd/scripts/landing-contract.sh"
-  else
-    candidate="$script_dir/../../../../../pr-shepherd/.apm/skills/pr-shepherd/scripts/landing-contract.sh"
-  fi
-  [[ -x "$candidate" ]] || die "pr-shepherd landing-contract.sh not found"
-  printf '%s\n' "$candidate"
-}
 
 cmd="${1:-}"
 shift || true
@@ -99,25 +81,10 @@ ci)
   gh pr checks "$ref"
   ;;
 
-land)
-  [[ $# -eq 8 ]] || die "land expects 8 arguments"
-  contract="$(landing_contract)"
-  exec "$contract" land "$@" external
-  ;;
 
-verify-landed)
-  [[ $# -eq 6 ]] || die "verify-landed expects 6 arguments"
-  contract="$(landing_contract)"
-  exec "$contract" verify-landed "$@"
-  ;;
 
-check-run)
-  [[ $# -eq 3 ]] || die "check-run expects 3 arguments"
-  contract="$(landing_contract)"
-  exec "$contract" check-run "$@"
-  ;;
 
 *)
-  die "usage: conflicts|pairwise|ci|land|verify-landed|check-run (got '${cmd:-}')"
+  die "usage: conflicts|pairwise|ci (got '${cmd:-}')"
   ;;
 esac

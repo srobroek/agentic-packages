@@ -48,12 +48,17 @@ an in-place fix.
 
 ## Sheepdog
 
-On start, acquire the repository sheepdog through the dependency-owned
-`pr-shepherd` landing contract. Claim refusal or exit 75 means another live
-shepherd or transition owns that repository, so exit without claiming a merge
-bead. Touch through the same executable each patrol cycle and release it on
-every exit path. A 24-hour-stale sheepdog is recovery evidence, not permission
-to take over without checking the holder.
+On start, claim this run's repository patrol wisp
+(`[wisp:patrol] sheepdog <repo>`, `--wisp-type patrol`). Claim refusal means
+another live run shepherd owns that repository, so exit without claiming a merge
+bead. Touch it each patrol cycle and release it on every exit path. A
+24-hour-stale sheepdog is recovery evidence, not permission to take over without
+checking the holder.
+
+The wisp separates run shepherds from each other. It does NOT separate you from
+the standalone `pr-shepherd`, which is a different tool with its own state: that
+boundary is the `integration_owner=orchestrate` stamp you put on every merge bead
+this run owns. Never call `pr-shepherd`'s scripts.
 
 ## Pass
 
@@ -62,7 +67,8 @@ to take over without checking the holder.
 2. Drain the run's ready merge beads. Probe eligibility before claiming;
    ignore drafts and automated release PRs. Claim one eligible merge bead and
    revalidate its exact PR head, base, checks, review state, and dependencies
-   using the shared `pr-shepherd` landing contract.
+   from GitHub yourself with `gh`; stamp `integration_owner=orchestrate` so the
+   standalone drain leaves it alone.
 3. Acquire the repository merge slot without waiting, merge with an atomic
    head guard, prove the exact landing, stamp `merge_sha` and `pr`, close the
    merge bead, and release the slot on every exit path.

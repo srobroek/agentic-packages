@@ -34,7 +34,7 @@ escalation wisp, not stored as a node state.
 | `reported → in_review` | worker reports declared evidence; orchestrator creates every review-wisp shell, stamps each runtime, and activates reviewers by wisp id |
 | `working` (blocked) | worker writes `BLOCKED` on a linked escalation wisp and exits or continues independent work; an advisor claims and answers that wisp directly |
 | `changes_requested → working` | same worker re-claims its node, reads all open review wisps, and applies the union of FIX items |
-| `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies shared pr-shepherd identity/CI safeguards, serializes on the merge slot, proves the final base, releases, and closes |
+| `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies its own identity/CI safeguards, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
 | `waiting_gate` | only an external machine gate remains (CI, release workflow, release PR checks, a long reviewer); orchestrator parks the node with the awaited identifier and resume instruction, never polls it, and exits when nothing else is ready |
