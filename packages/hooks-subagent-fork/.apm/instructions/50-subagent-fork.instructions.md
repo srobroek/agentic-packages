@@ -1,5 +1,6 @@
 ---
 description: Always-loaded fork_turns discipline for subagent spawns; the fork guard denies "all" and large values.
+applyTo: "**/*"
 ---
 
 Subagent spawns:

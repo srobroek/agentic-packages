@@ -1,5 +1,6 @@
 ---
 description: Always-loaded delivery cadence -- commit and push continuously in atomic units; no unpushed local work.
+applyTo: "**/*"
 ---
 
 For the continuous commit/push working rhythm -- atomic commits, pushing after

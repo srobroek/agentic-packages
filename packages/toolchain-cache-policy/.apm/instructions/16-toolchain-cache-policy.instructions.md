@@ -1,5 +1,6 @@
 ---
 description: Shared bounded toolchain caches and worktree-local build output.
+applyTo: "**/*"
 ---
 
 For which caches are shared across worktrees, which build output stays

@@ -1,5 +1,6 @@
 ---
 description: Route documentation and release-text writing through the write-docs skill.
+applyTo: "**/*"
 ---
 
 When writing or reviewing a README, docs, spec, ADR, constitution, PR
