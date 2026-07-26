@@ -19,6 +19,13 @@ setup() {
     '  *" show good-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"good-1","status":"open","labels":[],"dependencies":[{"id":"merge-1","dependency_type":"blocks"}]}]'\'' ;;' \
     '  *" show other-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"other-1","status":"open","labels":[],"dependencies":[]}]'\'' ;;' \
     '  *" show "*) exit 1 ;;' \
+    '  *" where "*)' \
+    '    dir="$PWD"' \
+    '    while [ "$2" = "-C" ] || [ "$1" = "-C" ]; do' \
+    '      if [ "$1" = "-C" ]; then dir="$2"; shift 2; else shift; fi' \
+    '    done' \
+    '    [ -d "$dir/.beads" ] && exit 0' \
+    '    exit 1 ;;' \
     'esac' > "$FAKE_BIN/bd"
   chmod +x "$FAKE_BIN/bd"
   export PATH="$FAKE_BIN:$PATH"
@@ -135,6 +142,36 @@ setup() {
   run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
   [ "$status" -eq 0 ]
   [ -z "$output" ]
+}
+
+@test "ignores a beads directory in a shared ancestor" {
+  local nested="$OUTSIDE_REPO/nested"
+  mkdir -p "$OUTSIDE_REPO/.beads" "$nested"
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$nested" \
+    --arg command 'gh pr create --draft --title x' \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [ -z "$output" ]
+}
+
+@test "resolves beads against the directory a cd prefix selects" {
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
+    --arg command "cd $TEST_REPO && gh pr create --draft --title x" \
+    '{cwd:$cwd,tool_input:{command:$command}}')"
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  [[ "$output" == *'Tracks-Bead'* ]]
+}
+
+@test "keeps session cwd when a cd prefix is not a plain directory change" {
+  for command in \
+    "cd $TEST_REPO extra && gh pr create --draft --title x" \
+    "cd - && gh pr create --draft --title x" \
+    "cd $TEST_REPO/missing && gh pr create --draft --title x"; do
+    export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
+      '{cwd:$cwd,tool_input:{command:$command}}')"
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+    [ -z "$output" ]
+  done
 }
 
 @test "blocks an absolute-path gh invocation without draft" {
