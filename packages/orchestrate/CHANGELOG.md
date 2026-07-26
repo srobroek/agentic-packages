@@ -1,5 +1,16 @@
 # Changelog
 
+## [10.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v9.0.0...orchestrate--v10.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** deny unrecognised agent types instead of skipping activation ([#747](https://github.com/srobroek/agentic-packages/issues/747))
+
+### Bug Fixes
+
+* **orchestrate:** deny unrecognised agent types instead of skipping activation ([#747](https://github.com/srobroek/agentic-packages/issues/747)) ([37ec780](https://github.com/srobroek/agentic-packages/commit/37ec780c3b46d426ddb7f37d10c7c531cb668372))
+
 ## [9.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v8.0.0...orchestrate--v9.0.0) (2026-07-26)
 
 
