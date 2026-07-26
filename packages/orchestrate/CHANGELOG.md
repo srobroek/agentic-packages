@@ -1,5 +1,17 @@
 # Changelog
 
+## [7.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v7.0.0...orchestrate--v7.0.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([6a7467f](https://github.com/srobroek/agentic-packages/commit/6a7467f0ccb14a638f1e4301490e93854dbcfa9a))
+
+
+### Documentation
+
+* **orchestrate,pr-shepherd:** give the watcher contract and dead-claim rule one owner ([#737](https://github.com/srobroek/agentic-packages/issues/737)) ([5ce7a96](https://github.com/srobroek/agentic-packages/commit/5ce7a9652510476a019135bcdcadd1ea3ddbe49e))
+
 ## [7.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v6.0.1...orchestrate--v7.0.0) (2026-07-25)
 
 

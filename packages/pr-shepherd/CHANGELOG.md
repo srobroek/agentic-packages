@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.2](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.15.1...pr-shepherd--v0.15.2) (2026-07-26)
+
+
+### Documentation
+
+* **orchestrate,pr-shepherd:** give the watcher contract and dead-claim rule one owner ([#737](https://github.com/srobroek/agentic-packages/issues/737)) ([5ce7a96](https://github.com/srobroek/agentic-packages/commit/5ce7a9652510476a019135bcdcadd1ea3ddbe49e))
+
 ## [0.15.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.15.0...pr-shepherd--v0.15.1) (2026-07-25)
 
 
