@@ -591,9 +591,12 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
     check("direct CLAIM spawn outside run -> allow", out == {}, str(out))
 
 print("=== script modes ===")
-# SKILL.md tells the lead to invoke the installed run-activate path directly, so
-# a mode-644 source ships a command that exits "permission denied". The _test_*
-# harnesses are exempt: CI runs those through `uv run`, never as commands.
+# Every shipped script stays executable so a bare-path caller works whatever the
+# deployment does with modes: APM writes the source mode once and then skips
+# content-identical files, so a mode-only source fix never reaches an install
+# that already has the wrong bit. The _test_* harnesses are exempt: CI runs
+# those through `uv run`, never as commands. The repo-wide counterpart is
+# .apm/scripts/check-script-invocation.py.
 mode_checked = sorted(Path(HERE).glob("*.py")) + [
     path
     for pattern in ("*.py", "*.sh")
