@@ -143,8 +143,11 @@ Role: lead session / orchestrator.
    `shepherd` patrol per GitHub repository for this run. It
    follows the shared `pr-shepherd` landing contract but keeps run-scoped
    lifecycle and cleanup ownership. The standalone `pr-shepherd` remains the
-   repository-global recovery/drain actor; the sheepdog lease prevents both
-   from owning the same repository concurrently. Create scribe query wisps
+   repository-global recovery/drain actor. Two mechanisms keep them apart, and
+   they are not the same one: the sheepdog wisp stops two run shepherds from
+   patrolling one repository, while `integration_owner=orchestrate` on each merge
+   bead is what stops the standalone drain from taking this run's PRs. Stamp it on
+   every merge bead this run creates. Create scribe query wisps
    only when a bounded status or ledger drain is needed.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): create

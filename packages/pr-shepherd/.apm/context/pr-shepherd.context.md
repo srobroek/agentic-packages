@@ -24,6 +24,11 @@ MUST Authors push branch/PR, write residual context onto their bead per beads
   alive waiting for CI or merge -- the merge bead plus shepherd own the wait.
 
 SHEPHERD PASS (stateless -- any session, /loop, or cron)
+MUST Skip a bead whose `metadata.integration_owner` names another actor
+  (`orchestrate`) while that run is live; its own shepherd is mid-flight. Take it
+  only once the run is terminal -- that recovery is this actor's job, stealing an
+  active merge is not. The drain query filters by label alone, so this check is
+  what separates the two actors.
 DEFAULT `bd gate check` then drain `bd ready --label agent:integrator
   --unassigned --json`; per bead: probe PR eligibility before claiming;
   ignore drafts and automated release PRs, otherwise claim, probe
