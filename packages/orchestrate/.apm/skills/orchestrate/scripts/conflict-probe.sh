@@ -25,9 +25,6 @@ die() {
 }
 command -v git >/dev/null || die "git not found"
 
-script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
-
 cmd="${1:-}"
 shift || true
 
