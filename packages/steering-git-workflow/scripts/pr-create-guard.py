@@ -76,9 +76,42 @@ def payload_command(payload: Any) -> tuple[str, Path]:
         command = tool_input
     raw_cwd = payload.get("cwd") or os.getcwd()
     cwd = Path(raw_cwd)
-    return command if isinstance(
-        command, str
-    ) else "", cwd if cwd.is_dir() else Path.cwd()
+    if not cwd.is_dir():
+        cwd = Path.cwd()
+    command = command if isinstance(command, str) else ""
+    return command, effective_cwd(command, cwd)
+
+
+def effective_cwd(command: str, session_cwd: Path) -> Path:
+    """Resolve the directory the command actually runs in.
+
+    The payload `cwd` is the session's directory, but a Bash call routinely starts
+    with `cd <path> &&`. Resolving beads against the session directory instead of
+    the command's directory made this guard deny a valid PR whose merge bead lived
+    in the target repository, and no `cd` prefix could correct it.
+    """
+    try:
+        tokens = shell_tokens(command)
+    except ValueError:
+        return session_cwd
+    segment: list[str] = []
+    for token in tokens:
+        if token in {";", "&&", "||", "&", "|"}:
+            break
+        segment.append(token)
+    if segment[:1] != ["cd"]:
+        return session_cwd
+    args = [token for token in segment[1:] if token != "--"]
+    if len(args) != 1 or args[0] in {"", "-"}:
+        return session_cwd
+    target = Path(args[0]).expanduser()
+    if not target.is_absolute():
+        target = session_cwd / target
+    try:
+        resolved = target.resolve()
+    except OSError:
+        return session_cwd
+    return resolved if resolved.is_dir() else session_cwd
 
 
 def shell_tokens(command: str) -> list[str]:
@@ -298,7 +331,27 @@ def draft_enabled(invocation: list[str]) -> bool:
 
 
 def beads_workspace(cwd: Path) -> bool:
-    return any((parent / ".beads").is_dir() for parent in (cwd, *cwd.parents))
+    """Report whether beads is actually initialised for this directory.
+
+    Ask `bd` rather than walking for a `.beads` directory. A workspace in a shared
+    ancestor -- `~/.beads` is common -- made every repository under the home
+    directory look beads-enabled, so this guard demanded bead trailers from
+    projects that track no beads at all. `bd where` resolves the same workspace the
+    later lookups will use, so the gate and the lookups cannot disagree.
+    """
+    if not shutil.which("bd"):
+        return False
+    try:
+        result = subprocess.run(
+            ["bd", "-C", str(cwd), "where"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
 
 
 def trailer_ids(body: str, name: str) -> list[str]:
