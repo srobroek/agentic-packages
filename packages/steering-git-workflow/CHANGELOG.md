@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.5](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.4...steering-git-workflow--v2.3.5) (2026-07-26)
+
+
+### Bug Fixes
+
+* **steering-git-workflow:** resolve the PR guard's beads workspace correctly ([#757](https://github.com/srobroek/agentic-packages/issues/757)) ([66d0609](https://github.com/srobroek/agentic-packages/commit/66d060993152638c77671d48d6f3fb9c3232c887))
+
 ## [2.3.4](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.3...steering-git-workflow--v2.3.4) (2026-07-25)
 
 
