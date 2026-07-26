@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.1...orchestrate--v10.0.2) (2026-07-26)
+
+
+### Bug Fixes
+
+* **orchestrate:** triage swarm-validate warnings instead of treating all as defects ([#752](https://github.com/srobroek/agentic-packages/issues/752)) ([ae3fc04](https://github.com/srobroek/agentic-packages/commit/ae3fc04a13c178aa4de60225c91f0aa31b1d551f))
+
 ## [10.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.0...orchestrate--v10.0.1) (2026-07-26)
 
 
