@@ -1,22 +1,34 @@
 version: 1
+# All five guards were pinned gpt-5.3-codex-spark, which Artificial Analysis has
+# no row for and OpenAI publishes as a "research preview" with no rate-card
+# price. An unpriced, unbenchmarked pin cannot be audited or cost-modelled, so
+# these move to the measured Luna rungs.
+# Basis: .audit-2026-07/findings/MODEL-MATRIX.md
+#
+# Luna/medium is the mechanical tier: TB-v2.1 53.2, coding 50.7, $0.050/task,
+# and it beats Claude Haiku 4.5 (reasoning) on 5 of 5 axes at 0.21x its cost.
+# Nothing here drops to Luna/low: at TB-v2.1 43.4 that rung is Haiku-class, and
+# it is where a mechanical task starts failing silently.
 agents:
   docs-guard:
     codex:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.6-luna
       reasoning_effort: medium
+  # The one guard that adjudicates rule intent rather than reading a report, so
+  # it takes the rung above: TB-v2.1 69.7, coding 63.3, $0.095/task.
   lint-guard:
     codex:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.6-luna
       reasoning_effort: high
   data-metrics-summarizer:
     codex:
-      model: gpt-5.3-codex-spark
+      model: gpt-5.6-luna
       reasoning_effort: medium
   maintenance-metrics-reader:
     codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: low
+      model: gpt-5.6-luna
+      reasoning_effort: medium
   reviewer-mechanics:
     codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: low
+      model: gpt-5.6-luna
+      reasoning_effort: medium

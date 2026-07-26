@@ -1,6 +1,13 @@
 version: 1
+# Was Sol/medium. Basis: .audit-2026-07/findings/MODEL-MATRIX.md
+#
+# Shepherding is tool-calling (gh, bd, git), not open-ended reasoning. Weighted
+# on the axes that measure that, Luna/max beats Sol/medium -- tau3-banking 27.2
+# vs 26.5, agentic 45.6 vs 44.5 -- at $0.209 against $0.314, i.e. 0.67x the cost.
+# It loses 3/5 on the overall axes, all of which are reasoning composites this
+# role does not exercise.
 agents:
   pr-shepherd:
     codex:
-      model: gpt-5.6-sol
-      reasoning_effort: medium
+      model: gpt-5.6-luna
+      reasoning_effort: max

@@ -1,9 +1,13 @@
 version: 1
+# Basis: .audit-2026-07/findings/MODEL-MATRIX.md
 agents:
+  # Was Sol/medium. Authoring journey documents to a fixed format is structured
+  # transformation, so it takes the shepherd-class cell: Luna/max, tau3-banking
+  # 27.2 (above Sol/medium's 26.5) and agentic 45.6, at 0.67x the cost.
   journey-scribe:
     codex:
-      model: gpt-5.6-sol
-      reasoning_effort: medium
+      model: gpt-5.6-luna
+      reasoning_effort: max
   journey-validator:
     codex:
       model: gpt-5.6-sol

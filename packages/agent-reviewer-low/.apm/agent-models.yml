@@ -1,4 +1,14 @@
 version: 1
+# Kept at Sol/low deliberately. Basis: .audit-2026-07/findings/MODEL-MATRIX.md
+#
+# This is the cheap review rung and Sol/low earns it: TB-v2.1 76.8, coding 69.7,
+# $0.197/task. It beats Luna/high 4/5 (tying agentic at 40.0 vs 40.1) for 2.08x,
+# which is the right trade when the alternative is missing a defect.
+#
+# Note for anyone tempted to promote this: Sol low -> medium is the single best
+# marginal buy in the matrix (+9.3 TB-v2.1, +6.6 coding for +$0.117, 5/5 wins).
+# It belongs on the DEFAULT reviewer, not on the cheap tier -- that promotion is
+# already applied to `orchestrate`'s `reviewer`.
 agents:
   reviewer-low:
     codex:
