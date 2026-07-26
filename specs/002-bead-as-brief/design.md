@@ -3,9 +3,9 @@ x-lint:
   allow: [E3]
   reason: "design reference documenting the model-routing tier table; model names are the subject matter, not instructions to load a model"
 ---
-# Bead-as-Brief — orchestrate v2 architecture
+# Bead-as-Brief -- orchestrate v2 architecture
 
-Status: Accepted — bead orc-3v0.
+Status: Accepted -- bead orc-3v0.
 
 All task data for a node lives on the node bead. Allocation prompts carry only
 the canonical WAIT bootstrap; later activation messages carry only CLAIM.
@@ -89,7 +89,7 @@ label is the routing signal), `review_dimensions` (labels, below).
 Rules:
 
 - `model`/`complexity_tier` are read by the orchestrator **before spawning**,
-  never by the agent after spawn — an agent cannot reconfigure its own model.
+  never by the agent after spawn -- an agent cannot reconfigure its own model.
 - `output_ref` MUST NOT have `metadata.worktree` as a prefix and MUST resolve
   under `artifacts_dir` (artifact kind) or reference a bead comment/audit
   event (comment kind). Worktrees are disposable; the git object store and
@@ -130,17 +130,17 @@ working; they never idle live waiting for another agent.
 
 | Tier | Actors | Bead relationship | Contract |
 |---|---|---|---|
-| T0 | orchestrator (main session) | Never claims — deny hook | Spawner + observer; all residual authority (create, close, dismiss, unclaim, deps, gates, shells, BRIEF) |
+| T0 | orchestrator (main session) | Never claims -- deny hook | Spawner + observer; all residual authority (create, close, dismiss, unclaim, deps, gates, shells, BRIEF) |
 | T1 | domain-specialist, reviewer, advisor, researcher | One durable claim at a time | Full: checklist + authority + bounce |
 | T2 | shepherd, pr-shepherd, scribe | Many resources over time | Per-transaction authority; zero claims held at exit |
 | T3 | builder, parallel-builder, pr-reviewer, external-repo-worker, speckit-implement-task, journey-scribe, journey-validator | Conditional | Contract binds iff a claim is held; silent otherwise |
-| T4 | Explore, Plan, guards, scouts, everything else | Never | None — no rules file, no hook |
+| T4 | Explore, Plan, guards, scouts, everything else | Never | None -- no rules file, no hook |
 
 Claim rules:
 
 - **One durable-bead claim per actor at any moment** (node or merge bead).
   Wisp claims are additional and unbounded.
-- **Zero claims of any kind held at exit** — wisps included. A dead actor's
+- **Zero claims of any kind held at exit** -- wisps included. A dead actor's
   claim (bead or wisp) enters dead-claim recovery.
 - Claim-holders are spawned only by T0. Children never claim.
 - Both shepherd actors follow the same landing invariant: claim one merge
@@ -202,7 +202,7 @@ pause:
 | Activation guard | PreToolUse on Agent and SendMessage, run-marker-gated | Require canonical WAIT allocation, live resources, runtime binding, and exact CLAIM activation |
 | Orchestrator claim-deny | PreToolUse on `bd … --claim`, run-marker-gated | Deny T0 claims; admit only worker commands with equal non-lead actor variables |
 
-Deny output is structured JSON, failure-specific, diagnosis-only — which
+Deny output is structured JSON, failure-specific, diagnosis-only -- which
 check failed and what the bead shows. Remediation lives in the agent's own
 contract, never in the deny message.
 
@@ -215,7 +215,7 @@ contract, never in the deny message.
 Verified hook semantics: both runtimes support SubagentStop block-and-continue
 (exit 2 or `decision:"block"`; Codex requires JSON stdout and spills >~2500
 tokens to a temp file). Codex provides `stop_hook_active` for re-entrancy;
-Claude does not — the Claude hook counts `stop_attempts` on the bead.
+Claude does not -- the Claude hook counts `stop_attempts` on the bead.
 
 ### Bounce-back
 
@@ -223,9 +223,9 @@ At `stop_attempts` = 3 the hook stops fighting:
 
 1. Force-allow the exit.
 2. Stamp a structured BOUNCE comment: accumulated failed checks from all
-   attempts (durable — the orchestrator's investigation evidence).
+   attempts (durable -- the orchestrator's investigation evidence).
 3. Unassign the bead; non-terminal state.
-4. Reset `stop_attempts` and `review_round` in the same act — a bounced bead
+4. Reset `stop_attempts` and `review_round` in the same act -- a bounced bead
    is always clean while unassigned.
 
 The orchestrator reads BOUNCE and decides: respawn with fixes, escalate tier,
@@ -246,7 +246,7 @@ Wisp types are TTL classes for compaction of **closed** wisps
 (beads source, `internal/types/types.go`): `heartbeat`/`ping` 6h ·
 `patrol`/`gc_report` 24h · `recovery`/`error`/`escalation` 7d. GC never
 deletes open wisps, but `bd mol wisp gc` flags open wisps untouched for 24h
-as abandoned — freshness is a liveness signal.
+as abandoned -- freshness is a liveness signal.
 
 | Wisp | bd type | Created by | Burned |
 |---|---|---|---|
@@ -270,7 +270,7 @@ as abandoned — freshness is a liveness signal.
 - An abandoned run leaves its wipe wisps for the next patrol. Beads 1.1.0
   verifies that a wisp blocked by a durable bead unblocks when that bead closes.
 
-### Worktree resource scaling (heavy build trees — Rust, etc.)
+### Worktree resource scaling (heavy build trees -- Rust, etc.)
 
 Per-worktree build output does not scale: N parallel Rust worktrees each grow
 a multi-GB `target/`, and the run can fill the disk (bead
@@ -301,7 +301,7 @@ a multi-GB `target/`, and the run can fill the disk (bead
 
 Rules:
 
-- Wisps carry questions, decisions, logs, chatter — never work assignments.
+- Wisps carry questions, decisions, logs, chatter -- never work assignments.
   Work for another actor is a `discovered-from` bead.
 - Nothing the rules engine checks may live on a wisp, except wisp-open/closed
   itself.
@@ -320,7 +320,7 @@ Rules:
 
 | Link | Use |
 |---|---|
-| `replies-to` | Conversation threads on wisps (`bd show <id> --thread`). CLI dep-type support unverified — implementation confirms; fallback `relates-to` |
+| `replies-to` | Conversation threads on wisps (`bd show <id> --thread`). CLI dep-type support unverified -- implementation confirms; fallback `relates-to` |
 | `relates-to` | Node ↔ wisp tether; node ↔ domain bead; cross-node hints |
 | `discovered-from` | Follow-up work found mid-node; fix beads from the shepherd |
 | `caused-by` | Bounce investigations, recovery beads → the node that failed |
@@ -336,8 +336,8 @@ burns, its links die with it.
 
 1. Planner stamps `needs-review:<dim>` labels at node creation. Default:
    `needs-review:code`. Any T1 actor may add dimensions mid-run.
-2. At `reported`, the orchestrator — atomically, before spawning any
-   reviewer — creates one review-wisp shell per `needs-review:*` label,
+2. At `reported`, the orchestrator -- atomically, before spawning any
+   reviewer -- creates one review-wisp shell per `needs-review:*` label,
    links each `replies-to` the node, and adds
    `bd dep add <merge-bead> <review-wisp>`. Shell creation is T0's because
    the full blocker set must exist before the first reviewer can close;
@@ -346,7 +346,7 @@ burns, its links die with it.
    follows links to the node and PR, fills the wisp with FIX material and
    working notes, writes a verdict line on the node
    (`REVIEW dim=security round=2 verdict=changes`), and submits a GitHub
-   review — always: `--request-changes` with the FIX list as body, or
+   review -- always: `--request-changes` with the FIX list as body, or
    `--approve`. The PR carries review continuity outside beads.
 4. On approve: close the wisp + swap the label, one act. On changes: the wisp
    stays open carrying the FIX material.
@@ -362,9 +362,9 @@ burns, its links die with it.
    dismiss-stale-approvals branch protection retrigger all dimensions
    (bead state mirrors PR state).
 8. Reviewers resume only within a node's fix rounds (round 2 must know what
-   round 1 demanded). Never across nodes — verdicts want cold eyes.
+   round 1 demanded). Never across nodes -- verdicts want cold eyes.
 
-Reviewer PR authority: `gh pr review`, `gh pr ready`. Nothing else — no push,
+Reviewer PR authority: `gh pr review`, `gh pr ready`. Nothing else -- no push,
 no merge, no edit.
 
 ## Landing (one contract, two lifecycles)
@@ -381,7 +381,7 @@ serialization.
   unassigned, `agent:integrator`) and adds `bd dep add <work> <merge-bead>`;
   the PR body carries `Merge-Bead:`. This is the one bead-creation carve-out
   for T1/T3 actors, plus the accompanying dep edge.
-- PRs are created **draft**. The shepherd ignores drafts (existing rule) — so
+- PRs are created **draft**. The shepherd ignores drafts (existing rule) -- so
   draft = invisible to landing until a reviewer promotes it via `gh pr ready`.
 - The shepherd manages PR state and audit only: undrafted-and-unblocked →
   probe → slot → merge → stamp `merge_sha`/`pr` → close as merged. It never
@@ -415,7 +415,7 @@ every patrol; the orchestrator runs `bd gate check` at every wake.
 | T0 → actor task | Bead (BRIEF comment + metadata), spawn = `CLAIM <id>` |
 | Actor → T0 outcome | Bead state + REPORTED/BOUNCE/FAILED comment |
 | Coder ↔ advisor | Escalation wisp; advisor claims the wisp, answers on it; one-line summary lands on the node |
-| Specialist ↔ specialist | Escalation wisp linked to both nodes/domain beads. Content peer-to-peer; T0 is the doorbell only. The answering side weaves the reply into its next natural boundary (stop, claim, checkpoint) — never a live interrupt |
+| Specialist ↔ specialist | Escalation wisp linked to both nodes/domain beads. Content peer-to-peer; T0 is the doorbell only. The answering side weaves the reply into its next natural boundary (stop, claim, checkpoint) -- never a live interrupt |
 | Specialist → researcher (bounded question) | Escalation wisp; researcher claims and answers on it |
 | Anyone → researcher (artifact-producing) | `discovered-from` bead; T0 triages and spawns; output is durable (`output_ref`) |
 | Anyone → ledger | `[wisp:ledger]` wisp, fire-and-forget; scribe drains in batch on its timer gate; final drain at run end by T0 |
@@ -433,7 +433,7 @@ Capability probe at run start: `SendMessage` exists only with
 | Capability | Wake path |
 |---|---|
 | Claude + flag | Suspend-and-resume: actor exits; T0 `SendMessage`s the stored agent id; full context restored |
-| Claude without flag, Codex | Bounded poll (60s interval, 15–30 min timeout) then checkpoint-exit; respawn reads node + worklog thread |
+| Claude without flag, Codex | Bounded poll (60s interval, 15 to 30 min timeout) then checkpoint-exit; respawn reads node + worklog thread |
 
 - Any wake may silently become a respawn: handles die on compaction and
   overnight gaps. T0 tries SendMessage; on a dead handle it respawns at the
@@ -454,14 +454,14 @@ officially undocumented; revisit when they stabilize.
 
 ## Domain specialists
 
-One agent definition, parameterized at spawn — never per-trade definitions.
+One agent definition, parameterized at spawn -- never per-trade definitions.
 
 - **Identity:** a domain bead (child of the run epic) carrying the domain
   BRIEF; nodes link `relates-to` it. Actor name `<role>-<domain>` (or
   `<role>-<epic>-<domain>` when epics collide), stable across resumes.
 - **Serial single-claim:** claim node → work → report → release → next domain
   node. Claim released at `reported`; fix rounds re-claim, and a FIX wake
-  queues behind the current claim — the specialist finishes its working phase
+  queues behind the current claim -- the specialist finishes its working phase
   first. Never a second durable claim; children must be collected before
   the node reports.
 - **Delegation-first:** keep work that depends on accumulated domain context;
@@ -485,17 +485,17 @@ One agent definition, parameterized at spawn — never per-trade definitions.
 
 | Profile | Domain bead brief | skill_hints | Typical tier |
 |---|---|---|---|
-| Code | subsystem scope, conventions, integration points | per stack | medium–high |
-| Docs | doc tree, audience, genre rules | `write-docs` | low–medium |
-| Security (review lens) | — dimension label, not a specialist | `speckit-security-review-branch` on the reviewer | high |
+| Code | subsystem scope, conventions, integration points | per stack | medium--high |
+| Docs | doc tree, audience, genre rules | `write-docs` | low--medium |
+| Security (review lens) | -- dimension label, not a specialist | `speckit-security-review-branch` on the reviewer | high |
 | Research | question space, sources, output format | `web-fetch`, `deep-research` | medium |
-| Infra/CI | pipeline scope, environments | stack-specific | medium–high |
-| QA (review lens) | — dimension label | journey/QA skills on the reviewer | medium |
+| Infra/CI | pipeline scope, environments | stack-specific | medium--high |
+| QA (review lens) | -- dimension label | journey/QA skills on the reviewer | medium |
 
 Template for a new profile: domain bead description (scope, conventions,
 standing constraints) + `skill_hints` + default `complexity_tier` + review
 dimensions its nodes default to. A profile earns a new agent *definition*
-only when it needs a different contract — different rules-file shape or tool
+only when it needs a different contract -- different rules-file shape or tool
 surface (that test is why `researcher` exists and `doc-writer` does
 not).
 
@@ -539,7 +539,7 @@ the DAG.
 
 Name the domain, not the task (the name must hold on resume #8). Node-scoped
 names embed the bead id so the universal Stop hook derives the claim from the
-assignee. T0 has no name — it is the session; its per-run identity is the
+assignee. T0 has no name -- it is the session; its per-run identity is the
 epic bead.
 
 ---
@@ -558,7 +558,7 @@ epic bead.
       generic contract; one that claims nothing is untouched.
 - [ ] Orchestrator claim-deny fires only in sessions with the run marker.
 - [ ] Review flow end-to-end: labels → shells → dep-blocked merge bead →
-      last-close unblocks → `gh pr ready` — with zero dimension-counting by
+      last-close unblocks → `gh pr ready` -- with zero dimension-counting by
       any actor.
 - [ ] Draft-PR flow: shepherd never sees a draft; reviewer undraft is the
       only promotion path.
