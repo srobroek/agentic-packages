@@ -114,13 +114,18 @@ Role: lead session / orchestrator.
    The epic and its dependency edges ARE the run DAG; never recreate it in
    `graph.py`, JSON, or an in-memory ledger.
    Then gate on structure before dispatching anything: run
-   `bd swarm validate <epic> --json`, stop on `swarmable=false`, and treat every
-   entry in `warnings` as a finding to resolve or explicitly accept -- external
-   dependencies, disconnected nodes, multiple endpoints, and empty graphs all
-   surface there while `swarmable` still reads true. It needs no swarm marker, so
-   it runs on a bare epic. `bd swarm status <epic>` is a coarse progress view
-   only; it omits external blockers, gates, and deferral, so never treat it as
-   proof a run is healthy.
+   `bd swarm validate <epic> --json` and stop on `swarmable=false`. Read
+   `warnings` too, because a broken graph can still report `swarmable=true`, but
+   triage them rather than treating every one as a defect:
+   cycles, disconnected nodes, multiple endpoints, and an empty graph are real --
+   resolve them before dispatch. An `outside epic` warning naming an
+   `agent:integrator` merge bead is EXPECTED and correct: merge beads are
+   deliberately unparented so the repository-global shepherd can drain them across
+   runs, and `work -> merge-bead` is the required dependency direction. Note it and
+   proceed. An `outside epic` warning naming anything else is a real finding.
+   Validate needs no swarm marker, so it runs on a bare epic. `bd swarm status
+   <epic>` is a coarse progress view only; it omits external blockers, gates, and
+   deferral, so never treat it as proof a run is healthy.
    Follow `beads` steering on `bd swarm create`: create a marker only when
    durable coordinator discovery, coordinator replacement, or an external
    scheduler needs a discoverable handle -- not for an ordinary run and not to
