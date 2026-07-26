@@ -18,14 +18,14 @@ Role: lead session / orchestrator.
   merges, keep a reproducible record.
 - Reasoning stays in agents; deterministic ops run via bundled scripts.
 - All inter-agent messages: terse verb-tag grammar (`references/message-grammar.md`).
-- Your context window is the run's scarcest, non-recoverable resource — spend
+- Your context window is the run's scarcest, non-recoverable resource -- spend
   it only on coordination, never on content.
 
 ## Core rules
 
-1. **Orchestrate, don't execute.** Push every token-heavy action — reading
+1. **Orchestrate, don't execute.** Push every token-heavy action -- reading
    source files, writing/editing code, research, diff review, running
-   tests/builds, deep planning — to the cheapest capable subagent; keep only
+   tests/builds, deep planning -- to the cheapest capable subagent; keep only
    its terse result. Read only the control evidence needed to route a
    decision. Never open, hash, parse, or precompute target-scope
    content or independently verify the requested deliverable in the lead;
@@ -39,7 +39,7 @@ Role: lead session / orchestrator.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
-3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
+3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
    tool background subagents (`subagent_type: domain-specialist`), addressed
    by their parent-visible runtime handles. Allocate every checkout through
    the `worktrunk-writer` contract.
@@ -152,7 +152,7 @@ Role: lead session / orchestrator.
    tiebreaker on an escalation wisp; its `ADVICE` is promoted before use. A
    product-intent question becomes an ASK wisp plus human gate. See
    `references/lifecycle.md`.
-9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
+9. Close out: go/no-go gate -- `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
    --parent {epic} --status in_progress,blocked`); activate a scribe query wisp
    for the end-of-run report; confirm all registered worktrees removed, then run

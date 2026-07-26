@@ -2,7 +2,7 @@
 
 ## SubagentStop (per-agent and universal)
 
-**Input (stdin JSON)** — fields used; all optional-tolerant (fail open):
+**Input (stdin JSON)** -- fields used; all optional-tolerant (fail open):
 
 | Field | Claude | Codex | Use |
 |---|---|---|---|
@@ -19,7 +19,7 @@ closure. `metadata.runtime_handle` is parent routing state and is not used for
 hook identity. A legacy resource without runtime context falls back to actor
 lookup. Any active claim at stop is a `claim_release` violation.
 
-**Output (stdout JSON)** — Codex requires JSON; Claude accepts it:
+**Output (stdout JSON)** -- Codex requires JSON; Claude accepts it:
 
 Allow: `{}` (exit 0).
 
@@ -34,7 +34,7 @@ Block (exit 0 + decision, or exit 2 with reason on stderr for Claude):
 }
 ```
 
-Rules: diagnosis only — no remediation text (contract lives in the agent
+Rules: diagnosis only -- no remediation text (contract lives in the agent
 definition); failure-specific (only failed checks appear); `attempt` counts
 toward bounce.
 

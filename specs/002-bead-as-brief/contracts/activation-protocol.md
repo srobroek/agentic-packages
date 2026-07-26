@@ -62,7 +62,7 @@ claim). The universal Stop hook derives the claim query from the assignee name
 3. Respawned actor reads: bead metadata → BRIEF → durable comments → worklog
    wisp thread (via links). Resume point = last CHECKPOINT.
 4. No live waiting: blocked actors write the escalation wisp, checkpoint, and
-   exit (pause state) — or bounded-poll (60s tick, 15–30min cap) on
+   exit (pause state) -- or bounded-poll (60s tick, 15 to 30min cap) on
    non-resume runtimes.
 5. Freshness rule: prefer respawn over resume after ~2 rounds on the same
    node or post-compaction.

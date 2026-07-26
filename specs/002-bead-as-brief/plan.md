@@ -14,15 +14,15 @@ Move all orchestrate task data onto beads (metadata + BRIEF), bind contracts to 
 
 **Language/Version**: Bash (evaluator + hooks; bash 3.2-compatible per hooks-portability-ci), YAML (rules files), Markdown (steering/skills/agents), Python 3 only where already used by package scripts
 
-**Primary Dependencies**: bd ≥ 1.1.0 (wisps, gates, graph links, merge slot, labels — verified against installed binary and beads source), Claude Code ≥ 2.1.198 (SubagentStop block, agent frontmatter hooks, SendMessage behind `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), Codex CLI (SubagentStop with agent_type matcher, JSON-stdout requirement), APM (compile, build-native-plugins.py, agent TOML generation), jq (hook JSON)
+**Primary Dependencies**: bd ≥ 1.1.0 (wisps, gates, graph links, merge slot, labels -- verified against installed binary and beads source), Claude Code ≥ 2.1.198 (SubagentStop block, agent frontmatter hooks, SendMessage behind `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), Codex CLI (SubagentStop with agent_type matcher, JSON-stdout requirement), APM (compile, build-native-plugins.py, agent TOML generation), jq (hook JSON)
 
-**Storage**: beads store (`.beads/*.db`) — durable beads, wisps, gates, deps, labels; no new storage
+**Storage**: beads store (`.beads/*.db`) -- durable beads, wisps, gates, deps, labels; no new storage
 
 **Testing**: package-local bash test scripts (existing `_test_*.sh` convention), hooks-portability-ci for hook scripts, conformance suite for the rules-engine evaluator (fixture beads → expected verdicts), one live end-to-end run as SC validation
 
 **Target Platform**: macOS + Linux dev machines; Claude Code primary, Codex degraded mode (fresh-per-node, defense-in-depth hooks)
 
-**Project Type**: APM package monorepo — steering, skills, agents, hooks
+**Project Type**: APM package monorepo -- steering, skills, agents, hooks
 
 **Performance Goals**: hook overhead <1s per SubagentStop evaluation (single `bd show --json` + rules eval); healthy node ≤6 durable comments; orchestrator routing viable at sonnet-low
 
@@ -36,9 +36,9 @@ Move all orchestrate task data onto beads (metadata + BRIEF), bind contracts to 
 
 | Principle | Status | Notes |
 |---|---|---|
-| I. Self-contained packages | PASS | Rules engine evaluator ships in the beads package (doctrine owner); each agent package ships its own rules file + hook wiring; no runtime reach-across — hooks read rules files deployed with their own package |
+| I. Self-contained packages | PASS | Rules engine evaluator ships in the beads package (doctrine owner); each agent package ships its own rules file + hook wiring; no runtime reach-across -- hooks read rules files deployed with their own package |
 | II. Generated artifacts not hand-edited | PASS | Definition contract blocks are compile-generated from rules files; plan adds them to build-native-plugins/apm compile flow; effort variants generated, not hand-written |
-| III. Hooks fail open | PASS with justification | SubagentStop contract blocks are `decision:"block"` — agent-facing, self-correctable, with an unconditional escape (`state=failed`) and a 3-attempt bounce that force-allows. No `ask` anywhere. Orchestrator claim-deny is deny-with-self-correction, run-marker-scoped. Malformed input → allow (fail open) |
+| III. Hooks fail open | PASS with justification | SubagentStop contract blocks are `decision:"block"` -- agent-facing, self-correctable, with an unconditional escape (`state=failed`) and a 3-attempt bounce that force-allows. No `ask` anywhere. Orchestrator claim-deny is deny-with-self-correction, run-marker-scoped. Malformed input → allow (fail open) |
 | IV. Conventional commits / release-please | PASS | Per-package changes land as scoped conventional commits; agent deletions are breaking-change commits for the orchestrate package |
 
 Post-design re-check: no violations introduced by Phase 1 artifacts. Complexity Tracking not needed.
@@ -95,16 +95,16 @@ packages/agent-coder/, agent-pr-reviewer/, agent-external-repo-worker/,
 speckit/, user-journeys/                   # T3 conditional rules files
 ```
 
-**Structure Decision**: Doctrine and evaluator live in `packages/beads` (cross-package owner); every contract-holding agent package owns its rules file and hook wiring; orchestrate owns the run machinery. Matches constitution I — no package depends on another's internals, only on the deployed doctrine contract.
+**Structure Decision**: Doctrine and evaluator live in `packages/beads` (cross-package owner); every contract-holding agent package owns its rules file and hook wiring; orchestrate owns the run machinery. Matches constitution I -- no package depends on another's internals, only on the deployed doctrine contract.
 
 ## Phase Sequencing (dependency order)
 
-1. **Doctrine** — beads steering section (wisps, links, labels, gates, claim⟺contract). Everything else references it.
-2. **Rules engine** — schema, evaluator, conformance fixtures; compile-time generation of definition contract blocks.
-3. **Hooks** — per-agent SubagentStop, universal Start/Stop net, orchestrator claim-deny; portability CI.
-4. **Fleet** — domain-specialist (+variants), agent deletions, reviewer/advisor/researcher/scribe amendments, rules files for T1/T2/T3.
-5. **pr-shepherd amendments** — draft-flow, sheepdog, fix-bead routing, gate ticking.
-6. **Orchestrate skill rewrite** — SKILL.md + references; wake mechanics; planner-node flow; capability probe.
-7. **Validation** — quickstart end-to-end run (SC-001…SC-007).
+1. **Doctrine** -- beads steering section (wisps, links, labels, gates, claim⟺contract). Everything else references it.
+2. **Rules engine** -- schema, evaluator, conformance fixtures; compile-time generation of definition contract blocks.
+3. **Hooks** -- per-agent SubagentStop, universal Start/Stop net, orchestrator claim-deny; portability CI.
+4. **Fleet** -- domain-specialist (+variants), agent deletions, reviewer/advisor/researcher/scribe amendments, rules files for T1/T2/T3.
+5. **pr-shepherd amendments** -- draft-flow, sheepdog, fix-bead routing, gate ticking.
+6. **Orchestrate skill rewrite** -- SKILL.md + references; wake mechanics; planner-node flow; capability probe.
+7. **Validation** -- quickstart end-to-end run (SC-001…SC-007).
 
 Downstream (separate beads, not this feature): orc-pyq speckit adoption; settings env flag rollout.
