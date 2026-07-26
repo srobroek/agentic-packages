@@ -1,5 +1,12 @@
 # Changelog
 
+## [21.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.0...srobroek-agentic--v21.1.1) (2026-07-26)
+
+
+### Documentation
+
+* add the orchestrate architecture reference ([#759](https://github.com/srobroek/agentic-packages/issues/759)) ([c608552](https://github.com/srobroek/agentic-packages/commit/c608552ca2a884947336ddd0042e7957a6b35263))
+
 ## [21.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.0.0...srobroek-agentic--v21.1.0) (2026-07-26)
 
 
