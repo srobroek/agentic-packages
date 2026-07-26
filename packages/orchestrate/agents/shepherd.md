@@ -75,8 +75,10 @@ this run owns. Never call `pr-shepherd`'s scripts.
 4. Closing the merge bead unblocks its `[wisp:recovery] wipe-worktree <path>`
    wisp. Reclaim it through `worktree-sweep.sh` and close the wisp. Never run
    raw Git worktree lifecycle commands.
-5. Release the repository sheepdog through the shared landing contract after
-   every landing, bounce, wait, refusal, or failure.
+5. Release the repository sheepdog with your own `bd` calls after every landing,
+   bounce, wait, refusal, or failure. Close the wisp and clear its assignee --
+   a closed wisp whose assignee still names you refuses the next generation's
+   claim. Never call another package's scripts to do it.
 
 ## Bounce
 
