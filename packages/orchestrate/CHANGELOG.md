@@ -1,5 +1,12 @@
 # Changelog
 
+## [11.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v11.0.1...orchestrate--v11.0.2) (2026-07-26)
+
+
+### Bug Fixes
+
+* **orchestrate:** stop the run-marker bind depending on a deployed exec bit ([#767](https://github.com/srobroek/agentic-packages/issues/767)) ([97b5ea7](https://github.com/srobroek/agentic-packages/commit/97b5ea7d190fc9181156b29c79a34952db23847a))
+
 ## [11.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v11.0.0...orchestrate--v11.0.1) (2026-07-26)
 
 

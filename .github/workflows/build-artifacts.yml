@@ -86,6 +86,14 @@ jobs:
             echo "no generator tests in .apm/scripts"
           fi
 
+      - name: Validate bare-path script invocations
+        # APM deploys the source mode on first write but skips content-identical
+        # files on later installs, so a mode-only source fix never reaches an
+        # install that already has the wrong bit. The executable bit is part of
+        # the shipped contract: any hook command or skill instruction that runs a
+        # script by bare path must target a committed-executable file.
+        run: python3 .apm/scripts/check-script-invocation.py
+
       - name: Validate released version baselines
         run: python3 .apm/scripts/check-release-baselines.py
 

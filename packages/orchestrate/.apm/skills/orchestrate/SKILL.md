@@ -97,13 +97,14 @@ Role: lead session / orchestrator.
    prompt hook creates `<primary>/.orchestration/.active-run` with
    `run_id=pending` before the first tool call. Preserve an existing run id
    during restart recovery; otherwise bind `pending` to this epic id with the
-   active runtime's installed hook entry:
-   `.claude/hooks/orchestrate/scripts/orchestrator-run-activate.py bind
-   {epic-id}` or
-   `.codex/hooks/orchestrate/scripts/orchestrator-run-activate.py bind
-   {epic-id}`. Read the marker back before dispatch; a pending marker makes
-   claim-holder allocation invalid. Put run identity and artifact paths on
-   Beads; never broadcast them in activation prompts.
+   active runtime's installed hook entry, always through an interpreter so the
+   deployed file mode is never load-bearing:
+   `uv run --quiet
+   .claude/hooks/orchestrate/scripts/orchestrator-run-activate.py bind
+   {epic-id}` or the same command against
+   `.codex/hooks/orchestrate/scripts/`. Read the marker back before dispatch;
+   a pending marker makes claim-holder allocation invalid. Put run identity and
+   artifact paths on Beads; never broadcast them in activation prompts.
 2. Plan & decompose yourself at high level; delegate deep planning (read-only
    `Plan`) or speccing (`speckit-*`) for work spanning >3 tasks with
    cross-cutting deps or an unfamiliar subsystem. Beads-managed external
