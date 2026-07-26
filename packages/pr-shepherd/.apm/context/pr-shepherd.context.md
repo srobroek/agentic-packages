@@ -67,5 +67,6 @@ MUST One `bd merge-slot create` per repo (idempotent); `acquire` without
   path. A held slot ends this pass for that PR.
 
 DEAD CLAIMS
-MUST Claim refusal = live holder -- skip. Force-release only after confirming
-  holder session is dead (no activity since before your session started).
+MUST Treat a claim refusal as a live holder and skip that PR this pass.
+  Dead-claim recovery is the `beads` steering's rule; follow it there instead of
+  a local restatement.

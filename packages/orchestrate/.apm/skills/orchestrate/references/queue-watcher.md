@@ -1,18 +1,19 @@
 # Release queue watcher handoff
 
-`release-queue-watch` is a read-only sensor for GitHub-backed runs. It emits
-ranked readiness dispatches and PR lifecycle records. Orchestrate resolves its
-own nodes first; a record without an orchestrate owner may route once to
-`pr-shepherd`. The watcher never assigns agents, changes Beads, acquires the
-merge slot, or mutates GitHub.
+Orchestrate's side of the watcher handoff. `release-queue-watch` owns the sensor
+itself: start mechanics, record shapes, transition semantics, and `lifecycleKey`
+are defined once in its `references/runtime.md`. Read that for the emitter
+contract; this file covers only what orchestrate does with a record.
+
+Orchestrate resolves its own nodes first; a record without an orchestrate owner
+may route once to `pr-shepherd`.
 
 ## Start and ownership boundary
 
-Resolve the installed watcher skill and start one runtime per repository with
-`pnpm --silent start`, `--slots=1`, and REST reconciliation enabled. Consume
-stdout NDJSON plus structured stderr errors serially; do not read the next line
-until the current receipt is durable. One watcher slot
-limits outstanding readiness notifications. It is not the Beads merge lock.
+Start the watcher as `release-queue-watch` documents, with `--slots=1`. Consume
+records serially; do not read the next line until the current receipt is durable.
+One watcher slot limits outstanding readiness notifications. It is not the Beads
+merge lock.
 
 | Concern | Owner |
 |---|---|
@@ -28,51 +29,12 @@ An exact active orchestrate node owns its PR. If the run also creates an
 generic shepherd refuses it. This precedence prevents two merge actors from
 racing.
 
-## JSON contracts
+## Record identity
 
-A ready dispatch contains a full pull-request snapshot:
-
-```json
-{
-  "type": "dispatch",
-  "pullRequest": {
-    "repository": "owner/repo",
-    "number": 42,
-    "title": "Ready change",
-    "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "baseRef": "main",
-    "labels": ["priority:high"],
-    "priority": 1,
-    "draft": false,
-    "mergeable": true,
-    "checks": "pass",
-    "createdAt": "2026-07-21T00:00:00Z",
-    "updatedAt": "2026-07-21T01:00:00Z",
-    "state": "active",
-    "activeSince": "2026-07-21T01:00:01Z"
-  }
-}
-```
-
-Its identity is `repository#number@headSha`. Ready admission facts are not
-authorization to merge.
-
-A lifecycle record carries the same `pullRequest` shape plus:
-
-```json
-{
-  "type": "pr-lifecycle",
-  "transition": "failed",
-  "source": "webhook",
-  "lifecycleKey": "owner/repo#42#opaque-state-fingerprint",
-  "pullRequest": {}
-}
-```
-
-Transitions are `opened`, `updated`, `failed`, `merged`, and `closed`; source
-is `webhook` or `reconciliation`. Treat `lifecycleKey` as opaque. Its state
-fingerprint includes observed CI attempts, including changes for which GitHub
-does not advance `pull_request.updated_at`.
+`release-queue-watch`'s `references/runtime.md` defines the `dispatch` and
+`pr-lifecycle` shapes, the five transitions, and `lifecycleKey`. Orchestrate adds
+only this: a dispatch's identity is `repository#number@headSha`, and readiness
+admission is not authorization to merge.
 
 ## Deterministic routing
 
