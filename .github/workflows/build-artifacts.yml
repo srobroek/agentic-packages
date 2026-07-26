@@ -97,6 +97,14 @@ jobs:
       - name: Validate released version baselines
         run: python3 .apm/scripts/check-release-baselines.py
 
+      - name: Validate instruction applyTo coverage
+        # apm-cli deploys any instruction lacking `applyTo` to BOTH the
+        # user-scope root context file (CLAUDE.md) and .claude/rules/ --
+        # doubling always-loaded guidance. Every instruction must declare
+        # applyTo (use "**/*" for genuinely global guidance) so it renders to
+        # exactly one target.
+        run: python3 .apm/scripts/check-instructions-apply-to.py
+
       - name: Regenerate non-destructive artifacts
         run: |
           # Native plugin layout FIRST: each package's committed Claude and Codex

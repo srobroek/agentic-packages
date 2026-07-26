@@ -1,5 +1,6 @@
 ---
 description: Always-loaded subagent model-routing policy for explicit Claude models and pinned Codex semantic profiles.
+applyTo: "**/*"
 ---
 
 For the model-routing rules enforced by this package's pre-tool hook,

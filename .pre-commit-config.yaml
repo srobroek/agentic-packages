@@ -1,0 +1,12 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-instructions-apply-to
+        name: instructions declare applyTo
+        description: >-
+          Every packages/*/.apm/instructions/*.instructions.md must declare
+          applyTo, or apm-cli deploys it to both CLAUDE.md and .claude/rules/.
+        entry: python3 .apm/scripts/check-instructions-apply-to.py
+        language: system
+        files: ^packages/[^/]+/\.apm/instructions/.*\.instructions\.md$
+        exclude: /apm_modules/
