@@ -342,6 +342,7 @@ The full inventory lives in `docs/`:
 - **[docs/hooks-and-mcp.md](docs/hooks-and-mcp.md)** -- the hook packages and MCP server packages
 - **[docs/external-repos.md](docs/external-repos.md)** -- catalog entries hosted in their own git repos (fetched on install, not vendored)
 - **[docs/speckit.md](docs/speckit.md)** -- the SpecKit orchestration system: setup, the DAG, the hook dispatcher, and the how/why
+- **[docs/orchestrate.md](docs/orchestrate.md)** -- the multi-agent orchestration system: roles, the bead/wisp object model, two-phase activation, the merge path, and the enforcement hooks
 
 ---
 
