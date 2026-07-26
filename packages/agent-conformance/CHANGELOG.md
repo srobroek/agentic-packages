@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v3.0.0...agent-conformance--v4.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741))
+
+### Features
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741)) ([c72959f](https://github.com/srobroek/agentic-packages/commit/c72959f0f0f5300f6b049c04ec878a164d39d5d5))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v2.0.0...agent-conformance--v3.0.0) (2026-07-25)
 
 

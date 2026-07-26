@@ -1,5 +1,5 @@
 name: agent-conformance
-version: 3.0.0
+version: 4.0.0
 description: >-
   Deterministic conformance harness for agent contract testing: check coverage
   and drift, stage per-case sandboxes, assert captured replies, and assemble run

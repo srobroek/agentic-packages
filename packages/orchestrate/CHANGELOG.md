@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v7.0.1...orchestrate--v8.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741))
+
+### Features
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741)) ([c72959f](https://github.com/srobroek/agentic-packages/commit/c72959f0f0f5300f6b049c04ec878a164d39d5d5))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([d874171](https://github.com/srobroek/agentic-packages/commit/d87417111f585092d54020a502ae7a6f18a7a6a5))
+
 ## [7.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v7.0.0...orchestrate--v7.0.1) (2026-07-26)
 
 

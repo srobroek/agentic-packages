@@ -45,7 +45,7 @@
     {
       "name": "agent-conformance",
       "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports -- no LLM required for the engine.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "testing",
         "agents",
@@ -935,7 +935,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "7.0.1",
+      "version": "8.0.0",
       "tags": [
         "skill",
         "agent",
@@ -970,7 +970,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "0.15.2",
+      "version": "1.0.0",
       "tags": [
         "beads",
         "merge-queue",

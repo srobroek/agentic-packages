@@ -1,5 +1,5 @@
 name: pr-shepherd
-version: 0.15.2
+version: 1.0.0
 description: >-
   Cross-session PR shepherd with beads as its durable state store. It validates
   exact check and head identity, honors persisted merge-slot order, merges with
