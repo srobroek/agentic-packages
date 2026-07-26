@@ -69,8 +69,9 @@ Role: lead session / orchestrator.
    single CLAIM verb; do not paste a protocol block into an activation.
 8. **Durable state, bounded processes.** Beads, wisps, and GitHub are the
    record. The bundled in-run `shepherd` owns this run's landing patrol and
-   uses the dependency-owned `pr-shepherd` landing safeguards. The standalone
-   `pr-shepherd` drains the repository-global queue across runs. Scribes drain
+   owns its own landing safeguards -- orchestrate depends on no other package at
+   runtime. The standalone `pr-shepherd` is a separate tool that drains the
+   repository-global queue across runs. Scribes drain
    ledger wisps on demand or at their timer boundary. No process or second
    graph is authoritative.
 9. **Never wait on an external gate; park it.** CI, release workflows, release
@@ -141,8 +142,8 @@ Role: lead session / orchestrator.
    offers, not what this contract recognises.
 4. Prepare one dedicated integration Worktrunk checkout and spawn one bundled
    `shepherd` patrol per GitHub repository for this run. It
-   follows the shared `pr-shepherd` landing contract but keeps run-scoped
-   lifecycle and cleanup ownership. The standalone `pr-shepherd` remains the
+   owns its run-scoped landing, lifecycle and cleanup entirely; never call another
+   package's scripts. The standalone `pr-shepherd` remains the
    repository-global recovery/drain actor. Two mechanisms keep them apart, and
    they are not the same one: the sheepdog wisp stops two run shepherds from
    patrolling one repository, while `integration_owner=orchestrate` on each merge
