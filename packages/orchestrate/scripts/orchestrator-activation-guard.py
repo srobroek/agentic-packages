@@ -18,6 +18,19 @@ CLAIM_HOLDERS = {
     "scribe",
     "shepherd",
 }
+# Non-claim-holder types a run may dispatch freely: read-only helpers and the
+# bundled quality guards. Anything outside both sets is unrecognised, and an
+# unrecognised type must not silently skip activation -- see unguarded_dispatch.
+EPHEMERAL_AGENTS = {
+    "Explore",
+    "Plan",
+    "data-metrics-summarizer",
+    "docs-guard",
+    "general-purpose",
+    "lint-guard",
+    "maintenance-metrics-reader",
+    "reviewer-mechanics",
+}
 RESOURCE_TOKEN = r"[A-Za-z0-9][A-Za-z0-9._:-]*"
 QUEUE_TOKEN = r"[A-Za-z0-9][A-Za-z0-9._:=+-]*"
 CLAIM_RE = re.compile(rf"^CLAIM (?P<resource>{RESOURCE_TOKEN})$")
@@ -91,6 +104,26 @@ def require_bound_run() -> None:
 
 def claim_holder(agent_type: str) -> bool:
     return agent_type in CLAIM_HOLDERS or agent_type.startswith("domain-specialist")
+
+
+def unguarded_dispatch(agent_type: str) -> None:
+    """Deny a task-bearing spawn whose agent type the contract does not recognise.
+
+    A literal claim-holder set cannot enumerate every agent a harness resolves, so
+    an unrecognised name used to skip activation entirely. A stale `workflow-*`
+    agent left installed by an older release ran a whole fixture that way: the
+    WAIT grammar, resource liveness, exact-CLAIM routing and bound-marker checks
+    all no-opped because the type matched nothing. Fail closed instead, and name
+    the recognised alternatives so the lead can self-correct.
+    """
+    emit_deny(
+        f"agent type {agent_type!r} is not a recognised orchestrate role, so its "
+        "activation cannot be verified. Dispatch a claim-holder role "
+        "(domain-specialist, researcher, reviewer, advisor, scribe, shepherd) "
+        "through the two-phase WAIT/CLAIM contract, or an ephemeral read-only "
+        "helper. A stale agent from an older release resolves in the harness but "
+        "is unknown to this contract."
+    )
 
 
 def metadata(record: dict) -> dict:
@@ -220,6 +253,8 @@ def main() -> None:
             or ""
         )
         if not claim_holder(agent_type):
+            if agent_type and agent_type not in EPHEMERAL_AGENTS:
+                unguarded_dispatch(agent_type)
             emit_allow()
         require_bound_run()
         prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")

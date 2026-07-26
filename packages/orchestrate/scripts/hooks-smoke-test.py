@@ -396,6 +396,35 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
     )
     check("WAIT with appended task data -> deny", pretool_denied(out), str(out))
 
+    # An unrecognised agent type must not skip activation. A stale workflow-*
+    # agent from an older release ran a whole fixture unguarded that way: the
+    # WAIT, resource, exact-CLAIM and bound-marker checks all no-opped.
+    for stale_type in ("workflow-researcher", "totally-made-up"):
+        out, _ = run_hook(
+            "orchestrator-activation-guard.py",
+            {
+                "tool_name": "Agent",
+                "tool_input": {"subagent_type": stale_type, "prompt": "go do the work."},
+            },
+            env=hook_env,
+        )
+        check(
+            f"unrecognised agent type {stale_type} -> deny",
+            pretool_denied(out),
+            str(out),
+        )
+
+    for ephemeral in ("general-purpose", "Explore", "docs-guard"):
+        out, _ = run_hook(
+            "orchestrator-activation-guard.py",
+            {
+                "tool_name": "Agent",
+                "tool_input": {"subagent_type": ephemeral, "prompt": "summarize the notes."},
+            },
+            env=hook_env,
+        )
+        check(f"ephemeral helper {ephemeral} -> allow", out == {}, str(out))
+
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
         {
