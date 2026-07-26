@@ -1,6 +1,12 @@
 version: 1
+# Was Luna/low. Basis: .audit-2026-07/findings/MODEL-MATRIX.md
+#
+# Luna/low is Haiku-class (TB-v2.1 43.4 vs Haiku 4.5 reasoning 44.2) and its
+# agentic score is 25.4. The operator's work is mechanical but tool-heavy, and
+# the whole saving is $0.045/task -- one bad tool call costs more than a thousand
+# tasks' worth of it. Luna/high wins 5 of 5 axes for that 1.88x.
 agents:
   operator:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: low
+      reasoning_effort: high

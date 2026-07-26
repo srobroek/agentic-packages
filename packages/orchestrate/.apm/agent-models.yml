@@ -1,29 +1,48 @@
 version: 1
+# Codex pins. Benchmark basis: .audit-2026-07/findings/MODEL-MATRIX.md
+# (Artificial Analysis per-effort ladders, 2026-07-26, one harness per benchmark).
+#
+# Two rules the matrix establishes, both of which this file now follows:
+#   1. Luna below `high` is the cheap-worker floor, not a tier to reason in.
+#      Luna/low is Haiku-class (TB-v2.1 43.4 vs Haiku 44.2). Luna/medium is a
+#      genuine mechanical tier (53.2, and 5/5 over Haiku at 0.21x its cost).
+#   2. Terra has no defensible cell. Sol/xhigh beats Terra/max on 5 of 5 axes
+#      AND costs less ($0.682 vs $0.825) -- strict domination. Terra appears
+#      nowhere in this repo, and the matrix says leave it that way.
 agents:
+  # The two-model specialist ladder. `-medium` is NOT a duplicate of the base:
+  # Luna/high vs Sol/medium is a 5/5 capability step at 3.31x cost. The variant
+  # NAME tracks the Claude-side effort (the generator enforces name == effort);
+  # the Codex model+effort pair below is a separate mapping and may differ.
+  #   cheap rung: Luna/high  -- TB-v2.1 69.7, coding 63.3, $0.095/task
+  #   deep  rung: Sol/medium -- TB-v2.1 86.1, coding 76.3, $0.314/task
   domain-specialist:
     codex:
-      model: gpt-5.6-luna
-      reasoning_effort: high
-  domain-specialist-low:
-    codex:
-      model: gpt-5.6-luna
-      reasoning_effort: low
+      model: gpt-5.6-sol
+      reasoning_effort: medium
   domain-specialist-medium:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: medium
+      reasoning_effort: high
+  # `high` IS the base tier, so this variant duplicates `domain-specialist` and
+  # must carry the same pin -- a divergence here would make one of two
+  # interchangeable names quietly cheaper. Its existence is an open question
+  # (ACTIONS 3.2/3.10), not a routing distinction.
   domain-specialist-high:
     codex:
-      model: gpt-5.6-luna
-      reasoning_effort: high
+      model: gpt-5.6-sol
+      reasoning_effort: medium
+  # Escalation-only. See gen-domain-specialist-variants.py TIER_NOTE. Sol/high
+  # buys +1.2 TB-v2.1 and +4.0 agentic over Sol/medium for 1.44x; that margin
+  # only pays on a node that already failed at the deep rung on reasoning depth.
   domain-specialist-xhigh:
     codex:
-      model: gpt-5.6-luna
+      model: gpt-5.6-sol
       reasoning_effort: high
   reviewer:
     codex:
       model: gpt-5.6-sol
-      reasoning_effort: high
+      reasoning_effort: medium
   advisor:
     codex:
       model: gpt-5.6-sol
@@ -31,12 +50,17 @@ agents:
   researcher:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: medium
+      reasoning_effort: high
+  # Was gpt-5.3-codex-spark, which has no published benchmark and no rate-card
+  # price -- an unauditable pin. Luna/medium is the measured mechanical tier.
   scribe:
     codex:
-      model: gpt-5.3-codex-spark
-      reasoning_effort: low
+      model: gpt-5.6-luna
+      reasoning_effort: medium
+  # Shepherds are tool-calling, not reasoning. On the two axes that exercises,
+  # Luna/max beats Sol/medium (tau3-banking 27.2 vs 26.5, agentic 45.6 vs 44.5)
+  # at 0.67x the cost, despite losing 3/5 overall.
   shepherd:
     codex:
-      model: gpt-5.6-sol
-      reasoning_effort: medium
+      model: gpt-5.6-luna
+      reasoning_effort: max

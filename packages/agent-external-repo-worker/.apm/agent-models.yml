@@ -1,6 +1,11 @@
 version: 1
+# Was Sol/medium. Basis: .audit-2026-07/findings/MODEL-MATRIX.md
+#
+# Shepherd-class: clone, discover conventions, edit, verify, publish -- almost
+# entirely tool sequencing. Luna/max carries the higher tau3-banking (27.2 vs
+# 26.5) and agentic (45.6 vs 44.5) at 0.67x Sol/medium's cost.
 agents:
   external-repo-worker:
     codex:
-      model: gpt-5.6-sol
-      reasoning_effort: medium
+      model: gpt-5.6-luna
+      reasoning_effort: max

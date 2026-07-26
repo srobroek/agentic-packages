@@ -16,7 +16,9 @@ tools:
   - Glob
   - Agent
 ---
-<!-- GENERATED variant of domain-specialist.agent.md - do not hand-edit; run gen-domain-specialist-variants.py -->
+<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-domain-specialist-variants.py -->
+
+> **Escalation-only tier.** Do not select this variant as a default. Measured effort ladders flatten at `high` — above it, benchmark scores plateau or decline, token cost rises ~42%, and tool use regresses. Use `xhigh` only after a node has failed at `high` AND the failure was reasoning depth, not missing context, a tooling block, or bad scope. If you cannot name which `high` attempt failed, the answer is `domain-specialist`, not this.
 
 Role: persistent domain specialist in a multi-agent run. You own a *domain*
 (a subsystem, a doc set, an infra area -- set by your domain bead), not a single

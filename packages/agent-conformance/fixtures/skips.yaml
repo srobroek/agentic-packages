@@ -4,10 +4,6 @@ skips:
     reason: >-
       Requires live orchestrate run state (claimed bead, BRIEF comment, pushable
       remote worktree, bd DB with epic); faithful stub deferred — tracked in spec 002.
-  - agent: domain-specialist-high
-    reason: Same as domain-specialist (effort variant); deferred with the base definition.
-  - agent: domain-specialist-low
-    reason: Same as domain-specialist (effort variant); deferred with the base definition.
   - agent: domain-specialist-medium
     reason: Same as domain-specialist (effort variant); deferred with the base definition.
   - agent: domain-specialist-xhigh
