@@ -1,5 +1,12 @@
 # Changelog
 
+## [21.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.0.0...srobroek-agentic--v21.1.0) (2026-07-26)
+
+
+### Features
+
+* one shepherd per repository via the sheepdog patrol lease ([#758](https://github.com/srobroek/agentic-packages/issues/758)) ([94f324b](https://github.com/srobroek/agentic-packages/commit/94f324b60058cbdb236bb431f33aaabaff3cd97d))
+
 ## [21.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v20.0.0...srobroek-agentic--v21.0.0) (2026-07-26)
 
 

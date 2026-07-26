@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v1.0.0...pr-shepherd--v1.1.0) (2026-07-26)
+
+
+### Features
+
+* one shepherd per repository via the sheepdog patrol lease ([#758](https://github.com/srobroek/agentic-packages/issues/758)) ([94f324b](https://github.com/srobroek/agentic-packages/commit/94f324b60058cbdb236bb431f33aaabaff3cd97d))
+
+
+### Bug Fixes
+
+* **pr-shepherd:** honour integration_owner on the drain path, not just the watcher ([#754](https://github.com/srobroek/agentic-packages/issues/754)) ([591ca58](https://github.com/srobroek/agentic-packages/commit/591ca580aa437aabc44c3d0c54054710fc64fdb0))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v0.15.2...pr-shepherd--v1.0.0) (2026-07-26)
 
 

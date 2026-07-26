@@ -1,5 +1,22 @@
 # Changelog
 
+## [11.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.2...orchestrate--v11.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** conflict-probe.sh no longer accepts land, verify-landed or check-run. Callers needing a landing transaction use pr-shepherd directly as a separate tool. orchestrate no longer installs pr-shepherd as a dependency; install it alongside if you want the repository-global drain.
+
+### Features
+
+* one shepherd per repository via the sheepdog patrol lease ([#758](https://github.com/srobroek/agentic-packages/issues/758)) ([94f324b](https://github.com/srobroek/agentic-packages/commit/94f324b60058cbdb236bb431f33aaabaff3cd97d))
+* **orchestrate:** make orchestrate standalone with no pr-shepherd dependency ([#756](https://github.com/srobroek/agentic-packages/issues/756)) ([49845e2](https://github.com/srobroek/agentic-packages/commit/49845e2c724ab29367b16b7e481055de4d1d3d1f))
+
+
+### Bug Fixes
+
+* **pr-shepherd:** honour integration_owner on the drain path, not just the watcher ([#754](https://github.com/srobroek/agentic-packages/issues/754)) ([591ca58](https://github.com/srobroek/agentic-packages/commit/591ca580aa437aabc44c3d0c54054710fc64fdb0))
+
 ## [10.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v10.0.1...orchestrate--v10.0.2) (2026-07-26)
 
 
