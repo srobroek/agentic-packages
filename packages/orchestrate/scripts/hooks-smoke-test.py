@@ -590,6 +590,23 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
     )
     check("direct CLAIM spawn outside run -> allow", out == {}, str(out))
 
+print("=== script modes ===")
+# SKILL.md tells the lead to invoke the installed run-activate path directly, so
+# a mode-644 source ships a command that exits "permission denied". The _test_*
+# harnesses are exempt: CI runs those through `uv run`, never as commands.
+mode_checked = sorted(Path(HERE).glob("*.py")) + [
+    path
+    for pattern in ("*.py", "*.sh")
+    for path in sorted(Path(SKILL, "scripts").glob(pattern))
+    if not path.name.startswith("_test_")
+]
+for script in mode_checked:
+    check(
+        f"{script.name} is executable",
+        os.access(script, os.X_OK),
+        f"mode {oct(script.stat().st_mode & 0o777)}; chmod +x the source",
+    )
+
 print("=== hook JSON configs ===")
 for cfg in ("orchestrate-claude-hooks.json", "orchestrate-codex-hooks.json"):
     path = os.path.join(HOOKS, cfg)
