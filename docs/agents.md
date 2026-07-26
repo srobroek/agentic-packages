@@ -29,7 +29,7 @@ runtime's transformer.
 | Agent | Description |
 | --- | --- |
 | `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications. |
-| `agent-coder` | Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks. |
+| `agent-coder` | Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch -- for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks. |
 | `agent-coder-high` | Escalated coding agent for complex bounded implementation and debugging. |
 | `agent-explorer` | Read-only exploration agent for bounded code and configuration discovery. |
 | `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |

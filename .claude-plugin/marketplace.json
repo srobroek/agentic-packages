@@ -20,7 +20,7 @@
     },
     {
       "name": "agent-coder",
-      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch — for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
+      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch -- for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
       "version": "7.0.2",
       "tags": [
         "agent",
@@ -44,7 +44,7 @@
     },
     {
       "name": "agent-conformance",
-      "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports — no LLM required for the engine.",
+      "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports -- no LLM required for the engine.",
       "version": "3.0.0",
       "tags": [
         "testing",
@@ -224,7 +224,7 @@
     },
     {
       "name": "catchup",
-      "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state — after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
+      "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state -- after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
       "version": "2.2.1",
       "tags": [
         "skill",
@@ -331,7 +331,7 @@
     },
     {
       "name": "dep-update",
-      "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively — one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
+      "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively -- one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
       "version": "2.1.3",
       "tags": [
         "skill",
@@ -463,7 +463,7 @@
     },
     {
       "name": "hooks-chezmoi-guard",
-      "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source — the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
+      "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source -- the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
       "version": "2.1.1",
       "tags": [
         "hooks",
@@ -489,7 +489,7 @@
     },
     {
       "name": "hooks-git-safety",
-      "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target — agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
+      "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target -- agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
       "version": "2.2.1",
       "tags": [
         "hooks",
@@ -525,7 +525,7 @@
     },
     {
       "name": "hooks-precommit-gate",
-      "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory — the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
+      "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory -- the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
       "version": "0.6.1",
       "tags": [
         "hooks",
@@ -537,7 +537,7 @@
     },
     {
       "name": "hooks-quality",
-      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK — it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
+      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK -- it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
       "version": "1.3.1",
       "tags": [
         "hooks",
@@ -590,7 +590,7 @@
     },
     {
       "name": "hooks-subagent-worktree",
-      "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder — if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none — and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
+      "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder -- if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none -- and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
       "version": "2.2.1",
       "tags": [
         "hooks",
@@ -1158,7 +1158,7 @@
     },
     {
       "name": "speckit-beads",
-      "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active — task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
+      "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active -- task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
       "version": "4.0.0",
       "tags": [
         "speckit",
@@ -1408,7 +1408,7 @@
     },
     {
       "name": "whats-new",
-      "description": "Research what changed in a tool, CLI, library, framework, package, or dependency — or a technology, cloud service, hosted API, platform, or model family (AWS Bedrock, Anthropic/Claude, OpenAI, GCP, Azure, …) — between what is in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, repos, changelogs, release notes, commit logs, and service announcement feeds/APIs via machine endpoints instead of reading rendered pages, then summarizes into a fixed template.",
+      "description": "Research what changed in a tool, CLI, library, framework, package, or dependency -- or a technology, cloud service, hosted API, platform, or model family (AWS Bedrock, Anthropic/Claude, OpenAI, GCP, Azure, …) -- between what is in use and the latest: breaking changes, deprecations, new features, and fixes. Resolves versions, repos, changelogs, release notes, commit logs, and service announcement feeds/APIs via machine endpoints instead of reading rendered pages, then summarizes into a fixed template.",
       "version": "2.1.2",
       "tags": [
         "skill",

@@ -2,7 +2,7 @@ name: catchup
 version: 2.2.1
 description: >-
   Resume interrupted project work from the best handover and, in beads (bd)
-  repos, live task state — after context loss, /clear, or a continue/resume
+  repos, live task state -- after context loss, /clear, or a continue/resume
   request, including repos with open beads but no handover file.
 author: Sjors Robroek
 license: Apache-2.0

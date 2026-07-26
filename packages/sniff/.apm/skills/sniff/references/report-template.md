@@ -113,7 +113,7 @@ extend-select = ["PLR2004", "C901"]
 cognitive_complexity = "warn"
 ```
 
-Keep it advisory and small — config for the *confirmed* smells, not a maximal
+Keep it advisory and small -- config for the *confirmed* smells, not a maximal
 lint setup. Show the snippet only for tools the repo already uses (or note the
 install step). Flag any rule whose adoption implies a large one-time fix, and
 say so rather than burying it. This is a recommendation; do not apply it unless
@@ -124,13 +124,13 @@ the user asks (and then it's a step-7 apply, with a verification re-run).
 |---------|---------|-----------------------------------|
 | ... | DROP/DOWNGRADE | false positive / over-abstraction / non-idiomatic-but-fine / not worth cost |
 
-## Adjacent (out of scope) — scoped runs only; omit if empty
+## Adjacent (out of scope) -- scoped runs only; omit if empty
 Real issues a tool surfaced just outside the target (e.g. the function a changed
-line calls). Listed, not mixed into the plan above — the user chose the scope.
+line calls). Listed, not mixed into the plan above -- the user chose the scope.
 
 | Finding (file:line) | Smell | Why flagged | In scope to fix? |
 |---------------------|-------|-------------|------------------|
-| ... | ... | adjacent to a target change | no — would need a wider sniff |
+| ... | ... | adjacent to a target change | no -- would need a wider sniff |
 
 ## Applied this run (only if step 7 apply ran)
 | Finding | Change | Verification | Result |

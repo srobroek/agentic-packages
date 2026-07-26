@@ -1,7 +1,7 @@
 {
   "name": "hooks-chezmoi-guard",
   "version": "2.1.1",
-  "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source — the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
+  "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source -- the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },
