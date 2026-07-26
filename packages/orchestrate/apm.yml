@@ -44,7 +44,7 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/beads#>=0.7.1 <1.0.0
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.2 <1.0.0
-    - srobroek/agentic-packages/packages/pr-shepherd#>=0.15.2 <1.0.0
+    - srobroek/agentic-packages/packages/pr-shepherd#>=1.0.0 <2.0.0
     - srobroek/agentic-packages/packages/agent-quality-guards#>=1.0.1 <2.0.0
     - srobroek/agentic-packages/packages/hooks-worktrunk#>=2.0.0 <3.0.0
     - srobroek/agentic-packages/packages/worktrunk-writer#>=2.0.0 <3.0.0
