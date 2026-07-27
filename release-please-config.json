@@ -1471,18 +1471,6 @@
           "jsonpath": "$.version"
         }
       ]
-    },
-    "packages/write-docs": {
-      "release-type": "simple",
-      "component": "write-docs",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
     }
   }
 }

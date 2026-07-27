@@ -61,3 +61,6 @@ reviews/
 
 # Agent conformance run outputs (gitignored; see packages/agent-conformance)
 .conformance-runs/
+
+# Audit raw evidence: per-agent transcripts (large, disposable).
+.audit-2026-07/raw/

@@ -1323,18 +1323,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "agentic-maintenance"
-    },
-    {
-      "name": "write-docs",
-      "source": {
-        "source": "local",
-        "path": "./packages/write-docs"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "docs"
     }
   ]
 }

@@ -1188,7 +1188,7 @@
     },
     {
       "name": "steering-docs-specs",
-      "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the write-docs package. Opt-in steering.",
+      "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the slopvac package (srobroek/slopvac). Opt-in steering.",
       "version": "3.1.1",
       "tags": [
         "steering",
@@ -1418,18 +1418,6 @@
       ],
       "category": "agentic-maintenance",
       "source": "./packages/write-agentic"
-    },
-    {
-      "name": "write-docs",
-      "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a Vale prose gate (house style plus the pinned vale-ai-tells package) and a SubagentStart hook that injects the same documentation discipline into every subagent. Requires the vale binary on PATH.",
-      "version": "3.0.0",
-      "tags": [
-        "skill",
-        "docs",
-        "writing"
-      ],
-      "category": "docs",
-      "source": "./packages/write-docs"
     }
   ]
 }

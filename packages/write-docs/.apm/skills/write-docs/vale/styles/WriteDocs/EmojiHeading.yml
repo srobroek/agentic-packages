@@ -1,9 +1,0 @@
-# W2 in the retired slop-lint.py. `scope: heading` replaces the old manual
-# leading-`#` test.
-extends: existence
-message: "emoji in heading: %s — delete it"
-level: warning
-link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/references/ai-tells.md
-scope: heading
-raw:
-  - '[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{FE0F}]'
