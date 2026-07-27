@@ -1,5 +1,5 @@
 {
-  ".": "24.0.0",
+  ".": "24.1.0",
   "packages/agent-adversarial-challenger": "4.0.0",
   "packages/agent-builder": "8.0.0",
   "packages/agent-builder-high": "3.0.0",
@@ -104,8 +104,8 @@
   "packages/steering-git-workflow": "2.3.6",
   "packages/steering-global-bootstrap": "1.1.3",
   "packages/steering-infrastructure": "2.1.2",
-  "packages/steering-multi-agent": "0.0.0",
-  "packages/steering-pragmatic": "4.3.3",
+  "packages/steering-multi-agent": "1.0.0",
+  "packages/steering-pragmatic": "4.4.0",
   "packages/steering-project-structure": "1.1.2",
   "packages/steering-speckit": "3.3.2",
   "packages/steering-subagent-routing": "3.2.5",

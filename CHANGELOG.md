@@ -1,5 +1,12 @@
 # Changelog
 
+## [24.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.0.0...srobroek-agentic--v24.1.0) (2026-07-27)
+
+
+### Features
+
+* multi-agent coexistence steering package ([#782](https://github.com/srobroek/agentic-packages/issues/782)) ([f3278f3](https://github.com/srobroek/agentic-packages/commit/f3278f3ee81f8ae0ee874086df903ab9432f0b7b))
+
 ## [24.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v23.0.0...srobroek-agentic--v24.0.0) (2026-07-27)
 
 
