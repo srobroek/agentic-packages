@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v3.1.1...steering-docs-specs--v4.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780))
+
+### Refactors
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780)) ([3a8fd27](https://github.com/srobroek/agentic-packages/commit/3a8fd27dab5a5692ee0e669ca7942584355ec939))
+
 ## [3.1.1](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v3.1.0...steering-docs-specs--v3.1.1) (2026-07-25)
 
 

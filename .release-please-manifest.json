@@ -1,5 +1,5 @@
 {
-  ".": "23.0.0",
+  ".": "24.0.0",
   "packages/agent-adversarial-challenger": "4.0.0",
   "packages/agent-builder": "8.0.0",
   "packages/agent-builder-high": "3.0.0",
@@ -99,7 +99,7 @@
   "packages/steering-backend": "1.1.2",
   "packages/steering-data": "1.1.2",
   "packages/steering-delivery": "1.1.4",
-  "packages/steering-docs-specs": "3.1.1",
+  "packages/steering-docs-specs": "4.0.0",
   "packages/steering-frontend": "2.1.2",
   "packages/steering-git-workflow": "2.3.6",
   "packages/steering-global-bootstrap": "1.1.3",

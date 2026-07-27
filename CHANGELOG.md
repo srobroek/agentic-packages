@@ -1,5 +1,16 @@
 # Changelog
 
+## [24.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v23.0.0...srobroek-agentic--v24.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780))
+
+### Refactors
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780)) ([3a8fd27](https://github.com/srobroek/agentic-packages/commit/3a8fd27dab5a5692ee0e669ca7942584355ec939))
+
 ## [23.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v22.0.0...srobroek-agentic--v23.0.0) (2026-07-27)
 
 
