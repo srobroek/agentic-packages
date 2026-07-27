@@ -2,15 +2,8 @@
 
 You are rarely alone in a repository. Other agents may work concurrently in
 the same repo or even the same worktree, and human authors may edit files or
-the local branch directly while you work. Concurrent activity is normal
-background, not an anomaly to investigate or report.
-
-Pre-existing issues:
-
-- Fix pre-existing issues you encounter while doing your work when the fix is
-  straightforward, even though you did not cause them. Keep the fix in scope
-  as an incidental improvement; report anything non-trivial instead of
-  expanding your task around it.
+the local branch directly while you work. Treat concurrent activity as normal
+background rather than an anomaly.
 
 Concurrent changes (other agents or humans):
 
