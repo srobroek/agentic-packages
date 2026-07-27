@@ -14,7 +14,7 @@ beads_opt() {
 # beads_bounded <seconds> <cmd...> -> run with a wall-clock bound where possible.
 # `timeout` is GNU; macOS ships it only via coreutils (as gtimeout). Degrade to
 # running bare rather than skipping the work, but use a bound wherever one exists:
-# Dolt network operations against a blocked or unreachable remote do not fail fast.
+# Dolt network operations do not always fail fast.
 beads_bounded() {
   _bt="$1"; shift
   if command -v timeout >/dev/null 2>&1; then
@@ -34,30 +34,24 @@ beads_has_dolt_remote() {
   esac
 }
 
-# beads_push_permitted <cwd> <timeout> -> 0 when a push to this repo's git remote
-# would be permitted, 1 when a policy guard refuses it.
+# beads_push_permitted <cwd> <timeout>
+#   0 = a push from here would go through
+#   1 = something rejected it at pre-push time
+#   2 = no answer (unreachable, timed out, no origin)
 #
-# Asks the guard instead of guessing: `git push --dry-run` runs the same pre-push
-# checks as a real push but transfers nothing and mutates no remote, so it is a
-# safe probe. The ref is deliberately a name that does not exist -- with
-# --dry-run nothing is created either way, and using a real branch could report a
-# non-fast-forward that has nothing to do with policy.
+# Probes with `git push --dry-run`, which runs the same pre-push path as a real
+# push while transferring nothing and mutating no remote.
 #
-# Detects the refusal by its message rather than by exit status: a dry-run exits
+# Reads the outcome from the message, not the exit status: a dry-run exits
 # non-zero for many ordinary reasons (no upstream, unreachable network, nothing
-# to push), so status alone cannot separate "policy says no" from "try later".
+# to push), so status alone cannot tell a rejection from "try later".
 #
-# Returns 2, not 1, when the probe could not reach a verdict -- an unresolvable
-# host, a timeout, no origin. That distinction matters: a refusal is permanent and
-# the operator should switch to JSONL, while an unreachable remote is transient
-# and retrying later is right. Collapsing them would tell someone to change their
-# whole sync strategy because their wifi dropped.
+# The 1/2 split matters. A rejection is durable and calls for a different route;
+# an unreachable remote is transient and calls for retrying. Collapsing them would
+# advise changing a sync strategy over a dropped connection.
 #
 # NOTE git resolves the remote host BEFORE running pre-push hooks, so an
-# unreachable URL never reaches the guard and cannot produce a verdict either way.
-#
-# NEVER attempt to work around a refusal. If the guard says no, the JSONL path is
-# the sanctioned alternative and the operator can request an exemption.
+# unreachable URL yields no answer either way.
 beads_push_permitted() {
   _cwd="$1"; _to="${2:-30}"
   git -C "$_cwd" rev-parse --git-dir >/dev/null 2>&1 || return 2
@@ -65,15 +59,14 @@ beads_push_permitted() {
 
   _out="$(
     beads_bounded "$_to" git -C "$_cwd" push --dry-run origin \
-      "HEAD:refs/heads/beads-sync-policy-probe" 2>&1 || true
+      "HEAD:refs/heads/beads-sync-probe" 2>&1 || true
   )"
   case "$_out" in
-    *"blocked your push"*|*"Code Defender"*|*"unapproved"*|\
-    *"not currently on the allow list"*)
-      return 1 ;;
     *"Could not resolve host"*|*"unable to access"*|*"Connection refused"*|\
     *"Could not read from remote"*|*"timed out"*|*"terminated"*)
       return 2 ;;
+    *"pre-push hook declined"*|*"blocked your push"*|*"not currently on the allow list"*)
+      return 1 ;;
   esac
   return 0
 }

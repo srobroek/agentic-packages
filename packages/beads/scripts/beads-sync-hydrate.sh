@@ -24,8 +24,8 @@ set -euo pipefail
 #
 # Portability floor: bash 3.2.57 + BSD userland. No PCRE, no \b.
 
-# Longest a session start may wait on the network. `bd dolt pull` against an
-# unreachable or guard-blocked remote does not fail fast.
+# Longest a session start may wait on the network: `bd dolt pull` against an
+# unreachable remote does not always fail fast.
 PULL_TIMEOUT="${BEADS_SYNC_PULL_TIMEOUT:-60}"
 
 cwd="$PWD"
@@ -53,9 +53,8 @@ add_note() { if [ -z "$notes" ]; then notes="$1"; else notes="$notes $1"; fi; }
 if beads_has_dolt_remote "$cwd" && beads_opt "$cwd" custom.dolt-auto-pull; then
   if ! beads_bounded "$PULL_TIMEOUT" env BD_NO_PAGER=1 BD_NON_INTERACTIVE=1 \
        bd -C "$cwd" dolt pull >/dev/null 2>&1; then
-    # Expected in three cases, none fatal: nothing has ever been pushed ("no
-    # branches found in remote"), the network is unreachable, or a push guard
-    # rejects the remote. The JSONL step below is the fallback for exactly these.
+    # Non-fatal: the remote may be empty (nothing pushed yet) or unreachable.
+    # The JSONL step below is the fallback for exactly these.
     add_note "bd dolt pull did not complete (remote empty, unreachable, or blocked); using JSONL if present."
   fi
 fi

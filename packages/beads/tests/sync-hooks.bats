@@ -351,3 +351,65 @@ HOOK
   run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 10"
   [ "$status" -eq 0 ]
 }
+
+# --- push: the runner indirection (extension point for guarded hosts) --------
+
+@test "push: a refusal with no wrapper configured advises the alternatives" {
+  init_beads
+  bd -C "$REPO" create "a bead" >/dev/null 2>&1
+  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
+  git init -q --bare "$BATS_TEST_TMPDIR/bare.git"
+  git -C "$REPO" remote add origin "$BATS_TEST_TMPDIR/bare.git"
+  git -C "$REPO" commit -q --allow-empty -m base
+  bd -C "$REPO" dolt remote add origin "git+file://$BATS_TEST_TMPDIR/bare.git" \
+    >/dev/null 2>&1 || skip "cannot add dolt remote"
+  # Stand in for a corporate guard.
+  mkdir -p "$REPO/.githooks"
+  printf '#!/bin/sh\necho "Code Defender blocked your push" >&2\nexit 1\n' \
+    > "$REPO/.githooks/pre-push"
+  chmod +x "$REPO/.githooks/pre-push"
+  git -C "$REPO" config core.hooksPath .githooks
+
+  BEADS_SYNC_PROBE_TIMEOUT=10 run run_push "git commit -m x"
+  [ "$status" -eq 0 ]
+  # Names every sanctioned route rather than just failing.
+  [[ "$output" == *"custom.bd-push-command"* ]]
+  [[ "$output" == *"jsonl-git-sync"* ]]
+}
+
+@test "push: a refusal WITH a wrapper configured runs the wrapper" {
+  init_beads
+  bd -C "$REPO" create "a bead" >/dev/null 2>&1
+  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
+  git init -q --bare "$BATS_TEST_TMPDIR/bare2.git"
+  git -C "$REPO" remote add origin "$BATS_TEST_TMPDIR/bare2.git"
+  git -C "$REPO" commit -q --allow-empty -m base
+  bd -C "$REPO" dolt remote add origin "git+file://$BATS_TEST_TMPDIR/bare2.git" \
+    >/dev/null 2>&1 || skip "cannot add dolt remote"
+  mkdir -p "$REPO/.githooks"
+  printf '#!/bin/sh\necho "Code Defender blocked your push" >&2\nexit 1\n' \
+    > "$REPO/.githooks/pre-push"
+  chmod +x "$REPO/.githooks/pre-push"
+  git -C "$REPO" config core.hooksPath .githooks
+
+  # A stub wrapper standing in for dbd: records that it was invoked with the
+  # same argv bd takes. This is the contract the indirection depends on -- a
+  # local package cannot remove this hook, so it must be able to redirect it.
+  mkdir -p "$BATS_TEST_TMPDIR/bin"
+  cat > "$BATS_TEST_TMPDIR/bin/fakebd" <<'WRAP'
+#!/bin/sh
+echo "$@" > "$FAKEBD_LOG"
+exit 0
+WRAP
+  chmod +x "$BATS_TEST_TMPDIR/bin/fakebd"
+  bd -C "$REPO" config set custom.bd-push-command fakebd >/dev/null 2>&1
+
+  FAKEBD_LOG="$BATS_TEST_TMPDIR/wrapper.log" \
+    PATH="$BATS_TEST_TMPDIR/bin:$PATH" \
+    BEADS_SYNC_PROBE_TIMEOUT=10 run run_push "git commit -m x"
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/wrapper.log" ]
+  [ "$(cat "$BATS_TEST_TMPDIR/wrapper.log")" = "dolt push" ]
+  # Succeeded through the wrapper, so nothing to report.
+  [ -z "$output" ]
+}
