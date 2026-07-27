@@ -1,4 +1,4 @@
 [tools]
 # beads CLI — orchestrate/beads packages exercise it in tests; CI installs
 # the same pinned version via mise-action.
-"aqua:gastownhall/beads" = "1.1.0"
+"aqua:gastownhall/beads" = "1.1.2"
