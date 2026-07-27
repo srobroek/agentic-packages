@@ -91,18 +91,39 @@ DEFAULT Cross-machine: one pull before fan-out, one push after updates.
 NOT `bd import` of issues.jsonl by hand -- `bd dolt pull` is the sync path,
   and in a JSONL-over-git repo (below) the hooks own both halves.
 
+SYNC HOOKS (Dolt first, JSONL only as fallback)
+MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
+  issue rows only -- no Dolt branches, commit history, or non-issue tables. Reach
+  for JSONL only where the native path cannot run.
+DEFAULT Both halves off. `beads-sync-hydrate.sh` (SessionStart) and
+  `beads-sync-stage.sh` (PreToolUse:Bash) exit having done nothing until the repo
+  opts in, so installing the package changes no existing repo.
+DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
+  config" authority the rule above allows. Pull is read-only and cannot lose
+  local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
+  a blocked remote does not fail fast.
+NOT Automatic push from any hook. Push mutates a remote and can hang (no return
+  inside 120s against a guard-blocked remote). It stays a deliberate act.
+DEFAULT Prefer bd's own `export.auto` (throttled export after every write) over
+  hook-driven export. Two gaps keep `beads-sync-stage.sh` necessary:
+  `export.git-add: true` does not actually stage the file, and throttling lets it
+  lag the database at the moment of commit.
+GOTCHA `bd config set export.auto true` writes a FLAT `export.auto:` key beside
+  the nested `export:` block, so nothing reads it and auto-export silently never
+  fires. Nest it by hand under `export:` in `.beads/config.yaml`.
+
 JSONL OVER GIT (fallback where `bd dolt push` cannot run)
-DEFAULT Off. `bd dolt push` stays the sync path; this exists for repos where it
-  is blocked -- it writes `refs/dolt/blobstore/`, which corporate push guards
-  reject as an unapproved-remote push and which needs credentials Dolt cannot
-  prompt for.
+DEFAULT Off. Exists for repos where the native push is blocked -- it writes
+  `refs/dolt/blobstore/`, which corporate push guards reject as an
+  unapproved-remote push and which needs credentials Dolt cannot prompt for.
+  Note pull and push differ: a guard blocks pushes while fetches still work.
 MUST Opt in per repo with `bd config set custom.jsonl-git-sync true`, commit
   `.beads/issues.jsonl merge=union` to `.gitattributes`, and confirm the file is
   not git-ignored (a stealth `bd init` excludes `.beads/` via
-  `.git/info/exclude`, which makes `git add` fail silently).
-MUST Leave both halves to the hooks: `beads-jsonl-export.sh` refreshes and
-  stages the file on `git commit`, `beads-jsonl-import.sh` hydrates at session
-  start. Neither commits; the agent's own commit carries the file.
+  `.git/info/exclude`, which makes `git add` fail silently -- the hook detects
+  this and says so).
+MUST Leave both halves to the hooks; neither commits, so the agent's own commit
+  carries the file.
 DEFAULT Trust the importer's resolution: newer `updated_at` wins, ties keep
   local, comments/labels/dependencies merge, local-only beads are never deleted,
   and stale rows are skipped and reported. `union` deliberately leaves duplicate
@@ -112,8 +133,6 @@ NOT `--allow-stale` unless deliberately restoring an older snapshot -- it
 MUST On a stale-skip warning at session start, commit a fresh export before
   pulling peer changes: the committed file is behind the local database, so the
   next export would overwrite what a peer committed.
-NOT A substitute for `bd dolt push` where that works -- export carries issue
-  records only, no Dolt branches, commit history, or non-issue tables.
 
 GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
 

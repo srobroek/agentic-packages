@@ -11,8 +11,8 @@
           },
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-jsonl-export.sh",
-            "statusMessage": "Refreshing beads JSONL export for commit..."
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.sh",
+            "statusMessage": "Staging beads JSONL for commit..."
           }
         ]
       }
@@ -35,8 +35,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-jsonl-import.sh",
-            "statusMessage": "Hydrating beads from committed JSONL..."
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-hydrate.sh",
+            "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
+            "timeout": 90
           }
         ]
       }
