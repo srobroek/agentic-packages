@@ -65,8 +65,9 @@ still belongs to `reviewer`, a researcher, or an advisor.
 
 ### Which domain-specialist rung
 
-Two rungs. The gap is a model step AND an effort step on both vendors: Claude
-opus/medium against opus/high, Codex Sol/medium against Sol/high.
+Two rungs. The gap is a model step AND an effort step at once on both runtimes,
+so the deep rung is not merely the default one thinking harder. The pins
+themselves live in `agent-models.yml` and the agent frontmatter.
 
 | Node needs | Route |
 |---|---|
