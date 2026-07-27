@@ -1,5 +1,5 @@
 name: speckit-beads
-version: 5.0.0
+version: 6.0.0
 description: >-
   Beads-native SpecKit workflow: ships the speckit-feature bd formula (the
   SpecKit phase spine as a molecule DAG with human gates at clarify approval,

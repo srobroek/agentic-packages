@@ -1,5 +1,16 @@
 # Changelog
 
+## [23.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v22.0.0...srobroek-agentic--v23.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* `project-setup` is no longer part of this marketplace. Install it from `srobroek/project-setup` directly.
+
+### Features
+
+* drop the external project-setup catalog entry ([#776](https://github.com/srobroek/agentic-packages/issues/776)) ([39c8501](https://github.com/srobroek/agentic-packages/commit/39c85017328614c8244f4b2611fc2e76d45b8f07))
+
 ## [22.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.2...srobroek-agentic--v22.0.0) (2026-07-27)
 
 
