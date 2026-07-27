@@ -1,5 +1,5 @@
 name: steering-multi-agent
-version: 1.0.0
+version: 1.0.1
 description: >-
   Multi-agent coexistence steering: tolerate concurrent agents and human authors
   in the same repo or worktree without reverting or reporting their benign
