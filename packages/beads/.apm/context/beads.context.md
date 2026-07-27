@@ -98,14 +98,15 @@ MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
 DEFAULT Every hook off until the repo opts in, so installing the package changes
   no existing repo: `beads-sync-hydrate.sh` (SessionStart, pull + JSONL import +
   report the last push), `beads-sync-stage.sh` (PreToolUse:Bash, stage the JSONL
-  on commit), `beads-sync-push.sh` (SessionEnd, publish), and
+  on commit), `beads-sync-push.sh` (SessionEnd on Claude / Stop on Codex, publish), and
   `beads-maintenance-check.sh` (SessionStart, size report).
 DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
   config" authority the rule above allows. Pull is read-only and cannot lose
   local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
   an unreachable remote does not always fail fast.
 DEFAULT Auto-push with `bd config set custom.dolt-auto-push true`.
-  `beads-sync-push.sh` runs at SessionEnd and DETACHES. Acceptable to automate
+  `beads-sync-push.sh` runs at end of session -- SessionEnd on Claude, Stop on
+  Codex, which has no SessionEnd event -- and DETACHES. Acceptable to automate
   because what moves is task records, not source: a Dolt push writes only
   `refs/dolt/blobstore/`, touches no branch, and is additive.
 DEFAULT One push per session, not per commit. An incremental push costs ~12s of

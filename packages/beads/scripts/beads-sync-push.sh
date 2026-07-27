@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# beads-sync-push.sh — SessionEnd hook (Claude + Codex).
+# beads-sync-push.sh — end-of-session hook: SessionEnd on Claude, Stop on Codex.
+#
+# The events differ because Codex has no SessionEnd; Stop is its nearest
+# end-of-turn signal. Codex also caps hook timeouts at 1-60s, which does not
+# constrain the push itself -- see the timeout note below.
 #
 # Publish bead state once, at the end of a session, so it does not sit unshared on
 # one machine.
@@ -29,9 +33,12 @@ set -euo pipefail
 #
 # Portability floor: bash 3.2.57 + BSD userland. No PCRE, no \b.
 
-# Bound on the detached push. Generous because a first push uploads accumulated
-# history: 90s was too low in practice and reported "did not complete" on a push
-# that was simply still running.
+# Bound on the DETACHED push, not on this hook: the hook returns as soon as the
+# background process is started, so a long bound here costs the session nothing.
+# Generous because a first push uploads accumulated history -- 90s was too low in
+# practice and reported "did not complete" on a push that was simply still
+# running. (Codex caps hook timeouts at 60s, which is fine for the same reason:
+# what has to finish inside the hook is the policy probe, not the push.)
 PUSH_TIMEOUT="${BEADS_SYNC_PUSH_TIMEOUT:-600}"
 PROBE_TIMEOUT="${BEADS_SYNC_PROBE_TIMEOUT:-30}"
 

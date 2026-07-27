@@ -40,7 +40,7 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-sync-hydrate.sh",
             "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
-            "timeout": 90
+            "timeout": 60
           },
           {
             "type": "command",
@@ -51,7 +51,7 @@
         ]
       }
     ],
-    "SessionEnd": [
+    "Stop": [
       {
         "matcher": "",
         "hooks": [
