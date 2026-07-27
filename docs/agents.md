@@ -29,8 +29,8 @@ runtime's transformer.
 | Agent | Description |
 | --- | --- |
 | `agent-adversarial-challenger` | Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications. |
-| `agent-coder` | Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch -- for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks. |
-| `agent-coder-high` | Escalated coding agent for complex bounded implementation and debugging. |
+| `agent-builder` | Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which runs in one of two modes the caller must name: `direct-edit` (edits the caller's tree in place; the caller commits) or `isolated` (own git worktree, commits continuously, hands back a reviewable branch). It refuses to start when the mode is unstated, because the two modes fail in opposite and unrecoverable directions. |
+| `agent-builder-high` | Escalated implementation agent for complex bounded work, difficult debugging, and cross-module behaviour changes. Ships `builder-high`, the escalation tier above `agent-builder`'s `builder`. |
 | `agent-explorer` | Read-only exploration agent for bounded code and configuration discovery. |
 | `agent-external-repo-worker` | Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work. |
 | `agent-operator` | Mechanical operator agent for tiny commands, formatting, and inventory steps. |
@@ -39,7 +39,6 @@ runtime's transformer.
 | `agent-reasoner` | Read-only reasoning agent for exceptional architecture, policy, and adversarial questions. |
 | `agent-reviewer-high` | Adversarial read-only reviewer for security-sensitive and broad-impact changes. |
 | `agent-reviewer-low` | Mechanical read-only reviewer for tiny changes with explicit criteria. |
-| `agent-worker` | Bounded implementation worker for changes without a more specific coding role. |
 <!-- END:agents -->
 
 ---

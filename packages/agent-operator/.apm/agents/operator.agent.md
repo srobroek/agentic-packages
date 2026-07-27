@@ -1,6 +1,7 @@
 ---
 name: operator
-effort: low
+model: opus
+effort: medium
 description: Executes tiny mechanical commands, formatting, and inventory steps with
   explicit targets and no design judgment.
 ---

@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 21.1.2
+version: 23.0.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -76,20 +76,20 @@ marketplace:
         - adversarial
         - critique
         - decision-review
-    - name: agent-coder
-      source: ./packages/agent-coder
+    - name: agent-builder
+      source: ./packages/agent-builder
       category: engineering
       tags:
         - agent
         - engineering
         - implementation
-    - name: agent-coder-high
-      source: ./packages/agent-coder-high
+    - name: agent-builder-high
+      source: ./packages/agent-builder-high
       category: engineering
       tags:
         - agent
-        - codex
-        - routing
+        - engineering
+        - implementation
     - name: agent-conformance
       source: ./packages/agent-conformance
       category: engineering
@@ -156,13 +156,6 @@ marketplace:
     - name: agent-reviewer-low
       source: ./packages/agent-reviewer-low
       category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-worker
-      source: ./packages/agent-worker
-      category: engineering
       tags:
         - agent
         - codex
@@ -646,15 +639,6 @@ marketplace:
       tags:
         - bundle
         - lifecycle
-    - name: project-setup
-      source: srobroek/project-setup
-      ref: project-setup-v0.5.2
-      category: project-lifecycle
-      tags:
-        - skill
-        - lifecycle
-        - setup
-        - scaffold
     - name: python-quality
       source: ./packages/python-quality
       category: languages

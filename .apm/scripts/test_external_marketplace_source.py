@@ -120,10 +120,10 @@ def test_external_marketplace_records_built():
 def test_external_marketplace_excludes_local_and_collisions():
     # Local packages never appear; a colliding external name (also a local dir)
     # is excluded from external_marketplace too (local wins).
-    mk = _marketplace({"name": "agent-coder", "source": "srobroek/elsewhere", "ref": "main"})
+    mk = _marketplace({"name": "agent-builder", "source": "srobroek/elsewhere", "ref": "main"})
     ctx = bi.build_context(mk)
     names = {r["name"] for r in ctx["external_marketplace"]}
-    assert "agent-coder" not in names
+    assert "agent-builder" not in names
     assert not any(bi._is_local_source(r.get("source")) for r in ctx["external_marketplace"])
 
 
@@ -200,14 +200,14 @@ def test_dict_form_external_source_preserved():
 
 
 def test_name_collision_local_wins_no_duplicate():
-    # 'agent-coder' is a real local package; an external entry with the same name
+    # 'agent-builder' is a real local package; an external entry with the same name
     # must be ignored (local wins) and NOT produce a second entry.
-    mk = _marketplace({"name": "agent-coder", "source": "srobroek/somewhere-else", "ref": "main"})
+    mk = _marketplace({"name": "agent-builder", "source": "srobroek/somewhere-else", "ref": "main"})
     ctx = bi.build_context(mk)
-    matches = [e for e in ctx["marketplace"]["entries"] if e["name"] == "agent-coder"]
-    assert len(matches) == 1, f"expected exactly one agent-coder entry, got {matches}"
-    assert matches[0]["source"] == "./packages/agent-coder"
-    warns = [w for w in ctx["marketplace"]["warnings"] if "agent-coder" in w and "ignored" in w]
+    matches = [e for e in ctx["marketplace"]["entries"] if e["name"] == "agent-builder"]
+    assert len(matches) == 1, f"expected exactly one agent-builder entry, got {matches}"
+    assert matches[0]["source"] == "./packages/agent-builder"
+    warns = [w for w in ctx["marketplace"]["warnings"] if "agent-builder" in w and "ignored" in w]
     assert warns, "expected a collision warning when local dir shadows external source"
 
 
@@ -219,8 +219,9 @@ def test_name_collision_local_wins_no_duplicate():
 def test_repo_block_local_entries_have_canonical_shape():
     # Local (./packages/<dir>) entries must keep the name/source/category/tags
     # shape with no git-source fields -- the common case must not regress. The
-    # repo also carries the project-setup EXTERNAL entry (a git source), so assert
-    # the invariant per-kind rather than "everything is local".
+    # assertion is per-kind rather than "everything is local" so it still holds
+    # whether or not the catalog currently carries an external git entry; it
+    # carries none today.
     ctx = bi.build_context()  # reads the repo's apm.yml
     entries = ctx["marketplace"]["entries"]
     assert entries, "no marketplace entries produced"

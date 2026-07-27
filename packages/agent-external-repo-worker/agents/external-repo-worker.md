@@ -1,7 +1,7 @@
 ---
 name: external-repo-worker
 description: Works in an external repo outside the caller project. Clones, discovers conventions, edits, verifies, and optionally publishes. Use when parent names a repo URL.
-model: sonnet
+model: opus
 effort: medium
 permissionMode: acceptEdits
 ---
@@ -22,7 +22,7 @@ that are outside the caller project's current repo root.
 - Otherwise create a **unique per-invocation** checkout directory:
   `mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`.
   Never default to the bare shared path: other agents may be working in the
-  same external repo at the same time, and a shared checkout means interleaved
+  same external repo in the same run, and a shared checkout means interleaved
   edits, index races, and corrupted state. Isolation-by-different-repo does not
   remove the need to isolate *within* that repo.
 - Reuse an existing checkout only when the parent explicitly pointed you at

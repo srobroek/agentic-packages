@@ -1,5 +1,30 @@
 # Changelog
 
+## [13.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v12.0.0...orchestrate--v13.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([f215865](https://github.com/srobroek/agentic-packages/commit/f21586533af761142538ca7082bd37cc5bd021ef))
+
+## [12.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v11.0.2...orchestrate--v12.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766))
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* **orchestrate:** read the expected bd version from mise.toml ([#773](https://github.com/srobroek/agentic-packages/issues/773)) ([26bbaac](https://github.com/srobroek/agentic-packages/commit/26bbaacfa82d03ca49acb6bb62fa476faff184f6))
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766)) ([f8fb26a](https://github.com/srobroek/agentic-packages/commit/f8fb26aacaa45cbf7ab9ceaa42855089d34b6673))
+
 ## [11.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v11.0.1...orchestrate--v11.0.2) (2026-07-26)
 
 

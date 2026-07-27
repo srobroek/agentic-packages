@@ -1,6 +1,6 @@
 {
   "name": "agentic-maintenance",
-  "version": "9.0.0",
+  "version": "11.0.0",
   "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
   "author": {
     "name": "Sjors Robroek"
@@ -17,7 +17,7 @@
     },
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/agent-coder"
+      "path": "packages/agent-builder"
     },
     {
       "git": "srobroek/agentic-packages",

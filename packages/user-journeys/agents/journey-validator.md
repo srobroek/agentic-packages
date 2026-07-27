@@ -2,8 +2,8 @@
 name: journey-validator
 description: >-
   Validates one user journey against the running product with evidence, intent-gated triage, run files, and reported findings. Never edits product code.
-model: sonnet
-effort: high
+model: opus
+effort: medium
 permissionMode: acceptEdits
 ---
 

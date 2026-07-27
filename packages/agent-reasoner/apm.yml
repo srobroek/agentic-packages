@@ -1,5 +1,5 @@
 name: agent-reasoner
-version: 3.0.0
+version: 4.0.0
 description: >-
   Read-only reasoning agent for exceptional architecture, policy, and
   adversarial questions.

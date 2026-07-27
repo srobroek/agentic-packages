@@ -11,7 +11,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 <!-- BEGIN:bundles -->
 | Bundle | What it gives you | Includes |
 | --- | --- | --- |
-| `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-coder`, `agent-pr-reviewer` |
+| `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-builder`, `agent-pr-reviewer` |
 | `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `codex-hook-contract` | Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations | self-contained |
@@ -55,7 +55,7 @@ dependencies:
     - mattpocock/skills/skills/productivity/grilling#main      # external, by source
 ```
 
-APM dependencies are repo-locators, not marketplace shortnames -- `code-review@srobroek-agentic` is **not** valid in `dependencies.apm` (that form only works on the `apm install` command line). The `owner/repo/path#ref` form resolves the same way for this repo's own dev checkout and for an external consumer installing from the marketplace.
+APM dependencies are repo-locators, not marketplace shortnames -- `code-review@srobroek-agentic` is *never* valid in `dependencies.apm` (that form only works on the `apm install` command line). The `owner/repo/path#ref` form resolves the same way for this repo's own dev checkout and for an external consumer installing from the marketplace.
 
 **Caret ranges and the update workflow.** Member deps use `#^<version>` caret ranges that resolve to the latest matching `<pkg>-v<X.Y.*>` tag via the lockfile. Running `apm update` advances all members to their latest compatible release automatically. When a member bumps its minor or major version you still edit the bundle's range explicitly (making it a `feat`/`fix` commit release-please can track). External deps (mattpocock and others) stay pinned to `#main`.
 

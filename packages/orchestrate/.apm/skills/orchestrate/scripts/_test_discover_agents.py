@@ -177,16 +177,27 @@ class DiscoverAgentsTest(unittest.TestCase):
 
         self.assertEqual([agent["name"] for agent in agents], ["coder"])
 
+    @staticmethod
+    def frontmatter_model(agents_dir, name: str) -> str:
+        """The `model:` line in the agent's own definition -- the source of truth."""
+        text = (agents_dir / f"{name}.agent.md").read_text(encoding="utf-8")
+        for line in text.split("---")[1].splitlines():
+            if line.startswith("model:"):
+                return line.split(":", 1)[1].strip()
+        raise AssertionError(f"{name}.agent.md has no model: pin")
+
     def test_real_package_agents_preserve_model_and_tools(self) -> None:
         package_agents = SCRIPT.parents[3] / "agents"
 
         agents = {agent["name"]: agent for agent in self.collect(package_agents)}
 
-        self.assertEqual(agents["domain-specialist"]["model"], "sonnet")
+        # Assert the discovered model matches the definition's own frontmatter
+        # rather than a literal. These pins move whenever routing is re-evaluated,
+        # and a hardcoded tier makes every such change look like a discovery bug.
+        for name in ("domain-specialist", "researcher", "shepherd"):
+            self.assertEqual(agents[name]["model"], self.frontmatter_model(package_agents, name))
         self.assertIn("Agent", str(agents["domain-specialist"]["tools"]))
-        self.assertEqual(agents["researcher"]["model"], "sonnet")
         self.assertIn("WebSearch", str(agents["researcher"]["tools"]))
-        self.assertEqual(agents["shepherd"]["model"], "sonnet")
 
     def test_quality_guard_package_agents_preserve_model_and_tools(self) -> None:
         package_agents = (
@@ -204,7 +215,7 @@ class DiscoverAgentsTest(unittest.TestCase):
             "maintenance-metrics-reader",
             "reviewer-mechanics",
         ):
-            self.assertEqual(agents[name]["model"], "haiku")
+            self.assertEqual(agents[name]["model"], self.frontmatter_model(package_agents, name))
             self.assertEqual(agents[name]["tools"], "Read, Grep, Glob, Bash")
 
     def test_json_is_byte_deterministic(self) -> None:

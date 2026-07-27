@@ -1,6 +1,7 @@
 ---
 name: explorer
-effort: medium
+model: opus
+effort: low
 description: Maps relevant files, dependencies, and runtime paths for a bounded question
   without editing or proposing architecture.
 ---

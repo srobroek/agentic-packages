@@ -7,13 +7,13 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 <!-- BEGIN:intro-counts -->
 - **30 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
 - **36 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
-- **12 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
+- **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **17 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
 - **15 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
-Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
+Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-builder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
 
 ---
 
@@ -340,7 +340,7 @@ The full inventory lives in `docs/`:
 - **[docs/agents.md](docs/agents.md)** -- the sub-agents (+ the SpecKit agents)
 - **[docs/steering.md](docs/steering.md)** -- the opt-in steering packages
 - **[docs/hooks-and-mcp.md](docs/hooks-and-mcp.md)** -- the hook packages and MCP server packages
-- **[docs/external-repos.md](docs/external-repos.md)** -- catalog entries hosted in their own git repos (fetched on install, not vendored)
+- **[docs/external-repos.md](docs/external-repos.md)** -- how a catalog entry can live in its own git repo and be fetched on install rather than vendored
 - **[docs/speckit.md](docs/speckit.md)** -- the SpecKit orchestration system: setup, the DAG, the hook dispatcher, and the how/why
 - **[docs/orchestrate.md](docs/orchestrate.md)** -- the multi-agent orchestration system: roles, the bead/wisp object model, two-phase activation, the merge path, and the enforcement hooks
 
@@ -370,7 +370,7 @@ fill in the content; [`templates/README.md`](templates/README.md) documents the
 canonical layout and the per-type gotchas. Then:
 
 1. Create `packages/<name>/apm.yml` (`type:` one of `skill | instructions | hooks | hybrid`; explicit `target`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Agent packages use `type: hybrid`; use `target: all` for portable task agents and `target: codex` for Codex-only raw/semantic profiles. Add `.apm/agent-models.yml` beside every agent source so post-deploy injection can restore the Codex model and reasoning effort. Use `type: hooks` for a package whose only primitive is hooks.
-2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** -- `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** -- an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
+2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** -- `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does *never* -- an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
 3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
 
 Gotchas worth knowing:
@@ -379,6 +379,6 @@ Gotchas worth knowing:
 - **Root `apm.yml` uses `targets:` (a list), not `target: all`.** `apm pack` (0.17.x) rejects the `all` scalar; the list form (`targets: [claude, codex]`) matches the marketplace `outputs:` block and is what pack/compile both accept.
 - **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge -- so a bundle that depends on a new package must land **after** that package is released.
 
-**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and fail loudly when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
+**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and exit non-zero with the failing check named when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
 
 License: Apache-2.0 (see [`LICENSE`](LICENSE)). Bundles that only aggregate third-party MIT-licensed packages retain their upstream MIT license, declared per package in `apm.yml`.

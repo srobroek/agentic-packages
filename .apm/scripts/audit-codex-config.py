@@ -60,7 +60,7 @@ CLAUDE_EVENTS = {
     "ElicitationResult",
 }
 CODEX_DIFFERENCE_PACKAGES = {
-    "agent-coder",
+    "agent-builder",
     "hooks-attribution-guard",
     "hooks-bash-safety",
     "hooks-chezmoi-guard",
@@ -133,7 +133,7 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-codex-hooks.json": "target-specific compatibility",
 }
 OBSOLETE_HOOK_MANIFESTS = {
-    "packages/agent-coder/.apm/hooks/agent-coder-claude-hooks.json",
+    "packages/agent-builder/.apm/hooks/agent-builder-claude-hooks.json",
 }
 COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
     "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",

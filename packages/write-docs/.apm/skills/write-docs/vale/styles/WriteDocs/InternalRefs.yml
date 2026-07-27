@@ -12,7 +12,11 @@ message: "internal reference: %s — consumer docs describe the released artifac
 level: error
 link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/references/consumer-docs.md
 ignorecase: true
+# `specs?/` must look like a real path: the segment after the slash has to reach a
+# `.` or a second `/`. Bare `spec/word` also matches prose alternations that name
+# two kinds of input ("Spec/task context", "PR/spec/commit"), which point at
+# nothing on disk.
 raw:
-  - '(\bspecs?/|\.specify/|\bADRs?\b|\bADR[- ]?\d+|\bconstitution\b|'
+  - '(\bspecs?/[\w.-]*[./]|\.specify/|\bADRs?\b|\bADR[- ]?\d+|\bconstitution\b|'
   - '\bdesign doc(ument)?\b|per the spec\b|as specified in\b|'
   - 'extracted from\b|mirrors (the )?\w+ (package|repo)|aligned with\b)'

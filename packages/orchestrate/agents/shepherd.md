@@ -1,8 +1,8 @@
 ---
 name: shepherd
 description: In-run merge shepherd. Lands approved branches via draft PRs, manages PR state only, reclaims worktrees.
-model: sonnet
-effort: high
+model: opus
+effort: medium
 permissionMode: acceptEdits
 tools:
   - Read
@@ -77,7 +77,7 @@ this run owns. Never call `pr-shepherd`'s scripts.
    raw Git worktree lifecycle commands.
 5. Release the repository sheepdog with your own `bd` calls after every landing,
    bounce, wait, refusal, or failure. Close the wisp and clear its assignee --
-   a closed wisp whose assignee still names you refuses the next generation's
+   a closed wisp whose assignee still names you refuses the successor's
    claim. Never call another package's scripts to do it.
 
 ## Bounce

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.6](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.5...steering-git-workflow--v2.3.6) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
 ## [2.3.5](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.4...steering-git-workflow--v2.3.5) (2026-07-26)
 
 

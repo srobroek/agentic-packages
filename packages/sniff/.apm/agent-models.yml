@@ -3,7 +3,7 @@ agents:
   bloodhound:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: high
+      reasoning_effort: xhigh
   refactor-challenger:
     codex:
       model: gpt-5.6-sol

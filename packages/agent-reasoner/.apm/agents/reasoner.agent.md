@@ -1,5 +1,6 @@
 ---
 name: reasoner
+model: opus
 effort: high
 description: Resolves one exceptional architecture, policy, or adversarial reasoning
   question without implementation ownership.

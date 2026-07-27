@@ -1,5 +1,5 @@
 name: agentic-maintenance
-version: 9.0.0
+version: 11.0.0
 description: >-
   Maintain your agentic assets: audit and optimize steering, write new skills,
   with the coder and PR reviewer agents.
@@ -15,5 +15,5 @@ dependencies:
   apm:
     - srobroek/agentic-packages/packages/audit-steering#>=2.1.2 <3.0.0
     - srobroek/agentic-packages/packages/write-agentic#>=4.0.1 <5.0.0
-    - srobroek/agentic-packages/packages/agent-coder#>=7.0.2 <8.0.0
+    - srobroek/agentic-packages/packages/agent-builder#>=8.0.0 <9.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.1.4 <4.0.0

@@ -1,5 +1,28 @@
 # Changelog
 
+## [23.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v22.0.0...srobroek-agentic--v23.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* `project-setup` is no longer part of this marketplace. Install it from `srobroek/project-setup` directly.
+
+### Features
+
+* drop the external project-setup catalog entry ([#776](https://github.com/srobroek/agentic-packages/issues/776)) ([39c8501](https://github.com/srobroek/agentic-packages/commit/39c85017328614c8244f4b2611fc2e76d45b8f07))
+
+## [22.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.2...srobroek-agentic--v22.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
 ## [21.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.1...srobroek-agentic--v21.1.2) (2026-07-26)
 
 

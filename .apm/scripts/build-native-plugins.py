@@ -435,6 +435,38 @@ def _sync_dir(src: Path, dst: Path, rel: str, pkg: str, check: bool) -> list[str
     return stale
 
 
+CODEX_CATALOG = ROOT / ".agents/plugins/marketplace.json"
+
+
+def _render_codex_catalog(ctx: dict) -> str:
+    """Render the Codex marketplace catalog from the inventory walk.
+
+    `apm pack` also writes this file, but it ignores each package's `target:` and
+    so lists every marketplace member -- including the Claude-only ones (the six
+    `lsp-*` packages, `agent-conformance`, `hooks-subagent-model`) and any
+    external git member, none of which a Codex install can resolve from
+    `./packages/<name>`. Owning it here keeps membership and `target:` in
+    agreement and puts the file under `--check`, so drift fails CI instead of
+    relying on someone reverting `apm pack`'s output by hand.
+    """
+    existing = json.loads(CODEX_CATALOG.read_text(encoding="utf-8"))
+    entries = []
+    for pkg in ctx["packages"]:
+        if "codex" not in set(pkg.get("targets") or ()):
+            continue
+        entry = {
+            "name": pkg["name"],
+            "source": {"source": "local", "path": f"./packages/{pkg['dirname']}"},
+            "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+        }
+        if pkg.get("category"):
+            entry["category"] = pkg["category"]
+        entries.append(entry)
+    out = {k: v for k, v in existing.items() if k != "plugins"}
+    out["plugins"] = sorted(entries, key=lambda e: e["name"])
+    return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Diff vs committed; exit 1 on drift.")
@@ -459,6 +491,15 @@ def main(argv: list[str] | None = None) -> int:
         elif not args.check and plan:
             n_written += 1
 
+    catalog = _render_codex_catalog(ctx)
+    n_codex = len(json.loads(catalog)["plugins"])
+    catalog_stale = CODEX_CATALOG.read_text(encoding="utf-8") != catalog
+    if catalog_stale:
+        if args.check:
+            all_stale.append(".agents/plugins/marketplace.json")
+        else:
+            CODEX_CATALOG.write_text(catalog, encoding="utf-8")
+
     if args.check:
         if all_stale:
             print("Native plugin layout out of date:")
@@ -472,6 +513,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(f"generated native plugin layout for {n_written} package(s)")
+    if catalog_stale:
+        print(f"regenerated Codex catalog: {n_codex} codex-target package(s)")
     return 0
 
 

@@ -1,7 +1,8 @@
 ---
 name: docs-guard
 description: Checks scoped documentation and documentation lint findings before orchestrate review.
-model: haiku
+model: sonnet
+effort: high
 permissionMode: plan
 tools:
   - Read
