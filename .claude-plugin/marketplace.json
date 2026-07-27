@@ -272,7 +272,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "14.0.0",
+      "version": "15.0.0",
       "tags": [
         "bundle",
         "baseline"
