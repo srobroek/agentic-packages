@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Compile APM global instructions into Claude and Codex root context files."""
 
 from __future__ import annotations
