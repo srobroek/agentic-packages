@@ -21,7 +21,7 @@
     {
       "name": "agent-builder",
       "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which runs in one of two modes the caller must name: `direct-edit` (edits the caller's tree in place; the caller commits) or `isolated` (own git worktree, commits continuously, hands back a reviewable branch). It refuses to start when the mode is unstated, because the two modes fail in opposite and unrecoverable directions.",
-      "version": "7.0.2",
+      "version": "8.0.0",
       "tags": [
         "agent",
         "engineering",
@@ -33,7 +33,7 @@
     {
       "name": "agent-builder-high",
       "description": "Escalated implementation agent for complex bounded work, difficult debugging, and cross-module behaviour changes. Ships `builder-high`, the escalation tier above `agent-builder`'s `builder`.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "engineering",
@@ -45,7 +45,7 @@
     {
       "name": "agent-conformance",
       "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports -- no LLM required for the engine.",
-      "version": "4.0.0",
+      "version": "5.0.0",
       "tags": [
         "testing",
         "agents",
@@ -57,7 +57,7 @@
     {
       "name": "agent-explorer",
       "description": "Read-only exploration agent for bounded code and configuration discovery.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "codex",
@@ -69,7 +69,7 @@
     {
       "name": "agent-external-repo-worker",
       "description": "Subagent that works inside an external repository outside the caller project. Handles isolated clone or reuse, convention discovery, bounded edits, local verification, and delegated publish or PR work.",
-      "version": "2.2.2",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "engineering",
@@ -93,7 +93,7 @@
     {
       "name": "agent-operator",
       "description": "Mechanical operator agent for tiny commands, formatting, and inventory steps.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "codex",
@@ -117,7 +117,7 @@
     {
       "name": "agent-quality-guards",
       "description": "Read-only quality-guard subagents for bounded triage: docs-guard checks scoped documentation and documentation lint findings, lint-guard validates and normalizes lint reports, data-metrics-summarizer compacts large logs and metrics, maintenance-metrics-reader snapshots repository maintenance health (stale branches, worktrees, lock states), and reviewer-mechanics smoke-checks scoped diffs for mechanical issues. All five reply with bounded, capped verdict lines and never edit files.",
-      "version": "1.0.1",
+      "version": "2.0.0",
       "tags": [
         "agent",
         "quality",
@@ -129,7 +129,7 @@
     {
       "name": "agent-reasoner",
       "description": "Read-only reasoning agent for exceptional architecture, policy, and adversarial questions.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "agent",
         "codex",
@@ -141,7 +141,7 @@
     {
       "name": "agent-reviewer-high",
       "description": "Adversarial read-only reviewer for security-sensitive and broad-impact changes.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "codex",
@@ -153,7 +153,7 @@
     {
       "name": "agent-reviewer-low",
       "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "agent",
         "codex",
@@ -165,7 +165,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "9.0.0",
+      "version": "10.0.0",
       "tags": [
         "bundle",
         "steering"
@@ -188,7 +188,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
-      "version": "0.7.1",
+      "version": "0.7.2",
       "tags": [
         "beads",
         "issue-tracking",
@@ -320,7 +320,7 @@
     {
       "name": "dep-update",
       "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively -- one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
-      "version": "2.1.3",
+      "version": "3.0.0",
       "tags": [
         "skill",
         "dependencies",
@@ -440,7 +440,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, /dev/random, /dev/urandom, /dev/stdout, /dev/stdin) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive/disruptive verbs also warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups are silent; unexpanded $var targets are denied; ~/subpath, repo root/.git, and outside-tree paths warn (non-blocking). Quoted bypass forms (rm -rf \"/etc\") and flags-after-target (rm /path -rf) are denied. Matching is anchored to command position to avoid quoted-string false positives. No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "tags": [
         "hooks",
         "bash",
@@ -478,7 +478,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target -- agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "tags": [
         "hooks",
         "git",
@@ -551,7 +551,7 @@
     {
       "name": "hooks-subagent-fork",
       "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Codex-only: Claude has no fork_turns concept, so the package does not target Claude at all. The hook fails open on malformed input.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "hooks",
         "subagent",
@@ -565,7 +565,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "tags": [
         "hooks",
         "subagent",
@@ -579,7 +579,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder -- if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none -- and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "tags": [
         "hooks",
         "worktree",
@@ -605,7 +605,7 @@
     {
       "name": "hooks-worktrunk",
       "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "worktrunk",
@@ -855,7 +855,7 @@
     {
       "name": "mcp-mempalace",
       "description": "MemPalace lifecycle and steering package for a local-first cross-session memory layer. Files verbatim conversation/decision history into a vector + temporal-graph store (ChromaDB, local embeddings, zero LLM calls) and recalls it via semantic + temporal search. Ships a SessionStart hook that injects a tiny per-repo memory index (recall happens on demand via mempalace_search with a real query), a SessionEnd hook that automatically mines each completed session's transcript into the repo's wing (with FTS5 self-heal), a one-time backfill script for historical transcripts, and steering that scopes MemPalace to cross-session memory rather than current code structure. Complements semantic code intelligence; it is not code navigation. The MCP runtime is supplied separately by the environment.",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "tags": [
         "mcp",
         "memory",
@@ -923,7 +923,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "11.0.2",
+      "version": "12.0.0",
       "tags": [
         "skill",
         "agent",
@@ -958,7 +958,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1121,7 +1121,7 @@
     {
       "name": "sniff",
       "description": "Refactoring auditor. Detects code smells, tech debt, and non-idiomatic code across 21 languages and formats, maps each finding to refactoring.guru smells, patterns, and techniques, stress-tests every recommendation with a built-in adversarial pragmatism critic, and produces a prioritized refactoring plan (impact, value, cost, severity, backwards-compatibility). Drives each language toolchain's own linters and analyzers (opportunistic, never required) with a guided first-run installer. Advisory by default; applies low-risk refactors only on explicit approval behind a verification re-run. Standalone: no APM dependencies.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "tags": [
         "skill",
         "agent",
@@ -1136,7 +1136,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "9.0.0",
+      "version": "10.0.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1160,7 +1160,7 @@
     {
       "name": "steering-architecture",
       "description": "Cross-cutting design steering: compose over fork, keep generic cores case-agnostic, and make structural invariants a verifiable diff guard. Opt-in steering.",
-      "version": "2.1.2",
+      "version": "2.1.3",
       "tags": [
         "steering",
         "architecture",
@@ -1194,7 +1194,7 @@
     {
       "name": "steering-delivery",
       "description": "Opinionated delivery cadence: work like a developer who commits continuously. Commit and push after every meaningful, self-contained step; keep commits atomic; leave no unpushed local work stranded in a local or disposable worktree. Always-on steering. Opt-in.",
-      "version": "1.1.3",
+      "version": "1.1.4",
       "tags": [
         "steering",
         "git",
@@ -1229,7 +1229,7 @@
     {
       "name": "steering-git-workflow",
       "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a dual-runtime PreToolUse blocker for non-draft or unlinked PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "2.3.5",
+      "version": "2.3.6",
       "tags": [
         "steering",
         "git"
@@ -1240,7 +1240,7 @@
     {
       "name": "steering-global-bootstrap",
       "description": "User-scope bootstrap steering that keeps reusable agentic assets in APM packages and limits chezmoi to session profiles and dotfile management. Install globally; project behavior remains project-local.",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "tags": [
         "steering",
         "bootstrap",
@@ -1264,7 +1264,7 @@
     {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "4.3.2",
+      "version": "4.3.3",
       "tags": [
         "steering",
         "pragmatic",
@@ -1278,7 +1278,7 @@
     {
       "name": "steering-project-structure",
       "description": "Opt-in steering: capability-first repository structure and ownership conventions -- repo layout, ownership boundaries, shared libraries, contracts, and where docs/specs/tools live.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "tags": [
         "steering",
         "structure"
@@ -1300,7 +1300,7 @@
     {
       "name": "steering-subagent-routing",
       "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
-      "version": "3.2.4",
+      "version": "3.2.5",
       "tags": [
         "steering",
         "routing"
@@ -1311,7 +1311,7 @@
     {
       "name": "steering-toolchain-defaults",
       "description": "Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project.",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "tags": [
         "steering",
         "toolchain"
@@ -1333,7 +1333,7 @@
     {
       "name": "toolchain-cache-policy",
       "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "hooks",
         "cache",
@@ -1360,7 +1360,7 @@
     {
       "name": "user-journeys",
       "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), agent-only and human-gated Beads verification formulas, the journey format spec and templates, and deterministic index, lint, and formula-install scripts.",
-      "version": "0.7.2",
+      "version": "1.0.0",
       "tags": [
         "journeys",
         "validation",
@@ -1414,7 +1414,7 @@
     {
       "name": "worktrunk-writer",
       "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "tags": [
         "worktrunk",
         "worktree",
@@ -1440,7 +1440,7 @@
     {
       "name": "write-docs",
       "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a Vale prose gate (house style plus the pinned vale-ai-tells package) and a SubagentStart hook that injects the same documentation discipline into every subagent. Requires the vale binary on PATH.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "tags": [
         "skill",
         "docs",
