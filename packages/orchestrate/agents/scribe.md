@@ -1,7 +1,7 @@
 ---
 name: scribe
 description: Read-only run reporter that drains one claimed ledger query.
-model: haiku
+model: opus
 effort: low
 permissionMode: acceptEdits
 tools:

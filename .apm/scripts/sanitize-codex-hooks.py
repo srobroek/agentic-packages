@@ -24,7 +24,7 @@ SUPPORTED_EVENTS = {
     "Stop",
 }
 OBSOLETE_COMMAND_SUFFIXES = {
-    "/agent-coder/scripts/coder-delegation-reminder.sh",
+    "/agent-builder/scripts/coder-delegation-reminder.sh",
 }
 CODEX_UNAVAILABLE_PACKAGES = {
     "hooks-subagent-model",

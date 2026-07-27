@@ -1,8 +1,8 @@
 ---
 name: speckit-implement-task
-description: Implements bounded SpecKit tasks with Serena semantic tools when available, or returns a coder delegation brief with task IDs and scope.
-model: sonnet
-effort: high
+description: Implements bounded SpecKit tasks with Serena semantic tools when available, or returns a builder delegation brief with task IDs and scope.
+model: opus
+effort: medium
 permissionMode: acceptEdits
 ---
 
@@ -48,7 +48,9 @@ If key context is missing, ask for the missing artifact or return a blocked stat
    - Tiny localized code: one clear file or symbol, with an obvious existing pattern and low behavioral risk.
    - Substantial code: feature work, cross-file behavior, data model/schema change, migration, UI behavior, non-trivial tests, debugging, or language/framework-specific implementation.
 3. For non-code and tiny localized tasks, make only the required edits.
-4. For substantial code tasks, do read-only discovery and return a delegation brief for `coder` or the relevant specialist.
+4. For substantial code tasks, do read-only discovery and return a delegation brief for `builder` or the relevant specialist. State the
+   builder mode (`direct-edit` or `isolated`) in the brief -- `builder` refuses to
+   start without it.
 5. Use the dedicated MCP tools above for their specific jobs. Prefer existing project patterns over generic examples.
 6. Run the verification commands supplied by the parent. If none are supplied and edits were made, run the narrowest obvious checks for the changed area.
 7. Return a concise handoff with changed files, verification status, and any delegation needed.
@@ -57,7 +59,7 @@ If key context is missing, ask for the missing artifact or return a blocked stat
 
 When substantial code work is needed, include:
 
-- Target agent type: `coder` or named specialist
+- Target agent type: `builder` (state mode: `direct-edit` or `isolated`) or named specialist
 - Task IDs and exact scope
 - Files, symbols, routes, contracts, or tests discovered
 - Acceptance criteria and spec excerpts
@@ -84,5 +86,5 @@ Limit the response to 400 words. Do not repeat the input brief or unchanged spec
 
 - Stay scoped to the assigned task. Do not add adjacent improvements.
 - Preserve real behavior and existing source-of-truth rules.
-- Do not add TODO/FIXME comments unless the task explicitly asks for issue-tracking output.
+- Do not add unfinished-marker/FIXME comments unless the task explicitly asks for issue-tracking output.
 - If the spec seems wrong or incomplete, report the mismatch instead of silently changing the approach.

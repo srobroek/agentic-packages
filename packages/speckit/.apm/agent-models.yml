@@ -6,7 +6,7 @@ agents:
   speckit-implement-task:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: high
+      reasoning_effort: xhigh
   # Was Luna/medium (TB-v2.1 53.2). Research is synthesis, so it takes the rung
   # where Luna stops being Haiku-class: 69.7 TB-v2.1, 63.3 coding, $0.095/task.
   speckit-research:

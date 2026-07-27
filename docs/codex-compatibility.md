@@ -100,7 +100,7 @@ run.
 
 ## Package-specific adaptations
 
-- `agent-coder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
+- `agent-builder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
 - `worktrunk-writer`: both runtimes consume parent-created Worktrunk leases; Codex unified shell paths remain outside complete hook interception.
 - `mcp-mempalace`: synchronous Codex startup versus asynchronous Claude startup.
 - `mcp-repomix`: Codex refreshes cannot reliably suppress subagent Git calls.
@@ -138,7 +138,7 @@ plugin manifests do not support every APM component type.
 
 | Package | Status | Codex difference or workaround |
 | --- | --- | --- |
-| `agent-coder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier on PreToolUse. |
+| `agent-builder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier on PreToolUse. |
 | `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
 | `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
 | `hooks-chezmoi-guard` | Partial | Bash and apply_patch aliases are covered; other write/shell routes need source-first steering and filesystem policy. |

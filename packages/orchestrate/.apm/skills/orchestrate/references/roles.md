@@ -14,8 +14,8 @@ starting point, refined by what the catalog actually offers.
 | **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → reviewer when rule intent is disputed |
 | **Maintenance-metrics-reader** | `maintenance-metrics-reader` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → researcher when a root cause is ambiguous |
 | **Reviewer-mechanics** | `reviewer-mechanics` (`agent-quality-guards`) | **cheap tier** low, read-only | ephemeral | → reviewer on deeper correctness questions |
-| **Domain-specialist** (deep) | `domain-specialist` (bundled) | **mid tier** high | per node, kept alive across fix rounds | do **not** upgrade the domain-specialist -- on a reasoning block it raises `BLOCKED` |
-| **Domain-specialist** (cheap) | `domain-specialist-medium` (bundled) | **cheap tier** medium | per node, kept alive across fix rounds | → `domain-specialist` when the node needs decomposition, not just execution |
+| **Domain-specialist** (default) | `domain-specialist` (bundled) | **mid tier** medium | per node, kept alive across fix rounds | → `domain-specialist-high` when a node fails on reasoning depth |
+| **Domain-specialist** (deep) | `domain-specialist-high` (bundled) | **top tier** high | per node, kept alive across fix rounds | already the deep rung -- on a further block it raises `BLOCKED` |
 | **Reviewer** | `reviewer` (bundled) → `code-reviewer`/`pr-reviewer` | **mid tier** medium, read-only | kept alive per node (re-reviews deltas) | → top tier for complex or security-critical diffs |
 | **Advisor** | `advisor` (bundled) → `adversarial-challenger` | **top tier** high, read-only | ephemeral, **spawned by the orchestrator** | already top tier |
 | **Shepherd** | `shepherd` (bundled) | **mid tier** medium | **persistent** | → top tier only if merge reasoning is genuinely gnarly |
@@ -65,18 +65,18 @@ still belongs to `reviewer`, a researcher, or an advisor.
 
 ### Which domain-specialist rung
 
-Two rungs, and the gap between them is a model step, not just an effort step:
+Two rungs. The gap is a model step AND an effort step at once on both runtimes,
+so the deep rung is not merely the default one thinking harder. The pins
+themselves live in `agent-models.yml` and the agent frontmatter.
 
 | Node needs | Route |
 |---|---|
-| Execution against a scope someone else already decomposed | `domain-specialist-medium` |
-| Decomposition, cross-file design, or delegation to children | `domain-specialist` |
-| A retry after the deep rung failed **on reasoning depth** | `domain-specialist-xhigh` |
+| Execution, decomposition, cross-file design, or delegation to children | `domain-specialist` |
+| A retry after the default rung failed **on reasoning depth** | `domain-specialist-high` |
 
-Default to `domain-specialist`. The specialist's paid work is scoping and
-delegation, so the cheap rung fits only a node whose scope arrives already
-settled. `xhigh` is escalation-only -- if you cannot name the `high` attempt that
-failed, it is not the answer.
+Default to `domain-specialist`. `-high` is escalation-only -- if you cannot name
+the attempt that failed and say the failure was reasoning depth rather than
+missing context, a tooling block, or bad scope, it is not the answer.
 
 **Only the orchestrator spawns or dismisses claim-holders, reviewers, and
 advisors.** A domain-specialist may nest bounded throwaway implementation

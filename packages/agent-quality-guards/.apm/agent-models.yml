@@ -19,7 +19,7 @@ agents:
   lint-guard:
     codex:
       model: gpt-5.6-luna
-      reasoning_effort: high
+      reasoning_effort: xhigh
   data-metrics-summarizer:
     codex:
       model: gpt-5.6-luna

@@ -1,8 +1,8 @@
 ---
 name: speckit-research
 description: Researches primary-source APIs and uses Serena semantic tools when available to bound decisions inside an active SpecKit workflow.
-model: sonnet
-effort: medium
+model: opus
+effort: low
 permissionMode: plan
 maxTurns: 20
 background: true

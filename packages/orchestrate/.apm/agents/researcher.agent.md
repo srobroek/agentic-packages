@@ -1,8 +1,8 @@
 ---
 name: researcher
 description: Read-only researcher for one claimed node or escalation wisp.
-model: sonnet
-effort: medium
+model: opus
+effort: low
 permissionMode: plan
 tools:
   - Read

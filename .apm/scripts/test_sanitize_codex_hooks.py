@@ -21,7 +21,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
     keep_script = Path(keep_command)
     keep_script.parent.mkdir(parents=True)
     keep_script.write_text("#!/bin/sh\n", encoding="utf-8")
-    future_command = f"{hooks_dir}/agent-coder/scripts/future-legitimate-hook.sh"
+    future_command = f"{hooks_dir}/agent-builder/scripts/future-legitimate-hook.sh"
     future_script = Path(future_command)
     future_script.parent.mkdir(parents=True, exist_ok=True)
     future_script.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -45,7 +45,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         {
                             "type": "command",
                             "command": (
-                                f"{hooks_dir}/agent-coder/scripts/coder-delegation-reminder.sh"
+                                f"{hooks_dir}/agent-builder/scripts/coder-delegation-reminder.sh"
                             ),
                         },
                         {

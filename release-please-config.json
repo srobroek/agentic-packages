@@ -68,9 +68,9 @@
         }
       ]
     },
-    "packages/agent-coder": {
+    "packages/agent-builder": {
       "release-type": "simple",
-      "component": "agent-coder",
+      "component": "agent-builder",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -80,9 +80,9 @@
         }
       ]
     },
-    "packages/agent-coder-high": {
+    "packages/agent-builder-high": {
       "release-type": "simple",
-      "component": "agent-coder-high",
+      "component": "agent-builder-high",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -203,18 +203,6 @@
     "packages/agent-reviewer-low": {
       "release-type": "simple",
       "component": "agent-reviewer-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-worker": {
-      "release-type": "simple",
-      "component": "agent-worker",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

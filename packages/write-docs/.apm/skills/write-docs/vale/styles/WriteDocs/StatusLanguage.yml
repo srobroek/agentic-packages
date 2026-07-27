@@ -1,12 +1,17 @@
 # E1 in the retired slop-lint.py. Runtime-state uses of "currently" (currently
 # running/active/…) are legitimate present-tense description, not doc status.
+#
+# "draft" is exempted before PR/PRs/release and after "opening a" because a draft
+# PR is a GitHub feature name, not a claim about this document's maturity. Agent
+# definitions that land branches talk about draft PRs constantly.
 extends: existence
 message: "status language: %s — state what the artifact does at HEAD"
 level: error
 link: https://github.com/srobroek/agentic-packages/blob/main/packages/write-docs/.apm/skills/write-docs/SKILL.md
 ignorecase: true
 raw:
-  - '\b(under construction|work[- ]in[- ]progress|WIP|coming soon|Draft|'
+  - '\b(under construction|work[- ]in[- ]progress|WIP|coming soon|'
+  - 'draft(?!\s*(PRs?|/release|-release))|'
   - 'being (specified|designed|implemented|built)|not yet (implemented|supported|available)|'
   - 'will (eventually|later|soon)\b|to be (implemented|defined|determined)|TBD|TODO|'
   - 'for now|at the moment|'

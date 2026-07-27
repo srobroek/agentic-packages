@@ -1,7 +1,8 @@
 ---
 name: data-metrics-summarizer
 description: Compacts scoped logs and metrics before orchestrate analysis.
-model: haiku
+model: sonnet
+effort: high
 permissionMode: plan
 tools:
   - Read
@@ -36,7 +37,7 @@ You do not diagnose root causes, recommend changes, or patch files.
    - top outlier candidates by frequency delta
 5. Cap output size to `top_k` items (default 20). Use the brief's requested
    ordering, or timestamp then source position when no order is specified.
-6. No conclusions, no recommendations. Do not infer root-cause.
+6. Figures only. Do not infer root-cause.
 
 ## Output
 

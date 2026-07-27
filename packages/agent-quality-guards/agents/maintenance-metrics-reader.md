@@ -1,7 +1,8 @@
 ---
 name: maintenance-metrics-reader
 description: Collect stale artifact and repository health signals for short-lived maintenance runs; reports only, does not modify code or merge state.
-model: haiku
+model: sonnet
+effort: high
 permissionMode: plan
 tools:
   - Read

@@ -590,12 +590,15 @@ try:
     assert 'dependencies' not in data, 'must not have dependencies'
     print('OK')
 except ImportError:
-    # pyyaml not available; use line-based checks instead
+    # pyyaml not available; use line-based checks instead. The no-dependencies
+    # check must anchor to the key at column 0: a bare 'project-setup' substring
+    # also matches the description's reference to .project-setup/answers.toml,
+    # which is prose, not a dependency.
     with open('${APM_YML}') as f:
         content = f.read()
     assert 'type: skill' in content
     assert 'category: code-intelligence' in content
-    assert 'project-setup' not in content
+    assert not any(ln.startswith('dependencies:') for ln in content.splitlines())
     print('OK (no pyyaml, line-checked)')
 "
   [ "$status" -eq 0 ]
