@@ -22,7 +22,7 @@
   "packages/cmux": "1.1.1",
   "packages/code-intelligence": "8.1.5",
   "packages/codex-hook-contract": "0.3.2",
-  "packages/core": "14.0.0",
+  "packages/core": "15.0.0",
   "packages/data-ai": "3.0.2",
   "packages/debate": "2.2.1",
   "packages/dep-audit": "2.1.2",
