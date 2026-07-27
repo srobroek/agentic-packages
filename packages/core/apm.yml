@@ -1,5 +1,5 @@
 name: core
-version: 13.0.1
+version: 14.0.0
 description: >-
   Baseline bundle for any repo: layers the project-lifecycle, code-intelligence,
   and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock
