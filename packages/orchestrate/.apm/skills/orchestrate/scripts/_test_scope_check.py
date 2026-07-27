@@ -4,7 +4,7 @@
 CI has no beads install, so these tests exercise the bd-facing path against a
 stub `bd` executable that replays canned JSON per subcommand. Real-bd behavior
 (label filters, claim semantics, metadata merge) is verified manually against
-bd 1.1.0 and documented in references/beads-store.md.
+bd and documented in references/beads-store.md.
 """
 
 import json
