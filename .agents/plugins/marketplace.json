@@ -1157,6 +1157,18 @@
       "category": "steering"
     },
     {
+      "name": "steering-multi-agent",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-multi-agent"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
       "name": "steering-pragmatic",
       "source": {
         "source": "local",
