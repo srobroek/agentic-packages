@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.3...agent-management--v1.2.4) (2026-07-27)
+
+
+### Bug Fixes
+
+* **agent-management:** run the global scripts through uv, not a shadowed python3 ([#786](https://github.com/srobroek/agentic-packages/issues/786)) ([a264e1f](https://github.com/srobroek/agentic-packages/commit/a264e1f2341f2cdb0e092f6b430782b1c1ceece5))
+
 ## [1.2.3](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.2...agent-management--v1.2.3) (2026-07-25)
 
 
