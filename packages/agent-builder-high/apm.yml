@@ -1,5 +1,5 @@
 name: agent-builder-high
-version: 2.0.1
+version: 3.0.0
 description: >-
   Escalated implementation agent for complex bounded work, difficult debugging,
   and cross-module behaviour changes. Ships `builder-high`, the escalation tier

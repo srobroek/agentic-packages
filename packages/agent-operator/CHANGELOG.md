@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-operator--v2.0.1...agent-operator--v3.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766))
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766)) ([f8fb26a](https://github.com/srobroek/agentic-packages/commit/f8fb26aacaa45cbf7ab9ceaa42855089d34b6673))
+
 ## [2.0.1](https://github.com/srobroek/agentic-packages/compare/agent-operator--v2.0.0...agent-operator--v2.0.1) (2026-07-25)
 
 

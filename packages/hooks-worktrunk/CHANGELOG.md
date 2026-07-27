@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-worktrunk--v2.0.0...hooks-worktrunk--v2.0.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-worktrunk--v1.0.0...hooks-worktrunk--v2.0.0) (2026-07-25)
 
 
