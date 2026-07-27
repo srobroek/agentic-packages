@@ -1,6 +1,6 @@
 {
   "name": "steering-toolchain-defaults",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Opt-in steering: opinionated default stack choices for frontend, infrastructure, and quality/observability. Install to adopt these defaults when setting up or standardizing a project.",
   "author": {
     "name": "Sjors Robroek"

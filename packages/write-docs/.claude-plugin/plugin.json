@@ -1,6 +1,6 @@
 {
   "name": "write-docs",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a Vale prose gate (house style plus the pinned vale-ai-tells package) and a SubagentStart hook that injects the same documentation discipline into every subagent. Requires the vale binary on PATH.",
   "author": {
     "name": "Sjors Robroek"
