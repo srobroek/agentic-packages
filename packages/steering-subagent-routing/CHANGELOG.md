@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.5](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.4...steering-subagent-routing--v3.2.5) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
 ## [3.2.4](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.3...steering-subagent-routing--v3.2.4) (2026-07-25)
 
 
