@@ -128,7 +128,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-codex-hooks.json": "target-specific compatibility",
-    "packages/write-docs/.apm/hooks/hooks.json": "native-required",
     "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-claude-hooks.json": "target-specific compatibility",
     "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-codex-hooks.json": "target-specific compatibility",
 }
