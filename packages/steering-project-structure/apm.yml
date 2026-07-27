@@ -1,5 +1,5 @@
 name: steering-project-structure
-version: 1.1.1
+version: 1.1.2
 description: >-
   Opt-in steering: capability-first repository structure and ownership
   conventions -- repo layout, ownership boundaries, shared libraries, contracts,

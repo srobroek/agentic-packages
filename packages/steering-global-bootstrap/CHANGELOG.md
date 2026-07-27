@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/srobroek/agentic-packages/compare/steering-global-bootstrap--v1.1.2...steering-global-bootstrap--v1.1.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/steering-global-bootstrap--v1.1.1...steering-global-bootstrap--v1.1.2) (2026-07-25)
 
 

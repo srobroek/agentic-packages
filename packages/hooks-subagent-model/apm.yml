@@ -1,5 +1,5 @@
 name: hooks-subagent-model
-version: 1.0.1
+version: 1.0.2
 description: >-
   Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn
   would inherit the parent session model. It allows explicit models and pinned
