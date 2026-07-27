@@ -95,22 +95,37 @@ SYNC HOOKS (Dolt first, JSONL only as fallback)
 MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
   issue rows only -- no Dolt branches, commit history, or non-issue tables. Reach
   for JSONL only where the native path cannot run.
-DEFAULT Both halves off. `beads-sync-hydrate.sh` (SessionStart) and
-  `beads-sync-stage.sh` (PreToolUse:Bash) exit having done nothing until the repo
-  opts in, so installing the package changes no existing repo.
+DEFAULT Every hook off until the repo opts in, so installing the package changes
+  no existing repo: `beads-sync-hydrate.sh` (SessionStart, pull + JSONL import +
+  report the last push), `beads-sync-stage.sh` (PreToolUse:Bash, stage the JSONL
+  on commit), `beads-sync-push.sh` (SessionEnd, publish), and
+  `beads-maintenance-check.sh` (SessionStart, size report).
 DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
   config" authority the rule above allows. Pull is read-only and cannot lose
   local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
   an unreachable remote does not always fail fast.
 DEFAULT Auto-push with `bd config set custom.dolt-auto-push true`.
-  `beads-sync-push.sh` runs on PostToolUse after a commit (pre-commit there is
-  nothing to send) and publishes bead state. Acceptable to automate because what
-  moves is task records, not source: a Dolt push writes only
+  `beads-sync-push.sh` runs at SessionEnd and DETACHES. Acceptable to automate
+  because what moves is task records, not source: a Dolt push writes only
   `refs/dolt/blobstore/`, touches no branch, and is additive.
+DEFAULT One push per session, not per commit. An incremental push costs ~12s of
+  which ~8s is process startup rather than transfer (measured: 12.2s incremental,
+  8.1s for a no-op, against a 311 MB / 4354-commit database), so per-commit
+  pushing made a ten-commit session pay two minutes for what one push covers.
+  Pushes are additive and idempotent, so pushing once at the end loses nothing.
+MUST Detach rather than block. A first push of a never-synced database uploads
+  its whole history -- over 550s on that same repo -- and no session should wait
+  on that.
+MUST Close the feedback loop when detaching. A detached process cannot report to
+  the session that spawned it, and a silently failed push is the worst outcome
+  here: state looks published while sitting on one machine. The push writes a
+  verdict to `.beads/last-push.log`; hydrate reports a failure it finds there at
+  the next session start and consumes the file so a stale verdict is not
+  re-reported.
 DEFAULT Check before pushing: the probe is `git push --dry-run`, which runs the
   same pre-push path while transferring nothing. Three outcomes, and the
   difference matters -- goes through, rejected at pre-push, or no answer
-  (unreachable/timeout: stay quiet and retry next commit, since advising a
+  (unreachable/timeout: stay quiet and let the next session try, since advising a
   strategy change over a dropped network is worse than silence).
 MUST Where a direct push does not go through, set `custom.bd-push-command` to a
   wrapper that runs bd with network access (`bd config set
@@ -148,6 +163,32 @@ NOT `--allow-stale` unless deliberately restoring an older snapshot -- it
 MUST On a stale-skip warning at session start, commit a fresh export before
   pulling peer changes: the committed file is behind the local database, so the
   next export would overwrite what a peer committed.
+
+MAINTENANCE (trimming a grown database)
+MUST Never run `bd prune`, `bd purge`, or `bd flatten` unprompted. All three are
+  irreversible, and flatten discards EVERY Dolt commit. Preview with `--dry-run`,
+  report the numbers, and let the user decide.
+GOTCHA Deleting rows does not shrink storage. Commit history is the bulk: measured
+  on a live repo, 207 beads occupied 311 MB of which the `bd export --all` payload
+  was 2.8 MB, `.dolt/noms/` (every historical row version) 199 MB, and
+  `.dolt/git-remote-cache/` 96 MB. 4354 Dolt commits produced that -- one per
+  create/update/comment/close, never collected.
+DEFAULT Judge size by COMMIT COUNT, not bead count. On that same repo `bd prune
+  --older-than 90d` matched nothing (every closed bead was recent) while 4354
+  commits sat underneath, so a prune-based threshold stays silent through the
+  whole problem.
+DEFAULT Order of escalation: `bd purge` (closed wisps, no value once closed) →
+  `bd prune --older-than <N>` (closed regular beads) → `bd flatten --force` only
+  when storage genuinely has to come back, accepting the loss of all history.
+DEFAULT `bd flatten --dry-run --json` is the size probe: it reports
+  `commit_count` and mutates nothing. `bd status --json` returns an empty summary
+  and `bd vc status` gives a hash with no counts, so this is the only
+  machine-readable signal.
+DEFAULT Enable the reporting hook per repo with `bd config set
+  custom.maintenance-check true` (threshold via
+  `BEADS_MAINTENANCE_COMMIT_THRESHOLD`, default 2000). It reports and never acts.
+NOT `bd prune --pattern '*' --force` as routine cleanup -- it sweeps every closed
+  bead regardless of age, which is the handover record for recent work.
 
 GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
 

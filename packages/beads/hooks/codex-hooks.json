@@ -41,19 +41,25 @@
             "command": "${PLUGIN_ROOT}/scripts/beads-sync-hydrate.sh",
             "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
             "timeout": 90
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-maintenance-check.sh",
+            "statusMessage": "Checking beads database size...",
+            "timeout": 60
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "SessionEnd": [
       {
-        "matcher": "Bash",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.sh",
-            "statusMessage": "Publishing beads state (Dolt push if permitted)...",
-            "timeout": 150
+            "statusMessage": "Publishing beads state...",
+            "timeout": 60
           }
         ]
       }

@@ -16,6 +16,7 @@ setup() {
   STAGE="$S/beads-sync-stage.sh"
   HYDRATE="$S/beads-sync-hydrate.sh"
   PUSH="$S/beads-sync-push.sh"
+  MAINT="$S/beads-maintenance-check.sh"
   LIB="$S/beads-sync-lib.sh"
   command -v jq >/dev/null 2>&1 || skip "jq not available"
 
@@ -23,6 +24,11 @@ setup() {
   mkdir -p "$REPO"
   cd "$REPO" || return 1
   git init -q -b main .
+  # Point hooksPath at an empty directory so a host-installed hook (anything set
+  # globally via core.hooksPath) cannot run inside these throwaway repos. Keeping
+  # them hermetic is right on its own terms; it is not a fix for any known hang.
+  mkdir -p "$REPO/.no-hooks"
+  git -C "$REPO" config core.hooksPath "$REPO/.no-hooks"
   git config user.email t@t
   git config user.name t
 }
@@ -265,11 +271,12 @@ staged() { git -C "$REPO" diff --cached --name-only; }
 
 # --- push: policy-gated publish ---------------------------------------------
 
-run_push() { commit_payload "$1" | /bin/bash "$PUSH"; }
+# SessionEnd payload: no tool_input, so the commit-matching helper no longer applies.
+run_push() { jq -n --arg cwd "$REPO" '{cwd:$cwd}' | /bin/bash "$PUSH"; }
 
 @test "push: no auto-push opt-in means the hook is inert" {
   init_beads
-  run run_push "git commit -m x"
+  run run_push
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
@@ -278,15 +285,7 @@ run_push() { commit_payload "$1" | /bin/bash "$PUSH"; }
   init_beads
   bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
   # Nothing to push to. Must not error, and must not invent a remote.
-  run run_push "git commit -m x"
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "push: non-commit command is inert" {
-  init_beads
-  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
-  run run_push "git status"
+  run run_push
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
@@ -299,7 +298,7 @@ run_push() { commit_payload "$1" | /bin/bash "$PUSH"; }
     >/dev/null 2>&1 || skip "cannot add remote"
   # An unreachable host is not a refusal. Telling the operator to abandon Dolt
   # sync because their network blipped would be worse than saying nothing.
-  BEADS_SYNC_PUSH_TIMEOUT=5 BEADS_SYNC_PROBE_TIMEOUT=5 run run_push "git commit -m x"
+  BEADS_SYNC_PUSH_TIMEOUT=5 BEADS_SYNC_PROBE_TIMEOUT=5 run run_push
   [ "$status" -eq 0 ]
   [[ "$output" != *"refuses"* ]]
 }
@@ -324,6 +323,7 @@ echo "Code Defender blocked your push due to the above finding." >&2
 exit 1
 HOOK
   chmod +x "$REPO/.githooks/pre-push"
+  # Re-point hooksPath away from setup()'s empty dir: this test NEEDS its hook to run.
   git -C "$REPO" config core.hooksPath .githooks
 
   run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 10"
@@ -368,13 +368,15 @@ HOOK
   printf '#!/bin/sh\necho "Code Defender blocked your push" >&2\nexit 1\n' \
     > "$REPO/.githooks/pre-push"
   chmod +x "$REPO/.githooks/pre-push"
+  # Re-point hooksPath away from setup()'s empty dir: this test NEEDS its hook to run.
   git -C "$REPO" config core.hooksPath .githooks
 
-  BEADS_SYNC_PROBE_TIMEOUT=10 run run_push "git commit -m x"
+  BEADS_SYNC_PROBE_TIMEOUT=10 run run_push
   [ "$status" -eq 0 ]
-  # Names every sanctioned route rather than just failing.
-  [[ "$output" == *"custom.bd-push-command"* ]]
-  [[ "$output" == *"jsonl-git-sync"* ]]
+  # SessionEnd detaches, so the verdict goes to the log the next session reads,
+  # not to this hook's stdout.
+  grep -q "^failed:" "$REPO/.beads/last-push.log"
+  grep -q "custom.bd-push-command" "$REPO/.beads/last-push.log"
 }
 
 @test "push: a refusal WITH a wrapper configured runs the wrapper" {
@@ -390,6 +392,7 @@ HOOK
   printf '#!/bin/sh\necho "Code Defender blocked your push" >&2\nexit 1\n' \
     > "$REPO/.githooks/pre-push"
   chmod +x "$REPO/.githooks/pre-push"
+  # Re-point hooksPath away from setup()'s empty dir: this test NEEDS its hook to run.
   git -C "$REPO" config core.hooksPath .githooks
 
   # A stub wrapper standing in for dbd: records that it was invoked with the
@@ -406,10 +409,107 @@ WRAP
 
   FAKEBD_LOG="$BATS_TEST_TMPDIR/wrapper.log" \
     PATH="$BATS_TEST_TMPDIR/bin:$PATH" \
-    BEADS_SYNC_PROBE_TIMEOUT=10 run run_push "git commit -m x"
+    BEADS_SYNC_PROBE_TIMEOUT=10 run run_push
   [ "$status" -eq 0 ]
+  # Returns immediately rather than waiting on the wrapper, so poll for the
+  # detached process to land instead of asserting straight away.
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [ -f "$BATS_TEST_TMPDIR/wrapper.log" ] && break
+    sleep 1
+  done
   [ -f "$BATS_TEST_TMPDIR/wrapper.log" ]
-  [ "$(cat "$BATS_TEST_TMPDIR/wrapper.log")" = "dolt push" ]
-  # Succeeded through the wrapper, so nothing to report.
+  # Invoked with bd's argv (now including -C <repo>), which is the contract the
+  # indirection depends on.
+  grep -q "dolt push" "$BATS_TEST_TMPDIR/wrapper.log"
+  # Nothing printed: the hook detached rather than reporting a result.
   [ -z "$output" ]
+}
+
+# --- maintenance reporting (never acts) --------------------------------------
+
+run_maint() { jq -n --arg cwd "$REPO" '{cwd:$cwd}' | /bin/bash "$MAINT"; }
+
+@test "maintenance: script parses under /bin/bash" {
+  run /bin/bash -n "$MAINT"; [ "$status" -eq 0 ]
+}
+
+@test "maintenance: inert without the opt-in" {
+  init_beads
+  run run_maint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "maintenance: silent below the commit threshold" {
+  init_beads
+  bd -C "$REPO" config set custom.maintenance-check true >/dev/null 2>&1
+  # A fresh database has a handful of commits, nowhere near any sane threshold.
+  run run_maint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "maintenance: reports above the threshold and never runs a destructive command" {
+  init_beads
+  bd -C "$REPO" config set custom.maintenance-check true >/dev/null 2>&1
+  bd -C "$REPO" create "a bead" >/dev/null 2>&1
+  before="$(bd -C "$REPO" list --status open,closed --json 2>/dev/null | jq 'length')"
+
+  # Threshold 1 forces the report on any database.
+  BEADS_MAINTENANCE_COMMIT_THRESHOLD=1 run run_maint
+  [ "$status" -eq 0 ]
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.hookEventName == "SessionStart"'
+  # Names flatten as the only thing that reclaims storage, and says it is manual.
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.additionalContext | test("flatten")'
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.additionalContext | test("irreversib")'
+
+  # The point of the hook: it reported, it did not delete. Bead count unchanged.
+  after="$(bd -C "$REPO" list --status open,closed --json 2>/dev/null | jq 'length')"
+  [ "$before" = "$after" ]
+}
+
+# --- the detached-push feedback loop ----------------------------------------
+#
+# SessionEnd detaches the push, so it cannot report to the session that spawned
+# it. The next SessionStart reads .beads/last-push.log instead. Without this loop
+# a failed push is completely silent -- state looks published while sitting on one
+# machine, which is the defect class this suite exists to prevent.
+
+@test "hydrate: reports a failed push from the previous session" {
+  init_beads; opt_in
+  printf 'failed: bd dolt push exited non-zero\n' > "$REPO/.beads/last-push.log"
+  run run_hydrate
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"FAILED"* ]]
+  [[ "$output" == *"not published"* ]]
+}
+
+@test "hydrate: reports a push that never finished" {
+  init_beads; opt_in
+  # Only a start line: the machine slept or the process was killed mid-transfer.
+  printf 'started: 2026-07-27T12:00:00Z\n' > "$REPO/.beads/last-push.log"
+  run run_hydrate
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"did not finish"* ]]
+}
+
+@test "hydrate: a successful push is not reported, and the log is consumed" {
+  init_beads; opt_in
+  printf 'started: x\nok: push complete\n' > "$REPO/.beads/last-push.log"
+  run run_hydrate
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"FAILED"* ]]
+  # Consumed either way, so a stale verdict cannot be re-reported every session.
+  [ ! -f "$REPO/.beads/last-push.log" ]
+}
+
+@test "hydrate: a reported failure is consumed, not repeated next session" {
+  init_beads; opt_in
+  printf 'failed: something broke\n' > "$REPO/.beads/last-push.log"
+  run run_hydrate
+  [[ "$output" == *"FAILED"* ]]
+  # Second start: nothing left to say.
+  run run_hydrate
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"FAILED"* ]]
 }

@@ -48,6 +48,29 @@ beads_dir="$(bd -C "$cwd" where 2>/dev/null | head -1 || true)"
 notes=""
 add_note() { if [ -z "$notes" ]; then notes="$1"; else notes="$notes $1"; fi; }
 
+# --- 0. report the previous session's detached push --------------------------
+
+# beads-sync-push.sh runs at SessionEnd and detaches, so it cannot report to the
+# session that spawned it. It leaves a verdict line here instead. Reporting it now
+# is the only thing keeping a failed push from being silent -- state would look
+# published while sitting on one machine.
+push_log="${beads_dir%/}/last-push.log"
+if [ -f "$push_log" ]; then
+  case "$(tail -1 "$push_log" 2>/dev/null || true)" in
+    failed:*)
+      add_note "the last session's beads push FAILED -- state is committed locally but not published. See ${push_log}; rerun the push when the cause is fixed."
+      ;;
+    started:*)
+      # Only a start line: the push was cut off before writing a verdict, which
+      # means the machine slept or the process was killed mid-transfer.
+      add_note "the last session's beads push did not finish (no result recorded in ${push_log}); it may need rerunning."
+      ;;
+  esac
+  # Clear it either way: a stale verdict must not be re-reported every session.
+  # This is the ONLY reader, so consuming the file loses nothing.
+  rm -f "$push_log" 2>/dev/null || true
+fi
+
 # --- 1. native Dolt pull ----------------------------------------------------
 
 if beads_has_dolt_remote "$cwd" && beads_opt "$cwd" custom.dolt-auto-pull; then
