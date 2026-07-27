@@ -1,7 +1,7 @@
 {
   "name": "steering-docs-specs",
   "version": "3.1.1",
-  "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the write-docs package. Opt-in steering.",
+  "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the slopvac package (srobroek/slopvac). Opt-in steering.",
   "author": {
     "name": "Sjors Robroek"
   },
