@@ -16,10 +16,8 @@ set -euo pipefail
 # A successful pull does not skip step 2: a peer without push access may have
 # committed JSONL the Dolt remote has never seen, so the file can still be ahead.
 #
-# PULL IS READ-ONLY AND SAFE TO AUTOMATE. Push is not -- it mutates a remote and
-# can hang (measured: no return inside 120s against a guard-blocked remote), so
-# this hook never pushes. Pushing stays a deliberate act per the SYNC rule on
-# explicit sync authority.
+# This hook only receives. Publishing is beads-sync-push.sh, which runs after the
+# agent's commit -- at session start there is nothing new to send.
 #
 # Self-gating: fail open (exit 0) whenever state cannot be determined. A sync
 # hook must never be the reason a session cannot start.
@@ -44,37 +42,16 @@ bd -C "$cwd" where >/dev/null 2>&1 || exit 0
 beads_dir="$(bd -C "$cwd" where 2>/dev/null | head -1 || true)"
 [ -n "$beads_dir" ] && [ -d "$beads_dir" ] || exit 0
 
-opt() {
-  case "$(bd -C "$cwd" config get "$1" 2>/dev/null || true)" in
-    true|1|yes|on) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-# `timeout` is GNU; macOS ships it only via coreutils. Degrade to running bare
-# rather than skipping the pull, but use a bound wherever one exists.
-run_bounded() {
-  if command -v timeout >/dev/null 2>&1; then
-    timeout "$PULL_TIMEOUT" "$@"
-  elif command -v gtimeout >/dev/null 2>&1; then
-    gtimeout "$PULL_TIMEOUT" "$@"
-  else
-    "$@"
-  fi
-}
+# shellcheck source=beads-sync-lib.sh
+. "$(dirname "$0")/beads-sync-lib.sh"
 
 notes=""
 add_note() { if [ -z "$notes" ]; then notes="$1"; else notes="$notes $1"; fi; }
 
 # --- 1. native Dolt pull ----------------------------------------------------
 
-has_remote=1
-case "$(bd -C "$cwd" dolt remote list 2>/dev/null || true)" in
-  ""|*"No remotes configured"*) has_remote=0 ;;
-esac
-
-if [ "$has_remote" = 1 ] && opt custom.dolt-auto-pull; then
-  if ! run_bounded env BD_NO_PAGER=1 BD_NON_INTERACTIVE=1 \
+if beads_has_dolt_remote "$cwd" && beads_opt "$cwd" custom.dolt-auto-pull; then
+  if ! beads_bounded "$PULL_TIMEOUT" env BD_NO_PAGER=1 BD_NON_INTERACTIVE=1 \
        bd -C "$cwd" dolt pull >/dev/null 2>&1; then
     # Expected in three cases, none fatal: nothing has ever been pushed ("no
     # branches found in remote"), the network is unreachable, or a push guard
@@ -86,7 +63,7 @@ fi
 # --- 2. JSONL fallback, only when the file actually differs -------------------
 
 source_file="${beads_dir%/}/issues.jsonl"
-if opt custom.jsonl-git-sync && [ -s "$source_file" ]; then
+if beads_opt "$cwd" custom.jsonl-git-sync && [ -s "$source_file" ]; then
   # Compare against a fresh export instead of timestamps. bd exposes no
   # database-wide commit time (`bd history` needs an issue id; `bd vc status`
   # gives a hash with no date), and file mtime is unreliable after a checkout --

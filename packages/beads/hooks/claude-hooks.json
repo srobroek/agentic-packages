@@ -41,6 +41,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.sh",
+            "statusMessage": "Publishing beads state (Dolt push if permitted)...",
+            "timeout": 150
+          }
+        ]
+      }
     ]
   }
 }

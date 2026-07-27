@@ -102,8 +102,21 @@ DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
   config" authority the rule above allows. Pull is read-only and cannot lose
   local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
   a blocked remote does not fail fast.
-NOT Automatic push from any hook. Push mutates a remote and can hang (no return
-  inside 120s against a guard-blocked remote). It stays a deliberate act.
+DEFAULT Auto-push with `bd config set custom.dolt-auto-push true`.
+  `beads-sync-push.sh` runs on PostToolUse after a commit (pre-commit there is
+  nothing to send) and publishes bead state. Acceptable to automate because what
+  moves is task records, not source: a Dolt push writes only
+  `refs/dolt/blobstore/`, touches no branch, and is additive.
+MUST Ask the policy guard, never guess or circumvent it. The probe is
+  `git push --dry-run`, which runs the same pre-push checks while transferring
+  nothing. Three verdicts, and the difference matters: permitted, REFUSED (switch
+  to JSONL or request an exemption), and NO VERDICT (unreachable/timeout -- stay
+  quiet and retry next commit, since advising a strategy change over a dropped
+  network is worse than silence).
+NOT Overriding `core.hooksPath`, injecting credentials, or any other route around
+  a refusing guard. A refusal is an answer, not an obstacle.
+GOTCHA Git resolves the remote host BEFORE running pre-push hooks, so an
+  unreachable URL never reaches the guard and yields no verdict either way.
 DEFAULT Prefer bd's own `export.auto` (throttled export after every write) over
   hook-driven export. Two gaps keep `beads-sync-stage.sh` necessary:
   `export.git-add: true` does not actually stage the file, and throttling lets it

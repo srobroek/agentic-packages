@@ -15,6 +15,8 @@ setup() {
   S="${BATS_TEST_DIRNAME}/../scripts"
   STAGE="$S/beads-sync-stage.sh"
   HYDRATE="$S/beads-sync-hydrate.sh"
+  PUSH="$S/beads-sync-push.sh"
+  LIB="$S/beads-sync-lib.sh"
   command -v jq >/dev/null 2>&1 || skip "jq not available"
 
   REPO="$BATS_TEST_TMPDIR/repo"
@@ -57,6 +59,8 @@ staged() { git -C "$REPO" diff --cached --name-only; }
 @test "scripts parse under /bin/bash" {
   run /bin/bash -n "$STAGE"; [ "$status" -eq 0 ]
   run /bin/bash -n "$HYDRATE"; [ "$status" -eq 0 ]
+  run /bin/bash -n "$PUSH"; [ "$status" -eq 0 ]
+  run /bin/bash -n "$LIB"; [ "$status" -eq 0 ]
 }
 
 # --- fail-open gating -------------------------------------------------------
@@ -257,4 +261,93 @@ staged() { git -C "$REPO" diff --cached --name-only; }
            md5sum "$REPO/.beads/issues.jsonl" | cut -d' ' -f1)"
   [ "$before" = "$after" ]
   [ -z "$(staged)" ]
+}
+
+# --- push: policy-gated publish ---------------------------------------------
+
+run_push() { commit_payload "$1" | /bin/bash "$PUSH"; }
+
+@test "push: no auto-push opt-in means the hook is inert" {
+  init_beads
+  run run_push "git commit -m x"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "push: opt-in without a Dolt remote is inert" {
+  init_beads
+  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
+  # Nothing to push to. Must not error, and must not invent a remote.
+  run run_push "git commit -m x"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "push: non-commit command is inert" {
+  init_beads
+  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
+  run run_push "git status"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "push: an unreachable remote stays quiet (transient, not a policy verdict)" {
+  init_beads
+  bd -C "$REPO" create "a bead" >/dev/null 2>&1
+  bd -C "$REPO" config set custom.dolt-auto-push true >/dev/null 2>&1
+  bd -C "$REPO" dolt remote add origin "git+https://invalid.invalid/nope.git" \
+    >/dev/null 2>&1 || skip "cannot add remote"
+  # An unreachable host is not a refusal. Telling the operator to abandon Dolt
+  # sync because their network blipped would be worse than saying nothing.
+  BEADS_SYNC_PUSH_TIMEOUT=5 BEADS_SYNC_PROBE_TIMEOUT=5 run run_push "git commit -m x"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"refuses"* ]]
+}
+
+# --- lib: the policy probe ---------------------------------------------------
+
+@test "lib: push probe treats a refusing pre-push hook as not permitted" {
+  # Stand in for a corporate guard: a pre-push hook that refuses with the same
+  # shape of message. The probe must read the refusal, not the exit code, since a
+  # dry-run exits non-zero for many ordinary reasons.
+  #
+  # The remote must be REACHABLE: git resolves the host before running pre-push,
+  # so an unreachable URL never reaches the guard at all. A local bare repo is the
+  # cheapest reachable remote.
+  git init -q --bare "$BATS_TEST_TMPDIR/bare.git"
+  git -C "$REPO" remote add origin "$BATS_TEST_TMPDIR/bare.git"
+  git -C "$REPO" commit -q --allow-empty -m base
+  mkdir -p "$REPO/.githooks"
+  cat > "$REPO/.githooks/pre-push" <<'HOOK'
+#!/bin/sh
+echo "Code Defender blocked your push due to the above finding." >&2
+exit 1
+HOOK
+  chmod +x "$REPO/.githooks/pre-push"
+  git -C "$REPO" config core.hooksPath .githooks
+
+  run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 10"
+  [ "$status" -eq 1 ]
+}
+
+@test "lib: push probe returns no-verdict (2) when there is no origin" {
+  # 2, not 1: absence of a remote is not a policy refusal, and conflating them
+  # would advise a strategy change for a missing config.
+  run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 5"
+  [ "$status" -eq 2 ]
+}
+
+@test "lib: push probe returns no-verdict (2) for an unreachable host" {
+  git -C "$REPO" remote add origin "https://invalid.invalid/nope.git"
+  git -C "$REPO" commit -q --allow-empty -m base
+  run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 10"
+  [ "$status" -eq 2 ]
+}
+
+@test "lib: push probe permits a reachable remote with no guard" {
+  git init -q --bare "$BATS_TEST_TMPDIR/ok.git"
+  git -C "$REPO" remote add origin "$BATS_TEST_TMPDIR/ok.git"
+  git -C "$REPO" commit -q --allow-empty -m base
+  run /bin/bash -c ". '$LIB'; beads_push_permitted '$REPO' 10"
+  [ "$status" -eq 0 ]
 }

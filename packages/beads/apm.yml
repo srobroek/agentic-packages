@@ -8,10 +8,10 @@ description: >-
   dependent packages map onto. A build-formula skill covers formula authoring:
   conditional steps, gates, composition, and the assertions that prove a formula
   pours the DAG it declares. A guard denies mutating `gh issue` commands in
-  Beads repositories. Opt-in sync hooks prefer native Dolt pull and fall back to
-  JSONL over ordinary git only where that is blocked, hydrating at session start
-  and staging on commit; neither ever pushes. Global `bd setup` wires session
-  start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates
+  Beads repositories. Opt-in sync hooks prefer native Dolt sync -- pull at session
+  start, push after commit once a `git push --dry-run` probe confirms the repo's
+  policy guard permits it -- and fall back to JSONL over ordinary git only where
+  it does not. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates
   only in repositories with `.beads/`.
 author: Sjors Robroek
 license: Apache-2.0
