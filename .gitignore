@@ -29,6 +29,10 @@ build/
 dist/
 __pycache__/
 *.pyc
+# No project venv is needed: scripts are PEP 723 and run via `uv run --script`.
+# A bare `uv run --with ...` still materializes one from pyproject.toml, so ignore
+# it rather than let it be committed.
+.venv/
 
 # SpecKit: ignore fetched/built extension artifacts (refetched/rebuilt locally),
 # keep the lean .specify/ config (manifests, templates, workflows, integration).
