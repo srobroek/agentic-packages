@@ -4,6 +4,6 @@ applyTo: "**/*"
 ---
 
 For coexisting with concurrent agents and human authors in the same repo or
-worktree -- fixing pre-existing issues in passing, tolerating upstream changes,
-and escaping interference via Worktrunk -- read
+worktree -- tolerating upstream changes, and escaping interference or
+underneath-you branch switches via Worktrunk -- read
 [multi-agent steering](../context/multi-agent.multi-agent-index.context.md).
