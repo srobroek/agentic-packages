@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/steering-multi-agent--v1.0.0...steering-multi-agent--v1.0.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **steering-multi-agent:** pointer text names the branch-switch recovery, not the relocated pre-existing-issues rule ([#784](https://github.com/srobroek/agentic-packages/issues/784)) ([b735387](https://github.com/srobroek/agentic-packages/commit/b735387e33ea3f5c9859ecb65ba4288979e22964))
+
 ## 1.0.0 (2026-07-27)
 
 
