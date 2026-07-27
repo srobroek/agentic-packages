@@ -8,6 +8,11 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-gh-issue-guard.sh",
             "statusMessage": "Checking gh issue command against beads policy..."
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.sh",
+            "statusMessage": "Staging beads JSONL for commit..."
           }
         ]
       }
@@ -20,6 +25,32 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-subagent-reminder.sh",
             "statusMessage": "Injecting beads work contract..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-hydrate.sh",
+            "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.sh",
+            "statusMessage": "Publishing beads state (Dolt push if permitted)...",
+            "timeout": 150
           }
         ]
       }
