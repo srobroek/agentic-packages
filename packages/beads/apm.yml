@@ -8,7 +8,9 @@ description: >-
   dependent packages map onto. A build-formula skill covers formula authoring:
   conditional steps, gates, composition, and the assertions that prove a formula
   pours the DAG it declares. A guard denies mutating `gh issue` commands in
-  Beads repositories. Global `bd setup` wires session start; `bd init
+  Beads repositories. Opt-in JSONL-over-git hooks carry bead state through
+  ordinary commits where `bd dolt push` is blocked: export and stage on commit,
+  hydrate at session start. Global `bd setup` wires session start; `bd init
   --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates
   only in repositories with `.beads/`.
 author: Sjors Robroek

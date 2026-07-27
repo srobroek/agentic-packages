@@ -88,7 +88,32 @@ MUST `bd dolt pull`/`push` only with explicit sync authority from user,
   repo config, or orchestrator; `git push` does not sync `refs/dolt/data`.
 DEFAULT Local: no routine pull; one push at orchestrator handoff.
 DEFAULT Cross-machine: one pull before fan-out, one push after updates.
-NOT `bd import` of issues.jsonl -- `bd dolt pull` is the sync path.
+NOT `bd import` of issues.jsonl by hand -- `bd dolt pull` is the sync path,
+  and in a JSONL-over-git repo (below) the hooks own both halves.
+
+JSONL OVER GIT (fallback where `bd dolt push` cannot run)
+DEFAULT Off. `bd dolt push` stays the sync path; this exists for repos where it
+  is blocked -- it writes `refs/dolt/blobstore/`, which corporate push guards
+  reject as an unapproved-remote push and which needs credentials Dolt cannot
+  prompt for.
+MUST Opt in per repo with `bd config set custom.jsonl-git-sync true`, commit
+  `.beads/issues.jsonl merge=union` to `.gitattributes`, and confirm the file is
+  not git-ignored (a stealth `bd init` excludes `.beads/` via
+  `.git/info/exclude`, which makes `git add` fail silently).
+MUST Leave both halves to the hooks: `beads-jsonl-export.sh` refreshes and
+  stages the file on `git commit`, `beads-jsonl-import.sh` hydrates at session
+  start. Neither commits; the agent's own commit carries the file.
+DEFAULT Trust the importer's resolution: newer `updated_at` wins, ties keep
+  local, comments/labels/dependencies merge, local-only beads are never deleted,
+  and stale rows are skipped and reported. `union` deliberately leaves duplicate
+  ids in the file for the importer to resolve.
+NOT `--allow-stale` unless deliberately restoring an older snapshot -- it
+  overwrites newer local state.
+MUST On a stale-skip warning at session start, commit a fresh export before
+  pulling peer changes: the committed file is behind the local database, so the
+  next export would overwrite what a peer committed.
+NOT A substitute for `bd dolt push` where that works -- export carries issue
+  records only, no Dolt branches, commit history, or non-issue tables.
 
 GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
 
