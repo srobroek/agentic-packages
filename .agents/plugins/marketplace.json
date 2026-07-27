@@ -41,18 +41,6 @@
       "category": "engineering"
     },
     {
-      "name": "agent-conformance",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-conformance"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
       "name": "agent-explorer",
       "source": {
         "source": "local",
@@ -557,18 +545,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-subagent-model",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-subagent-model"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-subagent-worktree",
       "source": {
         "source": "local",
@@ -723,78 +699,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "project-lifecycle"
-    },
-    {
-      "name": "lsp-go",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-go"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "lsp-python",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-python"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "lsp-rust",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-rust"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "lsp-shell",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-shell"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "lsp-terraform",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-terraform"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "lsp-typescript",
-      "source": {
-        "source": "local",
-        "path": "./packages/lsp-typescript"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
     },
     {
       "name": "matt-skills",
