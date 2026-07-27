@@ -219,8 +219,9 @@ def test_name_collision_local_wins_no_duplicate():
 def test_repo_block_local_entries_have_canonical_shape():
     # Local (./packages/<dir>) entries must keep the name/source/category/tags
     # shape with no git-source fields -- the common case must not regress. The
-    # repo also carries the project-setup EXTERNAL entry (a git source), so assert
-    # the invariant per-kind rather than "everything is local".
+    # assertion is per-kind rather than "everything is local" so it still holds
+    # whether or not the catalog currently carries an external git entry; it
+    # carries none today.
     ctx = bi.build_context()  # reads the repo's apm.yml
     entries = ctx["marketplace"]["entries"]
     assert entries, "no marketplace entries produced"

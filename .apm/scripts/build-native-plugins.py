@@ -442,12 +442,12 @@ def _render_codex_catalog(ctx: dict) -> str:
     """Render the Codex marketplace catalog from the inventory walk.
 
     `apm pack` also writes this file, but it ignores each package's `target:` and
-    so lists all 120 marketplace members -- including the Claude-only ones (the
-    six `lsp-*` packages, `agent-conformance`, `hooks-subagent-model`) and the
-    external git member `project-setup`, none of which a Codex install can
-    resolve from `./packages/<name>`. Owning it here keeps membership and
-    `target:` in agreement and puts the file under `--check`, so drift fails CI
-    instead of relying on someone reverting `apm pack`'s output by hand.
+    so lists every marketplace member -- including the Claude-only ones (the six
+    `lsp-*` packages, `agent-conformance`, `hooks-subagent-model`) and any
+    external git member, none of which a Codex install can resolve from
+    `./packages/<name>`. Owning it here keeps membership and `target:` in
+    agreement and puts the file under `--check`, so drift fails CI instead of
+    relying on someone reverting `apm pack`'s output by hand.
     """
     existing = json.loads(CODEX_CATALOG.read_text(encoding="utf-8"))
     entries = []
