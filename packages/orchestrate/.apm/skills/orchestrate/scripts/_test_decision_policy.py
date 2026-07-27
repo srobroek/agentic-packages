@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Contract and Beads 1.1.0 tests for orchestration decision policy."""
+"""Contract and Beads tests for orchestration decision policy.
+
+The bd version is read from mise.toml, not pinned here.
+"""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -351,6 +355,20 @@ class DecisionPolicyContractTest(unittest.TestCase):
 
 
 class BeadsDecisionPolicyTest(unittest.TestCase):
+    @staticmethod
+    def pinned_bd_version() -> str:
+        """The bd version mise.toml pins, which is what CI installs."""
+        for parent in Path(__file__).resolve().parents:
+            mise = parent / "mise.toml"
+            if mise.is_file():
+                match = re.search(
+                    r'"aqua:gastownhall/beads"\s*=\s*"([^"]+)"',
+                    mise.read_text(encoding="utf-8"),
+                )
+                if match:
+                    return match.group(1)
+        raise AssertionError("could not find the beads pin in mise.toml")
+
     def setUp(self) -> None:
         if shutil.which("bd") is None:
             self.skipTest("bd CLI not installed")
@@ -364,7 +382,10 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         version = subprocess.run(
             ["bd", "version"], capture_output=True, text=True, check=True, timeout=15
         ).stdout
-        self.assertIn("version 1.1.0", version)
+        # Read the expected version from mise.toml rather than hardcoding it: CI
+        # installs whatever mise pins, so a literal here turns every dependency
+        # bump into five unrelated test failures in setUp.
+        self.assertIn(f"version {self.pinned_bd_version()}", version)
         init = subprocess.run(
             [
                 "bd",
