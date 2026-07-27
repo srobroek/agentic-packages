@@ -1,5 +1,6 @@
 ---
 name: reviewer-high
+model: opus
 effort: high
 description: Select for adversarial read-only review of security-sensitive, architectural,
   or broad-impact changes -- or when reviewer-low escalates a non-mechanical finding.

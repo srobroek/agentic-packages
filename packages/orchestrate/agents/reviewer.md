@@ -1,8 +1,8 @@
 ---
 name: reviewer
 description: Independent read-only reviewer for one claimed review wisp.
-model: sonnet
-effort: high
+model: opus
+effort: low
 permissionMode: plan
 tools:
   - Read

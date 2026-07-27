@@ -1,5 +1,6 @@
 ---
 name: reviewer-low
+model: opus
 effort: low
 description: Select for mechanical read-only review of a small diff against explicit
   acceptance criteria. Escalates non-mechanical judgment to reviewer-high.

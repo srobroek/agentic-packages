@@ -19,8 +19,8 @@
       "source": "./packages/agent-adversarial-challenger"
     },
     {
-      "name": "agent-coder",
-      "description": "Implementation subagents for bounded code changes, tests, and refactors within a defined scope. Ships `coder` (edits the caller's tree directly; the parent commits) and `parallel-coder` (runs in an isolated worktree, self-commits, and hands back a reviewable branch -- for parallel or staged work). Delegation is guided by steering and explicit orchestration rather than per-edit hooks.",
+      "name": "agent-builder",
+      "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which runs in one of two modes the caller must name: `direct-edit` (edits the caller's tree in place; the caller commits) or `isolated` (own git worktree, commits continuously, hands back a reviewable branch). It refuses to start when the mode is unstated, because the two modes fail in opposite and unrecoverable directions.",
       "version": "7.0.2",
       "tags": [
         "agent",
@@ -28,19 +28,19 @@
         "implementation"
       ],
       "category": "engineering",
-      "source": "./packages/agent-coder"
+      "source": "./packages/agent-builder"
     },
     {
-      "name": "agent-coder-high",
-      "description": "Escalated coding agent for complex bounded implementation and debugging.",
+      "name": "agent-builder-high",
+      "description": "Escalated implementation agent for complex bounded work, difficult debugging, and cross-module behaviour changes. Ships `builder-high`, the escalation tier above `agent-builder`'s `builder`.",
       "version": "2.0.1",
       "tags": [
         "agent",
-        "codex",
-        "routing"
+        "engineering",
+        "implementation"
       ],
       "category": "engineering",
-      "source": "./packages/agent-coder-high"
+      "source": "./packages/agent-builder-high"
     },
     {
       "name": "agent-conformance",
@@ -161,18 +161,6 @@
       ],
       "category": "quality",
       "source": "./packages/agent-reviewer-low"
-    },
-    {
-      "name": "agent-worker",
-      "description": "Bounded implementation worker for changes without a more specific coding role.",
-      "version": "2.0.1",
-      "tags": [
-        "agent",
-        "codex",
-        "routing"
-      ],
-      "category": "engineering",
-      "source": "./packages/agent-worker"
     },
     {
       "name": "agentic-maintenance",

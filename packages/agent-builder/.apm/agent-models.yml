@@ -1,6 +1,6 @@
 version: 1
 agents:
-  worker:
+  builder:
     codex:
       model: gpt-5.6-luna
       reasoning_effort: xhigh

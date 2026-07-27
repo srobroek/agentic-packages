@@ -11,33 +11,39 @@ domain-specialist.agent.md into domain-specialist-<tier>.agent.md, changing
 only the `effort:` frontmatter line and the `name:`. One source of truth (the
 base file + its shared rules file); variants are generated, never hand-edited.
 
-Each tier name buys the effort it names. `xhigh` means `effort: xhigh` — a tier
-that silently delivered `high` made the config unreadable, because nothing at the
-call site could tell a deliberate ceiling from a typo. This governs the Claude
-frontmatter only. The Codex side is a separate mapping in `agent-models.yml` and
-deliberately differs: there the tiers select a *model* as well as an effort
-(`-medium` is Luna/high, the base is Sol/medium), because on the Codex ladder the
-cheap-vs-deep step is a model step, not an effort step.
+Each tier name buys the effort it names. A tier that silently delivered a lower
+effort made the config unreadable, because nothing at the call site could tell a
+deliberate ceiling from a typo. The check at the bottom enforces name == effort.
 
-There is no `low` tier. It was deleted 2026-07-26: its Codex cell (Luna/low) is
-Haiku-class — Terminal-Bench v2.1 43.4 against Haiku 4.5's 44.2, agentic 25.4 —
-so the tier promised a cheap specialist and delivered one that fails silently.
-See `.audit-2026-07/findings/MODEL-MATRIX.md`.
+The ladder is TWO rungs, and they differ on both axes at once:
 
-`xhigh` is an ESCALATION-ONLY tier and the orchestrator must not select it by
-default. Measured effort ladders flatten at `high`: tau3 peaks there and declines
-twice above it, GPQA high and xhigh are byte-identical for 42% more tokens, and
-tool use regresses. Reach for it only when a node has already failed at `high`
-and the failure was reasoning depth rather than context, tooling, or scope. Both
-tier files say so at the top of their body.
+    domain-specialist        Claude opus/medium   Codex Sol/medium   default
+    domain-specialist-high   Claude opus/high     Codex Sol/high     escalation
 
-`high` IS the base tier, so `domain-specialist-high` is a byte-for-byte duplicate
-of `domain-specialist` apart from its `name:`. It is generated anyway because it
-exists on `main` and another session's orchestrate rework reintroduced it after an
-earlier audit PR deleted it; leaving it ungenerated would orphan a file that is
-still selectable by name, which is strictly worse than a redundant one. Whether
-the rework wants that variant or inherited it by accident is an open question —
-ACTIONS 3.2 and 3.10.
+That alignment is the point. The previous four-rung ladder crossed its own names
+on the Codex side -- `-medium` sat on Luna/high while the base and `-xhigh` both
+sat on Sol -- so a reader could not tell which rung a variant actually bought.
+Now the rung is one step on both vendors simultaneously.
+
+Retired tiers, all swept by RETIRED on each run:
+
+  `low`     deleted 2026-07-26. Its Codex cell (Luna/low) is Haiku-class --
+            Terminal-Bench v2.1 43.4 against Haiku 4.5's 44.2 -- so the tier
+            promised a cheap specialist and delivered one that fails silently.
+  `medium`  folded into the base, which now IS the medium rung. It was the only
+            Luna cell in the ladder and the only variant whose Codex pin
+            contradicted its name.
+  `xhigh`   dropped. Measured effort ladders flatten at `high`: tau3 peaks there
+            and declines twice above it, GPQA high and xhigh are byte-identical
+            for 42% more tokens, and tool use regresses. There is nothing above
+            `high` worth routing to, so the escalation rung IS `high`.
+
+See `.audit-2026-07/findings/MODEL-MATRIX.md` for the per-effort numbers.
+
+`-high` is ESCALATION-ONLY and the orchestrator must not select it by default.
+Reach for it only when a node has already failed at the default rung and the
+failure was reasoning depth rather than context, tooling, or scope. Its file says
+so at the top of its body.
 
 Run from anywhere: `uv run gen-domain-specialist-variants.py`. Idempotent.
 Orchestrator tier table maps complexity_tier -> (variant, model).
@@ -52,25 +58,25 @@ BASE = os.path.join(AGENTS, "domain-specialist.agent.md")
 # Both trees are git-tracked and both were hand-synced before this script owned
 # the mirror, so regenerating only .apm/ let the mirror drift silently.
 MIRROR = os.path.abspath(os.path.join(HERE, "..", "agents"))
-TIER_EFFORT = {"medium": "medium", "high": "high", "xhigh": "xhigh"}
+TIER_EFFORT = {"high": "high"}
 # Variants this script used to generate and no longer does. Left-over files would
 # keep routing traffic to a deleted tier, so the run deletes them and says so.
-RETIRED = ("low",)
+RETIRED = ("low", "medium", "xhigh")
 
 # Prepended to a variant's body when the tier carries a usage restriction. The
 # generator owns this text so it cannot drift from TIER_EFFORT.
 TIER_NOTE = {
-    "xhigh": (
+    "high": (
         "> **Escalation-only tier.** Do not select this variant as a default. "
-        "Measured effort ladders flatten at `high` — above it, benchmark scores "
+        "Measured effort ladders flatten here: above it, benchmark scores "
         "plateau or decline, token cost rises ~42%, and tool use regresses. Use "
-        "`xhigh` only after a node has failed at `high` AND the failure was "
+        "`-high` only after a node has failed at the default rung AND the failure was "
         "reasoning depth, not missing context, a tooling block, or bad scope. "
-        "If you cannot name which `high` attempt failed, the answer is "
+        "If you cannot name which default-rung attempt failed, the answer is "
         "`domain-specialist`, not this."
     ),
 }
-GEN_MARK = "<!-- GENERATED variant of domain-specialist.agent.md — do not hand-edit; run gen-domain-specialist-variants.py -->"
+GEN_MARK = "<!-- GENERATED variant of domain-specialist.agent.md -- do not hand-edit; run gen-domain-specialist-variants.py -->"
 
 
 def main():

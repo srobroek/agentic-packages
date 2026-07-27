@@ -32,12 +32,12 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     live = _make_script(hooks_dir, "live-pkg", "real.sh")
     obsolete = _make_script(
         hooks_dir,
-        "agent-coder",
+        "agent-builder",
         "coder-delegation-reminder.sh",
     )
     future_agent_coder_hook = _make_script(
         hooks_dir,
-        "agent-coder",
+        "agent-builder",
         "future-legitimate-hook.sh",
     )
     events = {
@@ -96,7 +96,7 @@ def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
 def test_retired_agent_coder_hook_is_removed_even_if_script_exists(
     tmp_path: Path,
 ) -> None:
-    retired = _make_script(tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh")
+    retired = _make_script(tmp_path / "hooks", "agent-builder", "coder-delegation-reminder.sh")
     events = {"PreToolUse": [{"hooks": [{"type": "command", "command": str(retired)}]}]}
 
     assert sanitize_claude_hooks.clean_events(events) == 1

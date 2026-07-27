@@ -1,8 +1,8 @@
 {
   ".": "21.1.2",
   "packages/agent-adversarial-challenger": "4.0.0",
-  "packages/agent-coder": "7.0.2",
-  "packages/agent-coder-high": "2.0.1",
+  "packages/agent-builder": "7.0.2",
+  "packages/agent-builder-high": "2.0.1",
   "packages/agent-conformance": "4.0.0",
   "packages/agent-explorer": "2.0.1",
   "packages/agent-external-repo-worker": "2.2.2",
@@ -13,7 +13,6 @@
   "packages/agent-reasoner": "3.0.0",
   "packages/agent-reviewer-high": "2.0.1",
   "packages/agent-reviewer-low": "2.0.1",
-  "packages/agent-worker": "2.0.1",
   "packages/agentic-maintenance": "9.0.0",
   "packages/audit-steering": "2.1.2",
   "packages/beads": "0.7.1",

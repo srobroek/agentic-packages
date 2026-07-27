@@ -76,20 +76,20 @@ marketplace:
         - adversarial
         - critique
         - decision-review
-    - name: agent-coder
-      source: ./packages/agent-coder
+    - name: agent-builder
+      source: ./packages/agent-builder
       category: engineering
       tags:
         - agent
         - engineering
         - implementation
-    - name: agent-coder-high
-      source: ./packages/agent-coder-high
+    - name: agent-builder-high
+      source: ./packages/agent-builder-high
       category: engineering
       tags:
         - agent
-        - codex
-        - routing
+        - engineering
+        - implementation
     - name: agent-conformance
       source: ./packages/agent-conformance
       category: engineering
@@ -156,13 +156,6 @@ marketplace:
     - name: agent-reviewer-low
       source: ./packages/agent-reviewer-low
       category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-worker
-      source: ./packages/agent-worker
-      category: engineering
       tags:
         - agent
         - codex

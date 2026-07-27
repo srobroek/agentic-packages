@@ -1,4 +1,4 @@
-agent: coder-high
+agent: builder-high
 regime: clean
 prompt: |
   In config.py, rename the constant `MAX_SIZE` to `MAX_ITEMS` and update

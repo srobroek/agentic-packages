@@ -17,10 +17,10 @@
       "category": "quality"
     },
     {
-      "name": "agent-coder",
+      "name": "agent-builder",
       "source": {
         "source": "local",
-        "path": "./packages/agent-coder"
+        "path": "./packages/agent-builder"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -29,10 +29,10 @@
       "category": "engineering"
     },
     {
-      "name": "agent-coder-high",
+      "name": "agent-builder-high",
       "source": {
         "source": "local",
-        "path": "./packages/agent-coder-high"
+        "path": "./packages/agent-builder-high"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -147,18 +147,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "quality"
-    },
-    {
-      "name": "agent-worker",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-worker"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
     },
     {
       "name": "agentic-maintenance",
