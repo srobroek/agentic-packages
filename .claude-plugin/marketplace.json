@@ -1244,6 +1244,19 @@
       "source": "./packages/steering-infrastructure"
     },
     {
+      "name": "steering-multi-agent",
+      "description": "Multi-agent coexistence steering: tolerate concurrent agents and human authors in the same repo or worktree without reverting or reporting their benign changes, and escape interference (including branch switches underneath you) by moving to a Worktrunk checkout instead of fighting back. Always-on steering. Opt-in.",
+      "version": "0.0.0",
+      "tags": [
+        "steering",
+        "multi-agent",
+        "coordination",
+        "worktree"
+      ],
+      "category": "steering",
+      "source": "./packages/steering-multi-agent"
+    },
+    {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
       "version": "4.3.3",

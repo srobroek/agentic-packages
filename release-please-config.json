@@ -1304,6 +1304,18 @@
         }
       ]
     },
+    "packages/steering-multi-agent": {
+      "release-type": "simple",
+      "component": "steering-multi-agent",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-pragmatic": {
       "release-type": "simple",
       "component": "steering-pragmatic",

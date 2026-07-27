@@ -1,0 +1,19 @@
+name: steering-multi-agent
+version: 0.0.0
+description: >-
+  Multi-agent coexistence steering: tolerate concurrent agents and human
+  authors in the same repo or worktree without reverting or reporting their
+  benign changes, and escape interference (including branch switches
+  underneath you) by moving to a Worktrunk checkout instead of fighting
+  back. Always-on steering. Opt-in.
+author: Sjors Robroek
+license: Apache-2.0
+type: instructions
+target: all
+includes: auto
+category: steering
+tags:
+  - steering
+  - multi-agent
+  - coordination
+  - worktree

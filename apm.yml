@@ -786,6 +786,14 @@ marketplace:
       tags:
         - steering
         - infrastructure
+    - name: steering-multi-agent
+      source: ./packages/steering-multi-agent
+      category: steering
+      tags:
+        - steering
+        - multi-agent
+        - coordination
+        - worktree
     - name: steering-pragmatic
       source: ./packages/steering-pragmatic
       category: steering
