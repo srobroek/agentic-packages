@@ -235,7 +235,7 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
             try:
                 expanded.extend(expand_commands(inner, depth + 1))
             except ValueError:
-                # An unparseable inner string leaves the outer command judged.
+                # An unparsable inner string leaves the outer command judged.
                 continue
     return expanded
 
