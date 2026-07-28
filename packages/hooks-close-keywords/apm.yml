@@ -9,7 +9,7 @@ description: >-
   that rewrites the message in place (tool-agnostic), and a PreToolUse guard on
   `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow +
   additionalContext carrying the corrected body) when a malformed comma-list
-  close is detected. Cross-tool (Claude + Codex).
+  close is detected. Requires python3 on PATH. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions

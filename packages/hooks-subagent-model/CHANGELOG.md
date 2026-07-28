@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-model--v1.0.2...hooks-subagent-model--v2.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Bug Fixes
+
+* drop the repo-local source guard and stop routing agent work to haiku ([#791](https://github.com/srobroek/agentic-packages/issues/791)) ([b1b8b4e](https://github.com/srobroek/agentic-packages/commit/b1b8b4e78d6f18deb387d351cfb7365452e005d9))
+
 ## [1.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-model--v1.0.1...hooks-subagent-model--v1.0.2) (2026-07-27)
 
 

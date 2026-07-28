@@ -1,24 +1,12 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-before-commit.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "apply_patch|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-edit-advisory.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/quality-edit-advisory.py",
             "timeout": 3
           }
         ]

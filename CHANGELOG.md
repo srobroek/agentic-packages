@@ -1,5 +1,47 @@
 # Changelog
 
+## [25.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.1.1...srobroek-agentic--v25.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the codex-hook-contract package is renamed to agent-hook-contract. Update any dependency pin to the new package path.
+* **hooks-bash-safety:** agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Features
+
+* require Python for agent hooks and generalize the hook contract to Claude and Codex ([#790](https://github.com/srobroek/agentic-packages/issues/790)) ([45d3606](https://github.com/srobroek/agentic-packages/commit/45d36065aa0f56c9e34010388226aef8eb206fd8))
+
+
+### Bug Fixes
+
+* **hooks-bash-safety:** block rm -rf that a leading cd redirects to a system path ([#788](https://github.com/srobroek/agentic-packages/issues/788)) ([34bfd74](https://github.com/srobroek/agentic-packages/commit/34bfd74cf22648d223e2c76f1d073ff7987787a8))
+
+## [24.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.1.0...srobroek-agentic--v24.1.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **agent-management:** run the global scripts through uv, not a shadowed python3 ([#786](https://github.com/srobroek/agentic-packages/issues/786)) ([a264e1f](https://github.com/srobroek/agentic-packages/commit/a264e1f2341f2cdb0e092f6b430782b1c1ceece5))
+
+## [24.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.0.0...srobroek-agentic--v24.1.0) (2026-07-27)
+
+
+### Features
+
+* multi-agent coexistence steering package ([#782](https://github.com/srobroek/agentic-packages/issues/782)) ([f3278f3](https://github.com/srobroek/agentic-packages/commit/f3278f3ee81f8ae0ee874086df903ab9432f0b7b))
+
+## [24.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v23.0.0...srobroek-agentic--v24.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780))
+
+### Refactors
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780)) ([3a8fd27](https://github.com/srobroek/agentic-packages/commit/3a8fd27dab5a5692ee0e669ca7942584355ec939))
+
 ## [23.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v22.0.0...srobroek-agentic--v23.0.0) (2026-07-27)
 
 

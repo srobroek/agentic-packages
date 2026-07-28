@@ -1,9 +1,0 @@
-{
-  "name": "codex-hook-contract",
-  "version": "0.3.2",
-  "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

@@ -79,9 +79,22 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
+      "name": "agent-hook-contract",
+      "description": "Cross-tool agent hook contract for Claude Code and Codex CLI: supported events, matcher behavior, payloads, decisions, trust, and runtime limits, plus the authoring rules this repo holds its hooks to. Hooks are written in Python unless the script only forwards to one command: a hook that parses shell with grep and sed is a tokenizer without a lexer, and every gap is a bypass. Python is also faster once a hook touches jq, since one jq spawn costs more than the whole bash-vs-Python startup gap. Covers the per-call performance budget (no uv run on a per-tool-call hook, stdlib only on the hot path, in-process repo root discovery, batched git calls, cheap pre-parse bail) and the reliability rules (fail open, never emit ask, write denials to the model, accept a string tool_input, self-filter inside the script). Documentation only.",
+      "version": "1.0.0",
+      "tags": [
+        "hooks",
+        "claude",
+        "codex",
+        "reference"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/agent-hook-contract"
+    },
+    {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.2.3",
+      "version": "1.2.4",
       "tags": [
         "skill",
         "maintenance",
@@ -258,18 +271,6 @@
       "source": "./packages/code-intelligence"
     },
     {
-      "name": "codex-hook-contract",
-      "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
-      "version": "0.3.2",
-      "tags": [
-        "codex",
-        "hooks",
-        "reference"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/codex-hook-contract"
-    },
-    {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
       "version": "15.0.0",
@@ -427,7 +428,7 @@
     },
     {
       "name": "hooks-attribution-guard",
-      "description": "Advises against AI authorship attribution in git commits (Co-Authored-By Claude/Anthropic, \"Generated with/by AI\", \"AI-assisted/AI-generated\", Claude Code trailers). Emits a non-blocking advisory (allow + additionalContext, exit 0) so the human stays the sole author of record. Scoped to attribution trailers/phrases so prose mentioning AI is not flagged. Cross-tool (Claude + Codex).",
+      "description": "Advises against AI authorship attribution in git commits so the human stays the sole author of record. Covers agent trailers from any vendor (Co-Authored-By / Signed-off-by / Assisted-by naming Claude, Codex, Copilot, Cursor, Devin, aider, Gemini, OpenHands, Windsurf and others, or pointing at an agent noreply address), \"Generated with/by\" phrases, agent signature URLs, robot-emoji signature lines, and hyphenated AI-assisted/AI-generated qualifiers. Emits a non-blocking advisory (allow + additionalContext, exit 0); a commit message is trivially fixable, so it never blocks. Scoped to authorship constructs, so ordinary work that merely names an agent or a model (\"fix AI model loading bug\", \"bump anthropic sdk\") is not flagged. Cross-tool (Claude + Codex).",
       "version": "2.1.1",
       "tags": [
         "hooks",
@@ -439,8 +440,8 @@
     },
     {
       "name": "hooks-bash-safety",
-      "description": "Bash safety guards tuned for autonomous agents: hard-block only unrecoverable ops (rm -rf / or $HOME root, mkfs, dd to a real block device, sandbox-bypass flag). dd to pseudo-devices (/dev/null, /dev/zero, /dev/random, /dev/urandom, /dev/stdout, /dev/stdin) is allowed. curl|sh pipes emit a non-blocking warn (allow + advisory). sudo paired with destructive/disruptive verbs also warns. rm -rf defers to rm-rf-guard: project-local and temp-dir cleanups are silent; unexpanded $var targets are denied; ~/subpath, repo root/.git, and outside-tree paths warn (non-blocking). Quoted bypass forms (rm -rf \"/etc\") and flags-after-target (rm /path -rf) are denied. Matching is anchored to command position to avoid quoted-string false positives. No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
-      "version": "2.2.2",
+      "description": "Bash safety guard tuned for autonomous agents, in one Python module with a real shell tokenizer. Denies only the unrecoverable: rm -rf on the filesystem root, a home root, or a system-critical tree (BS-4/BS-8), rm -rf whose target hides behind an unexpanded variable so the guard cannot verify it (BS-9), mkfs (BS-5), dd onto a real block device while allowing the pseudo-devices (BS-6), and the sandbox-bypass flag (BS-3). Warns without blocking on a curl-to-shell pipe, sudo with a destructive verb, and rm -rf outside the git working tree (BS-7, BS-10). Anything inside the working tree is assumed git-recoverable and passes silently, so wiping node_modules or a build directory says nothing. Because the command is tokenized rather than pattern-matched, wrapper prefixes, env assignments, leading tabs, quoted targets, flags after the target, path traversal, subshells, loop bodies, and a rebasing cd are all covered by construction. Never emits \"ask\". Cross-tool (Claude + Codex).",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "bash",
@@ -451,7 +452,7 @@
     },
     {
       "name": "hooks-chezmoi-guard",
-      "description": "PreToolUse advisory (non-blocking) for files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). Emits permissionDecision:\"allow\" + additionalContext steering changes to the chezmoi source -- the operation proceeds. Read-only references and unmanaged paths are silent. Cross-tool (Claude + Codex).",
+      "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
       "version": "2.1.1",
       "tags": [
         "hooks",
@@ -464,7 +465,7 @@
     },
     {
       "name": "hooks-close-keywords",
-      "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow + additionalContext carrying the corrected body) when a malformed comma-list close is detected. Cross-tool (Claude + Codex).",
+      "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow + additionalContext carrying the corrected body) when a malformed comma-list close is detected. Requires python3 on PATH. Cross-tool (Claude + Codex).",
       "version": "0.6.1",
       "tags": [
         "hooks",
@@ -477,7 +478,7 @@
     },
     {
       "name": "hooks-git-safety",
-      "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target -- agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
+      "description": "Git safety guard for autonomous agents, in one Python module with a real shell tokenizer. Denies exactly one thing: a destructive op aimed at another working tree through an unexpanded variable or ~, where the guard cannot resolve which tree is affected (GS-2). Everything else is non-blocking. reset --hard, checkout --, restore, and clean -f warn only when repository state shows work would really be lost (GS-3, GS-5, GS-6), so a clean tree stays silent and an untracked-only tree does not trip the reset rules. push --force always warns, because the loss is on the remote where local state cannot answer for it (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass silently, all being reflog-recoverable. State reads happen once, and only after a destructive verb matches. An unreadable tree warns rather than staying quiet. Never emits \"ask\". Cross-tool (Claude + Codex).",
       "version": "2.2.2",
       "tags": [
         "hooks",
@@ -486,18 +487,6 @@
       ],
       "category": "project-lifecycle",
       "source": "./packages/hooks-git-safety"
-    },
-    {
-      "name": "hooks-git-workflow",
-      "description": "Opt-in git workflow hook: warn about uncommitted AND unpushed work at session end (continuous commit/push cadence). Cross-tool (Claude + Codex).",
-      "version": "3.0.1",
-      "tags": [
-        "hooks",
-        "git",
-        "commit"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/hooks-git-workflow"
     },
     {
       "name": "hooks-package-investigate",
@@ -512,20 +501,8 @@
       "source": "./packages/hooks-package-investigate"
     },
     {
-      "name": "hooks-precommit-gate",
-      "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory -- the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.6.1",
-      "tags": [
-        "hooks",
-        "git",
-        "pre-commit"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/hooks-precommit-gate"
-    },
-    {
       "name": "hooks-quality",
-      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK -- it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
+      "description": "Non-blocking quality advisory on edits. Accumulates edited files and changed lines across a session and suggests targeted checks (ruff, gofmt, cargo fmt, biome) once the change is large enough to warrant one, then holds a cooldown so it does not nag. Commit-time formatting is deliberately not covered: that is the pre-commit framework's stage, and this hook advises per language only where the framework does not already run a checker for it, which needs both an installed framework hook and a config naming that checker. Language selection reads .agents/hooks/quality-languages, then AGENTIC_QUALITY_LANGS, then marker files, so an unrecognised project is silent rather than guessed at. Never denies. Thresholds via AGENTIC_QUALITY_ADVISORY_LINES, _FILES, _COOLDOWN_SECONDS. Cross-tool (Claude + Codex).",
       "version": "1.3.1",
       "tags": [
         "hooks",
@@ -565,7 +542,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
-      "version": "1.0.2",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "subagent",
@@ -923,7 +900,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "13.0.0",
+      "version": "14.0.0",
       "tags": [
         "skill",
         "agent",
@@ -958,7 +935,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -1077,18 +1054,6 @@
       "source": "./packages/rust-quality"
     },
     {
-      "name": "secrets-scan",
-      "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "2.1.1",
-      "tags": [
-        "security",
-        "secrets",
-        "pre-commit"
-      ],
-      "category": "security",
-      "source": "./packages/secrets-scan"
-    },
-    {
       "name": "session-review",
       "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, or `write-agentic`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
       "version": "1.1.1",
@@ -1188,8 +1153,8 @@
     },
     {
       "name": "steering-docs-specs",
-      "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the write-docs package. Opt-in steering.",
-      "version": "3.1.1",
+      "description": "Spec and SpecKit workflow conventions: spec modes, specs/ placement, and .specify/ asset separation. Doc-writing style rules live in the slopvac package (srobroek/slopvac). Opt-in steering.",
+      "version": "4.0.0",
       "tags": [
         "steering",
         "docs"
@@ -1244,9 +1209,22 @@
       "source": "./packages/steering-infrastructure"
     },
     {
+      "name": "steering-multi-agent",
+      "description": "Multi-agent coexistence steering: tolerate concurrent agents and human authors in the same repo or worktree without reverting or reporting their benign changes, and escape interference (including branch switches underneath you) by moving to a Worktrunk checkout instead of fighting back. Always-on steering. Opt-in.",
+      "version": "1.0.1",
+      "tags": [
+        "steering",
+        "multi-agent",
+        "coordination",
+        "worktree"
+      ],
+      "category": "steering",
+      "source": "./packages/steering-multi-agent"
+    },
+    {
       "name": "steering-pragmatic",
       "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "4.3.3",
+      "version": "4.4.0",
       "tags": [
         "steering",
         "pragmatic",
@@ -1282,7 +1260,7 @@
     {
       "name": "steering-subagent-routing",
       "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
-      "version": "3.2.5",
+      "version": "4.0.0",
       "tags": [
         "steering",
         "routing"
@@ -1418,18 +1396,6 @@
       ],
       "category": "agentic-maintenance",
       "source": "./packages/write-agentic"
-    },
-    {
-      "name": "write-docs",
-      "description": "Author and review READMEs, consumer docs, PR descriptions, and internal docs: objective, example-backed, written for the released artifact, and slop-free. Ships a Vale prose gate (house style plus the pinned vale-ai-tells package) and a SubagentStart hook that injects the same documentation discipline into every subagent. Requires the vale binary on PATH.",
-      "version": "3.0.0",
-      "tags": [
-        "skill",
-        "docs",
-        "writing"
-      ],
-      "category": "docs",
-      "source": "./packages/write-docs"
     }
   ]
 }

@@ -151,6 +151,19 @@ def test_unusable_payload_fails_open(payload: str, wt_on_path: str) -> None:
     assert result.stdout == ""
 
 
+def test_a_non_string_cwd_fails_open(wt_on_path: str) -> None:
+    """The contract requires fail-open on an unexpected payload shape.
+
+    A list `cwd` reached Path() and raised TypeError, and with no wrapper around
+    main() the guard exited 1 with a traceback on the hot path.
+    """
+    result = run_guard(
+        {"cwd": ["/tmp"], "tool_input": {"command": "git worktree add x"}},
+        path=wt_on_path,
+    )
+    assert result.returncode == 0, f"must not fail closed: {result.stderr}"
+
+
 def test_absent_wt_binary_is_silent(tmp_path: Path) -> None:
     empty_bin = tmp_path / "empty"
     empty_bin.mkdir()

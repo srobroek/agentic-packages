@@ -56,13 +56,11 @@ jobs:
         # The repo-local PreToolUse guards under .apm/hooks are not packages, so
         # neither test.yml (scans packages/*) nor the generators above cover
         # them. Run their bats suites here so a guard regression (e.g. blocking a
-        # read-only command) can't land silently, and shellcheck the specific
-        # guards those suites cover. (Whole-dir shellcheck is intentionally NOT
-        # run: the other repo-local scripts carry pre-existing warnings and are
-        # out of scope for this gate; broaden coverage as suites are added.)
+        # read-only command) can't land silently. (Whole-dir shellcheck is
+        # intentionally NOT run: the other repo-local scripts carry pre-existing
+        # warnings and are out of scope for this gate; add a targeted shellcheck
+        # line alongside each suite as suites are added.)
         run: |
-          shellcheck -S warning .apm/hooks/scripts/agentic-source-guard.sh
-          echo "shellcheck clean: agentic-source-guard.sh"
           bats_files=$(find .apm/hooks/tests -name '*.bats' 2>/dev/null || true)
           if [ -n "$bats_files" ]; then
             if ! command -v bats >/dev/null 2>&1; then
@@ -104,6 +102,15 @@ jobs:
         # applyTo (use "**/*" for genuinely global guidance) so it renders to
         # exactly one target.
         run: python3 .apm/scripts/check-instructions-apply-to.py
+
+      - name: Validate hook scripts against their manifests
+        # The checks above validate invocation modes, release baselines, applyTo
+        # coverage, and Codex manifest shape; none reads what a hook script DOES
+        # against what its manifest and target claim. Every defect a recent audit
+        # found was that shape and passed a green pipeline: an apply_patch branch no
+        # matcher routed, a Claude-only systemMessage under target: all, and the
+        # `ask` ban going unenforced despite constitution III.
+        run: python3 .apm/scripts/check-hook-contract.py
 
       - name: Regenerate non-destructive artifacts
         run: |

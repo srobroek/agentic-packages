@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/pr-close-guard.sh",
+            "command": "${PLUGIN_ROOT}/scripts/pr-close-guard.py",
             "timeout": 10
           }
         ]

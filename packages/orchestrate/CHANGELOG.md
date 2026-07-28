@@ -1,5 +1,22 @@
 # Changelog
 
+## [14.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v13.0.0...orchestrate--v14.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the codex-hook-contract package is renamed to agent-hook-contract. Update any dependency pin to the new package path.
+* **hooks-bash-safety:** agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Features
+
+* require Python for agent hooks and generalize the hook contract to Claude and Codex ([#790](https://github.com/srobroek/agentic-packages/issues/790)) ([45d3606](https://github.com/srobroek/agentic-packages/commit/45d36065aa0f56c9e34010388226aef8eb206fd8))
+
+
+### Bug Fixes
+
+* **hooks-bash-safety:** block rm -rf that a leading cd redirects to a system path ([#788](https://github.com/srobroek/agentic-packages/issues/788)) ([34bfd74](https://github.com/srobroek/agentic-packages/commit/34bfd74cf22648d223e2c76f1d073ff7987787a8))
+
 ## [13.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v12.0.0...orchestrate--v13.0.0) (2026-07-27)
 
 

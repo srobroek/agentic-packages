@@ -183,9 +183,17 @@ write_codex_agent_literal() {
 @test "general-purpose without model -> deny with routing table" {
   run_guard '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose"}}'
   [ "$decision" = "deny" ]
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("haiku")' >/dev/null
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("sonnet")' >/dev/null
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("opus")' >/dev/null
+}
+
+# haiku is in the same disqualifying-rate group as sonnet (22-26% against opus at
+# 6-8%, 485-cell matrix 2026-07) and no shipped agent pins it, so the routing
+# message must not offer it as an option at all.
+@test "deny reason does not offer haiku" {
+  run_guard '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose"}}'
+  reason="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecisionReason')"
+  [[ "$reason" != *haiku* ]]
 }
 
 @test "Explore without model -> deny" {
@@ -213,7 +221,7 @@ write_codex_agent_literal() {
 @test "no subagent_type, no model -> deny with routing table" {
   run_guard '{"tool_name":"Agent","tool_input":{"description":"d","prompt":"x"}}'
   [ "$decision" = "deny" ]
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("haiku")' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("opus")' >/dev/null
 }
 
 @test "deny reason teaches caller to re-issue with an explicit model" {
@@ -221,9 +229,18 @@ write_codex_agent_literal() {
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("explicit model")' >/dev/null
 }
 
-@test "deny reason notes effort is not enforceable per-call" {
+@test "deny reason points at a task-specific agent_type first" {
   run_guard '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose"}}'
-  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("Effort is not enforceable")' >/dev/null
+  printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("agent_type")' >/dev/null
+}
+
+# The message is read by an agent mid-spawn, not by a human reviewing policy: it
+# must carry the instruction and nothing else. Keep it short enough that the
+# actionable part cannot get buried in rationale.
+@test "deny reason stays terse" {
+  run_guard '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose"}}'
+  reason="$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecisionReason')"
+  [ "$(printf '%s' "$reason" | wc -w)" -lt 60 ]
 }
 
 # --- env override: SUBAGENT_MODEL_GUARD_INHERIT_TYPES -----------------------

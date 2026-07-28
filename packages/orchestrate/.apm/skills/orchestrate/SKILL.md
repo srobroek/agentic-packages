@@ -173,12 +173,15 @@ Role: lead session / orchestrator.
    verdict. A blocked specialist similarly exchanges content with an advisor
    through an escalation wisp. The last approving reviewer closes the final
    wisp, swaps the review label, and makes the draft PR ready.
-7. The run's shepherd claims ready merge beads, revalidates the exact PR head
-   and CI through the shared landing safeguards, serializes landing with the
+7. The run's shepherd claims ready merge beads, revalidates the exact PR head,
+   CI, and the configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
+   through the shared landing safeguards, serializes landing with the
    merge slot, and either merges or creates an unassigned fix bead with bounce
-   evidence. Content conflicts, failed CI, and stale heads return to the
+   evidence. Content conflicts, failed CI, stale heads, and actionable review-bot
+   findings return to the
    originating specialist through a node or fix-bead claim; the shepherd never
-   edits or pushes. Dismiss actors only after terminal evidence and sweep
+   edits or pushes. A bot round still running is a wait it parks and re-probes,
+   never a poll and never a merge. Dismiss actors only after terminal evidence and sweep
    every checkout through `worktree-sweep.sh`.
 8. A dispute not settled by durable evidence gets a fresh read-only
    tiebreaker on an escalation wisp; its `ADVICE` is promoted before use. A
@@ -205,5 +208,6 @@ Role: lead session / orchestrator.
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
 | Scripts | `scope-check.py` · `discover-agents.py` · `conflict-probe.sh` ·
+  `bot-review-probe.py` ·
   `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
   `_test_*.py` self-tests) |

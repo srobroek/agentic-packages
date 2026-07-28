@@ -90,6 +90,10 @@ DEFAULT Local: no routine pull; one push at orchestrator handoff.
 DEFAULT Cross-machine: one pull before fan-out, one push after updates.
 NOT `bd import` of issues.jsonl by hand -- `bd dolt pull` is the sync path,
   and in a JSONL-over-git repo (below) the hooks own both halves.
+NOT Treating Dolt sync and the GitHub mirror as one thing: `bd dolt` moves the
+  beads database between machines, `bd github` mirrors beads to GitHub issues.
+  The containerized `dbd` wrapper injects credentials for the Dolt verbs only, so
+  `bd github` runs on the host with `GITHUB_TOKEN` supplied per invocation.
 
 SYNC HOOKS (Dolt first, JSONL only as fallback)
 MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
@@ -192,6 +196,7 @@ NOT `bd prune --pattern '*' --force` as routine cleanup -- it sweeps every close
   bead regardless of age, which is the handover record for recent work.
 
 GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
+  for config keys, per-verb cost, and the label-overwrite constraint.
 
 SESSION CLOSE (when beads were touched)
 MUST File beads for remaining/discovered work, close finished with `--reason`.

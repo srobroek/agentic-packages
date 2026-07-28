@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.5...steering-subagent-routing--v4.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Bug Fixes
+
+* drop the repo-local source guard and stop routing agent work to haiku ([#791](https://github.com/srobroek/agentic-packages/issues/791)) ([b1b8b4e](https://github.com/srobroek/agentic-packages/commit/b1b8b4e78d6f18deb387d351cfb7365452e005d9))
+
 ## [3.2.5](https://github.com/srobroek/agentic-packages/compare/steering-subagent-routing--v3.2.4...steering-subagent-routing--v3.2.5) (2026-07-27)
 
 

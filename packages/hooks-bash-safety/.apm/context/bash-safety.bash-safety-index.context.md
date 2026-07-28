@@ -2,7 +2,10 @@
 
 LEGEND: Rules carry stable IDs (BS-n) cited by the enforcing hooks.
 
-bash-guard.sh enforces BS-1..BS-7. rm-rf-guard.sh enforces BS-8..BS-10.
+bash-safety-guard.py enforces BS-1..BS-10. It tokenizes the command with a real
+shell lexer, so a guarded verb is found wherever it sits (behind a wrapper or an
+env assignment, inside a subshell or loop body, on a later line) while the same
+text inside a quoted argument stays an argument.
 
 MUST BS-1: treat operations that cannot be recovered as hard blocks -- emit deny only for truly unrecoverable destruction, warn for recoverable ones.
 NOT BS-2: emit `ask` (the human-confirmation decision) -- it stalls autonomous runs.

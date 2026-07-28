@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v2.2.2...hooks-bash-safety--v3.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **hooks-bash-safety:** agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Bug Fixes
+
+* **hooks-bash-safety:** block rm -rf that a leading cd redirects to a system path ([#788](https://github.com/srobroek/agentic-packages/issues/788)) ([34bfd74](https://github.com/srobroek/agentic-packages/commit/34bfd74cf22648d223e2c76f1d073ff7987787a8))
+
 ## [2.2.2](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v2.2.1...hooks-bash-safety--v2.2.2) (2026-07-27)
 
 

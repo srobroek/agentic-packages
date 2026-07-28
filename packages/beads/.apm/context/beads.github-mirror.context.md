@@ -23,3 +23,38 @@ DEFAULT Treat the mismatch as an upstream gap rather than per-issue toil: it
   needs configurable label mapping in bd itself. Until then, either accept the
   `::` scheme as the mirror's vocabulary and build triage queries that tolerate
   both, or keep mirrored issues out of label-driven workflows.
+
+CONFIG
+MUST Set `github.repo` to the BARE repository name. `owner/repo` there produces
+  a 404 on every pull, because bd joins it to `github.owner` and requests
+  `owner/owner/repo` -- and `bd github status` still reports
+  `Status: ✓ Configured` while that happens, so the status check does not catch
+  it (verified 2026-07-28).
+MUST Set `github.owner`, not `github.org`. Only the former is read, so a
+  workspace carrying just `github.org` reports `github.owner is not configured`
+  even with a valid token.
+DEFAULT `bd github status` is local-only (about half a second) and names the
+  missing key, so gate automation on it before spending a network call.
+
+COST
+Pull and push differ by an order of magnitude, so pick the verb instead of
+reaching for `sync`. Measured on a two-issue repo:
+
+| verb | cost |
+| --- | --- |
+| `--push-only` | ~1s |
+| `pull <ref>` | ~1.2s |
+| `--pull-only` (all) | ~7.5s |
+
+Repeat bulk pulls cost the same, because nothing about it is incremental. The
+GitHub API is a fraction of that, so the expense is bd's own traversal.
+MUST Pull by ref (`bd github pull <ref>`) when refreshing the issue a bead
+  tracks. Bulk `--pull-only` is for a deliberate reconciliation, not a routine
+  step.
+DEFAULT Push at a handoff boundary, where publishing local bead state is the
+  point, and where the direction is safe: a push cannot clobber local work.
+NOT Any `bd github` verb on a per-tool-call hook. The cheapest is about 1s, an
+  order of magnitude over the whole PreToolUse budget.
+DEFAULT `task beads:{status,push,pull,pull-all,sync,preview}` wraps these with
+  the token supplied per invocation. `beads:pull` refuses a bare call, so the
+  slow path has to be named.

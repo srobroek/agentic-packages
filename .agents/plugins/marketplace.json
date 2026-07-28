@@ -65,6 +65,18 @@
       "category": "engineering"
     },
     {
+      "name": "agent-hook-contract",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-hook-contract"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "agent-management",
       "source": {
         "source": "local",
@@ -243,18 +255,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "code-intelligence"
-    },
-    {
-      "name": "codex-hook-contract",
-      "source": {
-        "source": "local",
-        "path": "./packages/codex-hook-contract"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
     },
     {
       "name": "core",
@@ -473,34 +473,10 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-git-workflow",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-git-workflow"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-package-investigate",
       "source": {
         "source": "local",
         "path": "./packages/hooks-package-investigate"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
-      "name": "hooks-precommit-gate",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-precommit-gate"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -989,18 +965,6 @@
       "category": "languages"
     },
     {
-      "name": "secrets-scan",
-      "source": {
-        "source": "local",
-        "path": "./packages/secrets-scan"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
       "name": "session-review",
       "source": {
         "source": "local",
@@ -1149,6 +1113,18 @@
       "source": {
         "source": "local",
         "path": "./packages/steering-infrastructure"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
+      "name": "steering-multi-agent",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-multi-agent"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1323,18 +1299,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "agentic-maintenance"
-    },
-    {
-      "name": "write-docs",
-      "source": {
-        "source": "local",
-        "path": "./packages/write-docs"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "docs"
     }
   ]
 }
