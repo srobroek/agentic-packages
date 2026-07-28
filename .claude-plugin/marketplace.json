@@ -514,7 +514,7 @@
     },
     {
       "name": "hooks-quality",
-      "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK -- it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
+      "description": "Two non-blocking quality advisories sharing one language-detection module. On git commit, runs the project's formatters over the staged files and reports what to run (gofmt, ruff, cargo fmt, biome). On an edit, accumulates edited files and changed lines and suggests targeted checks once the change is large enough to be worth one, then holds a cooldown so it does not nag. Language selection reads .agents/hooks/quality-languages, then AGENTIC_QUALITY_LANGS, then marker files, so an unrecognised project is silent rather than guessed at. Defers entirely when the pre-commit framework already owns commit-time checks, which needs both a config and an installed framework hook. Neither hook ever denies: a formatting nit is trivially fixable and a blocked commit costs more. Thresholds via AGENTIC_QUALITY_ADVISORY_LINES, _FILES, _COOLDOWN_SECONDS. Cross-tool (Claude + Codex).",
       "version": "1.3.1",
       "tags": [
         "hooks",

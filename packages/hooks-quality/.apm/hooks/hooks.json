@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-before-commit.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/quality-before-commit.py",
             "timeout": 10
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/quality-edit-advisory.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/quality-edit-advisory.py",
             "timeout": 3
           }
         ]
