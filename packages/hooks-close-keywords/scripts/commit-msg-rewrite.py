@@ -17,7 +17,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from close_keywords import normalize  # noqa: E402
+try:
+    from close_keywords import normalize
+except Exception:  # noqa: BLE001
+    # A module-scope import failure is OUTSIDE the wrapper at the bottom of this
+    # file, so an absent or unreadable engine exited 1 and pre-commit rejected the
+    # commit -- for everyone with the hook installed, not just the author. The
+    # documented vendoring path makes that likely rather than exotic: the template
+    # names only this script in `entry:` and mentions close_keywords.py in prose,
+    # so copying just the entrypoint bricks committing. The shell predecessor
+    # degraded to a silent skip here, and so must this.
+    sys.exit(0)
 
 NOTICE = (
     "close-keywords: distributed the close keyword across the issue list so "
@@ -32,12 +42,19 @@ def main(argv: list[str]) -> int:
     if not path.is_file():
         return 0
 
-    original = path.read_text(encoding="utf-8", errors="surrogateescape")
+    # newline="" on both sides disables universal-newline translation. Without it,
+    # reading turned every CRLF into LF and writing them back rewrote the line
+    # endings of the WHOLE message -- including lines the rewrite never touched --
+    # whenever a close list happened to need fixing.
+    with path.open("r", encoding="utf-8", errors="surrogateescape", newline="") as handle:
+        original = handle.read()
+
     fixed = normalize(original)
     if fixed == original:
         return 0
 
-    path.write_text(fixed, encoding="utf-8", errors="surrogateescape")
+    with path.open("w", encoding="utf-8", errors="surrogateescape", newline="") as handle:
+        handle.write(fixed)
     print(NOTICE, file=sys.stderr)
     return 0
 

@@ -24,7 +24,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from close_keywords import normalize  # noqa: E402
+try:
+    from close_keywords import normalize
+except Exception:  # noqa: BLE001
+    # Module scope is outside the fail-open wrapper at the bottom of this file, so
+    # an absent engine exited 1 on every Bash call the agent made. Exit 1 does not
+    # deny (only exit 2 does), but it is stderr noise on the hot path where the
+    # contract asks for silence.
+    sys.exit(0)
 
 # `gh pr create` / `gh pr edit`, anchored to command position so a mention inside
 # a string or a different subcommand does not trigger the guard.
@@ -32,6 +39,12 @@ GH_PR = re.compile(
     r"(?:^\s*|[;&|]\s*)gh\s+pr\s+(?:create|edit)(?:\s|$)",
     re.MULTILINE,
 )
+
+# shlex.split is superlinear in the length of its input: measured 0.15s at 100KB
+# and 2.0s at 500KB, against a 10-second hook timeout that is shared with every
+# other hook on the same call. A `gh pr` command this long is not something the
+# guard can usefully advise on, so it declines rather than spending the budget.
+MAX_COMMAND_LENGTH = 64_000
 
 ADVICE = (
     "Heads-up: this gh pr --body has a comma-list close keyword; GitHub closes "
@@ -92,7 +105,9 @@ def main() -> int:
         command = extract_command(payload)
     except (ValueError, TypeError):
         return 0
-    if not command or not GH_PR.search(command):
+    if not command or len(command) > MAX_COMMAND_LENGTH:
+        return 0
+    if not GH_PR.search(command):
         return 0
 
     body = extract_body(command)

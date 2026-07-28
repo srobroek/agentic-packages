@@ -280,6 +280,58 @@ def test_fails_open_on_a_bad_payload(payload: str) -> None:
     assert result.stdout.strip() == ""
 
 
+def test_an_oversized_command_is_declined_quickly() -> None:
+    """shlex.split is superlinear, and the hook shares a 10s budget."""
+    import time
+
+    body = "word " * 200_000
+    started = time.monotonic()
+    code, output = run_guard(f'gh pr create --body "Closes #1, #2 {body}"')
+    elapsed = time.monotonic() - started
+
+    assert code == 0
+    assert output is None
+    assert elapsed < 5, f"declining an oversized command took {elapsed:.1f}s"
+
+
+@pytest.mark.parametrize("script", [PR_GUARD, COMMIT_MSG], ids=["pr-guard", "commit-msg"])
+def test_a_missing_engine_exits_zero(script: Path, tmp_path: Path) -> None:
+    """The shared engine is imported at module scope, outside the fail-open wrapper.
+
+    The documented vendoring path copies the entrypoint and names close_keywords.py
+    only in prose, so a partial vendor is likely. When it happened, commit-msg-rewrite
+    exited 1 and pre-commit rejected the commit for everyone with the hook installed.
+    The shell predecessor degraded to a silent skip here.
+    """
+    lone = tmp_path / script.name
+    lone.write_text(script.read_text())
+    message = tmp_path / "COMMIT_EDITMSG"
+    message.write_text("Closes #1, #2\n")
+
+    result = subprocess.run(
+        [sys.executable, str(lone), str(message)],
+        input=json.dumps({"tool_input": {"command": 'gh pr create --body "Closes #1, #2"'}}),
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, f"a missing engine must not fail closed: {result.stderr}"
+
+
+def test_crlf_line_endings_survive_a_rewrite(tmp_path: Path) -> None:
+    """A rewrite must not convert the line endings of the whole message.
+
+    Reading and writing through the default universal-newline translation turned
+    every CRLF into LF, including on lines the rewrite never touched.
+    """
+    message = tmp_path / "COMMIT_EDITMSG"
+    message.write_bytes(b"Closes #1, #2\r\nbody\r\n")
+
+    run_commit_msg(str(message))
+
+    assert message.read_bytes() == b"Closes #1, closes #2\r\nbody\r\n"
+
+
 def test_accepts_a_string_tool_input() -> None:
     """Some callers send tool_input as a bare string rather than an object."""
     payload = json.dumps({"tool_input": 'gh pr create --body "Closes #1, #2"'})
