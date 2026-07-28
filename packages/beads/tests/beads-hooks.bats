@@ -1,8 +1,10 @@
 #!/usr/bin/env bats
 #
-# Coverage for the beads hooks:
+# Coverage for the beads guard:
 #   - beads-gh-issue-guard.sh    PreToolUse:Bash, denies mutating `gh issue`
-#   - beads-subagent-reminder.sh SubagentStart advisory
+#
+# beads-subagent-reminder.py (SubagentStart advisory) was ported to Python;
+# its cases live in tests/test_beads_subagent_reminder.py.
 #
 # The guard denies, which makes its negative cases the ones that matter: a
 # read-only `gh issue list` is legitimate, a mention inside a quoted commit
@@ -19,7 +21,6 @@
 setup() {
   S="${BATS_TEST_DIRNAME}/../scripts"
   GUARD="$S/beads-gh-issue-guard.sh"
-  REMINDER="$S/beads-subagent-reminder.sh"
   command -v jq >/dev/null 2>&1 || skip "jq not available"
 
   # A workspace directory the guard will accept as beads-enabled.
@@ -49,7 +50,6 @@ decision() {
 
 @test "scripts parse under /bin/bash" {
   run /bin/bash -n "$GUARD"; [ "$status" -eq 0 ]
-  run /bin/bash -n "$REMINDER"; [ "$status" -eq 0 ]
 }
 
 # --- mutating gh issue is denied --------------------------------------------

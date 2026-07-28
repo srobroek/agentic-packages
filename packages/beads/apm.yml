@@ -9,8 +9,8 @@ description: >-
   conditional steps, gates, composition, and the assertions that prove a formula
   pours the DAG it declares. A guard denies mutating `gh issue` commands in
   Beads repositories. Global `bd setup` wires session start; `bd init
-  --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates
-  only in repositories with `.beads/`.
+  --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3
+  on PATH, and activates only in repositories with `.beads/`.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

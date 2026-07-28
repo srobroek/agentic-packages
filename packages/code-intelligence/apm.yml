@@ -2,7 +2,8 @@ name: code-intelligence
 version: 8.1.5
 description: >-
   Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR
-  reviewer agent, and project-structure steering.
+  reviewer agent, and project-structure steering. The SubagentStart context
+  injector requires python3 on PATH.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

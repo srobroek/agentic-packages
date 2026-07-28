@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.sh",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.py",
             "timeout": 30
           }
         ]

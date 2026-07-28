@@ -9,9 +9,9 @@ description: >-
   workspace is active -- task state lives in beads and tasks.md is never
   authored (reads stay allowed for legacy migration). Replaces the archived
   speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >=
-  1.1.0); guard and steering are inert in repos without .beads/. Install the
-  formula by copying formulas/speckit-feature.formula.toml into the repo's
-  .beads/formulas/.
+  1.1.0) and python3 on PATH; guard and steering are inert in repos without
+  .beads/. Install the formula by copying
+  formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

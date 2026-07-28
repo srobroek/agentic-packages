@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/subagent-fork-guard.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/subagent-fork-guard.py",
             "statusMessage": "Checking spawn fork_turns against policy...",
             "timeout": 10
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/subagent-fork-inject.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/subagent-fork-inject.py",
             "timeout": 5
           }
         ]

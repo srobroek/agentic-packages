@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-gh-issue-guard.sh",
+            "command": "${PLUGIN_ROOT}/scripts/beads-gh-issue-guard.py",
             "statusMessage": "Checking gh issue command against beads policy..."
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-subagent-reminder.sh",
+            "command": "${PLUGIN_ROOT}/scripts/beads-subagent-reminder.py",
             "statusMessage": "Injecting beads work contract..."
           }
         ]

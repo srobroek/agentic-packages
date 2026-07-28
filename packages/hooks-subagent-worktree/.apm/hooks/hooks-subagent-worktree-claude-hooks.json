@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/subagent-worktree-guard.sh"
+            "command": "python3 ${PLUGIN_ROOT}/scripts/subagent-worktree-guard.py"
           }
         ]
       }
