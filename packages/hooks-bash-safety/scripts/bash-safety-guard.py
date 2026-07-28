@@ -26,12 +26,13 @@ is one Python module instead of two shell scripts.
 from __future__ import annotations
 
 import json
-import os
 import re
-import shlex
-import subprocess
 import sys
 from pathlib import Path
+
+# shlex and subprocess are imported inside the functions that use them. Together
+# they add about 20ms to interpreter startup, and this hook runs on every Bash
+# call, the overwhelming majority of which bail before either is needed.
 
 # Command wrappers that keep the next word in command position. Each may carry
 # options, and an option may take a separate value (`nice -n 19`, `sudo -u root`).
@@ -117,6 +118,8 @@ def split_commands(command: str) -> list[list[str]]:
     parseable as shell, and the caller treats that as nothing to judge rather
     than guessing.
     """
+    import shlex
+
     # A newline separates commands exactly like a semicolon, but shlex treats
     # it as ordinary whitespace, which merged a second line into the first and
     # hid its verb from every check.

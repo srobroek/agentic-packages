@@ -478,7 +478,7 @@
     },
     {
       "name": "hooks-git-safety",
-      "description": "Git safety guards tuned for autonomous agents. DENY only when a destructive op targets another working tree through an unexpanded shell variable or ~ (the guard cannot verify the target -- agent re-issues with a literal path). All other destructive ops are non-blocking: reset --hard / checkout -- / restore / clean -f emit a warn (allow + advisory) only when uncommitted work would actually be lost; push --force/--force-with-lease always warns. branch -D, tag -d, stash drop/clear, worktree remove --force are passed silently (all reflog-recoverable). No \"ask\" is ever emitted. Cross-tool (Claude + Codex).",
+      "description": "Git safety guard for autonomous agents, in one Python module with a real shell tokenizer. Denies exactly one thing: a destructive op aimed at another working tree through an unexpanded variable or ~, where the guard cannot resolve which tree is affected (GS-2). Everything else is non-blocking. reset --hard, checkout --, restore, and clean -f warn only when repository state shows work would really be lost (GS-3, GS-5, GS-6), so a clean tree stays silent and an untracked-only tree does not trip the reset rules. push --force always warns, because the loss is on the remote where local state cannot answer for it (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass silently, all being reflog-recoverable. State reads happen once, and only after a destructive verb matches. An unreadable tree warns rather than staying quiet. Never emits \"ask\". Cross-tool (Claude + Codex).",
       "version": "2.2.2",
       "tags": [
         "hooks",

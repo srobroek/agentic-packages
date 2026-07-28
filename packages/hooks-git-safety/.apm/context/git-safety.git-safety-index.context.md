@@ -2,7 +2,10 @@
 
 LEGEND: Rules carry stable IDs (GS-n) cited by the enforcing hooks.
 
-git-guard.sh enforces GS-1..GS-6.
+git-safety-guard.py enforces GS-1..GS-6. It tokenizes the command with a real
+shell lexer, so a git call is found behind a wrapper, after a global option, or
+later in a chain, while the same text inside a quoted argument stays an argument.
+Repository-state checks run only after a destructive verb matches.
 
 NOT GS-1: emit `ask` (the human-confirmation decision) -- it stalls autonomous runs; deny for unverifiable targets, warn for recoverable ops.
 
