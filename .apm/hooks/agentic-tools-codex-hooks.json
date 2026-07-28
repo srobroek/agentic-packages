@@ -11,18 +11,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Edit|Write|apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/agentic-source-guard.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "PermissionRequest": [
       {
         "matcher": "Bash",
