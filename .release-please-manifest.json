@@ -6,7 +6,7 @@
   "packages/agent-conformance": "5.0.0",
   "packages/agent-explorer": "3.0.0",
   "packages/agent-external-repo-worker": "3.0.0",
-  "packages/agent-hook-contract": "1.0.0",
+  "packages/agent-hook-contract": "0.0.0",
   "packages/agent-management": "1.2.4",
   "packages/agent-operator": "3.0.0",
   "packages/agent-pr-reviewer": "3.1.4",

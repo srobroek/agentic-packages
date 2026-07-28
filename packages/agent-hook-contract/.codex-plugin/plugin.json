@@ -1,6 +1,6 @@
 {
   "name": "agent-hook-contract",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Cross-tool agent hook contract for Claude Code and Codex CLI: supported events, matcher behavior, payloads, decisions, trust, and runtime limits, plus the authoring rules this repo holds its hooks to. Hooks are written in Python unless the script only forwards to one command: a hook that parses shell with grep and sed is a tokenizer without a lexer, and every gap is a bypass. Python is also faster once a hook touches jq, since one jq spawn costs more than the whole bash-vs-Python startup gap. Covers the per-call performance budget (no uv run on a per-tool-call hook, stdlib only on the hot path, in-process repo root discovery, batched git calls, cheap pre-parse bail) and the reliability rules (fail open, never emit ask, write denials to the model, accept a string tool_input, self-filter inside the script). Documentation only.",
   "author": {
     "name": "Sjors Robroek"
