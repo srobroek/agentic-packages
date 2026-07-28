@@ -265,12 +265,9 @@ if [[ -n "$subagent_type" ]] && ! is_inherit_type "$subagent_type"; then
 fi
 
 read -r -d '' reason <<'EOF' || true
-This agent type inherits the session model. Re-issue the Agent call with an explicit model:
-- haiku — mechanical work: CI watching/shepherding, log triage, batched gh/git operations, file sweeps, formatting
-- sonnet — bounded coding, standard research, PR fix rounds, doc writing, test authoring
-- opus or omit-after-deliberation — deep/adversarial research, architecture, cross-cutting synthesis, judge/verification passes (to inherit the top-tier session model intentionally, pass the session's model name explicitly)
-
-Effort is not enforceable per-call (this hook cannot see a `tool_input.effort` field). For reusable agents, pin `effort:` in the agent definition frontmatter (low for mechanical lanes, high+ for verification/judge lanes). Workflow scripts may pass effort per agent() call.
+This agent type inherits the session model. Re-issue with either:
+- a task-specific agent_type from the available agent types (preferred -- they ship a model pin), or
+- an explicit model: opus, or sonnet for mechanical reading (log/metric summarising, lint and doc gathering, diff smoke checks).
 EOF
 
 deny "$reason"

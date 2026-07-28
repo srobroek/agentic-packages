@@ -4,24 +4,22 @@ Model routing is applied by per-package `agent-models.yml` files, injected at bu
 
 ## Criteria-based routing
 
+Spawn an agent by name rather than choosing a tier by hand: every shipped agent
+already carries a measured model+effort pin. Route by tier only when none fits.
+
 | Task type | Claude tier | Claude effort | Codex fallback |
 |-----------|-------------|----------------|----------------|
 | review / verify / adversarial / design judgment | opus | high | gpt-5.6-sol high |
-| scoped implementation, refactors, tests | sonnet | medium | gpt-5.6-luna xhigh |
-| mechanical/bounded transforms, lookups | haiku | low | gpt-5.3-codex-spark low--medium |
+| scoped implementation, refactors, tests | opus | low--medium | gpt-5.6-luna xhigh |
+| exploration, research, report writing | opus | low | gpt-5.6-luna high |
+| mechanical readers: log/metric summarising, lint and doc gathering, diff smoke checks | sonnet | high | gpt-5.3-codex-spark low--medium |
 | orchestration / planning | main session | inherit | parent session |
 | explicit coding-agent override | -- | -- | gpt-5.6-luna high |
 
 NOTE: `fable` is the frontier Claude model but is reserved for explicit user
 opt-in only -- never auto-routed by steering or agents.
 
-Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
-
-NOT haiku for implementation tasks that are complex, ambiguous, or loosely
-scoped -- measured (84-run matrix, 2026-07): haiku follows instruction-shaped
-bait 2/2 where opus/sonnet resist, violates output contracts 11-13/14, and
-wrote the runaway fake-clock tests. Well-scoped simple mechanical patches
-(single-file rename, bounded transform, lookup, format fix) stay haiku-eligible.
+Do not route to `haiku`. Escalate on failed verification, not preemptively.
 
 Do not encode MCP usage in model overrides. When delegating to coding or design
 agents, pass task-specific instructions to use the project's available tools,
