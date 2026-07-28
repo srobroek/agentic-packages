@@ -103,6 +103,15 @@ jobs:
         # exactly one target.
         run: python3 .apm/scripts/check-instructions-apply-to.py
 
+      - name: Validate hook scripts against their manifests
+        # The checks above validate invocation modes, release baselines, applyTo
+        # coverage, and Codex manifest shape; none reads what a hook script DOES
+        # against what its manifest and target claim. Every defect a recent audit
+        # found was that shape and passed a green pipeline: an apply_patch branch no
+        # matcher routed, a Claude-only systemMessage under target: all, and the
+        # `ask` ban going unenforced despite constitution III.
+        run: python3 .apm/scripts/check-hook-contract.py
+
       - name: Regenerate non-destructive artifacts
         run: |
           # Native plugin layout FIRST: each package's committed Claude and Codex

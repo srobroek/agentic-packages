@@ -39,9 +39,44 @@ from pathlib import Path
 WRAPPERS = frozenset(
     {
         "sudo", "doas", "env", "time", "nice", "command", "exec", "xargs",
-        "stdbuf", "nohup", "setsid", "ionice",
+        "stdbuf", "nohup", "setsid", "ionice", "timeout", "unbuffer", "flock",
     }
 )
+
+# Wrappers whose first non-option word is their OWN operand rather than the
+# wrapped command: `timeout 5 rm -rf /` and `nice -n 19` both put a value there.
+# Without this, `5` was read as the verb and the `rm` behind it went unjudged.
+WRAPPER_OPERAND = frozenset({"timeout", "flock"})
+
+# Shells whose `-c` argument is itself a command, and builtins that run a string
+# as one. The tokenizer sees that argument as a single word, so the verb inside
+# it is invisible unless the string is lexed again -- `sh -c 'rm -rf /'` is one
+# token to shlex and a filesystem wipe to the shell.
+SHELLS = frozenset({"sh", "bash", "zsh", "dash", "ksh", "ash", "busybox"})
+STRING_EVALUATORS = frozenset({"eval", "source", "."})
+
+# Tools that fetch from the network.
+DOWNLOADERS = frozenset({"curl", "wget", "fetch", "aria2c", "httpie", "http", "https"})
+
+# Anything that executes what it is handed. A shell is the familiar sink, but a
+# language interpreter runs remote code just as completely, and restricting the
+# check to shells let `curl ... | python3` through.
+INTERPRETERS = SHELLS | frozenset(
+    {"python", "python2", "python3", "perl", "ruby", "node", "php", "osascript", "pwsh"}
+)
+
+# A download inside a command or process substitution that an interpreter consumes:
+# `eval "$(curl -s ...)"`, `bash -c "$(wget -qO- ...)"`, `bash <(curl ...)`.
+# Re-lexing cannot see inside a substitution, because its value does not exist until
+# the shell runs it, so this is deliberately textual.
+SUBSTITUTED_DOWNLOAD = re.compile(
+    r"[$<]\(\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*"
+    r"(?:/\S*/)?(?:" + "|".join(sorted(DOWNLOADERS)) + r")\s",
+)
+
+# How deep to follow a nested shell string. A real command nests once or twice;
+# the bound only stops a pathological payload from recursing without end.
+MAX_NESTING = 4
 
 # Shell keywords and openers after which a command starts.
 OPENERS = frozenset({"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if"})
@@ -122,7 +157,10 @@ def split_commands(command: str) -> list[list[str]]:
 
     # A newline separates commands exactly like a semicolon, but shlex treats
     # it as ordinary whitespace, which merged a second line into the first and
-    # hid its verb from every check.
+    # hid its verb from every check. A BACKSLASH-newline is the opposite case: it
+    # is a line continuation, so the two halves are one command and splitting
+    # there orphaned the target of an `rm` from its flags.
+    command = re.sub(r"\\\r?\n", " ", command)
     lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     tokens = list(lexer)  # raises ValueError on an unterminated quote
@@ -149,6 +187,59 @@ def split_commands(command: str) -> list[list[str]]:
     return commands
 
 
+def nested_command(words: list[str]) -> str | None:
+    """Return the command string a shell invocation would run, if any.
+
+    `sh -c '<cmd>'` and `eval '<cmd>'` pass a command as a single argument, so the
+    verb inside it never reaches the tokenizer. This returns that argument for the
+    caller to lex again. `xargs` deliberately does not appear here: its targets
+    arrive on stdin, which no static check can see.
+    """
+    if not words:
+        return None
+    verb = Path(words[0]).name
+
+    if verb in SHELLS:
+        for index, word in enumerate(words[1:], start=1):
+            # `-c` may be bundled with other short flags, as in `sh -ec`.
+            if word.startswith("-") and not word.startswith("--") and "c" in word:
+                return words[index + 1] if index + 1 < len(words) else None
+            if not word.startswith("-"):
+                # A bare word is a script path, not an inline command.
+                return None
+        return None
+
+    if verb in STRING_EVALUATORS:
+        arguments = [word for word in words[1:] if not word.startswith("-")]
+        # `eval a b` concatenates its arguments into one command line.
+        return " ".join(arguments) if arguments else None
+
+    return None
+
+
+def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
+    """Tokenize, then re-lex any nested shell string so its verb is judged too.
+
+    The outer invocation is kept as well as its expansion: `sudo sh -c '...'`
+    still deserves the elevated-privilege warning on the outer form.
+    """
+    commands = split_commands(command)
+    if depth >= MAX_NESTING:
+        return commands
+
+    expanded: list[list[str]] = []
+    for words in commands:
+        expanded.append(words)
+        inner = nested_command(strip_prefix(words))
+        if inner:
+            try:
+                expanded.extend(expand_commands(inner, depth + 1))
+            except ValueError:
+                # An unparsable inner string leaves the outer command judged.
+                continue
+    return expanded
+
+
 def strip_prefix(words: list[str]) -> list[str]:
     """Drop openers, env assignments, and wrappers to reach the real verb."""
     index = 0
@@ -158,6 +249,7 @@ def strip_prefix(words: list[str]) -> list[str]:
             index += 1
             continue
         if word in WRAPPERS:
+            takes_operand = word in WRAPPER_OPERAND
             index += 1
             # Consume the wrapper's own options, plus one value for an option
             # that takes one. A bare word here is the wrapped command.
@@ -167,6 +259,9 @@ def strip_prefix(words: list[str]) -> list[str]:
                     following = words[index + 1] if index + 1 < len(words) else None
                     if following is not None and not following.startswith("-"):
                         index += 1
+            # `timeout 5 rm ...`: the duration belongs to the wrapper.
+            if takes_operand and index < len(words) and not words[index].startswith("-"):
+                index += 1
             continue
         break
     return words[index:]
@@ -388,17 +483,43 @@ def check_sudo(words: list[str]) -> tuple[str, str] | None:
     )
 
 
-def check_pipe_to_shell(commands: list[list[str]]) -> tuple[str, str] | None:
-    """Warn when a download is piped into a shell."""
+REMOTE_CODE_ADVICE = (
+    "BS-7 (warn on running a download without reading it): this executes code "
+    "fetched from the network without inspecting it first, so nothing has "
+    "verified what it does. Download it to a file, read it, then run it. "
+    "Proceeding."
+)
+
+
+def check_remote_code(commands: list[list[str]], command: str) -> tuple[str, str] | None:
+    """Warn when downloaded code reaches an interpreter without being read.
+
+    Three routes, because the pipe was only the most recognisable one:
+
+    The classic pipe, now to ANY interpreter and across intermediate stages.
+    Restricting the sink to `sh`/`bash` missed `| python3`, `| perl`, `| ruby` and
+    `| node`, which execute remote code just as completely, and requiring the shell
+    to sit immediately after the download missed
+    `curl ... | tee /tmp/x | sh`.
+
+    Command substitution feeding a shell, as in `eval "$(curl -s ...)"` or
+    `bash -c "$(curl ...)"`. Re-lexing cannot reach inside a substitution, since
+    its value only exists once the shell runs, so this is a textual check.
+
+    Process substitution, as in `bash <(curl -s ...)`, for the same reason.
+    """
     verbs = [Path(strip_prefix(words)[0]).name for words in commands if strip_prefix(words)]
-    for index, verb in enumerate(verbs[:-1]):
-        if verb in ("curl", "wget") and verbs[index + 1] in ("sh", "bash", "zsh"):
-            return (
-                "warn",
-                "BS-7 (warn on a curl-to-shell pipe): piping a download into a "
-                "shell runs remote code without inspecting it. Prefer downloading, "
-                "reading, then running. Proceeding.",
-            )
+    downloaders = [index for index, verb in enumerate(verbs) if verb in DOWNLOADERS]
+
+    # Any interpreter downstream of a download in the same pipeline, adjacent or not.
+    for start in downloaders:
+        if any(verb in INTERPRETERS for verb in verbs[start + 1 :]):
+            return ("warn", REMOTE_CODE_ADVICE)
+
+    # A download inside a substitution that a shell or `eval` consumes.
+    if SUBSTITUTED_DOWNLOAD.search(command):
+        return ("warn", REMOTE_CODE_ADVICE)
+
     return None
 
 
@@ -419,25 +540,32 @@ def extract(payload: str) -> tuple[str, str]:
     return command, cwd if isinstance(cwd, str) else ""
 
 
-def resolve_cwd(raw: str, command: str) -> Path:
-    """Resolve where the command runs, honouring a leading absolute `cd`.
-
-    A `cd` earlier in the same chain relocates every relative target after it,
-    so the payload directory is not where an `rm` lands. Only an absolute literal
-    `cd` is followed: guessing at a relative or variable-bearing one would be
-    worse than leaving it, and a variable target is denied anyway.
-    """
+def base_cwd(raw: str) -> Path:
+    """The directory the payload says the command runs in."""
     base = Path(raw) if raw and Path(raw).is_dir() else Path.cwd()
     try:
-        base = base.resolve()
+        return base.resolve()
     except OSError:
-        pass
+        return base
 
-    match = re.search(r"(?:^|[;&|])\s*cd\s+(/[^\s;&|]*)", command)
-    if match and "$" not in match.group(1):
-        candidate = match.group(1).rstrip("/") or "/"
-        return Path(candidate)
-    return base
+
+def cd_target(words: list[str]) -> str | None:
+    """Return the absolute literal directory a `cd` moves to, if it is one.
+
+    Only an absolute literal target is followed. A relative or variable-bearing
+    `cd` would have to be guessed at, and guessing wrong is how a guard denies
+    correct work; a variable-bearing `rm` target is denied on its own account
+    anyway.
+    """
+    if not words or Path(words[0]).name != "cd":
+        return None
+    operands = [word for word in words[1:] if not word.startswith("-")]
+    if len(operands) != 1:
+        return None
+    target = operands[0]
+    if not target.startswith("/") or "$" in target:
+        return None
+    return target.rstrip("/") or "/"
 
 
 def main() -> int:
@@ -462,23 +590,41 @@ def main() -> int:
         return 0
 
     try:
-        commands = split_commands(command)
+        # The pipe check needs commands in their original adjacency, because
+        # expansion splices a nested command in between two pipe stages and the
+        # curl-to-shell pair stops being neighbours.
+        literal = split_commands(command)
+        commands = expand_commands(command)
     except ValueError:
         # Not parseable as shell. Nothing reliable to judge, so allow rather than
         # block on a quoting quirk.
         return 0
 
-    cwd = resolve_cwd(raw_cwd, command)
-    root = find_repo_root(cwd)
+    cwd = base_cwd(raw_cwd)
+    roots: dict[Path, Path | None] = {cwd: find_repo_root(cwd)}
 
-    pipe = check_pipe_to_shell(commands)
+    pipe = check_remote_code(literal, command)
     findings: list[tuple[str, str]] = []
 
+    # Walk the chain in order, carrying the working directory forward. A `cd`
+    # governs only the commands that FOLLOW it, which is the whole point of doing
+    # this in sequence: matching the first `cd` anywhere in the string blamed
+    # `rm -rf build; cd /etc` on a benign relative target, and let
+    # `cd /tmp && cd /etc && rm -rf *` past because the first match won.
     for words in commands:
+        stripped = strip_prefix(words)
+
+        moved = cd_target(stripped)
+        if moved is not None:
+            cwd = Path(moved)
+            if cwd not in roots:
+                roots[cwd] = find_repo_root(cwd)
+            continue
+
         sudo_finding = check_sudo(words)
         if sudo_finding:
             findings.append(sudo_finding)
-        finding = check_command(strip_prefix(words), cwd, root)
+        finding = check_command(stripped, cwd, roots[cwd])
         if finding:
             findings.append(finding)
 

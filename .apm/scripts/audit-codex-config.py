@@ -98,7 +98,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-chezmoi-guard/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-close-keywords/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-git-safety/.apm/hooks/hooks.json": "native-required",
-    "packages/hooks-git-workflow/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-package-investigate/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-serena/.apm/hooks/hooks-serena-claude-hooks.json": "target-specific compatibility",

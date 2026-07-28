@@ -536,18 +536,6 @@
         }
       ]
     },
-    "packages/hooks-git-workflow": {
-      "release-type": "simple",
-      "component": "hooks-git-workflow",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-package-investigate": {
       "release-type": "simple",
       "component": "hooks-package-investigate",

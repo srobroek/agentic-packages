@@ -16,8 +16,11 @@ INPUT=$(cat 2>/dev/null || true)
 command -v jq >/dev/null 2>&1 || exit 0
 command -v bd >/dev/null 2>&1 || exit 0
 
-AGENT_ID=$(printf '%s' "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null)
-CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
+# `|| true` on both: under `set -e` a jq that rejects malformed JSON exits
+# non-zero and takes the whole script with it, so a corrupt payload left the hook
+# exiting non-zero instead of failing open as the contract requires.
+AGENT_ID=$(printf '%s' "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
 [ -z "$AGENT_ID" ] && exit 0  # Not a subagent
 [ -n "$CWD" ] && [ -d "$CWD" ] || CWD="$PWD"
 

@@ -526,26 +526,40 @@ def worktrunk_enforceable(payload: object) -> bool:
     if shutil.which("wt") is None:
         return False
     cwd = payload.get("cwd") if isinstance(payload, dict) else None
-    repo = Path(cwd or os.getcwd())
+    # Type-checked rather than trusted: a non-string `cwd` reached Path() and
+    # raised TypeError, which exited 1 because this script had no fail-open guard.
+    repo = Path(cwd if isinstance(cwd, str) and cwd else os.getcwd())
     if not repo.exists():
         return False
-    return not subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "--is-inside-work-tree"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    ).returncode
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=5,
+        )
+    except (subprocess.SubprocessError, OSError):
+        # A git that hangs or cannot start must not hold up the tool call. This was
+        # the only subprocess among the Bash guards with no timeout at all.
+        return False
+    return not completed.returncode
 
 
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, ValueError, OSError):
         return 0
-    if not worktrunk_enforceable(payload):
-        return 0
+    # No raw-substring prefilter here, deliberately: `scan_command` documents why
+    # one would be a bypass, since quoting splits every candidate token
+    # (`git work"tree" add`). The cost is instead cut by deciding whether the
+    # guard can act at all -- which is a `which` and a `git rev-parse` -- only
+    # after the cheap token scan finds something to complain about.
     violation = scan_command(command_from_payload(payload))
     if violation is None:
+        return 0
+    if not worktrunk_enforceable(payload):
         return 0
     print(
         json.dumps(
@@ -563,4 +577,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        # Fail open, per the hook contract: an unreadable payload or an unexpected
+        # exception allows rather than blocking. Without this, a payload carrying a
+        # non-string `cwd` raised TypeError and exited 1 on the hot path.
+        raise SystemExit(0)

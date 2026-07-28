@@ -355,13 +355,6 @@ marketplace:
         - hooks
         - git
         - safety
-    - name: hooks-git-workflow
-      source: ./packages/hooks-git-workflow
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - commit
     - name: hooks-package-investigate
       source: ./packages/hooks-package-investigate
       category: project-lifecycle
