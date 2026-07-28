@@ -14,6 +14,10 @@
 #   merge-probe.sh eligibility
 #       -> reads gh PR JSON on stdin; prints eligible|draft|release|closed
 #
+# Review-bot rounds are a separate probe: bot-review-probe.py (Python, because
+# each bot signals actionability differently and that belongs in an adapter
+# table, not in jq).
+#
 # Portability floor: bash 3.2 + BSD coreutils.
 set -euo pipefail
 

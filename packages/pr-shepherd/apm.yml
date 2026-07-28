@@ -20,10 +20,12 @@ includes:
   - .apm/instructions
   - .apm/skills/pr-shepherd/SKILL.md
   - .apm/skills/pr-shepherd/references
+  - .apm/skills/pr-shepherd/scripts/_test_bot_review_probe.py
   - .apm/skills/pr-shepherd/scripts/_test_landing_contract.sh
   - .apm/skills/pr-shepherd/scripts/_test_resolve_queue_event.py
   - .apm/skills/pr-shepherd/scripts/_test_sheepdog_real_db.sh
   - .apm/skills/pr-shepherd/scripts/_test_waiter_real_db.sh
+  - .apm/skills/pr-shepherd/scripts/bot-review-probe.py
   - .apm/skills/pr-shepherd/scripts/landing-contract.sh
   - .apm/skills/pr-shepherd/scripts/merge-probe.sh
   - .apm/skills/pr-shepherd/scripts/resolve-queue-event.py

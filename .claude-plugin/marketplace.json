@@ -79,9 +79,22 @@
       "source": "./packages/agent-external-repo-worker"
     },
     {
+      "name": "agent-hook-contract",
+      "description": "Cross-tool agent hook contract for Claude Code and Codex CLI: supported events, matcher behavior, payloads, decisions, trust, and runtime limits, plus the authoring rules this repo holds its hooks to. Hooks are written in Python unless the script only forwards to one command: a hook that parses shell with grep and sed is a tokenizer without a lexer, and every gap is a bypass. Python is also faster once a hook touches jq, since one jq spawn costs more than the whole bash-vs-Python startup gap. Covers the per-call performance budget (no uv run on a per-tool-call hook, stdlib only on the hot path, in-process repo root discovery, batched git calls, cheap pre-parse bail) and the reliability rules (fail open, never emit ask, write denials to the model, accept a string tool_input, self-filter inside the script). Documentation only.",
+      "version": "0.0.0",
+      "tags": [
+        "hooks",
+        "claude",
+        "codex",
+        "reference"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/agent-hook-contract"
+    },
+    {
       "name": "agent-management",
       "description": "Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets.",
-      "version": "1.2.3",
+      "version": "1.2.4",
       "tags": [
         "skill",
         "maintenance",
@@ -256,18 +269,6 @@
       ],
       "category": "code-intelligence",
       "source": "./packages/code-intelligence"
-    },
-    {
-      "name": "codex-hook-contract",
-      "description": "Current Codex CLI hook contract for supported events, matcher behavior, payloads, decisions, trust, and runtime limitations. Documentation only.",
-      "version": "0.3.2",
-      "tags": [
-        "codex",
-        "hooks",
-        "reference"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/codex-hook-contract"
     },
     {
       "name": "core",

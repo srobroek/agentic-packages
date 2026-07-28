@@ -168,7 +168,7 @@ apm install steering-pragmatic@srobroek-agentic --target claude,codex
 Specifically, native install does not deliver:
 
 - all `steering-*` and `language-steering-*` packages (steering only);
-- `codex-hook-contract` (reference instructions only);
+- `agent-hook-contract` (reference instructions only);
 - the architecture **context** carried by `language-rust` / `language-typescript`;
 - the always-on **instruction** inside `hooks-subagent-worktree` (the hook itself works; the "declare isolation" guidance is APM-only);
 - the Tauri instruction/context inside `mcp-tauri` (the MCP runtime is configured separately; the steering is APM-only).

@@ -35,6 +35,29 @@ DEFAULT `bd gate check` then drain `bd ready --label agent:integrator
   merge-tree/checks/review, then merge, bounce, or re-gate + release;
   comment every probe outcome on the merge bead.
 
+REVIEW BOTS
+MUST Treat a configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
+  as part of merge readiness: probe `merge-probe.sh bot-review` at the exact head
+  before every merge. Only `absent` or `clean` clears; `pending`, `stale`, and
+  unknown are waits. Silence is not approval.
+MUST Read actionability from the bot's own summary review body through its
+  adapter (CodeRabbit: `Actionable comments posted: N`) at the current head,
+  taking the LATEST round rather than the highest count -- every fix suggestion
+  hangs under that summary, and a max keeps a resolved round blocking forever.
+DEFAULT A new bot is a slug in `$PR_REVIEW_BOTS` plus an optional `ADAPTERS`
+  entry in `bot-review-probe.py`; without an adapter its count is unknown, so a
+  COMMENTED round reads `pending` instead of clearing.
+MUST Park an actionable round behind one unassigned `agent:coder` fix bead keyed
+  `review bot:<slug>@<head>`, exactly like CI-red. A durable bead, not a wisp:
+  the blocking dependency edge dies with a burned wisp.
+MUST Carry pointers -- summary URL, comment `path:line` + URL, `bot_review_head`
+  -- never a copy of the findings. The bot thread is live and its diff
+  suggestions render only on the PR.
+NOT Shepherd judgement on which findings are right; the claiming coder decides
+  what is correct and appropriate and replies on the PR to what it rejects.
+NOT Polling a bot round in-session; comment once per state@head, release, and
+  let the gate plus the next pass own the wait.
+
 ELIGIBILITY
 MUST Ignore while `isDraft=true`: do not claim, gate, bounce, merge, or close.
 MUST Ignore automated release PRs (head branch `release-please--branches--` or

@@ -47,12 +47,15 @@ the same pass; document nothing outside bead comments.
    while that run is live -- its own shepherd is mid-flight. Claim
    eligible work with `bd update <id> --claim` (skip on refusal), probe from metadata
    anchors `{pr, branch, base_sha, repo}` using the pr-shepherd skill's
-   `scripts/merge-probe.sh` (`conflicts`, `pr`), decide per the skill's
-   decision table, and comment the outcome on the bead.
+   `scripts/merge-probe.sh` (`conflicts`, `pr`) plus `scripts/bot-review-probe.py`
+   (`fetch` | `classify`), decide per the skill's decision table, and comment the
+   outcome on the bead.
+5b. The configured review bot is merge readiness: only `absent`/`clean` clears.
+   LOAD the skill's references/bot-review.md before acting on any other state.
 6. Already merged → verify terminal landing and close the merge bead. Closed
    without merge → mark the merge bead failed/blocked so dependents stay
-   blocked. Clean +
-   green + approved → acquire with one stable explicit holder and no
+   blocked. Clean + green + approved + bot review absent or clean → acquire with
+   one stable explicit holder and no
    `--wait` → `gh pr merge` → verify landing/completion → holder-verified
    release → close the merge bead.
 7. `Tracks-Bead:` is backlink-only. Reconcile closing work through native
@@ -64,9 +67,10 @@ the same pass; document nothing outside bead comments.
    unassigned `agent:coder` fix bead carrying the full diagnosis +
    origin_actor/origin_bead pointers, `bd dep add` to park the merge bead,
    comment, release your claim.
-9. Not yet approved → comment and release. Checks pending → add a gh:run gate
-   only for a concrete run id, otherwise comment and release. Never add a
-   gh:pr gate to the merge bead; it would deadlock until after merge.
+9. Not yet approved → comment and release. Checks or a bot review pending → add
+   a gh:run gate only for a concrete run id, otherwise comment and release.
+   Never add a gh:pr gate to the merge bead; it would deadlock until after
+   merge.
 10. When the queue is drained, report and `bd dolt push` if beads changed.
 
 ## Rules
@@ -80,8 +84,11 @@ MUST Never close a work bead from `Tracks-Bead:` alone.
 NOT Attach a gh:pr gate to a merge bead.
 MUST Fix beads are always unassigned + routing label; never pin `--assignee`.
 MUST Comment every probe outcome on the merge bead -- it is the audit trail.
-NOT Wait for CI, re-poll a pending PR, or stay alive as a watcher → the gate
-  bead plus the next shepherd pass own the wait.
+NOT Wait for CI or a review bot, re-poll a pending PR, or stay alive as a
+  watcher → the gate bead plus the next shepherd pass own the wait.
+NOT Merge on a `pending`, `stale`, or unknown bot review (silence is not
+  approval), or judge/quote/triage its findings -- the coder that owns the code
+  decides what is correct and appropriate; you route pointers only.
 NOT Take over a bead claimed by another actor; dead-claim recovery follows the
   `beads` steering.
 NOT Force-push, close PRs, or pick between two conflicting approved PRs on

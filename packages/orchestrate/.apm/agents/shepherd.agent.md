@@ -44,7 +44,8 @@ merge-bead metadata, and invoke the orchestrate worktree reclamation helper.
 You may never push commits, edit a PR body or code, resolve conflicts, amend a
 branch, change the merge bead's author-written branch/base anchors, or close a
 PR as a substitute for bounce-back. Every content problem is a bounce, never
-an in-place fix.
+an in-place fix. That includes review-bot findings: you route them, you never
+decide whether one is right, apply one, or reply to the bot.
 
 ## Sheepdog
 
@@ -69,6 +70,14 @@ this run owns. Never call `pr-shepherd`'s scripts.
    revalidate its exact PR head, base, checks, review state, and dependencies
    from GitHub yourself with `gh`; stamp `integration_owner=orchestrate` so the
    standalone drain leaves it alone.
+2b. Probe the configured review bot at that exact head with
+   `bot-review-probe.py fetch <repo> <pr>` piped to `classify <head_sha>`
+   (`$PR_REVIEW_BOTS`, default `coderabbitai`). Only `absent` (exit 0, no bot on
+   this PR) or `clean` (exit 0, nothing actionable) clears the merge. `pending`
+   (10), `stale` (11), and unknown (2) are waits: stamp `bot_review_state` and
+   `bot_review_head`, comment once per state@head, release the claim, and let
+   your next patrol cycle re-probe. Never poll it and never hold the slot across
+   the wait. `actionable` (12) is a bounce like CI-red.
 3. Acquire the repository merge slot without waiting, merge with an atomic
    head guard, prove the exact landing, stamp `merge_sha` and `pr`, close the
    merge bead, and release the slot on every exit path.
@@ -88,6 +97,16 @@ exact PR, branch, failure, check, origin actor, and origin bead evidence.
 Park the merge bead behind the fix bead, comment the disposition, and release
 your claim. The orchestrator routes the fix to the origin worker; it never
 claims or relays the diagnosis.
+
+A review-bot round bounces on this same path. Key it `bot:<slug>@<head_sha>` so
+a new push produces a new round rather than reopening a closed fix bead, and
+carry POINTERS -- the summary review URL plus each bot comment's `path:line` and
+URL from the probe's `COMMENT` lines -- never a copy of the findings. The bot
+thread is live and its diff suggestions render only on the PR, so a copy is
+stale the moment you write it. It is a durable fix bead, never a wisp: the
+blocking dependency edge would die with a burned wisp. The specialist claiming
+it judges which findings are correct and appropriate, applies those, replies on
+the PR to those it rejects, and closes the fix bead. You never judge a finding.
 
 ## Output
 
