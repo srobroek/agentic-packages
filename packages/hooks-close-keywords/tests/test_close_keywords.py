@@ -104,6 +104,9 @@ def test_distributes_the_keyword(text: str, expected: str) -> None:
         pytest.param("Fixed the parser, #2 was unrelated", id="keyword-without-a-ref"),
         pytest.param("", id="empty"),
         pytest.param("feat: ordinary subject line", id="plain-prose"),
+        pytest.param("Refactored the guard — nothing to close", id="em-dash"),
+        pytest.param("Closes #1, closes #2 — done", id="em-dash-after-a-list"),
+        pytest.param("Reviewed the café module", id="accented-character"),
     ],
 )
 def test_leaves_text_unchanged(text: str) -> None:
@@ -193,6 +196,13 @@ def test_commit_msg_never_blocks_the_commit(args: tuple[str, ...]) -> None:
             'gh pr create --body "## Summary\n\nCloses #1, #2"',
             id="body-with-newlines",
         ),
+        # A real body carries prose around the list, and typically an em dash or
+        # two. The awk engine aborted on the first multibyte byte, so the list
+        # went undetected whenever the description was not pure ASCII.
+        pytest.param(
+            'gh pr create --body "Closes #1, #2 — both regressions"',
+            id="list-alongside-non-ascii-prose",
+        ),
     ],
 )
 def test_advises_on_a_comma_list_body(command: str) -> None:
@@ -227,6 +237,18 @@ def test_advisory_carries_the_whole_corrected_body() -> None:
         pytest.param('gh issue create --body "Closes #1, #2"', id="not-a-pr-command"),
         pytest.param('git commit -m "Closes #1, #2"', id="commit-is-the-other-layer"),
         pytest.param('gh pr create --body "Closes #1, #2', id="unbalanced-quotes"),
+        # A body with no malformed list but a non-ASCII character in it. The awk
+        # engine this replaced aborted on any multibyte byte and the guard then
+        # advised with an EMPTY corrected body, so every em dash in a PR
+        # description produced a bogus advisory.
+        pytest.param(
+            'gh pr create --body "Refactored the guard — nothing to close"',
+            id="non-ascii-without-a-close-list",
+        ),
+        pytest.param(
+            'gh pr create --body "Closes #1, closes #2 — done"',
+            id="non-ascii-with-a-correct-list",
+        ),
     ],
 )
 def test_stays_silent(command: str) -> None:
