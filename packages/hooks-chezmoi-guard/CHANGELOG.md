@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.1.1...hooks-chezmoi-guard--v3.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+
+### Bug Fixes
+
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
 ## [2.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.1.0...hooks-chezmoi-guard--v2.1.1) (2026-07-25)
 
 

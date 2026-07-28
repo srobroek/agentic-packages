@@ -1,5 +1,5 @@
 name: speckit-beads
-version: 6.0.0
+version: 7.0.0
 description: >-
   Beads-native SpecKit workflow: ships the speckit-feature bd formula (the
   SpecKit phase spine as a molecule DAG with human gates at clarify approval,
@@ -10,8 +10,8 @@ description: >-
   authored (reads stay allowed for legacy migration). Replaces the archived
   speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >=
   1.1.0) and python3 on PATH; guard and steering are inert in repos without
-  .beads/. Install the formula by copying
-  formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.
+  .beads/. Install the formula by copying formulas/speckit-feature.formula.toml
+  into the repo's .beads/formulas/.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

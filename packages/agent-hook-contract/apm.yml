@@ -1,5 +1,5 @@
 name: agent-hook-contract
-version: 1.0.0
+version: 2.0.0
 description: >-
   Cross-tool agent hook contract for Claude Code and Codex CLI: supported
   events, matcher behavior, payloads, decisions, trust, and runtime limits, plus

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v1.3.1...hooks-quality--v2.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-git-workflow:** the hook script is now attribution-guard.py and requires python3 on PATH.
+
+### Bug Fixes
+
+* **steering-git-workflow:** stop blocking pull requests when the policy check cannot verify them ([#794](https://github.com/srobroek/agentic-packages/issues/794)) ([023c0f0](https://github.com/srobroek/agentic-packages/commit/023c0f087717a57386d18d06f2575fca0435b7b1))
+
 ## [1.3.1](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v1.3.0...hooks-quality--v1.3.1) (2026-07-25)
 
 
