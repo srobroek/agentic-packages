@@ -22,6 +22,7 @@ includes:
   - .apm/rules
   - .apm/skills/orchestrate/SKILL.md
   - .apm/skills/orchestrate/references
+  - .apm/skills/orchestrate/scripts/_test_bot_review_probe.py
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py
   - .apm/skills/orchestrate/scripts/_test_decision_policy.py
   - .apm/skills/orchestrate/scripts/_test_discover_agents.py
@@ -31,6 +32,7 @@ includes:
   - .apm/skills/orchestrate/scripts/_test_scope_check.py
   - .apm/skills/orchestrate/scripts/_test_thread_message.py
   - .apm/skills/orchestrate/scripts/_test_worktree_sweep.py
+  - .apm/skills/orchestrate/scripts/bot-review-probe.py
   - .apm/skills/orchestrate/scripts/conflict-probe.sh
   - .apm/skills/orchestrate/scripts/discover-agents.py
   - .apm/skills/orchestrate/scripts/inject-comms.sh

@@ -20,6 +20,7 @@ includes:
   - .apm/instructions
   - .apm/skills/pr-shepherd/SKILL.md
   - .apm/skills/pr-shepherd/references
+  - .apm/skills/pr-shepherd/scripts/_test_bot_review_probe.py
   - .apm/skills/pr-shepherd/scripts/_test_landing_contract.sh
   - .apm/skills/pr-shepherd/scripts/_test_resolve_queue_event.py
   - .apm/skills/pr-shepherd/scripts/_test_sheepdog_real_db.sh

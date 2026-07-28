@@ -48,6 +48,10 @@ TRIGGER
      statusCheckRollup
    - `scripts/merge-probe.sh conflicts origin/<base> origin/<branch>` →
      predicted conflict paths (exit 1 = conflicts)
+   - `scripts/bot-review-probe.py fetch <repo> <N>` piped to
+     `classify <head-sha>` → review-bot round for that exact head
+     (0 absent|clean · 10 pending · 11 stale · 12 actionable · 2 unknown).
+     LOAD references/bot-review.md before acting on anything but `absent`.
 8. Decide (LOAD references/bounce-back.md before any bounce):
 
 | probe result | action |
@@ -56,7 +60,10 @@ TRIGGER
 | automated release PR | ignore by branch/label product anchors; title is not an anchor |
 | already merged | verify terminal-branch landing, close merge bead, then reconcile ready closing work |
 | closed without merge | set merge bead `state:failed`, status blocked, comment; dependent work remains blocked |
-| clean + checks green + approved | LOAD references/landing-contract.md, then `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
+| bot review pending | comment once, release the claim, continue; the next pass re-probes. Never poll it in-session |
+| bot review stale | the bot reviewed an older head; treat as pending, never as clean |
+| bot review actionable | bounce → agent:coder with the summary URL and the bot's comment paths (references/bot-review.md) |
+| clean + checks green + approved + bot review absent/clean | LOAD references/landing-contract.md, then `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |
@@ -94,6 +101,12 @@ MUST Release the claim (`bd update <id> --assignee "" --status open`) whenever
   the bead is not closed this pass -- a parked claim starves other sessions.
 MUST Never fix code, rebase, or resolve conflicts -- file a fix bead and bounce
   (references/bounce-back.md); gates own the wait, not your session.
+MUST Probe the review bot before every merge and treat `pending`, `stale`, or
+  `unknown` as not-yet-mergeable. Silence is not approval: a completed bot check
+  with no review at the exact head is a wait, never a pass.
+NOT Judging bot findings yourself, quoting them into the fix bead, or merging
+  because they look like nits -- the coder that owns the code decides which are
+  correct and appropriate. You route, you never review.
 MUST Comment the pass outcome on the merge bead even when no action was taken.
 DEFAULT Merge method: repo convention (branch protection, CONTRIBUTING);
   squash when unstated.
