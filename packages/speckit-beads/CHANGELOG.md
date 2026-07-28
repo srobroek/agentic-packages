@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v6.0.0...speckit-beads--v7.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+
+### Bug Fixes
+
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
+
+### Refactors
+
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
 ## [6.0.0](https://github.com/srobroek/agentic-packages/compare/speckit-beads--v5.0.0...speckit-beads--v6.0.0) (2026-07-27)
 
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v3.0.0...hooks-bash-safety--v4.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+* **steering-git-workflow:** the hook script is now attribution-guard.py and requires python3 on PATH.
+
+### Bug Fixes
+
+* **steering-git-workflow:** stop blocking pull requests when the policy check cannot verify them ([#794](https://github.com/srobroek/agentic-packages/issues/794)) ([023c0f0](https://github.com/srobroek/agentic-packages/commit/023c0f087717a57386d18d06f2575fca0435b7b1))
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v2.2.2...hooks-bash-safety--v3.0.0) (2026-07-28)
 
 

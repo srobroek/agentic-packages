@@ -1,6 +1,6 @@
 {
   "name": "mcp-repomix",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review. The PostToolUse snapshot-refresh hook requires python3 on PATH.",
   "author": {
     "name": "Sjors Robroek"

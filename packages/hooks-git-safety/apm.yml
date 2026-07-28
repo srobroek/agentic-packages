@@ -1,5 +1,5 @@
 name: hooks-git-safety
-version: 2.2.2
+version: 3.0.0
 description: >-
   Git safety guard for autonomous agents, in one Python module with a real shell
   tokenizer. Denies exactly one thing: a destructive op aimed at another working
@@ -10,9 +10,9 @@ description: >-
   untracked-only tree does not trip the reset rules. push --force always warns,
   because the loss is on the remote where local state cannot answer for it
   (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass
-  silently, all being reflog-recoverable. State reads happen once, and only after
-  a destructive verb matches. An unreadable tree warns rather than staying quiet.
-  Never emits "ask". Cross-tool (Claude + Codex).
+  silently, all being reflog-recoverable. State reads happen once, and only
+  after a destructive verb matches. An unreadable tree warns rather than staying
+  quiet. Never emits "ask". Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
