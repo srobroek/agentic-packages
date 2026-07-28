@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/attribution-guard.sh",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/attribution-guard.py",
             "timeout": 10
           }
         ]

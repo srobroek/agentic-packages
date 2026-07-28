@@ -89,8 +89,13 @@ MUST `bd dolt pull`/`push` only with explicit sync authority from user,
 DEFAULT Local: no routine pull; one push at orchestrator handoff.
 DEFAULT Cross-machine: one pull before fan-out, one push after updates.
 NOT `bd import` of issues.jsonl -- `bd dolt pull` is the sync path.
+NOT Treating Dolt sync and the GitHub mirror as one thing: `bd dolt` moves the
+  beads database between machines, `bd github` mirrors beads to GitHub issues.
+  The containerized `dbd` wrapper injects credentials for the Dolt verbs only, so
+  `bd github` runs on the host with `GITHUB_TOKEN` supplied per invocation.
 
 GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
+  for config keys, per-verb cost, and the label-overwrite constraint.
 
 SESSION CLOSE (when beads were touched)
 MUST File beads for remaining/discovered work, close finished with `--reason`.
