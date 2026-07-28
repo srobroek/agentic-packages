@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import shutil
@@ -58,6 +59,27 @@ def deny(reason: str) -> None:
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
                     "permissionDecisionReason": reason,
+                }
+            }
+        )
+    )
+
+
+def advise(context: str) -> None:
+    """Allow the command but tell the model what could not be verified.
+
+    Used where the guard cannot reach a verdict: an unparseable command, or a
+    `bd` lookup that failed for reasons unrelated to the bead existing. Denying
+    on an inconclusive check turns every parser gap and every slow database into
+    a blocked PR, which is the opposite of what a guard is for.
+    """
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "allow",
+                    "additionalContext": context,
                 }
             }
         )
@@ -346,10 +368,12 @@ def beads_workspace(cwd: Path) -> bool:
             ["bd", "-C", str(cwd), "where"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            timeout=10,
+            timeout=30,
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired):
+        # An unreachable `bd` is not evidence of a beads workspace, so the bead
+        # trailer requirements below are skipped rather than demanded blindly.
         return False
     return result.returncode == 0
 
@@ -369,28 +393,77 @@ def trailer_ids(body: str, name: str) -> list[str]:
     return ids
 
 
+MISS_MESSAGE = re.compile(
+    r"no issue(s)? found|not found|no such|does not exist|unknown (bead|issue)", re.I
+)
+
+
+class BeadUnavailable(Exception):
+    """`bd` could not answer, so absence of a record proves nothing.
+
+    Raised instead of returning None when the lookup itself failed: binary
+    missing, timeout, crash, or unparseable output. The caller turns this into an
+    advisory rather than a denial, because a slow or unhealthy database must not
+    read as "that bead does not exist".
+    """
+
+
 def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
+    """Return the bead record, None when the bead genuinely does not exist.
+
+    Raises BeadUnavailable when the lookup could not be completed. The timeout is
+    generous because `bd` is Dolt-backed: a healthy call still takes about a
+    second, and system load pushes it well past that. One retry absorbs a
+    transient stall.
+    """
     if not shutil.which("bd"):
+        raise BeadUnavailable("bd is not installed")
+    last_error = "unknown error"
+    for attempt in range(2):
+        try:
+            result = subprocess.run(
+                ["bd", "-C", str(cwd), "show", bead_id, "--json"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=30,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            last_error = "bd show timed out"
+            continue
+        except OSError as error:
+            raise BeadUnavailable(f"could not run bd: {error}") from error
+
+        stdout = result.stdout.decode("utf-8", "replace").strip()
+        stderr = result.stderr.decode("utf-8", "replace").strip()
+        if result.returncode != 0:
+            # An explicit "no such bead" is a genuine miss. Anything else --
+            # schema skew, a locked database, a crash -- is an unavailable
+            # lookup, and must not read as "that bead does not exist". A bare
+            # non-zero exit with no message is treated as a miss, because that is
+            # how the simplest callers report one.
+            if not stderr or MISS_MESSAGE.search(stderr):
+                return None
+            last_error = stderr.splitlines()[0]
+            continue
+
+        if not stdout:
+            return None
+        try:
+            payload = json.loads(stdout)
+        except json.JSONDecodeError:
+            last_error = "bd returned unparseable JSON"
+            continue
+        # bd reports an unknown id as {"error": ...} on stdout with exit 0.
+        if isinstance(payload, dict) and payload.get("error"):
+            # An error object on a zero exit is how bd reports an unknown id.
+            return None
+        if isinstance(payload, list):
+            return payload[0] if payload and isinstance(payload[0], dict) else None
+        if isinstance(payload, dict):
+            return payload
         return None
-    try:
-        result = subprocess.run(
-            ["bd", "-C", str(cwd), "show", bead_id, "--json"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            timeout=5,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode != 0:
-        return None
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(payload, list) or not payload or not isinstance(payload[0], dict):
-        return None
-    return payload[0]
+    raise BeadUnavailable(last_error)
 
 
 def validate(invocation: list[str], cwd: Path) -> str | None:
@@ -495,15 +568,36 @@ def main() -> int:
     command, cwd = payload_command(payload)
     if not command:
         return 0
-    likely_pr_create = all(word in command for word in ("gh", "pr", "create"))
+    # Cheap bail before tokenizing. This hook is registered on every Bash call,
+    # and the shell wrapper that used to do this filtering is gone. A strict
+    # superset of the real trigger, so it cannot hide a command the parser would
+    # have flagged.
+    if not all(word in command for word in ("gh", "pr", "create")):
+        return 0
+    likely_pr_create = True
     try:
         invocations = invocation_spans(command)
     except ValueError as error:
         if likely_pr_create:
-            deny(f"PR creation command could not be safely parsed: {error}.")
+            # Allow, do not deny. PR bodies carry markdown: apostrophes,
+            # backticks, and nested quotes all make the tokenizer give up, and a
+            # command this guard cannot read is not evidence of a policy breach.
+            advise(
+                f"PR policy not verified: this command could not be parsed ({error}). "
+                "Ensure the invocation uses --draft and, in a Beads repository, a "
+                "PR body carrying Tracks-Bead and Merge-Bead trailers."
+            )
         return 0
     for invocation in invocations:
-        reason = validate(invocation, cwd)
+        try:
+            reason = validate(invocation, cwd)
+        except BeadUnavailable as error:
+            advise(
+                f"PR policy not fully verified: a bead lookup could not complete "
+                f"({error}). The draft and trailer requirements still apply; "
+                "re-check the bead state if the PR is rejected downstream."
+            )
+            return 0
         if reason:
             deny(reason)
             return 0
