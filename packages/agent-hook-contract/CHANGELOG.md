@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0 (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the codex-hook-contract package is renamed to agent-hook-contract. Update any dependency pin to the new package path.
+
+### Features
+
+* require Python for agent hooks and generalize the hook contract to Claude and Codex ([#790](https://github.com/srobroek/agentic-packages/issues/790)) ([45d3606](https://github.com/srobroek/agentic-packages/commit/45d36065aa0f56c9e34010388226aef8eb206fd8))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [0.3.2](https://github.com/srobroek/agentic-packages/compare/codex-hook-contract--v0.3.1...codex-hook-contract--v0.3.2) (2026-07-25)
 
 
