@@ -68,7 +68,7 @@ def deny(reason: str) -> None:
 def advise(context: str) -> None:
     """Allow the command but tell the model what could not be verified.
 
-    Used where the guard cannot reach a verdict: an unparseable command, or a
+    Used where the guard cannot reach a verdict: an unparsable command, or a
     `bd` lookup that failed for reasons unrelated to the bead existing. Denying
     on an inconclusive check turns every parser gap and every slow database into
     a blocked PR, which is the opposite of what a guard is for.
@@ -402,7 +402,7 @@ class BeadUnavailable(Exception):
     """`bd` could not answer, so absence of a record proves nothing.
 
     Raised instead of returning None when the lookup itself failed: binary
-    missing, timeout, crash, or unparseable output. The caller turns this into an
+    missing, timeout, crash, or unparsable output. The caller turns this into an
     advisory rather than a denial, because a slow or unhealthy database must not
     read as "that bead does not exist".
     """
@@ -452,7 +452,7 @@ def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
         try:
             payload = json.loads(stdout)
         except json.JSONDecodeError:
-            last_error = "bd returned unparseable JSON"
+            last_error = "bd returned unparsable JSON"
             continue
         # bd reports an unknown id as {"error": ...} on stdout with exit 0.
         if isinstance(payload, dict) and payload.get("error"):
