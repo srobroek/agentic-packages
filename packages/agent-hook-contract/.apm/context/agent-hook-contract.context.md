@@ -29,36 +29,42 @@ trailing quotes, each found by fuzzing after the guard shipped. Python has a
 lexer, a JSON parser, and a path normalizer in its standard library.
 
 Python is also faster here, which is the part that surprises people. Measured on
-an EDR-monitored macOS host, where every `exec` carries a scanning tax:
+an EDR-monitored macOS host, where every `exec` carries a scanning tax, running
+the three variants interleaved so machine drift cancels:
 
 | Approach | Median per call |
 | --- | --- |
-| `bash` plus one `jq` parse and one `jq` emit | 50 ms |
-| `bash` plus two `jq` parses and one `jq` emit | 134 ms |
-| Python, same work, no subprocesses | 44 ms |
+| `bash` plus two `jq` parses and one `jq` emit | 58 ms |
+| `bash` plus one `jq` parse and one `jq` emit | 45 ms |
+| Python, same work, no subprocesses | 42 ms |
 
-A Python interpreter starts about 9 ms slower than `bash`, and that gap is the
-whole of bash's advantage. A single `jq` spawn costs more than the gap, so **any
-hook that touches `jq` is both faster and safer in Python**. Since every hook
-parses a JSON payload on stdin, that is every hook.
+A Python interpreter starts slower than `bash`, and that gap is the whole of
+bash's advantage. A single `jq` spawn costs more than the gap, so **any hook that
+touches `jq` is at least as fast in Python, and safer**. Since every hook parses
+a JSON payload on stdin, that is every hook. Measure on the host that matters
+rather than trusting these numbers: the ranking is stable, the margins are not.
 
 ## Performance rules
 
 A `PreToolUse:Bash` hook runs on every shell command the agent issues, and all
 matching hooks launch concurrently. With two dozen registered, every wasted
-millisecond is a tax on the whole session.
+millisecond is charged to each command the agent runs.
 
-1. **Never `uv run` a per-tool-call hook.** It costs roughly three times a plain
-   `python3` start, all of it spent before the hook does any work.
-   `uv run --script` is fine for `SessionStart` and other once-per-session
-   events, where dependency isolation is worth the startup.
+1. **Never `uv run` a per-tool-call hook.** Resolving the environment adds
+   roughly 40% to a warm `python3` start, spent before the hook does any work.
+   Use it only when the script genuinely needs a third-party dependency; a
+   PEP 723 block listing `dependencies = []` is a pure tax. `uv run --script`
+   remains right for `SessionStart` and other once-per-session events, where the
+   startup buys real isolation.
 2. **Standard library only on the hot path.** No third-party import. A git
    library is the trap: importing `pygit2` or `GitPython` costs more than the
    subprocesses either would replace, and a hook process is too short-lived to
    amortize an import.
-3. **Find the repository root in-process.** Walking parents for a `.git` entry
-   is exact and roughly three orders of magnitude cheaper than spawning
-   `git rev-parse --show-toplevel`.
+3. **Find the repository root in-process.** Walking parents for a `.git` entry is
+   exact and around two orders of magnitude cheaper than spawning
+   `git rev-parse --show-toplevel`. Resolve the path first, and treat `.git` as
+   an entry rather than a directory so linked worktrees, where it is a file,
+   still resolve.
 4. **Batch the git calls you genuinely need.** One `git rev-parse A B C` returns
    three answers for less than the cost of three separate calls. Prefer one
    `subprocess.run` over a loop.
