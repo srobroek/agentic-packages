@@ -688,3 +688,47 @@ run_guard() {
   [ "$decision" = "deny" ]
   printf '%s' "$output" | jq -e '.hookSpecificOutput.permissionDecisionReason | test("BS-[0-9]")' >/dev/null
 }
+
+# --- rm-rf-guard.sh: a leading `cd` relocates relative targets ---------------
+#
+# The payload cwd is where the SHELL starts, not where the rm lands. A `cd`
+# earlier in the same command chain moves every relative target after it, so
+# `cd / && rm -rf *` deletes the root filesystem while the payload cwd still
+# names a harmless project dir.
+
+@test "rm-rf-guard: cd / then rm -rf * -> deny" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'cd / && rm -rf *')"
+  [ "$decision" = "deny" ]
+}
+
+@test "rm-rf-guard: cd to a critical dir then rm -rf * -> deny" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'cd /usr; rm -rf *')"
+  [ "$decision" = "deny" ]
+}
+
+@test "rm-rf-guard: cd / then rm -rf a named subdir -> deny" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'cd / && rm -rf etc')"
+  [ "$decision" = "deny" ]
+}
+
+@test "rm-rf-guard: cd into the project then rm -rf a build dir -> no deny" {
+  # The whole point of the recoverability model: relative deletes inside the
+  # working tree stay silent. Rebasing on cd must not change that.
+  run_guard "$RM_GUARD" "$(mk_cwd "cd $REPO && rm -rf build")"
+  [ "$decision" != "deny" ]
+}
+
+@test "rm-rf-guard: a relative cd is NOT followed (cannot be resolved safely)" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'cd ../.. && rm -rf build')"
+  [ "$decision" != "deny" ]
+}
+
+@test "rm-rf-guard: a variable-bearing cd is NOT followed" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'cd $ROOT && rm -rf build')"
+  [ "$decision" != "deny" ]
+}
+
+@test "rm-rf-guard: cd inside quoted prose does not rebase the cwd" {
+  run_guard "$RM_GUARD" "$(mk_cwd 'git commit -m "run cd / then rm -rf * to wipe"')"
+  [ "$decision" != "deny" ]
+}
