@@ -10,7 +10,7 @@ target -- so those forms are pinned here as a class.
 Ordinary work must pass silently. A guard that warns about `rm -rf node_modules`
 teaches the agent to ignore it, which is worse than not guarding at all.
 
-Nothing may block on an inconclusive read. An unparseable command, an empty
+Nothing may block on an inconclusive read. An unparsable command, an empty
 payload, or malformed JSON allows.
 
 Destructive literals are assembled from parts rather than written out, so this
