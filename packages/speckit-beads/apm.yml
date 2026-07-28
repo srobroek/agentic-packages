@@ -25,5 +25,5 @@ tags:
   - gates
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/speckit#>=10.0.0 <11.0.0
-    - srobroek/agentic-packages/packages/beads#>=0.7.2 <1.0.0
+    - srobroek/agentic-packages/packages/speckit#>=11.0.0 <12.0.0
+    - srobroek/agentic-packages/packages/beads#>=1.0.0 <2.0.0
