@@ -513,18 +513,6 @@
       "source": "./packages/hooks-package-investigate"
     },
     {
-      "name": "hooks-precommit-gate",
-      "description": "PreToolUse advisory (non-blocking) for git commit/push when a repo opts into the pre-commit framework. When the repo has .pre-commit-config.yaml but the matching git hook is not installed, or --no-verify would skip the framework, emits a single permissionDecision:\"allow\" + additionalContext advisory -- the operation proceeds. Silent in repos with no pre-commit config, so it adds zero friction elsewhere. Pairs with secrets-scan (enforcement lives in the pre-push hook). Cross-tool (Claude + Codex).",
-      "version": "0.6.1",
-      "tags": [
-        "hooks",
-        "git",
-        "pre-commit"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/hooks-precommit-gate"
-    },
-    {
       "name": "hooks-quality",
       "description": "Opt-in code-quality hooks: advisory linting/formatting feedback after edits and a quality check before commits. The before-commit gate is a FALLBACK -- it defers when the pre-commit framework is installed (which already runs the same formatters), so it only fires in repos that have not adopted pre-commit. Cross-tool (Claude + Codex).",
       "version": "1.3.1",
@@ -1076,18 +1064,6 @@
       ],
       "category": "languages",
       "source": "./packages/rust-quality"
-    },
-    {
-      "name": "secrets-scan",
-      "description": "Pre-commit secret scanning. A skill plus a PreToolUse hook that runs gitleaks or trufflehog (whichever is on PATH) over staged changes and blocks the commit when a secret is found, with an actionable message and a documented bypass. Warns and allows when no scanner is installed, so missing tooling never blocks. Cross-tool (Claude + Codex).",
-      "version": "2.1.1",
-      "tags": [
-        "security",
-        "secrets",
-        "pre-commit"
-      ],
-      "category": "security",
-      "source": "./packages/secrets-scan"
     },
     {
       "name": "session-review",

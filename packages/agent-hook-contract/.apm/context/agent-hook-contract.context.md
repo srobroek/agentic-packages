@@ -203,7 +203,15 @@ workaround for Claude's `PostToolUseFailure`.
    quoted prose do not trip it.
 4. When porting a guard to Python, keep the existing suite as the oracle. Prove
    behavior parity against it before porting the tests themselves.
-5. Keep destructive enforcement in Codex sandbox and command rules as well as in
+5. Fold narrow guards together while porting them, not as a separate pass. Two
+   guards in one package that share a matcher pay two process startups and two
+   payload parses to answer one question, so merging them during the rewrite is
+   nearly free. Merging them first, in shell, does the work twice.
+6. Keep a rollup inside one package. Guards in different packages that inspect
+   the same command stay separate processes, because a shared runtime would break
+   the rule that no package reaches into another's internals. Collapsing those is
+   a decision to merge the packages, not a porting step.
+7. Keep destructive enforcement in Codex sandbox and command rules as well as in
    hooks.
-6. Run `.apm/scripts/audit-codex-config.py` after changing manifests, hooks, MCP
+8. Run `.apm/scripts/audit-codex-config.py` after changing manifests, hooks, MCP
    config, or agent metadata.
