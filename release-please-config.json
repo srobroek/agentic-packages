@@ -128,6 +128,18 @@
         }
       ]
     },
+    "packages/agent-hook-contract": {
+      "release-type": "simple",
+      "component": "agent-hook-contract",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-management": {
       "release-type": "simple",
       "component": "agent-management",
@@ -299,18 +311,6 @@
     "packages/code-intelligence": {
       "release-type": "simple",
       "component": "code-intelligence",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/codex-hook-contract": {
-      "release-type": "simple",
-      "component": "codex-hook-contract",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

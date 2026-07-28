@@ -115,6 +115,14 @@ marketplace:
         - agent
         - engineering
         - repos
+    - name: agent-hook-contract
+      source: ./packages/agent-hook-contract
+      category: project-lifecycle
+      tags:
+        - hooks
+        - claude
+        - codex
+        - reference
     - name: agent-management
       source: ./packages/agent-management
       category: agentic-maintenance
@@ -219,13 +227,6 @@ marketplace:
       tags:
         - bundle
         - semantic
-    - name: codex-hook-contract
-      source: ./packages/codex-hook-contract
-      category: project-lifecycle
-      tags:
-        - codex
-        - hooks
-        - reference
     - name: core
       source: ./packages/core
       category: core
