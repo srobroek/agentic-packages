@@ -58,9 +58,18 @@ PATTERNS: list[tuple[str, str]] = [
     ),
     # A trailer key pointing at an agent noreply address, even when the display
     # name is something else.
+    #
+    # Each entry must identify an AGENT. The bare users.noreply.github.com domain
+    # was listed here, but that is every GitHub user's address, so an ordinary human
+    # co-author trailer was reported as AI attribution -- the exact false positive
+    # this guard is otherwise carefully scoped to avoid. GitHub bot accounts are
+    # matched instead by their local part, which ends in `[bot]` or `-bot`.
+    # `@openai` likewise needed the dot, or any address at a domain merely
+    # containing that substring matched.
     (
-        rf"(?:^|[\s\"'\\]){TRAILER_KEYS}\s*:[^\n]*<[^>]*(?:noreply@anthropic|@openai|@cursor\.|"
-        rf"@cognition|@aider\.|@all-hands|@codeium|users\.noreply\.github\.com)",
+        rf"(?:^|[\s\"'\\]){TRAILER_KEYS}\s*:[^\n]*<[^>]*(?:noreply@anthropic|@openai\.|@cursor\.|"
+        rf"@cognition|@aider\.|@all-hands|@codeium|"
+        rf"(?:\[bot\]|-bot)@users\.noreply\.github\.com)",
         "a commit trailer pointing at an AI agent address",
     ),
     # "Generated with <agent>", "Written by <agent>". A real signature opens a

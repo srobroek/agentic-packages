@@ -34,8 +34,13 @@ from pathlib import Path
 # Wrappers that keep the following word in command position.
 WRAPPERS = frozenset(
     {"sudo", "doas", "env", "time", "nice", "command", "exec", "xargs", "stdbuf",
-     "nohup", "setsid", "ionice"}
+     "nohup", "setsid", "ionice", "timeout", "unbuffer", "flock"}
 )
+
+# Wrappers whose first non-option word is their OWN operand rather than the wrapped
+# command: `timeout 5 git ...` and `flock /tmp/lock git ...`. Adding these to
+# WRAPPERS alone would leave `5` standing where the verb belongs.
+WRAPPER_OPERAND = frozenset({"timeout", "flock"})
 COMMAND_BOUNDARIES = frozenset(
     {"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if", "for"}
 )
@@ -103,8 +108,25 @@ def git_invocation(words: list[str]) -> list[str] | None:
     index = 0
     while index < len(words):
         word = words[index]
-        if word in COMMAND_BOUNDARIES or ASSIGNMENT.match(word) or word in WRAPPERS:
+        if word in COMMAND_BOUNDARIES or ASSIGNMENT.match(word):
             index += 1
+            continue
+        if word in WRAPPERS:
+            takes_operand = word in WRAPPER_OPERAND
+            index += 1
+            # Consume the wrapper's own options, plus one value for an option that
+            # takes one. Skipping only the wrapper WORD left `-n` standing where the
+            # verb belonged, so `nice -n 5 git ... reset --hard` was silent while the
+            # bare command denied -- six wrapper forms defeated the deny this way.
+            while index < len(words) and words[index].startswith("-"):
+                index += 1
+                if index < len(words) and not words[index].startswith("-"):
+                    following = words[index + 1] if index + 1 < len(words) else None
+                    if following is not None and not following.startswith("-"):
+                        index += 1
+            # `timeout 5 git ...`: the duration belongs to the wrapper.
+            if takes_operand and index < len(words) and not words[index].startswith("-"):
+                index += 1
             continue
         break
     if index >= len(words) or Path(words[index]).name != "git":
@@ -295,26 +317,35 @@ def main() -> int:
         # Not parseable as shell, so there is nothing reliable to judge.
         return 0
 
-    invocations = [inv for inv in (git_invocation(w) for w in commands) if inv]
-    destructive = [inv for inv in invocations if inv[0] in DESTRUCTIVE_SUBCOMMANDS]
+    destructive = [
+        (words, inv)
+        for words, inv in ((w, git_invocation(w)) for w in commands)
+        if inv and inv[0] in DESTRUCTIVE_SUBCOMMANDS
+    ]
     if not destructive:
         return 0
 
-    # Checked on the raw command so `-C` is not folded into `-c`.
-    if UNVERIFIABLE_REDIRECT.search(command):
-        emit(
-            "deny",
-            "blocked by GS-2 (no destructive op via an unexpanded variable): this "
-            "points git at another working tree through a shell variable or `~`, so "
-            "the guard cannot resolve which tree would be affected or what would be "
-            "lost. Resolve it to a literal path first, then re-run.",
-        )
-        return 0
+    # Scoped to the destructive invocation's own words. Searching the whole
+    # command string denied `git clean -fd; git -C ~/other status`, blaming a
+    # read-only `status` in a separate command for a tree the destructive op never
+    # touches. Re-joined with spaces so the `-C <path>` shape the pattern expects
+    # survives tokenization; `$` and `~` are still literal after posix lexing
+    # because the shell has not expanded them yet.
+    for words, _ in destructive:
+        if UNVERIFIABLE_REDIRECT.search(" ".join(words)):
+            emit(
+                "deny",
+                "blocked by GS-2 (no destructive op via an unexpanded variable): this "
+                "points git at another working tree through a shell variable or `~`, so "
+                "the guard cannot resolve which tree would be affected or what would be "
+                "lost. Resolve it to a literal path first, then re-run.",
+            )
+            return 0
 
     cwd = Path(raw_cwd) if raw_cwd and Path(raw_cwd).is_dir() else Path.cwd()
     state = RepoState(cwd)
 
-    for invocation in destructive:
+    for _, invocation in destructive:
         finding = judge(invocation, state)
         if finding:
             emit(finding[0], finding[1])

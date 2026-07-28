@@ -108,6 +108,54 @@ def test_literal_redirect_is_allowed(repo: Path) -> None:
     assert verdict(f"git -C {repo} status", repo) == "silent"
 
 
+def test_a_readonly_op_elsewhere_does_not_trigger_gs2(repo: Path) -> None:
+    """GS-2 applies to the destructive invocation, not to the whole command string.
+
+    Searching the raw string denied a benign pairing, blaming a read-only `status`
+    in a separate command for a tilde the destructive op never touches. A guard that
+    fires on correct work is worse than no guard.
+    """
+    _, decision = run("git clean -fd; git -C ~/other status", repo)
+    if decision is not None:
+        assert decision["permissionDecision"] != "deny", (
+            "a read-only op in a different command must not trigger GS-2"
+        )
+
+
+# --- wrapper prefixes must not defeat a denial ---------------------------------
+
+# Each of these was silent while the bare command denied, because the prefix skip
+# consumed the wrapper word but not its options, leaving `-n` or a duration where
+# the verb belonged.
+WRAPPED_DESTRUCTIVE = [
+    pytest.param("timeout 5 ", id="timeout-with-duration"),
+    pytest.param("flock /tmp/lock ", id="flock-with-lockfile"),
+    pytest.param("nice -n 5 ", id="nice-with-option-value"),
+    pytest.param("sudo -u me ", id="sudo-with-user"),
+    pytest.param("xargs -n1 ", id="xargs-with-option"),
+    pytest.param("unbuffer ", id="unbuffer"),
+    pytest.param("stdbuf -o0 ", id="stdbuf-with-option"),
+    pytest.param("env FOO=1 ", id="env-assignment"),
+    pytest.param("nohup ", id="nohup"),
+]
+
+
+@pytest.mark.parametrize("prefix", WRAPPED_DESTRUCTIVE)
+def test_a_wrapper_prefix_does_not_defeat_the_denial(prefix: str, repo: Path) -> None:
+    _, decision = run(f'{prefix}git -C "$DIR" reset --hard', repo)
+    assert decision is not None, f"no decision for wrapper prefix {prefix!r}"
+    assert decision["permissionDecision"] == "deny"
+
+
+def test_a_non_string_cwd_fails_open() -> None:
+    """The contract requires fail-open; this raised TypeError and exited 1."""
+    payload = json.dumps({"cwd": ["/tmp"], "tool_input": {"command": "git status"}})
+    result = subprocess.run(
+        [sys.executable, str(GUARD)], input=payload, capture_output=True, text=True, timeout=30
+    )
+    assert result.returncode == 0, f"must not fail closed: {result.stderr}"
+
+
 # --- GS-3 / GS-5 / GS-6: warn only when work would actually be lost ------------
 
 

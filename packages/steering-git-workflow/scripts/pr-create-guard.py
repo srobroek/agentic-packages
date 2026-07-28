@@ -605,4 +605,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        # Fail open, per the hook contract: an unexpected exception allows rather
+        # than blocking. Without this, a payload whose `cwd` was not a string raised
+        # TypeError and exited 1 instead of exiting 0 quietly.
+        raise SystemExit(0)
