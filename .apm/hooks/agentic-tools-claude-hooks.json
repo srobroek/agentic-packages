@@ -19,13 +19,6 @@
             "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.sh",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(*.d2)|Write(*.d2)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/validate-d2.sh",
-            "timeout": 5,
-            "statusMessage": "Checking D2 diagram quality..."
           }
         ]
       },
@@ -50,27 +43,6 @@
             "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
             "command": "${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.sh",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Bash(*&&*)|Bash(*;*)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/approve-compound-bash.sh",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/safe-commands.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Agent(*)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/concurrent-limit.sh",
-            "timeout": 3
           }
         ]
       }

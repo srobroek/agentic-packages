@@ -497,18 +497,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-precommit-gate",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-precommit-gate"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-quality",
       "source": {
         "source": "local",
@@ -987,18 +975,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "languages"
-    },
-    {
-      "name": "secrets-scan",
-      "source": {
-        "source": "local",
-        "path": "./packages/secrets-scan"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
     },
     {
       "name": "session-review",

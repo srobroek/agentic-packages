@@ -145,7 +145,6 @@ plugin manifests do not support every APM component type.
 | `hooks-close-keywords` | Partial | Simple Bash advisory only; use the supplied commit-msg/pre-commit gate for tool-independent coverage. |
 | `hooks-git-safety` | Partial | Simple Bash is covered; use Git protections and compiled steering for complete policy. |
 | `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
-| `hooks-precommit-gate` | Partial | Simple commit/push commands are covered; install real pre-commit hooks for tool-independent enforcement. |
 | `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
 | `hooks-worktrunk` | Partial | Both PreToolUse guards work; the WorktreeCreate/WorktreeRemove provider is Claude-only because Codex has no worktree lifecycle events. Use `wt` commands directly. |
 | `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
@@ -164,7 +163,6 @@ plugin manifests do not support every APM component type.
 | `mcp-repomix` | Partial | Same MCP; refresh can miss unsupported shell paths, and Codex PostToolUse has no subagent identity for suppressing subagent Git calls. Run the refresh script explicitly when required; extra subagent refreshes remain bounded by clean-tree and HEAD checks. |
 | `orchestrate` | Partial | Skill works; native Codex role profiles receive task-specific spawn briefs because APM agents are Claude-only and Codex ignores skill-frontmatter hooks. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
-| `secrets-scan` | Partial | Skill works; Bash guard can miss unsupported shell paths, so retain repository-native gitleaks/trufflehog gates. |
 | `speckit` | Partial | Skills and supported hooks work; native Codex role profiles receive the SpecKit task protocol, and Claude Skill-tool reminder has no Codex event equivalent. |
 | `worktrunk-writer` | Partial | Preparation, explicit lease validation, inventory, and apply_patch/simple Bash hooks work; unified shell paths still require sandbox policy and explicit validation. |
 

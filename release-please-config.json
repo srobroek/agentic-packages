@@ -560,18 +560,6 @@
         }
       ]
     },
-    "packages/hooks-precommit-gate": {
-      "release-type": "simple",
-      "component": "hooks-precommit-gate",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-quality": {
       "release-type": "simple",
       "component": "hooks-quality",
@@ -1127,18 +1115,6 @@
     "packages/rust-quality": {
       "release-type": "simple",
       "component": "rust-quality",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/secrets-scan": {
-      "release-type": "simple",
-      "component": "secrets-scan",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

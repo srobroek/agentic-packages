@@ -45,9 +45,8 @@ command -v bd >/dev/null 2>&1 || exit 0
 bd -C "$cwd" where >/dev/null 2>&1 || exit 0
 
 # Strip quoted values from a command string, leaving only bare tokens.
-# Copied from packages/hooks-precommit-gate/scripts/precommit-gate.sh (its
-# issues #4/#5 fix): quoted content is replaced by a single space so a
-# `gh issue edit` mentioned inside -m '...' cannot trip the guard.
+# Quoted content is replaced by a single space so a `gh issue edit` mentioned
+# inside -m '...' cannot trip the guard.
 # Handles single-quoted (no escapes) and double-quoted (backslash escapes).
 strip_quoted() {
   printf '%s' "$1" | awk '
