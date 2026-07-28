@@ -58,6 +58,27 @@ command=""
 [[ -n "$cwd" && "$cwd" != "null" && -d "$cwd" ]] || cwd="$PWD"
 cwd="$(cd "$cwd" 2>/dev/null && pwd -P 2>/dev/null || printf '%s' "$cwd")"
 cwd="${cwd%/}"; [[ -z "$cwd" ]] && cwd="/"
+
+# A `cd` EARLIER IN THE SAME COMMAND relocates every relative target that follows,
+# so the payload's cwd is not where the rm lands: `cd / && rm -rf *` wipes the root
+# filesystem while resolving against a harmless project cwd. Rebase on a leading
+# absolute `cd` so the classification below sees the real target.
+#
+# Only an ABSOLUTE, literal `cd` is followed. A relative or variable-bearing `cd`
+# is left alone: guessing where it lands would be worse than the status quo, and a
+# $-bearing target is already denied by BS-9.
+#
+# `|| true` on the pipeline is REQUIRED: under `set -euo pipefail` a non-matching
+# grep exits 1, which would abort the whole guard before it can emit any decision
+# -- turning every catastrophic command into a silent allow.
+cd_target="$(printf '%s' "$command" \
+  | grep -oE '(^|[;&|])[[:space:]]*cd[[:space:]]+/[^[:space:];&|]*' \
+  | head -n1 \
+  | sed -E 's/^[;&|]?[[:space:]]*cd[[:space:]]+//' || true)"
+if [[ -n "$cd_target" && "$cd_target" != *'$'* ]]; then
+  cwd="${cd_target%/}"; [[ -z "$cwd" ]] && cwd="/"
+fi
+
 # Project root = git working-tree top (canonical). If not a git repo, the working
 # dir itself is the root.
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || true)"
@@ -207,6 +228,22 @@ severity() {
   case "$t" in
     /|//|'/*'|'~'|'~/'|'$HOME'|'${HOME}'|"$HOME"|'$home'|'${home}')
       echo deny; return ;;
+  esac
+
+  # A RELATIVE target is as catastrophic as an absolute one when the cwd it
+  # resolves against is itself catastrophic: `cd / && rm -rf *` deletes exactly
+  # what `rm -rf /*` deletes. The cd-rebase above has already pointed $cwd at the
+  # real directory, so join and re-test rather than trusting the bare token.
+  case "$t" in
+    /*|'~'*|*'$'*) ;;  # absolute / home / variable: handled by the rules around this one
+    *)
+      case "$cwd" in
+        /) echo deny; return ;;
+      esac
+      for d in $CRIT; do
+        if [[ "$cwd" == "$d" ]]; then echo deny; return; fi
+      done
+      ;;
   esac
 
   # Whole-tree deletion of a critical system dir: the dir itself, dir/, or
