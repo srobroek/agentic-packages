@@ -1,7 +1,7 @@
 # Close-keyword normalizer — fragment for .pre-commit-config.yaml.
 #
 # project-setup merges this `repos:` entry into a project's
-# .pre-commit-config.yaml and vendors commit-msg-rewrite.sh + normalize-closes.sh
+# .pre-commit-config.yaml and vendors commit-msg-rewrite.py + close_keywords.py
 # into the repo (e.g. .pre-commit-hooks/), then rewrites the `entry:` path below
 # to point at the vendored script.
 #
@@ -16,6 +16,6 @@ repos:
       - id: normalize-close-keywords
         name: normalize GitHub close keywords (commit-msg)
         language: script
-        entry: .pre-commit-hooks/commit-msg-rewrite.sh
+        entry: .pre-commit-hooks/commit-msg-rewrite.py
         stages: [commit-msg]
         always_run: true
