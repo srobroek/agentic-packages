@@ -27,6 +27,7 @@ from quality_common import (  # noqa: E402
     language_enabled,
     language_for_file,
     payload_cwd,
+    precommit_covered_languages,
     read_payload,
     selected_languages,
 )
@@ -153,12 +154,15 @@ def main() -> int:
     if total_lines < line_threshold and len(known) < file_threshold:
         return 0
 
-    # Only suggest checks for languages actually present in the edited set, so a
-    # Python-only change never mentions cargo.
+    # Suggest checks only for languages present in the edited set, so a
+    # Python-only change never mentions cargo, and only for languages the
+    # pre-commit framework does not already check, so the advice does not repeat
+    # a gate that runs on its own.
+    covered = precommit_covered_languages(root)
     by_language: dict[str, list[str]] = {}
     for path in sorted(known):
         language = language_for_file(path)
-        if language and language_enabled(language, selected):
+        if language and language_enabled(language, selected) and language not in covered:
             by_language.setdefault(language, []).append(path)
     if not by_language:
         return 0
