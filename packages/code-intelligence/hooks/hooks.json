@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/subagent-context-inject.sh",
+            "command": "${PLUGIN_ROOT}/scripts/subagent-context-inject.py",
             "timeout": 5
           }
         ]

@@ -2,7 +2,7 @@
 
 LEGEND: Rules carry stable IDs (SF-n) cited by the enforcing hook.
 
-subagent-fork-guard.sh enforces SF-1..SF-2 on `PreToolUse:Agent`
+subagent-fork-guard.py enforces SF-1..SF-2 on `PreToolUse:Agent`
 (Codex `spawn_agent`; Claude Agent calls carry no `fork_turns` field, so the
 guard is a no-op there).
 

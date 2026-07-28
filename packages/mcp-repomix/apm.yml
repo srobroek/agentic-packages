@@ -2,7 +2,8 @@ name: mcp-repomix
 version: 1.2.1
 description: >-
   MCP server package for Repomix, providing bulk repository snapshots for
-  analysis and review.
+  analysis and review. The PostToolUse snapshot-refresh hook requires python3
+  on PATH.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

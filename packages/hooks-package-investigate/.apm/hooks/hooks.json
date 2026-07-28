@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/package-investigate.sh",
+            "command": "${PLUGIN_ROOT}/scripts/package-investigate.py",
             "timeout": 10
           }
         ]

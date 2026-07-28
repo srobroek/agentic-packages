@@ -1,7 +1,7 @@
 {
   "name": "hooks-package-investigate",
   "version": "1.2.1",
-  "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
+  "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Requires python3 on PATH. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },

@@ -7,7 +7,7 @@ description: >-
   economy defaults (prefer deletion, stdlib, and minimal solutions over new
   abstractions) and comment discipline. Always-on steering as main-session
   instructions, plus a SubagentStart hook that injects the same discipline into
-  every subagent in MUST register. Opt-in.
+  every subagent in MUST register. Requires python3 on PATH. Opt-in.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

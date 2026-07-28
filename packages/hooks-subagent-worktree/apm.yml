@@ -10,7 +10,7 @@ description: >-
   spawn (superseding the 1.x deny-gate, which guessed wrong and blocked
   legitimate work) and stays silent once isolation is already declared.
   Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a
-  no-op.
+  no-op. Requires python3 on PATH.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid

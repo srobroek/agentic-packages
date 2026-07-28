@@ -1,7 +1,7 @@
 {
   "name": "beads",
   "version": "0.7.2",
-  "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
+  "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
   "author": {
     "name": "Sjors Robroek"
   },
