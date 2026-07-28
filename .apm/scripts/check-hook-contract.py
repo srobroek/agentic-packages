@@ -121,15 +121,12 @@ def claude_only_emission(field: str) -> re.Pattern[str]:
     )
 
 
-# Packages shipping a hook script with no suite when this check was introduced.
-# Recorded rather than skipped silently, so the debt is visible and the rule holds
-# for every package added after it. Remove an entry when its suite lands; the check
-# fails on a stale entry, so this list cannot outlive the gap it describes.
-UNTESTED_HOOK_PACKAGES = {
-    "beads",  # beads-gh-issue-guard.sh, beads-subagent-reminder.sh
-    "mcp-repomix",  # repomix-refresh-snapshot.sh
-    "speckit-beads",  # speckit-beads-tasks-guard.sh
-}
+# Packages allowed to ship a hook script with no suite. Empty, and meant to stay
+# that way: the three that were listed when this check was introduced (beads,
+# mcp-repomix, speckit-beads) all have suites now. An entry here is recorded debt
+# rather than a silent skip, and the check fails on a stale entry, so a listing
+# cannot outlive the gap it describes.
+UNTESTED_HOOK_PACKAGES: set[str] = set()
 
 
 class Finding:

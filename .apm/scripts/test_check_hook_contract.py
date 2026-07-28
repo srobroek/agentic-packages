@@ -334,13 +334,44 @@ def test_a_suite_outside_the_tests_directory_counts(tmp_path: Path) -> None:
 
 
 def test_a_stale_allowlist_entry_is_rejected(tmp_path: Path) -> None:
-    """An entry that no longer describes a gap silently exempts a real package."""
-    build_package(tmp_path, "beads", with_tests=True)
+    """An entry that no longer describes a gap silently exempts a real package.
 
-    code, output = run_check(tmp_path)
+    The allowlist is empty on a healthy tree, so this injects an entry rather than
+    naming a real package: the mechanism is what matters, not today's contents.
+    """
+    build_package(tmp_path, "hooks-example", with_tests=True)
+    body = CHECK.read_text().replace(
+        "ROOT = Path(__file__).resolve().parents[2]", f"ROOT = Path({str(tmp_path)!r})"
+    ).replace(
+        "UNTESTED_HOOK_PACKAGES: set[str] = set()",
+        'UNTESTED_HOOK_PACKAGES: set[str] = {"hooks-example"}',
+    )
+    stand_in = tmp_path / "check_stale.py"
+    stand_in.write_text(body)
+    result = subprocess.run(
+        [sys.executable, str(stand_in)], capture_output=True, text=True, timeout=60
+    )
 
-    assert code == 1, "beads is allowlisted but now has a suite"
-    assert "stale-allowlist" in output
+    assert result.returncode == 1, "an allowlisted package that now has a suite must fail"
+    assert "stale-allowlist" in result.stdout + result.stderr
+
+
+def test_an_allowlisted_package_without_tests_is_exempt(tmp_path: Path) -> None:
+    """The exemption has to actually work, or the allowlist is decoration."""
+    build_package(tmp_path, "hooks-example", with_tests=False)
+    body = CHECK.read_text().replace(
+        "ROOT = Path(__file__).resolve().parents[2]", f"ROOT = Path({str(tmp_path)!r})"
+    ).replace(
+        "UNTESTED_HOOK_PACKAGES: set[str] = set()",
+        'UNTESTED_HOOK_PACKAGES: set[str] = {"hooks-example"}',
+    )
+    stand_in = tmp_path / "check_exempt.py"
+    stand_in.write_text(body)
+    result = subprocess.run(
+        [sys.executable, str(stand_in)], capture_output=True, text=True, timeout=60
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 # --- the failure mode that killed the predecessor -----------------------------
