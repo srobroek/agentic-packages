@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/guard.sh"
+            "command": "${PLUGIN_ROOT}/scripts/guard.py"
           }
         ]
       }
