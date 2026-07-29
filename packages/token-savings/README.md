@@ -126,6 +126,16 @@ already hand-truncating because output is too large, which is rtk's job done
 crudely and without a recovery path. That is the case worth improving, and it is
 what the spill hook below addresses.
 
+Run `rtk-configure.py` (in the skill) to set `tee.mode = "always"`, so rtk keeps
+a recovery log for every filtered command rather than only failed ones. The
+default covers failures, which is the wrong half: a SUCCESSFUL `pytest` showing 10
+of 30 failures is precisely when the rest is wanted. Note the limit measured on
+0.44.1 -- the `git log` filter never tees under either mode, so unbounded
+`git log` stays unrecoverable and the guard refuses it regardless. rtk's TOML
+parser also requires every field of a section it reads, so a partial override
+(`[tee]` with only `mode`) is rejected and silently falls back to defaults; the
+script writes complete sections.
+
 Telemetry is off by default in 0.44.1 (`rtk telemetry status` reports `consent:
 never asked`). Upstream's configuration doc shows `enabled = true`; the binary
 disagrees, and the binary is what runs. `RTK_TELEMETRY_DISABLED=1` overrides any
@@ -136,7 +146,7 @@ itself. To run an A/B baseline, remove the hook rather than setting that variabl
 
 ## Oversized output goes to disk
 
-A `Bash` result over 4 KB is replaced by its first 40 and last 60 lines plus a
+A `Bash` result over 2 KB is replaced by its first 20 and last 30 lines plus a
 path to the full text. The summary names the exact commands that recover any part
 of it:
 
@@ -159,16 +169,24 @@ store is pruned to 200 files and 7 days.
 The threshold is tuned against 4,417 real tool results from a 4,107-file
 repository's transcripts, where `Bash` owns 69% of all transcript bytes:
 
-| Threshold | Results hit | Bytes saved | Share of all transcript bytes |
-| --- | --- | --- | --- |
-| 12 KB | 24 | 300,922 | 8% |
-| 8 KB | 48 | 377,012 | 10% |
-| **4 KB** | **146** | **464,193** | **12%** |
-| 2 KB | 344 | 524,763 | 14% |
+| Threshold | Head/tail | Spilled | Bytes saved | Share of all bytes |
+| --- | --- | --- | --- | --- |
+| 4 KB | 40/60 | 100 | 464,193 | 12% |
+| 3 KB | 30/45 | 162 | 549,390 | 14% |
+| **2 KB** | **20/30** | **285** | **794,965** | **21%** |
+| 1 KB | 15/25 | 481 | 953,673 | 26% |
+| 500 B | 10/15 | 587 | 1,145,952 | 31% |
 
-4 KB is the knee. Do not expect more: **48% of transcript bytes live in results
-under 2 KB**, a long tail that no size threshold reaches. This is a real but
-bounded lever, not a transformation.
+The head and tail must shrink with the threshold: a 40/60 window is wider than
+most 1 KB results, so it spills them for no gain. 2 KB at 20/30 is the choice.
+Below it the window stops being useful rather than merely smaller -- at 500 B,
+**1,069 of the spilled results fit entirely inside the head and tail**, so the
+hook would rewrite them, add a retrieval footer, and hide nothing. A guard now
+refuses any rewrite that would not shrink the result, so the threshold is safe to
+lower without re-auditing the window.
+
+The remaining bound is structural: **48% of transcript bytes live in results under
+2 KB**, a long tail no size threshold reaches.
 
 ## Repository structure map
 

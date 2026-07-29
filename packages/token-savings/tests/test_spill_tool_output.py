@@ -217,6 +217,32 @@ def test_unwritable_state_dir_fails_open(tmp_path):
     assert _run(_payload(_big()), blocked) == ""
 
 
+def test_a_result_the_summary_would_not_shrink_is_untouched(tmp_path):
+    """The head/tail window plus the retrieval footer can exceed a short result.
+    Rewriting one would cost tokens and hide nothing."""
+    # Over the threshold in BYTES but only a few lines, so head+tail covers it
+    # all and the footer is pure overhead.
+    text = ("x" * 700 + "\n") * 4
+    assert _run(_payload(text), tmp_path) == ""
+    assert _spill_files(tmp_path) == []
+
+
+def test_head_tail_window_matches_the_threshold(tmp_path):
+    """A window larger than typical results at the threshold spills them for no
+    gain, so the two constants must be tuned together."""
+    body = SCRIPT.read_text()
+    threshold = int(
+        re.search(r"^SPILL_THRESHOLD_BYTES = ([\d_]+)", body, re.M).group(1).replace("_", "")
+    )
+    head = int(re.search(r"^HEAD_LINES = (\d+)", body, re.M).group(1))
+    tail = int(re.search(r"^TAIL_LINES = (\d+)", body, re.M).group(1))
+    # A typical line is ~40 bytes, so the window must not span more bytes than
+    # the threshold admits, or every borderline result is spilled pointlessly.
+    assert (head + tail) * 40 <= threshold * 2, (
+        f"window {head}+{tail} lines is too wide for a {threshold}-byte threshold"
+    )
+
+
 def test_prune_bounds_the_store(tmp_path):
     """A spill store must not grow without limit."""
     spill = tmp_path / "agentic-tools" / "token-savings" / "spill"

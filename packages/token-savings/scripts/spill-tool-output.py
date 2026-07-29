@@ -256,6 +256,15 @@ def main() -> int:
     except OSError:
         return 0
 
+    summary = build_summary(text, path, command, line_offset)
+
+    # Never make a result BIGGER. The head/tail window plus the retrieval footer
+    # can exceed a short result, and rewriting one then costs tokens and hides
+    # nothing. Measured at a 500-byte threshold this affected 1,069 results; the
+    # check makes the threshold safe to lower without auditing the window again.
+    if len(summary) >= len(text):
+        return 0
+
     prune(directory)
 
     print(
@@ -263,7 +272,7 @@ def main() -> int:
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PostToolUse",
-                    "updatedToolOutput": build_summary(text, path, command, line_offset),
+                    "updatedToolOutput": summary,
                 }
             }
         )
