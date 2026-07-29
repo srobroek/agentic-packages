@@ -29,7 +29,6 @@ OBSOLETE_COMMAND_SUFFIXES = {
 CODEX_UNAVAILABLE_PACKAGES = {
     "hooks-subagent-model",
     "hooks-subagent-worktree",
-    "hooks-worktree",
 }
 
 

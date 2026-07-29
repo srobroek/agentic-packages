@@ -285,3 +285,39 @@ STUB
   [ "$status" -eq 0 ]
   [[ "$output" == *"CLEAR — next merge is #42"* ]]
 }
+
+# --- regression: empty-array expansion under set -u ------------------------
+#
+# A ranked PR with zero READY PRs made `contains_number "$n" "${ready_numbers[@]}"`
+# expand an EMPTY array, which bash 3.2 treats as an unbound variable under
+# `set -u`. The script aborted mid-output before printing the gate, and the EXIT
+# trap overwrote the status so the caller saw exit 0 with a truncated dashboard.
+#
+# Every case here passed while the bug was live, because each asserted only on a
+# substring that appears before the abort point. These two assert on what comes
+# AFTER it.
+
+@test "ranked PR with no READY PRs still reaches the merge gate" {
+  # DIRTY makes the PR non-READY while leaving it ranked -- the everyday case.
+  write_pr green false feature/test DIRTY 42
+  write_bd_queue 42
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"MERGE GATE"* ]]
+}
+
+@test "ranked PR with no READY PRs emits no unbound-variable error" {
+  write_pr green false feature/test DIRTY 42
+  write_bd_queue 42
+  run bash "$SCRIPT"
+  [[ "$output" != *"unbound variable"* ]]
+}
+
+@test "unranked READY PR still reaches the merge gate" {
+  # The mirror case: ranked_numbers is empty where ready_numbers is not.
+  write_pr green false feature/test CLEAN 42
+  printf '[]\n' >"$PRSHEP_TEST_BD_JSON"
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"MERGE GATE"* ]]
+}

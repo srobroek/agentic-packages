@@ -47,6 +47,15 @@ COMMAND_BOUNDARIES = frozenset(
 CLOSERS = frozenset({"}", ")", "done", "fi", "esac"})
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
+# Invocations that carry a command as an ARGUMENT, so its git call never reaches
+# the tokenizer unless the argument is lexed again.
+SHELLS = frozenset({"sh", "bash", "zsh", "dash", "ksh", "ash", "busybox"})
+STRING_EVALUATORS = frozenset({"eval", "source", "."})
+
+# Depth bound on that re-lexing. Four is past any real nesting and keeps a
+# self-referential string from looping.
+MAX_NESTING = 4
+
 # Global git options that take a separate value, so the value is not mistaken for
 # the subcommand.
 GIT_OPTIONS_WITH_VALUE = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--namespace"})
@@ -96,6 +105,73 @@ def split_commands(command: str) -> list[list[str]]:
     if current:
         commands.append(current)
     return commands
+
+
+def nested_command(words: list[str]) -> str | None:
+    """The command string a shell invocation would run, if any.
+
+    `sh -c '<cmd>'` and `eval <cmd>` pass a command through as arguments, so the
+    git call inside never reached the tokenizer: `eval git -C $OTHER reset --hard`
+    was allowed silently while the bare form denied under GS-2.
+    """
+    if not words:
+        return None
+    verb = Path(words[0]).name
+
+    if verb in SHELLS:
+        for index, word in enumerate(words[1:], start=1):
+            # `-c` may be bundled with other short flags, as in `sh -ec`.
+            if word.startswith("-") and not word.startswith("--") and "c" in word:
+                return words[index + 1] if index + 1 < len(words) else None
+            if not word.startswith("-"):
+                # A bare word is a script path, not an inline command.
+                return None
+        return None
+
+    if verb in STRING_EVALUATORS:
+        # Drop the evaluator's own leading options only: filtering every `-` word
+        # would discard the WRAPPED command's flags too, which is how the sibling
+        # bash-safety guard lost the `-rf` from `eval rm -rf /`.
+        rest = words[1:]
+        index = 0
+        while index < len(rest) and rest[index].startswith("-"):
+            index += 1
+        # `eval a b` concatenates its arguments into one command line.
+        return " ".join(rest[index:]) if rest[index:] else None
+
+    return None
+
+
+def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
+    """Tokenize, then re-lex any nested shell string so its git call is judged too.
+
+    The outer invocation is kept as well as its expansion, so a rule keyed on the
+    outer form still sees it.
+    """
+    commands = split_commands(command)
+    if depth >= MAX_NESTING:
+        return commands
+
+    expanded: list[list[str]] = []
+    for words in commands:
+        expanded.append(words)
+        # Reach past openers, env assignments, and wrappers to the real verb, the
+        # same prefixes git_invocation skips.
+        index = 0
+        while index < len(words) and (
+            words[index] in COMMAND_BOUNDARIES
+            or words[index] in WRAPPERS
+            or ASSIGNMENT.match(words[index])
+        ):
+            index += 1
+        inner = nested_command(words[index:])
+        if inner:
+            try:
+                expanded.extend(expand_commands(inner, depth + 1))
+            except ValueError:
+                # An unparsable inner string leaves the outer command judged.
+                continue
+    return expanded
 
 
 def git_invocation(words: list[str]) -> list[str] | None:
@@ -312,7 +388,7 @@ def main() -> int:
         return 0
 
     try:
-        commands = split_commands(command)
+        commands = expand_commands(command)
     except ValueError:
         # Not parseable as shell, so there is nothing reliable to judge.
         return 0

@@ -37,13 +37,8 @@ def drive(module, payload, monkeypatch):
 
 ALL_STEMS = [
     "failure-logger",
-    "session-end-prune",
-    "post-merge-cleanup",
     "apm-outdated-check",
-    "worktree-orphan-cleanup",
     "notify",
-    "chezmoi-sync",
-    "allow-chezmoi-apply",
 ]
 
 
@@ -72,7 +67,7 @@ def test_every_hook_compiles(stem):
     "payload",
     [
         pytest.param("", id="empty"),
-        pytest.param("not json", id="unparseable"),
+        pytest.param("not json", id="unparsable"),
         pytest.param("[]", id="not-an-object"),
         pytest.param("{}", id="empty-object"),
         pytest.param('{"tool_input": null}', id="null-tool-input"),
@@ -142,113 +137,6 @@ def test_failure_logger_rotates(tmp_path, monkeypatch, capsys):
     assert "T" in (tmp_path / ".claude" / "debug" / "tool-failures.log.old").read_text()
 
 
-# --- post-merge-cleanup --------------------------------------------------
-
-
-def test_post_merge_ignores_a_failed_merge(monkeypatch):
-    module = load("post-merge-cleanup")
-    called = []
-    monkeypatch.setattr(module, "git", lambda *a, **k: called.append(a) or None)
-    payload = json.dumps(
-        {
-            "tool_input": {"command": "git merge worktree-worktree-123"},
-            "tool_result": {"exit_code": 1},
-        }
-    )
-    assert drive(module, payload, monkeypatch) == 0
-    assert called == [], "a failed merge must not delete anything"
-
-
-def test_post_merge_ignores_an_unrelated_branch(monkeypatch):
-    module = load("post-merge-cleanup")
-    called = []
-    monkeypatch.setattr(module, "git", lambda *a, **k: called.append(a) or None)
-    payload = json.dumps({"tool_input": {"command": "git merge main"}})
-    drive(module, payload, monkeypatch)
-    assert called == []
-
-
-def test_post_merge_branch_pattern_is_anchored():
-    module = load("post-merge-cleanup")
-    assert module.BRANCH_PATTERN.search("git merge worktree-worktree-42")
-    assert not module.BRANCH_PATTERN.search("git merge worktree-worktree-abc")
-    assert not module.BRANCH_PATTERN.search("git merge feature/worktree")
-
-
-def test_post_merge_parses_porcelain_records(monkeypatch):
-    """The shell version used `grep -B1`, assuming the path sits one line above the
-    branch line. A detached or bare entry breaks that adjacency and could return
-    the wrong worktree's path -- which was then force-removed."""
-    module = load("post-merge-cleanup")
-    porcelain = (
-        "worktree /tmp/other\n"
-        "HEAD 1111111\n"
-        "detached\n"
-        "\n"
-        "worktree /tmp/wanted\n"
-        "HEAD 2222222\n"
-        "branch refs/heads/worktree-worktree-9\n"
-        "\n"
-    )
-
-    class Result:
-        returncode = 0
-        stdout = porcelain
-
-    monkeypatch.setattr(module, "git", lambda *a, **k: Result())
-    assert module.worktree_for("/repo", "worktree-worktree-9") == "/tmp/wanted"
-
-
-def test_post_merge_unknown_branch_yields_no_path(monkeypatch):
-    module = load("post-merge-cleanup")
-
-    class Result:
-        returncode = 0
-        stdout = "worktree /tmp/a\nbranch refs/heads/main\n\n"
-
-    monkeypatch.setattr(module, "git", lambda *a, **k: Result())
-    assert module.worktree_for("/repo", "worktree-worktree-9") == ""
-
-
-# --- session-end-prune --------------------------------------------------
-
-
-def test_prune_skips_subagents(monkeypatch):
-    module = load("session-end-prune")
-    called = []
-    monkeypatch.setattr(module, "git", lambda *a, **k: called.append(a) or None)
-    assert drive(module, json.dumps({"agent_id": "sub"}), monkeypatch) == 0
-    assert called == []
-
-
-def test_prune_returns_none_when_porcelain_fails(monkeypatch):
-    """None, not an empty set: an empty set would read as 'nothing checked out' and
-    make every orphan branch a deletion candidate."""
-    module = load("session-end-prune")
-
-    class Failed:
-        returncode = 1
-        stdout = ""
-
-    monkeypatch.setattr(module, "git", lambda *a, **k: Failed())
-    assert module.checked_out_branches("/repo") is None
-
-
-def test_prune_collects_checked_out_branches(monkeypatch):
-    module = load("session-end-prune")
-
-    class Result:
-        returncode = 0
-        stdout = "worktree /a\nbranch refs/heads/main\n\nworktree /b\nbranch refs/heads/worktree-1\n"
-
-    monkeypatch.setattr(module, "git", lambda *a, **k: Result())
-    assert module.checked_out_branches("/repo") == {"main", "worktree-1"}
-
-
-def test_prune_uses_safe_delete_only():
-    """-d refuses to drop unmerged commits; -D would destroy them silently."""
-    body = (SCRIPTS / "session-end-prune.py").read_text(encoding="utf-8")
-    assert '"-D"' not in body
 
 
 # --- apm-outdated-check -------------------------------------------------
@@ -275,59 +163,20 @@ def test_outdated_exit_two_is_documented():
     assert "return 2" in body
 
 
-# --- worktree-orphan-cleanup -------------------------------------------
+def test_outdated_advice_uses_the_undeprecated_command():
+    """APM reports `apm deps update` as DEPRECATED in favour of `apm update`."""
+    module = load("apm-outdated-check")
+    assert "apm update" in module.ADVICE
+    assert "apm deps update" not in module.ADVICE
 
 
-def test_orphan_cleanup_skips_subagents(monkeypatch):
-    module = load("worktree-orphan-cleanup")
-    assert drive(module, json.dumps({"agent_id": "sub"}), monkeypatch) == 0
+def test_outdated_advice_never_names_a_single_global_package():
+    """`apm update --global <pkg>` plans "1 updated, N removed" and prunes every
+    other global package; the bare `--global --yes` form removes nothing."""
+    module = load("apm-outdated-check")
+    assert "apm update --global --yes" in module.ADVICE
+    assert "prunes" in module.ADVICE
 
-
-def test_orphan_cleanup_leaves_live_pids_alone(tmp_path, monkeypatch):
-    module = load("worktree-orphan-cleanup")
-    live = tmp_path / "repo" / f"worktree-{os.getpid()}"
-    (live / "node_modules").mkdir(parents=True)
-    monkeypatch.setattr(module, "BASES", (str(tmp_path),))
-    drive(module, "{}", monkeypatch)
-    assert (live / "node_modules").is_dir(), "a running session must not be cleaned"
-
-
-def test_orphan_cleanup_removes_dead_pid_artifacts(tmp_path, monkeypatch):
-    module = load("worktree-orphan-cleanup")
-    dead = tmp_path / "repo" / "worktree-999999"
-    (dead / "node_modules").mkdir(parents=True)
-    (dead / ".venv").mkdir()
-    (dead / "keep.txt").write_text("keep")
-    monkeypatch.setattr(module, "BASES", (str(tmp_path),))
-    monkeypatch.setattr(module, "alive", lambda pid: False)
-    drive(module, "{}", monkeypatch)
-    assert not (dead / "node_modules").exists()
-    assert not (dead / ".venv").exists()
-    assert (dead / "keep.txt").is_file(), "only build output is removed"
-
-
-def test_orphan_cleanup_ignores_non_numeric_suffix(tmp_path, monkeypatch):
-    module = load("worktree-orphan-cleanup")
-    odd = tmp_path / "repo" / "worktree-notapid"
-    (odd / "node_modules").mkdir(parents=True)
-    monkeypatch.setattr(module, "BASES", (str(tmp_path),))
-    monkeypatch.setattr(module, "alive", lambda pid: False)
-    drive(module, "{}", monkeypatch)
-    assert (odd / "node_modules").is_dir()
-
-
-def test_prune_does_not_follow_a_symlink(tmp_path):
-    """`find -exec rm -r` followed a symlinked __pycache__, so a planted link could
-    delete outside the worktree. rmtree does not, and prune() refuses outright."""
-    module = load("worktree-orphan-cleanup")
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    (outside / "precious.txt").write_text("keep")
-    link = tmp_path / "link"
-    link.symlink_to(outside, target_is_directory=True)
-    module.prune(link)
-    assert (outside / "precious.txt").is_file()
-    assert link.is_symlink()
 
 
 # --- notify -------------------------------------------------------------
@@ -353,62 +202,3 @@ def test_notify_suppresses_when_own_app_is_frontmost(monkeypatch):
 def test_notify_maps_term_program_to_bundle_id():
     module = load("notify")
     assert module.BUNDLE_IDS["ghostty"] == "com.mitchellh.ghostty"
-
-
-# --- chezmoi-sync ------------------------------------------------------
-
-
-def test_chezmoi_sync_never_runs_a_write_command():
-    """ADVISORY ONLY is the whole contract: no add, commit, stage, or push."""
-    body = (SCRIPTS / "chezmoi-sync.py").read_text(encoding="utf-8")
-    for banned in ('"add"', '"commit"', '"push"', '"re-add"', '"apply"'):
-        assert banned not in body, f"chezmoi-sync must not invoke {banned}"
-
-
-def test_chezmoi_sync_recognises_a_dot_directory_file():
-    """The shell version tested `[[ "$relative" == .*//* ]]`, needing a literal
-    double slash, so this branch never fired and ~/.ssh/config went unrecognised."""
-    module = load("chezmoi-sync")
-    assert module.is_config_path(Path(".ssh/config"))
-    assert module.is_config_path(Path(".config/fish/config.fish"))
-    assert module.is_config_path(Path(".zshrc"))
-    assert not module.is_config_path(Path("Documents/notes.txt"))
-
-
-def test_chezmoi_sync_ignores_known_noise():
-    module = load("chezmoi-sync")
-    home = Path("/home/u")
-    assert module.is_ignored(home / ".cache/x", Path(".cache/x"), "")
-    assert module.is_ignored(home / ".local/share/y", Path(".local/share/y"), "")
-    assert module.is_ignored(home / ".config/a.swp", Path(".config/a.swp"), "")
-    assert not module.is_ignored(home / ".config/fish/config.fish", Path(".config/fish/config.fish"), "")
-
-
-def test_chezmoi_sync_skips_missing_file(monkeypatch, capsys):
-    module = load("chezmoi-sync")
-    payload = json.dumps({"tool_input": {"file_path": "/nonexistent/nope.conf"}})
-    assert drive(module, payload, monkeypatch) == 0
-    assert capsys.readouterr().out == ""
-
-
-def test_chezmoi_sync_skips_project_dirs(tmp_path, monkeypatch, capsys):
-    module = load("chezmoi-sync")
-    project = tmp_path / "personal" / "dev" / "x.toml"
-    project.parent.mkdir(parents=True)
-    project.write_text("x = 1")
-    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-    called = []
-    monkeypatch.setattr(module, "chezmoi", lambda *a: called.append(a) or "")
-    payload = json.dumps({"tool_input": {"file_path": str(project)}})
-    assert drive(module, payload, monkeypatch) == 0
-    assert called == [], "project files must bail before chezmoi is consulted"
-    assert capsys.readouterr().out == ""
-
-
-def test_chezmoi_sync_recognises_config_names():
-    module = load("chezmoi-sync")
-    assert module.looks_like_config("settings.json")
-    assert module.looks_like_config(".gitconfig")
-    assert module.looks_like_config("foo.toml")
-    assert module.looks_like_config(".zshrc")
-    assert not module.looks_like_config("photo.png")
