@@ -86,28 +86,38 @@ separate task dependency. An accepted, rejected, duplicate, or superseded
 decision is closed with a disposition-specific reason; closed means resolved,
 not erased.
 
-## Edge type and its comment
+## Edge type and its note
 
-Pick the most specific type the relationship supports. `relates-to` is the
-documented choice for affected work, and also the weakest signal in the set, so a
-run full of them reads as noise: prefer `caused-by` for a root cause, `validates`
-for acceptance evidence, `supersedes` for replacement, `duplicate_of` for the same
-defect. `replies-to` threads wisp messages and dies with them -- never use it for a
-durable finding.
+Pick the most specific type the relationship supports: `caused-by` for a root
+cause, `validates` for acceptance evidence, `supersedes` for replacement,
+`duplicates` for the same defect, `discovered-from` for work that surfaced while
+doing other work, `tracks` for an umbrella, `until` for a hold. `relates-to` is the
+documented choice for affected work and also the weakest signal in the set, so a
+run full of them reads as noise.
 
-An edge carries no annotation. `bd dep add` has no note field, and extra keys in
-the `--file` JSONL are accepted and then silently dropped, so an annotated bulk
-write reports success while storing nothing. Every edge therefore gets a matching
-comment on the ORIGINATING bead, naming the type, the other bead, and the
-evidence:
+`blocks` and `parent-child` shape the run: never use either to record an
+observation. `replies-to` threads wisp messages and dies with them, so it cannot
+hold a durable finding. `related` stores as a distinct string from `relates-to`
+with no documented meaning; leave it alone.
+
+`--type` is NOT validated. Every string is accepted and stored verbatim, including
+a typo, which yields an edge no query matches. Copy the type rather than typing it.
+
+An edge carries no annotation. `bd dep add` has no note field, and `note`,
+`reason`, and `metadata` keys in the `--file` JSONL are accepted and then dropped,
+so an annotated bulk write reports success while storing nothing. Each edge's
+reasoning therefore goes in the ORIGINATING bead's `notes`, naming the other bead
+by id:
 
 ```text
 bd dep add <finding> <root-cause> --type caused-by
-bd comment <finding> "CAUSED-BY <root-cause>: <evidence>"
+bd update <finding> --append-notes "CAUSED-BY <root-cause-id>: <evidence>"
 ```
 
-One comment, on the originating side only. The edge already renders from both
-ends in `bd show`, so a second copy on the target is duplication.
+`--append-notes` preserves earlier lines, so multiple edges accumulate. `bd show`
+renders `notes` directly above the edge list, which puts the reasoning next to the
+relationship it explains. One line per edge, on the originating side only: the edge
+already renders from both ends.
 
 Before creation, after restart, and before action, list every decision under the
 epic with `bd list --type decision --parent <epic> --all --json`. Decisions
