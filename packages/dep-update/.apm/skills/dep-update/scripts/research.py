@@ -60,7 +60,13 @@ def fetch_json(ecosystem: str, name: str, url: str) -> dict:
 
 
 def normalize_version(raw: str) -> tuple[int, int, int] | None:
-    """Leading (major, minor, patch) of a version, or None when non-numeric."""
+    """Leading (major, minor, patch) of a version, or None when non-numeric.
+
+    A non-string is unorderable rather than an error: registry JSON is untrusted
+    input, and every caller already handles None.
+    """
+    if not isinstance(raw, str):
+        return None
     match = _VERSION_HEAD.match(raw.lstrip("v"))
     if not match:
         return None
@@ -72,7 +78,7 @@ def normalize_version(raw: str) -> tuple[int, int, int] | None:
 
 
 def is_prerelease(raw: str) -> bool:
-    return bool(_PRERELEASE.search(raw))
+    return isinstance(raw, str) and bool(_PRERELEASE.search(raw))
 
 
 def classify(installed: str, latest: str) -> str:
@@ -100,10 +106,17 @@ def pick_stable(latest: str, installed: str, versions: list[str]) -> str:
     """Latest stable version, unless the installed version is itself a pre-release."""
     if not is_prerelease(latest) or is_prerelease(installed):
         return latest
-    stable = [v for v in versions if not is_prerelease(v)]
+    # An unorderable candidate is not a fallback: sorting `["", "x", "nan"]` by
+    # `normalize_version(v) or (0,0,0)` made them all equal and returned the first,
+    # so a registry serving junk keys reported "" as the latest version.
+    stable = [
+        v
+        for v in versions
+        if isinstance(v, str) and not is_prerelease(v) and normalize_version(v)
+    ]
     if not stable:
         return latest
-    stable.sort(key=lambda v: normalize_version(v) or (0, 0, 0), reverse=True)
+    stable.sort(key=normalize_version, reverse=True)
     return stable[0]
 
 
@@ -114,6 +127,13 @@ def query_registry(ecosystem: str, name: str, installed: str) -> dict:
         if ecosystem == "pypi":
             data = fetch_json(ecosystem, name, f"https://pypi.org/pypi/{name}/json")
             latest = data["info"]["version"]
+            if not isinstance(latest, str) or not latest:
+                # A registry serving `"version": null` crashed the whole run: the
+                # TypeError surfaced from pick_stable, which runs AFTER this try
+                # block, so "never raises: every failure is a status" did not hold
+                # for the one field every later step depends on.
+                result.update(status="UNRESOLVABLE", reason="no info.version")
+                return result
             releases = data.get("releases") or {}
             files = releases.get(latest) or []
             if files and all(f.get("yanked", False) for f in files):

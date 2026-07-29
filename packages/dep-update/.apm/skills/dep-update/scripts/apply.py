@@ -197,7 +197,13 @@ def check_node_version(root: Path, name: str, version: str) -> bool:
         "optionalDependencies",
     ):
         block = data.get(section)
-        if isinstance(block, dict) and str(block.get(name, "")) in accepted:
+        if not isinstance(block, dict):
+            continue
+        declared = block.get(name)
+        # A string comparison, not `str(declared)`: a numeric `"x": 1` stringified
+        # to "1" and confirmed a bump to version "1", so a manifest npm would
+        # reject read as a landed upgrade.
+        if isinstance(declared, str) and declared in accepted:
             return True
     return False
 
