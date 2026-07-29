@@ -7,6 +7,7 @@ Install a single skill with `apm install <name>@srobroek-agentic`, or get a cura
 <!-- BEGIN:skills -->
 | Skill | Description |
 | --- | --- |
+| `adr` | Architecture decision records in MADR format, registered as decisions land rather than reconstructed at closeout. A beads `decision` bead is the live record the moment a choice is made; the ADR file is what discharges it, so a decision cannot be lost between being made and being written. Ships steering for when a choice earns a record, a skill for authoring one, and the `adrs` CLI contract (MADR 4.0.0, `docs/adr/NNNN-title.md`, `adrs doctor` as the deterministic gate). Requires the `adrs` binary; degrades to advisory when it is absent. |
 | `agent-conformance` | Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports -- no LLM required for the engine. |
 | `agent-management` | Manage APM-backed project agents, skills, hooks, steering, bundles, and package dependencies. Use when a repo already has or is about to get apm.yml and the task is to add, update, remove, install, compile, patch, or audit agentic assets. |
 | `audit-steering` | Audit agent rules, hooks, skills, and guardrails for drift, duplication, stale files, and token waste. |

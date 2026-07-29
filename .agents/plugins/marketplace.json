@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "adr",
+      "source": {
+        "source": "local",
+        "path": "./packages/adr"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "source": {
         "source": "local",

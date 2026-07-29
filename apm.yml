@@ -72,6 +72,14 @@ marketplace:
   build:
     tagPattern: '{name}--v{version}'
   packages:
+    - name: adr
+      source: ./packages/adr
+      category: project-lifecycle
+      tags:
+        - adr
+        - decisions
+        - madr
+        - architecture
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger
       category: quality
