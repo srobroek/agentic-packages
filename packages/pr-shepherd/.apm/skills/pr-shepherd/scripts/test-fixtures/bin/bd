@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # git-blob digest of stdin, matching `git hash-object --stdin`, which is what
-# landing-contract.sh actually calls. Recomputing it as a bare sha1 -- which both
+# landing-contract.py actually calls. Recomputing it as a bare sha1 -- which both
 # this suite and the fake git used to do -- made the oracle self-consistent but
 # blind: the ids it verified were not the ids production computes, so digest drift
 # could not fail a test.

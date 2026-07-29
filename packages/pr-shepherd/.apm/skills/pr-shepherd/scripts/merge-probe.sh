@@ -50,7 +50,7 @@ case "$cmd" in
     # -z separates paths with NUL and emits them RAW. Without it git C-quotes any
     # unusual path -- a tab becomes the eleven characters "wei\trd.txt", quotes and
     # a literal backslash-t included -- and that quoted form flowed into
-    # landing-contract.sh's content-addressed `failure-key`, silently changing the
+    # landing-contract.py's content-addressed `failure-key`, silently changing the
     # key and breaking bounce deduplication for that PR. Verified against real git.
     #
     # The output goes to a FILE, not a command substitution: bash strips NUL bytes
@@ -78,7 +78,7 @@ case "$cmd" in
       # and `tr '\0' '\n'` would corrupt a path that legitimately contains a
       # newline -- git leaves those raw under -z, verified against real git.
       #
-      # Sorted bytewise, because landing-contract.sh's failure-key hashes this list
+      # Sorted bytewise, because landing-contract.py's failure-key hashes this list
       # in order and a locale-dependent collation would change the key.
       python3 -c '
 import sys
