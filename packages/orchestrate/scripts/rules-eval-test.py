@@ -455,6 +455,59 @@ else:
     failed += 1
     print(f"  FAIL live resolution rejects active claim at stop -> {violations!r}")
 
+# deny_metadata is presence-based (_has_metadata), so a role must not deny a key
+# the orchestrator is required to stamp pre-claim: the role gets blocked at exit
+# for a write it never made. spawn-brief.md requires `branch`, `worktree`, and
+# `lease_token` on every Worktrunk-backed node.
+run(
+    "scribe exit allows the orchestrator branch stamp",
+    "allow",
+    bead(
+        status="closed",
+        labels=["agent:scribe"],
+        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+        linked_comments=[{"text": "REPORTED report=/run/artifacts/run-report.md"}],
+    ),
+    agent_type="scribe",
+    rules_file=SCRIBE,
+)
+run(
+    "shepherd exit allows the orchestrator worktree stamp",
+    "allow",
+    bead(
+        status="closed",
+        labels=["agent:integrator"],
+        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+        comments=[{"body": "MERGED merge_sha=abc1234"}],
+    ),
+    agent_type="shepherd",
+    rules_file=SHEPHERD,
+)
+run(
+    "scribe still blocked on its own forbidden output_ref",
+    "block",
+    bead(
+        status="closed",
+        labels=["agent:scribe"],
+        metadata={"branch": "orc/run-1", "output_ref": "/tmp/somewhere"},
+        linked_comments=[{"text": "REPORTED report=/run/artifacts/run-report.md"}],
+    ),
+    agent_type="scribe",
+    rules_file=SCRIBE,
+)
+run(
+    "shepherd still blocked on its own forbidden output_ref",
+    "block",
+    bead(
+        status="closed",
+        labels=["agent:integrator"],
+        metadata={"worktree": "/tmp/wt", "output_ref": "/tmp/somewhere"},
+        comments=[{"body": "MERGED merge_sha=abc1234"}],
+    ),
+    agent_type="shepherd",
+    rules_file=SHEPHERD,
+)
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

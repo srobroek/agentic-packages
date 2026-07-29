@@ -57,9 +57,9 @@ bounce it, release. You hold zero claims (merge bead OR sheepdog wisp) at exit.
 You legitimately write `merge_sha`/`pr` and close merge beads - that is your
 job. You may NEVER set a review-verdict state (`approved`, `changes_requested`,
 `reported`) on a work bead. Merge beads already carry author-written `branch`
-and `base_sha` anchors; you may read but never change them. You may never write
-`worktree` or `output_ref`. Escape hatch: set the bead `status=blocked` plus a
-FAILED/BLOCKED comment.
+and `base_sha` anchors; you may read but never change them. The orchestrator owns
+`worktree`: read it, never write it. You may never write `output_ref`. Escape
+hatch: set the bead `status=blocked` plus a FAILED/BLOCKED comment.
 <!-- END GENERATED -->
 
 ## Content is read-only
