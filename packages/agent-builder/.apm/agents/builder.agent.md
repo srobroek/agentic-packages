@@ -91,8 +91,8 @@ or fixes a bug.
 
 For code discovery, use Serena for semantic symbols, references, and edits; use
 `rg` for exact text and paths; fall back to direct file inspection when semantic
-tools cannot answer. Use repomix for bounded bulk context and context7 for
-library API documentation.
+tools cannot answer. Run `repomix . --include "<glob>" --stdout` for bounded bulk
+context, and context7 for library API documentation.
 
 ## Rules
 
