@@ -1,7 +1,8 @@
 ---
-description: Always-loaded pragmatic working style -- accuracy and calibration over agreeableness.
+description: Rules for what the agent produces: code economy, comments, artifact register.
 applyTo: "**/*"
 ---
 
-For communication style, epistemic defaults, and how to handle uncertainty,
-tradeoffs, and brainstorming, read [pragmatic steering](../context/pragmatic.pragmatic-index.context.md).
+For code economy, comment discipline, written-artifact register, and the rule
+against justifying a choice inside the artifact, read
+[pragmatic steering](../context/pragmatic.pragmatic-index.context.md).
