@@ -1,5 +1,5 @@
 ---
-description: Always-loaded rules for what the agent produces -- code economy, comments, and no justification inside an artifact.
+description: Rules for what the agent produces: code economy, comments, artifact register.
 applyTo: "**/*"
 ---
 
