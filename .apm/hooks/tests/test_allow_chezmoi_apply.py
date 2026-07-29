@@ -107,7 +107,7 @@ def test_non_verb_positions_are_not_approved(command, monkeypatch, capsys):
     "raw",
     [
         pytest.param("", id="empty"),
-        pytest.param("not json", id="unparseable"),
+        pytest.param("not json", id="unparsable"),
         pytest.param("[]", id="not-an-object"),
         pytest.param("{}", id="no-tool-input"),
         pytest.param('{"tool_input": {}}', id="no-command"),

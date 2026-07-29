@@ -185,7 +185,7 @@ def test_empty_payload_exits_zero(stem, monkeypatch, capsys):
 @pytest.mark.parametrize(
     "payload",
     [
-        pytest.param("not json", id="unparseable"),
+        pytest.param("not json", id="unparsable"),
         pytest.param("[]", id="not-an-object"),
         pytest.param("{}", id="empty-object"),
         pytest.param('{"tool_input": null}', id="null-tool-input"),
