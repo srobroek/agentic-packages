@@ -63,6 +63,15 @@ reviews/
 /.mcp.json
 /.worktrees/
 
+# repomix's DEFAULT output names. Any bare `repomix` run in the repository root
+# writes these, and they are ~40 MB: two were committed by a tuning sweep that
+# omitted --output, and CI caught them only via a typos scan of the packed
+# content. The map hook always passes an explicit --output outside the tree.
+/repomix-output.xml
+/repomix-output.md
+/repomix-output.txt
+/repomix.xml
+
 # Agent conformance run outputs (gitignored; see packages/agent-conformance)
 .conformance-runs/
 
