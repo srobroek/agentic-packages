@@ -1,5 +1,16 @@
 # Changelog
 
+## [15.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v14.0.0...orchestrate--v15.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1ea2d17](https://github.com/srobroek/agentic-packages/commit/1ea2d17165aab551582be9a3c1f9c3d7c28f6dc4))
+
 ## [14.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v13.0.0...orchestrate--v14.0.0) (2026-07-28)
 
 
