@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/inject-working-style.sh",
+            "command": "${PLUGIN_ROOT}/scripts/inject-working-style.py",
             "timeout": 5
           }
         ]

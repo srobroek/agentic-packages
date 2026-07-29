@@ -1,5 +1,5 @@
 name: hooks-worktrunk
-version: 2.0.1
+version: 3.0.0
 description: >-
   Enforces Worktrunk as the worktree-management interface for Claude and Codex.
   A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout

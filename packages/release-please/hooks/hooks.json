@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/release-please-guard.sh",
+            "command": "${PLUGIN_ROOT}/scripts/release-please-guard.py",
             "timeout": 10
           }
         ]

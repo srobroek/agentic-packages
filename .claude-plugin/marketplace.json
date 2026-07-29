@@ -81,7 +81,7 @@
     {
       "name": "agent-hook-contract",
       "description": "Cross-tool agent hook contract for Claude Code and Codex CLI: supported events, matcher behavior, payloads, decisions, trust, and runtime limits, plus the authoring rules this repo holds its hooks to. Hooks are written in Python unless the script only forwards to one command: a hook that parses shell with grep and sed is a tokenizer without a lexer, and every gap is a bypass. Python is also faster once a hook touches jq, since one jq spawn costs more than the whole bash-vs-Python startup gap. Covers the per-call performance budget (no uv run on a per-tool-call hook, stdlib only on the hot path, in-process repo root discovery, batched git calls, cheap pre-parse bail) and the reliability rules (fail open, never emit ask, write denials to the model, accept a string tool_input, self-filter inside the script). Documentation only.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "claude",
@@ -200,8 +200,8 @@
     },
     {
       "name": "beads",
-      "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached push at session end once a `git push --dry-run` probe confirms it goes through, with a configurable pusher for hosts that need a wrapper -- and fall back to JSONL over ordinary git otherwise. A maintenance hook reports when Dolt history has grown enough to trim, and never trims it. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and activates only in repositories with `.beads/`.",
-      "version": "0.7.2",
+      "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached push at session end once a `git push --dry-run` probe confirms it goes through, with a configurable pusher for hosts that need a wrapper -- and fall back to JSONL over ordinary git otherwise. A maintenance hook reports when Dolt history has grown enough to trim, and never trims it. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
+      "version": "1.0.0",
       "tags": [
         "beads",
         "issue-tracking",
@@ -261,8 +261,8 @@
     },
     {
       "name": "code-intelligence",
-      "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering.",
-      "version": "8.1.5",
+      "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering. The SubagentStart context injector requires python3 on PATH.",
+      "version": "9.0.0",
       "tags": [
         "bundle",
         "semantic"
@@ -429,7 +429,7 @@
     {
       "name": "hooks-attribution-guard",
       "description": "Advises against AI authorship attribution in git commits so the human stays the sole author of record. Covers agent trailers from any vendor (Co-Authored-By / Signed-off-by / Assisted-by naming Claude, Codex, Copilot, Cursor, Devin, aider, Gemini, OpenHands, Windsurf and others, or pointing at an agent noreply address), \"Generated with/by\" phrases, agent signature URLs, robot-emoji signature lines, and hyphenated AI-assisted/AI-generated qualifiers. Emits a non-blocking advisory (allow + additionalContext, exit 0); a commit message is trivially fixable, so it never blocks. Scoped to authorship constructs, so ordinary work that merely names an agent or a model (\"fix AI model loading bug\", \"bump anthropic sdk\") is not flagged. Cross-tool (Claude + Codex).",
-      "version": "2.1.1",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "git",
@@ -441,7 +441,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guard tuned for autonomous agents, in one Python module with a real shell tokenizer. Denies only the unrecoverable: rm -rf on the filesystem root, a home root, or a system-critical tree (BS-4/BS-8), rm -rf whose target hides behind an unexpanded variable so the guard cannot verify it (BS-9), mkfs (BS-5), dd onto a real block device while allowing the pseudo-devices (BS-6), and the sandbox-bypass flag (BS-3). Warns without blocking on a curl-to-shell pipe, sudo with a destructive verb, and rm -rf outside the git working tree (BS-7, BS-10). Anything inside the working tree is assumed git-recoverable and passes silently, so wiping node_modules or a build directory says nothing. Because the command is tokenized rather than pattern-matched, wrapper prefixes, env assignments, leading tabs, quoted targets, flags after the target, path traversal, subshells, loop bodies, and a rebasing cd are all covered by construction. Never emits \"ask\". Cross-tool (Claude + Codex).",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "hooks",
         "bash",
@@ -453,7 +453,7 @@
     {
       "name": "hooks-chezmoi-guard",
       "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
-      "version": "2.1.1",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "chezmoi",
@@ -466,7 +466,7 @@
     {
       "name": "hooks-close-keywords",
       "description": "Fixes the GitHub \"comma-list close\" quirk, where a closing keyword binds to only the FIRST issue in a list (Closes #1, #2, #3 closes just #1). A shared normalizer distributes the keyword across every issue in a contiguous list (-> Closes #1, closes #2, closes #3) for close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved. Two delivery layers: a pre-commit commit-msg hook that rewrites the message in place (tool-agnostic), and a PreToolUse guard on `gh pr create`/`gh pr edit` that emits a non-blocking advisory (allow + additionalContext carrying the corrected body) when a malformed comma-list close is detected. Requires python3 on PATH. Cross-tool (Claude + Codex).",
-      "version": "0.6.1",
+      "version": "1.0.0",
       "tags": [
         "hooks",
         "git",
@@ -479,7 +479,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guard for autonomous agents, in one Python module with a real shell tokenizer. Denies exactly one thing: a destructive op aimed at another working tree through an unexpanded variable or ~, where the guard cannot resolve which tree is affected (GS-2). Everything else is non-blocking. reset --hard, checkout --, restore, and clean -f warn only when repository state shows work would really be lost (GS-3, GS-5, GS-6), so a clean tree stays silent and an untracked-only tree does not trip the reset rules. push --force always warns, because the loss is on the remote where local state cannot answer for it (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass silently, all being reflog-recoverable. State reads happen once, and only after a destructive verb matches. An unreadable tree warns rather than staying quiet. Never emits \"ask\". Cross-tool (Claude + Codex).",
-      "version": "2.2.2",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "git",
@@ -490,8 +490,8 @@
     },
     {
       "name": "hooks-package-investigate",
-      "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Cross-tool (Claude + Codex).",
-      "version": "1.2.1",
+      "description": "Non-blocking PreToolUse Bash hook that nudges the agent to investigate a dependency's trustworthiness, maintenance, quality, popularity, and alternatives BEFORE adding/installing it (lighter review for update/upgrade/remove). Requires python3 on PATH. Cross-tool (Claude + Codex).",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "dependencies",
@@ -503,7 +503,7 @@
     {
       "name": "hooks-quality",
       "description": "Non-blocking quality advisory on edits. Accumulates edited files and changed lines across a session and suggests targeted checks (ruff, gofmt, cargo fmt, biome) once the change is large enough to warrant one, then holds a cooldown so it does not nag. Commit-time formatting is deliberately not covered: that is the pre-commit framework's stage, and this hook advises per language only where the framework does not already run a checker for it, which needs both an installed framework hook and a config naming that checker. Language selection reads .agents/hooks/quality-languages, then AGENTIC_QUALITY_LANGS, then marker files, so an unrecognised project is silent rather than guessed at. Never denies. Thresholds via AGENTIC_QUALITY_ADVISORY_LINES, _FILES, _COOLDOWN_SECONDS. Cross-tool (Claude + Codex).",
-      "version": "1.3.1",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "quality",
@@ -515,7 +515,7 @@
     {
       "name": "hooks-serena",
       "description": "Serena lifecycle hooks for Claude Code and Codex. Activates Serena at session start, reminds agents to use symbolic tools, and clears hook state at session end without configuring MCP transport.",
-      "version": "0.2.1",
+      "version": "1.0.0",
       "tags": [
         "hooks",
         "serena",
@@ -527,8 +527,8 @@
     },
     {
       "name": "hooks-subagent-fork",
-      "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Codex-only: Claude has no fork_turns concept, so the package does not target Claude at all. The hook fails open on malformed input.",
-      "version": "1.0.2",
+      "description": "PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns is \"all\", omitted (Codex defaults omitted to a full-history fork), or above the numeric maximum (default 3, SUBAGENT_FORK_GUARD_MAX overrides). Denials carry the corrected call format. A SubagentStart hook injects the fork_turns=\"none\" discipline into spawning subagents, and an always-on instruction carries the same rule in the main session. Codex-only: Claude has no fork_turns concept, so the package does not target Claude at all. The hook fails open on malformed input. Requires python3 on PATH.",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "subagent",
@@ -542,7 +542,7 @@
     {
       "name": "hooks-subagent-model",
       "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "subagent",
@@ -555,8 +555,8 @@
     },
     {
       "name": "hooks-subagent-worktree",
-      "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder -- if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none -- and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op.",
-      "version": "2.2.2",
+      "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder -- if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none -- and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op. Requires python3 on PATH.",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "worktree",
@@ -569,8 +569,8 @@
     },
     {
       "name": "hooks-worktree",
-      "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events.",
-      "version": "1.3.1",
+      "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events. Both events route through one script, worktree-hooks.py. Requires python3 on PATH.",
+      "version": "2.0.0",
       "tags": [
         "hooks",
         "worktree",
@@ -582,7 +582,7 @@
     {
       "name": "hooks-worktrunk",
       "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
-      "version": "2.0.1",
+      "version": "3.0.0",
       "tags": [
         "hooks",
         "worktrunk",
@@ -865,8 +865,8 @@
     },
     {
       "name": "mcp-repomix",
-      "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review.",
-      "version": "1.2.1",
+      "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review. The PostToolUse snapshot-refresh hook requires python3 on PATH.",
+      "version": "2.0.0",
       "tags": [
         "mcp",
         "repomix"
@@ -982,8 +982,8 @@
     },
     {
       "name": "release-please",
-      "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships a warn-only cross-tool advisory hook; it never blocks.",
-      "version": "1.1.1",
+      "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships a warn-only cross-tool advisory hook (Python, requires python3 on PATH); it never blocks.",
+      "version": "2.0.0",
       "tags": [
         "skill",
         "hooks",
@@ -1083,7 +1083,7 @@
     {
       "name": "speckit",
       "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
-      "version": "10.0.0",
+      "version": "11.0.0",
       "tags": [
         "bundle",
         "speckit"
@@ -1093,8 +1093,8 @@
     },
     {
       "name": "speckit-beads",
-      "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active -- task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0); guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
-      "version": "6.0.0",
+      "description": "Beads-native SpecKit workflow: ships the speckit-feature bd formula (the SpecKit phase spine as a molecule DAG with human gates at clarify approval, analyze approval, and verify sign-off), steering that maps one spec dir to one molecule root epic and implementation task beads to the implement step, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active -- task state lives in beads and tasks.md is never authored (reads stay allowed for legacy migration). Replaces the archived speckit-gate gates.yaml engine. Requires the bd CLI (gastownhall/beads >= 1.1.0) and python3 on PATH; guard and steering are inert in repos without .beads/. Install the formula by copying formulas/speckit-feature.formula.toml into the repo's .beads/formulas/.",
+      "version": "7.0.0",
       "tags": [
         "speckit",
         "beads",
@@ -1176,7 +1176,7 @@
     {
       "name": "steering-git-workflow",
       "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads body linkage, and pre-push verification. Ships a dual-runtime PreToolUse blocker for non-draft or unlinked PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "2.3.6",
+      "version": "3.0.0",
       "tags": [
         "steering",
         "git"
@@ -1223,8 +1223,8 @@
     },
     {
       "name": "steering-pragmatic",
-      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Opt-in.",
-      "version": "4.4.0",
+      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Requires python3 on PATH. Opt-in.",
+      "version": "5.0.0",
       "tags": [
         "steering",
         "pragmatic",

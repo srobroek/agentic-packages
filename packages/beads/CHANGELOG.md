@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.7.2...beads--v1.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+* **steering-git-workflow:** the hook script is now attribution-guard.py and requires python3 on PATH.
+* the secrets-scan and hooks-precommit-gate packages are removed. Secret scanning moves to the gitleaks pre-commit hook; install real git hooks for tool-independent enforcement.
+
+### Bug Fixes
+
+* **steering-git-workflow:** stop blocking pull requests when the policy check cannot verify them ([#794](https://github.com/srobroek/agentic-packages/issues/794)) ([023c0f0](https://github.com/srobroek/agentic-packages/commit/023c0f087717a57386d18d06f2575fca0435b7b1))
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
+
+### Refactors
+
+* drop secrets-scan, hooks-precommit-gate, and the auto-approve hooks ([#792](https://github.com/srobroek/agentic-packages/issues/792)) ([195f194](https://github.com/srobroek/agentic-packages/commit/195f1946b7dd3212c672d827edcc7e2c292e39bc))
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
 ## [0.7.2](https://github.com/srobroek/agentic-packages/compare/beads--v0.7.1...beads--v0.7.2) (2026-07-27)
 
 

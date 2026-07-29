@@ -1,5 +1,5 @@
 name: hooks-subagent-fork
-version: 1.0.2
+version: 2.0.0
 description: >-
   PreToolUse:Agent deny gate rejecting Codex spawn_agent calls whose fork_turns
   is "all", omitted (Codex defaults omitted to a full-history fork), or above
@@ -8,7 +8,7 @@ description: >-
   fork_turns="none" discipline into spawning subagents, and an always-on
   instruction carries the same rule in the main session. Codex-only: Claude has
   no fork_turns concept, so the package does not target Claude at all. The hook
-  fails open on malformed input.
+  fails open on malformed input. Requires python3 on PATH.
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions

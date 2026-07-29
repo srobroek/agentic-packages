@@ -1,7 +1,7 @@
 {
   "name": "hooks-worktree",
-  "version": "1.3.1",
-  "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events.",
+  "version": "2.0.0",
+  "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events. Both events route through one script, worktree-hooks.py. Requires python3 on PATH.",
   "author": {
     "name": "Sjors Robroek"
   },

@@ -39,10 +39,32 @@ the three variants interleaved so machine drift cancels:
 | Python, same work, no subprocesses | 42 ms |
 
 A Python interpreter starts slower than `bash`, and that gap is the whole of
-bash's advantage. A single `jq` spawn costs more than the gap, so **any hook that
-touches `jq` is at least as fast in Python, and safer**. Since every hook parses
-a JSON payload on stdin, that is every hook. Measure on the host that matters
-rather than trusting these numbers: the ranking is stable, the margins are not.
+bash's advantage. Python wins once a hook spawns enough subprocesses to outweigh
+it, and since every hook parses a JSON payload on stdin, most do.
+
+Re-measured 2026-07-28 on a mise-managed CPython 3.14, interleaved, 50 reps, the
+break-even is TWO `jq` spawns rather than one:
+
+| Measurement | Median |
+| --- | --- |
+| `bash -c true` | 8.7 ms |
+| `python3 -c pass` | 27.2 ms |
+| `bash` plus one `jq` | 19.2 ms |
+
+So the startup gap is 18.5 ms against 10.5 ms per `jq`. A hook doing one `jq`
+parse is FASTER in shell on this host; the ported guards all did three to seven,
+so they still win when they do their work.
+
+Two corollaries the earlier numbers hid. A hook whose cheap bail exits before its
+first `jq` pays only startup, so shell beats Python on that path -- measured on
+`package-investigate`, 20.6 ms shell against 28.3 ms Python for a payload that
+bails. And because matching hooks launch CONCURRENTLY, the wall-clock floor per
+tool call is the SLOWEST hook, not the sum: where several Python hooks already
+share a matcher, one more costs nothing observable. Judge a port on the work path
+and on what else shares its matcher, not on the bail path alone.
+
+Measure on the host that matters rather than trusting any of these numbers: the
+ranking holds, the margins move a lot, and the interpreter is the variable.
 
 ## Performance rules
 
