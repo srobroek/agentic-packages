@@ -54,7 +54,12 @@ def _sandbox_path(tmp_path: Path, *, omit: tuple[str, ...]) -> str:
         if not found:
             continue
         if name in ("npm", "node"):
-            extra.append(str(Path(found).resolve().parent))
+            # NOT resolve(): npm finds its own libraries relative to argv[0], and on
+            # a runner where /usr/local/bin/npm is a symlink into a versioned
+            # directory, resolving it yields a parent with no node_modules -- npm
+            # then dies with "Cannot find module .../npm-prefix.js". Keep the
+            # unresolved directory, which is how a normal PATH presents it.
+            extra.append(str(Path(found).parent))
         else:
             link = bindir / name
             if not link.exists():

@@ -208,11 +208,15 @@ def main() -> int:
     from pathlib import Path
 
     path = Path(raw)
-    if not path.is_file():
-        return 0
+    # is_file() needs the same OSError guard as resolve(): a path longer than the
+    # filesystem allows raises ENAMETOOLONG on Linux (it merely returns False on
+    # macOS), which crashed this hook closed instead of failing open. Found by
+    # fuzzing with a 3000-character path, and only on the Linux runner.
     try:
+        if not path.is_file():
+            return 0
         path = path.resolve()
-    except OSError:
+    except (OSError, ValueError):
         return 0
 
     home = Path.home()
