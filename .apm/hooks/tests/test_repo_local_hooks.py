@@ -67,7 +67,7 @@ def test_every_hook_compiles(stem):
     "payload",
     [
         pytest.param("", id="empty"),
-        pytest.param("not json", id="unparseable"),
+        pytest.param("not json", id="unparsable"),
         pytest.param("[]", id="not-an-object"),
         pytest.param("{}", id="empty-object"),
         pytest.param('{"tool_input": null}', id="null-tool-input"),
