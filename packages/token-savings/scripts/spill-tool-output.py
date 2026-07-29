@@ -47,24 +47,26 @@ import sys
 # real tool results from a 4,107-file repository's transcripts, where `Bash`
 # owns 69% of all transcript bytes:
 #
-#   threshold   results hit   bytes saved   share of all transcript bytes
-#      12 KB             24       300,922                              8%
-#       8 KB             48       377,012                             10%
-#       4 KB            146       464,193                             12%
-#       2 KB            344       524,763                             14%
+#   threshold   head/tail   spilled   bytes saved   share of all bytes
+#      4 KB         40/60       100       464,193                 12%
+#      2 KB         20/30       285       794,965                 21%
+#      1 KB         15/25       481       953,673                 26%
+#    500 B          10/15       587     1,145,952                 31%
 #
-# 4 KB is the knee. Going to 2 KB adds two points while spilling 198 more
-# results, and a 2 KB result is often small enough that the head/tail plus the
-# retrieval instructions is barely a saving at all.
+# The window must shrink WITH the threshold: a 40/60 window is wider than most
+# 1 KB results, so it spills them for no gain. 2 KB at 20/30 is the choice.
+# Below it the window stops being useful rather than merely smaller: at 500 B,
+# 1,069 spilled results fit ENTIRELY inside a 20/30 window, so the hook would
+# rewrite them, add a retrieval footer, and hide nothing.
 #
 # Do not expect more than this: 48% of transcript bytes live in results UNDER
 # 2 KB, a long tail no size threshold can reach.
-SPILL_THRESHOLD_BYTES = 4_000
+SPILL_THRESHOLD_BYTES = 2_000
 
 # Kept from each end. Enough for a test summary, a stack trace tail, or a build
 # verdict without reproducing the body.
-HEAD_LINES = 40
-TAIL_LINES = 60
+HEAD_LINES = 20
+TAIL_LINES = 30
 
 # Prune: keep the store bounded without a background process.
 MAX_SPILL_FILES = 200
@@ -257,6 +259,12 @@ def main() -> int:
     # The header occupies two lines ahead of the output, which the summary's
     # `sed` range has to account for.
     line_offset = 2 if command else 0
+
+    # Decide BEFORE writing. The summary can exceed a short result, and a hook that
+    # writes the spill file and then declines to use it leaves an orphan the prune
+    # has to collect -- pure disk churn for a result the agent reads in full anyway.
+    if len(build_summary(text, path, command, line_offset)) >= len(text):
+        return 0
     try:
         # Write via a temp file and rename so a concurrent reader never sees a
         # partial spill.

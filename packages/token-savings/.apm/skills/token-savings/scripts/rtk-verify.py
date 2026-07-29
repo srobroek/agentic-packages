@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Verify rtk's filters case by case: what each saves, and what each loses.
 
-The allowlist in `rtk-rewrite-guard.py` is only defensible if someone checked
-each entry. This is that check, as a repeatable harness rather than a one-time
-session. It runs a real command twice -- natively and through rtk -- in a
-scratch fixture built for the purpose, then compares:
+The BLOCKLIST in `rtk-rewrite-guard.py` is only defensible if someone checked each
+entry, and only stays defensible if someone rechecks them. This is that check, as
+a repeatable harness rather than a one-time session. It runs a real command twice,
+natively and through rtk, in a scratch fixture built for the purpose, and
+compares:
 
   bytes        how much smaller the filtered output is
   facts        whether the load-bearing content survived (per-case patterns)
@@ -20,7 +21,10 @@ Comparison is against the RAW command, not against the `2>&1 | tail -50` idiom
 the agent actually uses. Both are reported, because on some shapes hand-tailing
 is cheaper than rtk and that is the honest baseline.
 
-Run: rtk-verify.py [--case NAME] [--markdown] [--keep]
+Run: rtk-verify.py [--case NAME] [--markdown] [--keep] [--coverage]
+
+`--coverage` lists what the guard blocks and whether rtk still offers each one. A
+block whose defect upstream has fixed is a saving refused for nothing.
 """
 
 from __future__ import annotations
@@ -468,13 +472,78 @@ def verify(name: str, spec: dict, keep: bool) -> dict:
             shutil.rmtree(workdir, ignore_errors=True)
 
 
+def coverage() -> int:
+    """Report what the guard BLOCKS, and which blocked filters are still verified.
+
+    The guard is a blocklist: it routes anything `rtk rewrite` claims and names
+    only what measurably breaks. So the useful report is not "what is uncovered"
+    (nothing is) but "is every block still justified on the installed rtk". A
+    block whose defect upstream has fixed is a saving being refused for no reason.
+
+    Run the matching `--case` to re-verify one, and delete the entry if it passes.
+    """
+    import re
+
+    guard = Path(__file__).resolve().parents[4] / "scripts" / "rtk-rewrite-guard.py"
+    try:
+        body = guard.read_text(encoding="utf-8")
+    except OSError:
+        print(f"cannot read the guard at {guard}", file=sys.stderr)
+        return 1
+
+    blocked_match = re.search(r"BLOCKED_BINARIES = frozenset\(\s*\{(.*?)\}\s*\)", body, re.S)
+    blocked = (
+        [m.group(1) for m in re.finditer(r'"([a-z0-9-]+)"', blocked_match.group(1))]
+        if blocked_match
+        else []
+    )
+
+    help_text = subprocess.run(
+        ["rtk", "--help"], capture_output=True, text=True, check=False
+    ).stdout
+    offered = set()
+    for line in help_text.splitlines():
+        match = re.match(r"\s{2}([a-z][a-z0-9-]*)\s{2,}\S", line)
+        if match:
+            offered.add(match.group(1))
+    offered -= {
+        "init", "config", "gain", "discover", "session", "telemetry", "learn", "run",
+        "proxy", "pipe", "trust", "untrust", "verify", "rewrite", "hook", "help",
+        "hook-audit", "cc-economics", "summary", "smart", "read", "err", "test",
+    }
+
+    print(f"rtk offers {len(offered)} filters. The guard routes all of them except:\n")
+    for name in blocked:
+        state = "still offered by rtk" if name in offered else "no longer in rtk --help"
+        print(f"  {name:16s} ({state})")
+
+    stale = [name for name in blocked if name not in offered]
+    if stale:
+        print("\nBlocked but no longer offered -- the entry is now dead weight:")
+        for name in stale:
+            print(f"  {name}")
+    print(
+        "\nRe-verify a block with `--case <name>` before trusting it. A defect rtk "
+        "has since fixed is a saving being refused for nothing."
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--case", action="append", help="run only these cases")
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--keep", action="store_true", help="keep fixture dirs for inspection")
     parser.add_argument("--list", action="store_true")
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        help="list rtk filters the guard's allowlist does not cover",
+    )
     args = parser.parse_args(argv)
+
+    if args.coverage:
+        return coverage()
 
     if args.list:
         for name, spec in CASES.items():

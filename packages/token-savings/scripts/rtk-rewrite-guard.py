@@ -53,106 +53,42 @@ import sys
 #   wc              -- the output IS a count; filtering it is nonsense
 #   curl            -- response bodies are parsed as often as read
 #   jq / python3    -- output shape is the caller's contract
-ALLOWED = frozenset(
+# BLOCKLIST, not an allowlist. rtk ships ~56 filters and an allowlist covered 32
+# of them, leaving 20 as unrealised saving that drifted every time rtk added one.
+# So route by default and name only what MEASURABLY breaks. The trade is explicit:
+# a filter nobody has evaluated now gets routed, and the failure mode moves from
+# "a saving we did not take" to "output we did not verify". `rtk-verify.py`
+# re-runs the sweep that populated this list against the installed rtk version.
+#
+# Every entry below was reproduced, most on both a real repository and a minimal
+# fixture. The comment is the reason, and a reason is required to add one.
+BLOCKED_BINARIES = frozenset(
     {
-        # `git log` is admitted only WITH an explicit commit-limiting or compact
-        # flag, enforced by GIT_LOG_REQUIRES_LIMIT below. Verified on 0.44.1:
-        # `git log --oneline` over 25 commits returned all 25, while bare
-        # `git log` returned 10 of 25 with NO omission marker and NO tee-log
-        # path. A silently shortened history is the worst case for this hook,
-        # because the agent cannot tell it is reading a prefix.
-        ("git", "log"),
-        ("git", "diff"),
-        ("git", "show"),
-        ("git", "blame"),
-        ("gh", "pr"),
-        ("gh", "issue"),
-        ("gh", "run"),
-        # NOTE: `gh pr` and `gh issue` cover mutating verbs too (`gh pr merge`,
-        # `gh pr create`), which MUTATING_SUBVERBS below removes. Found by
-        # replaying real command history rather than by review.
-        ("docker", "ps"),
-        ("docker", "images"),
-        ("kubectl", "get"),
-        ("kubectl", "describe"),
-        ("cargo", "build"),
-        ("cargo", "clippy"),
-        ("cargo", "test"),
-        ("pytest", None),
-        # rtk 0.44.0 added a `uv run` filter, and `uv run` was by far the most
-        # common unrouted command in local history (5,064 occurrences). Verified
-        # on 0.44.1 against a FAILING pytest run, the case where detail matters:
-        # the assertion, the failure message, and the `1 failed, 1 passed`
-        # verdict all survived at 46% fewer bytes, and a tee log path is named.
-        ("uv", "run"),
-        ("ruff", "check"),
-        ("tsc", None),
-        ("eslint", None),
-        # --- other language toolchains, each verified by rtk-verify.py ---------
-        # rtk ships ~79 filters. These are the ones whose filtered output was
-        # checked to preserve the load-bearing facts. A filter with no local
-        # toolchain is NOT added on faith: the verifier SKIPs it, and an
-        # unverified entry stays out.
-        # `rg`/`grep` are the LARGEST single source of unrouted output bytes (21%
-        # of them, measured across 21 repositories), so they are worth routing
-        # despite truncating. rtk showed 25 of 400 matches, announced `+375 more`,
-        # and named a tee log holding all 400 -- lossy but recoverable, which is
-        # the right trade for a model READING matches.
-        #
-        # The danger is a COUNT. `rg -n match | wc -l` returns 400 natively and 28
-        # through rtk, because the truncation notice becomes data. An explicit
-        # `rg -c` is safe (rtk passes 400 through correctly), but the piped form is
-        # not, and the guard cannot see intent. So: count flags are refused via
-        # AMBIGUOUS_MACHINE_FLAGS below, and a pipe is only allowed into a pure
-        # truncator, which is already the rule for every other command.
-        ("rg", None),
-        ("grep", None),
-        ("go", "test"),
-        ("go", "build"),
-        ("go", "vet"),
-        ("mypy", None),
-        ("pytest", None),
-        ("jest", None),
-        ("vitest", None),
-        ("prettier", None),
-        ("biome", None),
-        ("phpunit", None),
-        ("pest", None),
-        ("phpstan", None),
-        ("rubocop", None),
-        ("rspec", None),
-        ("dotnet", "build"),
-        ("dotnet", "test"),
-        ("mvn", "test"),
-        ("mvn", "compile"),
-        ("sbt", None),
-        ("npm", "run"),
-        ("pnpm", "run"),
-        ("pnpm", "test"),
-        ("gradlew", None),
-        ("next", "build"),
-        ("prisma", None),
-        # Read-only VCS/platform reads that mirror the git/gh entries above.
-        ("glab", "mr"),
-        ("glab", "ci"),
-        ("gt", "log"),
-        ("oc", "get"),
-        ("oc", "describe"),
+        # exit 1 becomes exit 0 AND the line number is dropped
+        # (`./main.go:11:6:` renders as `main.go (1 issues)`), so a linter reports
+        # clean while findings exist. CI and the agent both read that exit code.
+        "golangci-lint",
+        # Dropped four of six directories, announcing `+130 more` with no tee log
+        # and therefore no way back.
+        "find",
+        # The output IS the number; filtering it is either pointless or wrong.
+        "wc",
+        # JSON/schema-oriented: passed an 89 KB HTML page through byte for byte.
+        "curl",
     }
 )
 
-# Filters measured to LOSE something that matters, so they are refused even
-# though rtk offers them. Each was reproduced with `rtk-verify.py`.
-#
-#   golangci-lint  turns exit 1 into exit 0 AND drops the line number
-#                  (`./main.go:11:6:` becomes `main.go (1 issues)`). A linter
-#                  that reports clean while findings exist is worse than no
-#                  filter, because CI and the agent both read the exit code.
-#   find           drops whole directories with no recovery path
-#   grep / rg      truncates to ~25 lines; fatal for a count
-#   wc             the output IS the number
-#   curl           passed an 89 KB HTML page through unchanged
-BLOCKED_BINARIES = frozenset({"golangci-lint", "find", "wc", "curl"})
+# Subcommands and flag shapes that break even though the binary is fine.
+BLOCKED_SUBCOMMANDS = frozenset(
+    {
+        # `git log` unbounded returns 10 of 25 commits with NO omission marker and
+        # no tee log, so the agent cannot tell it is reading a prefix of history.
+        # `--oneline` and an explicit count are lossless; `--stat` and `--graph`
+        # truncate the same way, which is why the check below is a flag allowlist
+        # rather than a flag blocklist.
+        ("git", "log"),
+    }
+)
 
 # Any of these in the command means something downstream consumes the bytes, so
 # a filtered rendering could change a result rather than just shorten it.
@@ -263,15 +199,44 @@ def _is_count_flag(token: str) -> bool:
     return len(token) > 1 and token[0] == "-" and token[1:].isdigit()
 
 
+def _rtk_would_filter(command: str) -> bool:
+    """Does rtk have a filter for this command?
+
+    `rtk rewrite <cmd>` prints the rewritten form when rtk recognises the command
+    and nothing when it does not, so it answers the question authoritatively for
+    the INSTALLED version. That is the point of consulting it instead of copying
+    a list of filter names: rtk 0.44 added `uv run` and `git checkout`, and a
+    hardcoded list would have gone stale silently.
+
+    A subprocess on the hot path is affordable here because this runs only after
+    the byte-level bail and the blocklist, so the common command never reaches it.
+    Fails CLOSED on error: if rtk cannot answer, do not route.
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["rtk", "rewrite", command],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return bool(result.stdout.strip())
+
+
 def _bail_early(raw: bytes) -> bool:
     """Cheapest possible reject, before any JSON parse.
 
-    Every command this guard can act on names an allowlisted binary, so a
-    payload mentioning none of them cannot be rewritten. Kept a strict superset
-    of the real trigger: it tests only for the command names, never for the
-    subcommand, so it cannot mask a case the structured check would have caught.
+    With a blocklist there is no short list of names to test for, so this can only
+    reject what is structurally unroutable: a payload with no `tool_input` at all.
+    The real filtering happens in `_rewrite`, and `_rtk_would_filter` is the
+    expensive step -- it sits behind the pipeline, redirect, and flag checks so a
+    compound command never pays for it.
     """
-    return not any(name.encode() in raw for name, _ in ALLOWED)
+    return b"tool_input" not in raw
 
 
 def _rewrite(command: str) -> str | None:
@@ -475,7 +440,15 @@ def _rewrite_simple(command: str) -> str | None:
     if binary in BLOCKED_BINARIES:
         return None
 
-    if (binary, argument) not in ALLOWED and (binary, None) not in ALLOWED:
+    # rtk only filters commands it has a filter for; prefixing anything else just
+    # adds a process. `rtk rewrite` is rtk's own answer to "would you touch this",
+    # so ask it rather than maintaining a parallel list of 56 filter names.
+    # Consult rtk with the command as IT would see it: after the env assignments
+    # and the `timeout <n>` wrapper are stripped. rtk declines
+    # `timeout 600 cargo clippy` outright while claiming `cargo clippy`, so asking
+    # with the wrapper attached would refuse every wrapped build and test command,
+    # which is most of them in real history.
+    if not _rtk_would_filter(" ".join(tokens[index:])):
         return None
 
     subverb = tokens[index + 2] if index + 2 < len(tokens) else None

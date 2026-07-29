@@ -5,11 +5,13 @@ through a lossy filter, so every case it must NOT touch is a case where a
 filtered rendering could change an answer rather than merely shorten it. Those
 tests outnumber the positive ones deliberately.
 
-Each refusal below was verified against rtk 0.43.0 rather than assumed:
-`rtk git status --porcelain` drops the trailing newline (so `| wc -l`
-under-counts), and `rtk grep` returned 25 of 400 matching lines (so `grep -c`
-would be wrong). The guard cannot detect caller intent, so it refuses the whole
-shape.
+The guard is a BLOCKLIST: it routes anything rtk has a filter for and names only
+what measurably breaks. So the tests split three ways -- the blocked binaries and
+flag shapes, the structural refusals (pipelines into parsers, redirection, chains),
+and the fail-open paths. Each blocked entry was reproduced rather than assumed.
+
+`rtk rewrite` is consulted to decide whether rtk has a filter at all, so the stub
+`rtk` in these tests must answer that question, not merely exist.
 """
 
 from __future__ import annotations
@@ -38,7 +40,49 @@ def _run(payload, *, with_rtk: bool = True, tmp_path: Path | None = None) -> str
             stub_dir = tmp_path / "bin"
             stub_dir.mkdir(exist_ok=True)
             stub = stub_dir / "rtk"
-            stub.write_text("#!/bin/sh\nexit 0\n")
+            # `rtk rewrite <cmd>` prints the rewritten command when rtk has a
+            # filter and nothing when it does not. The guard consults it, so the
+            # stub answers for a known set and declines for anything else.
+            # `rtk rewrite <cmd>` prints the rewritten command when rtk has a
+            # filter and nothing when it does not, and the guard consults it. So
+            # the stub must DECLINE what real rtk declines, or these tests assert
+            # behaviour the shipped guard does not have. Verified against rtk
+            # 0.44.1: it claims ls and make, and declines pwd, echo, rm,
+            # git rev-parse, python3, and a bare timeout.
+            # `rtk rewrite <cmd>` prints the rewritten command when rtk has a
+            # filter and nothing when it does not, and the guard consults it. The
+            # stub must DECLINE what real rtk declines, or these tests assert
+            # behaviour the shipped guard does not have. Verified against 0.44.1:
+            # rtk claims `ls` and `make`, and declines `pwd`, `echo`, `rm`,
+            # `git rev-parse`, and `python3`.
+            # `rtk rewrite <cmd>` prints the rewritten command when rtk has a
+            # filter and nothing when it does not, and the guard consults it. The
+            # stub must DECLINE what real rtk declines, or these tests assert
+            # behaviour the shipped guard does not have. Verified against 0.44.1:
+            # rtk claims `ls` and `make`, and declines `pwd`, `echo`, `rm`,
+            # `git rev-parse`, and `python3`.
+            #
+            # The guard passes the whole command as ONE argument, so match on a
+            # leading-word glob rather than on `$1` alone.
+            stub.write_text(
+                "#!/bin/sh\n"
+                '[ "$1" = "rewrite" ] || exit 0\n'
+                "shift\n"
+                'case "$1" in\n'
+                "  pwd|pwd\\ *|echo|echo\\ *|rm|rm\\ *) exit 0 ;;\n"
+                "  python3|python3\\ *|some-unknown-tool*) exit 0 ;;\n"
+                # rtk declines these too, and a `;`/`cd` chain relies on it:
+                # the guard must route the routable segment and leave these.
+                "  cd|cd\\ *|bd|bd\\ *) exit 0 ;;\n"
+                # rtk declines a `timeout`-wrapped command outright, which is
+                # why the guard strips the numeric wrapper before asking. The
+                # flag form is not stripped, so it arrives wrapped and is
+                # declined here too.
+                "  timeout|timeout\\ -*|gtimeout\\ -*) exit 0 ;;\n"
+                "  \"git rev-parse\"*) exit 0 ;;\n"
+                "esac\n"
+                'printf "rtk %s\\n" "$1"\n'
+            )
             stub.chmod(0o755)
             env["PATH"] = f"{stub_dir}{os.pathsep}{env['PATH']}"
     else:
@@ -76,15 +120,38 @@ def _bash(command: str) -> dict:
         "cargo clippy",
         "cargo test",
         "kubectl get pods",
-        "kubectl describe pod x",
         "docker ps",
         "ruff check .",
         "eslint src",
         "tsc --noEmit",
         "uv run pytest",
+        # A blocklist routes these too, where the earlier allowlist did not: they
+        # were 20 of rtk's 56 filters going unused.
+        "tree",
+        "aws s3 ls",
+        "php artisan test",
+        "rake test",
+        "pip install x",
+        "npx tsc",
+        "playwright test",
+        "psql -c 'select 1'",
     ],
 )
-def test_allowlisted_commands_are_routed(command, tmp_path):
+def test_anything_rtk_filters_is_routed(command, tmp_path):
+    assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
+
+
+@pytest.mark.parametrize("command", ["some-unknown-tool --flag", "pwd", "echo hi"])
+def test_a_command_rtk_has_no_filter_for_is_left_alone(command, tmp_path):
+    """Prefixing `rtk` onto something it does not filter only adds a process, so
+    the guard asks `rtk rewrite` rather than keeping a parallel list of filters."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize("command", ["ls -la", "make build"])
+def test_the_blocklist_routes_what_the_allowlist_missed(command, tmp_path):
+    """rtk filters `ls` and `make` and the old allowlist named neither, so both
+    went unrouted. That gap -- 20 of rtk's 56 filters -- is why this flipped."""
     assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
 
 
@@ -112,11 +179,6 @@ def test_quiet_is_allowed_where_it_only_means_less_verbose(command, tmp_path):
     ],
 )
 def test_ambiguous_flags_still_block_the_commands_they_mean_machine_output_for(command, tmp_path):
-    assert _run(_bash(command), tmp_path=tmp_path) == ""
-
-
-@pytest.mark.parametrize("command", ["uv tool install x", "uv sync", "uv pip list"])
-def test_only_uv_run_is_routed(command, tmp_path):
     assert _run(_bash(command), tmp_path=tmp_path) == ""
 
 
@@ -201,11 +263,27 @@ def test_blocked_binaries_are_refused_even_though_rtk_offers_them(command, tmp_p
     assert _run(_bash(command), tmp_path=tmp_path) == ""
 
 
-@pytest.mark.parametrize("command", ["find . -name '*.txt'", "find . -type f"])
-def test_find_is_refused(command, tmp_path):
-    """`rtk find` dropped four of six directories entirely, announcing only
-    `+130 more` with no path to recover them."""
-    assert _run(_bash(command), tmp_path=tmp_path) == ""
+def test_the_coverage_report_names_every_block(tmp_path):
+    """The blocklist's cost is a saving refused for nothing once rtk fixes a
+    defect. `rtk-verify.py --coverage` lists every block and whether rtk still
+    offers it, so a stale entry is prompted rather than remembered."""
+    verifier = (
+        Path(__file__).resolve().parent.parent
+        / ".apm"
+        / "skills"
+        / "token-savings"
+        / "scripts"
+        / "rtk-verify.py"
+    )
+    if shutil.which("rtk") is None:
+        pytest.skip("rtk not installed")
+    proc = subprocess.run(
+        [sys.executable, str(verifier), "--coverage"], capture_output=True, text=True
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "golangci-lint" in proc.stdout
+    assert "routes all of them except" in proc.stdout
+    assert "Re-verify a block" in proc.stdout
 
 
 def test_env_assignments_keep_their_position(tmp_path):
@@ -244,11 +322,10 @@ def test_absolute_paths_resolve_to_the_allowlisted_binary(tmp_path):
         "rg --json pattern",
         # The output IS a count.
         "wc -l file",
-        # Not on the allowlist at all.
+        # rtk has no filter for these, so it declines and so does the guard.
         "python3 -c 'print(1)'",
+        # Blocked by name despite rtk offering a filter.
         "curl -s https://example.test",
-        "ls -la",
-        "make build",
     ],
 )
 def test_unsafe_or_unlisted_commands_are_untouched(command, tmp_path):
@@ -328,10 +405,13 @@ def test_timeout_wrapper_keeps_rtk_inside_it(command, expected, tmp_path):
 
 
 def test_timeout_with_a_flag_is_not_guessed_at(tmp_path):
+    """Only the numeric-duration form is stripped, so `timeout --flag` reaches rtk
+    with the wrapper attached and rtk declines it."""
     assert _run(_bash("timeout --preserve-status 5 pytest"), tmp_path=tmp_path) == ""
 
 
-def test_timeout_does_not_launder_an_unlisted_command(tmp_path):
+def test_timeout_does_not_launder_an_unfiltered_command(tmp_path):
+    """The wrapper is stripped before rtk is consulted, and rtk declines `rm`."""
     assert _run(_bash("timeout 600 rm -rf /tmp/x"), tmp_path=tmp_path) == ""
 
 
@@ -352,7 +432,6 @@ def test_a_single_leading_cd_is_stepped_over(command, expected, tmp_path):
 @pytest.mark.parametrize(
     "command",
     [
-        "cd /tmp/x && rm -rf /tmp/y",
         "cd /tmp/x && cargo build && echo done",
         "cd /a && cd /b && cargo test",
     ],
@@ -386,11 +465,16 @@ def test_semicolon_segments_are_routed_individually(command, expected, tmp_path)
     assert _run(_bash(command), tmp_path=tmp_path) == expected
 
 
-@pytest.mark.parametrize(
-    "command", ["echo hi; rm -rf /tmp/y", "echo a; echo b", "ls; pwd"]
-)
+@pytest.mark.parametrize("command", ["echo hi; rm -rf /tmp/y", "echo a; echo b"])
 def test_a_chain_with_no_routable_segment_is_untouched(command, tmp_path):
+    """rtk filters neither `echo` nor `rm`, so no segment is routable."""
     assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+def test_a_chain_routes_only_the_segments_rtk_filters(tmp_path):
+    """`ls; pwd` routes the `ls` and leaves `pwd`, because rtk filters one and not
+    the other. Per-segment consultation is what makes that possible."""
+    assert _run(_bash("ls; pwd"), tmp_path=tmp_path) == "rtk ls; pwd"
 
 
 @pytest.mark.parametrize(
@@ -487,14 +571,13 @@ def test_unbalanced_quotes_are_untouched(tmp_path):
 def test_emits_allow_and_never_ask(tmp_path):
     """Constitution III: no guard emits `ask`, and Codex rejects it outright.
     `updatedInput` additionally requires permissionDecision:allow on Codex."""
-    stub_dir = tmp_path / "bin"
-    stub_dir.mkdir()
-    stub = stub_dir / "rtk"
-    stub.write_text("#!/bin/sh\nexit 0\n")
-    stub.chmod(0o755)
-    env = dict(os.environ)
-    env["PATH"] = f"{stub_dir}{os.pathsep}{env['PATH']}"
+    # Go through `_run` so the shared stub is used. A stub that merely exits 0
+    # makes the guard believe rtk has no filter, so nothing is ever routed and
+    # this test would assert against an empty string.
+    assert _run(_bash("git log --oneline"), tmp_path=tmp_path) == "rtk git log --oneline"
 
+    env = dict(os.environ)
+    env["PATH"] = f"{tmp_path / 'bin'}{os.pathsep}{env['PATH']}"
     proc = subprocess.run(
         [sys.executable, str(GUARD)],
         input=json.dumps(_bash("git log --oneline")),

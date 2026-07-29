@@ -98,7 +98,11 @@ def test_sed_instruction_points_at_the_first_hidden_line(tmp_path):
     line = subprocess.run(
         ["sed", "-n", f"{start},{start}p", path], capture_output=True, text=True
     ).stdout.strip()
-    assert line.startswith("line 41 "), f"sed points at {line!r}, expected output line 41"
+    # Derive the expected line from the constant so tuning HEAD_LINES cannot leave
+    # this asserting a stale offset.
+    head = int(re.search(r"^HEAD_LINES = (\d+)", SCRIPT.read_text(), re.M).group(1))
+    expected = f"line {head + 1} "
+    assert line.startswith(expected), f"sed points at {line!r}, expected {expected!r}"
 
 
 def test_head_and_tail_are_both_retained(tmp_path):
@@ -258,9 +262,17 @@ def test_unwritable_state_dir_fails_open(tmp_path):
 def test_a_result_the_summary_would_not_shrink_is_untouched(tmp_path):
     """The head/tail window plus the retrieval footer can exceed a short result.
     Rewriting one would cost tokens and hide nothing."""
-    # Over the threshold in BYTES but only a few lines, so head+tail covers it
-    # all and the footer is pure overhead.
-    text = ("x" * 700 + "\n") * 4
+    # Over the threshold in BYTES but few enough lines that head+tail covers all of
+    # them, so the retrieval footer is pure overhead. Sized from the constants so a
+    # threshold change cannot silently stop exercising this path.
+    threshold = int(
+        re.search(r"^SPILL_THRESHOLD_BYTES = ([\d_]+)", SCRIPT.read_text(), re.M)
+        .group(1)
+        .replace("_", "")
+    )
+    head = int(re.search(r"^HEAD_LINES = (\d+)", SCRIPT.read_text(), re.M).group(1))
+    per_line = threshold // max(head - 2, 1) + 40
+    text = ("x" * per_line + "\n") * (head - 2)
     assert _run(_payload(text), tmp_path) == ""
     assert _spill_files(tmp_path) == []
 
