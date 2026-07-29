@@ -27,6 +27,18 @@ def _big(lines: int = 600, filler: str = " some content here to pad this line ou
     return "\n".join(f"line {i}{filler}" for i in range(1, lines + 1))
 
 
+def _raw(payload, state: Path):
+    """The `updatedToolOutput` value exactly as emitted, shape included."""
+    environment = dict(os.environ)
+    environment["XDG_STATE_HOME"] = str(state)
+    raw = payload if isinstance(payload, str) else json.dumps(payload)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT)], input=raw, capture_output=True, text=True, env=environment
+    )
+    out = proc.stdout.strip()
+    return None if not out else json.loads(out)["hookSpecificOutput"]["updatedToolOutput"]
+
+
 def _run(payload, state: Path) -> str:
     """Return the rewritten tool output, or "" when untouched."""
     environment = dict(os.environ)
@@ -39,7 +51,9 @@ def _run(payload, state: Path) -> str:
     out = proc.stdout.strip()
     if not out:
         return ""
-    return json.loads(out)["hookSpecificOutput"]["updatedToolOutput"]
+    value = json.loads(out)["hookSpecificOutput"]["updatedToolOutput"]
+    # Bash output is a structured object; the tests below read its stdout.
+    return value["stdout"] if isinstance(value, dict) else value
 
 
 def _payload(text: str, *, exit_code: int = 0, command: str = "pytest -v") -> dict:
@@ -175,6 +189,30 @@ def test_no_partial_files_are_left_behind(tmp_path):
     _run(_payload(_big()), tmp_path)
     spill = tmp_path / "agentic-tools" / "token-savings" / "spill"
     assert list(spill.glob("*.part")) == []
+
+
+def test_bash_output_is_replaced_with_the_tools_own_object_shape(tmp_path):
+    """The trap this guards: built-in tools return structured objects, and per the
+    hook docs "a value that doesn't match the tool's output schema is ignored and
+    the original output is used" -- silently. An earlier version emitted a bare
+    string, so the hook was a complete no-op that looked like it worked."""
+    value = _raw(_payload(_big()), tmp_path)
+    assert isinstance(value, dict), f"Bash needs an object, got {type(value).__name__}"
+    assert set(value) == {"stdout", "stderr", "interrupted", "isImage"}
+    assert isinstance(value["interrupted"], bool)
+    assert isinstance(value["isImage"], bool)
+    assert "[token-savings]" in value["stdout"]
+
+
+def test_an_mcp_tool_may_receive_a_string(tmp_path):
+    """MCP output is passed through without schema validation."""
+    payload = {
+        "tool_name": "mcp__example__run",
+        "tool_use_id": "toolu_x",
+        "tool_input": {"command": "x"},
+        "tool_response": _big(),
+    }
+    assert isinstance(_raw(payload, tmp_path), str)
 
 
 def test_emits_only_fields_claude_accepts(tmp_path):

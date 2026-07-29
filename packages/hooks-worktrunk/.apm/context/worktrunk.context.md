@@ -56,22 +56,24 @@ NOT Treat `copy-ignored` as a shared writable build directory; it creates a
 DEFAULT Run a dev server with
   `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
   matching `[list] url`.
-DEFAULT Refresh the repomix pack in `post-start` from the GLOBAL user config, not
-  per repository. `repomix` with no arguments reads the repository's committed
-  `repomix.config.json`, so the command carries no repository-specific knowledge
-  and IS a cross-repository invariant:
+MUST Put every project command in the repository's checked-in `.config/wt.toml`,
+  never in the global user config, even when the command itself looks like an
+  invariant. A collaborator cloning the repository has no global config and gets
+  nothing, with no signal naming what is missing; a checked-in file travels with
+  the clone. This holds for the repomix refresh, builds, watchers, dev servers,
+  and database setup alike:
 
     [post-start]
     repomix = "repomix"
 
-  Each repository supplies its own patterns in `repomix.config.json`; one without
-  the file gets repomix's defaults and is simply larger. That split is what makes
-  the global hook legitimate under HOOK OWNERSHIP below.
-MUST Gitignore the pack and list it in `.worktreeinclude`, both per repository.
-  Copying beats rebuilding and the pack holds no absolute paths, so a copy is
-  valid in any checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, near-free
-  on a reflink filesystem. `copy-ignored` runs first, so `repomix` only repacks
-  what the branch changed.
+  `repomix` with no arguments reads the repository's committed
+  `repomix.config.json`, so the hook line stays identical across repositories
+  while each one supplies its own patterns.
+MUST Gitignore the pack and list it in `.worktreeinclude`. Copying beats
+  rebuilding and the pack holds no absolute paths, so a copy is valid in any
+  checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, near-free on a reflink
+  filesystem. `copy-ignored` runs first, so `repomix` only repacks what the branch
+  changed.
 NOT Read the pack. It is 6,349,248 tokens on a 4,107-file repository; a
   `PreToolUse` guard denies the read and names `rg`/`awk` instead.
 NOT Build a graphify graph per worktree. `graphify update` has no output flag and
@@ -118,6 +120,11 @@ NOT Build a graphify graph per worktree. `graphify update` has no output flag an
 HOOK OWNERSHIP
 MUST User hooks contain cross-repository invariants only. Repository commands
   belong in checked-in `.config/wt.toml`.
+MUST Resolve the ambiguous case toward the repository. A command can look like an
+  invariant (`repomix`, `just build`, `pnpm install`) because its TEXT is the same
+  everywhere, and still belong in the repository: what makes it work is the
+  committed config beside it. Put it in the global config and a collaborator who
+  clones the repository gets silence, with nothing naming what they lack.
 DEFAULT Repositories encode repeatable setup, validation, dev servers,
   databases, and cleanup in project hooks instead of agent instructions or
   manual runbooks.

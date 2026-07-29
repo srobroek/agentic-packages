@@ -31,32 +31,26 @@ repository -- a silent no-op for as long as it shipped.
 
 ## The scheme
 
+Artifacts live in the repository root, gitignored, at their tools' conventional
+names:
+
 ```
-${XDG_STATE_HOME:-$HOME/.local/state}/agentic-tools/<tool>/<sha256(repo_root)[:16]>-<artifact>
-${XDG_STATE_HOME:-$HOME/.local/state}/agentic-tools/<tool>/<sha256(repo_root)[:16]>.head
+<repo>/repomix-full.xml     gitignored, in .worktreeinclude
+<repo>/graphify-out/        gitignored, in .worktreeinclude
+<repo>/.serena/             gitignored (Serena already does this)
 ```
 
-Four properties, each earning its place:
+Out-of-tree storage keyed by a hash of the repository root was tried first and
+FAILED the only test that mattered. Asked a where-is-X question with no steering,
+a subagent answered in five `ls`/`rg` calls and reported "no mention anywhere in
+my context of a pre-built repository structure map". In-tree is discoverable the
+way every other file is, needs no injection hook, and `wt step copy-ignored` warms
+a worktree with it because these artifacts hold no absolute paths.
 
-1. **Outside the working tree.** No gitignore entry to add, no `git status`
-   noise, nothing to accidentally commit, and it survives `git clean -xfd`.
-2. **Keyed by a hash of the absolute repository root.** One artifact per
-   checkout, so worktrees of the same repository do not collide -- each has its
-   own root path and therefore its own key.
-3. **`XDG_STATE_HOME`, not `XDG_CACHE_HOME`.** These are regenerable but not
-   disposable: losing one costs a rebuild during a session. State is the right
-   category, and it keeps them out of cache-eviction sweeps.
-4. **A `.head` marker beside each artifact**, holding the commit the artifact was
-   built from. That single file answers "is this stale" without running git.
-
-Total footprint on this machine for two repositories plus a spill store: **184 KB**.
+The cost of in-tree is that each artifact needs a `.gitignore` entry, which is
+precisely what scaffolding is for.
 
 ## What project-scaffold should provide
-
-MUST A resolver every tool can call, rather than each reimplementing the hash.
-  Same input (repo root, tool name, artifact name) gives the same path from any
-  language. `token-savings` implements this in `repomix-map.py:state_dir()` and
-  `map_paths()`; that is the reference, not the API.
 
 MUST A gitignore contribution for the tools that CANNOT be redirected, scaffolded
   into every new repository. repomix takes `--output <path>` and can be pointed
@@ -104,10 +98,17 @@ DEFAULT Do not build a graphify graph per worktree. Point queries at the primary
 MUST Rebuild in the worktree only when the branch has changed the code being
   queried, and gitignore the output first.
 
-## Global versus per-project
+## Everything repository-local, nothing global
 
-This belongs in a **global** install. The paths are machine-wide by construction
-(`$XDG_STATE_HOME`), the tools are installed once per machine, and per-project
-copies of the same resolver would drift. A project-local install would also mean
-a repository without the scaffolding writes to a different location than one
-with it, which defeats the point of standardising.
+The artifacts live IN the tree, gitignored, and every command that maintains them
+belongs in the repository's checked-in `.config/wt.toml`. The decisive argument is
+cloning: a collaborator without your global config gets nothing, and no signal
+names what is missing. A checked-in file travels with the clone.
+
+This holds even for a command whose TEXT looks like a cross-repository invariant.
+`repomix` is byte-identical in every repository, but what makes it correct is the
+`repomix.config.json` committed beside it, so it is a repository command. Resolve
+the ambiguous case toward the repository.
+
+The only global piece is tool INSTALLATION (mise or equivalent), which is a
+machine concern rather than a repository one.

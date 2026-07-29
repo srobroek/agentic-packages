@@ -13,12 +13,24 @@ that actually blow up -- a test run, a build, a stack trace -- the verdict is in
 the last lines and the invocation is in the first, so a head plus tail answers
 most questions with no retrieval at all. Retrieval is the fallback, not the plan.
 
-CLAUDE ONLY. This rewrites a tool result via
-`hookSpecificOutput.updatedToolOutput`, which Codex does not implement: its
-`PostToolUse` wire struct carries `hookEventName`, `additionalContext`, and
-`updatedMCPToolOutput`, and it rejects the last one. So this ships in the Claude
-hook manifest only, and the Codex manifest omits it rather than installing a
-hook that would silently do nothing.
+ORDERING, since it decides whether this works at all. `PostToolUse` fires after
+the tool has run, and `updatedToolOutput` replaces the result "before it is sent
+to Claude" (Claude Code hook docs). So the model never sees the original: the
+side effects have already happened and cannot be undone, but the OUTPUT is
+substituted before it reaches context. That is the whole mechanism.
+
+THE SHAPE IS MANDATORY AND FAILS SILENTLY. Built-in tools return structured
+objects, not strings: `Bash` returns `{stdout, stderr, interrupted, isImage}`.
+Per the docs, "for built-in tools, a value that doesn't match the tool's output
+schema is ignored and the original output is used" -- no error, no warning. An
+earlier version of this hook emitted a bare string and was therefore a complete
+no-op that looked like it worked. Emit the object.
+
+CLAUDE ONLY. Codex's `PostToolUse` wire struct carries `hookEventName`,
+`additionalContext`, and `updatedMCPToolOutput`, and rejects the last one, so it
+cannot replace a tool result at all. This ships in the Claude manifest only.
+(`updatedMCPToolOutput` is deprecated upstream in favour of `updatedToolOutput`,
+which covers every tool.)
 
 Deliberately conservative. Output under the threshold is untouched, a failing
 command is never truncated (the agent needs the error), and anything unparsable
@@ -224,6 +236,7 @@ def main() -> int:
     except OSError:
         return 0
 
+    tool_name = payload.get("tool_name")
     tool_input = payload.get("tool_input")
     command = ""
     if isinstance(tool_input, dict):
@@ -267,12 +280,27 @@ def main() -> int:
 
     prune(directory)
 
+    # Mirror the tool's own output shape. `Bash` returns a structured object, and
+    # a mismatched shape is silently discarded in favour of the original.
+    replacement: object
+    if tool_name == "Bash":
+        replacement = {
+            "stdout": summary,
+            "stderr": "",
+            "interrupted": False,
+            "isImage": False,
+        }
+    else:
+        # An MCP tool's output is passed through without schema validation, so a
+        # string is accepted there.
+        replacement = summary
+
     print(
         json.dumps(
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PostToolUse",
-                    "updatedToolOutput": summary,
+                    "updatedToolOutput": replacement,
                 }
             }
         )
