@@ -17,8 +17,17 @@ MUST Judge a token-saving change with `tokenmeter.py` (this package's skill),
   and compares its own captured output against its own filtered output for the
   same run, so it cannot see a follow-up command caused by over-filtering.
 MUST Judge compression on `cost_weighted`, not `input_tokens`. Cache reads bill
-  below fresh input but not at zero, and they dominate: a measured session showed
-  279 input tokens against 14.2M cache reads.
+  below fresh input but not at zero, and they dominate: across 23 local sessions,
+  97.5% of input-side tokens were cache reads and fresh input was 0.00%. Weighted
+  at 1.25x for a write and 0.10x for a read, cache creation is 24.4% of input cost
+  from 2.5% of the tokens.
+DEFAULT Expect a trim of TOOL OUTPUT to compound. A result is fresh in the turn it
+  lands and cache-read on every turn after, so one removed token saves 1.5
+  base-token-equivalents over the next 5 turns and 6.0 over 50.
+NOT Trim a stable prefix mid-session to save tokens. Editing a committed
+  `CLAUDE.md` or a steering file re-creates the WHOLE prefix at 1.25x, which is how
+  a proxy-based rewriter reaches a 2-7x cost INCREASE. Add to the prefix once and
+  let it cache.
 MUST Count subagent cost. Orchestration relocates cost rather than removing it.
 MUST Require 3+ runs per arm and separated per-run ranges. Agent runs are
   nondeterministic; a two-run A/B measures variance.

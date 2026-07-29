@@ -1176,7 +1176,7 @@
     },
     {
       "name": "steering-pragmatic",
-      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Requires python3 on PATH. Opt-in.",
+      "description": "Rules for what an agent PRODUCES: code economy (prefer deletion, stdlib, and minimal solutions over new abstractions), comment discipline, written-artifact register, and no justification for a choice inside the artifact that ships. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register, since a subagent writes files too. Conversational register is not here: on Claude it is the `Pragmatic` output style, which reaches the main session's system prompt. Requires python3 on PATH. Opt-in.",
       "version": "5.0.0",
       "tags": [
         "steering",
