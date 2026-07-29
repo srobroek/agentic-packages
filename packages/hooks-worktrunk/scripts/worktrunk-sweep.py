@@ -21,7 +21,7 @@ one of these holds, read from `wt list --format json`:
   * it is not ahead of its remote, so no local commit is unpublished;
   * its last commit is older than the age threshold.
 Anything Worktrunk will not describe -- a detached worktree, a missing remote, an
-unparseable record -- is left alone. Fewer signals means less confidence, not more
+unparsable record -- is left alone. Fewer signals means less confidence, not more
 license.
 
 Artifact removal additionally requires the directory to be git-ignored, so a
