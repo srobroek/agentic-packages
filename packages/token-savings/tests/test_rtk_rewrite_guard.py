@@ -194,7 +194,6 @@ def test_unsafe_or_unlisted_commands_are_untouched(command, tmp_path):
         "git log >> /tmp/out",
         "cargo clippy &> /tmp/out",
         "git diff && cargo clippy",
-        "git log; cargo test",
         "cargo clippy || true",
         "echo $(git log --oneline -1)",
         "echo `git log -1`",
@@ -288,11 +287,74 @@ def test_a_single_leading_cd_is_stepped_over(command, expected, tmp_path):
         "cd /tmp/x && rm -rf /tmp/y",
         "cd /tmp/x && cargo build && echo done",
         "cd /a && cd /b && cargo test",
-        "cd /tmp/x; cargo build",
     ],
 )
 def test_cd_does_not_launder_a_longer_chain(command, tmp_path):
     assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+def test_a_cd_semicolon_chain_routes_the_later_segment(tmp_path):
+    """`cd /x; cargo build` is two independent commands, so the second is
+    routable on its own -- unlike `cd /x && cargo build && echo done`, where
+    exit-status control flow links the parts."""
+    assert (
+        _run(_bash("cd /tmp/x; cargo build"), tmp_path=tmp_path) == "cd /tmp/x; rtk cargo build"
+    )
+
+
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        ('echo "=== A ==="; cargo build 2>&1 | tail -2', 'echo "=== A ==="; rtk cargo build 2>&1 | tail -2'),
+        ("cd /x; cargo test 2>&1 | tail -5", "cd /x; rtk cargo test 2>&1 | tail -5"),
+        ("cargo build; cargo clippy", "rtk cargo build; rtk cargo clippy"),
+        ('bd note x "a; b"; cargo build', 'bd note x "a; b"; rtk cargo build'),
+    ],
+)
+def test_semicolon_segments_are_routed_individually(command, expected, tmp_path):
+    """A `;` chain is a sequence of independent commands, not a data pipeline, so
+    filtering one segment cannot affect another. This was the single biggest
+    blocker in real traffic: 649 of 1,043 rtk-filterable commands."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+@pytest.mark.parametrize(
+    "command", ["echo hi; rm -rf /tmp/y", "echo a; echo b", "ls; pwd"]
+)
+def test_a_chain_with_no_routable_segment_is_untouched(command, tmp_path):
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        ('git log --oneline --grep="a;b" -5', 'rtk git log --oneline --grep="a;b" -5'),
+        ("cargo build --features 'a;b'", "rtk cargo build --features 'a;b'"),
+        ('git log --oneline --grep="fix > bug" -5', 'rtk git log --oneline --grep="fix > bug" -5'),
+    ],
+)
+def test_markers_inside_quotes_are_data_not_shell_syntax(command, expected, tmp_path):
+    """A quoted `;` or `>` is an argument. A raw substring check refused these."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+def test_unbalanced_quotes_stay_untouched(tmp_path):
+    assert _run(_bash('echo "unbalanced; cargo build'), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        (
+            "gh run view --job 1 --log-failed 2>/dev/null | tail -30",
+            "rtk gh run view --job 1 --log-failed 2>/dev/null | tail -30",
+        ),
+        ("cargo clippy 2> /dev/null | tail -5", "rtk cargo clippy 2> /dev/null | tail -5"),
+    ],
+)
+def test_discarding_stderr_is_not_a_file_redirect(command, expected, tmp_path):
+    """`2>/dev/null` discards stderr; it does not send OUTPUT to a file."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
 
 
 @pytest.mark.parametrize(

@@ -28,7 +28,7 @@ sees only `Bash`. Claude's native `Read`, `Grep`, and `Glob` never reach it, and
 to use natively. Do not expect this to be the dominant lever; measure it with
 `tokenmeter.py` before believing any number, including this package's.
 
-Fails open: an unparseable payload, a missing rtk, or any exception allows the
+Fails open: an unparsable payload, a missing rtk, or any exception allows the
 command through untouched.
 """
 
@@ -207,18 +207,123 @@ def _bail_early(raw: bytes) -> bool:
 
 
 def _rewrite(command: str) -> str | None:
+    """Rewrite whatever segments of a `;`-separated command are safely routable.
+
+    A `;` chain is a SEQUENCE of independent commands sharing one Bash call, not
+    a data pipeline: `echo "=== A ==="; cargo build | tail -2` runs two unrelated
+    things, and filtering the second cannot affect the first. This is the single
+    biggest blocker in real traffic (649 of 1,043 rtk-filterable commands in one
+    repository's history), so each segment is considered on its own and only the
+    routable ones are rewritten. `&&` and `||` are NOT split here: they carry
+    exit-status control flow between the parts.
+    """
+    if ";" in command:
+        segments = _split_unquoted(command, ";")
+        if segments is None:
+            # Unbalanced quotes, or a `;` that only appears inside a quoted
+            # string: nothing to split, so judge the whole command as one.
+            return _rewrite_segment(command)
+        rewritten_any = False
+        results = []
+        for segment in segments:
+            candidate = _rewrite_segment(segment.strip())
+            if candidate is None:
+                results.append(segment)
+            else:
+                # Preserve the segment's original leading whitespace so the
+                # reassembled command reads the same as the author wrote it.
+                lead = segment[: len(segment) - len(segment.lstrip())]
+                results.append(lead + candidate)
+                rewritten_any = True
+        return ";".join(results) if rewritten_any else None
+    return _rewrite_segment(command)
+
+
+def _has_unquoted(text: str, markers: tuple[str, ...]) -> bool:
+    """Is any marker present outside quotes? Markers may be multi-character."""
+    stripped: list[str] = []
+    quote: str | None = None
+    escaped = False
+    for char in text:
+        if escaped:
+            escaped = False
+            continue
+        if char == "\\":
+            escaped = True
+            continue
+        if quote:
+            if char == quote:
+                quote = None
+            continue
+        if char in ("'", '"'):
+            quote = char
+            continue
+        stripped.append(char)
+    bare = "".join(stripped)
+    return any(marker in bare for marker in markers)
+
+
+def _split_unquoted(text: str, sep: str) -> list[str] | None:
+    """Split on `sep` only where it is OUTSIDE quotes and not backslash-escaped.
+
+    A naive `str.split(";")` corrupts `git log --grep="a;b"` and every `bd note x
+    "step one; step two"`, which real history is full of. Returns None when the
+    separator never occurs unquoted (so there is nothing to split) or when the
+    quoting is unbalanced (so the guard should not guess).
+    """
+    parts: list[str] = []
+    current: list[str] = []
+    quote: str | None = None
+    escaped = False
+    for char in text:
+        if escaped:
+            current.append(char)
+            escaped = False
+            continue
+        if char == "\\":
+            current.append(char)
+            escaped = True
+            continue
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = None
+            continue
+        if char in ("'", '"'):
+            quote = char
+            current.append(char)
+            continue
+        if char == sep:
+            parts.append("".join(current))
+            current = []
+            continue
+        current.append(char)
+    if quote is not None:
+        return None
+    parts.append("".join(current))
+    return parts if len(parts) > 1 else None
+
+
+def _rewrite_segment(command: str) -> str | None:
     """Return the rtk-prefixed command, or None to leave it untouched."""
     import shlex
 
     if command.strip().startswith("rtk "):
         return None  # already routed; never double-wrap
 
-    # `2>&1` is a stderr merge, not a redirection to a file, and it appears on
-    # nearly every real build/test command. Neutralize that exact form before the
-    # redirection check so `cmd 2>&1 | tail -50` is reachable. `&>` is NOT
-    # neutralized: `&> file` redirects both streams to a file, so stripping it
-    # made `cargo clippy &> /tmp/out` look routable when its output goes to disk.
-    probe = command.replace("2>&1", "")
+    # `2>&1` merges stderr into stdout and `2>/dev/null` discards it; neither
+    # sends the command's OUTPUT to a file, and between them they appear on most
+    # real build and test commands. Neutralize both exact forms before the
+    # redirection check, so `cmd 2>&1 | tail -50` and
+    # `gh run view --log-failed 2>/dev/null | tail -30` are reachable.
+    #
+    # `&>` is deliberately NOT neutralized: `&> file` redirects both streams to a
+    # file, so stripping it made `cargo clippy &> /tmp/out` look routable when its
+    # output goes to disk rather than to the model.
+    def _strip_stderr_forms(text: str) -> str:
+        return text.replace("2>&1", "").replace("2>/dev/null", "").replace("2> /dev/null", "")
+
+    probe = _strip_stderr_forms(command)
 
     # `cd <dir> && <cmd>` is the single most common real shape (12,393 of 24,725
     # local Bash calls start with `cd`). The `cd` is not something rtk would
@@ -235,9 +340,12 @@ def _rewrite(command: str) -> str | None:
     if cd_match:
         prefix = cd_match.group(1)
         command = cd_match.group(2).strip()
-        probe = command.replace("2>&1", "")
+        probe = _strip_stderr_forms(command)
 
-    if any(marker in probe for marker in PIPELINE_MARKERS):
+    # Test the markers OUTSIDE quotes only. A quoted `;` or `>` is data, not
+    # shell syntax: `git log --grep="a;b" -5` and `cargo build --features 'a;b'`
+    # were both refused while a raw substring check ran the show.
+    if _has_unquoted(probe, PIPELINE_MARKERS):
         return None
 
     # Split on pipes: rewrite the FIRST stage, keep the rest verbatim, and only

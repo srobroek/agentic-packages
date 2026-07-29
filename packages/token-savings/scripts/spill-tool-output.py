@@ -21,7 +21,7 @@ hook manifest only, and the Codex manifest omits it rather than installing a
 hook that would silently do nothing.
 
 Deliberately conservative. Output under the threshold is untouched, a failing
-command is never truncated (the agent needs the error), and anything unparseable
+command is never truncated (the agent needs the error), and anything unparsable
 fails open. Spill files are pruned by age and count so this cannot fill a disk.
 """
 
