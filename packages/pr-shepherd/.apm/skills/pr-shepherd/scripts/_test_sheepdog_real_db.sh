@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
-readonly CONTRACT="$SCRIPT_DIR/landing-contract.sh"
+readonly CONTRACT="$SCRIPT_DIR/landing-contract.py"
 readonly REPO="owner/repo"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/pr-shepherd-sheepdog.XXXXXX")"
 readonly TMP_ROOT
