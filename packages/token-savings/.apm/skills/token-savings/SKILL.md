@@ -71,15 +71,15 @@ NOT Report a percentage without the run count and the separation verdict.
 
 ## Structure map
 
-`scripts/../../../scripts/repomix-map.py` maintains a directory-tree map from
-`repomix --no-files`, refreshed when HEAD moves and injected at session start
-within a token budget.
+`repomix-map.py` maintains a directory-tree map from `repomix --no-files`,
+refreshed when HEAD moves and injected at session AND subagent start within a
+token budget. Measured on a 4,107-file repository: 31,299 tokens against
+10,365,403 for a full pack of the same tree, a 331x reduction.
 
-Measured on a 4,107-file repository: the map is 31,299 tokens against
-10,365,403 for a full `repomix` pack of the same tree, a 331x reduction.
-`--compress` (Tree-sitter signature extraction) removed only 8% on source files
-and 1.4% repository-wide, because the bulk is test fixtures and cached artifacts
-rather than function bodies.
+MUST Exclude generated output before reaching for `--compress`. An ignore set
+  removed 21.1% and 33.5% of a full pack on two repositories, against
+  `--compress`'s 21%, and losslessly. See
+  [repomix ignores](references/repomix-ignores.md).
 
 DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining. Above it the hook names
   the file instead, because a large repository maps to ~31k tokens and paying
@@ -106,5 +106,4 @@ MUST Measure coverage in BYTES, not in commands routed. Command counts flatter a
 NOT Steer agents toward "more filterable" command shapes to raise that number.
   The ceiling stays under a quarter, and the constraint distorts real work.
 
-MUST Use the map to LOCATE files. It carries no file contents; read or search
-  the file itself once the map says where it is.
+MUST Use the map to LOCATE files, then read or search the file itself.

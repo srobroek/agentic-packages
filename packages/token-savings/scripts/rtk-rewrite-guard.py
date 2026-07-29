@@ -93,6 +93,20 @@ ALLOWED = frozenset(
         # checked to preserve the load-bearing facts. A filter with no local
         # toolchain is NOT added on faith: the verifier SKIPs it, and an
         # unverified entry stays out.
+        # `rg`/`grep` are the LARGEST single source of unrouted output bytes (21%
+        # of them, measured across 21 repositories), so they are worth routing
+        # despite truncating. rtk showed 25 of 400 matches, announced `+375 more`,
+        # and named a tee log holding all 400 -- lossy but recoverable, which is
+        # the right trade for a model READING matches.
+        #
+        # The danger is a COUNT. `rg -n match | wc -l` returns 400 natively and 28
+        # through rtk, because the truncation notice becomes data. An explicit
+        # `rg -c` is safe (rtk passes 400 through correctly), but the piped form is
+        # not, and the guard cannot see intent. So: count flags are refused via
+        # AMBIGUOUS_MACHINE_FLAGS below, and a pipe is only allowed into a pure
+        # truncator, which is already the rule for every other command.
+        ("rg", None),
+        ("grep", None),
         ("go", "test"),
         ("go", "build"),
         ("go", "vet"),
@@ -138,7 +152,7 @@ ALLOWED = frozenset(
 #   grep / rg      truncates to ~25 lines; fatal for a count
 #   wc             the output IS the number
 #   curl           passed an 89 KB HTML page through unchanged
-BLOCKED_BINARIES = frozenset({"golangci-lint", "find", "grep", "rg", "wc", "curl"})
+BLOCKED_BINARIES = frozenset({"golangci-lint", "find", "wc", "curl"})
 
 # Any of these in the command means something downstream consumes the bytes, so
 # a filtered rendering could change a result rather than just shorten it.
@@ -186,6 +200,11 @@ MACHINE_FLAGS = (
 # "machine-quiet" to git and "less verbose" to pytest; `-c` is "count" to grep
 # and "config" to git. Keyed by the binary, checked only for that binary.
 AMBIGUOUS_MACHINE_FLAGS = {
+    # A count is the whole output, so filtering it is either pointless or wrong.
+    # `-l`/`--files-with-matches` is a short file list that rtk passes through
+    # unchanged, so there is nothing to gain and a parser may consume it.
+    "rg": ("-c", "--count", "--count-matches", "-l", "--files-with-matches", "--json"),
+    "grep": ("-c", "--count", "-l", "--files-with-matches"),
     "git": ("-q", "--quiet", "-c"),
     "gh": ("-q", "--jq", "-t", "--template"),
     "docker": ("-q", "--quiet"),

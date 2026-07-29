@@ -164,6 +164,34 @@ def test_other_language_toolchains_are_routed(command, tmp_path):
 
 
 @pytest.mark.parametrize(
+    "command,expected",
+    [
+        ("rg -n pattern src/", "rtk rg -n pattern src/"),
+        ("rg pattern", "rtk rg pattern"),
+        ("rg -n pattern | tail -20", "rtk rg -n pattern | tail -20"),
+        ("grep -rn foo .", "rtk grep -rn foo ."),
+    ],
+)
+def test_search_is_routed_because_it_is_the_largest_byte_source(command, expected, tmp_path):
+    """`rg`/`grep` are 21% of all unrouted output bytes across 21 repositories,
+    the single largest source. rtk truncates (25 of 400 matches) but ANNOUNCES it
+    and names a tee log holding all 400, which is the right trade for a model
+    reading matches. Routing them took overall coverage from 3.5% to 7.5%."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["rg -c pattern", "rg --count pattern", "rg -l pattern", "rg -n pattern | wc -l"],
+)
+def test_a_search_count_is_never_routed(command, tmp_path):
+    """The failure mode: `rg -n match | wc -l` is 400 natively and 28 through rtk,
+    because the `+375 more` notice becomes data. An explicit `rg -c` happens to be
+    safe, but the guard cannot see intent, so every count shape is refused."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
     "command", ["golangci-lint run", "golangci-lint run ./...", "curl -s https://x.test"]
 )
 def test_blocked_binaries_are_refused_even_though_rtk_offers_them(command, tmp_path):
@@ -208,9 +236,12 @@ def test_absolute_paths_resolve_to_the_allowlisted_binary(tmp_path):
         "git log --oneline --quiet",
         # Single-token output: nothing to save, always parsed.
         "git rev-parse HEAD",
-        # rtk grep truncates to ~25 lines; fatal for a count.
+        # A count is the whole output; rtk truncating it would be wrong.
         "grep -c foo x",
-        "rg -n pattern",
+        "rg -c pattern",
+        "rg --count pattern",
+        "rg -l pattern",
+        "rg --json pattern",
         # The output IS a count.
         "wc -l file",
         # Not on the allowlist at all.

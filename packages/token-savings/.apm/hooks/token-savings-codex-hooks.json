@@ -35,6 +35,18 @@
           }
         ]
       }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py inject",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }

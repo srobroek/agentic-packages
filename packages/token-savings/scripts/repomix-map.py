@@ -70,6 +70,75 @@ BYTES_PER_TOKEN = 3.5
 
 MAP_BASENAME = "repomix-map.xml"
 
+# BOTH an allowlist and a blocklist, because measured against a full pack they cut
+# different things and compose better than either alone:
+#
+#   default                        1,299,332 / 10,365,403 tokens
+#   --ignore only                       -21.1% / -33.5%
+#   --include code+md only              -14.9% / -28.3%
+#   --include code only                 -61.2% / -59.0%   (drops ALL prose)
+#   --include + --ignore                -29.2% / -39.7%   <- shipped
+#
+# `--include` alone on code extensions is the biggest single cut, but it discards
+# every README, spec, and ADR -- the files that explain WHY the code is shaped as
+# it is, which is most of what a fresh session needs. So the allowlist admits
+# prose and config, and the blocklist then removes the generated and duplicated
+# members of those same extensions (a lockfile is `.yaml`, a CHANGELOG is `.md`).
+#
+# An allowlist alone would also silently drop a language nobody thought to list.
+# Pairing them means a new extension shows up as noise to be measured, rather than
+# as a file that vanished.
+#
+# See `.apm/skills/token-savings/references/repomix-ignores.md` for the numbers.
+DEFAULT_INCLUDES = ",".join(
+    (
+        "**/*.rs",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.py",
+        "**/*.go",
+        "**/*.sh",
+        "**/*.toml",
+        "**/*.sql",
+        "**/*.md",
+        "**/*.yaml",
+        "**/*.yml",
+    )
+)
+DEFAULT_IGNORES = ",".join(
+    (
+        "**/CHANGELOG.md",
+        "**/*.lock",
+        "**/*.lock.yaml",
+        "**/*.lock.json",
+        "**/pnpm-lock.yaml",
+        "**/Cargo.lock",
+        "**/uv.lock",
+        "**/package-lock.json",
+        "**/poetry.lock",
+        "**/.claude-plugin/marketplace.json",
+        "**/.agents/plugins/marketplace.json",
+        "**/assets/seed/**",
+        "**/fixtures/**",
+        "**/testdata/**",
+        "**/*.snap",
+        "**/messages/*.json",
+        "**/locales/**",
+        "**/i18n/**",
+        "**/bindings/index.ts",
+        "**/*.generated.*",
+        "**/generated/**",
+        "**/.agents/skills/**",
+        "**/.specify/extensions/**",
+        "**/local-*.txt",
+        "**/*.min.js",
+        "**/*.min.css",
+        "**/*.map",
+    )
+)
+
 
 def repo_root(start: str) -> str | None:
     """Walk parents for a `.git` entry, in process.
@@ -218,6 +287,10 @@ def refresh(root: str, force: bool = False) -> int:
                 "xml",
                 "--no-files",
                 "--no-file-summary",
+                "--include",
+                DEFAULT_INCLUDES,
+                "--ignore",
+                DEFAULT_IGNORES,
                 "--output",
                 map_path,
                 root,
@@ -242,8 +315,17 @@ def refresh(root: str, force: bool = False) -> int:
     return 0
 
 
-def inject(root: str, budget: int) -> int:
-    """Emit SessionStart additionalContext describing the map."""
+def inject(root: str, budget: int, event: str = "SessionStart") -> int:
+    """Emit additionalContext describing the map.
+
+    `event` must name the hook that invoked this, because the payload echoes it
+    back in `hookEventName` and a mismatch is silently ignored. The same entry
+    point serves `SessionStart` and `SubagentStart`: a SUBAGENT does not inherit
+    the parent's session context, so without the SubagentStart binding it never
+    learns the map exists. Verified by asking a subagent a "where is X" question
+    with no steering -- it answered with five `ls`/`rg` calls and reported seeing
+    "no mention anywhere in my context of a pre-built repository structure map".
+    """
     import json
     import os
 
@@ -283,7 +365,7 @@ def inject(root: str, budget: int) -> int:
         json.dumps(
             {
                 "hookSpecificOutput": {
-                    "hookEventName": "SessionStart",
+                    "hookEventName": event,
                     "additionalContext": context,
                 }
             }
@@ -360,7 +442,22 @@ def main(argv: list[str]) -> int:
     env_budget = os.environ.get("TOKEN_SAVINGS_MAP_BUDGET")
     if env_budget and env_budget.isdigit():
         budget = int(env_budget)
-    return inject(root, budget)
+
+    # Echo back whichever event actually fired. The payload carries it, so trust
+    # that over the argv, and fall back to SessionStart for a manual run.
+    event = "SessionStart"
+    if raw.strip():
+        import json as _json
+
+        try:
+            payload = _json.loads(raw)
+            if isinstance(payload, dict):
+                name = payload.get("hook_event_name")
+                if isinstance(name, str) and name:
+                    event = name
+        except (ValueError, TypeError):
+            pass
+    return inject(root, budget, event)
 
 
 if __name__ == "__main__":
