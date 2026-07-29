@@ -10,3 +10,14 @@ repos:
         language: system
         files: ^packages/[^/]+/\.apm/instructions/.*\.instructions\.md$
         exclude: /apm_modules/
+
+      - id: check-twin-scripts
+        name: duplicated scripts stay byte-identical
+        description: >-
+          Two skills that need the same capability duplicate it, because
+          constitution I forbids a runtime reach across packages. The
+          duplication is deliberate; drift between the copies is a defect.
+        entry: python3 .apm/scripts/check-twin-scripts.py
+        language: system
+        pass_filenames: false
+        files: ^packages/(whats-new|dep-update)/

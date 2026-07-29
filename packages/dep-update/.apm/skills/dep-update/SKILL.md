@@ -13,7 +13,7 @@ TRIGGER
 
 ## Workflow
 
-1. `scripts/detect.sh [dir]` -- enumerates deps as `ecosystem<TAB>name<TAB>version`.
+1. `scripts/detect.py [dir]` -- enumerates deps as `ecosystem<TAB>name<TAB>version`.
 2. If `.project-setup/answers.toml` exists, read the baseline pins from
    `[module.lang-python]` / `[module.lang-ts]` (keys in `references/recipes.md`).
    Absent file or section → continue silently on lockfile data alone.
@@ -85,7 +85,7 @@ Guard each with `command -v`; missing → report "scanner not available:
 
 | Script | Purpose | Exit |
 |--------|---------|------|
-| `scripts/detect.sh [dir]` | Enumerate deps and pinned versions, no network. | 0 |
+| `scripts/detect.py [dir]` | Enumerate deps and pinned versions, no network. | 0 |
 | `scripts/research.sh [dir]` | Query PyPI/npm, classify, emit JSON-lines. Per-dep `status`: OK, CURRENT, UNRESOLVABLE (404/auth/network -- skill continues), DISCONFIRMED (all PyPI files yanked). `DEP_UPDATE_FIXTURE_DIR` stubs the registry. | 0 |
 | `scripts/apply.sh <eco> <name> <ver> [dir]` | Apply one bump via the package manager, then verify the manifest. Absent package manager → prints the manual command. | 0 applied/skipped · 1 post-apply version mismatch · 2 bad arguments |
 

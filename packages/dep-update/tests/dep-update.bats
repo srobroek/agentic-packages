@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 #
 # Tests for dep-update's helper scripts.
-# Portability floor: bash 3.2.57 + BSD sed/grep/awk (stock macOS).
+# detect/research/apply are Python; the suite drives them as shipped.
 # Run with: bats packages/dep-update/tests/dep-update.bats
 #
 # Strategy:
-#   - detect.sh:   fixture dirs in BATS_TEST_TMPDIR (no network).
+#   - detect.py:   fixture dirs in BATS_TEST_TMPDIR (no network).
 #   - research.sh: DEP_UPDATE_FIXTURE_DIR points to JSON fixture files.
 #   - apply.sh:    stub package manager binaries on PATH; DEP_UPDATE_PKG_MANAGER.
 #   - apm.yml:     parsed with python3 + tomllib/pyyaml (or grep fallback).
@@ -46,19 +46,19 @@ run_script() {
   run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/${script}" "$@"
 }
 
-# Run detect.sh against $PROJ.
+# Run detect.py against $PROJ.
 run_detect() {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/detect.sh" "$PROJ"
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/detect.py" "$PROJ"
 }
 
-# Run research.sh with fixture dir against $PROJ (detect.sh runs internally).
+# Run research.sh with fixture dir against $PROJ (detect.py runs internally).
 run_research() {
   run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_FIXTURE_DIR="$FIXTURES" \
     /bin/bash "${SCRIPTS}/research.sh" "$@"
 }
 
 # Run research.sh with fixture dir, reading dep lines from a file via stdin.
-# Sets RESEARCH_USE_STDIN=1 so the script reads from stdin instead of detect.sh.
+# Sets RESEARCH_USE_STDIN=1 so the script reads from stdin instead of detect.py.
 # Usage: run_research_stdin <dep_file> [project-dir]
 run_research_stdin() {
   local dep_file="$1"
@@ -151,13 +151,13 @@ PY
 }
 
 # ============================================================================
-# detect.sh tests
+# detect.py tests
 # ============================================================================
 
 # --- portability -----------------------------------------------------------
 
-@test "detect.sh parses under /bin/bash (bash 3.2 compatibility)" {
-  run /bin/bash -n "${SCRIPTS}/detect.sh"
+@test "detect.py parses as valid Python" {
+  run python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "${SCRIPTS}/detect.py"
   [ "$status" -eq 0 ]
 }
 
@@ -233,7 +233,7 @@ EOF
 # --- non-existent dir ------------------------------------------------------
 
 @test "detect: non-existent directory exits 2" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/detect.sh" "${PROJ}/does-not-exist"
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/detect.py" "${PROJ}/does-not-exist"
   [ "$status" -eq 2 ]
 }
 
@@ -475,7 +475,7 @@ EOF
 # SC-009: NO write to .project-setup/ under any path
 # ============================================================================
 
-@test "SC-009: detect.sh never writes to .project-setup/" {
+@test "SC-009: detect.py never writes to .project-setup/" {
   cat >"${PROJ}/uv.lock" <<'EOF'
 [[package]]
 name = "fastapi"

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# dep-update/research.sh: for each dependency from detect.sh, query its
+# dep-update/research.sh: for each dependency from detect.py, query its
 # registry for the current latest version and classify the potential bump.
 #
 # Portability floor: bash 3.2.57 + BSD sed/grep/awk (stock macOS). Registry
 # queries use an embedded python3 block (stdlib urllib+json only, no third-
 # party deps). No runner SDK import.
 #
-# Input: reads "ecosystem<TAB>name<TAB>version" lines from stdin (detect.sh
-# output), or a project dir as the first argument (detect.sh is run internally).
+# Input: reads "ecosystem<TAB>name<TAB>version" lines from stdin (detect.py
+# output), or a project dir as the first argument (detect.py is run internally).
 #
 # Output: one JSON-lines record per dependency on stdout:
 #   {"ecosystem":"pypi","name":"requests","installed":"2.28.0",
@@ -33,7 +33,7 @@
 # approach.
 #
 # Usage: research.sh [project-dir]
-#   With no stdin (terminal), runs detect.sh against project-dir first.
+#   With no stdin (terminal), runs detect.py against project-dir first.
 
 set -uo pipefail
 
@@ -44,7 +44,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # --- collect deps into a temp file -----------------------------------------
 # Writes dep lines (ecosystem<TAB>name<TAB>version) to a temp file.
 # If RESEARCH_USE_STDIN=1 is set, reads from stdin (for tests / piped use).
-# Otherwise runs detect.sh against the target dir.
+# Otherwise runs detect.py against the target dir.
 
 collect_deps() {
   local target="${1:-.}"
@@ -53,7 +53,7 @@ collect_deps() {
   if [ "${RESEARCH_USE_STDIN:-0}" = "1" ]; then
     cat >"$tmpfile"
   else
-    /bin/bash "${SCRIPT_DIR}/detect.sh" "$target" 2>/dev/null >"$tmpfile"
+    python3 "${SCRIPT_DIR}/detect.py" "$target" 2>/dev/null >"$tmpfile"
   fi
   printf '%s' "$tmpfile"
 }
