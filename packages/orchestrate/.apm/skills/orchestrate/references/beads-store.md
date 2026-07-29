@@ -117,6 +117,24 @@ rather than typing it.
 finding. `related` stores as a distinct string from `relates-to` with no documented
 meaning; leave it alone.
 
+## Duplicates
+
+Two beads that are the same work get `bd duplicate <id> --of <canonical>`, never a
+hand-built edge. The command closes the duplicate and leaves the canonical open,
+which is the outcome a reader needs; a `relates-to` edge would leave both open and
+still competing for a claim.
+
+```text
+bd duplicate <duplicate-id> --of <canonical-id>
+bd update <canonical-id> --append-notes "DUPLICATE <duplicate-id>: <what matched>"
+```
+
+The stored edge type is `duplicates`, and `bd show` renders it as `DEPENDS ON` on
+the duplicate and `BLOCKS` on the canonical, so the closed status carries the
+meaning rather than the heading. Note on the canonical, because that is the bead
+that survives. Search first: `bd search` or `bd duplicates` surfaces candidates, and
+closing the wrong side loses the bead a reader will look for.
+
 An edge carries no annotation. `bd dep add` has no note field, and `note`,
 `reason`, and `metadata` keys in the `--file` JSONL are accepted and then dropped,
 so an annotated bulk write reports success while storing nothing. Each edge's

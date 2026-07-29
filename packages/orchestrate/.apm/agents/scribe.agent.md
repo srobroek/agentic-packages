@@ -125,6 +125,11 @@ overwriting. Use `notes` rather than a comment: the reasoning is a durable prope
 of the bead, not a timestamped remark in a thread. One line per edge on the
 originating side only, because the edge already renders from both.
 
+Two beads that turn out to be the same work are the one case you do NOT record
+yourself. `bd duplicate <id> --of <canonical>` closes the duplicate, and closing a
+work node is outside your contract however obvious the match looks. Name both ids
+and the matching evidence in your report and leave the call to the orchestrator.
+
 ## Output
 
 Begin your final reply with
