@@ -171,7 +171,7 @@ def test_design_and_notes_render_as_more_information():
     assert out.count("## More Information") == 1
 
 
-def test_absent_sections_are_omitted_rather_than_placeheld():
+def test_absent_sections_are_omitted_not_given_placeholders():
     # A placeholder reads as an answered question.
     out = mod.render_one(bead(description="## Decision\nX."), 1)
     assert "## Considered Options" not in out
