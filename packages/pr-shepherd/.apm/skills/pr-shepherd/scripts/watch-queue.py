@@ -358,7 +358,7 @@ def run() -> int:
     try:
         prs = json.loads(raw or "[]")
     except ValueError as exc:
-        die(f"ERROR: gh returned unparseable PR JSON: {exc}")
+        die(f"ERROR: gh returned unparsable PR JSON: {exc}")
     if not isinstance(prs, list):
         die("ERROR: gh returned a non-list PR payload")
 

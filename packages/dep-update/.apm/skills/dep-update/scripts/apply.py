@@ -270,7 +270,15 @@ def main(argv: list[str]) -> int:
     target = argv[4] if len(argv) > 4 else "."
     root = Path(target)
 
-    if not root.is_dir():
+    # is_dir() RAISES ENAMETOOLONG on Linux for an over-long path, while macOS
+    # returns False. CI caught this where a local run could not: the uncaught
+    # OSError left main() with no exit code of its own. Treat anything the
+    # filesystem cannot name as "not a directory", which is what it is.
+    try:
+        usable = root.is_dir()
+    except (OSError, ValueError):
+        usable = False
+    if not usable:
         error(f"apply.py: '{target}' is not a directory")
         return 2
 

@@ -1,6 +1,33 @@
+# Local mirror of the CI gates cheap enough to run per commit.
+#
+# Every hook here also runs in CI. The point is the boundary, not the coverage: a
+# finding at commit time costs seconds, and the same finding in CI costs a round
+# trip plus a fixup commit. agentic-lint has now cost that twice on this
+# repository -- once for a description two words over its cap.
+#
+# Deliberately NOT here: `apm run build-artifacts` and its staleness diff
+# (regeneration touches 100+ files), the bats and pytest suites
+# (_test_landing_contract.sh alone is ~2 minutes), and anything needing network.
+#
+# `files:` patterns keep these fast. A hook that reads the whole tree still only
+# fires when a file it cares about is staged.
 repos:
   - repo: local
     hooks:
+      - id: agentic-lint
+        name: agentic markdown lint
+        description: >-
+          The write-agentic linter over changed agent, skill, steering, and
+          context markdown: description word caps, hedges, missing output
+          contracts, oversized context files. Runs in 0.04s per file and takes
+          the staged paths directly, so it is the cheapest CI gate to pull
+          forward. Template references are placeholder-full meta-documents and
+          are excluded, matching the CI job.
+        entry: python3 packages/write-agentic/.apm/skills/write-agentic/scripts/lint.py
+        language: system
+        files: ^packages/[^/]+/\.apm/.*\.md$
+        exclude: (/apm_modules/|/references/template-)
+
       - id: check-instructions-apply-to
         name: instructions declare applyTo
         description: >-
@@ -21,3 +48,52 @@ repos:
         language: system
         pass_filenames: false
         files: ^packages/(whats-new|dep-update)/
+
+      - id: check-hook-contract
+        name: hook scripts match their manifests
+        description: >-
+          A tool surface the script branches on must appear in a matcher that
+          routes it, a target:all script must emit only fields both runtimes
+          accept, no script may emit permissionDecision "ask", and every hook
+          script ships tests. 0.28s.
+        entry: python3 .apm/scripts/check-hook-contract.py
+        language: system
+        pass_filenames: false
+        files: ^packages/[^/]+/(\.apm/hooks/.*\.json|scripts/.*\.py|tests/.*)$
+        exclude: /apm_modules/
+
+      - id: check-script-invocation
+        name: bare-path invocations target an executable
+        description: >-
+          apm deploys the source mode on first write and skips content-identical
+          files later, so a mode-only fix never reaches an existing install. Any
+          bare-path invocation must target a committed-executable file. 0.16s.
+        entry: python3 .apm/scripts/check-script-invocation.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/(\.apm/hooks/.*\.json|\.apm/skills/.*|scripts/.*)|templates/.*)$
+        exclude: /apm_modules/
+
+      - id: audit-codex-config
+        name: Codex manifests and compatibility table agree
+        description: >-
+          docs/codex-compatibility.md is hand-maintained and drifts from the
+          generated manifests silently. This fails on the drift, which has
+          happened twice while removing packages. 0.19s.
+        entry: python3 .apm/scripts/audit-codex-config.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/(apm\.yml|\.apm/hooks/.*\.json)|docs/codex-compatibility\.md)$
+        exclude: /apm_modules/
+
+      - id: check-release-baselines
+        name: release baselines match published tags
+        description: >-
+          A baseline ahead of its tag breaks release-please, and a brand-new
+          package needs the 0.0.0 first-release sentinel. 2.8s, the slowest hook
+          here, so it is scoped to version and manifest changes only.
+        entry: python3 .apm/scripts/check-release-baselines.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/apm\.yml|\.release-please-manifest\.json|release-please-config\.json)$
+        exclude: /apm_modules/

@@ -185,7 +185,7 @@ def test_git_merge_abort_is_silent(rp_dir: Path) -> None:
 
 def test_detect_json_is_valid_json(rp_dir: Path) -> None:
     """DEFECT: `grep -Ec` printed its own `0` AND the `|| printf '0'` fallback
-    fired, so an empty manifest emitted `"package_count":0\\n0` -- unparseable.
+    fired, so an empty manifest emitted `"package_count":0\\n0` -- unparsable.
     """
     (rp_dir / ".release-please-manifest.json").write_text("{}")
     result = run_detect("--json", str(rp_dir))

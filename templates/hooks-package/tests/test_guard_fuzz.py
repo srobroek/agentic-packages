@@ -231,7 +231,7 @@ def test_nesting_within_the_bound_is_judged_at_every_level():
         assert guard.in_scope(nested), nested
 
 
-# --- trailing quotes and unparseable input -----------------------------------
+# --- trailing quotes and unparsable input -----------------------------------
 
 
 @pytest.mark.parametrize(
@@ -246,7 +246,7 @@ def test_nesting_within_the_bound_is_judged_at_every_level():
         "'",
     ],
 )
-def test_an_unparseable_command_fails_open(command: str):
+def test_an_unparsable_command_fails_open(command: str):
     """Not shell, so there is nothing to judge. A guard that guessed here would
     deny on a quoting typo, and a guard that crashed would wedge the agent."""
     assert guard.in_scope(command) is False

@@ -424,7 +424,7 @@ def test_a_real_remote_url_parses_to_owner_repo(url: str, expected: str):
 
 
 @pytest.mark.parametrize("url", ["", "   ", "https://github.com", "onlyone", "/", "://"])
-def test_an_unparseable_remote_fails_closed(url: str):
+def test_an_unparsable_remote_fails_closed(url: str):
     with pytest.raises(wq.Failure):
         wq.parse_remote(url)
 

@@ -125,7 +125,7 @@ def test_package_json_peer_and_optional_deps(tmp_path):
 
 
 def test_malformed_package_json_fails_open(tmp_path):
-    """An unparseable manifest yields no rows and still exits 0."""
+    """An unparsable manifest yields no rows and still exits 0."""
     (tmp_path / "package.json").write_text("{not json")
     (tmp_path / "requirements.txt").write_text("requests==2.31.0\n")
     result = run_cli(tmp_path)
