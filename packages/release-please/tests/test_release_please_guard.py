@@ -17,14 +17,15 @@ from pathlib import Path
 import pytest
 
 GUARD = Path(__file__).resolve().parent.parent / "scripts" / "release-please-guard.py"
-DETECT = (
-    Path(__file__).resolve().parent.parent
-    / ".apm"
-    / "skills"
-    / "release-please"
-    / "scripts"
-    / "detect-release-please.sh"
-)
+
+
+def run_detect(*args: str) -> subprocess.CompletedProcess:
+    """The folded `detect` subcommand, invoked as the skill's step-0 gate does."""
+    return subprocess.run(
+        [sys.executable, str(GUARD), "detect", *args],
+        capture_output=True,
+        text=True,
+    )
 
 
 def _init_repo(path: Path) -> None:
@@ -84,25 +85,14 @@ def test_parses() -> None:
     subprocess.run([sys.executable, "-c", f"compile(open({str(GUARD)!r}).read(), 'g', 'exec')"], check=True)
 
 
-def test_detect_script_still_parses_under_bin_bash() -> None:
-    # detect-release-please.sh stays a shell script -- out of this port's scope --
-    # but the guard depends on it, so its own bats parse-check is preserved here.
-    result = subprocess.run(["/bin/bash", "-n", str(DETECT)], capture_output=True)
-    assert result.returncode == 0
-
-
 def test_detect_reports_present_on_a_release_please_repo(rp_dir: Path) -> None:
-    result = subprocess.run(
-        ["/bin/bash", str(DETECT), str(rp_dir)], capture_output=True, text=True
-    )
+    result = run_detect(str(rp_dir))
     assert result.returncode == 0
     assert "present=true" in result.stdout
 
 
 def test_detect_reports_absent_on_a_plain_repo(plain_dir: Path) -> None:
-    result = subprocess.run(
-        ["/bin/bash", str(DETECT), str(plain_dir)], capture_output=True, text=True
-    )
+    result = run_detect(str(plain_dir))
     assert result.returncode == 1
     assert "present=false" in result.stdout
 
@@ -185,3 +175,176 @@ def test_git_merge_abort_is_silent(rp_dir: Path) -> None:
     code, output = run_guard("git merge --abort", rp_dir)
     assert code == 0
     assert not context(output)
+
+
+# --- detect: config facts ---------------------------------------------------
+#
+# The detector was a separate shell script parsing its own JSON with `grep -E`.
+# These cases pin the three defects that parsing carried.
+
+
+def test_detect_json_is_valid_json(rp_dir: Path) -> None:
+    """DEFECT: `grep -Ec` printed its own `0` AND the `|| printf '0'` fallback
+    fired, so an empty manifest emitted `"package_count":0\\n0` -- unparsable.
+    """
+    (rp_dir / ".release-please-manifest.json").write_text("{}")
+    result = run_detect("--json", str(rp_dir))
+    assert json.loads(result.stdout)["package_count"] == 0
+
+
+def test_detect_counts_keys_not_lines_in_a_minified_manifest(rp_dir: Path) -> None:
+    """DEFECT: `grep -Ec '"[^"]+"[[:space:]]*:'` counted LINES holding a key, so
+    a minified three-package manifest reported 1.
+    """
+    (rp_dir / ".release-please-manifest.json").write_text(
+        '{"a":"1.0.0","b":"2.0.0","c":"3.0.0"}'
+    )
+    result = run_detect("--json", str(rp_dir))
+    assert json.loads(result.stdout)["package_count"] == 3
+
+
+def test_detect_counts_a_pretty_printed_manifest(rp_dir: Path) -> None:
+    (rp_dir / ".release-please-manifest.json").write_text(
+        json.dumps({"a": "1.0.0", "b": "2.0.0"}, indent=2)
+    )
+    result = run_detect("--json", str(rp_dir))
+    assert json.loads(result.stdout)["package_count"] == 2
+
+
+def test_detect_ignores_a_per_package_flag_override(rp_dir: Path) -> None:
+    """DEFECT: the flag pattern matched ANYWHERE in the file, so a per-package
+    `separate-pull-requests` reported itself as the top-level value.
+    """
+    (rp_dir / "release-please-config.json").write_text(
+        json.dumps(
+            {
+                "separate-pull-requests": False,
+                "packages": {"pkg-a": {"separate-pull-requests": True}},
+            }
+        )
+    )
+    result = run_detect("--json", str(rp_dir))
+    assert json.loads(result.stdout)["separate_pull_requests"] == "false"
+
+
+def test_detect_reports_unknown_for_an_unset_flag(rp_dir: Path) -> None:
+    result = run_detect("--json", str(rp_dir))
+    facts = json.loads(result.stdout)
+    assert facts["separate_pull_requests"] == "unknown"
+    assert facts["include_component_in_tag"] == "unknown"
+    assert facts["tag_separator"] == "unknown"
+
+
+def test_detect_reports_top_level_flags_and_separator(rp_dir: Path) -> None:
+    (rp_dir / "release-please-config.json").write_text(
+        json.dumps(
+            {
+                "separate-pull-requests": True,
+                "include-component-in-tag": False,
+                "tag-separator": "--",
+                "packages": {".": {}},
+            }
+        )
+    )
+    facts = json.loads(run_detect("--json", str(rp_dir)).stdout)
+    assert facts["separate_pull_requests"] == "true"
+    assert facts["include_component_in_tag"] == "false"
+    assert facts["tag_separator"] == "--"
+
+
+def test_detect_on_malformed_config_reports_unknown_rather_than_crashing(
+    rp_dir: Path,
+) -> None:
+    (rp_dir / "release-please-config.json").write_text("{not json")
+    result = run_detect("--json", str(rp_dir))
+    assert result.returncode == 0
+    facts = json.loads(result.stdout)
+    # The file EXISTS, so the repo is still managed; only its values are unknown.
+    assert facts["present"] is True
+    assert facts["separate_pull_requests"] == "unknown"
+
+
+# --- detect: mode classification --------------------------------------------
+
+
+def test_detect_mode_manifest(rp_dir: Path) -> None:
+    assert json.loads(run_detect("--json", str(rp_dir)).stdout)["mode"] == "manifest"
+
+
+def test_detect_mode_config_only(rp_dir: Path) -> None:
+    (rp_dir / ".release-please-manifest.json").unlink()
+    facts = json.loads(run_detect("--json", str(rp_dir)).stdout)
+    assert facts["mode"] == "config-only"
+    assert facts["package_count"] == 0
+
+
+def test_detect_mode_inline_action_from_a_workflow(plain_dir: Path) -> None:
+    workflows = plain_dir / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "release.yml").write_text(
+        "jobs:\n  r:\n    steps:\n      - uses: googleapis/release-please-action@v4\n"
+    )
+    facts = json.loads(run_detect("--json", str(plain_dir)).stdout)
+    assert facts["mode"] == "inline-action"
+    assert facts["present"] is True
+    assert facts["workflow_files"] == ".github/workflows/release.yml"
+
+
+def test_detect_mode_none_on_a_plain_repo(plain_dir: Path) -> None:
+    facts = json.loads(run_detect("--json", str(plain_dir)).stdout)
+    assert facts["mode"] == "none"
+    assert facts["present"] is False
+
+
+def test_detect_ignores_a_workflow_without_the_action(plain_dir: Path) -> None:
+    workflows = plain_dir / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text("jobs:\n  b:\n    steps:\n      - run: true\n")
+    facts = json.loads(run_detect("--json", str(plain_dir)).stdout)
+    assert facts["workflow_files"] == ""
+    assert facts["present"] is False
+
+
+def test_detect_accepts_the_legacy_config_name(plain_dir: Path) -> None:
+    (plain_dir / ".release-please-config.json").write_text('{"packages":{".":{}}}')
+    facts = json.loads(run_detect("--json", str(plain_dir)).stdout)
+    assert facts["present"] is True
+    assert facts["config_file"].endswith(".release-please-config.json")
+
+
+# --- detect: CLI contract ---------------------------------------------------
+
+
+def test_detect_default_output_is_key_value_lines(rp_dir: Path) -> None:
+    result = run_detect(str(rp_dir))
+    keys = [line.split("=", 1)[0] for line in result.stdout.splitlines()]
+    assert keys == [
+        "present",
+        "mode",
+        "config_file",
+        "manifest_file",
+        "workflow_files",
+        "separate_pull_requests",
+        "include_component_in_tag",
+        "tag_separator",
+        "package_count",
+    ]
+
+
+def test_detect_rejects_an_unknown_option(rp_dir: Path) -> None:
+    assert run_detect("--bogus", str(rp_dir)).returncode == 2
+
+
+def test_detect_rejects_a_second_directory(rp_dir: Path) -> None:
+    assert run_detect(str(rp_dir), str(rp_dir)).returncode == 2
+
+
+def test_detect_rejects_a_missing_directory(tmp_path: Path) -> None:
+    assert run_detect(str(tmp_path / "nope")).returncode == 2
+
+
+def test_unknown_subcommand_exits_two() -> None:
+    result = subprocess.run(
+        [sys.executable, str(GUARD), "bogus"], capture_output=True, text=True
+    )
+    assert result.returncode == 2

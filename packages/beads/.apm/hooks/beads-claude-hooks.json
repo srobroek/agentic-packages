@@ -8,6 +8,11 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-gh-issue-guard.py",
             "statusMessage": "Checking gh issue command against beads policy..."
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.py",
+            "statusMessage": "Staging beads JSONL for commit..."
           }
         ]
       }
@@ -20,6 +25,32 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-subagent-reminder.py",
             "statusMessage": "Injecting beads work contract..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-session.py",
+            "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.py",
+            "statusMessage": "Publishing beads state...",
+            "timeout": 60
           }
         ]
       }

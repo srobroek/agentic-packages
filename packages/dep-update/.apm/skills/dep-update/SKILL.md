@@ -13,11 +13,11 @@ TRIGGER
 
 ## Workflow
 
-1. `scripts/detect.sh [dir]` -- enumerates deps as `ecosystem<TAB>name<TAB>version`.
+1. `scripts/detect.py [dir]` -- enumerates deps as `ecosystem<TAB>name<TAB>version`.
 2. If `.project-setup/answers.toml` exists, read the baseline pins from
    `[module.lang-python]` / `[module.lang-ts]` (keys in `references/recipes.md`).
    Absent file or section → continue silently on lockfile data alone.
-3. `scripts/research.sh [dir]` -- queries PyPI/npm, classifies each bump, emits
+3. `scripts/research.py [dir]` -- queries PyPI/npm, classifies each bump, emits
    JSON-lines. For rust and go, use the endpoints in `references/recipes.md`.
 4. Run the CVE scanners below.
 5. For MINOR-CHECK and MAJOR-ADVISORY, fetch changelog prose in the order given
@@ -50,7 +50,7 @@ name: old → new (PATCH|MINOR)  [cite]
 Apply? [Y/n]
 ```
 
-On `Y`: `scripts/apply.sh <ecosystem> <name> <new_version> [project-dir]`.
+On `Y`: `scripts/apply.py <ecosystem> <name> <new_version> [project-dir]`.
 On `n`: record as skipped and move on.
 
 MUST confirm every bump on its own `[Y/n]` -- no global yes-to-all, no batching.
@@ -85,9 +85,9 @@ Guard each with `command -v`; missing → report "scanner not available:
 
 | Script | Purpose | Exit |
 |--------|---------|------|
-| `scripts/detect.sh [dir]` | Enumerate deps and pinned versions, no network. | 0 |
-| `scripts/research.sh [dir]` | Query PyPI/npm, classify, emit JSON-lines. Per-dep `status`: OK, CURRENT, UNRESOLVABLE (404/auth/network -- skill continues), DISCONFIRMED (all PyPI files yanked). `DEP_UPDATE_FIXTURE_DIR` stubs the registry. | 0 |
-| `scripts/apply.sh <eco> <name> <ver> [dir]` | Apply one bump via the package manager, then verify the manifest. Absent package manager → prints the manual command. | 0 applied/skipped · 1 post-apply version mismatch · 2 bad arguments |
+| `scripts/detect.py [dir]` | Enumerate deps and pinned versions, no network. | 0 |
+| `scripts/research.py [dir]` | Query PyPI/npm, classify, emit JSON-lines. Per-dep `status`: OK, CURRENT, UNRESOLVABLE (404/auth/network -- skill continues), DISCONFIRMED (all PyPI files yanked). `DEP_UPDATE_FIXTURE_DIR` stubs the registry. | 0 |
+| `scripts/apply.py <eco> <name> <ver> [dir]` | Apply one bump via the package manager, then verify the manifest. Absent package manager → prints the manual command. | 0 applied/skipped · 1 post-apply version mismatch · 2 bad arguments |
 
 `references/recipes.md` holds what the scripts do not: the go-proxy and
 crates.io endpoints, the advisory-only apply commands, the changelog fetch
