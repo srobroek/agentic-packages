@@ -1445,7 +1445,14 @@ recover_claim() {
 
   prepared="$(prepare_recovery "$merge_bead" "$key" claim "$subject" "$evidence")"
   IFS='|' read -r phase _ <<<"$prepared"
-  if [[ "$(recovery_phase_rank "$phase")" -lt 2 ]]; then
+  # Assign first, then compare. A command substitution INSIDE [[ ]] discards the
+  # callee's exit, so `recovery_phase_rank`'s `fail` on an unknown phase was thrown
+  # away and `[[ "" -lt 2 ]]` -- which is TRUE in bash 3.2 -- took the mutating
+  # branch. A bare assignment propagates the exit under `set -e`, which is what the
+  # other three call sites already do.
+  local phase_rank
+  phase_rank="$(recovery_phase_rank "$phase")"
+  if [[ $phase_rank -lt 2 ]]; then
     claim="$(bd show "$merge_bead" --json | jq -ce \
       '.[0] | {assignee: (.assignee // ""), status: (.status // ""), labels: (.labels // [])}')" ||
       fail "cannot inspect merge claim"

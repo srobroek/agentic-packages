@@ -56,10 +56,42 @@ NOT Treat `copy-ignored` as a shared writable build directory; it creates a
 DEFAULT Run a dev server with
   `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
   matching `[list] url`.
+MUST Put every project command in the repository's checked-in `.config/wt.toml`,
+  never in the global user config, even when the command itself looks like an
+  invariant. A collaborator cloning the repository has no global config and gets
+  nothing, with no signal naming what is missing; a checked-in file travels with
+  the clone. This holds for the repomix refresh, builds, watchers, dev servers,
+  and database setup alike:
+
+    [post-start]
+    repomix = "repomix"
+
+  `repomix` with no arguments reads the repository's committed
+  `repomix.config.json`, so the hook line stays identical across repositories
+  while each one supplies its own patterns.
+MUST Gitignore the pack and list it in `.worktreeinclude`. Copying beats
+  rebuilding and the pack holds no absolute paths, so a copy is valid in any
+  checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, near-free on a reflink
+  filesystem. `copy-ignored` runs first, so `repomix` only repacks what the branch
+  changed.
+NOT Read the pack whole. It is 6,349,248 tokens on a 4,107-file repository; a
+  `PreToolUse` guard denies the read and names `rg`/`awk` instead.
+NOT Build a graphify graph per worktree. `graphify update` has no output flag and
+  writes `graphify-out/` into the tree: 6.9s and 9.9 MB on a 741-file repository,
+  paid again in every worktree. Gitignore it, list it in `.worktreeinclude` so a
+  new checkout copies it, and query the primary checkout with
+  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which carries the
+  same staleness the primary already tolerates. Rebuild locally only when the
+  branch changed the code being queried.
 
 HOOK OWNERSHIP
 MUST User hooks contain cross-repository invariants only. Repository commands
   belong in checked-in `.config/wt.toml`.
+MUST Resolve the ambiguous case toward the repository. A command can look like an
+  invariant (`repomix`, `just build`, `pnpm install`) because its TEXT is the same
+  everywhere, and still belong in the repository: what makes it work is the
+  committed config beside it. Put it in the global config and a collaborator who
+  clones the repository gets silence, with nothing naming what they lack.
 DEFAULT Repositories encode repeatable setup, validation, dev servers,
   databases, and cleanup in project hooks instead of agent instructions or
   manual runbooks.
