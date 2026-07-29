@@ -29,7 +29,7 @@ includes:
   - .apm/skills/pr-shepherd/scripts/landing-contract.sh
   - .apm/skills/pr-shepherd/scripts/merge-probe.sh
   - .apm/skills/pr-shepherd/scripts/resolve-queue-event.py
-  - .apm/skills/pr-shepherd/scripts/watch-queue.sh
+  - .apm/skills/pr-shepherd/scripts/watch-queue.py
   - .apm/skills/pr-shepherd/scripts/test-fixtures
 category: project-lifecycle
 tags:

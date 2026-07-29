@@ -17,7 +17,7 @@ plain-`curl` variant and say so in the report's Coverage section.
 
 ## Step A -- resolve the current version (no network)
 
-Use `scripts/detect.sh [dir]` to list the repo's declared dependencies as
+Use `scripts/detect.py [dir]` to list the repo's declared dependencies as
 `ecosystem<TAB>name<TAB>version` (offline, no toolchain). Pick your target's row.
 
 For an exact pinned version, the lockfile beats the manifest range:

@@ -17,7 +17,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `beads`, `grilling`^, `grill-with-docs`^ |
 | `data-ai` | Data and AI toolkit | `steering-data` |
-| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit` |
+| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate` |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^ |
 | `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure` |
