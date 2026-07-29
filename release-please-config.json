@@ -356,18 +356,6 @@
         }
       ]
     },
-    "packages/dep-audit": {
-      "release-type": "simple",
-      "component": "dep-audit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/dep-update": {
       "release-type": "simple",
       "component": "dep-update",
@@ -851,18 +839,6 @@
     "packages/mcp-fetcher": {
       "release-type": "simple",
       "component": "mcp-fetcher",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-mempalace": {
-      "release-type": "simple",
-      "component": "mcp-mempalace",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

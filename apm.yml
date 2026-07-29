@@ -246,15 +246,6 @@ marketplace:
         - skill
         - planning
         - analysis
-    - name: dep-audit
-      source: ./packages/dep-audit
-      category: security
-      tags:
-        - skill
-        - security
-        - dependencies
-        - audit
-        - cve
     - name: dep-update
       source: ./packages/dep-update
       category: code-intelligence
@@ -538,13 +529,6 @@ marketplace:
       tags:
         - mcp
         - web
-    - name: mcp-mempalace
-      source: ./packages/mcp-mempalace
-      category: mcp
-      tags:
-        - mcp
-        - memory
-        - cross-session
     - name: mcp-package-version
       source: ./packages/mcp-package-version
       category: mcp

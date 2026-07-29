@@ -207,6 +207,10 @@ if [[ "${PRSHEP_FCFS:-0}" != "1" ]] && command -v bd >/dev/null 2>&1; then
   done < <(bd ready --label pr:merge --json 2>/dev/null | jq -r '.[].metadata.pr // empty')
 fi
 
+# Callers MUST pass the haystack as ${arr[@]+"${arr[@]}"}. Under `set -u` bash 3.2
+# treats "${arr[@]}" on an EMPTY array as an unbound variable and aborts the whole
+# script -- and because the EXIT trap overwrites the status, the caller sees a
+# truncated dashboard and exit 0. That is a silent wrong answer, not a crash.
 contains_number() {
   local needle="$1"; shift
   local n
@@ -224,7 +228,7 @@ fi
 first_ranked_ready=""
 if ((${#ranked_numbers[@]} > 0)); then
   for number in "${ranked_numbers[@]}"; do
-    if contains_number "$number" "${ready_numbers[@]}"; then
+    if contains_number "$number" ${ready_numbers[@]+"${ready_numbers[@]}"}; then
       [[ -n "$first_ranked_ready" ]] || first_ranked_ready="$number"
       printf '   ranked #%s  READY\n' "$number"
     else
@@ -239,7 +243,7 @@ if ((${#ready_numbers[@]} > 0)); then
     if [[ "${PRSHEP_FCFS:-0}" == "1" ]]; then
       # In FCFS mode all ready PRs are valid candidates
       [[ -n "$first_ranked_ready" ]] || first_ranked_ready="$number"
-    elif ((${#ranked_numbers[@]} == 0)) || ! contains_number "$number" "${ranked_numbers[@]}"; then
+    elif ((${#ranked_numbers[@]} == 0)) || ! contains_number "$number" ${ranked_numbers[@]+"${ranked_numbers[@]}"}; then
       unranked_ready+=("$number")
     fi
   done
