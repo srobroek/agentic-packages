@@ -81,10 +81,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "lsp-shell",
     "lsp-terraform",
     "lsp-typescript",
-<<<<<<< HEAD
-    "mcp-mempalace",
-=======
->>>>>>> origin/main
     "orchestrate",
     "release-please",
     "speckit",
@@ -115,11 +111,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/token-savings/.apm/hooks/token-savings-codex-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
-<<<<<<< HEAD
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
-=======
->>>>>>> origin/main
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
     "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
     "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
