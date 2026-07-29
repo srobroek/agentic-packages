@@ -100,16 +100,17 @@ MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
   issue rows only -- no Dolt branches, commit history, or non-issue tables. Reach
   for JSONL only where the native path cannot run.
 DEFAULT Every hook off until the repo opts in, so installing the package changes
-  no existing repo: `beads-sync-hydrate.sh` (SessionStart, pull + JSONL import +
-  report the last push), `beads-sync-stage.sh` (PreToolUse:Bash, stage the JSONL
-  on commit), `beads-sync-push.sh` (SessionEnd on Claude / Stop on Codex, publish), and
-  `beads-maintenance-check.sh` (SessionStart, size report).
+  no existing repo: `beads-sync-session.py` (SessionStart, pull + JSONL import +
+  report the last push + size report), `beads-sync-stage.py` (PreToolUse:Bash,
+  stage the JSONL on commit), and `beads-sync-push.py` (SessionEnd on Claude /
+  Stop on Codex, publish). Hydration and the size report share one script because
+  both bound SessionStart with the same matcher.
 DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
   config" authority the rule above allows. Pull is read-only and cannot lose
   local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
   an unreachable remote does not always fail fast.
 DEFAULT Auto-push with `bd config set custom.dolt-auto-push true`.
-  `beads-sync-push.sh` runs at end of session -- SessionEnd on Claude, Stop on
+  `beads-sync-push.py` runs at end of session -- SessionEnd on Claude, Stop on
   Codex, which has no SessionEnd event -- and DETACHES. Acceptable to automate
   because what moves is task records, not source: a Dolt push writes only
   `refs/dolt/blobstore/`, touches no branch, and is additive.
@@ -141,7 +142,7 @@ MUST Where a direct push does not go through, set `custom.bd-push-command` to a
 GOTCHA Git resolves the remote host BEFORE running pre-push hooks, so an
   unreachable URL yields no answer either way.
 DEFAULT Prefer bd's own `export.auto` (throttled export after every write) over
-  hook-driven export. Two gaps keep `beads-sync-stage.sh` necessary:
+  hook-driven export. Two gaps keep `beads-sync-stage.py` necessary:
   `export.git-add: true` does not actually stage the file, and throttling lets it
   lag the database at the moment of commit.
 GOTCHA `bd config set export.auto true` writes a FLAT `export.auto:` key beside

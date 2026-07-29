@@ -11,7 +11,7 @@
           },
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.sh",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.py",
             "statusMessage": "Staging beads JSONL for commit..."
           }
         ]
@@ -35,15 +35,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-sync-hydrate.sh",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-session.py",
             "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
             "timeout": 90
-          },
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-maintenance-check.sh",
-            "statusMessage": "Checking beads database size...",
-            "timeout": 60
           }
         ]
       }
@@ -54,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.sh",
+            "command": "${PLUGIN_ROOT}/scripts/beads-sync-push.py",
             "statusMessage": "Publishing beads state...",
             "timeout": 60
           }
