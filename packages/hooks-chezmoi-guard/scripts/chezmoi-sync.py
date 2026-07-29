@@ -141,10 +141,24 @@ def is_config_path(relative) -> bool:
     return len(parts) > 1 and parts[0].startswith(".")
 
 
+def under(text: str, directory: str) -> bool:
+    """Whether text names something inside directory, by path segment.
+
+    A bare `startswith` matched a SIBLING whose name merely begins with the
+    directory's: with the source at `~/.local/share/chezmoi`, an edit under
+    `~/.local/share/chezmoi-backup` was read as an edit to the source itself and
+    skipped, so the advisory never fired for it.
+    """
+    if not directory:
+        return False
+    directory = directory.rstrip("/")
+    return text == directory or text.startswith(directory + "/")
+
+
 def is_ignored(path, relative, source: str) -> bool:
     """Whether the path is known-uninteresting."""
     text = str(path)
-    if source and text.startswith(source):
+    if under(text, source):
         return True
     parts = relative.parts
     if not parts:
@@ -218,7 +232,7 @@ def main() -> int:
 
     text = str(path)
     # A direct edit to the source: advise on committing, nothing else.
-    if text.startswith(source) or text.startswith(str(home / ".local/share/chezmoi/")):
+    if under(text, source) or under(text, str(home / ".local/share/chezmoi")):
         advisory = pending_advisory(source)
         if advisory:
             print(advisory)
