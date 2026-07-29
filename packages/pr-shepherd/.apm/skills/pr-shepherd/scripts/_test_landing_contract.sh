@@ -19,7 +19,7 @@ print(hashlib.sha1(b"blob %d\0"%len(d)+d).hexdigest())'
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
-readonly CONTRACT="$SCRIPT_DIR/landing-contract.sh"
+readonly CONTRACT="$SCRIPT_DIR/landing-contract.py"
 readonly PROBE="$SCRIPT_DIR/merge-probe.sh"
 readonly FIXTURE_BIN="$SCRIPT_DIR/test-fixtures/bin"
 readonly SYSTEM_PATH="$PATH"
