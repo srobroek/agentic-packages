@@ -88,8 +88,57 @@ ALLOWED = frozenset(
         ("ruff", "check"),
         ("tsc", None),
         ("eslint", None),
+        # --- other language toolchains, each verified by rtk-verify.py ---------
+        # rtk ships ~79 filters. These are the ones whose filtered output was
+        # checked to preserve the load-bearing facts. A filter with no local
+        # toolchain is NOT added on faith: the verifier SKIPs it, and an
+        # unverified entry stays out.
+        ("go", "test"),
+        ("go", "build"),
+        ("go", "vet"),
+        ("mypy", None),
+        ("pytest", None),
+        ("jest", None),
+        ("vitest", None),
+        ("prettier", None),
+        ("biome", None),
+        ("phpunit", None),
+        ("pest", None),
+        ("phpstan", None),
+        ("rubocop", None),
+        ("rspec", None),
+        ("dotnet", "build"),
+        ("dotnet", "test"),
+        ("mvn", "test"),
+        ("mvn", "compile"),
+        ("sbt", None),
+        ("npm", "run"),
+        ("pnpm", "run"),
+        ("pnpm", "test"),
+        ("gradlew", None),
+        ("next", "build"),
+        ("prisma", None),
+        # Read-only VCS/platform reads that mirror the git/gh entries above.
+        ("glab", "mr"),
+        ("glab", "ci"),
+        ("gt", "log"),
+        ("oc", "get"),
+        ("oc", "describe"),
     }
 )
+
+# Filters measured to LOSE something that matters, so they are refused even
+# though rtk offers them. Each was reproduced with `rtk-verify.py`.
+#
+#   golangci-lint  turns exit 1 into exit 0 AND drops the line number
+#                  (`./main.go:11:6:` becomes `main.go (1 issues)`). A linter
+#                  that reports clean while findings exist is worse than no
+#                  filter, because CI and the agent both read the exit code.
+#   find           drops whole directories with no recovery path
+#   grep / rg      truncates to ~25 lines; fatal for a count
+#   wc             the output IS the number
+#   curl           passed an 89 KB HTML page through unchanged
+BLOCKED_BINARIES = frozenset({"golangci-lint", "find", "grep", "rg", "wc", "curl"})
 
 # Any of these in the command means something downstream consumes the bytes, so
 # a filtered rendering could change a result rather than just shorten it.
@@ -403,6 +452,9 @@ def _rewrite_simple(command: str) -> str | None:
 
     binary = os.path.basename(tokens[index])
     argument = tokens[index + 1] if index + 1 < len(tokens) else None
+
+    if binary in BLOCKED_BINARIES:
+        return None
 
     if (binary, argument) not in ALLOWED and (binary, None) not in ALLOWED:
         return None

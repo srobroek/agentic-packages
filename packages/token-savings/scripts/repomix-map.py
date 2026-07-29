@@ -308,6 +308,14 @@ def main(argv: list[str]) -> int:
     # SessionStart and manual paths, which have no command to inspect.
     if command == "refresh" and not forced and raw:
         encoded = raw.encode("utf-8", "replace") if isinstance(raw, str) else raw
+        # A bare-word filter is far too loose: measured on 3,358 real Bash calls,
+        # testing for "commit"/"merge"/etc. admitted 36% of them, because those
+        # words appear in bead notes, commit MESSAGES, and branch names. Only 1%
+        # actually contained a HEAD-moving git verb. Requiring the literal `git `
+        # first cuts the JSON-parse-plus-git-read path by a factor of 20 while
+        # staying a strict superset of the structured check below.
+        if b"git " not in encoded and b"git\t" not in encoded:
+            return 0
         if not any(
             verb in encoded
             for verb in (b"commit", b"merge", b"rebase", b"pull", b"checkout", b"switch", b"worktree", b"reset")

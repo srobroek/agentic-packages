@@ -136,6 +136,43 @@ def test_unbounded_git_log_is_refused(command, tmp_path):
     assert _run(_bash(command), tmp_path=tmp_path) == ""
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "go test ./...",
+        "go build ./...",
+        "go vet ./...",
+        "mypy src",
+        "npm run build",
+        "pnpm test",
+        "jest",
+        "vitest run",
+        "dotnet build",
+        "mvn test",
+        "rubocop",
+        "rspec",
+        "phpunit",
+        "prettier --check .",
+        "biome check .",
+        "sbt compile",
+    ],
+)
+def test_other_language_toolchains_are_routed(command, tmp_path):
+    """rtk ships ~79 filters; these cover the other toolchains. Each was checked
+    with rtk-verify.py where the toolchain is installed locally."""
+    assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
+
+
+@pytest.mark.parametrize(
+    "command", ["golangci-lint run", "golangci-lint run ./...", "curl -s https://x.test"]
+)
+def test_blocked_binaries_are_refused_even_though_rtk_offers_them(command, tmp_path):
+    """`rtk golangci-lint` turns exit 1 into exit 0 AND drops the line number
+    (`./main.go:11:6:` becomes `main.go (1 issues)`), so a linter reports clean
+    while findings exist. `rtk curl` passed an 89 KB HTML page through unchanged."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
 @pytest.mark.parametrize("command", ["find . -name '*.txt'", "find . -type f"])
 def test_find_is_refused(command, tmp_path):
     """`rtk find` dropped four of six directories entirely, announcing only

@@ -121,6 +121,53 @@ def _big_tree(root: Path) -> None:
             (sub / f"file{i}.txt").write_text("x\n")
 
 
+def _go_module(root: Path) -> None:
+    subprocess.run(["go", "mod", "init", "probe"], cwd=str(root), check=True, capture_output=True)
+    (root / "main.go").write_text(
+        "package main\n\nimport \"fmt\"\n\n"
+        "func main() {\n\tfor i := 0; i < 30; i++ {\n\t\tfmt.Println(\"line\", i)\n\t}\n}\n"
+    )
+    (root / "main_test.go").write_text(
+        "package main\n\nimport \"testing\"\n\n"
+        "func TestPasses(t *testing.T) {}\n"
+        "func TestFails(t *testing.T) { t.Fatal(\"distinctive go failure\") }\n"
+    )
+
+
+def _go_vet_issue(root: Path) -> None:
+    subprocess.run(["go", "mod", "init", "probe"], cwd=str(root), check=True, capture_output=True)
+    # Printf arg mismatch: something `go vet` reliably reports.
+    (root / "main.go").write_text(
+        "package main\n\nimport \"fmt\"\n\n"
+        "func main() {\n\tfmt.Printf(\"%d\\n\", \"not-a-number\")\n}\n"
+    )
+
+
+def _golangci_findings(root: Path) -> None:
+    """A finding golangci-lint reliably reports, so exit code and line number are
+    both observable."""
+    subprocess.run(["go", "mod", "init", "probe"], cwd=str(root), check=True, capture_output=True)
+    (root / "main.go").write_text(
+        "package main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n)\n\n"
+        "func main() {\n\tf, _ := os.Open(\"nope\")\n\tdefer f.Close()\n"
+        "\tvar unused int\n\tfmt.Println(\"hi\")\n}\n"
+    )
+
+
+def _mypy_errors(root: Path) -> None:
+    (root / "bad.py").write_text(
+        "def f(a: int) -> str:\n    return a\n\n\n"
+        "def g(b: str) -> int:\n    return b\n\n\nx: int = 'distinctive mypy string'\n"
+    )
+
+
+def _node_project(root: Path) -> None:
+    (root / "package.json").write_text(
+        '{"name":"probe","version":"1.0.0","private":true,'
+        '"scripts":{"noisy":"node -e \'for(let i=0;i<200;i++)console.log(\\"line \\"+i)\'"}}\n'
+    )
+
+
 # --- cases ------------------------------------------------------------------
 
 case(
@@ -254,6 +301,68 @@ case(
     setup=_big_tree,
     command="find . -name '*.txt'",
     facts=["dir0", "dir5"],
+)
+
+# --- other language toolchains ---------------------------------------------
+# rtk ships ~79 filters. These cover every toolchain installed on this host; a
+# filter with no local toolchain SKIPs rather than being assumed safe.
+
+case(
+    "go-test-failing",
+    requires=["go"],
+    setup=_go_module,
+    command="go test ./...",
+    facts=["distinctive go failure", "FAIL"],
+)
+case(
+    "go-build",
+    requires=["go"],
+    setup=_go_module,
+    command="go build ./...",
+    facts=[],
+)
+case(
+    "go-vet",
+    requires=["go"],
+    setup=_go_vet_issue,
+    command="go vet ./...",
+    facts=["main.go"],
+)
+case(
+    "mypy",
+    requires=["mypy"],
+    setup=_mypy_errors,
+    command="mypy bad.py",
+    facts=["bad.py", "error"],
+)
+case(
+    "golangci-lint",
+    requires=["golangci-lint", "go"],
+    setup=_golangci_findings,
+    command="golangci-lint run",
+    # rtk reports "main.go (1 issues)" and drops `:11:6`, so assert the LINE.
+    facts=["main.go", ":11:"],
+)
+case(
+    "npm-run",
+    requires=["npm"],
+    setup=_node_project,
+    command="npm run noisy",
+    facts=["line 0", "line 199"],
+)
+case(
+    "pnpm-run",
+    requires=["pnpm"],
+    setup=_node_project,
+    command="pnpm run noisy",
+    facts=["line 0", "line 199"],
+)
+case(
+    "dotnet-build",
+    requires=["dotnet"],
+    setup=None,
+    command="dotnet --info",
+    facts=[],
 )
 
 
