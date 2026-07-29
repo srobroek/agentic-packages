@@ -7,9 +7,13 @@ set -Eeuo pipefail
 # blind: the ids it verified were not the ids production computes, so digest drift
 # could not fail a test.
 blob_sha1() {
-  local payload
-  payload="$(cat)"
-  printf 'blob %d\0%s' "${#payload}" "$payload" | shasum -a 1 | awk '{print $1}'
+  # Read stdin as BYTES. Every identity payload is NUL-separated, and `$(cat)`
+  # strips NUL bytes, so a shell round trip hashed "slot-1stable-holder1" where
+  # git hashes "slot-1\0stable-holder\01\0". The helper and the fake agreed with
+  # each other and disagreed with production -- the drift this suite must catch.
+  python3 -c 'import hashlib,sys
+d=sys.stdin.buffer.read()
+print(hashlib.sha1(b"blob %d\0"%len(d)+d).hexdigest())'
 }
 
 
