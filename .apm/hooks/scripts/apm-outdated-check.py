@@ -30,6 +30,19 @@ STALE_MARKERS = ("outdated", "stale", "behind")
 # Cap the excerpt: the reminder is a nudge, not a report.
 EXCERPT_LINES = 10
 
+# `apm update`, not `apm deps update`: APM reports the latter as "DEPRECATED: use
+# 'apm update' instead (strict superset)".
+#
+# The bare `--global --yes` form is spelled out because naming a single package --
+# `apm update --global <pkg>` -- plans "1 updated, N removed" and PRUNES every other
+# globally installed package. Range pins already permit new minors, so the bare form
+# updates the named package too while removing nothing.
+ADVICE = (
+    "APM dependencies are outdated. Run `apm update` in this project. For the global "
+    "install run `apm update --global --yes` -- bare, never `apm update --global "
+    "<package>`, which prunes every other global package."
+)
+
 
 def main() -> int:
     payload = sys.stdin.read()
@@ -109,7 +122,7 @@ def main() -> int:
         return 0
 
     print(
-        "APM dependencies are outdated. Run `apm deps update` to get latest packages.",
+        ADVICE,
         file=sys.stderr,
     )
     for line in output.splitlines()[:EXCERPT_LINES]:

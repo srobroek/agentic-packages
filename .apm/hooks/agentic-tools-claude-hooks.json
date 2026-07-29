@@ -11,29 +11,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.py",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Bash(git merge*)",
-            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/post-merge-cleanup.py",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PostToolUseFailure": [
       {
         "hooks": [
@@ -65,26 +42,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/worktree-orphan-cleanup.py",
-            "async": true,
-            "timeout": 60
-          },
-          {
-            "type": "command",
             "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/apm-outdated-check.py",
             "asyncRewake": true,
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/session-end-prune.py",
-            "async": true,
             "timeout": 30
           }
         ]

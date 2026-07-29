@@ -9,8 +9,8 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 - **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **18 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **13 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
+- **9 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
+- **12 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
 Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-builder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
@@ -193,8 +193,8 @@ apm install code-review@srobroek-agentic
 # A single agent
 apm install agent-pr-reviewer@srobroek-agentic
 
-# A shared MCP aggregation package
-apm install mcp-1mcp@srobroek-agentic
+# An MCP server package
+apm install mcp-serena@srobroek-agentic
 ```
 
 `--target` is **optional** -- plain `apm install` and `apm compile` auto-detect which runtimes to deploy for from what's already in your project (`.claude/`, `.codex/`, etc.). Only pass `--target` when you want to force a specific set, e.g. on a fresh project that doesn't have those dirs yet:
@@ -244,7 +244,7 @@ apm install hooks-bash-safety@srobroek-agentic --global --target claude,codex
 
 User-scope support varies by runtime: **fully supported for `claude`, `codex`, and `agent-skills`** (the cross-client `~/.agents/skills/` dir, which Codex also reads); MCP servers at global scope only target Copilot/Codex CLI. Skills, agents, hooks, and instructions all deploy globally for Claude and Codex.
 
-**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
+**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-subagent-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
 
 > **Caveat -- symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
 

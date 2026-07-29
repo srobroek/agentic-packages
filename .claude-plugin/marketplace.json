@@ -452,7 +452,7 @@
     },
     {
       "name": "hooks-chezmoi-guard",
-      "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
+      "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. A PostToolUse advisory additionally reports when an edit landed on an applied target rather than its source, names the template when the source is one, and lists what is already uncommitted in the chezmoi source repo; it runs no git or chezmoi write command. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
       "version": "3.0.0",
       "tags": [
         "hooks",
@@ -568,20 +568,8 @@
       "source": "./packages/hooks-subagent-worktree"
     },
     {
-      "name": "hooks-worktree",
-      "description": "Worktree lifecycle hooks: create worktrees outside the repo tree (in /tmp) to prevent nesting, and clean up the worktree directory and branch on removal. Claude-only WorktreeCreate/WorktreeRemove events; Codex requires explicit worktree wrapper commands because it has no equivalent lifecycle events. Both events route through one script, worktree-hooks.py. Requires python3 on PATH.",
-      "version": "2.0.0",
-      "tags": [
-        "hooks",
-        "worktree",
-        "lifecycle"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/hooks-worktree"
-    },
-    {
       "name": "hooks-worktrunk",
-      "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
+      "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. A SessionStart sweep reports Worktrunk worktrees that are abandoned -- clean, fully pushed, and untouched for weeks -- and reclaims their git-ignored build output; it never removes a worktree or branch, leaving that to `wt remove`, which already refuses an unmerged branch. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
       "version": "3.0.0",
       "tags": [
         "hooks",
@@ -784,17 +772,6 @@
       ],
       "category": "planning-product",
       "source": "./packages/matt-skills"
-    },
-    {
-      "name": "mcp-1mcp",
-      "description": "MCP client package for the shared 1MCP runtime. Starts the machine-managed background runtime when needed and connects clients through its proxy.",
-      "version": "1.0.5",
-      "tags": [
-        "mcp",
-        "aggregation"
-      ],
-      "category": "mcp",
-      "source": "./packages/mcp-1mcp"
     },
     {
       "name": "mcp-codebase-memory",

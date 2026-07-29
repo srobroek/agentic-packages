@@ -404,13 +404,6 @@ marketplace:
         - subagent
         - isolation
         - policy
-    - name: hooks-worktree
-      source: ./packages/hooks-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - lifecycle
     - name: hooks-worktrunk
       source: ./packages/hooks-worktrunk
       category: project-lifecycle
@@ -527,12 +520,6 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
-    - name: mcp-1mcp
-      source: ./packages/mcp-1mcp
-      category: mcp
-      tags:
-        - mcp
-        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp

@@ -608,18 +608,6 @@
         }
       ]
     },
-    "packages/hooks-worktree": {
-      "release-type": "simple",
-      "component": "hooks-worktree",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-worktrunk": {
       "release-type": "simple",
       "component": "hooks-worktrunk",
@@ -827,18 +815,6 @@
     "packages/matt-skills": {
       "release-type": "simple",
       "component": "matt-skills",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-1mcp": {
-      "release-type": "simple",
-      "component": "mcp-1mcp",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
