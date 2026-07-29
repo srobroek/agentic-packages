@@ -22,9 +22,8 @@ python3 scripts/tokenmeter.py measure ~/.claude/projects/<project>/<session>.jso
 Reports token counts per category, `turns`, `tool_calls`, `tool_result_chars`,
 per-tool call counts, and `cost_weighted`.
 
-MUST Judge compression on `cost_weighted`, not `input_tokens`. Cache reads bill
-  below fresh input but are not free, and they dominate: one session showed 279
-  input tokens against 14.2M cache reads, so a tool judged on `input_tokens`
+MUST Judge compression on `cost_weighted`, not `input_tokens`. One session showed
+  279 input tokens against 14.2M cache reads, so a tool judged on `input_tokens`
   looks miraculous while changing nothing.
 
 MUST Include subagents (`--no-subagents` is diagnosis only). One session hid 45
@@ -66,27 +65,32 @@ MUST Disable the treatment by its own switch rather than uninstalling, so the
 NOT Compare across different repositories, models, or days without saying so.
 NOT Report a percentage without the run count and the separation verdict.
 
-## Structure map
+## Repository pack
 
-`repomix-map.py` maintains a directory-tree map from `repomix --no-files`,
-refreshed when HEAD moves and injected at session AND subagent start within a
-token budget. Measured on a 4,107-file repository: 31,299 tokens against
-10,365,403 for a full pack of the same tree, a 331x reduction.
+A pack is a search target, never a read: 6,349,248 tokens on a 4,107-file
+repository, roughly six context windows. Searching it beats the live tree (0.023s
+against 0.126s to list a directory's paths) and is faithful.
 
-MUST Filter the pack by path before any content flag: an allowlist plus a
-  blocklist removed 29% to 89%, losslessly. Re-derive with
-  `scripts/repomix-tune.py --repo <path>`, which sweeps every option on the
-  installed repomix. See [repomix ignores](references/repomix-ignores.md).
-NOT Leave a code-graph dump unignored. `graphify-out/` measured 38% of one pack:
-  an index of an index. See [standard paths](references/standard-paths.md).
+MUST Search the pack, never read it. A `PreToolUse` guard denies `Read`, `cat`,
+  `bat`, `less`, and an oversized `head`/`tail` on one, and names the search:
 
-DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining; above it the hook names
-  the file to `rg` instead of inlining it.
-DEFAULT `refresh --scope '<glob>'` builds a separately-keyed SCOPED map: 54 tokens
-  for one crate against 27,750 for the whole tree. Only when the CALLER knows the
-  scope. Across 1,662 real subagent transcripts the median touched 9 top-level
-  directories, so a guessed scope is usually wrong, and a map missing what an
-  agent needs is worse than none because it trusts it.
+    rg '<pattern>' repomix-full.xml
+    rg -o 'path="[^"]*<name>[^"]*"' repomix-full.xml    # locate a file
+    awk '/<file path="<path>">/,/<\/file>/' repomix-full.xml   # one file
+
+MUST Read the actual source file once the pack says where it is; a pack goes
+  stale on the first edit.
+DEFAULT `TOKEN_SAVINGS_ALLOW_PACK_READ=1` steps the guard aside when the whole
+  pack genuinely is what you want.
+MUST Generate it with `repomix`, which reads the committed
+  `repomix.config.json`. Filter by PATH there before any content flag: an
+  allowlist plus a blocklist removed 29% to 89%, losslessly, where `--compress`
+  manages 21% and regresses on comment-dense files. Re-derive with
+  `scripts/repomix-tune.py --repo <path>`. See
+  [repomix ignores](references/repomix-ignores.md).
+NOT Leave a pack unignored. Two 40 MB packs were committed during this work, and
+  an unignored artifact feeds the next pack: `graphify-out/` measured 38% of one.
+  See [standard paths](references/standard-paths.md).
 
 ## Code lookup routing
 

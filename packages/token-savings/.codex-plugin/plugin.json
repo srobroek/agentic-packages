@@ -1,7 +1,7 @@
 {
   "name": "token-savings",
   "version": "0.0.0",
-  "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content. A cheap repository structure map from `repomix --no-files` replaces exploratory listing, injected only within a token budget. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report. Telemetry stays off. Requires python3 on PATH. rtk and repomix are optional; every path degrades to a no-op without them.",
+  "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content, and a second denies reading a repomix pack (six context windows on a large repository) while naming the rg and awk that search it. Oversized shell output spills to a file with its recovery commands. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report, and repomix-tune re-derives every pack-filtering claim on the installed repomix. Telemetry stays off. Requires python3 on PATH; rtk and repomix are optional and every path degrades to a no-op without them.",
   "author": {
     "name": "Sjors Robroek"
   },

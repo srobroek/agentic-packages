@@ -1,17 +1,5 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume|clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py inject",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -20,30 +8,21 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/rtk-rewrite-guard.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
+            "timeout": 10
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
-        "matcher": "Bash",
+        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py refresh",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py inject",
-            "timeout": 15
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
+            "timeout": 10
           }
         ]
       }

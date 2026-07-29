@@ -11,15 +11,18 @@ named as a claim.
 
 | Client | Event | Matcher | Command |
 | --- | --- | --- | --- |
-| Claude Code | `SessionStart` | all starts | `repomix-map.py inject` |
-| Claude Code | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py` |
-| Claude Code | `PostToolUse` | `Bash` | `repomix-map.py refresh`, `spill-tool-output.py` |
-| Codex | `SessionStart` | `startup\|resume\|clear` | `repomix-map.py inject` |
-| Codex | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py` |
-| Codex | `PostToolUse` | `Bash` | `repomix-map.py refresh` |
+| Both | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py`, `repomix-read-guard.py` |
+| Both | `PreToolUse` | `Read` | `repomix-read-guard.py` |
+| Claude Code | `PostToolUse` | `Bash` | `spill-tool-output.py` |
 
-`rtk` and `repomix` are optional. Without them every hook exits 0 with no
-output. `python3` is required.
+The `PostToolUse` spill hook is Claude-only: Codex's `PostToolUse` wire struct
+carries no `updatedToolOutput`, so it cannot rewrite a tool result. Retrieval from
+a spill file is plain Bash, so the recovery half works on both.
+
+`rtk` and `repomix` are optional; without them every hook exits 0 with no output.
+`python3` is required. Nothing here generates a repomix pack: that is `repomix`
+reading a committed `repomix.config.json`, invoked by `wt post-start` or by hand.
+The package filters, spills, guards, and measures.
 
 ## The measurement instrument
 
@@ -226,51 +229,61 @@ rtk-filtered warnings) produced a 4,748-byte summary keeping the first and last
 warning, a recovery path, and exactly one `[token-savings]` marker. The hook
 refuses to re-spill an already-spilled result, so a marker can never stack.
 
-## Repository structure map
+## Repository pack, searched not read
 
-`repomix --no-files` emits the directory tree with no file contents. On a
-741-file repository that is 6,093 tokens against 1,022,188 for a full pack, a
-168x reduction, which is small enough to hand an agent at session start.
+A repomix pack of a 4,107-file repository is **6,349,248 tokens across 26 MB**,
+roughly six context windows. Reading it cannot succeed. Searching it is genuinely
+good: one file instead of a tree walk, **0.023s** to list every path under a
+directory against 0.126s for the equivalent `rg` over the live tree, and faithful
+(16 unique symbol matches in the pack against 16 live).
 
-`--compress` is not the lever it appears to be. Measured repository-wide it
-removes **21%** (10,365,403 to 8,166,829 tokens) against the 70% its
-documentation claims, because it extracts Tree-sitter signatures from code while
-markdown and JSON go untouched. It also regresses on comment-dense files, where
-doc comments duplicate around the elision markers.
+So a `PreToolUse` guard denies the read and names the search.
 
-**A pack is cheap, which is the opposite of what this hook originally assumed.**
-Measured on repomix 1.17.0: a full pack of 4,107 files is 1.65s, of 1,269 files
-1.30s, and the `--no-files` map is 1.26s to 3.18s depending on the tree, so the
-map is sometimes *slower* than the pack it replaces. repomix has no cache either
-(two identical runs: 2.27s, 2.49s). The saving here is CONTEXT, not time. The
-cost-avoidance machinery that the "packing is expensive" premise bought (a
-detached re-exec, a lockdir, a 120-second timeout) has been removed; the
-HEAD-marker gate stays because skipping redundant work is still right and costs
-one file read.
+| Denied | Allowed |
+| --- | --- |
+| `Read` on a pack | `rg` / `grep` / `awk` / `sed` / `jq` / `wc` on a pack |
+| any `mcp__*` file reader | `cat pack \| rg x` (a search; the reader is plumbing) |
+| `cat` `bat` `less` `more` `nl` `open` | `head -20`, bare `head` (sampling) |
+| `head -100000`, `tail -50000` | a pack under 400 KB (readable) |
+| an oversized `head` even piped to `rg` | any normal source file |
 
-The map is written under `XDG_STATE_HOME`, refreshed when HEAD moves, and
-deduped with an atomic lockdir. `TOKEN_SAVINGS_MAP_BUDGET` (default 8000 tokens)
-decides whether the map is inlined or merely named: a 4,124-file repository maps
-to ~31k tokens, and paying that on every session would cost more than the
-exploration it saves. Over budget, the hook tells the agent to `rg` the file.
+`TOKEN_SAVINGS_ALLOW_PACK_READ=1` steps the guard aside when the whole pack
+genuinely is what you want. A deny with no escape hatch is a guard that gets
+deleted the first time it is wrong, and the denial names the override so the model
+can act rather than just be blocked.
 
-`refresh` runs on every Bash call, so it rejects commands that cannot have moved
-HEAD by testing the raw payload bytes before parsing JSON. That bail costs one
-interpreter start and no filesystem work.
+The denial also names the extraction that answers "show me one file":
 
-### Defects this found in `mcp-repomix`
+```bash
+awk '/<file path="src\/main.rs">/,/<\/file>/' repomix-full.xml
+```
 
-That package's `repomix.xml` refresh hook has never produced a snapshot on any
-local repository, for three independent reasons:
+That works because XML's `</file>` close tag is self-delimiting. It is the one
+place the output format matters: markdown's boundary depends on the next
+`## File:` heading existing. On size the formats are identical (61,244 tokens for
+xml against 61,249 for markdown), so choose for filterability.
 
-1. It passed `--directory`, which repomix 1.11.1 rejects with `unknown option`.
-   Fixed here; the directory is positional.
-2. It refuses unless `repomix.xml` is gitignored, and it is not gitignored in any
-   local repository. This package writes outside the tree instead, so no
-   `.gitignore` edit is required and no working tree is dirtied.
-3. The installed hook still points at `repomix-refresh-snapshot.sh` after the
-   shell-to-Python port renamed it. That is install drift, repaired by
-   `apm install --force`.
+### Generating it
+
+`repomix` reads a committed `repomix.config.json`, so the package ships no
+wrapper. Filter by PATH there before any content flag:
+
+| Approach | 1,269-file repo | 4,107-file repo |
+| --- | --- | --- |
+| `--ignore` only | -21.1% | -33.5% |
+| `--include` code+prose | -14.9% | -28.3% |
+| `--include` CODE only | -61.2% | -59.0% |
+| **`--include` + `--ignore`** | **-29.2%** | **-39.7%** |
+
+Code-only is the biggest cut and the wrong default: it discards every README,
+spec, and ADR, which is most of what a fresh session needs. Pairing the two also
+fails safe, since an allowlist alone silently drops a language nobody listed.
+
+`scripts/repomix-tune.py --repo <path>` re-derives all of this against whatever
+repomix version is installed, so none of it has to be trusted. Running it on a
+repository where graphify had been used found `graphify-out/` was **38% of the
+entire pack** -- an index of an index -- which took that repository from a 14.9%
+reduction to 87%.
 
 ## Tools evaluated and declined
 
@@ -304,6 +317,6 @@ interact at all.
 uv run --no-project --with pytest pytest -q packages/token-savings/tests/
 ```
 
-162 tests, weighted toward the negative cases: every command shape the rtk
+242 tests, weighted toward the negative cases: every command shape the rtk
 guard must refuse, every payload that must fail open, the budget gate and HEAD
 dedupe, and the comparison verdicts that must decline to call a delta real.

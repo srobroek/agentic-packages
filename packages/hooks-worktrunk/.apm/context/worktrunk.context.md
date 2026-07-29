@@ -56,6 +56,33 @@ NOT Treat `copy-ignored` as a shared writable build directory; it creates a
 DEFAULT Run a dev server with
   `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
   matching `[list] url`.
+DEFAULT Build the repomix pack in `post-start` and let `copy-ignored` warm it.
+  The pack must be gitignored, listed in `.worktreeinclude`, and generated from a
+  committed `repomix.config.json` so the invocation carries no flags:
+
+    [post-start]
+    repomix = "repomix"
+
+  Copying beats rebuilding, and the pack holds no absolute paths so a copy is
+  valid in any checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, and
+  near-free on a reflink filesystem. `copy-ignored` runs first, so `repomix` only
+  repacks what the branch changed.
+NOT Read the pack. It is 6,349,248 tokens on a 4,107-file repository; a
+  `PreToolUse` guard denies the read and names `rg`/`awk` instead.
+NOT Build a graphify graph per worktree. `graphify update` has no output flag and
+  writes `graphify-out/` into the tree: 6.9s and 9.9 MB, paid again in every
+  worktree. Query the primary checkout with
+  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which carries the
+  same staleness the primary already tolerates, and rebuild locally only when the
+  branch changed the code being queried.
+NOT Copy Python virtual environments; run `uv sync` because their paths are
+  absolute.
+NOT Copy `target/` when the repository-scoped Cargo target hook is active.
+NOT Treat `copy-ignored` as a shared writable build directory; it creates a
+  copy-on-write warm start where the filesystem supports reflinks.
+DEFAULT Run a dev server with
+  `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
+  matching `[list] url`.
 DEFAULT Build the repository structure map in `post-start` so a new checkout has
   one before its first session, and drop it in `post-remove`. Artifacts are keyed
   by a hash of the worktree root, so each checkout gets its own without

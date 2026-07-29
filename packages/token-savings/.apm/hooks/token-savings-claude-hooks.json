@@ -1,18 +1,5 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py inject",
-            "statusMessage": "Surfacing repository structure map...",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -20,6 +7,21 @@
           {
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/rtk-rewrite-guard.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
             "timeout": 10
           }
         ]
@@ -31,23 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py refresh",
-            "timeout": 15
-          },
-          {
-            "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/spill-tool-output.py",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/repomix-map.py inject",
             "timeout": 15
           }
         ]
