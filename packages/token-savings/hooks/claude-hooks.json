@@ -33,6 +33,11 @@
             "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/repomix-map.py refresh",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/spill-tool-output.py",
+            "timeout": 15
           }
         ]
       }

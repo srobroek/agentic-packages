@@ -854,7 +854,7 @@
     },
     {
       "name": "mcp-playwright",
-      "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
+      "description": "MCP server package for Playwright, providing stateful browser automation and in-browser UI verification. The server inlines the accessibility tree on every action, so prefer `playwright-cli` (see the `playwright` skill) for scripted flows and keep this for loops that need the model reasoning over page structure turn by turn. Do not pass `--snapshot-mode none`: element refs come from snapshots, so it removes the ability to interact.",
       "version": "1.2.1",
       "tags": [
         "mcp",
@@ -922,7 +922,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
+      "description": "Automate browser tasks with Playwright, routing between the two interfaces by context cost. The `playwright-cli` path writes the accessibility snapshot to a file and returns a path (402 bytes against 33,011 inlined by MCP on the same page) while keeping full interaction and cross-invocation state. The MCP server is reserved for loops that need the model to reason over page structure turn by turn: exploratory automation, self-healing tests, long autonomous sessions.",
       "version": "4.1.2",
       "tags": [
         "skill",

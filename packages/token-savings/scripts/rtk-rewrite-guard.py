@@ -55,6 +55,12 @@ import sys
 #   jq / python3    -- output shape is the caller's contract
 ALLOWED = frozenset(
     {
+        # `git log` is admitted only WITH an explicit commit-limiting or compact
+        # flag, enforced by GIT_LOG_REQUIRES_LIMIT below. Verified on 0.44.1:
+        # `git log --oneline` over 25 commits returned all 25, while bare
+        # `git log` returned 10 of 25 with NO omission marker and NO tee-log
+        # path. A silently shortened history is the worst case for this hook,
+        # because the agent cannot tell it is reading a prefix.
         ("git", "log"),
         ("git", "diff"),
         ("git", "show"),
@@ -62,6 +68,9 @@ ALLOWED = frozenset(
         ("gh", "pr"),
         ("gh", "issue"),
         ("gh", "run"),
+        # NOTE: `gh pr` and `gh issue` cover mutating verbs too (`gh pr merge`,
+        # `gh pr create`), which MUTATING_SUBVERBS below removes. Found by
+        # replaying real command history rather than by review.
         ("docker", "ps"),
         ("docker", "images"),
         ("kubectl", "get"),
@@ -70,6 +79,12 @@ ALLOWED = frozenset(
         ("cargo", "clippy"),
         ("cargo", "test"),
         ("pytest", None),
+        # rtk 0.44.0 added a `uv run` filter, and `uv run` was by far the most
+        # common unrouted command in local history (5,064 occurrences). Verified
+        # on 0.44.1 against a FAILING pytest run, the case where detail matters:
+        # the assertion, the failure message, and the `1 failed, 1 passed`
+        # verdict all survived at 46% fewer bytes, and a tee log path is named.
+        ("uv", "run"),
         ("ruff", "check"),
         ("tsc", None),
         ("eslint", None),
@@ -80,26 +95,97 @@ ALLOWED = frozenset(
 # a filtered rendering could change a result rather than just shorten it.
 # Checked against the raw string before tokenizing, because the cost of a false
 # negative here is a wrong answer the agent cannot detect.
-PIPELINE_MARKERS = ("|", ">", ">>", "<", "$(", "`", "&&", "||", ";")
+PIPELINE_MARKERS = (">", ">>", "<", "$(", "`", "&&", "||", ";")
 
-# Flags that mean "emit a machine format". A filter may reflow these safely for
-# a reader and still break the parser on the other end.
+# A pipe is not automatically disqualifying: it depends on what CONSUMES the
+# output. `cmd 2>&1 | tail -50` is the dominant idiom in local history (8,901
+# occurrences of tail/head against 2,200 of a real parser) and it is the agent
+# hand-truncating because output is too big. rtk does that better: measured on
+# `cargo clippy`, `native | tail -50` was 657 bytes and `rtk | tail -50` was 89,
+# with the warning, file, and line intact.
+#
+# So a pipe is allowed when EVERY downstream stage is a pure truncator. Anything
+# that counts, searches, or reparses is refused, because rtk reformats and
+# truncates: `wc -l` would count summary lines, and `grep ERROR` could miss a
+# line rtk dropped.
+SAFE_DOWNSTREAM = frozenset({"tail", "head", "cat"})
+
+# Flags that mean "emit a machine format" whatever the command. A filter may
+# reflow these safely for a reader and still break the parser on the other end.
 MACHINE_FLAGS = (
     "--porcelain",
     "--json",
     "-json",
     "--format",
     "--pretty",
-    "--quiet",
-    "-q",
     "--name-only",
     "--numstat",
     "--raw",
     "-0",
     "--null",
     "--count",
-    "-c",
 )
+
+# Flags whose meaning depends on the command, so a global ban is wrong. `-q` is
+# "machine-quiet" to git and "less verbose" to pytest; `-c` is "count" to grep
+# and "config" to git. Keyed by the binary, checked only for that binary.
+AMBIGUOUS_MACHINE_FLAGS = {
+    "git": ("-q", "--quiet", "-c"),
+    "gh": ("-q", "--jq", "-t", "--template"),
+    "docker": ("-q", "--quiet"),
+    "kubectl": ("-o", "--output"),
+}
+
+# Third-position verbs that CHANGE something. The allowlist is keyed on the
+# first two tokens, so `("gh", "pr")` admits `gh pr view` and `gh pr merge`
+# alike. Filtering the output of a merge or a create is never worth it: the
+# result is short, and it is the record of a side effect the agent must read
+# exactly. Replaying real history surfaced `gh pr merge 249 --squash` and
+# `gh pr create --draft ...` being routed, which review had missed.
+MUTATING_SUBVERBS = frozenset(
+    {
+        "create",
+        "merge",
+        "close",
+        "reopen",
+        "edit",
+        "delete",
+        "comment",
+        "review",
+        "ready",
+        "checkout",
+        "rerun",
+        "cancel",
+        "lock",
+        "unlock",
+        "transfer",
+        "pin",
+        "unpin",
+        "develop",
+        "sync",
+        "update-branch",
+    }
+)
+
+
+def os_basename(path: str) -> str:
+    import os
+
+    return os.path.basename(path)
+
+
+def _is_duration(token: str) -> bool:
+    """`600`, `600s`, `2m`: a `timeout` duration rather than a flag or a command."""
+    return bool(token) and token[0].isdigit() and token.rstrip("smhd").isdigit()
+
+
+def _is_count_flag(token: str) -> bool:
+    """`-5`, `-n5`, `-n 5`, `--max-count=5`: the caller bounded the commit count."""
+    if token.startswith("--max-count"):
+        return True
+    if token.startswith("-n"):
+        return True
+    return len(token) > 1 and token[0] == "-" and token[1:].isdigit()
 
 
 def _bail_early(raw: bytes) -> bool:
@@ -120,8 +206,35 @@ def _rewrite(command: str) -> str | None:
     if command.strip().startswith("rtk "):
         return None  # already routed; never double-wrap
 
-    if any(marker in command for marker in PIPELINE_MARKERS):
+    # `2>&1` is a stderr merge, not a redirection to a file, and it appears on
+    # nearly every real build/test command. Neutralize that exact form before the
+    # redirection check so `cmd 2>&1 | tail -50` is reachable. `&>` is NOT
+    # neutralized: `&> file` redirects both streams to a file, so stripping it
+    # made `cargo clippy &> /tmp/out` look routable when its output goes to disk.
+    probe = command.replace("2>&1", "")
+
+    if any(marker in probe for marker in PIPELINE_MARKERS):
         return None
+
+    # Split on pipes: rewrite the FIRST stage, keep the rest verbatim, and only
+    # when every later stage is a pure truncator.
+    head, *downstream = command.split("|")
+    for stage in downstream:
+        words = stage.strip().split()
+        if not words or words[0] not in SAFE_DOWNSTREAM:
+            return None
+    if downstream:
+        rewritten_head = _rewrite_simple(head.strip())
+        if rewritten_head is None:
+            return None
+        return " | ".join([rewritten_head] + [s.strip() for s in downstream])
+
+    return _rewrite_simple(command)
+
+
+def _rewrite_simple(command: str) -> str | None:
+    """Rewrite one pipe-free command, or None to leave it alone."""
+    import shlex
 
     try:
         tokens = shlex.split(command)
@@ -140,6 +253,19 @@ def _rewrite(command: str) -> str | None:
     if index >= len(tokens):
         return None
 
+    # Skip a `timeout <seconds>` wrapper, which prefixes a large share of real
+    # build and test commands. rtk goes AFTER it, so the timeout still governs the
+    # whole pipeline: `timeout 600 rtk uv run pytest`. Only the numeric-argument
+    # form is skipped, so `timeout --foo` is left alone rather than guessed at.
+    while (
+        index + 1 < len(tokens)
+        and os_basename(tokens[index]) in ("timeout", "gtimeout")
+        and _is_duration(tokens[index + 1])
+    ):
+        index += 2
+    if index >= len(tokens):
+        return None
+
     import os
 
     binary = os.path.basename(tokens[index])
@@ -148,7 +274,26 @@ def _rewrite(command: str) -> str | None:
     if (binary, argument) not in ALLOWED and (binary, None) not in ALLOWED:
         return None
 
+    subverb = tokens[index + 2] if index + 2 < len(tokens) else None
+    if subverb in MUTATING_SUBVERBS:
+        return None
+
+    # `git log` truncates to 10 commits silently unless the caller bounded it.
+    # Measured on 0.44.1 over a 25-commit history: `--oneline` returned all 25,
+    # while bare `git log`, `--stat`, and `--graph` each returned 10 with no
+    # omission marker and no tee-log path. `--stat` and `--graph` were on this
+    # list until that measurement removed them, so verify a flag before adding
+    # one rather than reasoning about which forms "look compact".
+    if binary == "git" and argument == "log":
+        bounded = any(
+            token == "--oneline" or _is_count_flag(token) for token in tokens[index + 2 :]
+        )
+        if not bounded:
+            return None
+
     if any(flag in tokens for flag in MACHINE_FLAGS):
+        return None
+    if any(flag in tokens for flag in AMBIGUOUS_MACHINE_FLAGS.get(binary, ())):
         return None
     # `--format=x` and `--pretty=y` attach their value with `=`, so the
     # membership test above misses them.

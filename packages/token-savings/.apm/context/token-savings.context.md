@@ -1,3 +1,9 @@
+---
+x-lint:
+  allow: [prose-format.ProseBlock]
+  reason: "the rule bodies are MUST/NOT directives carrying the measurement that justifies each one; splitting the evidence away from its rule is what makes a rule get ignored"
+---
+
 # Token savings
 
 Context-cost reduction, and how to tell whether a reduction is real. Every
@@ -46,10 +52,16 @@ NOT Install `rtk hook claude` (rtk's own blanket PreToolUse handler). Measured o
 NOT Route `curl` through rtk for HTML. It is JSON-oriented and passed an 89 KB
   page through byte for byte.
 
-Realized savings are bounded by which tool the agent reaches for: the hook sees
-only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it entirely. `rtk
-discover` found the largest local misses to be `rg -n` and `cat -n`, shell
-spellings of tools the agent is separately steered to use natively.
+Expect a SMALL effect, and do not let the allowlist imply otherwise. Replaying
+24,725 real `Bash` calls from local transcripts, 94% contain a pipe, redirect,
+chain, or command substitution, and the guard refuses every one of those because
+a filtered rendering feeding another process can change a result. Of the 1,161
+distinct non-pipeline commands, the guard routes 26. The hook also sees only
+`Bash`, so native `Read`, `Grep`, and `Glob` bypass it entirely.
+
+That measurement is the reason to keep the guard narrow rather than to widen it:
+the commands rtk could additionally reach are the compound ones where filtering
+is unsafe.
 
 ## Repository structure map, not a full pack
 
@@ -68,10 +80,26 @@ DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000 tokens) decides inline versus pointer. 
 MUST Prefer the fetcher MCP for pages. It already runs Readability and returns
   markdown, measured at 89% smaller than raw HTML, so the compression is present
   rather than missing. `trafilatura --markdown` reached 93% when a CLI is wanted.
-MUST Prefer targeted Playwright extraction over a full snapshot for read-only
-  content. `ariaSnapshot` measured 21.8 KB against 7.3 KB for `innerText` on the
-  same page. Reach for `browser_find` to locate a node, then a depth-limited
-  `browser_snapshot`.
+MUST Drive the browser through `playwright-cli` rather than the MCP server for
+  scripted flows and verification. The CLI writes the accessibility snapshot to a
+  file and returns its path, measured at 402 bytes against 33,011 that the MCP
+  server inlines for the same page, and it still clicks, fills, uploads, and
+  keeps state across invocations. Reserve the MCP server for loops that need the
+  model reasoning over page structure turn by turn (exploratory automation,
+  self-healing tests). See the `playwright` skill for the routing table.
+NOT Pass `--snapshot-mode none` to shrink the MCP server. Element refs come from
+  snapshots, so it removes the ability to interact and leaves an interface that
+  can only look.
+
+## Oversized tool output goes to disk
+
+MUST Read the spill file rather than re-running the command. A `Bash` result over
+  12 KB is replaced by its first 40 and last 60 lines plus a path, measured at
+  80% smaller on a 24 KB test dump. The summary names the exact `rg`, `sed`, and
+  `wc -l` invocations that recover any part of it, so retrieval needs no special
+  tool and works under both runtimes even though the compression is Claude-only.
+NOT Expect a failing command to be summarized. A nonzero exit is passed through
+  whole, because the error text is the thing worth reading.
 
 ## Hook surface limit
 

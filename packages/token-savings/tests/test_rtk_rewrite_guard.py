@@ -81,10 +81,66 @@ def _bash(command: str) -> dict:
         "ruff check .",
         "eslint src",
         "tsc --noEmit",
+        "uv run pytest",
     ],
 )
 def test_allowlisted_commands_are_routed(command, tmp_path):
     assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["uv run pytest -q", "pytest -q", "uv run --with pytest pytest tests/"],
+)
+def test_quiet_is_allowed_where_it_only_means_less_verbose(command, tmp_path):
+    """`-q` is machine-quiet to git and merely terse to pytest, so banning it
+    globally refused the single most common command in local history."""
+    assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git log -q",
+        "git log --quiet",
+        "git log -c core.x=1",
+        "gh pr view 1 -q .title",
+        "gh pr view 1 --jq .title",
+        "docker ps -q",
+        "kubectl get pods -o json",
+        "kubectl get pods --output json",
+    ],
+)
+def test_ambiguous_flags_still_block_the_commands_they_mean_machine_output_for(command, tmp_path):
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize("command", ["uv tool install x", "uv sync", "uv pip list"])
+def test_only_uv_run_is_routed(command, tmp_path):
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["git log --oneline", "git log -5", "git log -n 20", "git log -n20", "git log --max-count=5"],
+)
+def test_bounded_git_log_is_routed(command, tmp_path):
+    """Verified lossless on 0.44.1 over a 25-commit history."""
+    assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
+
+
+@pytest.mark.parametrize("command", ["git log", "git log --stat", "git log --graph", "git log -p"])
+def test_unbounded_git_log_is_refused(command, tmp_path):
+    """These return 10 of 25 commits with NO omission marker and no tee log, so
+    the agent cannot tell it is reading a prefix of the history."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize("command", ["find . -name '*.txt'", "find . -type f"])
+def test_find_is_refused(command, tmp_path):
+    """`rtk find` dropped four of six directories entirely, announcing only
+    `+130 more` with no path to recover them."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
 
 
 def test_env_assignments_keep_their_position(tmp_path):
@@ -134,9 +190,9 @@ def test_unsafe_or_unlisted_commands_are_untouched(command, tmp_path):
 @pytest.mark.parametrize(
     "command",
     [
-        "git log | head -5",
         "git log > /tmp/out",
         "git log >> /tmp/out",
+        "cargo clippy &> /tmp/out",
         "git diff && cargo clippy",
         "git log; cargo test",
         "cargo clippy || true",
@@ -145,10 +201,71 @@ def test_unsafe_or_unlisted_commands_are_untouched(command, tmp_path):
         "git log < /dev/null",
     ],
 )
-def test_pipelines_and_redirection_are_untouched(command, tmp_path):
-    """A filtered rendering feeding another process could change a result
-    rather than just shorten what the model reads."""
+def test_redirection_and_chaining_are_untouched(command, tmp_path):
+    """A filtered rendering written to a file or feeding another command could
+    change a result rather than just shorten what the model reads."""
     assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        ("cargo clippy | tail -50", "rtk cargo clippy | tail -50"),
+        ("cargo clippy 2>&1 | tail -50", "rtk cargo clippy 2>&1 | tail -50"),
+        ("uv run pytest 2>&1 | tail -30", "rtk uv run pytest 2>&1 | tail -30"),
+        ("pytest -q | head -20", "rtk pytest -q | head -20"),
+        ("cargo test | tail -50 | head -5", "rtk cargo test | tail -50 | head -5"),
+    ],
+)
+def test_piping_into_a_pure_truncator_is_routed(command, expected, tmp_path):
+    """`cmd 2>&1 | tail -50` is the dominant real idiom: the agent truncating by
+    hand because output is too large. rtk does it better and safely, because tail
+    and head do not interpret what they read. Measured on `cargo clippy`:
+    `native | tail -50` 657 bytes against `rtk | tail -50` 89, warning intact."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cargo clippy | wc -l",
+        "cargo clippy | grep ERROR",
+        "cargo clippy | rg warning",
+        "cargo clippy | jq .",
+        "cargo clippy | sort",
+        "cargo clippy | tail -5 | wc -l",
+        "git log --oneline | awk '{print $1}'",
+    ],
+)
+def test_piping_into_anything_that_interprets_is_refused(command, tmp_path):
+    """rtk reformats and truncates, so a counter miscounts and a searcher can
+    miss a line that was dropped."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        ("timeout 600 cargo clippy", "timeout 600 rtk cargo clippy"),
+        ("timeout 2m pytest -q", "timeout 2m rtk pytest -q"),
+        ("gtimeout 30 cargo test", "gtimeout 30 rtk cargo test"),
+        (
+            "timeout 600 uv run pytest 2>&1 | tail -50",
+            "timeout 600 rtk uv run pytest 2>&1 | tail -50",
+        ),
+    ],
+)
+def test_timeout_wrapper_keeps_rtk_inside_it(command, expected, tmp_path):
+    """rtk goes after the wrapper so the timeout still governs the whole run."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+def test_timeout_with_a_flag_is_not_guessed_at(tmp_path):
+    assert _run(_bash("timeout --preserve-status 5 pytest"), tmp_path=tmp_path) == ""
+
+
+def test_timeout_does_not_launder_an_unlisted_command(tmp_path):
+    assert _run(_bash("timeout 600 rm -rf /tmp/x"), tmp_path=tmp_path) == ""
 
 
 def test_already_routed_commands_are_not_double_wrapped(tmp_path):

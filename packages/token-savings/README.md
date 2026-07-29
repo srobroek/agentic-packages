@@ -13,7 +13,7 @@ named as a claim.
 | --- | --- | --- | --- |
 | Claude Code | `SessionStart` | all starts | `repomix-map.py inject` |
 | Claude Code | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py` |
-| Claude Code | `PostToolUse` | `Bash` | `repomix-map.py refresh` |
+| Claude Code | `PostToolUse` | `Bash` | `repomix-map.py refresh`, `spill-tool-output.py` |
 | Codex | `SessionStart` | `startup\|resume\|clear` | `repomix-map.py inject` |
 | Codex | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py` |
 | Codex | `PostToolUse` | `Bash` | `repomix-map.py refresh` |
@@ -56,39 +56,105 @@ The `PreToolUse` guard prefixes `rtk` onto commands on an allowlist, at the
 command position so a leading `FOO=1` stays environment for the target rather
 than an argument to rtk.
 
-Measured savings on allowlisted commands: `git log -50` 87% fewer bytes,
-`git log --stat -20` 94%. Truncation is marked inline (`[+N lines omitted]`) and
-a tee log path is named, so a shortened result is visibly shortened.
+Every allowlist entry was verified by running the command twice, natively and
+through rtk, and diffing what survived. `rtk-verify.py` in the skill re-runs that
+sweep against whatever rtk version is installed:
 
-This package deliberately does not install rtk's own `rtk hook claude`. Measured on
-0.43.0 it rewrites commands whose output is machine-parsed:
+```bash
+python3 .apm/skills/token-savings/scripts/rtk-verify.py --markdown
+```
 
-- `rtk git status --porcelain` preserves every line but drops the trailing
-  newline, so `| wc -l` under-counts by one.
-- `rtk grep` returned 25 of 400 matching lines.
+Verified on rtk 0.44.1. `| tail -50` is the idiom the agent uses today and is the
+honest competing baseline, so it is reported alongside:
 
-Both behaviors are right for a model reading output and wrong for a pipeline
-parsing it, and rtk cannot tell them apart because the difference is in the
-caller's intent. So the allowlist names what is safe instead: `git log`, `diff`,
-`show`, `blame`, `gh pr|issue|run`, `cargo`, `kubectl`, `docker ps`, `ruff
-check`, `tsc`, `eslint`. Pipelines, redirection, command substitution,
-machine-format flags (`--porcelain`, `--json`, `--format=`, `-c`), `grep`/`rg`,
-`wc`, and `curl` are never rewritten.
+| Command | Native | rtk | `\| tail -50` | Saved | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| `pytest` (30 passing) | 464 | 18 | 464 | 96% | routed |
+| `grep -n` (400 matches) | 17384 | 1173 | 2200 | 93% | routed, recoverable |
+| `cargo test` (failing) | 379 | 38 | 264 | 90% | routed |
+| `cargo clippy` (warnings) | 684 | 88 | 567 | 87% | routed |
+| `ls -la` | 459 | 66 | 459 | 86% | routed |
+| `pytest` (30 failing) | 11450 | 1823 | 3026 | 84% | routed, recoverable |
+| `wc -l` | 15 | 4 | 15 | 73% | routed |
+| `ruff check` | 761 | 395 | 761 | 48% | routed |
+| `cargo build` | 188 | 100 | 72 | 47% | routed |
+| `uv run pytest` (failing) | 11418 | 6377 | 3026 | 44% | routed |
+| `git show` | 443 | 352 | 443 | 21% | routed |
+| `git log --oneline` | 1416 | 1416 | 1416 | 0% | routed, no gain |
+| `git log` (unbounded) | 4465 | 810 | 1477 | 82% | **refused** |
+| `find -name` | 3180 | 569 | 884 | 82% | **refused** |
+| `git status --porcelain` | 13 | 12 | 13 | 8% | **refused** |
 
-Realized savings are bounded by tool choice: the hook sees only `Bash`, so
-native `Read`, `Grep`, and `Glob` never reach it. `rtk discover` found the
-largest local misses to be `rg -n` and `cat -n`, shell spellings of tools the
-agent is separately steered to use natively. Measure before assuming this is a
-large lever.
+"Recoverable" means rtk truncated but named a tee log that still contains
+everything: a 30-failure pytest run showed 10 failures, and all 30 were retrievable
+from the path it printed. The refusals lose information with no way back:
 
-Telemetry is off by default in 0.43.0 (`rtk telemetry status` reports `consent:
+- **`git log` unbounded** returns 10 of 25 commits with no omission marker and no
+  tee log, so the agent cannot tell it is reading a prefix of the history. Only
+  `--oneline` (verified lossless at 25 of 25) or an explicit count (`-5`, `-n 20`,
+  `--max-count=5`) is routed. `--stat` and `--graph` were on the allowlist until
+  measurement showed they truncate to 10 as well.
+- **`find`** dropped four of six directories entirely, announcing `+130 more` with
+  a correct total and no path to recover the omitted entries.
+- **`git status --porcelain`** keeps every line but drops the trailing newline, so
+  `| wc -l` under-counts by one and a shell `read -r` loop loses the last record.
+
+Both defects persist in 0.44.1, so this is the shape of the tool rather than a
+stale bug. **rtk's own `rtk hook claude` is deliberately not installed**, because
+it rewrites all of the above indiscriminately.
+
+Also never routed: pipelines, redirection, command substitution, machine-format
+flags (`--porcelain`, `--json`, `--format=`, `--numstat`), `curl`, and the
+mutating `gh` subverbs. `gh pr merge` and `gh pr create` were being routed until
+replaying real history caught it: the allowlist keys on the first two tokens
+(`gh pr`), which cannot see the third, so a mutating-subverb blocklist now runs
+after it. Flags whose meaning depends on the command are per-command: `-q` is
+machine-quiet to git and merely terse to pytest, and banning it globally refused
+`uv run pytest -q`.
+
+### Expect a small effect
+
+Replaying 24,725 real `Bash` calls from local transcripts, **94% contain a pipe,
+redirect, chain, or command substitution**, and the guard refuses every one
+because a filtered rendering feeding another process can change a result rather
+than shorten it. Of the 1,161 distinct non-pipeline commands, the guard routes 26.
+The hook also sees only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it.
+
+Build and test commands are piped even more often (98%), but overwhelmingly into
+`tail` or `head` (8,901 occurrences against 2,200 into a parser). The agent is
+already hand-truncating because output is too large, which is rtk's job done
+crudely and without a recovery path. That is the case worth improving, and it is
+what the spill hook below addresses.
+
+Telemetry is off by default in 0.44.1 (`rtk telemetry status` reports `consent:
 never asked`). Upstream's configuration doc shows `enabled = true`; the binary
 disagrees, and the binary is what runs. `RTK_TELEMETRY_DISABLED=1` overrides any
 stored consent.
 
-`RTK_DISABLED=1` leaves hook rewriting untouched; it affects only the rtk
-process itself. To run an A/B baseline, remove the hook rather than setting that
-variable.
+`RTK_DISABLED=1` leaves hook rewriting untouched; it affects only the rtk process
+itself. To run an A/B baseline, remove the hook rather than setting that variable.
+
+## Oversized output goes to disk
+
+A `Bash` result over 12 KB is replaced by its first 40 and last 60 lines plus a
+path to the full text, measured at **80% smaller** on a 24 KB test dump. The
+summary names the exact commands that recover any part of it:
+
+```
+rg <pattern> /path/to/spill.txt
+sed -n '43,242p' /path/to/spill.txt
+wc -l /path/to/spill.txt
+```
+
+Retrieval is therefore plain Bash and works under both runtimes, even though the
+compression half is Claude-only (`updatedToolOutput` is absent from Codex's
+`PostToolUse` wire struct). Head AND tail are kept because for the shapes that
+blow up -- test runs, builds, stack traces -- the verdict is in the last lines and
+the invocation in the first, so most questions need no retrieval at all.
+
+A failing command is never summarized: the error text is the thing worth reading.
+Output under the threshold is untouched, a spilled result never nests, and the
+store is pruned to 200 files and 7 days.
 
 ## Repository structure map
 
@@ -107,7 +173,8 @@ to ~31k tokens, and paying that on every session would cost more than the
 exploration it saves. Over budget, the hook tells the agent to `rg` the file.
 
 `refresh` runs on every Bash call, so it rejects commands that cannot have moved
-HEAD by testing the raw payload bytes before parsing JSON. That bail costs one interpreter start and no filesystem work.
+HEAD by testing the raw payload bytes before parsing JSON. That bail costs one
+interpreter start and no filesystem work.
 
 ### Defects this found in `mcp-repomix`
 
@@ -129,8 +196,8 @@ local repository, for three independent reasons:
 | --- | --- |
 | `headroom` | No. Issue #2438 measures a 2-7x cost increase from defeating prompt caching in both modes. #789 (skill output compressed away) is open. Web tools are hardcoded verbatim-excluded with no subtractive key, so "compress web output" needs patching `config.py`. |
 | `tamp` | No. Same proxy shape as headroom, so they collide. No per-tool or per-content filtering, only a global 1-9 level. `textpress` (L7+) posts content to OpenRouter. 86 stars, zero GitHub releases, and npm-declared MIT that GitHub cannot detect from any LICENSE file. |
-| `token-optimizer` | No. PolyForm Noncommercial 1.0.0 is incompatible with this repository's Apache-2.0. Its runtime archive-and-retrieve idea is Claude-only anyway: Codex `PostToolUse` cannot replace a tool result. |
-| `graphify` | Not wired by default. Its own benchmark reports accuracy (70.8% to 82.0% key-fact coverage) at ~140k tokens per query and never states the grep baseline's token cost, so the token claim is unverifiable from published data. Overlaps Serena and a code graph. Worth a separate A/B on resource use: it is tree-sitter parse-to-file with no resident daemon, against Serena's 4 processes at 95 MB RSS and 522 MB of bundled language servers. |
+| `token-optimizer` | No. PolyForm Noncommercial 1.0.0 is incompatible with this repository's Apache-2.0. Its runtime archive-and-retrieve idea is implemented here instead (see above), Claude-only for the same wire-struct reason. |
+| `graphify` | Not wired by default, but worth a separate trial. `graphify update` rebuilt a 741-file repo in 7.4s and a 4,124-file repo in 55s (53,453 nodes) fully locally, so a post-commit hook is viable. Two caveats measurement surfaced: the FIRST build is not local (plain `graphify .` tried to send 468 files to AWS Bedrock), and it writes a 60 MB `graphify-out/` into the repo that is not gitignored. Its own benchmark reports accuracy (70.8% to 82.0% key-fact coverage) at ~140k tokens per query and never states the grep baseline's token cost, so the token claim is unverifiable from published data. Overlaps Serena and a code graph. Worth a separate A/B on resource use: it is tree-sitter parse-to-file with no resident daemon, against Serena's 4 processes at 95 MB RSS and 522 MB of bundled language servers. |
 | `rtk curl` | Excluded from the allowlist, having passed an 89 KB HTML page through unchanged. |
 
 ## Web content
@@ -139,10 +206,15 @@ The fetcher MCP already runs Readability and returns markdown, measured 89%
 smaller than raw HTML, so the compression is already present.
 `trafilatura --markdown` reached 93% if a CLI is preferred.
 
-For Playwright, prefer targeted extraction over a full snapshot on read-only
-content: `ariaSnapshot` measured 21.8 KB against 7.3 KB for `innerText` on the
-same page. Use `browser_find` to locate a node, then a depth-limited
-`browser_snapshot`.
+For the browser, the interface choice dominates: `playwright-cli goto` returned
+**402 bytes** on a docs page because it writes the accessibility snapshot to a
+file and hands back the path, where the MCP server inlines the tree at **33,011
+bytes** for the same page. The CLI still clicks, fills, uploads, and keeps state
+across separate invocations, so it covers scripted flows and verification. The
+`playwright` skill carries the routing table; the MCP server stays for loops that
+need the model reasoning over page structure turn by turn. `--snapshot-mode none`
+is not a shortcut: element refs come from snapshots, so it removes the ability to
+interact at all.
 
 ## Tests
 
@@ -150,6 +222,6 @@ same page. Use `browser_find` to locate a node, then a depth-limited
 uv run --no-project --with pytest pytest -q packages/token-savings/tests/
 ```
 
-110 tests, weighted toward the negative cases: every command shape the rtk
+162 tests, weighted toward the negative cases: every command shape the rtk
 guard must refuse, every payload that must fail open, the budget gate and HEAD
 dedupe, and the comparison verdicts that must decline to call a delta real.
