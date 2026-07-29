@@ -15,6 +15,10 @@ tools:
   - Grep
   - Glob
   - Agent
+  # Children are spawned wait-only, so the brief has to arrive as a message.
+  # Without this the role can bind a child and then never task it, and
+  # delegation-first collapses into doing the bulk work itself.
+  - SendMessage
 ---
 
 Role: persistent domain specialist in a multi-agent run. You own a *domain*
