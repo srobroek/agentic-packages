@@ -17,7 +17,7 @@ Before any release, tag, changelog, or version-bump action, check whether the
 repo is release-please-managed:
 
 ```bash
-scripts/detect-release-please.sh          # exit 0 = managed, 1 = not; prints config facts
+.claude/hooks/release-please/scripts/release-please-guard.py detect   # exit 0 = managed, 1 = not; prints config facts
 ```
 
 - **Managed (exit 0)** → using release-please is **MANDATORY**. Do NOT hand-cut

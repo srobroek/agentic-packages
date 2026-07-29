@@ -37,7 +37,7 @@ This is the script-location bug these templates exist to prevent:
   (`scripts/check.sh`), so they must live at
   `.apm/skills/<name>/scripts/check.sh` -- nested under the skill dir.
 - **Hook** scripts are referenced from hook JSON as
-  `${PLUGIN_ROOT}/scripts/guard.sh` -- resolved from the plugin root -- so they
+  `${PLUGIN_ROOT}/scripts/guard.py` -- resolved from the plugin root -- so they
   must live at the package-root `scripts/`.
 - A **hybrid** has both at once. See `hybrid-package/`: `run.sh` is nested under
   the skill, `notify.sh` sits at the package root.
@@ -48,11 +48,20 @@ The `"if": "Bash(git push*)"` filter on a hook entry has been observed to
 SILENTLY no-match -- the hook simply never fires, with no error -- which can let
 the thing it was guarding through. Use a broad `matcher` (e.g. `"Bash"`) and
 have the script read the payload from stdin, decide whether the command is in
-scope, and exit 0 early when it is not. See `hooks-package/scripts/guard.sh`.
+scope, and exit 0 early when it is not. See `hooks-package/scripts/guard.py`.
 
 When parsing the payload, branch on `tool_input` type: it may be an object
 (`{command: "..."}`) or a bare string, and `.tool_input.command // .tool_input`
 throws on a string in jq, which would silently bypass the guard.
+
+### 3. Match the command's verb, not a substring of the line
+
+A `*"git push"*` glob denies `echo "git push"` and a commit message quoting the
+phrase, while missing `env GIT_SSH=x git push`, `sudo git push`, and
+`nice -n 19 git push`. Tokenize with `shlex`, strip env assignments and command
+wrappers, then compare the resulting words. `hooks-package/scripts/guard.py`
+carries the wrapper and option-value tables; its suite has a case per bypass
+this repo actually shipped.
 
 ## Conventions shared by all types
 

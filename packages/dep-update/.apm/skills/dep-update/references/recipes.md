@@ -1,6 +1,6 @@
 # dep-update: what the scripts do not implement
 
-`research.sh` queries PyPI and npm only. Everything below covers the gaps:
+`research.py` queries PyPI and npm only. Everything below covers the gaps:
 the rust/go endpoints, the apply commands per package manager, the changelog
 fetch order, and the `answers.toml` key names.
 
@@ -8,7 +8,7 @@ All version data comes from machine-readable JSON endpoints -- never scrape
 rendered HTML for a version number. Reserve web-fetch for changelog prose
 (migration guides, breaking-change posts) that has no structured endpoint.
 
-## Registry endpoints not in research.sh
+## Registry endpoints not in research.py
 
 Go modules (advisory only -- no apply):
 
