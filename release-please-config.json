@@ -56,9 +56,9 @@
         }
       ]
     },
-    "packages/adr": {
+    "packages/adr-as-beads": {
       "release-type": "simple",
-      "component": "adr",
+      "component": "adr-as-beads",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
