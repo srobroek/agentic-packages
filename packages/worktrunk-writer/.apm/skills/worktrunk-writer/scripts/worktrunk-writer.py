@@ -1085,9 +1085,37 @@ def orchestration_active(cwd: Path) -> bool:
     if os.environ.get("ORCHESTRATE_RUN"):
         return True
     marker = os.environ.get("ORCHESTRATE_MARKER_FILE")
-    if marker:
-        return Path(marker).is_file()
-    return (cwd / ".orchestration" / ".active-run").is_file()
+    path = Path(marker) if marker else cwd / ".orchestration" / ".active-run"
+    if not path.is_file():
+        return False
+    return marker_run_live(cwd, path)
+
+
+def marker_run_live(cwd: Path, marker: Path) -> bool:
+    """Whether the marker names a run that is still going.
+
+    A crashed run leaves its marker behind, and a stale marker used to hold the
+    repository under the protocol indefinitely. Unreadable marker, unparseable
+    run id, or an absent task system all read as live: this narrows a guard, so
+    every uncertainty resolves toward keeping it on.
+    """
+    try:
+        payload = json.loads(marker.read_text())
+    except (OSError, json.JSONDecodeError):
+        return True
+    run_id = payload.get("run_id") if isinstance(payload, dict) else None
+    if not run_id or run_id == "pending":
+        return True
+    if not beads_active(cwd):
+        return True
+    try:
+        issues = beads_json(["show", str(run_id), "--json"], cwd)
+    except ContractError:
+        return True
+    issue = issues[0] if isinstance(issues, list) and issues else issues
+    if not isinstance(issue, dict):
+        return True
+    return issue.get("status") != "closed"
 
 
 def protocol_engaged(
@@ -1119,7 +1147,18 @@ def protocol_engaged(
     prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
     if allocation_checkout(prompt) is not None:
         return True
-    return orchestration_active(cwd)
+    # An orchestration run engages the protocol only where a lease could be
+    # implicated. The marker alone used to be sufficient, which turned the
+    # documented advise-not-deny default into a deny for every spawn made from the
+    # primary checkout during a run -- including read-only work aimed at an
+    # entirely different repository. The four checks above already catch a caller
+    # that holds or occupies a lease, so reaching here means this call touches
+    # none: leave it to the advisory.
+    return orchestration_active(cwd) and repo_has_leases(inventory)
+
+
+def repo_has_leases(inventory: list[dict[str, Any]]) -> bool:
+    return bool(leased_items(inventory))
 
 
 def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[str, Any]:
@@ -1185,14 +1224,27 @@ def assert_spawn_allocation(
     checkout = allocation_checkout(prompt)
 
     # A claim-holder may spawn bounded implementation children inside its own
-    # checkout, sharing its actor and lease and never receiving `--bead`. The
-    # contract has always said so; until now the code had no branch for it, so a
+    # checkout, sharing its actor and lease and never receiving `--bead`. Both
+    # SKILL.md files promised this and the code had no branch for it, so a
     # delegation-first specialist could not delegate and did its own bulk work.
+    #
+    # The child is still wait-only: the parent binds its returned id to the same
+    # path, actor, and lease before releasing the brief. Admitting a task-bearing
+    # child here would be a false kindness -- an unbound context is refused by
+    # assert_runtime_lease on its first Bash or Edit, so it would spawn and then
+    # be unable to act.
     parent = spawner_lease(payload or {}, inventory)
     if parent is not None:
         parent_path = item_path(parent)
-        if checkout is None or checkout == parent_path:
+        if checkout == parent_path:
             return parent
+        if checkout is None:
+            raise ContractError(
+                "child spawn must be wait-only: send the canonical WAIT for your own "
+                f"checkout {str(parent_path)!r}, bind the returned id to your path, actor, "
+                "and lease, then release the brief. A task-bearing child holds no lease "
+                "and is denied on its first repository tool."
+            )
         # A WAIT naming any other path is an attempt to leave the parent's lease.
         raise ContractError(
             f"child spawn must stay in its parent's leased checkout {str(parent_path)!r}; "

@@ -61,14 +61,46 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
   whose volume would displace it, including bulk implementation, wide file
   reading, repeated test-fix loops, log triage, and mechanical edits.
 - **Children never touch beads, PRs, or pushes.** They edit files only inside
-  your prepared Worktrunk checkout and report back to you. Spawn them
-  wait-only, bind their returned IDs to your path/actor/lease with
-  `worktrunk-writer bind`, then release the brief. They never create, switch,
-  or remove worktrees. You review their edits, commit, and push.
+  your prepared Worktrunk checkout and report back to you. They never create,
+  switch, or remove worktrees. You review their edits, commit, and push.
 - Collect all children before you report the node. No child outlives its node.
 - If your domain needs more parallel *nodes* than you can pipeline, that is the
   orchestrator's signal to spawn a second specialist -- you never spawn a
   sub-specialist (only the orchestrator creates claim-holders).
+
+### Spawning a child
+
+A child shares your checkout, actor, and lease, taken from your node metadata
+(`worktree`, `actor`, `lease_token`). It never gets its own checkout and never
+receives `--bead` or `--resource`.
+
+1. Spawn with exactly the text below, nothing else, naming YOUR checkout. Send it
+   with no leading whitespace: the match is anchored, so an indented copy is
+   refused.
+
+```text
+WAIT checkout={your-checkout}
+Do not invoke tools or start work.
+The controlling parent will send your task after binding your Worktrunk lease.
+```
+
+   A task-bearing spawn is refused with `child spawn must be wait-only`; a WAIT
+   naming another path is refused as an attempt to leave your lease.
+
+2. The child replies `WAIT context={id}` and stops. Bind that id to your own
+   anchors and require `status=bound`:
+
+   ```bash
+   worktrunk-writer.py bind --repo {repo} --path {your-checkout} \
+     --actor {your-actor} --lease {your-lease} \
+     --handle {spawn-handle} --ack 'WAIT context={id}'
+   ```
+
+3. Send the brief as an ordinary message. A child is not a claim-holder, so it
+   receives a task, never a `CLAIM`.
+
+Skip the bind and the child cannot act at all: an unbound context is refused on
+its first Bash or Edit, which reads as a lease error rather than a missing step.
 
 ## Work
 

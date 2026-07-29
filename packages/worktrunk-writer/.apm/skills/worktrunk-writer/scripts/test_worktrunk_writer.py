@@ -1776,15 +1776,20 @@ class ChildSpawnTests(unittest.TestCase):
             "The controlling parent will send your task after binding your Worktrunk lease."
         )
 
-    def test_bound_holder_may_spawn_a_task_bearing_child(self) -> None:
-        item = self.spawn(
-            {"subagent_type": "general-purpose", "prompt": "Grep callers"}, "parent-ctx"
-        )
-        self.assertEqual(item["branch"], "writer/parent")
-
     def test_child_may_name_the_parents_own_checkout(self) -> None:
         item = self.spawn({"prompt": self.wait_for(self.parent_path)}, "parent-ctx")
         self.assertEqual(item["branch"], "writer/parent")
+
+    def test_a_task_bearing_child_is_told_to_be_wait_only(self) -> None:
+        """Admitting it would spawn a child that cannot act.
+
+        An unbound context is refused by assert_runtime_lease on its first Bash or
+        Edit, so the useful failure is here, naming the wait-only sequence.
+        """
+        with self.assertRaisesRegex(MODULE.ContractError, "must be wait-only"):
+            self.spawn(
+                {"subagent_type": "general-purpose", "prompt": "Grep callers"}, "parent-ctx"
+            )
 
     def test_child_may_not_escape_to_another_lease(self) -> None:
         with self.assertRaisesRegex(MODULE.ContractError, "stay in its parent's leased checkout"):
@@ -1801,7 +1806,10 @@ class ChildSpawnTests(unittest.TestCase):
     def test_exemption_ignores_agent_type_and_reads_only_the_binding(self) -> None:
         """Classifying by subagent_type is what got the 1.x deny gate reverted."""
         for kind in ("general-purpose", "domain-specialist", "reviewer", ""):
-            item = self.spawn({"subagent_type": kind, "prompt": "work"}, "parent-ctx")
+            item = self.spawn(
+                {"subagent_type": kind, "prompt": self.wait_for(self.parent_path)},
+                "parent-ctx",
+            )
             self.assertEqual(item["branch"], "writer/parent")
 
     def test_a_context_bound_twice_grants_no_exemption(self) -> None:
@@ -1812,6 +1820,73 @@ class ChildSpawnTests(unittest.TestCase):
             )
         with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
             self.spawn({"subagent_type": "general-purpose", "prompt": "work"}, "dupe-ctx")
+
+
+class MarkerLivenessTests(unittest.TestCase):
+    """A run marker engages the protocol only while its run is going.
+
+    Every uncertainty resolves toward live: this narrows a guard, so an
+    unreadable marker or an absent task system must not switch it off.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.cwd = Path(self.temp.name)
+        self.marker = self.cwd / ".active-run"
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def live(self, text, issue=None, beads=True):
+        self.marker.write_text(text)
+        with patch.object(MODULE, "beads_active", return_value=beads):
+            with patch.object(MODULE, "beads_json", return_value=[issue] if issue else []):
+                return MODULE.marker_run_live(self.cwd, self.marker)
+
+    def test_open_run_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "run-1"}', {"id": "run-1", "status": "open"}))
+
+    def test_closed_run_is_not_live(self) -> None:
+        self.assertFalse(self.live('{"run_id": "run-1"}', {"id": "run-1", "status": "closed"}))
+
+    def test_pending_marker_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "pending"}'))
+
+    def test_unparseable_marker_is_live(self) -> None:
+        self.assertTrue(self.live("not json at all"))
+
+    def test_absent_task_system_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "run-1"}', {"status": "closed"}, beads=False))
+
+    def test_unreadable_resource_is_live(self) -> None:
+        self.marker.write_text('{"run_id": "run-1"}')
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(MODULE, "beads_json", side_effect=MODULE.ContractError("no bd")):
+                self.assertTrue(MODULE.marker_run_live(self.cwd, self.marker))
+
+
+class ProtocolEngagementTests(unittest.TestCase):
+    """A marker alone is not enough; a lease must be reachable.
+
+    Escalating on the marker alone turned the documented advise-not-deny default
+    into a deny for every spawn from the primary checkout during a run, including
+    read-only work aimed at a different repository.
+    """
+
+    def engaged(self, inventory, cwd="/tmp/elsewhere"):
+        payload = {"tool_input": {"subagent_type": "general-purpose", "prompt": "work"}}
+        with patch.object(MODULE, "orchestration_active", return_value=True):
+            return MODULE.protocol_engaged(payload, inventory, Path(cwd))
+
+    def test_a_repo_with_no_leases_does_not_engage(self) -> None:
+        self.assertFalse(self.engaged([{"branch": "main", "path": "/tmp/primary"}]))
+
+    def test_a_repo_holding_a_lease_still_engages(self) -> None:
+        inventory = [
+            {"branch": "main", "path": "/tmp/primary"},
+            {"branch": "w/a", "path": "/tmp/w-a", "vars": {"actor": "a", "lease": "l"}},
+        ]
+        self.assertTrue(self.engaged(inventory))
 
 
 class EnvelopeCompletenessTests(unittest.TestCase):
