@@ -86,6 +86,16 @@ DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining. Above it the hook names
   that every session costs more than the exploration it saves. Search the named
   file with `rg` rather than reading it.
 
+## Code lookup routing
+
+Reaching for the wrong navigation tool pays twice: for the answer, and for the
+follow-up when it is incomplete. Serena knows `pub` from private and is live;
+graphify answers "what calls this" cheaply with typed edges but models no
+visibility and truncates a file's members at 20. See
+[code lookup routing](references/code-lookup-routing.md) for the measured
+comparison and the command surface, which exists so no agent pays the 12,464-byte
+`graphify --help` read again.
+
 ## Judging a filter's reach
 
 MUST Measure coverage in BYTES, not in commands routed. Command counts flatter a

@@ -232,9 +232,21 @@ refuses to re-spill an already-spilled result, so a marker can never stack.
 741-file repository that is 6,093 tokens against 1,022,188 for a full pack, a
 168x reduction, which is small enough to hand an agent at session start.
 
-`--compress` is not the lever it appears to be: Tree-sitter signature extraction
-removed 8% on source files and 1.4% repository-wide, because the bulk is test
-fixtures and cached artifacts rather than function bodies.
+`--compress` is not the lever it appears to be. Measured repository-wide it
+removes **21%** (10,365,403 to 8,166,829 tokens) against the 70% its
+documentation claims, because it extracts Tree-sitter signatures from code while
+markdown and JSON go untouched. It also regresses on comment-dense files, where
+doc comments duplicate around the elision markers.
+
+**A pack is cheap, which is the opposite of what this hook originally assumed.**
+Measured on repomix 1.17.0: a full pack of 4,107 files is 1.65s, of 1,269 files
+1.30s, and the `--no-files` map is 1.26s to 3.18s depending on the tree, so the
+map is sometimes *slower* than the pack it replaces. repomix has no cache either
+(two identical runs: 2.27s, 2.49s). The saving here is CONTEXT, not time. The
+cost-avoidance machinery that the "packing is expensive" premise bought (a
+detached re-exec, a lockdir, a 120-second timeout) has been removed; the
+HEAD-marker gate stays because skipping redundant work is still right and costs
+one file read.
 
 The map is written under `XDG_STATE_HOME`, refreshed when HEAD moves, and
 deduped with an atomic lockdir. `TOKEN_SAVINGS_MAP_BUDGET` (default 8000 tokens)

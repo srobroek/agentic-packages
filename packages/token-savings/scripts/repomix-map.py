@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 """Maintain a cheap repository structure map, and tell the agent it exists.
 
-THE PROBLEM THIS SOLVES. `mcp-repomix` already refreshes a full `repomix.xml`
-after branch and merge events, but a full pack is not a thing an agent can
-read: measured here, a 741-file repository packs to 1,022,188 tokens and a
-4,124-file one is far worse. `--compress` (Tree-sitter signature extraction)
-removed only 8% on source files and 1.4% repository-wide, because the bulk is
-test fixtures and cached artifacts rather than function bodies. So the full
-snapshot is useful only as something to grep, and nothing was telling agents it
-was there.
+THE PROBLEM THIS SOLVES is CONTEXT, not time. A full pack is not a thing an
+agent can read: a 4,107-file repository packs to 10,365,403 tokens, roughly ten
+context windows, while the `--no-files` map of the same tree is 31,299. That
+331x is the entire point.
+
+`--compress` does not close that gap. Measured repository-wide it removes 21%
+(10,365,403 -> 8,166,829 tokens), against the 70% its documentation claims,
+because it extracts Tree-sitter signatures from code and markdown and JSON are
+untouched. It also REGRESSES on comment-dense files: doc comments duplicate
+around the elision markers.
+
+A PACK IS CHEAP, which is the opposite of what this script used to assume. Its
+header claimed "a pack is expensive and every gate that suppresses one is
+load-bearing", and the cost-avoidance machinery that premise bought -- a
+detached re-exec, a lockdir, a 120-second timeout -- has been removed. Measured
+with repomix 1.17.0: a full pack of 4,107 files is 1.65s and of 1,269 files
+1.30s, and the `--no-files` map is 1.26s to 3.18s depending on the tree, so the
+map is sometimes SLOWER than the pack it replaces. repomix also has no cache
+(two identical runs: 2.27s then 2.49s), so nothing is amortised by deferring.
+
+The HEAD-marker gate stays, because skipping genuinely redundant work is still
+right, and it is one file read. What is gone is the machinery that treated two
+seconds as something to engineer around.
 
 `repomix --no-files` emits the directory tree and metadata with no file
 contents. Same repository: 6,093 tokens instead of 1,022,188, a 168x
@@ -38,10 +53,10 @@ import sys
 # Only `sys` at module scope: `inject` runs on every SessionStart, and the
 # repository's hook contract puts the per-call budget ahead of tidy imports.
 
-# Rebuilding costs a repomix run, so it is gated on HEAD having moved. A pack of
-# the 4,124-file repository took well under this; the timeout only bounds a
-# pathological case.
-PACK_TIMEOUT_SECONDS = 120
+# A pack is 1.3 to 3.2 seconds measured on repomix 1.17.0, so this bounds only a
+# pathological tree. A 120-second timeout on a 2-second operation could not fire
+# for the reason it was written.
+PACK_TIMEOUT_SECONDS = 30
 
 # Above this, the map is referenced rather than inlined. 6k fits comfortably in
 # a session preamble; the ~31k a large repository produces does not, and paying
