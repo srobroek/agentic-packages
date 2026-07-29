@@ -65,6 +65,3 @@ RELATIONSHIP TO OTHER RECORDS
 | ADR file | Durable, project-scoped, point-in-time | Append-only; supersede, never rewrite |
 | Roadmap | Forward-looking, re-sequenced as plans change | Continuously updated |
 | Work-bead comment | Affects only that bead and its owned scope | Local, stays with the bead |
-
-A choice that affects one bead is a comment. A choice that crosses a boundary is a
-`decision` bead. A crossing choice that survives the run is also an ADR.

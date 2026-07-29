@@ -1,5 +1,5 @@
 ---
-description: When a choice earns an architecture decision record, and how to register it as it lands.
+description: When a choice earns a decision record, and how to register it.
 applyTo: "{docs/adr/**,**/*.md,**/adrs.toml,**/.adr-dir}"
 ---
 

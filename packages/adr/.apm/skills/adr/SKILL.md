@@ -1,6 +1,6 @@
 ---
 name: adr
-description: Register and author an architecture decision record. Use when a hard-to-reverse or boundary-crossing choice is made, when asked to write or supersede an ADR, or when `adrs doctor` reports findings.
+description: Register and author an architecture decision record. Use when a hard-to-reverse choice is made, when superseding a record, or when `adrs doctor` reports findings.
 ---
 
 # Architecture decision records
