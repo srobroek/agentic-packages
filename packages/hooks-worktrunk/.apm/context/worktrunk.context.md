@@ -56,17 +56,22 @@ NOT Treat `copy-ignored` as a shared writable build directory; it creates a
 DEFAULT Run a dev server with
   `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
   matching `[list] url`.
-DEFAULT Build the repomix pack in `post-start` and let `copy-ignored` warm it.
-  The pack must be gitignored, listed in `.worktreeinclude`, and generated from a
-  committed `repomix.config.json` so the invocation carries no flags:
+DEFAULT Refresh the repomix pack in `post-start` from the GLOBAL user config, not
+  per repository. `repomix` with no arguments reads the repository's committed
+  `repomix.config.json`, so the command carries no repository-specific knowledge
+  and IS a cross-repository invariant:
 
     [post-start]
     repomix = "repomix"
 
-  Copying beats rebuilding, and the pack holds no absolute paths so a copy is
-  valid in any checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, and
-  near-free on a reflink filesystem. `copy-ignored` runs first, so `repomix` only
-  repacks what the branch changed.
+  Each repository supplies its own patterns in `repomix.config.json`; one without
+  the file gets repomix's defaults and is simply larger. That split is what makes
+  the global hook legitimate under HOOK OWNERSHIP below.
+MUST Gitignore the pack and list it in `.worktreeinclude`, both per repository.
+  Copying beats rebuilding and the pack holds no absolute paths, so a copy is
+  valid in any checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, near-free
+  on a reflink filesystem. `copy-ignored` runs first, so `repomix` only repacks
+  what the branch changed.
 NOT Read the pack. It is 6,349,248 tokens on a 4,107-file repository; a
   `PreToolUse` guard denies the read and names `rg`/`awk` instead.
 NOT Build a graphify graph per worktree. `graphify update` has no output flag and

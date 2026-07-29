@@ -84,16 +84,26 @@ def test_whole_file_readers_are_denied(command, repo):
 
 @pytest.mark.parametrize(
     "command",
-    ["head -100000 repomix-full.xml", "tail -50000 repomix-full.xml", "head -n 99999 repomix-full.xml"],
+    [
+        "head -100000 repomix-full.xml",
+        "tail -50000 repomix-full.xml",
+        "head -n 99999 repomix-full.xml",
+        "head -20 repomix-full.xml",
+        "tail -30 repomix-full.xml",
+        "head repomix-full.xml",
+    ],
 )
-def test_an_oversized_head_or_tail_is_denied(command, repo):
-    """A large count is a slurp wearing a sampler's clothes."""
+def test_head_and_tail_are_denied_at_any_count(command, repo):
+    """A prefix of a pack is arbitrary, not a sample. `head -20` returned 3,023
+    bytes covering 7 unrelated file openings, where `rg -o 'path="[^"]*"'` answers
+    the question that motivates the peek -- what files exist -- completely and for
+    less. Banning both also removes the arbitrary-limit argument."""
     assert _denied(_run("Bash", {"command": command}, repo))
 
 
-def test_an_oversized_head_piped_into_a_searcher_is_still_denied(repo):
-    """The pipe does not save it: `head -100000` has already read the pack."""
-    assert _denied(_run("Bash", {"command": "head -100000 repomix-full.xml | rg x"}, repo))
+def test_head_piped_into_a_searcher_is_still_denied(repo):
+    """The pipe does not save it: the prefix is in context before `rg` runs."""
+    assert _denied(_run("Bash", {"command": "head -20 repomix-full.xml | rg x"}, repo))
 
 
 def test_an_mcp_file_reader_is_denied(repo):
@@ -108,6 +118,8 @@ def test_the_denial_names_the_search_commands(repo):
     assert "rg" in reason
     assert "awk" in reason
     assert "tokens" in reason
+    # The head/tail ban is surprising enough that the denial has to explain it.
+    assert "head" in reason
 
 
 # --- allowed: the pack's intended use --------------------------------------
@@ -131,16 +143,20 @@ def test_searching_a_pack_is_allowed(command, repo):
     assert not _denied(_run("Bash", {"command": command}, repo))
 
 
-@pytest.mark.parametrize(
-    "command", ["head -20 repomix-full.xml", "tail -30 repomix-full.xml", "head repomix-full.xml"]
-)
-def test_sampling_the_shape_is_allowed(command, repo):
-    assert not _denied(_run("Bash", {"command": command}, repo))
-
-
 def test_a_small_pack_is_readable(repo):
-    """A tiny repository packs to a few thousand tokens; denying that obstructs."""
+    """40 KB is roughly 10,000 tokens: reading it is a considered choice. The
+    threshold was 400 KB and that was far too generous, half a context window."""
     assert not _denied(_run("Read", {"file_path": "small.xml"}, repo))
+
+
+def test_the_threshold_is_not_generous(repo):
+    """Guards the constant itself: a permissive threshold quietly defeats the
+    guard, since a pack just under it is still a large read."""
+    import re
+
+    body = SCRIPT.read_text()
+    limit = int(re.search(r"^READABLE_BYTES = ([\d_]+)", body, re.M).group(1).replace("_", ""))
+    assert limit <= 50_000, f"{limit} bytes is ~{limit // 4} tokens to read by accident"
 
 
 def test_reading_a_source_file_is_untouched(repo):

@@ -243,9 +243,20 @@ So a `PreToolUse` guard denies the read and names the search.
 | --- | --- |
 | `Read` on a pack | `rg` / `grep` / `awk` / `sed` / `jq` / `wc` on a pack |
 | any `mcp__*` file reader | `cat pack \| rg x` (a search; the reader is plumbing) |
-| `cat` `bat` `less` `more` `nl` `open` | `head -20`, bare `head` (sampling) |
-| `head -100000`, `tail -50000` | a pack under 400 KB (readable) |
-| an oversized `head` even piped to `rg` | any normal source file |
+| `cat` `bat` `less` `more` `nl` `open` | a pack under 40 KB (readable on purpose) |
+| **`head` and `tail`, at any count** | any normal source file |
+| `head -20 pack \| rg x` | |
+
+`head`/`tail` are denied outright rather than allowed under a line limit. A prefix
+of a pack is arbitrary, not a sample: `head -20` returned 3,023 bytes covering 7
+unrelated file openings, while `rg -o 'path="[^"]*"'` answers the question that
+motivates the peek -- what files exist -- completely and for less. Banning both
+also removes the arbitrary-limit argument (why 200 lines and not 500).
+
+The readable threshold is **40 KB**, roughly 10,000 tokens. It was 400 KB and that
+was far too generous: half a context window spent by accident on an artifact whose
+entire purpose is to be searched. A test asserts the constant stays small, because
+a permissive threshold quietly defeats the guard.
 
 `TOKEN_SAVINGS_ALLOW_PACK_READ=1` steps the guard aside when the whole pack
 genuinely is what you want. A deny with no escape hatch is a guard that gets

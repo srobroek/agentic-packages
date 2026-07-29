@@ -15,15 +15,14 @@ the whole context window, and the correction is mechanical.
 Covers the ways a pack gets read:
 
   Read tool           on a pack path
-  Bash                cat / bat / head -<huge> / less / more / open
+  Bash                cat / bat / less / more / open / nl / head / tail
   MCP file readers    a `file_path`/`path` argument naming a pack
 
 Deliberately NOT denied:
 
-  rg / grep / awk / sed on a pack   -- the intended use
-  head / tail with a small count    -- sampling the shape is reasonable
-  wc                                -- a size check
-  a pack under the size threshold   -- a tiny repository's pack is readable
+  rg / grep / awk / sed / jq on a pack   -- the intended use
+  wc                                    -- a size check
+  a pack under 40 KB                    -- small enough to read on purpose
 
 THE ESCAPE HATCH. Sometimes the whole pack IS what you want: a human opening it
 in an editor, or an agent genuinely needing to page through it. Set
@@ -56,16 +55,24 @@ PACK_NAMES = (
     "repomix.txt",
 )
 
-# Below this a pack is small enough to read. A tiny repository packs to a few
-# thousand tokens and denying that would be obstructive. 400 KB is roughly 100k
-# tokens: already large, still recoverable.
-READABLE_BYTES = 400_000
+# Below this a pack is small enough to read outright. 400 KB was the first guess
+# and it was far too generous: 400 KB is roughly 100,000 tokens, half a window,
+# spent on an artifact whose whole purpose is to be searched. 40 KB (~10,000
+# tokens) is the point where reading it is a considered choice rather than an
+# accident, and a genuinely tiny repository still packs under it.
+READABLE_BYTES = 40_000
 
 # Readers that pull a whole file into context.
 WHOLE_FILE_READERS = ("cat", "bat", "less", "more", "open", "nl")
 
-# A line-count flag small enough that the caller is sampling, not slurping.
-SAMPLE_LIMIT = 200
+# `head`/`tail` on a pack is banned outright rather than allowed under a line
+# limit. The earlier version permitted a small count as "sampling the shape", but
+# a prefix of a pack is not useful: `head -20` returned 3,023 bytes covering 7
+# arbitrary file openings, while `rg -o 'path="[^"]*"'` answers the question that
+# motivates the sample (what files exist) completely and for less. A line limit
+# also invites the arbitrary-number problem -- why 200 and not 500 -- so there is
+# no number to argue about.
+HEAD_TAIL = ("head", "tail")
 
 
 def pack_paths_in(text: str) -> list[str]:
@@ -108,24 +115,18 @@ def repo_root(start: str) -> str:
 def is_search(command: str) -> bool:
     """Does this command SEARCH the pack rather than read it?
 
-    Checked before the reader test, because `rg pattern repomix.xml` and
-    `cat repomix.xml | rg pattern` are both searches and only the second has a
-    reader in it.
+    A reader may legitimately appear in a search: `cat pack | rg pattern` is a
+    search whose first stage happens to be `cat`. But `head`/`tail` disqualify the
+    whole command even when a searcher follows, because the prefix has already
+    entered context by the time the searcher sees it.
     """
     import re
 
-    # A large `head`/`tail` count is a slurp wearing a sampler's clothes, so test
-    # it BEFORE the searcher list -- `head -100000 pack | rg x` would otherwise
-    # pass on the `rg` alone.
-    match = re.search(r"(^|[\s;&|])(head|tail)\s+-n?\s*(\d+)", command)
-    if match and int(match.group(3)) > SAMPLE_LIMIT:
+    if re.search(r"(^|[\s;&|])(" + "|".join(HEAD_TAIL) + r")(\s|$)", command):
         return False
-
-    if re.search(r"(^|[\s;&|])(rg|grep|egrep|fgrep|ag|ack|awk|sed|wc|jq|xmllint)(\s|$)", command):
-        return True
-    if match:
-        return True
-    return False
+    return bool(
+        re.search(r"(^|[\s;&|])(rg|grep|egrep|fgrep|ag|ack|awk|sed|wc|jq|xmllint)(\s|$)", command)
+    )
 
 
 def deny(name: str, size: int, how: str) -> None:
@@ -144,6 +145,8 @@ def deny(name: str, size: int, how: str) -> None:
                         f"  rg '<pattern>' {name}\n"
                         f"  rg -o 'path=\"[^\"]*<name>[^\"]*\"' {name}   # locate a file\n"
                         f"  awk '/<file path=\"<path>\">/,/<\\/file>/' {name}   # one file's contents\n"
+                        f"`head`/`tail` are denied too: a prefix of a pack is arbitrary, "
+                        f"where `rg -o 'path=\"[^\"]*\"'` answers what-files-exist completely. "
                         f"To read one source file, read that file rather than the pack. "
                         f"If you genuinely need the whole pack, rerun with "
                         f"TOKEN_SAVINGS_ALLOW_PACK_READ=1."
@@ -227,14 +230,9 @@ def main() -> int:
         deny(name, size, "That command")
         return 0
 
-    # A `head`/`tail` count above the sample limit reads most of the pack even
-    # though neither is in WHOLE_FILE_READERS.
-    oversized = re.search(r"(^|[\s;&|])(head|tail)\s+-n?\s*(\d+)", command or "")
-    if oversized and int(oversized.group(3)) > SAMPLE_LIMIT:
-        deny(name, size, f"Reading {oversized.group(3)} lines")
+    if command and re.search(r"(^|[\s;&|])(" + "|".join(HEAD_TAIL) + r")(\s|$)", command):
+        deny(name, size, "A prefix or suffix of a pack")
         return 0
-
-    # A bare `head`/`tail` with no count defaults to 10 lines: a sample, allowed.
     return 0
 
 
