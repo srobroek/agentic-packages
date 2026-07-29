@@ -124,6 +124,13 @@ MACHINE_FLAGS = (
     "-0",
     "--null",
     "--count",
+    # `rtk cargo test --no-run` emits ZERO bytes and exits 0, discarding the
+    # "Finished" line and every built test-executable path. Reproduced on 0.44.1
+    # both on a 4,107-file workspace (32,031 native bytes to 0) and on a
+    # two-file fixture (151 to 0). rtk's test filter looks for a result tally
+    # that a compile-only run never prints, and emits nothing rather than
+    # falling back. Total silent loss, so never route it.
+    "--no-run",
 )
 
 # Flags whose meaning depends on the command, so a global ban is wrong. `-q` is
@@ -213,6 +220,23 @@ def _rewrite(command: str) -> str | None:
     # made `cargo clippy &> /tmp/out` look routable when its output goes to disk.
     probe = command.replace("2>&1", "")
 
+    # `cd <dir> && <cmd>` is the single most common real shape (12,393 of 24,725
+    # local Bash calls start with `cd`). The `cd` is not something rtk would
+    # filter and it does not consume the command's output, so rewrite what
+    # follows and keep the prefix verbatim: `cd X && rtk cargo build` is
+    # equivalent to `cd X && cargo build`, verified. Only a SINGLE leading
+    # `cd <one-token> &&` is unwrapped; anything more complex falls through to
+    # the chain rejection below.
+    prefix = ""
+    stripped = command.strip()
+    import re
+
+    cd_match = re.match(r"^(cd\s+[^\s&;|<>]+\s*&&\s*)(.+)$", stripped, re.S)
+    if cd_match:
+        prefix = cd_match.group(1)
+        command = cd_match.group(2).strip()
+        probe = command.replace("2>&1", "")
+
     if any(marker in probe for marker in PIPELINE_MARKERS):
         return None
 
@@ -227,9 +251,10 @@ def _rewrite(command: str) -> str | None:
         rewritten_head = _rewrite_simple(head.strip())
         if rewritten_head is None:
             return None
-        return " | ".join([rewritten_head] + [s.strip() for s in downstream])
+        return prefix + " | ".join([rewritten_head] + [s.strip() for s in downstream])
 
-    return _rewrite_simple(command)
+    rewritten = _rewrite_simple(command)
+    return None if rewritten is None else prefix + rewritten
 
 
 def _rewrite_simple(command: str) -> str | None:

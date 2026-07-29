@@ -268,6 +268,43 @@ def test_timeout_does_not_launder_an_unlisted_command(tmp_path):
     assert _run(_bash("timeout 600 rm -rf /tmp/x"), tmp_path=tmp_path) == ""
 
 
+@pytest.mark.parametrize(
+    "command,expected",
+    [
+        ("cd /tmp/x && cargo build", "cd /tmp/x && rtk cargo build"),
+        ("cd ~/dev/repo && gh pr checks 5 2>&1 | tail -10", "cd ~/dev/repo && rtk gh pr checks 5 2>&1 | tail -10"),
+        ("cd /a && uv run pytest", "cd /a && rtk uv run pytest"),
+    ],
+)
+def test_a_single_leading_cd_is_stepped_over(command, expected, tmp_path):
+    """`cd` is the first token of 12,393 of 24,725 local Bash calls. It neither
+    filters nor consumes output, so the command after it is routable."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cd /tmp/x && rm -rf /tmp/y",
+        "cd /tmp/x && cargo build && echo done",
+        "cd /a && cd /b && cargo test",
+        "cd /tmp/x; cargo build",
+    ],
+)
+def test_cd_does_not_launder_a_longer_chain(command, tmp_path):
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
+@pytest.mark.parametrize(
+    "command", ["cargo test --no-run", "cargo test --workspace --no-run"]
+)
+def test_cargo_test_no_run_is_refused(command, tmp_path):
+    """`rtk cargo test --no-run` emits ZERO bytes and exits 0, discarding the
+    built test-executable paths. Reproduced on a 4,107-file workspace (32,031
+    native bytes to 0) and on a two-file fixture (151 to 0)."""
+    assert _run(_bash(command), tmp_path=tmp_path) == ""
+
+
 def test_already_routed_commands_are_not_double_wrapped(tmp_path):
     assert _run(_bash("rtk git log --oneline"), tmp_path=tmp_path) == ""
 
