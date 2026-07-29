@@ -150,20 +150,23 @@ lease-unbind = "python3 <skill>/scripts/worktrunk-writer.py lifecycle --event pr
 | `pre-start` | Releases the binding when the activation resource proves the actor finished. | No-op |
 | `pre-remove` | Clears the binding so teardown strands nothing. | No-op |
 
-Two properties hold on every event. An unleased checkout is a silent no-op,
-decided by the checkout's own `actor`/`lease` vars rather than by whether an
-orchestrator is running, because `pr-shepherd`, standalone reviewers, and humans
-all hold leases without a run marker. Any internal error fails open: lease
-bookkeeping must never stop a worktree from starting.
+On every event:
+
+- An unleased checkout is a silent no-op. The test is the checkout's own
+  `actor`/`lease` vars; `pr-shepherd`, standalone reviewers, and humans all hold
+  leases without a run marker.
+- Any internal error fails open. Lease bookkeeping must never stop a worktree
+  from starting.
 
 `pre-switch` only sees `wt switch`. A raw `git switch` bypasses Worktrunk, so the
 PreToolUse guard stays the backstop for agents.
 
-Releasing on `pre-start` never guesses liveness. A slow actor and a dead one look
-identical from inventory, so the check asks the task system: a resource that is
-closed, or unassigned and not in progress, is provably done. Missing resource,
-missing `bd`, or any error leaves the binding alone. Reaping an actor that died
-without unassigning stays an explicit `release` call.
+Releasing on `pre-start` never guesses liveness, because a slow actor and a dead
+one look identical from inventory. It asks the task system instead:
+
+- Resource closed, or unassigned and not in progress: release.
+- Missing resource, missing `bd`, or any error: leave the binding alone.
+- Actor died without unassigning: an explicit `release` call.
 
 ## Logs
 

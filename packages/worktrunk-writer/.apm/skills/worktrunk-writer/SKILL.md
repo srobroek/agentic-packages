@@ -15,7 +15,7 @@ TRIGGER
 ## Workflow
 
 1. PREPARE without `--bead` when the parent must create the checkout before the agent claims:
-   `scripts/worktrunk-writer.py prepare --repo <repo> --branch <branch> --base <base> --source <copy-source> --actor <unique-actor> --lease <unique-token> --runtime <claude|codex> --agent <agent> [--run <id>] [--node <id>] [--worktree-path <template>]`. `prepare` is parent-managed and rejects `--bead`; the activation resource stays unassigned until the worker claims it.
+   `scripts/worktrunk-writer.py prepare --repo <repo> --branch <branch> --base <base> --source <source-branch> --actor <unique-actor> --lease <unique-token> --runtime <claude|codex> --agent <agent> [--run <id>] [--node <id>] [--worktree-path <template>]`. `prepare` is parent-managed and rejects `--bead`; the activation resource stays unassigned until the worker claims it. `--source` names the BRANCH whose checkout supplies the ignored-file copy, not a filesystem path: a path fails as `Branch <path> has no worktree`. `--base` is the ref the new branch starts from, and it must be the ref where the target work actually lives.
 2. Require `status=ready`. Allocate an ordinary tool user with exactly:
    ```text
    WAIT checkout={path}
