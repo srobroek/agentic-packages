@@ -89,14 +89,23 @@ def test_spill_file_holds_the_complete_output(tmp_path):
 
 def test_sed_instruction_points_at_the_first_hidden_line(tmp_path):
     """The header occupies two lines, so an unadjusted range re-reads what the
-    agent already has."""
+    agent already has.
+
+    Executes the footer through a real shell instead of parsing a literal path
+    out of it. The path is bound ONCE to `$F` to keep the footer small, so the
+    instruction is only correct if that binding resolves as written.
+    """
     text = _big()
     summary = _run(_payload(text), tmp_path)
-    match = re.search(r"sed -n '(\d+),(\d+)p' (\S+)", summary)
+    match = re.search(r"sed -n '(\d+),(\d+)p'", summary)
     assert match, summary
-    start, path = int(match.group(1)), match.group(3)
+    start = int(match.group(1))
+    binding = re.search(r'F="([^"]+)"', summary)
+    assert binding, summary
     line = subprocess.run(
-        ["sed", "-n", f"{start},{start}p", path], capture_output=True, text=True
+        ["bash", "-c", f'F="{binding.group(1)}"; sed -n "{start},{start}p" "$F"'],
+        capture_output=True,
+        text=True,
     ).stdout.strip()
     # Derive the expected line from the constant so tuning HEAD_LINES cannot leave
     # this asserting a stale offset.
@@ -112,7 +121,7 @@ def test_head_and_tail_are_both_retained(tmp_path):
     summary = _run(_payload(text), tmp_path)
     assert "line 1 " in summary
     assert "line 600" in summary
-    assert "lines omitted" in summary
+    assert "omitted" in summary
 
 
 def test_failing_command_output_is_never_truncated(tmp_path):

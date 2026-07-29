@@ -160,7 +160,7 @@ the model rather than what any tool reported:
 | 31,393 B | truncated to 2,246 B | truncated |
 | 223,522 B | truncated to 2,247 B | truncated |
 
-So this hook owns everything from 2 KB to about 30 KB, which is most real output.
+So this hook owns everything from 1 KB to about 30 KB, which is most real output.
 
 ### Why `BASH_MAX_OUTPUT_LENGTH=2000` is not a replacement
 
@@ -202,14 +202,13 @@ itself. To run an A/B baseline, remove the hook rather than setting that variabl
 
 ## Oversized output goes to disk
 
-A `Bash` result over 2 KB is replaced by its first 20 and last 30 lines plus a
-path to the full text. The summary names the exact commands that recover any part
-of it:
+A `Bash` result over 1 KB is replaced by its first 15 and last 25 lines plus a
+path to the full text. The path is bound once to `$F`, and the footer is two
+lines:
 
 ```
-rg <pattern> /path/to/spill.txt
-sed -n '43,242p' /path/to/spill.txt
-wc -l /path/to/spill.txt
+F="/path/to/spill.txt"  # do not re-run
+sed -n '18,217p' "$F"  # rg <pat> "$F"
 ```
 
 Retrieval is therefore plain Bash and works under both runtimes, even though the
@@ -222,27 +221,53 @@ A failing command is never summarized: the error text is the thing worth reading
 Output under the threshold is untouched, a spilled result never nests, and the
 store is pruned to 200 files and 7 days.
 
-The threshold is tuned against 4,417 real tool results from a 4,107-file
-repository's transcripts, where `Bash` owns 69% of all transcript bytes:
+### The footer sets the floor on the threshold
 
-| Threshold | Head/tail | Spilled | Bytes saved | Share of all bytes |
+Overhead is fixed per spill, so it decides how small a result can usefully be
+summarized. An earlier footer repeated the spill path four times, once in the
+header and once per retrieval command, at 85 bytes each:
+
+| Footer | Overhead | Path repeats |
+| --- | --- | --- |
+| three named commands, path in each | 555 B | 4 |
+| path bound to `$F`, prose retained | 206 B | 1 |
+| **current** | **174 B** | **1** |
+
+At 555 bytes a 1 KB threshold spends more than half its budget on the footer. At
+174 it does not, which is what makes 1 KB viable. The path is now 85 of those 174
+bytes, so the remaining prose is 89 and there is little left to cut.
+
+`# do not re-run` survives the trimming deliberately. Re-running the command is
+the failure this hook exists to prevent, and its side effects have already
+happened once.
+
+Verified in a live session: asked for a value sitting mid-output in a 12,536-byte
+test log, the agent read `$F`, ran `grep` against it, and answered from the file.
+Total tool-result bytes for the run were 1,094.
+
+### Threshold, re-tuned on 32,957 results across 651 repositories
+
+Counting only the sub-native band this hook can claim, and excluding results
+already shaped by a hook or the native cap:
+
+| Threshold | Head/tail | Spilled | Bytes saved | Share of sub-native bytes |
 | --- | --- | --- | --- | --- |
-| 4 KB | 40/60 | 100 | 464,193 | 12% |
-| 3 KB | 30/45 | 162 | 549,390 | 14% |
-| **2 KB** | **20/30** | **285** | **794,965** | **21%** |
-| 1 KB | 15/25 | 481 | 953,673 | 26% |
-| 500 B | 10/15 | 587 | 1,145,952 | 31% |
+| 2 KB | 20/30 | 3,487 | 8,578,237 | 25.6% |
+| **1 KB** | **15/25** | **6,165** | **10,614,207** | **31.7%** |
+| 1 KB | 10/20 | 6,791 | 12,379,880 | 37.0% |
+| 500 B | 10/15 | 7,994 | 12,898,559 | 38.6% |
 
-The head and tail must shrink with the threshold: a 40/60 window is wider than
-most 1 KB results, so it spills them for no gain. 2 KB at 20/30 is the choice.
-Below it the window stops being useful rather than merely smaller -- at 500 B,
-**1,069 of the spilled results fit entirely inside the head and tail**, so the
-hook would rewrite them, add a retrieval footer, and hide nothing. A guard now
-refuses any rewrite that would not shrink the result, so the threshold is safe to
-lower without re-auditing the window.
+Saved bytes keep rising, so bytes alone would pick the bottom row. What stops it is
+how much of a spilled result stays readable. At 15/25 the median spill leaves 62%
+of its lines visible and the 10th percentile 38%; at 10/20 those fall to 50% and
+29%, making a third of spills mostly hidden for another five points. 500 B adds
+0.9 points over 1 KB at 10/20 and spills 1,200 more results to get there.
 
-The remaining bound is structural: **48% of transcript bytes live in results under
-2 KB**, a long tail no size threshold reaches.
+A guard refuses any rewrite that would not shrink the result, so no configuration
+can make a result larger.
+
+The remaining bound is structural: results under 1 KB hold 7.9 MB of the corpus's
+33.5 MB, and no size threshold reaches them.
 
 ### rtk and the spill hook compose rather than collide
 

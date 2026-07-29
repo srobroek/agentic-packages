@@ -59,30 +59,44 @@ import sys
 
 # Only `sys` at module scope: this runs after every Bash call.
 
-# Below this, truncation is not worth a retrieval handle. Tuned against 4,417
-# real tool results from a 4,107-file repository's transcripts, where `Bash`
-# owns 69% of all transcript bytes:
+# Below this, truncation is not worth a retrieval handle. Re-tuned against 32,957
+# real tool results harvested across 651 local repositories, excluding results
+# already shaped by a hook or the native cap, and counting only the sub-native
+# band this hook can actually claim:
 #
-#   threshold   head/tail   spilled   bytes saved   share of all bytes
-#      4 KB         40/60       100       464,193                 12%
-#      2 KB         20/30       285       794,965                 21%
-#      1 KB         15/25       481       953,673                 26%
-#    500 B          10/15       587     1,145,952                 31%
+#   threshold   head/tail   spilled   bytes saved   share of sub-native bytes
+#      2 KB         20/30      3,487     8,578,237                      25.6%
+#      1 KB         15/25      6,165    10,614,207                      31.7%
+#      1 KB         10/20      6,791    12,379,880                      37.0%
+#    500 B          10/15      7,994    12,898,559                      38.6%
+#
+# 1 KB at 15/25 is the choice, and the last two rows are why it is not 500 B or a
+# narrower window. Saved bytes keep rising, so bytes alone would pick the bottom
+# row; what stops it is how much of a result stays READABLE. At 15/25 the median
+# spill leaves 62% of its lines visible and the 10th percentile 38%; at 10/20 that
+# falls to 50% and 29%, so a third of spills become mostly-hidden for another five
+# points. 500 B buys 0.9 points over 1 KB/10-20 and spills 1,200 more results.
 #
 # The window must shrink WITH the threshold: a 40/60 window is wider than most
-# 1 KB results, so it spills them for no gain. 2 KB at 20/30 is the choice.
-# Below it the window stops being useful rather than merely smaller: at 500 B,
-# 1,069 spilled results fit ENTIRELY inside a 20/30 window, so the hook would
-# rewrite them, add a retrieval footer, and hide nothing.
+# 1 KB results, so it spills them for no gain. Below 500 B the window stops being
+# useful rather than merely smaller: 1,069 spilled results fit ENTIRELY inside a
+# 20/30 window at that threshold, so the hook would rewrite them, add a retrieval
+# footer, and hide nothing.
 #
-# Do not expect more than this: 48% of transcript bytes live in results UNDER
-# 2 KB, a long tail no size threshold can reach.
-SPILL_THRESHOLD_BYTES = 2_000
+# Lowering this to 1 KB only became worthwhile once the footer shrank. Overhead is
+# FIXED per spill, so it sets the floor: the summary used to repeat the spill path
+# four times, 555 bytes against a 2,000-byte threshold. Binding the path once to
+# `$F` cut that to 206, which is what makes 1 KB pay.
+#
+# Still a floor rather than a solved problem: results under 1 KB hold 7.9 MB of the
+# corpus's 33.5 MB, and no size threshold reaches them.
+SPILL_THRESHOLD_BYTES = 1_000
 
 # Kept from each end. Enough for a test summary, a stack trace tail, or a build
-# verdict without reproducing the body.
-HEAD_LINES = 20
-TAIL_LINES = 30
+# verdict without reproducing the body. Narrowed with the threshold, since a
+# window wider than the results it sees spills them for no gain.
+HEAD_LINES = 15
+TAIL_LINES = 25
 
 # Prune: keep the store bounded without a background process.
 MAX_SPILL_FILES = 200
@@ -185,6 +199,13 @@ def build_summary(text: str, path: str, command: str, line_offset: int = 0) -> s
     itself (the `$ command` header and its blank line). Without it the `sed`
     range printed here is off by that much, and an agent following the
     instruction silently re-reads lines it already has.
+
+    THE PATH APPEARS ONCE. An earlier version repeated it in the header and in
+    all three retrieval commands: 4 x 85 bytes on a real spill path, against a
+    threshold of 2,000. Bound to `$F` instead, the footer costs 85 bytes plus one
+    short line per command, which is what makes a threshold below 2 KB viable at
+    all -- the overhead is fixed, so it is the whole reason a small result cannot
+    be usefully spilled.
     """
     lines = text.splitlines()
     head = lines[:HEAD_LINES]
@@ -193,29 +214,26 @@ def build_summary(text: str, path: str, command: str, line_offset: int = 0) -> s
     first_hidden = len(head) + 1 + line_offset
 
     parts = [
-        f"[token-savings] Output was {len(text)} bytes across {len(lines)} lines. "
-        f"Full text saved to:\n  {path}",
+        f"[token-savings] {len(text)}B/{len(lines)}L",
         "",
-        f"--- first {len(head)} lines ---",
+        f"--- first {len(head)} ---",
         *head,
     ]
     if tail:
         parts += [
             "",
-            f"--- {hidden} lines omitted ---",
+            f"--- {hidden} omitted ---",
             "",
-            f"--- last {len(tail)} lines ---",
+            f"--- last {len(tail)} ---",
             *tail,
         ]
+    # "do not re-run" stays despite the byte cost: re-running is the failure this
+    # replaces, and the side effects have already happened once.
     parts += [
         "",
-        "To see the omitted part, DO NOT re-run the command. Read the file:",
-        f"  rg <pattern> {path}",
-        f"  sed -n '{first_hidden},{first_hidden + 199}p' {path}",
-        f"  wc -l {path}",
+        f'F="{path}"  # do not re-run',
+        f"sed -n '{first_hidden},{first_hidden + 199}p' \"$F\"  # rg <pat> \"$F\"",
     ]
-    if command:
-        parts.append(f"Command was: {command}")
     return "\n".join(parts)
 
 

@@ -77,7 +77,7 @@ NOT Steer agents away from heredocs or chained commands to raise this. Fixing
 MUST Prefer the spill hook for output volume. It reads no command name, which is
   why it covers the 76.7% rtk structurally cannot. Its replayed 21.7% of all tool
   bytes is an UPPER BOUND: Claude Code truncates Bash output natively between 24 KB
-  and 31 KB and runs first, so the hook owns 2 KB to about 30 KB and the replay
+  and 31 KB and runs first, so the hook owns 1 KB to about 30 KB and the replay
   counts the largest results too.
 NOT Set `BASH_MAX_OUTPUT_LENGTH=2000` as a substitute for the hook. It covers the
   same range and keeps only the HEAD. On a 20,704-byte test log with its one
@@ -125,15 +125,19 @@ NOT Pass `--snapshot-mode none` to shrink the MCP server. Element refs come from
 ## Oversized tool output goes to disk
 
 MUST Read the spill file rather than re-running the command. A `Bash` result over
-  2 KB is replaced by its first 20 and last 30 lines plus a path. The summary
-  names the exact `rg`, `sed`, and `wc -l` invocations that recover any part of
-  it, so retrieval needs no special tool and works under both runtimes even
-  though the compression is Claude-only.
-DEFAULT 2 KB with a 20/30-line window, tuned on 4,429 real tool results. The
-  window must shrink WITH the threshold --
-  at 500 bytes, 1,069 spilled results fit entirely inside a 20/30 window, so the
-  hook would rewrite them and hide nothing. A guard refuses any rewrite that
-  would not shrink the result.
+  1 KB is replaced by its first 15 and last 25 lines plus a path bound to `$F`,
+  followed by the `sed` range that continues it and the `rg` that searches it.
+  Retrieval needs no special tool and works under both runtimes even though the
+  compression is Claude-only.
+DEFAULT 1 KB with a 15/25-line window, tuned on 32,957 tool results across 651
+  repositories: 31.7% of sub-native bytes against 25.6% at 2 KB. A narrower window
+  saves more and reads worse -- at 10/20 the median spill leaves 50% of its lines
+  visible against 62%, so a third become mostly hidden for five points. The window
+  must shrink WITH the threshold; a guard refuses any rewrite that would not
+  shrink the result.
+NOT Pad the retrieval footer. Overhead is FIXED per spill, so it sets the floor on
+  the threshold: repeating the spill path in every command cost 555 bytes against
+  a 1 KB budget, and binding it once to `$F` cut that to 174.
 NOT Expect a failing command to be summarized. A nonzero exit is passed through
   whole, because the error text is the thing worth reading.
 
