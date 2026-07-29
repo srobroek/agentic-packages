@@ -24,6 +24,33 @@ Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
 including the first resource read and claim. Codex sets the tool workdir to
 the dedicated integration checkout.
 
+Every `bd ... --claim` MUST carry `BEADS_ACTOR` and `BD_ACTOR` inline in the
+same command, both set to your actor from the resource's `metadata.actor`:
+
+```bash
+cd -- <checkout> && BEADS_ACTOR=<actor> BD_ACTOR=<actor> bd update <id> --claim
+```
+
+An `export` on an earlier line does NOT work. Shell state does not persist
+between tool calls, and the claim guard parses the assignments out of the single
+command segment it is given, so an exported value is already gone by the time it
+runs. Without the inline form every claim is refused with "orchestrators route
+work, they never claim beads" - which reads like an identity problem and is not
+one.
+
+Lease recoveries you own, both from `worktrunk-writer`:
+
+- A checkout bound to an agent that is gone: `worktrunk-writer.py release --repo
+  <repo> --path <path> --actor <actor> --lease <token>` clears the binding and
+  keeps the branch, working tree, and commits, so a replacement actor can bind.
+- Bead writes that will not publish: the local embedded Dolt DB is authoritative
+  for readers in this repo, but `bd dolt push` publishes to the shared remote.
+  Report it as outstanding rather than leaving the orchestrator to discover it.
+
+NEVER change your checkout's branch. `git switch`, `git checkout -b`, and
+`git branch -m` strand the merge bead, PR, and lease anchors that key on it. Set
+`status=blocked` with a BLOCKED comment instead.
+
 <!-- BEGIN GENERATED: bead contract (from .apm/rules/shepherd.rules.json) -->
 ## Your bead contract (enforced at SubagentStop)
 

@@ -1716,5 +1716,168 @@ class InventorySchemaTests(unittest.TestCase):
             MODULE.normalize_inventory({"schema": 2})
 
 
+class LifecycleHookTests(unittest.TestCase):
+    """The wt hook entry point. A leased checkout is guarded; nothing else is.
+
+    Regression cover for a live lockout: a specialist ran `git switch -c` inside
+    its leased checkout, which moved it off the stamped branch and left it unable
+    to run any tool, including the `bd` call that would have reported the failure.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.primary = root / "primary"
+        self.leased = root / "leased"
+        self.plain = root / "plain"
+        for path in (self.primary, self.leased, self.plain):
+            path.mkdir()
+        self.inventory = [
+            {"branch": "main", "path": str(self.primary), "kind": "worktree"},
+            {"branch": "plain/branch", "path": str(self.plain), "kind": "worktree"},
+            {
+                "branch": "writer/leased",
+                "path": str(self.leased),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "leased-actor",
+                    "lease": "leased-token",
+                    "context": "agent-1",
+                    "contexts": json.dumps(["agent-1"]),
+                    "runtime-bindings": json.dumps([{"context": "agent-1", "handle": "agent-1"}]),
+                    "resource": "demo-1",
+                },
+            },
+        ]
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def invoke(self, **kwargs):
+        fields = {"repo": str(self.primary), "path": None, "target": None, "event": "pre-start"}
+        fields.update(kwargs)
+        args = SimpleNamespace(**fields)
+        with patch.object(MODULE, "wt_inventory", return_value=self.inventory):
+            with patch.object(MODULE, "clear_var") as cleared:
+                code = MODULE.lifecycle(args)
+        return code, [call.args[2] for call in cleared.call_args_list]
+
+    def test_unleased_checkout_is_a_silent_noop_on_every_event(self) -> None:
+        for event in ("pre-start", "pre-switch", "pre-remove"):
+            code, cleared = self.invoke(event=event, path=str(self.plain), target="elsewhere")
+            self.assertEqual((event, code, cleared), (event, 0, []))
+
+    def test_pre_switch_refuses_to_leave_the_stamped_branch(self) -> None:
+        code, cleared = self.invoke(event="pre-switch", path=str(self.leased), target="main")
+        self.assertEqual(code, 1)
+        self.assertEqual(cleared, [])
+
+    def test_pre_switch_allows_a_switch_to_the_stamped_branch(self) -> None:
+        code, _ = self.invoke(
+            event="pre-switch", path=str(self.leased), target="writer/leased"
+        )
+        self.assertEqual(code, 0)
+
+    def test_pre_remove_always_clears_the_binding(self) -> None:
+        code, cleared = self.invoke(event="pre-remove", path=str(self.leased))
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+
+    def test_pre_start_keeps_a_binding_whose_resource_is_still_working(self) -> None:
+        with patch.object(MODULE, "stale_binding", return_value=False):
+            code, cleared = self.invoke(event="pre-start", path=str(self.leased))
+        self.assertEqual((code, cleared), (0, []))
+
+    def test_pre_start_releases_a_binding_the_resource_proves_finished(self) -> None:
+        with patch.object(MODULE, "stale_binding", return_value=True):
+            code, cleared = self.invoke(event="pre-start", path=str(self.leased))
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+
+    def test_an_internal_error_fails_open(self) -> None:
+        args = SimpleNamespace(
+            repo=str(self.primary), path=str(self.leased), target=None, event="pre-remove"
+        )
+        with patch.object(MODULE, "wt_inventory", side_effect=MODULE.ContractError("no wt")):
+            self.assertEqual(MODULE.lifecycle(args), 0)
+
+
+class StaleBindingTests(unittest.TestCase):
+    """Liveness is never guessed: only the task system can prove an actor is done."""
+
+    def setUp(self) -> None:
+        self.repo = Path("/tmp/repo")
+        self.item = {"branch": "writer/leased", "vars": {"resource": "demo-1"}}
+
+    def stale(self, issue, *, beads=True):
+        with patch.object(MODULE, "beads_active", return_value=beads):
+            with patch.object(MODULE, "beads_json", return_value=[issue]):
+                return MODULE.stale_binding(self.repo, self.item)
+
+    def test_closed_resource_is_stale(self) -> None:
+        self.assertTrue(self.stale({"status": "closed", "assignee": "someone"}))
+
+    def test_unassigned_and_not_in_progress_is_stale(self) -> None:
+        self.assertTrue(self.stale({"status": "open", "assignee": None}))
+
+    def test_claimed_in_progress_resource_is_live(self) -> None:
+        self.assertFalse(self.stale({"status": "in_progress", "assignee": "orc-a"}))
+
+    def test_unassigned_but_in_progress_is_left_alone(self) -> None:
+        self.assertFalse(self.stale({"status": "in_progress", "assignee": None}))
+
+    def test_blocked_resource_is_left_alone(self) -> None:
+        self.assertFalse(self.stale({"status": "blocked", "assignee": None}))
+
+    def test_no_resource_var_is_never_stale(self) -> None:
+        self.assertFalse(MODULE.stale_binding(self.repo, {"vars": {}}))
+
+    def test_absent_beads_workspace_is_never_stale(self) -> None:
+        self.assertFalse(self.stale({"status": "closed"}, beads=False))
+
+    def test_unreadable_resource_is_never_stale(self) -> None:
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(
+                MODULE, "beads_json", side_effect=MODULE.ContractError("bd missing")
+            ):
+                self.assertFalse(MODULE.stale_binding(self.repo, self.item))
+
+
+class ReleaseTests(unittest.TestCase):
+    def test_release_clears_only_binding_vars(self) -> None:
+        item = {
+            "branch": "writer/leased",
+            "path": "/tmp/leased",
+            "vars": {
+                "actor": "a",
+                "lease": "l",
+                "context": "agent-1",
+                "contexts": json.dumps(["agent-1"]),
+                "runtime-bindings": json.dumps([{"context": "agent-1", "handle": "agent-1"}]),
+            },
+        }
+        args = SimpleNamespace(repo="/tmp/repo", path="/tmp/leased", actor="a", lease="l")
+        with patch.object(MODULE, "wt_inventory", return_value=[item]):
+            with patch.object(MODULE, "validate", return_value={"status": "valid"}):
+                with patch.object(MODULE, "find_item", return_value=item):
+                    with patch.object(MODULE, "clear_var") as cleared:
+                        result = MODULE.release(args)
+        self.assertEqual(result["status"], "released")
+        self.assertEqual(result["released_contexts"], ["agent-1"])
+        self.assertEqual(
+            sorted(call.args[2] for call in cleared.call_args_list),
+            ["context", "contexts", "runtime-bindings"],
+        )
+
+    def test_release_rejects_a_mismatched_lease(self) -> None:
+        args = SimpleNamespace(repo="/tmp/repo", path="/tmp/leased", actor="a", lease="wrong")
+        with patch.object(MODULE, "wt_inventory", return_value=[]):
+            with patch.object(
+                MODULE, "validate", side_effect=MODULE.ContractError("lease mismatch")
+            ):
+                with self.assertRaises(MODULE.ContractError):
+                    MODULE.release(args)
+
+
 if __name__ == "__main__":
     unittest.main()
