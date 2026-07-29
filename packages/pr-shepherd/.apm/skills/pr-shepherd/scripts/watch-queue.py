@@ -218,9 +218,20 @@ def classify(prs: list, required: list[str], release_pattern: str) -> list[dict]
     for pr in prs:
         if not isinstance(pr, dict):
             continue
-        rollup = pr.get("statusCheckRollup") or []
-        title = pr.get("title") or ""
-        branch = pr.get("headRefName") or ""
+        number = pr.get("number")
+        # A PR with no usable number cannot be merged by number, and letting it
+        # through made `str(None)` a merge candidate: the dashboard recommended
+        # `#None`. bool is an int subclass, so it is excluded explicitly.
+        if not isinstance(number, int) or isinstance(number, bool) or number <= 0:
+            continue
+        rollup = pr.get("statusCheckRollup")
+        if not isinstance(rollup, list):
+            rollup = []
+        # Coerced rather than defaulted: a non-string title made `title[:52]`
+        # raise TypeError, and a non-string branch did the same inside
+        # `release_re.search`, aborting the whole dashboard over one bad record.
+        title = pr.get("title") if isinstance(pr.get("title"), str) else ""
+        branch = pr.get("headRefName") if isinstance(pr.get("headRefName"), str) else ""
         release = bool(release_re.search(branch)) or bool(RELEASE_TITLE.match(title))
         draft = bool(pr.get("isDraft"))
         merge_state = pr.get("mergeStateStatus") or ""
@@ -229,11 +240,16 @@ def classify(prs: list, required: list[str], release_pattern: str) -> list[dict]
             not release
             and not draft
             and merge_state == "CLEAN"
+            # `all()` is vacuously true on an empty list, so a caller reaching
+            # classify() with zero required contexts marked every clean PR READY
+            # and recommended a merge gated by nothing. The documented rule is
+            # fail-closed: no required contexts means no merge.
+            and bool(checks)
             and all(state == "OK" for state in checks)
         )
         out.append(
             {
-                "number": pr.get("number"),
+                "number": number,
                 "title": title[:TITLE_WIDTH],
                 "draft": draft,
                 "release": release,
