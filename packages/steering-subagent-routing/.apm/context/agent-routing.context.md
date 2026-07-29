@@ -30,12 +30,22 @@ In beads repos (`bd where` succeeds), pass the bead id in the spawn prompt so
 the worker claims it (`bd update <id> --claim`) -- an unpassed id leaves the
 bead unclaimed and a parallel worker may take the same work.
 
-## Repomix refresh
+## Repomix for bulk context
 
-Repomix is a snapshot packer, on-demand, stored as ignored `repomix.xml`.
+Repomix packs a whole tree into one document. Run it on demand, from the CLI;
+there is no snapshot to keep fresh. A pack of this repository takes 1.3s and
+repomix caches nothing, so a second pack costs the same as the first.
 
-| Refresh after | Do NOT refresh on |
-|---------------|-------------------|
-| `git switch -c` / `checkout -b` / `worktree add` | every commit |
-| `git merge` / `git pull` / `git rebase` | PR create/review |
-| | remote-only `gh pr merge` |
+| Need | Command |
+|------|---------|
+| pack the tree | `repomix .` |
+| scope to the files that matter | `repomix . --include "src/**/*.ts"` |
+| read it without writing a file | `repomix . --stdout` |
+| pack another repository | `repomix --remote <url> --remote-branch <ref>` |
+
+Reach for `--include` first: scoping to code cut output 81 percent against a
+whole-repo pack. Prefer semantic symbol tools and `rg` for a single lookup, and
+a pack only when a task needs many files at once.
+
+Decide `--compress` per language. It saved 21 percent on this repository and 0
+percent on markdown and JSON. It grew 197 files of 4,107.

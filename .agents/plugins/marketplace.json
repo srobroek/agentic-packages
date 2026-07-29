@@ -737,18 +737,6 @@
       "category": "mcp"
     },
     {
-      "name": "mcp-repomix",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-repomix"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-serena",
       "source": {
         "source": "local",

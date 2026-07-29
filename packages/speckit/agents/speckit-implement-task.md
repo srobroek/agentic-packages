@@ -35,7 +35,7 @@ If key context is missing, ask for the missing artifact or return a blocked stat
 ## MCP Tool Use
 
 - Use Serena for semantic symbol, reference, implementation, and type discovery before editing code; use `rg` for exact text and paths.
-- Use `repomix` when the task requires broad repository context that would be too noisy to gather file-by-file.
+- Run `repomix . --include "<glob>" --stdout` when the task requires broad repository context that would be too noisy to gather file-by-file.
 - Use `context7` for current library/API usage before touching unfamiliar framework or dependency code.
 - Use GitHub tooling only for issue/PR/task references the parent provided or the spec explicitly names.
 - If a semantic tool is unavailable, fall back to the smallest direct inspection needed. Do not invent APIs or project structure.
