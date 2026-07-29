@@ -32,5 +32,11 @@ One workflow for three asset kinds. Pick the template, author at source, lint.
 MUST Enums in CAPS (`PASS|PARTIAL|FAIL`); decision tables as `situation → choice`.
 MUST No hedge words on normative lines (lint list); replace with an observable condition.
 MUST No model names in prose -- tier routing lives in steering-subagent-routing.
+MUST State the rule, never argue for it. A steering line is read as an instruction,
+  so a defence of why the rule exists is tokens the agent pays on every load and
+  cannot act on. Write the reason only when it IS the rule (the measured number
+  that set a threshold, the failure the rule prevents, a gotcha the agent cannot
+  infer) or when an agent that does not know the reason would route around the
+  rule.
 DEFAULT Gotchas/env-facts may stay single sentences when a table would lose the trap.
 NOT User-facing text (reports, PR bodies) -- never keyword prefixes.
