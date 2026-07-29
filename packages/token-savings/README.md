@@ -42,9 +42,10 @@ warns when turn count rises even if tokens fell.
 
 These two choices come from measurements that would otherwise mislead:
 
-- **`cost_weighted`, not `input_tokens`.** One session recorded 279 input tokens
-  against 14.2M cache reads. Cache reads bill below fresh input but not at zero,
-  so a tool judged on `input_tokens` looks transformative while changing nothing.
+- **`cost_weighted`, not `input_tokens`.** Across 23 local sessions, 97.5% of
+  input-side tokens were cache reads and fresh input was 0.00%. Cache reads bill
+  below fresh input but not at zero, so a tool judged on `input_tokens` looks
+  transformative while changing nothing.
 - **Subagents count.** One session attributed 45 subagents and 92 turns that a
   main-thread-only reading missed entirely. Orchestration relocates cost.
 
