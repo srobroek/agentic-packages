@@ -41,7 +41,7 @@ Honor whatever the user supplies; only discover the rest.
 ## Workflow
 
 1. **Resolve the target and its kind.** If named, use it. Otherwise run
-   `scripts/detect.sh [dir]` to list declared dependencies. If `detect.sh`
+   `scripts/detect.py [dir]` to list declared dependencies. If `detect.py`
    returns more than one equally plausible candidate, list them and ask.
    Decide: versioned software or service/stream.
 
@@ -88,6 +88,6 @@ Honor whatever the user supplies; only discover the rest.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/detect.sh` | No-network enumeration of declared dependencies + pinned versions across ecosystems. |
+| `scripts/detect.py` | No-network enumeration of declared dependencies + pinned versions across ecosystems. |
 
 For everything network-facing use the commands in `references/recipes.md`.

@@ -60,6 +60,7 @@ CLAUDE_EVENTS = {
     "ElicitationResult",
 }
 CODEX_DIFFERENCE_PACKAGES = {
+    "adr-as-beads",
     "agent-builder",
     "hooks-attribution-guard",
     "hooks-bash-safety",
@@ -81,7 +82,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "lsp-shell",
     "lsp-terraform",
     "lsp-typescript",
-    "mcp-repomix",
     "orchestrate",
     "release-please",
     "speckit",
@@ -89,6 +89,7 @@ CODEX_DIFFERENCE_PACKAGES = {
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
 HOOK_MANIFEST_CLASSIFICATION = {
+    "packages/adr-as-beads/.apm/hooks/hooks.json": "native-required",
     "packages/beads/.apm/hooks/beads-claude-hooks.json": "target-specific compatibility",
     "packages/beads/.apm/hooks/beads-codex-hooks.json": "target-specific compatibility",
     "packages/code-intelligence/.apm/hooks/hooks.json": "native-required",
@@ -108,9 +109,10 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-codex-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-claude-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-codex-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
-    "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
     "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
     "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",

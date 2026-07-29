@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "adr-as-beads",
+      "source": {
+        "source": "local",
+        "path": "./packages/adr-as-beads"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "source": {
         "source": "local",
@@ -725,18 +737,6 @@
       "category": "mcp"
     },
     {
-      "name": "mcp-repomix",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-repomix"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-serena",
       "source": {
         "source": "local",
@@ -1155,6 +1155,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "steering"
+    },
+    {
+      "name": "token-savings",
+      "source": {
+        "source": "local",
+        "path": "./packages/token-savings"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
     },
     {
       "name": "toolchain-cache-policy",

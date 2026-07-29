@@ -1,6 +1,70 @@
+# Local mirror of the CI gates cheap enough to run per commit.
+#
+# Every hook here also runs in CI. The point is the boundary, not the coverage: a
+# finding at commit time costs seconds, and the same finding in CI costs a round
+# trip plus a fixup commit. agentic-lint has now cost that twice on this
+# repository -- once for a description two words over its cap.
+#
+# Deliberately NOT here: `apm run build-artifacts` and its staleness diff
+# (regeneration touches 100+ files, minutes; the --check gates below give the same
+# signal in 0.76s), the bats and pytest suites (_test_landing_contract.sh alone is
+# ~2 minutes; the generator suite runs at pre-push instead), and lychee, which needs
+# DNS and is not even a gate in CI (`|| true`).
+#
+# `files:` patterns keep these fast. A hook that reads the whole tree still only
+# fires when a file it cares about is staged.
+#
+# Measured on this repo: check-yaml/check-toml/check-json are near-instant, zizmor
+# 0.03s per workflow, agentic-lint and check-twin-scripts 0.04s,
+# check-instructions-apply-to 0.08s, yamllint 0.15s (whole tree),
+# check-script-invocation 0.16s, audit-codex-config 0.19s, shellcheck 0.26s per
+# script, check-hook-contract 0.28s, render-docs --check 0.35s,
+# build-native-plugins --check 0.41s, actionlint 1.08s per workflow,
+# check-release-baselines 2.8s.
 repos:
+  # Structural file checks. These are the standard pre-commit-hooks, not something
+  # prek ships itself: prek is a hook RUNNER, and check-yaml/check-toml/check-json
+  # come from this repo.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        # .yaml.jinja and template fragments are not valid YAML until rendered.
+        exclude: (\.jinja$|/templates/|/apm_modules/)
+      - id: check-toml
+      - id: check-json
+        # apm-hooks.json and the deployed settings are generated, not authored.
+        exclude: (/apm_modules/|^\.claude/)
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      # check-shebang-scripts-are-executable is deliberately NOT enabled. It flags
+      # 57 files here, and every one is invoked as `python3 <script>`: the shebang
+      # documents the interpreter rather than declaring an entrypoint. The bit that
+      # actually matters is the inverse -- a BARE-path invocation whose target is
+      # not executable -- and check-script-invocation already enforces exactly that,
+      # against the manifests and skills that do the invoking.
+      - id: check-executables-have-shebangs
+        exclude: /apm_modules/
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
   - repo: local
     hooks:
+      - id: agentic-lint
+        name: agentic markdown lint
+        description: >-
+          The write-agentic linter over changed agent, skill, steering, and
+          context markdown: description word caps, hedges, missing output
+          contracts, oversized context files. Runs in 0.04s per file and takes
+          the staged paths directly, so it is the cheapest CI gate to pull
+          forward. Template references are placeholder-full meta-documents and
+          are excluded, matching the CI job.
+        entry: python3 packages/write-agentic/.apm/skills/write-agentic/scripts/lint.py
+        language: system
+        files: ^packages/[^/]+/\.apm/.*\.md$
+        exclude: (/apm_modules/|/references/template-)
+
       - id: check-instructions-apply-to
         name: instructions declare applyTo
         description: >-
@@ -10,3 +74,180 @@ repos:
         language: system
         files: ^packages/[^/]+/\.apm/instructions/.*\.instructions\.md$
         exclude: /apm_modules/
+
+      - id: check-twin-scripts
+        name: duplicated scripts stay byte-identical
+        description: >-
+          Two skills that need the same capability duplicate it, because
+          constitution I forbids a runtime reach across packages. The
+          duplication is deliberate; drift between the copies is a defect.
+        entry: python3 .apm/scripts/check-twin-scripts.py
+        language: system
+        pass_filenames: false
+        files: ^packages/(whats-new|dep-update)/
+
+      - id: check-hook-contract
+        name: hook scripts match their manifests
+        description: >-
+          A tool surface the script branches on must appear in a matcher that
+          routes it, a target:all script must emit only fields both runtimes
+          accept, no script may emit permissionDecision "ask", and every hook
+          script ships tests. 0.28s.
+        entry: python3 .apm/scripts/check-hook-contract.py
+        language: system
+        pass_filenames: false
+        files: ^packages/[^/]+/(\.apm/hooks/.*\.json|scripts/.*\.py|tests/.*)$
+        exclude: /apm_modules/
+
+      - id: check-script-invocation
+        name: bare-path invocations target an executable
+        description: >-
+          apm deploys the source mode on first write and skips content-identical
+          files later, so a mode-only fix never reaches an existing install. Any
+          bare-path invocation must target a committed-executable file. 0.16s.
+        entry: python3 .apm/scripts/check-script-invocation.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/(\.apm/hooks/.*\.json|\.apm/skills/.*|scripts/.*)|templates/.*)$
+        exclude: /apm_modules/
+
+      - id: audit-codex-config
+        name: Codex manifests and compatibility table agree
+        description: >-
+          docs/codex-compatibility.md is hand-maintained and drifts from the
+          generated manifests silently. This fails on the drift, which has
+          happened twice while removing packages. 0.19s.
+        entry: python3 .apm/scripts/audit-codex-config.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/(apm\.yml|\.apm/hooks/.*\.json)|docs/codex-compatibility\.md)$
+        exclude: /apm_modules/
+
+      - id: shellcheck
+        name: shellcheck (bash 3.2 / BSD floor)
+        description: >-
+          Package scripts at the same severity CI uses. The remaining shell is
+          the risky kind, and the portability floor is bash 3.2 with BSD
+          userland, so a GNU-only flag or a bashism is easy to introduce and
+          invisible until it runs on the wrong host. 0.26s per script.
+        entry: shellcheck -S warning
+        language: system
+        files: ^(packages/|templates/|\.apm/).*\.sh$
+        exclude: (/apm_modules/|^\.specify/)
+
+      - id: zizmor
+        name: zizmor (workflow supply-chain audit, offline)
+        description: >-
+          Audits workflows for injection, excessive permissions, and unpinned
+          actions. --offline drops the rules that need network, so this stays
+          local-safe. 0.03s per workflow.
+        entry: zizmor --offline
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+
+      - id: actionlint
+        name: actionlint
+        description: >-
+          Workflow syntax, expression, and shell-in-`run` checks. 1.08s per
+          file, and only fires when a workflow changes.
+        entry: actionlint
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+
+      - id: yamllint
+        name: yamllint
+        description: >-
+          The same config CI uses. apm.yml and the hook manifests are
+          hand-edited constantly, and a malformed one otherwise costs a full CI
+          round trip. 0.15s across the whole tree.
+        entry: yamllint -c .yamllint
+        language: system
+        types: [yaml]
+        exclude: (\.jinja$|/templates/|/apm_modules/)
+
+      - id: render-docs-check
+        name: generated docs and tables are current
+        description: >-
+          render-docs.py renders three artifact families from one inventory walk:
+          the marker-injected tables in docs/*.md plus the README intro counts,
+          the marketplace block in apm.yml, and the release-please config and
+          manifest. --check diffs against the committed files and exits 1 on
+          drift, regenerating nothing. This is the class that has cost two CI
+          round trips today, including a README skill count taken from a stale
+          generated copy during a merge. 0.35s.
+        entry: python3 .apm/scripts/render-docs.py all --check
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/apm\.yml|apm\.yml|docs/.*\.md|README\.md|release-please-config\.json|\.release-please-manifest\.json|\.apm/templates/.*)$
+        exclude: /apm_modules/
+
+      - id: build-native-plugins-check
+        name: native plugin manifests are current
+        description: >-
+          Each package's Claude and Codex manifests plus its target-specific
+          components are generated from apm.yml. --check fails on drift without
+          writing. 0.41s.
+        entry: python3 .apm/scripts/build-native-plugins.py --check
+        language: system
+        pass_filenames: false
+        files: ^packages/[^/]+/(apm\.yml|\.apm/.*)$
+        exclude: /apm_modules/
+
+      - id: check-release-baselines
+        name: release baselines match published tags
+        description: >-
+          A baseline ahead of its tag breaks release-please, and a brand-new
+          package needs the 0.0.0 first-release sentinel. 2.8s, the slowest hook
+          here, so it is scoped to version and manifest changes only.
+        entry: python3 .apm/scripts/check-release-baselines.py
+        language: system
+        pass_filenames: false
+        files: ^(packages/[^/]+/apm\.yml|\.release-please-manifest\.json|release-please-config\.json)$
+        exclude: /apm_modules/
+
+      # The only hook here that WRITES. Every other entry is read-only, so note
+      # the mechanic: prek fails a commit when a hook modifies a tracked file and
+      # leaves it unstaged, and silently omits a newly written untracked one. The
+      # renderer stages what it writes, which is what makes the ADR land in the
+      # same commit as the work that motivated the decision.
+      #
+      # always_run because a database is not a path: no `files:` pattern can
+      # detect that a decision bead changed. It exits fast when nothing moved,
+      # and exits 0 when `bd` or the database is absent.
+      - id: render-adrs
+        name: render ADR files from decision beads
+        description: >-
+          Projects every closed beads `decision` bead into
+          docs/adr/NNNN-title.md. The bead is the record; the file is the
+          readable copy for anyone without beads installed, and for PR review.
+          Deferred (proposed) and open (being drafted) decisions are skipped.
+        entry: python3 packages/adr-as-beads/scripts/render_adrs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: bd-lint-decisions
+        name: decision beads state a rationale and a rejected alternative
+        description: >-
+          `bd lint` enforces `## Decision`, `## Rationale`, and
+          `## Alternatives Considered` on a decision bead and exits 1 when one is
+          missing. Native to bd; its help text omits the decision type, but the
+          rules are enforced.
+        entry: bash -c 'command -v bd >/dev/null || exit 0; bd lint --type decision --status all'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # pre-push, not pre-commit: 11.7s is too much to pay on every commit for a
+      # suite that only breaks when the generators change, but far cheaper than
+      # finding it in CI.
+      - id: generator-tests
+        name: generator unit tests (.apm/scripts)
+        description: >-
+          The doc and manifest generators are not covered by the per-package test
+          matrix, which scans packages/* only. 110 tests, 11.7s.
+        entry: python3 -m pytest .apm/scripts -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^\.apm/scripts/.*\.py$

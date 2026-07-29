@@ -102,7 +102,6 @@ run.
 
 - `agent-builder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
 - `worktrunk-writer`: both runtimes consume parent-created Worktrunk leases; Codex unified shell paths remain outside complete hook interception.
-- `mcp-repomix`: Codex refreshes cannot reliably suppress subagent Git calls.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
 - `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
 - `lsp-*`: Claude-only native LSP registration; Codex uses language CLIs and code MCP tools.
@@ -137,6 +136,7 @@ plugin manifests do not support every APM component type.
 
 | Package | Status | Codex difference or workaround |
 | --- | --- | --- |
+| `adr-as-beads` | Partial | The write guard covers `apply_patch` and the file-write tools; a shell redirect into `docs/adr/` bypasses it. The pre-commit renderer rewrites the file from its bead regardless, so the loss is bounded to that one edit. |
 | `agent-builder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier on PreToolUse. |
 | `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
 | `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
@@ -158,7 +158,6 @@ plugin manifests do not support every APM component type.
 | `lsp-shell` | Claude-only | Codex has no native plugin LSP surface; use shellcheck/parser checks. |
 | `lsp-terraform` | Claude-only | Codex has no native plugin LSP surface; use terraform validate and related CLI checks. |
 | `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
-| `mcp-repomix` | Partial | Same MCP; refresh can miss unsupported shell paths, and Codex PostToolUse has no subagent identity for suppressing subagent Git calls. Run the refresh script explicitly when required; extra subagent refreshes remain bounded by clean-tree and HEAD checks. |
 | `orchestrate` | Partial | Skill works; native Codex role profiles receive task-specific spawn briefs because APM agents are Claude-only and Codex ignores skill-frontmatter hooks. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `speckit` | Partial | Skills and supported hooks work; native Codex role profiles receive the SpecKit task protocol, and Claude Skill-tool reminder has no Codex event equivalent. |

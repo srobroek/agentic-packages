@@ -128,6 +128,46 @@ Hooks prepare, validate, notify, or refuse. They do not claim or close tasks,
 acquire merge locks, push task databases, create nested worktrees, or infer
 task state from activity markers.
 
+### Lease lifecycle hooks
+
+`worktrunk-writer.py lifecycle` is this package's own hook entry point. Add it to
+`.config/wt.toml`, then approve it once with `wt config approvals add`:
+
+```toml
+[[pre-switch]]
+lease-branch-guard = "python3 <skill>/scripts/worktrunk-writer.py lifecycle --event pre-switch --repo {{ primary_worktree_path }} --path {{ worktree_path }} --target {{ branch }}"
+
+[[pre-start]]
+lease-stale-release = "python3 <skill>/scripts/worktrunk-writer.py lifecycle --event pre-start --repo {{ primary_worktree_path }} --path {{ worktree_path }}"
+
+[[pre-remove]]
+lease-unbind = "python3 <skill>/scripts/worktrunk-writer.py lifecycle --event pre-remove --repo {{ primary_worktree_path }} --path {{ worktree_path }}"
+```
+
+| Event | On a leased checkout | Otherwise |
+|---|---|---|
+| `pre-switch` | Refuses the switch; the stamped `branch` is the lease identity. | Allows |
+| `pre-start` | Releases the binding when the activation resource proves the actor finished. | No-op |
+| `pre-remove` | Clears the binding so teardown strands nothing. | No-op |
+
+On every event:
+
+- An unleased checkout is a silent no-op. The test is the checkout's own
+  `actor`/`lease` vars; `pr-shepherd`, standalone reviewers, and humans all hold
+  leases without a run marker.
+- Any internal error fails open. Lease bookkeeping must never stop a worktree
+  from starting.
+
+`pre-switch` only sees `wt switch`. A raw `git switch` bypasses Worktrunk, so the
+PreToolUse guard stays the backstop for agents.
+
+Releasing on `pre-start` never guesses liveness, because a slow actor and a dead
+one look identical from inventory. It asks the task system instead:
+
+- Resource closed, or unassigned and not in progress: release.
+- Missing resource, missing `bd`, or any error: leave the binding alone.
+- Actor died without unassigning: an explicit `release` call.
+
 ## Logs
 
 - `.git/wt/logs/commands.jsonl` records hook and LLM commands, exits, and duration.

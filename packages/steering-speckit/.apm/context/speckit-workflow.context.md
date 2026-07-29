@@ -34,8 +34,23 @@ MUST Route requirements or approach changes through bonded `mol-speckit-iterate`
   molecules and refresh the roadmap after applying the change.
 
 DECISIONS
-MUST Record non-trivial hard-to-reverse decisions as MADR records under
-  `docs/adr/NNNN-title.md` when the decision lands.
+MUST Register a hard-to-reverse or boundary-crossing choice when it lands, not at
+  closeout. The `adr` package owns the format, the path, and the gate; this section
+  owns only which SpecKit phases produce one.
+| phase | what earns a record |
+|---|---|
+| plan | a technology, contract, or boundary choice the plan depends on |
+| critique + security plan review | a risk knowingly accepted rather than mitigated |
+| analyze | a constraint discovered late that changes the approach |
+| implement | a deviation from the approved plan, recorded before the deviation spreads |
+| iterate | the reason an approved approach changed |
+MUST Set `--spec-id <spec>` on the decision bead, which is the native field that
+  binds a record to the spec that produced it. Without it the record survives and
+  its provenance does not.
+MUST Cite the record on the phase's bead before that phase closes. A phase that
+  produced a choice and closed without a citation loses the alternatives.
+NOT Defer recording to retro or closeout. By then the rejected options are gone, and
+  the rejected option is the part worth keeping.
 | observed condition | route |
 |---|---|
 | Approved intent is correct and implementation is incomplete | converge |

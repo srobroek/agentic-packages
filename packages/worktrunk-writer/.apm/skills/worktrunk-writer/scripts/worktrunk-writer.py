@@ -434,10 +434,79 @@ def assert_activation_resource_available(
                 f"activation resource {resource} is already joined to "
                 f"Worktrunk branch {item.get('branch')!r}"
             )
+    assert_envelope_complete(resource, metadata)
     conflicts = active_bead_conflicts(repo, resource, branch, path)
     if conflicts:
         raise ContractError("active Beads share this branch or path: " + ", ".join(conflicts))
+    assert_merge_beads_owned(repo, resource, metadata)
     return issue
+
+
+# Stamped before dispatch, in the order a dispatcher forgets them. `scope` and the
+# execution_* fields route and bound the work; `artifacts_dir` is separately
+# range-checked by validate_bead_artifacts.
+REQUIRED_ENVELOPE_FIELDS = (
+    "scope",
+    "base_ref",
+    "base_sha",
+    "execution_task_kind",
+    "execution_kind",
+    "execution_dispatch",
+    "execution_agent",
+    "complexity_tier",
+)
+
+
+def assert_envelope_complete(resource: str, metadata: dict[str, Any]) -> None:
+    """Fail at bind when the brief envelope is incomplete.
+
+    A field missing here does not surface until the actor trips over it mid-task,
+    as a denial that names a lease problem rather than the absent stamp. Bind is
+    the last moment the dispatcher is still holding the resource, so it is the
+    cheapest place to say which field is missing.
+    """
+    missing = [key for key in REQUIRED_ENVELOPE_FIELDS if not metadata.get(key)]
+    if missing:
+        raise ContractError(
+            f"activation resource {resource} metadata is incomplete; stamp and read back "
+            + ", ".join(missing)
+        )
+
+
+def assert_merge_beads_owned(repo: Path, resource: str, metadata: dict[str, Any]) -> None:
+    """Require `integration_owner` on the merge beads this run's work depends on.
+
+    A merge bead without it is fair game for the repository-global `pr-shepherd`,
+    which drains queues across runs and cannot know a run still owns the PR. The
+    result is a mid-run landing nobody sequenced. Only the run that created the
+    edge can supply the owner, so the check runs while it is still dispatching.
+    """
+    run_id = metadata.get("run_id")
+    if not run_id or not beads_active(repo):
+        return
+    try:
+        issues = beads_json(["list", "--all", "--json"], repo)
+    except ContractError:
+        return
+    if not isinstance(issues, list):
+        return
+    unowned = []
+    for issue in issues:
+        if not isinstance(issue, dict) or issue.get("status") == "closed":
+            continue
+        labels = issue.get("labels") or []
+        if "agent:integrator" not in labels and "pr:merge" not in labels:
+            continue
+        other = issue.get("metadata") or {}
+        if other.get("run_id") != run_id:
+            continue
+        if not other.get("integration_owner"):
+            unowned.append(str(issue.get("id") or "unknown"))
+    if unowned:
+        raise ContractError(
+            "merge beads in this run lack metadata.integration_owner, so the "
+            "repository-global shepherd may drain them mid-run: " + ", ".join(sorted(unowned))
+        )
 
 
 def validate(
@@ -524,6 +593,26 @@ def set_var(repo: Path, branch: str, key: str, value: str | None) -> None:
             "vars",
             "set",
             f"{key}={value}",
+            f"--branch={branch}",
+        ]
+    )
+
+
+def clear_var(repo: Path, branch: str, key: str) -> None:
+    if not WORKTRUNK_VAR_KEY_RE.fullmatch(key):
+        raise ContractError(
+            f"invalid Worktrunk variable key {key!r}; keys use only letters, digits, and hyphens"
+        )
+    run(
+        [
+            "wt",
+            "-C",
+            str(repo),
+            "config",
+            "state",
+            "vars",
+            "clear",
+            key,
             f"--branch={branch}",
         ]
     )
@@ -811,6 +900,145 @@ def bind(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
+def release(args: argparse.Namespace) -> dict[str, Any]:
+    """Clear a checkout's runtime binding, keeping the lease and the work.
+
+    `bind` writes `context`/`contexts`/`runtime-bindings`; nothing used to unwrite
+    them. When a bound agent died its binding still named a dead session, so
+    `assert_bound_handle` refused every replacement and the only recovery was
+    hand-editing `.git/worktrees/*/HEAD` and the Worktrunk vars. This is the
+    supported path: the orchestrator releases, then binds a fresh agent to the
+    same prepared checkout.
+
+    Deliberately explicit rather than timer-driven. Liveness is not observable
+    from inventory -- a slow agent and a dead one look identical -- so reaping
+    stays an orchestrator decision, gated on the matching actor and lease so it
+    cannot be used to take over someone else's checkout.
+    """
+    repo = Path(args.repo).resolve()
+    path = Path(args.path).resolve()
+    inventory = wt_inventory(repo)
+    # validate() enforces the actor/lease match before anything is cleared.
+    validate(
+        repo,
+        path,
+        actor=args.actor,
+        lease=args.lease,
+        check_beads=False,
+        inventory=inventory,
+    )
+    item = find_item(inventory, path=path)
+    branch = str(item["branch"])
+    variables = worktrunk_vars(item)
+    released = sorted(bound_contexts(item))
+    for key in ("context", "contexts", RUNTIME_BINDINGS_KEY):
+        clear_var(repo, branch, key)
+    if variables.get(LEGACY_RUNTIME_BINDINGS_KEY) is not None:
+        clear_var(repo, branch, LEGACY_RUNTIME_BINDINGS_KEY)
+    return {
+        "status": "released",
+        "inventory_contract": "worktrunk-schema-2",
+        "path": str(path),
+        "branch": branch,
+        "actor": variables.get("actor"),
+        "lease": variables.get("lease"),
+        "released_contexts": released,
+    }
+
+
+def lifecycle(args: argparse.Namespace) -> int:
+    """Worktrunk lifecycle hook entry point. Never blocks ordinary worktree work.
+
+    Two invariants, because a hook that can break `wt switch` is worse than a
+    missing stamp:
+
+    * An UNLEASED checkout is none of our business -- exit 0, do nothing. The test
+      is the checkout's own `actor`/`lease` vars, never "is an orchestrator
+      running": the run marker is unreliable, and `pr-shepherd`, standalone
+      reviewers, and humans all use leases without one.
+    * Any internal error fails OPEN. Missing `wt`, unreadable inventory, or a
+      malformed var must not stop a worktree from starting.
+
+    `pre-switch` is the exception that returns non-zero: refusing a branch change
+    on a leased checkout is the whole point. The stamped `branch` IS the lease
+    identity -- merge beads, PRs, and `active_bead_conflicts` all key on it -- so a
+    silent switch strands every anchor pointing at that checkout and locks the
+    actor out of its own tools one call later.
+    """
+    event = args.event
+    repo = Path(args.repo).resolve()
+    path = Path(args.path).resolve() if args.path else Path.cwd().resolve()
+    try:
+        inventory = wt_inventory(repo)
+        item = containing_item(inventory, path)
+        variables = worktrunk_vars(item) if item else {}
+        if not variables.get("lease") or not variables.get("actor"):
+            return 0
+        branch = str(item.get("branch") or "")
+        stamped_actor = str(variables["actor"])
+        stamped_lease = str(variables["lease"])
+
+        if event == "pre-switch":
+            target = str(getattr(args, "target", None) or "").strip()
+            if target and branch and target != branch:
+                print(
+                    f"worktrunk-writer: refusing to switch {path} from its leased branch "
+                    f"{branch!r} to {target!r}. That branch is the lease identity for actor "
+                    f"{stamped_actor!r}; changing it strands the merge bead, PR, and lease "
+                    "anchors, and the guard will deny every later tool call. Report a BOUNCE "
+                    "or BLOCKED on the resource instead, or ask the orchestrator to re-prepare "
+                    "a checkout on the branch you need.",
+                    file=sys.stderr,
+                )
+                return 1
+            return 0
+
+        if event in {"pre-remove", "pre-start"}:
+            contexts = sorted(bound_contexts(item))
+            if not contexts:
+                return 0
+            if event == "pre-start" and not stale_binding(repo, item):
+                return 0
+            for key in ("context", "contexts", RUNTIME_BINDINGS_KEY):
+                clear_var(repo, branch, key)
+            reason = "worktree removal" if event == "pre-remove" else "a stale binding"
+            print(
+                f"worktrunk-writer: released {len(contexts)} runtime binding(s) on {branch!r} "
+                f"({stamped_actor}/{stamped_lease}) for {reason}. Branch, path, actor, and "
+                "lease are unchanged; bind a replacement actor to reuse this checkout.",
+                file=sys.stderr,
+            )
+        return 0
+    except (ContractError, OSError, ValueError, json.JSONDecodeError) as error:
+        # Fail open: never let lease bookkeeping block a worktree operation.
+        print(f"worktrunk-writer: lifecycle {event} skipped ({error})", file=sys.stderr)
+        return 0
+
+
+def stale_binding(repo: Path, item: dict[str, Any]) -> bool:
+    """Whether a bound resource says its actor is finished with this checkout.
+
+    Liveness is not observable, so this never guesses from a timestamp -- a slow
+    agent and a dead one look identical. It asks the task system instead: a
+    binding whose activation resource is closed, or is unassigned and no longer in
+    progress, is provably done and safe to clear. Anything else is left alone.
+    """
+    resource = bound_resource(item)
+    if not resource or not beads_active(repo):
+        return False
+    try:
+        issues = beads_json(["show", str(resource), "--json"], repo)
+    except ContractError:
+        return False
+    issue = issues[0] if isinstance(issues, list) and issues else issues
+    if not isinstance(issue, dict):
+        return False
+    status = str(issue.get("status") or "")
+    if status == "closed":
+        return True
+    return not issue.get("assignee") and status not in {"in_progress", "blocked"}
+
+
 def runtime_context(payload: dict[str, Any]) -> str | None:
     for key in ("agent_id", "subagent_id"):
         value = payload.get(key)
@@ -857,9 +1085,37 @@ def orchestration_active(cwd: Path) -> bool:
     if os.environ.get("ORCHESTRATE_RUN"):
         return True
     marker = os.environ.get("ORCHESTRATE_MARKER_FILE")
-    if marker:
-        return Path(marker).is_file()
-    return (cwd / ".orchestration" / ".active-run").is_file()
+    path = Path(marker) if marker else cwd / ".orchestration" / ".active-run"
+    if not path.is_file():
+        return False
+    return marker_run_live(cwd, path)
+
+
+def marker_run_live(cwd: Path, marker: Path) -> bool:
+    """Whether the marker names a run that is still going.
+
+    A crashed run leaves its marker behind, and a stale marker used to hold the
+    repository under the protocol indefinitely. Unreadable marker, unparseable
+    run id, or an absent task system all read as live: this narrows a guard, so
+    every uncertainty resolves toward keeping it on.
+    """
+    try:
+        payload = json.loads(marker.read_text())
+    except (OSError, json.JSONDecodeError):
+        return True
+    run_id = payload.get("run_id") if isinstance(payload, dict) else None
+    if not run_id or run_id == "pending":
+        return True
+    if not beads_active(cwd):
+        return True
+    try:
+        issues = beads_json(["show", str(run_id), "--json"], cwd)
+    except ContractError:
+        return True
+    issue = issues[0] if isinstance(issues, list) and issues else issues
+    if not isinstance(issue, dict):
+        return True
+    return issue.get("status") != "closed"
 
 
 def protocol_engaged(
@@ -891,7 +1147,18 @@ def protocol_engaged(
     prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
     if allocation_checkout(prompt) is not None:
         return True
-    return orchestration_active(cwd)
+    # An orchestration run engages the protocol only where a lease could be
+    # implicated. The marker alone used to be sufficient, which turned the
+    # documented advise-not-deny default into a deny for every spawn made from the
+    # primary checkout during a run -- including read-only work aimed at an
+    # entirely different repository. The four checks above already catch a caller
+    # that holds or occupies a lease, so reaching here means this call touches
+    # none: leave it to the advisory.
+    return orchestration_active(cwd) and repo_has_leases(inventory)
+
+
+def repo_has_leases(inventory: list[dict[str, Any]]) -> bool:
+    return bool(leased_items(inventory))
 
 
 def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[str, Any]:
@@ -906,14 +1173,85 @@ def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[st
     return matches[0]
 
 
+def resolve_checkout_repo(checkout: Path) -> Path | None:
+    """Return the git root that owns `checkout`, or None if it is not one.
+
+    Used only to pick which repo's Worktrunk inventory to query -- it does not
+    itself grant anything, so it cannot be spoofed into a lease.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(checkout), "rev-parse", "--show-toplevel"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        return None
+    return Path(result.stdout.strip()).resolve()
+
+
+def spawner_lease(
+    payload: dict[str, Any], inventory: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """The leased checkout the SPAWNING context already holds, if any.
+
+    Decided from the binding recorded in Worktrunk vars, never from
+    `subagent_type` or an agent name: those are free-form strings a hook cannot
+    resolve to read-or-write, and classifying by them is the defect that got the
+    1.x deny gate reverted in 3bb87228.
+    """
+    context = runtime_context(payload)
+    if not context:
+        return None
+    holders = [item for item in inventory if context in bound_contexts(item)]
+    if len(holders) != 1:
+        return None
+    return holders[0] if worktrunk_vars(holders[0]).get("lease") else None
+
+
 def assert_spawn_allocation(
-    tool_input: dict[str, Any], inventory: list[dict[str, Any]]
+    tool_input: dict[str, Any],
+    inventory: list[dict[str, Any]],
+    payload: dict[str, Any] | None = None,
+    *,
+    repo: Path | None = None,
 ) -> dict[str, Any]:
     handle = runtime_recipient(tool_input)
     if handle:
         return assert_bound_handle(inventory, handle)
     prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
     checkout = allocation_checkout(prompt)
+
+    # A claim-holder may spawn bounded implementation children inside its own
+    # checkout, sharing its actor and lease and never receiving `--bead`. Both
+    # SKILL.md files promised this and the code had no branch for it, so a
+    # delegation-first specialist could not delegate and did its own bulk work.
+    #
+    # The child is still wait-only: the parent binds its returned id to the same
+    # path, actor, and lease before releasing the brief. Admitting a task-bearing
+    # child here would be a false kindness -- an unbound context is refused by
+    # assert_runtime_lease on its first Bash or Edit, so it would spawn and then
+    # be unable to act.
+    parent = spawner_lease(payload or {}, inventory)
+    if parent is not None:
+        parent_path = item_path(parent)
+        if checkout == parent_path:
+            return parent
+        if checkout is None:
+            raise ContractError(
+                "child spawn must be wait-only: send the canonical WAIT for your own "
+                f"checkout {str(parent_path)!r}, bind the returned id to your path, actor, "
+                "and lease, then release the brief. A task-bearing child holds no lease "
+                "and is denied on its first repository tool."
+            )
+        # A WAIT naming any other path is an attempt to leave the parent's lease.
+        raise ContractError(
+            f"child spawn must stay in its parent's leased checkout {str(parent_path)!r}; "
+            f"refusing an allocation for {str(checkout)!r}. Only the orchestrator "
+            "prepares a separate checkout."
+        )
+
     if checkout is None:
         raise ContractError(
             "tool-using agent spawn is not parent-prepared; the parent must load "
@@ -921,6 +1259,24 @@ def assert_spawn_allocation(
             "sequence before task delivery; the child cannot establish its own lease"
         )
     item = containing_item(inventory, checkout)
+    if (item is None or item_path(item) != checkout) and repo is not None:
+        # The lease may live in a different repository than the parent's own
+        # cwd -- a dep-repo-worker or external-repo-worker manages its own
+        # checkout elsewhere, and an orchestrate run must be able to dispatch
+        # it. Re-derive the checkout's OWN git root and check THAT repo's
+        # Worktrunk inventory instead of trusting anything the caller
+        # asserted: `wt -C <checkout-repo> list` is ground truth for whichever
+        # repo actually owns the path, so a checkout that no `prepare` call
+        # ever leased in ITS OWN repo still finds no match here -- there is no
+        # claim to forge, only a real lease to look up under the right root.
+        # A same-repo path is unaffected: its git root equals `repo`, so no
+        # second lookup runs and the original inventory's answer stands.
+        checkout_repo = resolve_checkout_repo(checkout)
+        if checkout_repo is not None and checkout_repo != repo:
+            try:
+                item = containing_item(wt_inventory(checkout_repo), checkout)
+            except ContractError:
+                item = None
     variables = worktrunk_vars(item) if item else {}
     if item is None or item_path(item) != checkout or not variables.get("lease"):
         raise ContractError("agent WAIT checkout is not a prepared writer lease")
@@ -998,6 +1354,102 @@ def bash_redirection_targets(command: str, cwd: Path) -> list[Path]:
     return targets
 
 
+# Read-only argv heads, and the read-only subcommands of tools that do both.
+# Deliberately an ALLOWLIST: anything unrecognised counts as mutating, so a new
+# or obscure writer is governed by default rather than slipping through. The
+# point of the exemption is narrow — a lease-invalid actor must keep enough tool
+# surface to report a BOUNCE and release its binding, which means read-only
+# inspection plus `bd`.
+READ_ONLY_HEADS = frozenset(
+    {
+        "cat", "head", "tail", "wc", "grep", "rg", "egrep", "fgrep", "find", "ls",
+        "pwd", "echo", "printf", "true", "false", "test", "stat", "file", "which",
+        "command", "type", "basename", "dirname", "realpath", "readlink", "date",
+        "env", "sort", "uniq", "cut", "tr", "diff", "cmp", "md5", "md5sum",
+        "sha1sum", "sha256sum", "jq", "yq", "column", "less", "more", "nl", "seq",
+        "bd", "gh", "wt",
+    }
+)
+READ_ONLY_SUBCOMMANDS = {
+    "git": frozenset(
+        {
+            "status", "log", "show", "diff", "grep", "cat-file", "rev-parse",
+            "rev-list", "ls-files", "ls-tree", "describe", "blame", "shortlog",
+            "merge-base", "cherry", "config", "remote", "symbolic-ref",
+            "for-each-ref", "check-ignore", "merge-tree", "var", "help",
+        }
+    ),
+}
+
+
+def command_segments(command: str) -> list[list[str]] | None:
+    """Split a command into argv segments. `None` when it cannot be parsed."""
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for line in command.replace("\\\n", " ").splitlines():
+        lexer = shlex.shlex(line, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        try:
+            tokens = list(lexer)
+        except ValueError:
+            return None
+        for token in tokens:
+            if token and not set(token).difference(";&|"):
+                if current:
+                    segments.append(current)
+                    current = []
+                continue
+            current.append(token)
+        if current:
+            segments.append(current)
+            current = []
+    return segments
+
+
+def command_mutates(command: str) -> bool:
+    """Whether a shell command may write, judged conservatively.
+
+    Only a command whose every segment is a recognised read-only invocation is
+    treated as non-mutating. An unparseable command, an unknown argv head, or any
+    redirection means "assume it writes".
+    """
+    if not command.strip():
+        return False
+    if re.search(r"(?<![0-9<>])>>?", command):
+        return True
+    segments = command_segments(command)
+    if segments is None:
+        return True
+    for segment in segments:
+        tokens = [token for token in segment if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", token)]
+        while tokens and tokens[0] in {
+            "env",
+            "command",
+            "builtin",
+            "exec",
+            "time",
+            "sudo",
+            "nohup",
+            "xargs",
+        }:
+            tokens = tokens[1:]
+        if not tokens:
+            continue
+        head = os.path.basename(tokens[0])
+        if head in {"cd", "export", "set", "unset", "shift", ":"}:
+            continue
+        if head in READ_ONLY_SUBCOMMANDS:
+            args = [token for token in tokens[1:] if not token.startswith("-")]
+            # A bare `git` or an unrecognised subcommand is not provably read-only.
+            if not args or args[0] not in READ_ONLY_SUBCOMMANDS[head]:
+                return True
+            continue
+        if head not in READ_ONLY_HEADS:
+            return True
+    return False
+
+
 def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
@@ -1006,6 +1458,9 @@ def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
     if tool == "Bash":
         command = tool_input.get("command")
         if isinstance(command, str):
+            # A leading `cd` is kept as a target even for read-only commands:
+            # that is how the guard CONFINES an actor to its own checkout, which
+            # is a separate job from protecting writes.
             checkout = leading_cd_target(command, cwd)
             if checkout:
                 raw_targets.append(checkout)
@@ -1215,7 +1670,7 @@ def hook() -> int:
         return 0
     try:
         if tool in SPAWN_TOOLS:
-            assert_spawn_allocation(tool_input, inventory)
+            assert_spawn_allocation(tool_input, inventory, payload, repo=repo)
             return 0
         if tool in CONTINUATION_TOOLS:
             handle = runtime_recipient(tool_input)
@@ -1281,6 +1736,14 @@ def parser() -> argparse.ArgumentParser:
     binding.add_argument("--resource")
     binding.add_argument("--context", help=argparse.SUPPRESS)
     binding.add_argument("--bead", help=argparse.SUPPRESS)
+    freeing = sub.add_parser("release")
+    for name in ("repo", "path", "actor", "lease"):
+        freeing.add_argument(f"--{name}", required=True)
+    life = sub.add_parser("lifecycle")
+    life.add_argument("--event", required=True, choices=("pre-start", "pre-switch", "pre-remove"))
+    life.add_argument("--repo", required=True)
+    life.add_argument("--path")
+    life.add_argument("--target", help="branch a pre-switch is moving to")
     fleet = sub.add_parser("inventory")
     fleet.add_argument("--repo", required=True)
     fleet.add_argument("--full", action="store_true")
@@ -1292,11 +1755,15 @@ def main() -> int:
     args = parser().parse_args()
     if args.command == "hook":
         return hook()
+    if args.command == "lifecycle":
+        return lifecycle(args)
     try:
         if args.command == "prepare":
             result = prepare(args)
         elif args.command == "bind":
             result = bind(args)
+        elif args.command == "release":
+            result = release(args)
         elif args.command == "validate":
             result = validate(
                 Path(args.repo).resolve(),

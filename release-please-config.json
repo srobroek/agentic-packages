@@ -56,6 +56,18 @@
         }
       ]
     },
+    "packages/adr-as-beads": {
+      "release-type": "simple",
+      "component": "adr-as-beads",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-adversarial-challenger": {
       "release-type": "simple",
       "component": "agent-adversarial-challenger",
@@ -872,18 +884,6 @@
         }
       ]
     },
-    "packages/mcp-repomix": {
-      "release-type": "simple",
-      "component": "mcp-repomix",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-serena": {
       "release-type": "simple",
       "component": "mcp-serena",
@@ -1295,6 +1295,18 @@
     "packages/steering-tools-scripts": {
       "release-type": "simple",
       "component": "steering-tools-scripts",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/token-savings": {
+      "release-type": "simple",
+      "component": "token-savings",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

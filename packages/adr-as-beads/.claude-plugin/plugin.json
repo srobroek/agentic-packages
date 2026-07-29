@@ -1,0 +1,11 @@
+{
+  "name": "adr-as-beads",
+  "version": "0.0.0",
+  "description": "Architecture decision records held as beads `decision` beads, registered as decisions land rather than reconstructed at closeout. The bead is the record; a pre-commit hook projects every closed decision into a MADR file under `docs/adr/` so the choice is readable in a PR by anyone without beads installed. Ships steering for when a choice earns a record, a skill for registering one, the renderer, and a `.pre-commit-config.yaml` fragment. Enforcement is native: `bd create --validate` and `bd lint` require a rationale and a rejected alternative, and `bd supersede` records replacement as a typed edge. Requires `bd`; the hook exits 0 without it.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "skills": "./.apm/skills",
+  "hooks": "./hooks/hooks.json"
+}

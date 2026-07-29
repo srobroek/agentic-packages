@@ -1,7 +1,7 @@
 {
   "name": "playwright",
   "version": "4.1.2",
-  "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
+  "description": "Automate browser tasks with Playwright, routing between the two interfaces by context cost. The `playwright-cli` path writes the accessibility snapshot to a file and returns a path (402 bytes against 33,011 inlined by MCP on the same page) while keeping full interaction and cross-invocation state. The MCP server is reserved for loops that need the model to reason over page structure turn by turn: exploratory automation, self-healing tests, long autonomous sessions.",
   "author": {
     "name": "Sjors Robroek"
   },

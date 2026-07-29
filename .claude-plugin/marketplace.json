@@ -6,6 +6,19 @@
   },
   "plugins": [
     {
+      "name": "adr-as-beads",
+      "description": "Architecture decision records held as beads `decision` beads, registered as decisions land rather than reconstructed at closeout. The bead is the record; a pre-commit hook projects every closed decision into a MADR file under `docs/adr/` so the choice is readable in a PR by anyone without beads installed. Ships steering for when a choice earns a record, a skill for registering one, the renderer, and a `.pre-commit-config.yaml` fragment. Enforcement is native: `bd create --validate` and `bd lint` require a rationale and a rejected alternative, and `bd supersede` records replacement as a typed edge. Requires `bd`; the hook exits 0 without it.",
+      "version": "0.0.0",
+      "tags": [
+        "adr",
+        "decisions",
+        "madr",
+        "architecture"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/adr-as-beads"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
       "version": "4.0.0",
@@ -200,7 +213,7 @@
     },
     {
       "name": "beads",
-      "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
+      "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached push at session end once a `git push --dry-run` probe confirms it goes through, with a configurable pusher for hosts that need a wrapper -- and fall back to JSONL over ordinary git otherwise. The same session-start hook reports when Dolt history has grown enough to trim, and never trims it. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
       "version": "1.0.0",
       "tags": [
         "beads",
@@ -805,7 +818,7 @@
     },
     {
       "name": "mcp-playwright",
-      "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
+      "description": "MCP server package for Playwright, providing stateful browser automation and in-browser UI verification. The server inlines the accessibility tree on every action, so prefer `playwright-cli` (see the `playwright` skill) for scripted flows and keep this for loops that need the model reasoning over page structure turn by turn. Do not pass `--snapshot-mode none`: element refs come from snapshots, so it removes the ability to interact.",
       "version": "1.2.1",
       "tags": [
         "mcp",
@@ -813,17 +826,6 @@
       ],
       "category": "mcp",
       "source": "./packages/mcp-playwright"
-    },
-    {
-      "name": "mcp-repomix",
-      "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review. The PostToolUse snapshot-refresh hook requires python3 on PATH.",
-      "version": "2.0.0",
-      "tags": [
-        "mcp",
-        "repomix"
-      ],
-      "category": "mcp",
-      "source": "./packages/mcp-repomix"
     },
     {
       "name": "mcp-serena",
@@ -873,7 +875,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
+      "description": "Automate browser tasks with Playwright, routing between the two interfaces by context cost. The `playwright-cli` path writes the accessibility snapshot to a file and returns a path (402 bytes against 33,011 inlined by MCP on the same page) while keeping full interaction and cross-invocation state. The MCP server is reserved for loops that need the model to reason over page structure turn by turn: exploratory automation, self-healing tests, long autonomous sessions.",
       "version": "4.1.2",
       "tags": [
         "skill",
@@ -933,7 +935,7 @@
     },
     {
       "name": "release-please",
-      "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships a warn-only cross-tool advisory hook (Python, requires python3 on PATH); it never blocks.",
+      "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships one Python script (requires python3 on PATH) serving both a warn-only cross-tool advisory hook, which never blocks, and a `detect` subcommand that reports how the repo configures release-please.",
       "version": "2.0.0",
       "tags": [
         "skill",
@@ -1174,7 +1176,7 @@
     },
     {
       "name": "steering-pragmatic",
-      "description": "Opinionated pragmatic working style: prioritize accuracy, calibration, and decision usefulness over agreeableness. Analytical and direct by default; distinguish facts from assumptions; avoid hype and sycophancy. Includes code economy defaults (prefer deletion, stdlib, and minimal solutions over new abstractions) and comment discipline. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register. Requires python3 on PATH. Opt-in.",
+      "description": "Rules for what an agent PRODUCES: code economy (prefer deletion, stdlib, and minimal solutions over new abstractions), comment discipline, written-artifact register, and no justification for a choice inside the artifact that ships. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register, since a subagent writes files too. Conversational register is not here: on Claude it is the `Pragmatic` output style, which reaches the main session's system prompt. Requires python3 on PATH. Opt-in.",
       "version": "5.0.0",
       "tags": [
         "steering",
@@ -1199,7 +1201,7 @@
     },
     {
       "name": "steering-speckit",
-      "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
+      "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Names which phases produce a decision record and defers the format, path, and gate to the adr package. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
       "version": "3.3.2",
       "tags": [
         "steering",
@@ -1240,6 +1242,20 @@
       ],
       "category": "steering",
       "source": "./packages/steering-tools-scripts"
+    },
+    {
+      "name": "token-savings",
+      "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content, and a second denies reading a repomix pack (six context windows on a large repository) while naming the rg and awk that search it. Oversized shell output spills to a file with its recovery commands. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report, and repomix-tune re-derives every pack-filtering claim on the installed repomix. Telemetry stays off. Requires python3 on PATH; rtk and repomix are optional and every path degrades to a no-op without them.",
+      "version": "0.0.0",
+      "tags": [
+        "tokens",
+        "context",
+        "rtk",
+        "repomix",
+        "measurement"
+      ],
+      "category": "code-intelligence",
+      "source": "./packages/token-savings"
     },
     {
       "name": "toolchain-cache-policy",

@@ -2,7 +2,7 @@ name: steering-speckit
 version: 3.3.2
 description: >-
   Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG,
-  human-gating rules, and command reference. Opt-in -- install alongside the
+  human-gating rules, and command reference. Names which phases produce a decision record and defers the format, path, and gate to the adr package. Opt-in -- install alongside the
   speckit package to adopt this specific spec-driven process.
 author: Sjors Robroek
 license: Apache-2.0
@@ -13,3 +13,9 @@ category: steering
 tags:
   - steering
   - speckit
+dependencies:
+  apm:
+    # The DECISIONS block names which SpecKit phases produce a decision record but
+    # deliberately owns none of the mechanics. Without this dependency an agent
+    # reads "register a choice" with no format, path, or gate behind it.
+    - srobroek/agentic-packages/packages/adr-as-beads#>=1.0.0 <2.0.0
