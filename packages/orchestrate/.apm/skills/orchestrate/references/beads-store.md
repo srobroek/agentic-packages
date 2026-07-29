@@ -86,6 +86,29 @@ separate task dependency. An accepted, rejected, duplicate, or superseded
 decision is closed with a disposition-specific reason; closed means resolved,
 not erased.
 
+## Edge type and its comment
+
+Pick the most specific type the relationship supports. `relates-to` is the
+documented choice for affected work, and also the weakest signal in the set, so a
+run full of them reads as noise: prefer `caused-by` for a root cause, `validates`
+for acceptance evidence, `supersedes` for replacement, `duplicate_of` for the same
+defect. `replies-to` threads wisp messages and dies with them -- never use it for a
+durable finding.
+
+An edge carries no annotation. `bd dep add` has no note field, and extra keys in
+the `--file` JSONL are accepted and then silently dropped, so an annotated bulk
+write reports success while storing nothing. Every edge therefore gets a matching
+comment on the ORIGINATING bead, naming the type, the other bead, and the
+evidence:
+
+```text
+bd dep add <finding> <root-cause> --type caused-by
+bd comment <finding> "CAUSED-BY <root-cause>: <evidence>"
+```
+
+One comment, on the originating side only. The edge already renders from both
+ends in `bd show`, so a second copy on the target is duplication.
+
 Before creation, after restart, and before action, list every decision under the
 epic with `bd list --type decision --parent <epic> --all --json`. Decisions
 compete only when their nonempty `decision_key` values match.
