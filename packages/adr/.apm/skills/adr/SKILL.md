@@ -68,9 +68,7 @@ Never edit an accepted record to change its decision. Write a new record, mark t
 old one superseded, and name the successor in both. The old record stays readable:
 its value is that it explains what was believed at the time.
 
-The roadmap is the forward-looking document and is re-sequenced as plans change. An
-ADR is point-in-time and append-only. When a decision changes, the roadmap moves and
-a new ADR records why.
+When a decision changes, the roadmap moves and a new record says why.
 
 ## Conventions
 
@@ -78,9 +76,17 @@ a new ADR records why.
 |---|---|
 | Format | MADR 4.0.0 (`full`, `minimal`, `bare`, `bare-minimal` variants) |
 | Path | `docs/adr/NNNN-kebab-title.md` |
-| Directory config | `.adr-dir` holding `docs/adr`; the tool defaults to `doc/adr` |
+| Directory setup | `adrs init docs/adr` once per repo; it writes `.adr-dir` and creates the directory |
 | Numbering | sequential, never reused |
-| Gate | `adrs doctor`, wired as a pre-commit hook by the scaffold layer |
+| Gate | `adrs doctor --warnings-as-errors`, run by hand until a project wires it |
+
+WHAT THE GATE DOES NOT CATCH. `adrs doctor` checks that MADR's sections exist and
+are not placeholder text. It does NOT check that a rejected alternative was recorded
+or that a consequence names a cost: a single-option ADR is `info` severity, which
+`--warnings-as-errors` does not gate on, and an ADR with no `## Considered Options`
+heading at all draws nothing. Verified against 0.10.1. So the two rules that make a
+record worth writing are reviewer's work, not the tool's -- read them as review
+criteria rather than as something a gate enforces.
 
 Rule findings carry an ID and a location, for example
 `warning: [ADR014] Section '## Context and Problem Statement' appears to be empty

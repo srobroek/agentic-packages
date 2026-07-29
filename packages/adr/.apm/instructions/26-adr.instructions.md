@@ -1,6 +1,6 @@
 ---
 description: When a choice earns a decision record, and how to register it.
-applyTo: "{docs/adr/**,**/*.md,**/adrs.toml,**/.adr-dir}"
+applyTo: "**/*"
 ---
 
 For recording a hard-to-reverse or boundary-crossing choice, the MADR format, the

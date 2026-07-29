@@ -12,8 +12,7 @@ MUST Record the choice that was REJECTED and why, not only the one taken. An ADR
   without a rejected alternative is a description, not a decision.
 NOT Record a choice a later commit can undo at no cost, a naming preference, or a
   step already fixed by an existing record.
-DEFAULT When in doubt, write the `decision` bead. Promoting a bead to an ADR is
-  cheap; recovering an unrecorded decision is not.
+DEFAULT In doubt, write the bead: promotion is cheap, recovery is not.
 
 REGISTER AS YOU GO
 MUST Create the `decision` bead BEFORE the choice affects a second bead, agent, or
@@ -22,8 +21,11 @@ MUST Create the `decision` bead BEFORE the choice affects a second bead, agent, 
   `decision_disposition`. See the beads carrier doctrine for the full schema.
 MUST Link affected work with `relates-to` and evidence-supplying work with
   `validates`. Both are non-blocking; `blocks` is never correct for accepted policy.
-MUST Write the ADR file when the disposition reaches `accepted`, then cite its path
-  on the bead. The bead is closed by the ADR, not instead of it.
+MUST Write the ADR file when the disposition reaches `accepted`, cite its path on
+  the bead, then READ THE CITATION BACK before closing. The carrier doctrine makes
+  the bead authoritative and a file evidence only, so an uncited file is not a
+  decision -- and a bead closed as `accepted` whose file was later superseded is a
+  split the doctrine's `decision_key` machinery cannot see.
 DEFAULT A decision that stays `proposed` keeps its bead open and needs no file yet.
 
 THE FILE
@@ -32,18 +34,18 @@ THE FILE
 | Format | MADR 4.0.0 |
 | Path | `docs/adr/NNNN-kebab-title.md` |
 | Numbering | sequential, never reused |
-| Tool | `adrs`, with `--no-edit` in any non-interactive context |
 | Gate | `adrs doctor`, exit 1 under `--warnings-as-errors` |
 
 MUST Create records with `adrs new --no-edit --format madr "<title>"`. Without
   `--no-edit` the command spawns `$EDITOR` and blocks; `EDITOR=true` does not help.
-MUST Keep the ADR directory at `docs/adr` via the `.adr-dir` file. The tool's own
-  default is `doc/adr`, and a mismatch means the gate lints an empty directory.
+MUST Initialise with `adrs init docs/adr`. The tool defaults to `doc/adr`, and
+  writing `.adr-dir` by hand does NOT create the directory -- `adrs new` then fails
+  with "ADR directory not found", and a later bare `adrs init` silently rewrites
+  `.adr-dir` back to `doc/adr`. Verified against 0.10.1.
 NOT Edit an accepted record to change its decision. Write a new one and mark the old
   `superseded`, naming the successor. An ADR is a point-in-time record; the roadmap
   is the forward-looking document.
-DEFAULT Absent `adrs`, the format and path still apply and the gate is skipped;
-  degrade to advisory rather than blocking a commit.
+DEFAULT Absent `adrs`, format and path still apply and the gate is skipped.
 
 WHAT BELONGS IN EACH SECTION
 | Section | Holds | Fails when |
@@ -55,13 +57,12 @@ WHAT BELONGS IN EACH SECTION
 | Consequences | What becomes harder, not only easier | Only benefits are listed |
 | Confirmation | How compliance is verified | It names no observable check |
 
-MUST State a consequence that is a cost. A record with no downside was not a
-  decision between real alternatives.
+MUST State a consequence that is a cost. No gate checks this, so it is a review
+  criterion: `adrs doctor` sees only that sections exist and are not placeholders.
 
-RELATIONSHIP TO OTHER RECORDS
+RECORD AUTHORITY
 | Record | Scope | Mutability |
 |---|---|---|
-| `decision` bead | Live, cross-boundary, run-scoped | Disposition changes until closed |
-| ADR file | Durable, project-scoped, point-in-time | Append-only; supersede, never rewrite |
-| Roadmap | Forward-looking, re-sequenced as plans change | Continuously updated |
+| `decision` bead | Live, cross-boundary. AUTHORITATIVE per the carrier doctrine | Disposition changes until closed |
+| ADR file | The durable evidence a bead cites, project-scoped | Append-only; supersede, never rewrite |
 | Work-bead comment | Affects only that bead and its owned scope | Local, stays with the bead |
