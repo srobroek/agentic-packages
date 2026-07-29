@@ -40,7 +40,8 @@ the exploration it saves.
 Two entry points, both fail-open:
 
   refresh   rebuild the map when HEAD moved (SessionStart, and after merges)
-  inject    emit SessionStart additionalContext naming the map, within budget
+  inject    emit additionalContext naming the map, within budget
+  forget    delete this checkout's map (Worktrunk `post-remove`)
 
 Never blocks a session. Missing repomix, an unwritable path, a pack timeout, or
 any exception exits 0 with no output.
@@ -132,6 +133,12 @@ DEFAULT_IGNORES = ",".join(
         "**/generated/**",
         "**/.agents/skills/**",
         "**/.specify/extensions/**",
+        # Index dumps from code-graph tools, which write into the tree without
+        # gitignoring themselves. Running the tuning sweep on a repository where
+        # graphify had been used found `graphify-out/` was 38% of the whole pack.
+        "**/graphify-out/**",
+        "**/.serena/**",
+        "**/repomix.xml",
         "**/local-*.txt",
         "**/*.min.js",
         "**/*.min.css",
@@ -315,6 +322,23 @@ def refresh(root: str, force: bool = False) -> int:
     return 0
 
 
+def forget(root: str) -> int:
+    """Delete this checkout's map and marker.
+
+    Maps are keyed by a hash of the ROOT PATH, so a removed worktree leaves one
+    that nothing will ever read again. Worktrunk `post-remove` calls this. Returns
+    0 even when there was nothing to remove.
+    """
+    import os
+
+    for path in map_paths(root):
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    return 0
+
+
 def inject(root: str, budget: int, event: str = "SessionStart") -> int:
     """Emit additionalContext describing the map.
 
@@ -380,7 +404,7 @@ def main(argv: list[str]) -> int:
     if not argv:
         return 0
     command = argv[0]
-    if command not in ("refresh", "inject"):
+    if command not in ("refresh", "inject", "forget"):
         return 0
 
     forced = "--force" in argv
@@ -434,6 +458,9 @@ def main(argv: list[str]) -> int:
     root = repo_root(cwd)
     if root is None:
         return 0
+
+    if command == "forget":
+        return forget(root)
 
     if command == "refresh":
         return refresh(root, force=forced)

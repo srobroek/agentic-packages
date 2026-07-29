@@ -40,18 +40,15 @@ python3 scripts/tokenmeter.py compare --markdown \
 Both arms accept transcript paths, directories, or saved `measure` records, so
 an arm can be assembled across days.
 
-MUST Run at least 3 per arm. Below that `compare` labels the verdict
-  "indicative only" and refuses a confident percentage, because agent runs are
-  nondeterministic and a two-run A/B measures noise.
+MUST Run at least 3 per arm. Below that `compare` refuses a confident percentage,
+  because agent runs are nondeterministic and a two-run A/B measures noise.
 
-MUST Read `ranges_separated` before believing a delta. Overlapping per-run
-  ranges mean the arms are not distinguished by that metric whatever the medians
-  say; the verdict follows the ranges.
+MUST Read `ranges_separated` before believing a delta. Overlapping per-run ranges
+  mean the arms are not distinguished, whatever the medians say.
 
-MUST Check the `turns` and `tool_calls` deltas even when tokens fell. The
-  characteristic failure of an output filter is hiding something the agent
-  needed, which it buys back as extra round trips. `compare` warns when turns
-  rise.
+MUST Check `turns` and `tool_calls` even when tokens fell. An output filter's
+  characteristic failure is hiding something the agent needed, which it buys back
+  as extra round trips.
 
 ## Designing the arms
 
@@ -76,34 +73,32 @@ refreshed when HEAD moves and injected at session AND subagent start within a
 token budget. Measured on a 4,107-file repository: 31,299 tokens against
 10,365,403 for a full pack of the same tree, a 331x reduction.
 
-MUST Exclude generated output before reaching for `--compress`. An ignore set
-  removed 21.1% and 33.5% of a full pack on two repositories, against
-  `--compress`'s 21%, and losslessly. See
+MUST Filter the pack by path before reaching for any content flag. An allowlist
+  plus a blocklist removed 29% to 89% depending on the repository, losslessly.
+  Re-derive it with `scripts/repomix-tune.py --repo <path>`, which sweeps every
+  option on whatever repomix version is installed. See
   [repomix ignores](references/repomix-ignores.md).
+NOT Leave a code-graph dump unignored. `graphify-out/` measured 38% of one
+  repository's entire pack: an index of an index. Artifacts belong outside the
+  tree, keyed by repo-root hash under `XDG_STATE_HOME`; see
+  [standard paths](references/standard-paths.md).
 
-DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining. Above it the hook names
-  the file instead, because a large repository maps to ~31k tokens and paying
-  that every session costs more than the exploration it saves. Search the named
-  file with `rg` rather than reading it.
+DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining; above it the hook names
+  the file to `rg` instead of inlining it.
 
 ## Code lookup routing
 
-Reaching for the wrong navigation tool pays twice: for the answer, and for the
-follow-up when it is incomplete. Serena knows `pub` from private and is live;
-graphify answers "what calls this" cheaply with typed edges but models no
-visibility and truncates a file's members at 20. See
-[code lookup routing](references/code-lookup-routing.md) for the measured
-comparison and the command surface, which exists so no agent pays the 12,464-byte
-`graphify --help` read again.
+MUST Route by question shape, not habit. Serena knows `pub` from private and is
+  live; graphify answers "what calls this" cheaply with typed edges but models no
+  visibility and truncates a file's members at 20. See
+  [code lookup routing](references/code-lookup-routing.md).
 
 ## Judging a filter's reach
 
-MUST Measure coverage in BYTES, not in commands routed. Command counts flatter a
-  filter. On one repository's history the rtk guard routes 3.6% of `Bash` output
-  bytes, and 76.7% of those bytes come from tools rtk has no filter for at all
-  (`wt`, `bd`, `jq`, `rg`, `head`, `python3`), which caps it at 23.3% even if
-  every chain and heredoc were rewritten.
-NOT Steer agents toward "more filterable" command shapes to raise that number.
-  The ceiling stays under a quarter, and the constraint distorts real work.
+MUST Measure coverage in BYTES, not commands routed. Command counts flatter a
+  filter: the rtk guard routes 7.5% of `Bash` output bytes, and most of the rest
+  comes from tools rtk cannot filter at all.
+NOT Steer agents toward "more filterable" command shapes. The ceiling stays low
+  and the constraint distorts real work.
 
 MUST Use the map to LOCATE files, then read or search the file itself.

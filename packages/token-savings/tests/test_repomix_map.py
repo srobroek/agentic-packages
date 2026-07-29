@@ -245,6 +245,36 @@ def test_malformed_payloads_fail_open(raw, repo, env, tmp_path):
     assert proc.returncode == 0
 
 
+def test_forget_removes_this_checkouts_map(repo, env):
+    """Maps are keyed by the ROOT PATH, so a removed worktree leaves one nothing
+    will read again. Worktrunk `post-remove` calls this."""
+    environment, _, state = env
+    _run("refresh", repo, environment)
+    assert len(_maps(state)) == 1
+    _run("forget", repo, environment)
+    assert _maps(state) == []
+
+
+def test_forget_is_silent_when_there_is_no_map(repo, env):
+    environment, _, state = env
+    assert _run("forget", repo, environment) == ""
+    assert _maps(state) == []
+
+
+def test_a_worktree_gets_its_own_map(repo, env, tmp_path):
+    """Keyed by root path, so a linked worktree cannot collide with its parent."""
+    environment, _, state = env
+    worktree = repo.parent / "wt2"
+    subprocess.run(
+        ["git", "-C", str(repo), "worktree", "add", "-q", str(worktree), "-b", "wt2"],
+        check=True,
+        capture_output=True,
+    )
+    _run("refresh", repo, environment)
+    _run("refresh", worktree, environment)
+    assert len(_maps(state)) == 2
+
+
 def test_unknown_subcommand_is_a_noop(repo, env):
     environment, _, _ = env
     assert _run("bogus", repo, environment) == ""

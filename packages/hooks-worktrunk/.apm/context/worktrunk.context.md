@@ -56,6 +56,19 @@ NOT Treat `copy-ignored` as a shared writable build directory; it creates a
 DEFAULT Run a dev server with
   `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
   matching `[list] url`.
+DEFAULT Build the repository structure map in `post-start` so a new checkout has
+  one before its first session, and drop it in `post-remove`. Artifacts are keyed
+  by a hash of the worktree root, so each checkout gets its own without
+  collision, and a removed worktree otherwise leaves a map nothing will use:
+
+    post-start   token-savings/scripts/repomix-map.py refresh --force
+    post-remove  token-savings/scripts/repomix-map.py forget
+
+  Without the `post-start` step the map is still built lazily on the first
+  HEAD-moving command, so this only removes a first-session delay.
+NOT Copy the map with `copy-ignored`. It lives outside the tree under
+  `XDG_STATE_HOME`, keyed by the ROOT PATH, so a copied map would carry the
+  parent checkout's key and be invisible to the worktree that holds it.
 
 HOOK OWNERSHIP
 MUST User hooks contain cross-repository invariants only. Repository commands
