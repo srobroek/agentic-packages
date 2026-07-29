@@ -18,4 +18,4 @@ dependencies:
     # The DECISIONS block names which SpecKit phases produce a decision record but
     # deliberately owns none of the mechanics. Without this dependency an agent
     # reads "register a choice" with no format, path, or gate behind it.
-    - srobroek/agentic-packages/packages/adr#>=0.0.0 <1.0.0
+    - srobroek/agentic-packages/packages/adr#>=1.0.0 <2.0.0

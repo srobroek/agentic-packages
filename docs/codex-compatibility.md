@@ -137,6 +137,7 @@ plugin manifests do not support every APM component type.
 
 | Package | Status | Codex difference or workaround |
 | --- | --- | --- |
+| `adr` | Partial | The write guard covers `apply_patch` and the file-write tools; a shell redirect into `docs/adr/` bypasses it. The pre-commit renderer rewrites the file from its bead regardless, so the loss is bounded to that one edit. |
 | `agent-builder` | Partial | Agents work through APM; Claude-only edit reminder has no reliable Codex subagent identifier on PreToolUse. |
 | `hooks-attribution-guard` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep Git/CI enforcement. |
 | `hooks-bash-safety` | Partial | Simple Bash is covered; unified shell paths can bypass Codex hooks. Keep sandbox and approval controls. |
