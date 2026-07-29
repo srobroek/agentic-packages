@@ -204,6 +204,28 @@ lower without re-auditing the window.
 The remaining bound is structural: **48% of transcript bytes live in results under
 2 KB**, a long tail no size threshold reaches.
 
+### rtk and the spill hook compose rather than collide
+
+They act at different points, so double-filtering is not a risk. rtk rewrites the
+COMMAND in `PreToolUse`; the spill hook then sees whatever that command actually
+printed. Measured on the same 3,350 real Bash results:
+
+| | Results | Bytes |
+| --- | --- | --- |
+| rtk only | 103 | 48,431 |
+| spill only | 278 | 1,220,138 |
+| both would fire | 11 | 43,423 |
+
+The overlap is 0.33% of results, and in practice it is smaller still: rtk usually
+shrinks output BELOW the 2 KB threshold, so the spill hook then declines. A
+`cargo clippy --workspace` that returned 6,773 bytes natively came back as 30
+after rtk, and the largest rtk-filtered output measured was 1,765 bytes.
+
+Where both do fire, they nest safely. Forcing the case (8,141 bytes of
+rtk-filtered warnings) produced a 4,748-byte summary keeping the first and last
+warning, a recovery path, and exactly one `[token-savings]` marker. The hook
+refuses to re-spill an already-spilled result, so a marker can never stack.
+
 ## Repository structure map
 
 `repomix --no-files` emits the directory tree with no file contents. On a
