@@ -136,9 +136,9 @@ itself. To run an A/B baseline, remove the hook rather than setting that variabl
 
 ## Oversized output goes to disk
 
-A `Bash` result over 12 KB is replaced by its first 40 and last 60 lines plus a
-path to the full text, measured at **80% smaller** on a 24 KB test dump. The
-summary names the exact commands that recover any part of it:
+A `Bash` result over 4 KB is replaced by its first 40 and last 60 lines plus a
+path to the full text. The summary names the exact commands that recover any part
+of it:
 
 ```
 rg <pattern> /path/to/spill.txt
@@ -155,6 +155,20 @@ the invocation in the first, so most questions need no retrieval at all.
 A failing command is never summarized: the error text is the thing worth reading.
 Output under the threshold is untouched, a spilled result never nests, and the
 store is pruned to 200 files and 7 days.
+
+The threshold is tuned against 4,417 real tool results from a 4,107-file
+repository's transcripts, where `Bash` owns 69% of all transcript bytes:
+
+| Threshold | Results hit | Bytes saved | Share of all transcript bytes |
+| --- | --- | --- | --- |
+| 12 KB | 24 | 300,922 | 8% |
+| 8 KB | 48 | 377,012 | 10% |
+| **4 KB** | **146** | **464,193** | **12%** |
+| 2 KB | 344 | 524,763 | 14% |
+
+4 KB is the knee. Do not expect more: **48% of transcript bytes live in results
+under 2 KB**, a long tail that no size threshold reaches. This is a real but
+bounded lever, not a transformation.
 
 ## Repository structure map
 

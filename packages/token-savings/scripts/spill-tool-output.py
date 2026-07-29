@@ -31,10 +31,23 @@ import sys
 
 # Only `sys` at module scope: this runs after every Bash call.
 
-# Below this, truncation is not worth a retrieval handle. 12 KB is roughly 3k
-# tokens -- large enough that the head/tail plus instructions is a clear win,
-# small enough to leave ordinary command output alone.
-SPILL_THRESHOLD_BYTES = 12_000
+# Below this, truncation is not worth a retrieval handle. Tuned against 4,417
+# real tool results from a 4,107-file repository's transcripts, where `Bash`
+# owns 69% of all transcript bytes:
+#
+#   threshold   results hit   bytes saved   share of all transcript bytes
+#      12 KB             24       300,922                              8%
+#       8 KB             48       377,012                             10%
+#       4 KB            146       464,193                             12%
+#       2 KB            344       524,763                             14%
+#
+# 4 KB is the knee. Going to 2 KB adds two points while spilling 198 more
+# results, and a 2 KB result is often small enough that the head/tail plus the
+# retrieval instructions is barely a saving at all.
+#
+# Do not expect more than this: 48% of transcript bytes live in results UNDER
+# 2 KB, a long tail no size threshold can reach.
+SPILL_THRESHOLD_BYTES = 4_000
 
 # Kept from each end. Enough for a test summary, a stack trace tail, or a build
 # verdict without reproducing the body.

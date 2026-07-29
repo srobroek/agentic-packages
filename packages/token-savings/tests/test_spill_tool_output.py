@@ -116,8 +116,14 @@ def test_small_output_is_untouched(tmp_path):
 
 
 def test_output_just_under_the_threshold_is_untouched(tmp_path):
-    payload = _payload("x" * 11_000)
-    assert _run(payload, tmp_path) == ""
+    """Read the threshold from the script rather than hardcoding it, so tuning
+    the constant cannot leave this test asserting the old value."""
+    threshold = int(
+        re.search(r"^SPILL_THRESHOLD_BYTES = ([\d_]+)", SCRIPT.read_text(), re.M)
+        .group(1)
+        .replace("_", "")
+    )
+    assert _run(_payload("x" * (threshold - 200)), tmp_path) == ""
 
 
 def test_an_already_spilled_result_is_not_nested(tmp_path):
