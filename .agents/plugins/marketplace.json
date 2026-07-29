@@ -293,18 +293,6 @@
       "category": "planning-product"
     },
     {
-      "name": "dep-audit",
-      "source": {
-        "source": "local",
-        "path": "./packages/dep-audit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
       "name": "dep-update",
       "source": {
         "source": "local",
@@ -533,18 +521,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-worktree",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-worktree"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-worktrunk",
       "source": {
         "source": "local",
@@ -689,18 +665,6 @@
       "category": "planning-product"
     },
     {
-      "name": "mcp-1mcp",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-1mcp"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-codebase-memory",
       "source": {
         "source": "local",
@@ -729,18 +693,6 @@
       "source": {
         "source": "local",
         "path": "./packages/mcp-fetcher"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
-      "name": "mcp-mempalace",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-mempalace"
       },
       "policy": {
         "installation": "AVAILABLE",

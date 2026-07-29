@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# git-blob digest of stdin, matching `git hash-object --stdin`, which is what
+# landing-contract.sh actually calls. Recomputing it as a bare sha1 -- which both
+# this suite and the fake git used to do -- made the oracle self-consistent but
+# blind: the ids it verified were not the ids production computes, so digest drift
+# could not fail a test.
+blob_sha1() {
+  local payload
+  payload="$(cat)"
+  printf 'blob %d\0%s' "${#payload}" "$payload" | shasum -a 1 | awk '{print $1}'
+}
+
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
 readonly CONTRACT="$SCRIPT_DIR/landing-contract.sh"
@@ -111,7 +123,7 @@ assert_waiter_status() {
   local generation="${4:-1}"
   local digest waiter actual
 
-  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
+  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | blob_sha1)"
   waiter="slot-1-waiter-${digest:0:12}"
   actual="missing"
   [[ ! -f "$state/waiters/$waiter/status" ]] || actual="$(<"$state/waiters/$waiter/status")"
@@ -123,7 +135,7 @@ waiter_path() {
   local generation="${2:-1}"
   local digest
 
-  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
+  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | blob_sha1)"
   printf '%s/waiters/slot-1-waiter-%s\n' "$state" "${digest:0:12}"
 }
 
@@ -136,7 +148,7 @@ native_holder_for() {
   waiter="$(waiter_path "$holder" "$generation")"
   waiter="${waiter##*/}"
   digest="$(printf '%s\0%s\0%s\0%s\0' "$holder" "$generation" "$lease_actor" "$waiter" |
-    sha1sum | awk '{print $1}')"
+    blob_sha1)"
   printf 'pr-shepherd:%s\n' "$digest"
 }
 
@@ -345,6 +357,25 @@ run_contract acquire-slot stable-holder 1 0
 assert_eq 0 "$last_rc" "successor reacquires after durable dead-claim recovery"
 run_contract release-slot stable-holder terminal
 assert_eq 0 "$last_rc" "successor terminally releases the recovered waiter"
+
+# A corrupt recovery_phase must ABORT rather than mutate the claim.
+#
+# The defensive fix at the `recovery_phase_rank` call site is unreachable today:
+# `prepare_recovery` validates the phase first (its `fail` is a bare statement, so
+# the exit propagates under `set -e`), and it returns either that validated phase or
+# the literal `prepared`. The check downstream was still written as
+# `[[ "$(recovery_phase_rank ...)" -lt 2 ]]`, where a command substitution inside
+# [[ ]] DISCARDS the callee's exit and `[[ "" -lt 2 ]]` is true in bash 3.2 -- so the
+# unknown-phase path would have taken the mutating branch if anything ever reached
+# it. This case pins the abort at the reachable gate, so the invariant is covered
+# wherever it is enforced.
+new_state recover-claim-corrupt-phase
+scenario=recover-claim-corrupt-phase
+actor="actor-corrupt"
+printf 'not-a-real-phase\n' >"$state/recovery-phase"
+printf 'pr-shepherd:claim-recovery:merge-1:dead-actor\n' >"$state/recovery-key"
+run_contract recover-claim merge-1 dead-actor session-registry:dead stable-holder
+assert_eq 2 "$last_rc" "a corrupt recovery phase aborts instead of mutating"
 
 new_state recover-claim-waiter-competitor-before-acquire
 scenario=recover-claim-waiter-competitor-before-acquire

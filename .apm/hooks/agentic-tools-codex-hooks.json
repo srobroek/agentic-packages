@@ -10,18 +10,6 @@
           }
         ]
       }
-    ],
-    "PermissionRequest": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.py",
-            "timeout": 10
-          }
-        ]
-      }
     ]
   }
 }

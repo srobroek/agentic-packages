@@ -21,6 +21,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/worktrunk-sweep.py",
+            "timeout": 60
+          }
+        ]
+      }
     ]
   }
 }
