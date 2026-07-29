@@ -14,6 +14,7 @@ named as a claim.
 | Both | `PreToolUse` | `Bash` | `rtk-rewrite-guard.py`, `repomix-read-guard.py` |
 | Both | `PreToolUse` | `Read` | `repomix-read-guard.py` |
 | Claude Code | `PostToolUse` | `Bash` | `spill-tool-output.py` |
+| Claude Code | `PostToolUse` | `Read` | `read-truncation-notice.py` |
 
 The `PostToolUse` spill hook is Claude-only: Codex's `PostToolUse` wire struct
 carries no `updatedToolOutput`, so it cannot rewrite a tool result. Retrieval from
@@ -264,6 +265,36 @@ Where both do fire, they nest safely. Forcing the case (8,141 bytes of
 rtk-filtered warnings) produced a 4,748-byte summary keeping the first and last
 warning, a recovery path, and exactly one `[token-savings]` marker. The hook
 refuses to re-spill an already-spilled result, so a marker can never stack.
+
+## `Read` truncates silently, so the hook says so
+
+`Read` on a file past its token cap returns a prefix and reports nothing. Measured
+on a 118,893-byte, 4,001-line file: the result carried lines 1 to 2,860, with no
+`<persisted-output>` block and no notice. Asked afterwards, the model reported
+reading all 4,001 lines, which is what the result looks like from inside the
+transcript. This is silent loss, the same class as rtk returning 10 of 25 commits
+unmarked.
+
+The hook payload carries what the result withholds. `tool_response.file` holds
+`numLines`, `totalLines`, `startLine`, and `truncatedByTokenCap`, and that flag is
+`True` on a truncated read and absent on a complete one, so
+`read-truncation-notice.py` reads the runtime's verdict instead of guessing from a
+size threshold.
+
+It appends `additionalContext` and never rewrites the result. The content is not
+the problem, the missing notice is, so nothing is substituted and a wrong guess
+cannot lose data. Asked whether it had seen the whole file, the same prompt and
+model answered:
+
+| | answer |
+| --- | --- |
+| without the hook | "read all 4001 lines" |
+| with the hook | "I saw lines 1 through 2,860 ... did not see all of them" |
+
+`Glob` and `Grep` also reach `PostToolUse`, and both report their own truncation:
+`Glob` returns `truncated` and `countIsComplete`, `Grep` returns `numLines` beside
+`totalLines`. Neither has been observed dropping content without saying so, so
+neither carries a hook here.
 
 ## Repository pack, searched not read
 

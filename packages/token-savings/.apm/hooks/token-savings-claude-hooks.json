@@ -37,6 +37,16 @@
             "timeout": 15
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/read-truncation-notice.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
