@@ -100,7 +100,10 @@ def _run(
 
 
 def _maps(state: Path) -> list[Path]:
-    return sorted((state / "agentic-tools" / "token-savings").glob("*-repomix-map.xml"))
+    """Full maps only. `*-repomix-map.xml` also matches `*-scoped-repomix-map.xml`,
+    so exclude the scoped ones explicitly."""
+    found = (state / "agentic-tools" / "token-savings").glob("*-repomix-map.xml")
+    return sorted(p for p in found if "-scoped-" not in p.name)
 
 
 def test_refresh_builds_a_map(repo, env):
@@ -273,6 +276,53 @@ def test_a_worktree_gets_its_own_map(repo, env, tmp_path):
     _run("refresh", repo, environment)
     _run("refresh", worktree, environment)
     assert len(_maps(state)) == 2
+
+
+def _scoped(state: Path) -> list[Path]:
+    return sorted((state / "agentic-tools" / "token-savings").glob("*-scoped-*.xml"))
+
+
+def test_scoped_map_is_keyed_separately_from_the_full_map(repo, env):
+    """Building a scoped map must not clobber the full one: an orchestrated run
+    scoping a subagent to one crate should not blind the parent session."""
+    environment, _, state = env
+    _run("refresh", repo, environment)
+    _run("refresh", repo, environment, extra=["--scope", "src/**"])
+    assert len(_maps(state)) == 1
+    assert len(_scoped(state)) == 1
+
+
+def test_scope_replaces_the_default_allowlist(repo, env):
+    """A caller naming `crates/foo/**` means that subtree, not its intersection
+    with a language list."""
+    environment, argv_log, _ = env
+    _run("refresh", repo, environment, extra=["--scope", "src/**"])
+    argv = argv_log.read_text()
+    assert "src/**" in argv
+    assert "**/*.rs" not in argv
+
+
+def test_two_scopes_coexist(repo, env):
+    environment, _, state = env
+    _run("refresh", repo, environment, extra=["--scope", "src/**"])
+    _run("refresh", repo, environment, extra=["--scope", "tests/**"])
+    assert len(_scoped(state)) == 2
+
+
+def test_forget_scope_leaves_the_full_map(repo, env):
+    environment, _, state = env
+    _run("refresh", repo, environment)
+    _run("refresh", repo, environment, extra=["--scope", "src/**"])
+    _run("forget", repo, environment, extra=["--scope", "src/**"])
+    assert _scoped(state) == []
+    assert len(_maps(state)) == 1
+
+
+def test_inject_reads_the_scoped_map_when_scoped(repo, env):
+    environment, _, _ = env
+    _run("refresh", repo, environment, extra=["--scope", "src/**"])
+    out = _run("inject", repo, environment, extra=["--scope", "src/**"])
+    assert "<directory_structure>" in json.loads(out)["hookSpecificOutput"]["additionalContext"]
 
 
 def test_unknown_subcommand_is_a_noop(repo, env):

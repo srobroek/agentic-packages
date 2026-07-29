@@ -58,10 +58,20 @@ MUST A resolver every tool can call, rather than each reimplementing the hash.
   language. `token-savings` implements this in `repomix-map.py:state_dir()` and
   `map_paths()`; that is the reference, not the API.
 
-MUST A gitignore contribution for the tools that CANNOT be redirected. repomix
-  can be pointed anywhere with `--output`, but `graphify` writes `graphify-out/`
-  relative to the repository with no override flag found. Those need
-  `.gitignore` entries scaffolded, or they land in commits.
+MUST A gitignore contribution for the tools that CANNOT be redirected, scaffolded
+  into every new repository. repomix takes `--output <path>` and can be pointed
+  outside the tree; `graphify` cannot. Its query verbs accept `--graph <path>`,
+  but `graphify update` has NO output flag: it writes `graphify-out/` relative to
+  the repository, unavoidably. So the scaffolded `.gitignore` needs at minimum:
+
+    graphify-out/
+    /repomix.xml
+    .serena/
+
+  Leaving them tracked costs twice. They are large (`graphify-out/` 9.9 MB on a
+  741-file repository, 60 MB on a 4,107-file one; `repomix.xml` 4.7 MB and 39 MB),
+  and they feed into the NEXT artifact -- `graphify-out/` measured 38% of one
+  repository's entire repomix pack.
 
 MUST A staleness convention. Read the `.head` marker, compare to `HEAD`, and
   report the commit distance rather than rebuilding. Rebuilding at session start
@@ -79,6 +89,20 @@ NOT Put an artifact in the tree because agents will not otherwise find it. That
   does not fire for subagents. A `SubagentStart` hook naming the absolute path
   and the exact `rg` command to search it fixes discovery without touching the
   tree.
+
+## Per-worktree cost, which the scheme does not solve
+
+A Worktrunk worktree is a separate root, so every root-keyed artifact is rebuilt
+there. For the structure map that is 1.3 to 3.2s and 82 KB outside the tree, so
+`post-start` absorbs it. For graphify it is 6.9s and 9.9 MB INSIDE the tree, per
+worktree, with no way to redirect it.
+
+DEFAULT Do not build a graphify graph per worktree. Point queries at the primary
+  checkout's graph with `--graph <primary>/graphify-out/graph.json`; it is a
+  snapshot, so a few commits of drift is the same staleness the primary already
+  tolerates.
+MUST Rebuild in the worktree only when the branch has changed the code being
+  queried, and gitignore the output first.
 
 ## Global versus per-project
 

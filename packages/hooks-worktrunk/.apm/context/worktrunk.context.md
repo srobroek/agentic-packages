@@ -61,14 +61,27 @@ DEFAULT Build the repository structure map in `post-start` so a new checkout has
   by a hash of the worktree root, so each checkout gets its own without
   collision, and a removed worktree otherwise leaves a map nothing will use:
 
-    post-start   token-savings/scripts/repomix-map.py refresh --force
-    post-remove  token-savings/scripts/repomix-map.py forget
+    [post-start]
+    repomix-map = "python3 ~/.claude/hooks/token-savings/scripts/repomix-map.py refresh --force"
+
+    [post-remove]
+    repomix-map = "python3 ~/.claude/hooks/token-savings/scripts/repomix-map.py forget"
+
+  Add `--scope '<glob>'` on both when the worktree exists for one subtree: a
+  scoped map of one crate measured 54 tokens against 27,750 for the whole tree,
+  and it is keyed separately so it never clobbers the full map.
 
   Without the `post-start` step the map is still built lazily on the first
   HEAD-moving command, so this only removes a first-session delay.
 NOT Copy the map with `copy-ignored`. It lives outside the tree under
   `XDG_STATE_HOME`, keyed by the ROOT PATH, so a copied map would carry the
   parent checkout's key and be invisible to the worktree that holds it.
+NOT Build a graphify graph per worktree. `graphify update` has no output flag and
+  writes `graphify-out/` into the tree: 6.9s and 9.9 MB on a 741-file repository,
+  paid again in every worktree. Query the primary checkout's graph instead with
+  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which is the same
+  staleness the primary already tolerates, and rebuild locally only when the
+  branch changed the code being queried.
 
 HOOK OWNERSHIP
 MUST User hooks contain cross-repository invariants only. Repository commands

@@ -43,6 +43,15 @@ Two entry points, both fail-open:
   inject    emit additionalContext naming the map, within budget
   forget    delete this checkout's map (Worktrunk `post-remove`)
 
+`refresh --scope <glob>` builds a SCOPED map instead of a whole-repository one,
+keyed separately so it cannot clobber the full map. Use it when the CALLER knows
+the subagent's scope: an orchestrated run handing over one crate can build a
+55-token map of it against 27,750 for the whole tree. Do not make it the default.
+Sampling 1,662 real subagent transcripts, the median touched 9 top-level
+directories and only 19% touched three or fewer, so a guessed scope is usually
+wrong -- and a map missing the directory an agent needs is worse than no map,
+because the agent trusts it and greps anyway.
+
 Never blocks a session. Missing repomix, an unwritable path, a pack timeout, or
 any exception exits 0 with no output.
 """
@@ -175,7 +184,7 @@ def state_dir() -> str:
     return os.path.join(base, "agentic-tools", "token-savings")
 
 
-def map_paths(root: str) -> tuple[str, str]:
+def map_paths(root: str, scope: str | None = None) -> tuple[str, str]:
     """Return (map_path, head_marker_path).
 
     The map lives OUTSIDE the repository, keyed by a hash of the root. Writing
@@ -187,10 +196,14 @@ def map_paths(root: str) -> tuple[str, str]:
     import hashlib
     import os
 
-    digest = hashlib.sha256(root.encode("utf-8", "surrogateescape")).hexdigest()[:16]
+    key = root if scope is None else f"{root}\x00{scope}"
+    digest = hashlib.sha256(key.encode("utf-8", "surrogateescape")).hexdigest()[:16]
     directory = state_dir()
+    # A scoped map gets its own key, so building one never clobbers the full map
+    # and two different scopes coexist.
+    suffix = MAP_BASENAME if scope is None else f"scoped-{MAP_BASENAME}"
     return (
-        os.path.join(directory, f"{digest}-{MAP_BASENAME}"),
+        os.path.join(directory, f"{digest}-{suffix}"),
         os.path.join(directory, f"{digest}.head"),
     )
 
@@ -248,8 +261,13 @@ def current_head(root: str) -> str:
     return ""
 
 
-def refresh(root: str, force: bool = False) -> int:
-    """Rebuild the map when HEAD moved. Returns 0 always."""
+def refresh(root: str, force: bool = False, scope: str | None = None) -> int:
+    """Rebuild the map when HEAD moved. Returns 0 always.
+
+    `scope` is a repomix `--include` glob. When given, it REPLACES the default
+    allowlist rather than narrowing it, because a caller naming `crates/foo/**`
+    means that subtree and not its intersection with a language list.
+    """
     import os
     import subprocess
 
@@ -258,7 +276,7 @@ def refresh(root: str, force: bool = False) -> int:
     if shutil.which("repomix") is None:
         return 0
 
-    map_path, head_marker = map_paths(root)
+    map_path, head_marker = map_paths(root, scope)
     head = current_head(root)
 
     if not force and head:
@@ -295,7 +313,7 @@ def refresh(root: str, force: bool = False) -> int:
                 "--no-files",
                 "--no-file-summary",
                 "--include",
-                DEFAULT_INCLUDES,
+                scope or DEFAULT_INCLUDES,
                 "--ignore",
                 DEFAULT_IGNORES,
                 "--output",
@@ -322,7 +340,7 @@ def refresh(root: str, force: bool = False) -> int:
     return 0
 
 
-def forget(root: str) -> int:
+def forget(root: str, scope: str | None = None) -> int:
     """Delete this checkout's map and marker.
 
     Maps are keyed by a hash of the ROOT PATH, so a removed worktree leaves one
@@ -331,7 +349,7 @@ def forget(root: str) -> int:
     """
     import os
 
-    for path in map_paths(root):
+    for path in map_paths(root, scope):
         try:
             os.unlink(path)
         except OSError:
@@ -339,7 +357,7 @@ def forget(root: str) -> int:
     return 0
 
 
-def inject(root: str, budget: int, event: str = "SessionStart") -> int:
+def inject(root: str, budget: int, event: str = "SessionStart", scope: str | None = None) -> int:
     """Emit additionalContext describing the map.
 
     `event` must name the hook that invoked this, because the payload echoes it
@@ -353,7 +371,7 @@ def inject(root: str, budget: int, event: str = "SessionStart") -> int:
     import json
     import os
 
-    map_path, _ = map_paths(root)
+    map_path, _ = map_paths(root, scope)
     try:
         size = os.path.getsize(map_path)
     except OSError:
@@ -409,6 +427,15 @@ def main(argv: list[str]) -> int:
 
     forced = "--force" in argv
 
+    # `--scope <glob>` builds/reads/removes a separately-keyed scoped map. Parsed
+    # by hand rather than with argparse: this is a hot-path hook and argparse
+    # costs an import the bail path should not pay.
+    scope = None
+    if "--scope" in argv:
+        index = argv.index("--scope")
+        if index + 1 < len(argv):
+            scope = argv[index + 1]
+
     # Read cwd from the payload rather than trusting the process working
     # directory, and canonicalize it: on macOS a payload may carry `/tmp/x`
     # where git reports `/private/tmp/x`, and the two share no prefix.
@@ -460,10 +487,10 @@ def main(argv: list[str]) -> int:
         return 0
 
     if command == "forget":
-        return forget(root)
+        return forget(root, scope)
 
     if command == "refresh":
-        return refresh(root, force=forced)
+        return refresh(root, force=forced, scope=scope)
 
     budget = DEFAULT_BUDGET_TOKENS
     env_budget = os.environ.get("TOKEN_SAVINGS_MAP_BUDGET")
@@ -484,7 +511,7 @@ def main(argv: list[str]) -> int:
                     event = name
         except (ValueError, TypeError):
             pass
-    return inject(root, budget, event)
+    return inject(root, budget, event, scope)
 
 
 if __name__ == "__main__":

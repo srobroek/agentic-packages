@@ -27,8 +27,8 @@ MUST Judge compression on `cost_weighted`, not `input_tokens`. Cache reads bill
   input tokens against 14.2M cache reads, so a tool judged on `input_tokens`
   looks miraculous while changing nothing.
 
-MUST Include subagents (`--no-subagents` is for diagnosis only). One session
-  hid 45 subagents and 92 turns from a main-thread-only reading.
+MUST Include subagents (`--no-subagents` is diagnosis only). One session hid 45
+  subagents and 92 turns from a main-thread-only reading.
 
 ## Running an A/B
 
@@ -73,18 +73,20 @@ refreshed when HEAD moves and injected at session AND subagent start within a
 token budget. Measured on a 4,107-file repository: 31,299 tokens against
 10,365,403 for a full pack of the same tree, a 331x reduction.
 
-MUST Filter the pack by path before reaching for any content flag. An allowlist
-  plus a blocklist removed 29% to 89% depending on the repository, losslessly.
-  Re-derive it with `scripts/repomix-tune.py --repo <path>`, which sweeps every
-  option on whatever repomix version is installed. See
-  [repomix ignores](references/repomix-ignores.md).
-NOT Leave a code-graph dump unignored. `graphify-out/` measured 38% of one
-  repository's entire pack: an index of an index. Artifacts belong outside the
-  tree, keyed by repo-root hash under `XDG_STATE_HOME`; see
-  [standard paths](references/standard-paths.md).
+MUST Filter the pack by path before any content flag: an allowlist plus a
+  blocklist removed 29% to 89%, losslessly. Re-derive with
+  `scripts/repomix-tune.py --repo <path>`, which sweeps every option on the
+  installed repomix. See [repomix ignores](references/repomix-ignores.md).
+NOT Leave a code-graph dump unignored. `graphify-out/` measured 38% of one pack:
+  an index of an index. See [standard paths](references/standard-paths.md).
 
 DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining; above it the hook names
   the file to `rg` instead of inlining it.
+DEFAULT `refresh --scope '<glob>'` builds a separately-keyed SCOPED map: 54 tokens
+  for one crate against 27,750 for the whole tree. Only when the CALLER knows the
+  scope. Across 1,662 real subagent transcripts the median touched 9 top-level
+  directories, so a guessed scope is usually wrong, and a map missing what an
+  agent needs is worse than none because it trusts it.
 
 ## Code lookup routing
 
@@ -101,4 +103,4 @@ MUST Measure coverage in BYTES, not commands routed. Command counts flatter a
 NOT Steer agents toward "more filterable" command shapes. The ceiling stays low
   and the constraint distorts real work.
 
-MUST Use the map to LOCATE files, then read or search the file itself.
+MUST Use the map to LOCATE files, then read the file itself.
