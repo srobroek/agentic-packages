@@ -40,7 +40,27 @@ ARTIFACT_DIRS = ("target", "node_modules", ".venv", "dist", "build", ".build")
 # How old the last commit must be before a clean, published worktree is called
 # abandoned. Two weeks: long enough that a branch parked over a holiday is not
 # swept, short enough to matter.
-STALE_AFTER_SECONDS = int(os.environ.get("WORKTRUNK_SWEEP_STALE_AFTER", 14 * 24 * 3600))
+_DEFAULT_STALE_AFTER = 14 * 24 * 3600
+
+
+def _stale_after() -> int:
+    """The age threshold, falling back to the default on any unusable override.
+
+    A non-numeric or negative override used to raise at import time, so the hook
+    exited 1 before reading stdin -- a crash-closed guard, against the fail-open
+    rule. A negative value would additionally call every worktree stale.
+    """
+    raw = os.environ.get("WORKTRUNK_SWEEP_STALE_AFTER")
+    if raw is None:
+        return _DEFAULT_STALE_AFTER
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return _DEFAULT_STALE_AFTER
+    return value if value > 0 else _DEFAULT_STALE_AFTER
+
+
+STALE_AFTER_SECONDS = _stale_after()
 
 # Cap the report. A machine with dozens of stale worktrees needs a nudge, not a wall.
 REPORT_LIMIT = 10
@@ -98,6 +118,14 @@ def is_stale(record: dict, now: float) -> tuple[bool, str]:
     if not isinstance(path, str) or not path or not os.path.isdir(path):
         return False, "no directory"
 
+    # Only a path wt reports canonically is swept. `wt list` emits absolute,
+    # already-resolved paths for every real worktree, so demanding that costs
+    # nothing and closes two escapes: a record whose path is a SYMLINK to another
+    # tree (reclaim followed it and deleted that tree's git-ignored dirs), and one
+    # containing `..` (a path under the managed root that resolves outside it).
+    if path != os.path.realpath(path):
+        return False, "non-canonical path"
+
     # A detached worktree has branch: null. Worktrunk cannot name what it holds, so
     # neither can this.
     if not isinstance(record.get("branch"), str) or not record["branch"]:
@@ -107,14 +135,22 @@ def is_stale(record: dict, now: float) -> tuple[bool, str]:
     if not isinstance(working, dict):
         return False, "no working-tree status"
     for key in ("staged", "modified", "untracked", "renamed", "deleted"):
-        if working.get(key):
+        # An ABSENT key is unknown, not clean. `working.get(key)` used to read a
+        # missing field as false, so a record with `working_tree: {}` -- which is
+        # what schema 2 produces, since it renames these fields -- was judged clean
+        # on every signal and its build output deleted.
+        if key not in working:
+            return False, f"no working-tree status ({key})"
+        if working[key]:
             return False, f"uncommitted work ({key})"
 
     remote = record.get("remote")
     if not isinstance(remote, dict):
         return False, "no remote tracking"
     ahead = remote.get("ahead")
-    if not isinstance(ahead, int):
+    # bool is a subclass of int, and a negative count is nonsense; either means the
+    # field is not the integer this reads, so the count is unknown.
+    if not isinstance(ahead, int) or isinstance(ahead, bool) or ahead < 0:
         return False, "unknown ahead count"
     if ahead > 0:
         return False, f"{ahead} unpushed commit(s)"
@@ -123,7 +159,9 @@ def is_stale(record: dict, now: float) -> tuple[bool, str]:
     if not isinstance(commit, dict):
         return False, "no commit metadata"
     timestamp = commit.get("timestamp")
-    if not isinstance(timestamp, int):
+    # A bool or a non-positive epoch is not a commit time. `timestamp: True`
+    # evaluated as 1 and reported a 20663-day-old worktree.
+    if not isinstance(timestamp, int) or isinstance(timestamp, bool) or timestamp <= 0:
         return False, "no commit timestamp"
     age = now - timestamp
     if age < STALE_AFTER_SECONDS:
@@ -143,11 +181,22 @@ def reclaim(path: str) -> list[str]:
     import shutil
 
     removed = []
+    # Defence in depth behind is_stale's canonical-path check: resolve the root
+    # here too, so a caller that reaches reclaim directly still cannot delete
+    # through a symlink or a `..` escape.
+    root = os.path.realpath(path)
+    if root != path or not os.path.isdir(root):
+        return removed
     for name in ARTIFACT_DIRS:
-        candidate = os.path.join(path, name)
+        candidate = os.path.join(root, name)
         if not os.path.isdir(candidate) or os.path.islink(candidate):
             continue
-        if not ignored(path, name):
+        # An intermediate symlink cannot occur for these single-segment names, but
+        # a race could swap the directory between the check and the removal; the
+        # containment assertion is cheap and makes the invariant explicit.
+        if os.path.dirname(os.path.realpath(candidate)) != root:
+            continue
+        if not ignored(root, name):
             continue
         try:
             shutil.rmtree(candidate, ignore_errors=True)
