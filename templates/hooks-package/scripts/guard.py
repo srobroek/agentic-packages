@@ -32,7 +32,9 @@ advisory.
 from __future__ import annotations
 
 import json
+import re
 import sys
+from pathlib import Path
 
 # Match on the command's VERB, not on a substring of the whole line. A
 # `*"git push"*` glob matches `echo "git push"` and a commit message quoting it,
@@ -42,13 +44,40 @@ import sys
 # prefixes, env assignments, leading tabs, path traversal, and trailing quotes,
 # every one a gap in a hand-rolled matcher.
 WRAPPERS = frozenset(
-    {"sudo", "doas", "env", "time", "nice", "command", "exec", "nohup", "timeout"}
+    {
+        "sudo", "doas", "env", "time", "nice", "command", "exec", "nohup",
+        # `flock` and the four below appeared in WRAPPER_OPERAND and
+        # OPTION_TAKES_VALUE but not here, so `flock /tmp/l git push` was never
+        # stripped and the push behind it went unjudged.
+        "timeout", "flock", "stdbuf", "setsid", "ionice", "unbuffer",
+    }
 )
 
 # Wrappers whose first non-option word is their OWN operand, not the wrapped
 # command: `timeout 5 git push`. Without this, `5` is read as the verb and the
 # command behind it goes unjudged.
 WRAPPER_OPERAND = frozenset({"timeout", "flock"})
+
+# Shells whose `-c` argument is itself a command, and builtins that run a string
+# as one. shlex sees that argument as ONE token, so `sh -c 'git push'` is a
+# single word to the tokenizer and a push to the shell. The string has to be
+# lexed again or the verb inside it is invisible.
+SHELLS = frozenset({"sh", "bash", "zsh", "dash", "ksh", "ash", "busybox"})
+STRING_EVALUATORS = frozenset({"eval", "source", "."})
+
+# How deep to follow a nested shell string. Real commands nest once or twice; the
+# bound only stops a pathological payload from recursing without end.
+MAX_NESTING = 4
+
+# Shell keywords, group openers, and terminators. Each begins or ends a command,
+# so treating one as a plain word leaves it standing where the verb belongs and
+# `if true; then git push; fi` goes unjudged.
+COMMAND_BOUNDARIES = frozenset(
+    {"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if", "for"}
+)
+CLOSERS = frozenset({"}", ")", "done", "fi", "esac"})
+
+ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
 # Wrapper options that take a SEPARATE value, as in `nice -n 19 git push` and
 # `sudo -u git git push`. Skipping the flag alone leaves its value in command
@@ -59,6 +88,12 @@ OPTION_TAKES_VALUE = {
     "doas": {"-u", "-C"},
     "timeout": {"-s", "-k"},
     "flock": {"-c", "-E", "-w", "--timeout"},
+    # `ionice -c 3 git push` leaves the class number in command position unless
+    # the option's value is consumed along with the flag.
+    "ionice": {"-c", "-n", "-p", "-P", "-u"},
+    "stdbuf": {"-i", "-o", "-e"},
+    "env": {"-u", "--unset", "-C", "--chdir", "-S"},
+    "time": {"-f", "--format", "-o", "--output"},
 }
 
 # Replace this with the verb and subcommand your guard cares about.
@@ -87,54 +122,137 @@ def read_command(payload: str) -> str:
     return ""
 
 
-def verb_words(command: str) -> list[str]:
-    """The command's words with wrappers and env assignments stripped.
+def split_commands(command: str) -> list[list[str]]:
+    """Every command position in a shell line, as word lists.
+
+    shlex handles quoting and escapes, so a gated phrase inside a quoted argument
+    stays an argument. An unterminated quote is not parseable as shell; the caller
+    treats that as nothing to judge rather than guessing at the intent.
+    """
+    import shlex
+
+    # A newline separates commands exactly like a semicolon, but shlex treats it
+    # as ordinary whitespace, which merges the second line into the first and
+    # hides its verb. A BACKSLASH-newline is the opposite: a line continuation,
+    # so the two halves are one command.
+    command = re.sub(r"\\\r?\n", " ", command)
+    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    words = list(lexer)  # raises ValueError on an unterminated quote
+
+    commands: list[list[str]] = []
+    current: list[str] = []
+    for word in words:
+        # `;`, `&&`, `||` and `|` each start a new command, as do keywords and
+        # group delimiters. Without this, `true && git push` read `true` as the
+        # only verb and the push behind the operator went unjudged.
+        if (word and set(word) <= {";", "&", "|"}) or word in COMMAND_BOUNDARIES or word in CLOSERS:
+            if current:
+                commands.append(current)
+            current = []
+            continue
+        current.append(word)
+    if current:
+        commands.append(current)
+    return commands
+
+
+def strip_prefix(words: list[str]) -> list[str]:
+    """Drop env assignments and wrappers to reach the real verb.
 
     `env FOO=1 sudo -u git git push` reduces to `["git", "push"]`, so a verb
     comparison sees the same thing whatever prefixes the agent used.
     """
-    import shlex
-
-    try:
-        words = shlex.split(command)
-    except ValueError:
-        # Unbalanced quotes: fail open rather than guess at the intent.
-        return []
     while words:
         head = words[0]
-        if "=" in head and not head.startswith("="):
+        if ASSIGNMENT.match(head):
             words = words[1:]          # env assignment: FOO=bar cmd
-        elif head in WRAPPERS:
-            takes_value = OPTION_TAKES_VALUE.get(head, frozenset())
+        elif Path(head).name in WRAPPERS:
+            name = Path(head).name
+            takes_value = OPTION_TAKES_VALUE.get(name, frozenset())
             words = words[1:]
             while words and words[0].startswith("-"):
                 option = words[0]
                 words = words[1:]
                 if option in takes_value and words:
                     words = words[1:]  # the option's separate value
-            if head in WRAPPER_OPERAND and words:
+            if name in WRAPPER_OPERAND and words:
                 words = words[1:]      # the wrapper's own operand
         else:
             break
     return words
 
 
-def in_scope(command: str) -> bool:
-    """Whether this guard should judge `command`."""
-    words = verb_words(command)
+def nested_command(words: list[str]) -> str | None:
+    """The command string a shell invocation would run, if any."""
+    if not words:
+        return None
+    verb = Path(words[0]).name
+    if verb in SHELLS:
+        for index, word in enumerate(words[1:], start=1):
+            # `-c` may be bundled with other short flags, as in `sh -ec`.
+            if word.startswith("-") and not word.startswith("--") and "c" in word:
+                return words[index + 1] if index + 1 < len(words) else None
+            if not word.startswith("-"):
+                return None  # a bare word is a script path, not an inline command
+        return None
+    if verb in STRING_EVALUATORS:
+        # Drop only the evaluator's OWN options, then keep the rest verbatim:
+        # `eval git push` and `eval 'git push'` both push, and filtering every
+        # `-` word would discard the WRAPPED command's flags too.
+        rest = words[1:]
+        index = 0
+        while index < len(rest) and rest[index].startswith("-"):
+            index += 1
+        return " ".join(rest[index:]) or None
+    return None
+
+
+def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
+    """Every command position, re-lexing nested shell strings so those count too."""
+    commands = split_commands(command)
+    if depth >= MAX_NESTING:
+        return commands
+    expanded: list[list[str]] = []
+    for words in commands:
+        expanded.append(words)
+        inner = nested_command(strip_prefix(words))
+        if inner:
+            try:
+                expanded.extend(expand_commands(inner, depth + 1))
+            except ValueError:
+                continue  # an unparsable inner string leaves the outer judged
+    return expanded
+
+
+def matches_gate(words: list[str]) -> bool:
+    """Whether one command position is the gated verb and subcommand."""
     prefix: list[str] = []
     skip_next = False
-    for word in words:
+    for index, word in enumerate(words):
         if skip_next:
             skip_next = False
             continue
         if word.startswith("-"):
             skip_next = word in GATED_OPTION_TAKES_VALUE
             continue
-        prefix.append(word)
+        # Compare the basename of the VERB only: `/usr/bin/git push` and
+        # `./git push` are the same command, while a path traversal in an
+        # argument must stay an argument.
+        prefix.append(Path(word).name if index == 0 else word)
         if len(prefix) == len(GATED_COMMAND):
             break
     return prefix == list(GATED_COMMAND)
+
+
+def in_scope(command: str) -> bool:
+    """Whether this guard should judge `command`, in any command position."""
+    try:
+        commands = expand_commands(command)
+    except ValueError:
+        # Unbalanced quotes: fail open rather than guess at the intent.
+        return False
+    return any(matches_gate(strip_prefix(words)) for words in commands)
 
 
 def deny(reason: str) -> None:

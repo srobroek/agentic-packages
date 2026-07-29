@@ -217,5 +217,6 @@ def test_unbalanced_quotes_fail_open():
         ("", []),
     ],
 )
-def test_verb_words_strips_prefixes(command, expected):
-    assert guard.verb_words(command) == expected
+def test_strip_prefix_reaches_the_real_verb(command, expected):
+    commands = guard.expand_commands(command)
+    assert [guard.strip_prefix(words) for words in commands] == ([expected] if expected else [])
