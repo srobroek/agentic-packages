@@ -368,18 +368,6 @@
         }
       ]
     },
-    "packages/dep-audit": {
-      "release-type": "simple",
-      "component": "dep-audit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/dep-update": {
       "release-type": "simple",
       "component": "dep-update",
@@ -620,18 +608,6 @@
         }
       ]
     },
-    "packages/hooks-worktree": {
-      "release-type": "simple",
-      "component": "hooks-worktree",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-worktrunk": {
       "release-type": "simple",
       "component": "hooks-worktrunk",
@@ -848,18 +824,6 @@
         }
       ]
     },
-    "packages/mcp-1mcp": {
-      "release-type": "simple",
-      "component": "mcp-1mcp",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-codebase-memory": {
       "release-type": "simple",
       "component": "mcp-codebase-memory",
@@ -887,18 +851,6 @@
     "packages/mcp-fetcher": {
       "release-type": "simple",
       "component": "mcp-fetcher",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-mempalace": {
-      "release-type": "simple",
-      "component": "mcp-mempalace",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

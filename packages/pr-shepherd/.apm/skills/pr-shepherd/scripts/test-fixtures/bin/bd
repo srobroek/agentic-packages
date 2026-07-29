@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# git-blob digest of stdin, matching `git hash-object --stdin`, which is what
+# landing-contract.sh actually calls. Recomputing it as a bare sha1 -- which both
+# this suite and the fake git used to do -- made the oracle self-consistent but
+# blind: the ids it verified were not the ids production computes, so digest drift
+# could not fail a test.
+blob_sha1() {
+  local payload
+  payload="$(cat)"
+  printf 'blob %d\0%s' "${#payload}" "$payload" | shasum -a 1 | awk '{print $1}'
+}
+
+
 : "${FAKE_STATE:?FAKE_STATE is required}"
 : "${FAKE_SCENARIO:?FAKE_SCENARIO is required}"
 printf '%s\n' "$*" >>"$FAKE_STATE/bd.log"
@@ -24,7 +36,7 @@ waiter_id_for() {
   local generation="${2:-1}"
   local digest
 
-  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | sha1sum | awk '{print $1}')"
+  digest="$(printf 'slot-1\0%s\0%s\0' "$holder" "$generation" | blob_sha1)"
   printf 'slot-1-waiter-%s\n' "${digest:0:12}"
 }
 

@@ -210,8 +210,17 @@ def nested_command(words: list[str]) -> str | None:
         return None
 
     if verb in STRING_EVALUATORS:
-        arguments = [word for word in words[1:] if not word.startswith("-")]
+        # Drop only the evaluator's OWN leading options, then keep the rest
+        # verbatim. Filtering every `-` word discarded the WRAPPED command's flags
+        # too, so `eval rm -rf /` reconstructed as `rm /` and the recursive-force
+        # check never fired -- while `eval 'rm -rf /'`, a single quoted argument,
+        # denied. Real `eval` deletes in both spellings.
+        rest = words[1:]
+        index = 0
+        while index < len(rest) and rest[index].startswith("-"):
+            index += 1
         # `eval a b` concatenates its arguments into one command line.
+        arguments = rest[index:]
         return " ".join(arguments) if arguments else None
 
     return None

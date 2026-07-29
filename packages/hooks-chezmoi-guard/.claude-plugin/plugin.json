@@ -1,7 +1,7 @@
 {
   "name": "hooks-chezmoi-guard",
   "version": "3.0.0",
-  "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
+  "description": "PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY manages (exact membership in `chezmoi managed`, 60s cache). A managed target is a real file rather than a symlink to its source, so a direct edit succeeds and is then reverted by the next `chezmoi apply` with no error and no diff; this names that before the edit lands. Emits permissionDecision:\"allow\" + additionalContext pointing at the source -- the operation proceeds. Bound to the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell write is not covered. A PostToolUse advisory additionally reports when an edit landed on an applied target rather than its source, names the template when the source is one, and lists what is already uncommitted in the chezmoi source repo; it runs no git or chezmoi write command. Unmanaged paths and paths merely mentioned in a patch body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
   },

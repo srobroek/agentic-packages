@@ -8,7 +8,7 @@ description: >-
   this names that before the edit lands. Emits permissionDecision:"allow" +
   additionalContext pointing at the source -- the operation proceeds. Bound to
   the write tools (apply_patch/Edit/Write/MultiEdit), so a redirect-based shell
-  write is not covered. Unmanaged paths and paths merely mentioned in a patch
+  write is not covered. A PostToolUse advisory additionally reports when an edit landed on an applied target rather than its source, names the template when the source is one, and lists what is already uncommitted in the chezmoi source repo; it runs no git or chezmoi write command. Unmanaged paths and paths merely mentioned in a patch
   body are silent. Requires python3 on PATH. Cross-tool (Claude + Codex).
 author: Sjors Robroek
 license: Apache-2.0

@@ -58,7 +58,7 @@ MUST keep majors, rust, and go out of the loop: named, cited, stopped (FR-014).
 NOT writing `.project-setup/answers.toml` or `sources.toml` -- the project-setup
 runner owns those; this skill only reads them.
 NOT importing the runner SDK (`sdk.py`) -- stdlib only (`urllib`, `json`,
-`tomllib`/`tomli`), matching `dep-audit` and `whats-new`.
+`tomllib`/`tomli`), matching `whats-new`.
 MUST report coverage as observed: ecosystems detected, lockfiles read, scanners
 that ran, scanners that were absent. An unrun scanner never reads as clean.
 
