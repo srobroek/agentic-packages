@@ -67,59 +67,63 @@ those. Yours are the ones that need the whole run in view: two nodes tripping ov
 one underlying defect, a finding that replaces an earlier bead, a review that
 supplies acceptance evidence for a decision recorded elsewhere.
 
-Reach for the most specific type the relationship supports:
+You have exactly two types. `bd show` renders every other one under DEPENDS ON and
+BLOCKS, so an edge meant as an observation reads as a dependency:
 
-| Relationship you observed | Type |
-|---|---|
-| B is the root cause of A | `caused-by` |
-| B supplies or checks A's acceptance evidence | `validates` |
-| B replaces A | `supersedes` |
-| A surfaced while working B | `discovered-from` |
-| A is the same defect as B | `duplicates` |
-| B is an umbrella tracking A | `tracks` |
-| A waits on B, as a note to a reader | `until` |
-| affected work, nothing sharper fits | `relates-to` |
+| Relationship you observed | Type | Renders as |
+|---|---|---|
+| A surfaced while working B | `discovered-from` | `DISCOVERED FROM` / `DISCOVERED` |
+| affected work, nothing sharper fits | `relates-to` | `RELATED` on both ends |
 
 `discovered-from` is the one you will reach for least: a specialist files its own
 findings that way as it works, so an unattributed finding usually means the
 specialist missed it rather than that you should add it. Use it when a finding was
 filed with no origin at all.
 
-`relates-to` remains the documented type for affected work and stays available, but
-it is the weakest signal here: a run full of them reads as noise. Create it through
-`bd dep relate`, which writes both directions.
+`relates-to` is the documented type for affected work and the weakest signal in the
+graph, so a run full of them reads as noise. Create it with `bd dep relate`, which
+writes both directions.
 
-Out of bounds: `blocks` and `parent-child` shape the run, and a report must never
-gate or reparent the work it describes. `replies-to` threads wisp messages and dies
-with them, so it cannot hold a durable finding. `related` is a distinct stored
-string from `relates-to` with no documented meaning -- do not use it.
+Everything else is out of bounds, for one of three reasons:
 
-`blocks` is the only type that gates `bd ready`. Every other type here, `until`
-included, is documentation for a reader rather than enforcement.
+- `blocks` and `parent-child` shape the run. A report must never gate or reparent
+  the work it describes.
+- `caused-by`, `validates`, `supersedes`, `duplicates`, `tracks`, and `until` all
+  display as DEPENDS ON near-side and BLOCKS far-side. The stored type is right and
+  `bd dep tree` prints it, but every reader of `bd show` sees a dependency that does
+  not exist. Say it in `notes` instead; the wording carries the meaning the
+  rendering throws away.
+- `replies-to` threads wisp messages and dies with them. `related` stores as a
+  distinct string from `relates-to` with no documented meaning.
+
+`blocks` is also the only type that gates `bd ready`, so none of the above would
+have enforced anything even if it rendered correctly.
 
 `--type` is NOT validated: every string is accepted and stored verbatim, `typo-xyz`
-included. A misspelling does not fail, and it does not vanish -- it creates a real
-edge that `bd dep tree` traverses and that `bd show` renders under DEPENDS ON, the
-`blocks` heading, while the other bead shows nothing at all. A typo therefore reads
-as a dependency that does not exist. Copy the type from the table rather than typing
-it.
+included. A misspelling neither fails nor vanishes; it creates a real
+edge that `bd dep tree` traverses and that `bd show` renders under DEPENDS ON. A
+typo therefore reads as a dependency that does not exist. Copy the type from the
+table rather than typing it.
 
 An edge cannot be annotated. `bd dep add` has no note field; the JSONL `--file`
 form accepts `note`, `reason`, and even `metadata`, reports success, and stores
 `{}`. So each edge gets its reasoning in the ORIGINATING bead's `notes`, and that
-line MUST name the other bead by id -- `notes` is the only place the reasoning
+line MUST name the other bead by id, because `notes` is the only place the reasoning
 exists, and `bd show` renders it immediately above the edge list:
 
 ```bash
-bd dep add <finding> <root-cause> --type caused-by
-bd update <finding> --append-notes "CAUSED-BY astro-plan-78v0: three nodes hit
+bd dep relate <finding> <root-cause>
+bd update <finding> --append-notes "ROOT CAUSE astro-plan-78v0: three nodes hit
   'artifacts_dir writes are denied' (btnb, pi3p, qpgg). One root cause."
 ```
+
+The edge says these two are related; the note says how. That split is forced,
+because the two usable types are coarse, so precision lives in the wording.
 
 `--append-notes` keeps earlier lines, so several edges accumulate without
 overwriting. Use `notes` rather than a comment: the reasoning is a durable property
 of the bead, not a timestamped remark in a thread. One line per edge on the
-originating side only -- the edge already renders from both.
+originating side only, because the edge already renders from both.
 
 ## Output
 

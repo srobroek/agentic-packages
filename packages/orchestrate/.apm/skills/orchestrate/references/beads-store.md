@@ -86,27 +86,36 @@ separate task dependency. An accepted, rejected, duplicate, or superseded
 decision is closed with a disposition-specific reason; closed means resolved,
 not erased.
 
-## Edge type and its note
+## How an edge type renders
 
-Pick the most specific type the relationship supports: `caused-by` for a root
-cause, `validates` for acceptance evidence, `supersedes` for replacement,
-`duplicates` for the same defect, `discovered-from` for work that surfaced while
-doing other work, `tracks` for an umbrella, `until` for a hold. `relates-to` is the
-documented choice for affected work and also the weakest signal in the set, so a
-run full of them reads as noise.
+`bd show` has a heading for four types only:
 
-`blocks` and `parent-child` shape the run: never use either to record an
-observation. `replies-to` threads wisp messages and dies with them, so it cannot
-hold a durable finding. `related` stores as a distinct string from `relates-to`
-with no documented meaning; leave it alone.
+| Type | Near end | Far end | Gates `bd ready` |
+|---|---|---|---|
+| `blocks` | `DEPENDS ON` | `BLOCKS` | yes |
+| `parent-child` | `PARENT` | `CHILDREN` | no |
+| `discovered-from` | `DISCOVERED FROM` | `DISCOVERED` | no |
+| `relates-to` | `RELATED` | `RELATED` | no |
 
-`blocks` is the only type that gates `bd ready`; every other type, `until` included,
-documents a relationship rather than enforcing one.
+`caused-by`, `validates`, `supersedes`, `duplicates`, `tracks`, and `until` store
+correctly and print their type in `bd dep tree`, but `bd show` renders each as
+`DEPENDS ON` near-side and `BLOCKS` far-side. A reader of `bd show` therefore sees
+ordering that does not exist. Where the precise type carries policy meaning, as
+`validates` and `supersedes` do for decision beads above, keep it and rely on
+`bd dep tree`. Anywhere a reader is the audience, prefer a rendering type and put
+the distinction in `notes`.
+
+`blocks` is the only type that gates `bd ready`. Every other type documents a
+relationship rather than enforcing one, `until` included.
 
 `--type` is NOT validated. Every string is accepted and stored verbatim, including a
 typo, which creates a real edge: `bd dep tree` traverses it and `bd show` renders it
-under DEPENDS ON, the `blocks` heading, while the far bead shows nothing. A typo
-reads as a dependency that does not exist. Copy the type rather than typing it.
+under DEPENDS ON. A typo reads as a dependency that does not exist. Copy the type
+rather than typing it.
+
+`replies-to` threads wisp messages and dies with them, so it cannot carry a durable
+finding. `related` stores as a distinct string from `relates-to` with no documented
+meaning; leave it alone.
 
 An edge carries no annotation. `bd dep add` has no note field, and `note`,
 `reason`, and `metadata` keys in the `--file` JSONL are accepted and then dropped,
@@ -115,8 +124,8 @@ reasoning therefore goes in the ORIGINATING bead's `notes`, naming the other bea
 by id:
 
 ```text
-bd dep add <finding> <root-cause> --type caused-by
-bd update <finding> --append-notes "CAUSED-BY <root-cause-id>: <evidence>"
+bd dep relate <finding> <root-cause>
+bd update <finding> --append-notes "ROOT CAUSE <root-cause-id>: <evidence>"
 ```
 
 `--append-notes` preserves earlier lines, so multiple edges accumulate. `bd show`
