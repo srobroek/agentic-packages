@@ -118,7 +118,10 @@ def _load_json(path: str) -> object | None:
     import json
 
     try:
-        with open(path, encoding="utf-8", errors="replace") as handle:
+        # utf-8-sig, because `json` rejects a UTF-8 BOM outright: a config written
+        # by a Windows editor parsed as nothing, and a three-package manifest then
+        # reported package_count=0 rather than 3.
+        with open(path, encoding="utf-8-sig", errors="replace") as handle:
             return json.load(handle)
     except (OSError, ValueError):
         return None
