@@ -864,17 +864,6 @@
       "source": "./packages/mcp-playwright"
     },
     {
-      "name": "mcp-repomix",
-      "description": "MCP server package for Repomix, providing bulk repository snapshots for analysis and review. The PostToolUse snapshot-refresh hook requires python3 on PATH.",
-      "version": "2.0.0",
-      "tags": [
-        "mcp",
-        "repomix"
-      ],
-      "category": "mcp",
-      "source": "./packages/mcp-repomix"
-    },
-    {
       "name": "mcp-serena",
       "description": "MCP server package for Serena semantic code tools. The launcher shares one Serena backend across agents in the same checkout, isolates linked worktrees, and applies resource and capacity limits to worktree backends.",
       "version": "1.3.1",

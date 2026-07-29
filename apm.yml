@@ -570,12 +570,6 @@ marketplace:
       tags:
         - mcp
         - browser
-    - name: mcp-repomix
-      source: ./packages/mcp-repomix
-      category: mcp
-      tags:
-        - mcp
-        - repomix
     - name: mcp-serena
       source: ./packages/mcp-serena
       category: mcp

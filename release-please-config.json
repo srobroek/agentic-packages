@@ -920,18 +920,6 @@
         }
       ]
     },
-    "packages/mcp-repomix": {
-      "release-type": "simple",
-      "component": "mcp-repomix",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-serena": {
       "release-type": "simple",
       "component": "mcp-serena",
