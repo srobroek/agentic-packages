@@ -112,19 +112,35 @@ after it. Flags whose meaning depends on the command are per-command: `-q` is
 machine-quiet to git and merely terse to pytest, and banning it globally refused
 `uv run pytest -q`.
 
-### Expect a small effect
+### Expect a small effect, and measure it in bytes
 
-Replaying 24,725 real `Bash` calls from local transcripts, **94% contain a pipe,
-redirect, chain, or command substitution**, and the guard refuses every one
-because a filtered rendering feeding another process can change a result rather
-than shorten it. Of the 1,161 distinct non-pipeline commands, the guard routes 26.
-The hook also sees only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it.
+Command counts flatter rtk. What costs context is BYTES, and on a 4,107-file
+repository's real history the guard routes **3.6% of all `Bash` output bytes**
+(114 of 3,350 calls; routed commands are only 1.1x larger than average, so the
+two measures agree).
 
-Build and test commands are piped even more often (98%), but overwhelmingly into
-`tail` or `head` (8,901 occurrences against 2,200 into a parser). The agent is
-already hand-truncating because output is too large, which is rtk's job done
-crudely and without a recovery path. That is the case worth improving, and it is
-what the spill hook below addresses.
+Where the rest goes:
+
+| Share of Bash bytes | Reason it is out of reach |
+| --- | --- |
+| **76.7%** | **a tool rtk has no filter for** (`wt`, `bd`, `jq`, `rg`, `head`, `python3`) |
+| 10.3% | `;` chain with no routable segment |
+| 3.8% | pipes into a parser |
+| 3.6% | routed today |
+| 3.1% | other |
+| 2.2% | `&&` chain (exit-status control flow) |
+| 0.3% | heredoc |
+
+**Steering agents toward "more filterable" commands is not worth it.** Fixing
+every chain, heredoc, and parser pipe would lift rtk to **23.3% of Bash bytes at
+most**, because the remaining 76.7% is tools it cannot filter at all. The twenty
+largest outputs in that history are `head -100 <file>`, `wt list`,
+`bd ready --json`, `rg -rn`, and `python3` heredocs; rtk has a filter for none of
+them. Constraining how agents write shell commands would distort real work for a
+ceiling still under a quarter.
+
+The spill hook reaches **21.7% of all tool bytes** without knowing which command
+produced them, which is precisely why it covers the 76.7% rtk cannot.
 
 Run `rtk-configure.py` (in the skill) to set `tee.mode = "always"`, so rtk keeps
 a recovery log for every filtered command rather than only failed ones. The

@@ -5,12 +5,10 @@ description: Measure whether a change actually cut token cost, from transcript u
 
 # Token savings measurement
 
-Every token-saving tool reports its own savings, and that number is not
-evidence. `rtk gain` compares rtk's captured output against rtk's filtered
-output for the same run, estimating tokens as `bytes / 4` with no tokenizer. It
-cannot see the follow-up command the agent issued because detail was filtered
-away. Its own documentation says a command showing 90% fewer output bytes does
-not make a session 90% cheaper.
+A tool's self-reported savings is not evidence. `rtk gain` compares its own
+captured output against its own filtered output for the same run, estimating
+tokens as `bytes / 4` with no tokenizer, and cannot see a follow-up command
+caused by over-filtering.
 
 `scripts/tokenmeter.py` reads the `usage` block the API returned on every
 assistant turn, from the transcript JSONL. That is billed cost.
@@ -21,20 +19,16 @@ assistant turn, from the transcript JSONL. That is billed cost.
 python3 scripts/tokenmeter.py measure ~/.claude/projects/<project>/<session>.jsonl
 ```
 
-Reports `input_tokens`, `cache_creation_input_tokens`,
-`cache_read_input_tokens`, `output_tokens`, `turns`, `tool_calls`,
-`tool_result_chars`, per-tool call counts, and `cost_weighted`.
+Reports token counts per category, `turns`, `tool_calls`, `tool_result_chars`,
+per-tool call counts, and `cost_weighted`.
 
-MUST Judge a compression tool on `cost_weighted`, not `input_tokens`. Cache
-  reads bill at a fraction of fresh input but are not free, and they dominate:
-  one measured session showed 279 input tokens against 14.2M cache reads. A
-  tool judged on `input_tokens` alone looks miraculous while changing nothing.
+MUST Judge compression on `cost_weighted`, not `input_tokens`. Cache reads bill
+  below fresh input but are not free, and they dominate: one session showed 279
+  input tokens against 14.2M cache reads, so a tool judged on `input_tokens`
+  looks miraculous while changing nothing.
 
-MUST Include subagents. `measure` finds the per-agent `.output` transcripts
-  automatically; `--no-subagents` exists for diagnosis only. Orchestration moves
-  cost into subagents, so a main-thread-only measurement makes any delegating
-  change look like a large saving. One measured session attributed 45 subagents
-  and 92 extra turns that were invisible without them.
+MUST Include subagents (`--no-subagents` is for diagnosis only). One session
+  hid 45 subagents and 92 turns from a main-thread-only reading.
 
 ## Running an A/B
 
@@ -65,9 +59,7 @@ MUST Hold the task fixed and vary only the tool. Same prompt, same starting
   commit, same model.
 
 MUST Cover the shapes that behave differently: direct single-agent work, a
-  subagent fan-out, and an orchestrated run. A filter that helps a shell-heavy
-  single agent can be neutral for a fan-out that spends its budget on
-  delegation.
+  subagent fan-out, and an orchestrated run.
 
 MUST Disable the treatment by its own switch rather than uninstalling, so the
   arms differ in one variable. `RTK_DISABLED=1` leaves hook rewriting untouched
@@ -83,15 +75,26 @@ NOT Report a percentage without the run count and the separation verdict.
 `repomix --no-files`, refreshed when HEAD moves and injected at session start
 within a token budget.
 
-Measured on a 741-file repository: the map is 6,093 tokens against 1,022,188
-for a full `repomix` pack, a 168x reduction. `--compress` (Tree-sitter signature
-extraction) removed only 8% on source files and 1.4% repository-wide, because
-the bulk is test fixtures and cached artifacts rather than function bodies.
+Measured on a 4,107-file repository: the map is 31,299 tokens against
+10,365,403 for a full `repomix` pack of the same tree, a 331x reduction.
+`--compress` (Tree-sitter signature extraction) removed only 8% on source files
+and 1.4% repository-wide, because the bulk is test fixtures and cached artifacts
+rather than function bodies.
 
 DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000) caps inlining. Above it the hook names
   the file instead, because a large repository maps to ~31k tokens and paying
   that every session costs more than the exploration it saves. Search the named
   file with `rg` rather than reading it.
+
+## Judging a filter's reach
+
+MUST Measure coverage in BYTES, not in commands routed. Command counts flatter a
+  filter. On one repository's history the rtk guard routes 3.6% of `Bash` output
+  bytes, and 76.7% of those bytes come from tools rtk has no filter for at all
+  (`wt`, `bd`, `jq`, `rg`, `head`, `python3`), which caps it at 23.3% even if
+  every chain and heredoc were rewritten.
+NOT Steer agents toward "more filterable" command shapes to raise that number.
+  The ceiling stays under a quarter, and the constraint distorts real work.
 
 MUST Use the map to LOCATE files. It carries no file contents; read or search
   the file itself once the map says where it is.
