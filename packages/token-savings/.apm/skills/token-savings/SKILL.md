@@ -108,3 +108,40 @@ NOT Steer agents toward "more filterable" command shapes. The ceiling stays low
   and the constraint distorts real work.
 
 MUST Use the map to LOCATE files, then read the file itself.
+
+## Custom rtk filters, for tools rtk has no filter for
+
+`filters/rtk-filters.toml` holds filters for tools rtk ships nothing for. It is
+the only route into the 76.7% of Bash output bytes that rtk's own filters cannot
+reach, so it is worth the trust step.
+
+It goes in **`.rtk/filters.toml` at the repository root, and nowhere else.**
+`rtk trust` trusts "project-local TOML filters in current directory" and records an
+absolute path per file. Copies under `~/.config/rtk/`,
+`~/Library/Application Support/rtk/`, and `~/.rtk/` were each tested and ignored,
+with `rtk verify` staying at 154 tests, so a user-global install silently does
+nothing. Scaffold it per repository.
+
+```bash
+mkdir -p .rtk
+cp <skill>/filters/rtk-filters.toml .rtk/filters.toml
+rtk trust --yes          # gates on a content hash; editing the file revokes it
+rtk verify               # runs the inline tests beside rtk's own
+```
+
+Commit `.rtk/filters.toml` rather than gitignoring it. A collaborator without it
+loses the saving with no signal, and `rtk trust` is per-machine regardless.
+
+MUST Run `rtk verify` after installing or editing. It executes the `[[tests.*]]`
+  blocks in the file: 154 tests without it, 156 with, and an untrusted file is
+  SKIPPED with a warning rather than failing.
+MUST Re-run `rtk trust` after any edit. Trust is a content hash, so an edited
+  file is silently ignored until re-trusted.
+NOT Add a filter that truncates rows. Measured on `bd list` (23,425 bytes, 222
+  rows, no ANSI, already dense), the only saving available was cutting rows to 90
+  characters for 19%, which removes issue titles. `bd` output belongs to the spill
+  hook, which keeps the head and tail intact and names a recovery path. This is
+  why the file filters `wt list` and not `bd`.
+
+Verified on a 21-worktree repository: `wt list` went 5,441 to 3,990 bytes, 27%,
+with every row and branch name preserved because the saving is all ANSI styling.
