@@ -906,8 +906,29 @@ def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[st
     return matches[0]
 
 
+def resolve_checkout_repo(checkout: Path) -> Path | None:
+    """Return the git root that owns `checkout`, or None if it is not one.
+
+    Used only to pick which repo's Worktrunk inventory to query -- it does not
+    itself grant anything, so it cannot be spoofed into a lease.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(checkout), "rev-parse", "--show-toplevel"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        return None
+    return Path(result.stdout.strip()).resolve()
+
+
 def assert_spawn_allocation(
-    tool_input: dict[str, Any], inventory: list[dict[str, Any]]
+    tool_input: dict[str, Any],
+    inventory: list[dict[str, Any]],
+    *,
+    repo: Path | None = None,
 ) -> dict[str, Any]:
     handle = runtime_recipient(tool_input)
     if handle:
@@ -921,6 +942,24 @@ def assert_spawn_allocation(
             "sequence before task delivery; the child cannot establish its own lease"
         )
     item = containing_item(inventory, checkout)
+    if (item is None or item_path(item) != checkout) and repo is not None:
+        # The lease may live in a different repository than the parent's own
+        # cwd -- a dep-repo-worker or external-repo-worker manages its own
+        # checkout elsewhere, and an orchestrate run must be able to dispatch
+        # it. Re-derive the checkout's OWN git root and check THAT repo's
+        # Worktrunk inventory instead of trusting anything the caller
+        # asserted: `wt -C <checkout-repo> list` is ground truth for whichever
+        # repo actually owns the path, so a checkout that no `prepare` call
+        # ever leased in ITS OWN repo still finds no match here -- there is no
+        # claim to forge, only a real lease to look up under the right root.
+        # A same-repo path is unaffected: its git root equals `repo`, so no
+        # second lookup runs and the original inventory's answer stands.
+        checkout_repo = resolve_checkout_repo(checkout)
+        if checkout_repo is not None and checkout_repo != repo:
+            try:
+                item = containing_item(wt_inventory(checkout_repo), checkout)
+            except ContractError:
+                item = None
     variables = worktrunk_vars(item) if item else {}
     if item is None or item_path(item) != checkout or not variables.get("lease"):
         raise ContractError("agent WAIT checkout is not a prepared writer lease")
@@ -1215,7 +1254,7 @@ def hook() -> int:
         return 0
     try:
         if tool in SPAWN_TOOLS:
-            assert_spawn_allocation(tool_input, inventory)
+            assert_spawn_allocation(tool_input, inventory, repo=repo)
             return 0
         if tool in CONTINUATION_TOOLS:
             handle = runtime_recipient(tool_input)
