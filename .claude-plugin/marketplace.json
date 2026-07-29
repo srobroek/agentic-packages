@@ -6,6 +6,19 @@
   },
   "plugins": [
     {
+      "name": "adr",
+      "description": "Architecture decision records in MADR format, registered as decisions land rather than reconstructed at closeout. A beads `decision` bead is the live record the moment a choice is made; the ADR file is what discharges it, so a decision cannot be lost between being made and being written. Ships steering for when a choice earns a record, a skill for authoring one, and the `adrs` CLI contract (MADR 4.0.0, `docs/adr/NNNN-title.md`, `adrs doctor` as the deterministic gate). Requires the `adrs` binary; degrades to advisory when it is absent.",
+      "version": "0.0.0",
+      "tags": [
+        "adr",
+        "decisions",
+        "madr",
+        "architecture"
+      ],
+      "category": "project-lifecycle",
+      "source": "./packages/adr"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "description": "Read-only adversarial challenger: independently stress-tests any claim, plan, design, hypothesis, decision, or conclusion -- technical or not -- by attacking its assumptions and returning evidence-backed counter-arguments and alternatives, without changing anything. The critic half of a generate/critique loop; debugging escalation, debate devil's-advocate, research and decision review are all applications.",
       "version": "4.0.0",
@@ -1199,7 +1212,7 @@
     },
     {
       "name": "steering-speckit",
-      "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
+      "description": "Opinionated SpecKit workflow steering: the mandatory-gated Phase 1/2/3 DAG, human-gating rules, and command reference. Names which phases produce a decision record and defers the format, path, and gate to the adr package. Opt-in -- install alongside the speckit package to adopt this specific spec-driven process.",
       "version": "3.3.2",
       "tags": [
         "steering",
