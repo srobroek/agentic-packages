@@ -31,12 +31,10 @@ same command, both set to your actor from the resource's `metadata.actor`:
 cd -- <checkout> && BEADS_ACTOR=<actor> BD_ACTOR=<actor> bd update <id> --claim
 ```
 
-An `export` on an earlier line does NOT work. Shell state does not persist
-between tool calls, and the claim guard parses the assignments out of the single
-command segment it is given, so an exported value is already gone by the time it
-runs. Without the inline form every claim is refused with "orchestrators route
-work, they never claim beads" - which reads like an identity problem and is not
-one.
+An `export` on an earlier line does NOT work: shell state does not persist
+between tool calls. Without the inline form the claim is refused with
+"orchestrators route work, they never claim beads", which names your identity
+rather than the real fault.
 
 Lease recoveries you own, both from `worktrunk-writer`:
 

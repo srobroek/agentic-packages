@@ -70,9 +70,7 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 
 A child shares your checkout, actor, and lease, taken from your node metadata
 (`worktree`, `actor`, `lease_token`). It never gets its own checkout and never
-receives `--bead` or `--resource`. Children are spawned wait-only, so the brief
-arrives as a `SendMessage`; that tool is in your list for this reason, and
-without it you could bind a child and then never task it.
+receives `--bead` or `--resource`.
 
 1. Spawn with exactly the text below, nothing else, naming YOUR checkout. Send it
    with no leading whitespace: the match is anchored, so an indented copy is
