@@ -1,0 +1,152 @@
+---
+x-lint:
+  allow: [prose-format.ProseBlock]
+  reason: "the rule bodies are MUST/NOT directives carrying the measurement that justifies each one; splitting the evidence away from its rule is what makes a rule get ignored"
+---
+
+# Token savings
+
+Context-cost reduction, and how to tell whether a reduction is real. Every
+figure here was measured on this machine rather than taken from a tool's README.
+
+## Measure before believing
+
+MUST Judge a token-saving change with `tokenmeter.py` (this package's skill),
+  which reads the `usage` block the API returned per turn. A tool's self-report
+  is not evidence: `rtk gain` estimates tokens as `bytes / 4` with no tokenizer,
+  and compares its own captured output against its own filtered output for the
+  same run, so it cannot see a follow-up command caused by over-filtering.
+MUST Judge compression on `cost_weighted`, not `input_tokens`. Cache reads bill
+  below fresh input but not at zero, and they dominate: a measured session showed
+  279 input tokens against 14.2M cache reads.
+MUST Count subagent cost. Orchestration relocates cost rather than removing it.
+MUST Require 3+ runs per arm and separated per-run ranges. Agent runs are
+  nondeterministic; a two-run A/B measures variance.
+NOT Trust `rtk session` adoption percentages. It reported 54% adoption for a
+  session that had used rtk in 8 of 74 shell calls, while `rtk discover` reported
+  27 rtk commands across all history.
+
+## Prompt caching is the largest existing lever
+
+MUST Preserve the stable prompt prefix. Savings under Claude come mostly from
+  cache hits, so a change that rewrites conversation history fights the biggest
+  free lever available. A proxy-based compressor (headroom, tamp) rewrites that
+  history; headroom issue #2438 measures a 2-7x cost INCREASE from defeating
+  caching in both of its modes.
+NOT Chain two lossy rewriters. Run at most one.
+
+## rtk: allowlist, never blanket rewrite
+
+`rtk` filters command output. It is installed by mise; telemetry is OFF by
+default in 0.44.1 (`consent: never asked`), and `rtk telemetry disable` or
+`RTK_TELEMETRY_DISABLED=1` keeps it off. Run `rtk-configure.py` to set
+`tee.mode = "always"`, so a truncated-but-SUCCESSFUL command still leaves a
+recovery log; the default covers only failures.
+
+MUST Route only commands whose filtered output was verified to be a faithful,
+  shorter rendering. This package's `rtk-rewrite-guard.py` holds the allowlist.
+NOT Install `rtk hook claude` (rtk's own blanket PreToolUse handler). Measured on
+  0.43.0 it rewrites machine-parsed commands: `rtk git status --porcelain` drops
+  the TRAILING NEWLINE, so `| wc -l` under-counts by one, and `rtk grep` returned
+  25 of 400 matching lines. Both are correct for a model reading output and wrong
+  for a parsed pipeline, and rtk cannot distinguish them because the difference
+  is in the caller's intent.
+NOT Route `curl` through rtk for HTML. It is JSON-oriented and passed an 89 KB
+  page through byte for byte.
+
+Expect a SMALL effect, measured by BYTES rather than by command count. On a
+4,107-file repository's real history, the guard routes 3.6% of all `Bash` output
+bytes. Attributing the rest:
+
+| Share of Bash bytes | Reason it is out of reach |
+| --- | --- |
+| 76.7% | a tool rtk has no filter for (`wt`, `bd`, `jq`, `rg`, `head`, `python3`) |
+| 10.3% | `;` chain with no routable segment |
+| 3.8% | pipes into a parser |
+| 3.6% | **routed today** |
+| 3.1% | other |
+| 2.2% | `&&` chain (exit-status control flow) |
+| 0.3% | heredoc |
+
+NOT Steer agents away from heredocs or chained commands to raise this. Fixing
+  EVERY chain, heredoc, and parser pipe would lift rtk to 23.3% of Bash bytes at
+  most, because the remaining 76.7% is tools it cannot filter at all. The top 20
+  outputs by size are `head -100 <file>`, `wt list`, `bd ready --json`, `rg -rn`,
+  and `python3` heredocs -- none of which rtk has a filter for. Steering would
+  distort how agents work for a ceiling that is still under a quarter.
+MUST Prefer the spill hook for output volume. It reads no command name, which is
+  why it covers the 76.7% rtk structurally cannot. Its replayed 21.7% of all tool
+  bytes is an UPPER BOUND: Claude Code truncates Bash output natively between 24 KB
+  and 31 KB and runs first, so the hook owns 1 KB to about 30 KB and the replay
+  counts the largest results too.
+NOT Set `BASH_MAX_OUTPUT_LENGTH=2000` as a substitute for the hook. It covers the
+  same range and keeps only the HEAD. On a 20,704-byte test log with its one
+  failure on the second-to-last line, native needed a follow-up `Read` and put
+  26,456 bytes in context, more than the raw output; the hook answered from its
+  summary in 1,798 bytes.
+
+The hook also sees only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it.
+
+NOT Trust a whole-file `Read` to return the whole file. On a 118,893-byte,
+  4,001-line file it returned 97,885 bytes and stopped at line 2,860 with no
+  `<persisted-output>` block, no truncation notice, and nothing naming what was
+  dropped. The model then reported reading all 4,001 lines. Pass an explicit
+  `offset`/`limit`, or search with `rg` and read the range that matters.
+
+## Repository pack, searched not read
+
+MUST Search the committed `repomix-full.xml`, then read the source file it points
+  at. A full pack is 6,349,248 tokens on a 4,107-file repository, roughly six
+  context windows, so reading it cannot succeed; a `PreToolUse` guard denies the
+  read and names the `rg` and `awk` that answer instead.
+NOT Rely on `--compress` for a size win. Tree-sitter signature extraction
+  removed 8% on source files and 1.4% repository-wide, because the bulk is test
+  fixtures and cached artifacts. Filter by PATH in `repomix.config.json`.
+NOT Build a second metadata-only artifact. A `--no-files` map is smaller (6,093
+  tokens against 1,022,188 on a 741-file repository) but redundant, because
+  `rg -o 'path="..."'` over the full pack answers where-is-X in 0.023s. It also
+  cannot be produced safely from one config: repomix has `--no-files` and no
+  `--files`, so a config carrying `files = false` cannot be overridden from the
+  command line, and a recipe naming the full pack silently emits a map instead.
+
+## Web content
+
+MUST Prefer the fetcher MCP for pages. It already runs Readability and returns
+  markdown, measured at 89% smaller than raw HTML, so the compression is present
+  rather than missing. `trafilatura --markdown` reached 93% when a CLI is wanted.
+MUST Drive the browser through `playwright-cli` rather than the MCP server for
+  scripted flows and verification. The CLI writes the accessibility snapshot to a
+  file and returns its path, measured at 402 bytes against 33,011 that the MCP
+  server inlines for the same page, and it still clicks, fills, uploads, and
+  keeps state across invocations. Reserve the MCP server for loops that need the
+  model reasoning over page structure turn by turn (exploratory automation,
+  self-healing tests). See the `playwright` skill for the routing table.
+NOT Pass `--snapshot-mode none` to shrink the MCP server. Element refs come from
+  snapshots, so it removes the ability to interact and leaves an interface that
+  can only look.
+
+## Oversized tool output goes to disk
+
+MUST Read the spill file rather than re-running the command. A `Bash` result over
+  1 KB is replaced by its first 15 and last 25 lines plus a path bound to `$F`,
+  followed by the `sed` range that continues it and the `rg` that searches it.
+  Retrieval needs no special tool and works under both runtimes even though the
+  compression is Claude-only.
+DEFAULT 1 KB with a 15/25-line window, tuned on 32,957 tool results across 651
+  repositories: 31.7% of sub-native bytes against 25.6% at 2 KB. A narrower window
+  saves more and reads worse -- at 10/20 the median spill leaves 50% of its lines
+  visible against 62%, so a third become mostly hidden for five points. The window
+  must shrink WITH the threshold; a guard refuses any rewrite that would not
+  shrink the result.
+NOT Pad the retrieval footer. Overhead is FIXED per spill, so it sets the floor on
+  the threshold: repeating the spill path in every command cost 555 bytes against
+  a 1 KB budget, and binding it once to `$F` cut that to 174.
+NOT Expect a failing command to be summarized. A nonzero exit is passed through
+  whole, because the error text is the thing worth reading.
+
+## Hook surface limit
+
+A `PostToolUse` hook cannot compress tool output portably. Claude accepts
+`updatedToolOutput`; Codex's `PostToolUse` wire struct has no such field and
+rejects `updatedMCPToolOutput`, so it may only ADD context. Rewriting the
+command in `PreToolUse` via `updatedInput` works on both.

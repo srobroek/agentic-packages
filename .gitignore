@@ -63,6 +63,23 @@ reviews/
 /.mcp.json
 /.worktrees/
 
+# repomix's DEFAULT output names. Any bare `repomix` run in the repository root
+# writes these, and they are ~40 MB: two were committed by a tuning sweep that
+# omitted --output, and CI caught them only via a typos scan of the packed
+# content.
+/repomix-output.xml
+/repomix-output.md
+/repomix-output.txt
+/repomix.xml
+repomix-full.xml
+
+# graphify's index. `graphify update` has no output flag, so it writes into the
+# tree unavoidably: 9.9 MB here, 60 MB on a 4,107-file repository. It is also in
+# the repomix ignore list, because an unignored index gets packed into the next
+# one -- it measured 38% of one repository's entire pack. Listed in
+# .worktreeinclude so a new worktree copies it instead of rebuilding.
+graphify-out/
+
 # Agent conformance run outputs (gitignored; see packages/agent-conformance)
 .conformance-runs/
 

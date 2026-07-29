@@ -796,6 +796,15 @@ marketplace:
       tags:
         - steering
         - tooling
+    - name: token-savings
+      source: ./packages/token-savings
+      category: code-intelligence
+      tags:
+        - tokens
+        - context
+        - rtk
+        - repomix
+        - measurement
     - name: toolchain-cache-policy
       source: ./packages/toolchain-cache-policy
       category: project-lifecycle

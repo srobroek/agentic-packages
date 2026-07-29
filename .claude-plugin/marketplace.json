@@ -818,7 +818,7 @@
     },
     {
       "name": "mcp-playwright",
-      "description": "MCP server package for Playwright, providing browser automation and in-browser UI verification.",
+      "description": "MCP server package for Playwright, providing stateful browser automation and in-browser UI verification. The server inlines the accessibility tree on every action, so prefer `playwright-cli` (see the `playwright` skill) for scripted flows and keep this for loops that need the model reasoning over page structure turn by turn. Do not pass `--snapshot-mode none`: element refs come from snapshots, so it removes the ability to interact.",
       "version": "1.2.1",
       "tags": [
         "mcp",
@@ -886,7 +886,7 @@
     },
     {
       "name": "playwright",
-      "description": "Automate browser tasks with Playwright: navigate, click, fill forms, and extract page data through the available browser tooling.",
+      "description": "Automate browser tasks with Playwright, routing between the two interfaces by context cost. The `playwright-cli` path writes the accessibility snapshot to a file and returns a path (402 bytes against 33,011 inlined by MCP on the same page) while keeping full interaction and cross-invocation state. The MCP server is reserved for loops that need the model to reason over page structure turn by turn: exploratory automation, self-healing tests, long autonomous sessions.",
       "version": "4.1.2",
       "tags": [
         "skill",
@@ -1253,6 +1253,20 @@
       ],
       "category": "steering",
       "source": "./packages/steering-tools-scripts"
+    },
+    {
+      "name": "token-savings",
+      "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content, and a second denies reading a repomix pack (six context windows on a large repository) while naming the rg and awk that search it. Oversized shell output spills to a file with its recovery commands. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report, and repomix-tune re-derives every pack-filtering claim on the installed repomix. Telemetry stays off. Requires python3 on PATH; rtk and repomix are optional and every path degrades to a no-op without them.",
+      "version": "0.0.0",
+      "tags": [
+        "tokens",
+        "context",
+        "rtk",
+        "repomix",
+        "measurement"
+      ],
+      "category": "code-intelligence",
+      "source": "./packages/token-savings"
     },
     {
       "name": "toolchain-cache-policy",

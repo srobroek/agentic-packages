@@ -38,7 +38,7 @@ expecting the MCP runtime to be configured separately by the environment.
 | `mcp-context7` | MCP server package for Context7, providing current library and framework documentation lookups. |
 | `mcp-fetcher` | MCP server package for Fetcher, providing direct web-page retrieval for coding agents. |
 | `mcp-package-version` | MCP server for package version discovery |
-| `mcp-playwright` | MCP server package for Playwright, providing browser automation and in-browser UI verification. |
+| `mcp-playwright` | MCP server package for Playwright, providing stateful browser automation and in-browser UI verification. The server inlines the accessibility tree on every action, so prefer `playwright-cli` (see the `playwright` skill) for scripted flows and keep this for loops that need the model reasoning over page structure turn by turn. Do not pass `--snapshot-mode none`: element refs come from snapshots, so it removes the ability to interact. |
 | `mcp-repomix` | MCP server package for Repomix, providing bulk repository snapshots for analysis and review. The PostToolUse snapshot-refresh hook requires python3 on PATH. |
 | `mcp-serena` | MCP server package for Serena semantic code tools. The launcher shares one Serena backend across agents in the same checkout, isolates linked worktrees, and applies resource and capacity limits to worktree backends. |
 | `mcp-tauri` | Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment. |

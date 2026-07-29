@@ -108,6 +108,8 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-codex-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-claude-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-codex-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
     "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
