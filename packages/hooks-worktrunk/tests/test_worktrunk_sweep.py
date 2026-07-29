@@ -227,7 +227,15 @@ def live_record(path, **overrides):
     return record(path=path, commit={"sha": "abc", "timestamp": stamp}, **overrides)
 
 
-def drive(payload, monkeypatch, capsys):
+def drive(payload, monkeypatch, capsys, *, wt=True):
+    """Run main() against a payload.
+
+    wt=True stubs `shutil.which` so the hook does not bail. Without it these tests
+    pass only where the wt binary happens to be installed -- green on a developer
+    machine and red in CI, which is how the gap first showed up.
+    """
+    if wt:
+        monkeypatch.setattr("shutil.which", lambda name: "/usr/local/bin/wt")
     monkeypatch.setattr("sys.stdin", io.StringIO(payload))
     code = sweep.main()
     out = capsys.readouterr().out
@@ -246,7 +254,7 @@ def test_subagents_do_not_sweep(monkeypatch, capsys):
 
 def test_absent_wt_is_inert(monkeypatch, capsys):
     monkeypatch.setattr("shutil.which", lambda name: None)
-    code, out = drive("{}", monkeypatch, capsys)
+    code, out = drive("{}", monkeypatch, capsys, wt=False)
     assert code == 0
     assert out is None
 
