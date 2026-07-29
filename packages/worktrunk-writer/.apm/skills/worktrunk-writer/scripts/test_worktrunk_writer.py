@@ -1036,6 +1036,16 @@ class SpawnAllocationCrossRepoTests(unittest.TestCase):
                 MODULE.assert_spawn_allocation(
                     tool_input, inventory=[], repo=self.caller_repo
                 )
+COMPLETE_ENVELOPE = {
+    "scope": ["src/**"],
+    "base_ref": "main",
+    "base_sha": "0" * 40,
+    "execution_task_kind": "rust",
+    "execution_kind": "implementation",
+    "execution_dispatch": "subagent",
+    "execution_agent": "domain-specialist",
+    "complexity_tier": "medium",
+}
 
 
 class BindingTests(unittest.TestCase):
@@ -1213,6 +1223,7 @@ class BindingTests(unittest.TestCase):
                     "branch": "writer/a",
                     "lease_token": "lease-a",
                     "worktree": str(path),
+                    **COMPLETE_ENVELOPE,
                 },
             }
             writes: list[tuple[str, str]] = []
@@ -1714,6 +1725,153 @@ class InventorySchemaTests(unittest.TestCase):
     def test_envelope_without_items_is_rejected(self) -> None:
         with self.assertRaises(MODULE.ContractError):
             MODULE.normalize_inventory({"schema": 2})
+
+
+class ChildSpawnTests(unittest.TestCase):
+    """A claim-holder delegates inside its own lease, and cannot leave it.
+
+    Both SKILL.md files promised this; the code had no branch for it, so every
+    delegation-first specialist did its own bulk work. One burned 295k tokens and
+    280 tool calls on work it was designed to hand off.
+    """
+
+    def setUp(self) -> None:
+        self.parent_path = Path("/tmp/leased-parent")
+        self.other_path = Path("/tmp/leased-other")
+        self.inventory = [
+            {
+                "branch": "writer/parent",
+                "path": str(self.parent_path),
+                "vars": {
+                    "actor": "parent-actor",
+                    "lease": "parent-lease",
+                    "contexts": json.dumps(["parent-ctx"]),
+                    "runtime-bindings": json.dumps(
+                        [{"context": "parent-ctx", "handle": "parent-ctx"}]
+                    ),
+                },
+            },
+            {
+                "branch": "writer/other",
+                "path": str(self.other_path),
+                "vars": {
+                    "actor": "other-actor",
+                    "lease": "other-lease",
+                    "contexts": json.dumps(["other-ctx"]),
+                    "runtime-bindings": json.dumps(
+                        [{"context": "other-ctx", "handle": "other-ctx"}]
+                    ),
+                },
+            },
+        ]
+
+    def spawn(self, tool_input, context=None):
+        payload = {"agent_id": context} if context else {}
+        return MODULE.assert_spawn_allocation(tool_input, self.inventory, payload)
+
+    def wait_for(self, path):
+        return (
+            f"WAIT checkout={path}\n"
+            "Do not invoke tools or start work.\n"
+            "The controlling parent will send your task after binding your Worktrunk lease."
+        )
+
+    def test_bound_holder_may_spawn_a_task_bearing_child(self) -> None:
+        item = self.spawn(
+            {"subagent_type": "general-purpose", "prompt": "Grep callers"}, "parent-ctx"
+        )
+        self.assertEqual(item["branch"], "writer/parent")
+
+    def test_child_may_name_the_parents_own_checkout(self) -> None:
+        item = self.spawn({"prompt": self.wait_for(self.parent_path)}, "parent-ctx")
+        self.assertEqual(item["branch"], "writer/parent")
+
+    def test_child_may_not_escape_to_another_lease(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "stay in its parent's leased checkout"):
+            self.spawn({"prompt": self.wait_for(self.other_path)}, "parent-ctx")
+
+    def test_unbound_spawner_is_still_denied(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "Do work"}, "stranger")
+
+    def test_spawn_without_a_context_is_still_denied(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "Do work"})
+
+    def test_exemption_ignores_agent_type_and_reads_only_the_binding(self) -> None:
+        """Classifying by subagent_type is what got the 1.x deny gate reverted."""
+        for kind in ("general-purpose", "domain-specialist", "reviewer", ""):
+            item = self.spawn({"subagent_type": kind, "prompt": "work"}, "parent-ctx")
+            self.assertEqual(item["branch"], "writer/parent")
+
+    def test_a_context_bound_twice_grants_no_exemption(self) -> None:
+        for item in self.inventory:
+            item["vars"]["contexts"] = json.dumps(["dupe-ctx"])
+            item["vars"]["runtime-bindings"] = json.dumps(
+                [{"context": "dupe-ctx", "handle": "dupe-ctx"}]
+            )
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "work"}, "dupe-ctx")
+
+
+class EnvelopeCompletenessTests(unittest.TestCase):
+    def test_missing_fields_are_named(self) -> None:
+        metadata = dict(COMPLETE_ENVELOPE)
+        del metadata["scope"]
+        del metadata["complexity_tier"]
+        with self.assertRaises(MODULE.ContractError) as caught:
+            MODULE.assert_envelope_complete("demo-1", metadata)
+        message = str(caught.exception)
+        self.assertIn("scope", message)
+        self.assertIn("complexity_tier", message)
+        self.assertNotIn("base_ref", message)
+
+    def test_a_complete_envelope_passes(self) -> None:
+        MODULE.assert_envelope_complete("demo-1", dict(COMPLETE_ENVELOPE))
+
+    def test_an_empty_value_counts_as_missing(self) -> None:
+        metadata = dict(COMPLETE_ENVELOPE, base_sha="")
+        with self.assertRaisesRegex(MODULE.ContractError, "base_sha"):
+            MODULE.assert_envelope_complete("demo-1", metadata)
+
+
+class MergeBeadOwnerTests(unittest.TestCase):
+    """An unowned merge bead can be drained mid-run by the global shepherd."""
+
+    def check(self, issues, metadata={"run_id": "run-1"}):
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(MODULE, "beads_json", return_value=issues):
+                MODULE.assert_merge_beads_owned(Path("/tmp/repo"), "demo-1", metadata)
+
+    def merge_bead(self, **over):
+        issue = {
+            "id": "merge-1",
+            "status": "open",
+            "labels": ["agent:integrator"],
+            "metadata": {"run_id": "run-1", "integration_owner": "orchestrate"},
+        }
+        issue.update(over)
+        return issue
+
+    def test_owned_merge_beads_pass(self) -> None:
+        self.check([self.merge_bead()])
+
+    def test_unowned_merge_bead_in_this_run_is_reported(self) -> None:
+        bead = self.merge_bead(metadata={"run_id": "run-1"})
+        with self.assertRaisesRegex(MODULE.ContractError, "merge-1"):
+            self.check([bead])
+
+    def test_another_runs_merge_bead_is_not_our_business(self) -> None:
+        self.check([self.merge_bead(metadata={"run_id": "run-2"})])
+
+    def test_closed_merge_bead_is_ignored(self) -> None:
+        self.check([self.merge_bead(status="closed", metadata={"run_id": "run-1"})])
+
+    def test_non_merge_beads_are_ignored(self) -> None:
+        self.check([self.merge_bead(labels=["orc-node"], metadata={"run_id": "run-1"})])
+
+    def test_a_run_without_an_id_is_skipped(self) -> None:
+        self.check([self.merge_bead(metadata={"run_id": "run-1"})], metadata={})
 
 
 class LifecycleHookTests(unittest.TestCase):

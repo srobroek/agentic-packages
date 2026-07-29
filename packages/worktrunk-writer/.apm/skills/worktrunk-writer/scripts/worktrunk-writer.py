@@ -434,10 +434,79 @@ def assert_activation_resource_available(
                 f"activation resource {resource} is already joined to "
                 f"Worktrunk branch {item.get('branch')!r}"
             )
+    assert_envelope_complete(resource, metadata)
     conflicts = active_bead_conflicts(repo, resource, branch, path)
     if conflicts:
         raise ContractError("active Beads share this branch or path: " + ", ".join(conflicts))
+    assert_merge_beads_owned(repo, resource, metadata)
     return issue
+
+
+# Stamped before dispatch, in the order a dispatcher forgets them. `scope` and the
+# execution_* fields route and bound the work; `artifacts_dir` is separately
+# range-checked by validate_bead_artifacts.
+REQUIRED_ENVELOPE_FIELDS = (
+    "scope",
+    "base_ref",
+    "base_sha",
+    "execution_task_kind",
+    "execution_kind",
+    "execution_dispatch",
+    "execution_agent",
+    "complexity_tier",
+)
+
+
+def assert_envelope_complete(resource: str, metadata: dict[str, Any]) -> None:
+    """Fail at bind when the brief envelope is incomplete.
+
+    A field missing here does not surface until the actor trips over it mid-task,
+    as a denial that names a lease problem rather than the absent stamp. Bind is
+    the last moment the dispatcher is still holding the resource, so it is the
+    cheapest place to say which field is missing.
+    """
+    missing = [key for key in REQUIRED_ENVELOPE_FIELDS if not metadata.get(key)]
+    if missing:
+        raise ContractError(
+            f"activation resource {resource} metadata is incomplete; stamp and read back "
+            + ", ".join(missing)
+        )
+
+
+def assert_merge_beads_owned(repo: Path, resource: str, metadata: dict[str, Any]) -> None:
+    """Require `integration_owner` on the merge beads this run's work depends on.
+
+    A merge bead without it is fair game for the repository-global `pr-shepherd`,
+    which drains queues across runs and cannot know a run still owns the PR. The
+    result is a mid-run landing nobody sequenced. Only the run that created the
+    edge can supply the owner, so the check runs while it is still dispatching.
+    """
+    run_id = metadata.get("run_id")
+    if not run_id or not beads_active(repo):
+        return
+    try:
+        issues = beads_json(["list", "--all", "--json"], repo)
+    except ContractError:
+        return
+    if not isinstance(issues, list):
+        return
+    unowned = []
+    for issue in issues:
+        if not isinstance(issue, dict) or issue.get("status") == "closed":
+            continue
+        labels = issue.get("labels") or []
+        if "agent:integrator" not in labels and "pr:merge" not in labels:
+            continue
+        other = issue.get("metadata") or {}
+        if other.get("run_id") != run_id:
+            continue
+        if not other.get("integration_owner"):
+            unowned.append(str(issue.get("id") or "unknown"))
+    if unowned:
+        raise ContractError(
+            "merge beads in this run lack metadata.integration_owner, so the "
+            "repository-global shepherd may drain them mid-run: " + ", ".join(sorted(unowned))
+        )
 
 
 def validate(
@@ -1083,9 +1152,29 @@ def resolve_checkout_repo(checkout: Path) -> Path | None:
     return Path(result.stdout.strip()).resolve()
 
 
+def spawner_lease(
+    payload: dict[str, Any], inventory: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """The leased checkout the SPAWNING context already holds, if any.
+
+    Decided from the binding recorded in Worktrunk vars, never from
+    `subagent_type` or an agent name: those are free-form strings a hook cannot
+    resolve to read-or-write, and classifying by them is the defect that got the
+    1.x deny gate reverted in 3bb87228.
+    """
+    context = runtime_context(payload)
+    if not context:
+        return None
+    holders = [item for item in inventory if context in bound_contexts(item)]
+    if len(holders) != 1:
+        return None
+    return holders[0] if worktrunk_vars(holders[0]).get("lease") else None
+
+
 def assert_spawn_allocation(
     tool_input: dict[str, Any],
     inventory: list[dict[str, Any]],
+    payload: dict[str, Any] | None = None,
     *,
     repo: Path | None = None,
 ) -> dict[str, Any]:
@@ -1094,6 +1183,23 @@ def assert_spawn_allocation(
         return assert_bound_handle(inventory, handle)
     prompt = str(tool_input.get("prompt") or tool_input.get("message") or "")
     checkout = allocation_checkout(prompt)
+
+    # A claim-holder may spawn bounded implementation children inside its own
+    # checkout, sharing its actor and lease and never receiving `--bead`. The
+    # contract has always said so; until now the code had no branch for it, so a
+    # delegation-first specialist could not delegate and did its own bulk work.
+    parent = spawner_lease(payload or {}, inventory)
+    if parent is not None:
+        parent_path = item_path(parent)
+        if checkout is None or checkout == parent_path:
+            return parent
+        # A WAIT naming any other path is an attempt to leave the parent's lease.
+        raise ContractError(
+            f"child spawn must stay in its parent's leased checkout {str(parent_path)!r}; "
+            f"refusing an allocation for {str(checkout)!r}. Only the orchestrator "
+            "prepares a separate checkout."
+        )
+
     if checkout is None:
         raise ContractError(
             "tool-using agent spawn is not parent-prepared; the parent must load "
@@ -1512,7 +1618,7 @@ def hook() -> int:
         return 0
     try:
         if tool in SPAWN_TOOLS:
-            assert_spawn_allocation(tool_input, inventory, repo=repo)
+            assert_spawn_allocation(tool_input, inventory, payload, repo=repo)
             return 0
         if tool in CONTINUATION_TOOLS:
             handle = runtime_recipient(tool_input)
