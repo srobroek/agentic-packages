@@ -1,6 +1,6 @@
 """Tests for the non-guard repo-local hooks.
 
-These six hooks had no tests before the port. Each suite pins the behaviour that
+These hooks had no tests before the port. Each suite pins the behaviour that
 made the hook worth keeping plus the fail-open contract, and several cases record a
 defect the shell version carried.
 """
@@ -36,7 +36,6 @@ def drive(module, payload, monkeypatch):
 
 
 ALL_STEMS = [
-    "agent-metrics",
     "failure-logger",
     "session-end-prune",
     "post-merge-cleanup",
@@ -44,7 +43,6 @@ ALL_STEMS = [
     "worktree-orphan-cleanup",
     "notify",
     "chezmoi-sync",
-    "gh-rate-guard",
     "allow-chezmoi-apply",
 ]
 
@@ -94,45 +92,6 @@ def test_no_hook_shells_out_to_jq_or_awk(stem):
     body = (SCRIPTS / f"{stem}.py").read_text(encoding="utf-8")
     for banned in ('"jq"', "'jq'", '"awk"', "'awk'", '"sed"', "'sed'"):
         assert banned not in body, f"{stem}.py still spawns {banned}"
-
-
-# --- agent-metrics --------------------------------------------------------
-
-
-def test_agent_metrics_writes_a_parseable_record(tmp_path, monkeypatch, capsys):
-    module = load("agent-metrics")
-    monkeypatch.setattr(module, "repo_root", lambda: str(tmp_path))
-    payload = json.dumps({"agent_type": "coder", "agent_id": "a1"})
-    assert drive(module, payload, monkeypatch) == 0
-    capsys.readouterr()
-    lines = (tmp_path / ".claude" / "metrics" / "agents.jsonl").read_text().splitlines()
-    record = json.loads(lines[-1])
-    assert record["agent_type"] == "coder"
-    assert record["agent_id"] == "a1"
-    assert record["timestamp"].endswith("Z")
-
-
-def test_agent_metrics_quote_in_field_stays_parseable(tmp_path, monkeypatch, capsys):
-    """The shell version interpolated fields into a hand-built JSON string, so a
-    quote in agent_type produced a line no JSONL reader could parse."""
-    module = load("agent-metrics")
-    monkeypatch.setattr(module, "repo_root", lambda: str(tmp_path))
-    payload = json.dumps({"agent_type": 'we"ird', "agent_id": "x"})
-    drive(module, payload, monkeypatch)
-    capsys.readouterr()
-    line = (tmp_path / ".claude" / "metrics" / "agents.jsonl").read_text().splitlines()[-1]
-    assert json.loads(line)["agent_type"] == 'we"ird'
-
-
-def test_agent_metrics_defaults_missing_fields(tmp_path, monkeypatch, capsys):
-    module = load("agent-metrics")
-    monkeypatch.setattr(module, "repo_root", lambda: str(tmp_path))
-    drive(module, "{}", monkeypatch)
-    capsys.readouterr()
-    record = json.loads(
-        (tmp_path / ".claude" / "metrics" / "agents.jsonl").read_text().splitlines()[-1]
-    )
-    assert record["agent_type"] == "unknown"
 
 
 # --- failure-logger ------------------------------------------------------
