@@ -86,3 +86,113 @@ def test_identity_payload_helpers_match_git():
 
     key = module.recovery_key("claim", "dead-actor", "session-registry:dead")
     assert key == _git_hash_object(b"claim\0dead-actor\0session-registry:dead\0")
+
+
+# --- fuzz: the identity digests and the landing-state machine ---------------
+#
+# Deterministic combinatorial corpus, matching the house style in
+# packages/hooks-git-safety/tests/test_git_safety_fuzz.py. The digest is the
+# highest-risk surface in this script: one byte of drift renames every live
+# waiter, so the field encoding is fuzzed against the real git binary rather
+# than against a second Python implementation.
+
+# Field values chosen for the ways a shell round trip loses data: embedded NUL,
+# tab, newline, backslash, quote, non-ASCII, empty, and a leading dash.
+HOSTILE_FIELDS = (
+    "",
+    "plain",
+    "with space",
+    "with\ttab",
+    "with\nnewline",
+    "with\\backslash",
+    'with"quote',
+    "with'apostrophe",
+    "--leading-dash",
+    "ünïcøde",
+    "trailing-nul-ish\\0",
+    "a" * 300,
+)
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+def test_fuzz_nul_payload_encoding_matches_git():
+    """Every field combination must encode to what git hashes."""
+    module = _load()
+    checked = 0
+    for first in HOSTILE_FIELDS:
+        for second in HOSTILE_FIELDS:
+            checked += 1
+            payload = module.nul_payload(first, second)
+            assert payload.endswith(b"\0")
+            assert module.blob_digest(payload) == _git_hash_object(payload)
+    assert checked == len(HOSTILE_FIELDS) ** 2
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+def test_fuzz_waiter_ids_are_collision_free_and_git_exact():
+    """A distinct (slot, holder, generation) triple must yield a distinct waiter id."""
+    module = _load()
+    seen: dict[str, tuple] = {}
+    for holder in HOSTILE_FIELDS:
+        for generation in (1, 2, 10, 999):
+            triple = ("slot-1", holder, generation)
+            waiter = module.waiter_id(*triple)
+            expected = _git_hash_object(f"slot-1\0{holder}\0{generation}\0".encode())
+            assert waiter == f"slot-1-waiter-{expected[:12]}"
+            assert waiter not in seen or seen[waiter] == triple, (
+                f"waiter id collision: {triple} and {seen[waiter]}"
+            )
+            seen[waiter] = triple
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+def test_fuzz_failure_key_is_order_and_detail_sensitive():
+    """Conflict paths hash in order, so a reordering must change the key."""
+    module = _load()
+    paths = ["a\tb.txt", "b.txt", "c\nd.txt", "ünïcøde.txt"]
+    key = module.failure_key("owner/repo", "conflict", paths)
+    assert key == _git_hash_object(
+        b"owner/repo\0conflict\0" + b"".join(p.encode() + b"\0" for p in paths)
+    )
+    assert key != module.failure_key("owner/repo", "conflict", list(reversed(paths)))
+    assert key != module.failure_key("owner/repo", "ci", paths)
+    assert key != module.failure_key("Owner/repo", "conflict", paths)
+
+
+def test_landing_states_are_distinct_and_named():
+    """The dependent follow-up matches these exact strings and codes."""
+    module = _load()
+    assert module.STATE_QUEUED == "queued"
+    assert module.STATE_EJECTED == "ejected"
+    assert module.EXIT_WAITING == 10
+    assert module.EXIT_FAILED == 12
+    # The beads merge slot is a separate concept and must not be conflated.
+    assert module.EXIT_SLOT_QUEUED == 75
+    assert module.STATE_QUEUED != module.STATE_EJECTED
+
+
+def test_recovery_phase_rank_rejects_every_unknown_phase():
+    """An unknown phase aborts. In shell this discarded the exit and mutated."""
+    module = _load()
+    for phase, rank in zip(module.RECOVERY_PHASES, range(1, 6)):
+        assert module.recovery_phase_rank(phase) == rank
+    for bad in ("", "not-a-real-phase", "PREPARED", "complete ", "0", None):
+        with pytest.raises(module.Fail):
+            module.recovery_phase_rank(bad)
+
+
+def test_bounce_phase_rank_rejects_every_unknown_phase():
+    module = _load()
+    for bad in ("not-a-phase", "COMPLETE", "parked "):
+        with pytest.raises(module.Fail):
+            module.bounce_phase_rank(bad)
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+def test_fuzz_canonical_repo_folds_only_ascii_case():
+    """The wisp id folds case, so Owner/Repo and owner/repo are one shepherd."""
+    module = _load()
+    for repo in ("Owner/Repo", "owner/repo", "OWNER/REPO", "oWnEr/rEpO"):
+        assert module.canonical_repo(repo) == "owner/repo"
+    # Non-ASCII must NOT fold: the digest is an identity, not a display string.
+    assert module.canonical_repo("Ünïcøde/Repo") == "Ünïcøde/repo"

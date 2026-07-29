@@ -346,9 +346,11 @@ if [[ "${1:-}" == "show" ]]; then
     bounce_phase=""
     recovery_key=""
     recovery_phase=""
+    landing_state=""
     assignee=""
     status="open"
     labels='[]'
+    [[ ! -f "$FAKE_STATE/landing-state" ]] || landing_state="$(<"$FAKE_STATE/landing-state")"
     [[ ! -f "$FAKE_STATE/bounce-key" ]] || bounce_key="$(<"$FAKE_STATE/bounce-key")"
     [[ ! -f "$FAKE_STATE/bounce-fix" ]] || bounce_fix="$(<"$FAKE_STATE/bounce-fix")"
     [[ ! -f "$FAKE_STATE/bounce-phase" ]] || bounce_phase="$(<"$FAKE_STATE/bounce-phase")"
@@ -367,8 +369,8 @@ if [[ "${1:-}" == "show" ]]; then
       status="in_progress"
       labels='["agent:integrator","state:working"]'
     fi
-    printf '[{"id":"merge-1","assignee":"%s","status":"%s","labels":%s,"metadata":{"bounce_key":"%s","bounce_fix":"%s","bounce_phase":"%s","recovery_key":"%s","recovery_phase":"%s"},"dependencies":%s}]\n' \
-      "$assignee" "$status" "$labels" "$bounce_key" "$bounce_fix" "$bounce_phase" "$recovery_key" "$recovery_phase" "$dependency_json"
+    printf '[{"id":"merge-1","assignee":"%s","status":"%s","labels":%s,"metadata":{"bounce_key":"%s","bounce_fix":"%s","bounce_phase":"%s","recovery_key":"%s","recovery_phase":"%s","landing_state":"%s"},"dependencies":%s}]\n' \
+      "$assignee" "$status" "$labels" "$bounce_key" "$bounce_fix" "$bounce_phase" "$recovery_key" "$recovery_phase" "$landing_state" "$dependency_json"
   fi
   exit 0
 fi
@@ -531,6 +533,7 @@ update)
   for argument in "$@"; do
     if [[ "$previous" == "--set-metadata" ]]; then
       case "$argument" in
+      landing_state=*) printf '%s\n' "${argument#landing_state=}" >"$FAKE_STATE/landing-state" ;;
       bounce_key=*) printf '%s\n' "${argument#bounce_key=}" >"$FAKE_STATE/bounce-key" ;;
       bounce_fix=*) printf '%s\n' "${argument#bounce_fix=}" >"$FAKE_STATE/bounce-fix" ;;
       bounce_phase=*) printf '%s\n' "${argument#bounce_phase=}" >"$FAKE_STATE/bounce-phase" ;;

@@ -22,7 +22,80 @@ apply_requested_jq() {
   jq -r "$filter"
 }
 
+emit_queue() {
+  # GraphQL merge-queue probe shape. REST branch protection carries no
+  # merge-queue field at all, so the contract asks GraphQL and this fake answers
+  # in that shape.
+  local enabled="$1" in_queue="$2" entry="$3"
+  printf '{"data":{"repository":{"pullRequest":{"isMergeQueueEnabled":%s,"isInMergeQueue":%s,"mergeQueueEntry":%s}}}}\n' \
+    "$enabled" "$in_queue" "$entry"
+}
+
+readonly QUEUE_ENTRY='{"state":"QUEUED","position":0,"headCommit":{"oid":"'"${EXPECTED_HEAD:-}"'"}}'
+
 case "$FAKE_SCENARIO:${1:-}:${2:-}" in
+queue-*:api:graphql)
+  case "$FAKE_SCENARIO" in
+  queue-detect-failure) exit 1 ;;
+  queue-detect-malformed) printf 'not json\n' ;;
+  queue-absent) emit_queue false false null ;;
+  queue-ejected)
+    if [[ -f "$FAKE_STATE/landing-state" ]]; then
+      emit_queue true false null
+    else
+      emit_queue true true "$QUEUE_ENTRY"
+    fi
+    ;;
+  queue-proved) emit_queue true true "$QUEUE_ENTRY" ;;
+  *) emit_queue true true "$QUEUE_ENTRY" ;;
+  esac
+  ;;
+queue-enqueue:pr:view | queue-ejected:pr:view | queue-proved:pr:view | queue-detect-failure:pr:view | queue-detect-malformed:pr:view)
+  view_count=0
+  if [[ -f "$FAKE_STATE/view-count" ]]; then
+    read -r view_count <"$FAKE_STATE/view-count"
+  fi
+  view_count=$((view_count + 1))
+  printf '%s\n' "$view_count" >"$FAKE_STATE/view-count"
+  # A queued resume pass reads PR state first and never re-enters the slot.
+  if [[ -f "$FAKE_STATE/landing-state" ]]; then
+    if [[ "$FAKE_SCENARIO" == "queue-proved" ]]; then
+      if [[ "$view_count" -eq 1 ]]; then
+        printf 'MERGED\t%s\t%s\n' "$EXPECTED_HEAD" "$EXPECTED_MERGE"
+      else
+        printf 'MERGED\t2026-07-22T00:00:00Z\t%s\tmain\t%s\thttps://example.test/pr/7\n' \
+          "$EXPECTED_MERGE" "$EXPECTED_HEAD"
+      fi
+    else
+      printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+    fi
+  elif [[ "$view_count" -eq 1 ]]; then
+    printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+  elif [[ "$view_count" -eq 2 ]]; then
+    printf 'OPEN\tfalse\tMERGEABLE\tAPPROVED\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
+  else
+    # The queue signature: merge succeeded, yet the PR is still OPEN with no
+    # merge commit -- it was enqueued, not merged.
+    printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+  fi
+  ;;
+queue-*:pr:merge)
+  if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
+    touch "$FAKE_STATE/atomic-head-guard"
+    exit 0
+  fi
+  printf 'missing exact head guard\n' >&2
+  exit 99
+  ;;
+queue-proved:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'ahead\n'
+  else
+    exit 99
+  fi
+  ;;
 stale-run:run:view)
   printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
   ;;
