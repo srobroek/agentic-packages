@@ -60,7 +60,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": (f"{hooks_dir}/hooks-worktree/scripts/create.sh"),
+                            "command": (f"{hooks_dir}/hooks-retired-example/scripts/create.sh"),
                         }
                     ]
                 }
@@ -335,7 +335,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
     keep_dir.mkdir(parents=True)
     (keep_dir / "guard.sh").write_text("#!/bin/sh\n", encoding="utf-8")
     (keep_dir / "helper.sh").write_text("#!/bin/sh\n", encoding="utf-8")
-    stale_dir = hooks_dir / "hooks-worktree" / "scripts"
+    stale_dir = hooks_dir / "hooks-retired-example" / "scripts"
     stale_dir.mkdir(parents=True)
     (stale_dir / "create.sh").write_text("#!/bin/sh\n", encoding="utf-8")
     stale_file = hooks_dir / "legacy-guard.sh"
@@ -367,7 +367,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
         check=True,
     )
     assert [path.name for path in pending] == [
-        "hooks-worktree",
+        "hooks-retired-example",
         "legacy-guard.sh",
     ]
     assert stale_dir.is_dir()
@@ -376,7 +376,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
     removed = sanitize_codex_hooks.prune_stale_entries(config, hooks_dir)
 
     assert [path.name for path in removed] == [
-        "hooks-worktree",
+        "hooks-retired-example",
         "legacy-guard.sh",
     ]
     assert (keep_dir / "helper.sh").is_file()

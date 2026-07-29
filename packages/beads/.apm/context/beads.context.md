@@ -13,7 +13,7 @@ DEFAULT `bd remember "insight" --key <slug>` for repo-scoped durable facts any
   injected verbatim via bd prime each session -- keep the set ≤30, prune stale
   keys with `bd forget` during session review.
 DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
-  stays in Claude auto-memory (see mempalace steering).
+  stays in Claude auto-memory.
 
 IDENTITY
 MUST Set BEADS_ACTOR (`<harness>/<agent-name>/<session-id>`) on every mutating

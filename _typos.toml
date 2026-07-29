@@ -2,7 +2,15 @@
 # CHANGELOG.md files contain commit SHA fragments that trigger false positives
 # (e.g. commit id "abd5330" flagged as "abd" → "and").
 # Generated dirs have no source content to check.
-extend-exclude = ["**/CHANGELOG.md", "**/.apm/apm_modules/**", "**/node_modules/**"]
+# .specify/ is upstream github/spec-kit code, regenerated wholesale by
+# `specify init --here --force`. Correcting a typo there is reverted on the next
+# upgrade, so it is excluded rather than patched.
+extend-exclude = [
+  "**/CHANGELOG.md",
+  "**/.apm/apm_modules/**",
+  "**/node_modules/**",
+  ".specify/**",
+]
 
 [default.extend-words]
 # git clean -nd is a valid git flag pair, not a word

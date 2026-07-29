@@ -7,7 +7,18 @@ printf '%s\n' "$*" >>"$FAKE_STATE/git.log"
 
 case "${1:-}" in
 hash-object)
-  sha1sum | awk '{print $1}'
+  # A REAL git blob hash, not a bare sha1 of the content. git prefixes
+  # "blob <bytelength>\0" before hashing, so the two differ for every input --
+  # `printf hello | git hash-object --stdin` is b6fc4c62..., while sha1("hello")
+  # is aaf4c61d...
+  #
+  # This matters more than a fixture detail. The digests this command produces ARE
+  # the waiter ids, native holder tokens, failure keys, and sheepdog wisp ids. While
+  # the fake computed a bare sha1 and the test helpers recomputed it the same way,
+  # the suite was self-consistent but could not detect digest drift -- the one
+  # failure a rewrite is most likely to introduce.
+  _payload="$(cat)"
+  printf 'blob %d\0%s' "${#_payload}" "$_payload" | shasum -a 1 | awk '{print $1}'
   ;;
 fetch | cat-file)
   exit 0

@@ -962,6 +962,82 @@ class RuntimeHookTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
 
+class SpawnAllocationCrossRepoTests(unittest.TestCase):
+    """assert_spawn_allocation must find a lease prepared in a DIFFERENT repo
+    than the session cwd (dep-repo-worker / external-repo-worker dispatch),
+    while still failing closed for an unprepared checkout inside the caller's
+    own repo -- and for a checkout whose OWN repo has no matching lease
+    either, which is what a forged or mismatched claim would look like."""
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.caller_repo = root / "caller-repo"
+        self.other_repo = root / "other-repo"
+        self.other_lease_path = self.other_repo / "worktree" / "feature"
+        self.other_lease_path.mkdir(parents=True)
+        self.caller_repo.mkdir()
+        self.unrelated_path = root / "unrelated"
+        self.unrelated_path.mkdir()
+        self.other_repo_inventory = [
+            {
+                "branch": "writer/dep-1",
+                "path": str(self.other_lease_path),
+                "kind": "worktree",
+                "vars": {"actor": "dep-actor", "lease": "dep-lease"},
+            }
+        ]
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def _wait_prompt(self, checkout: Path) -> str:
+        return (
+            f"WAIT checkout={checkout}\n"
+            "Do not invoke tools or start work.\n"
+            "The controlling parent will send your task after binding "
+            "your Worktrunk lease."
+        )
+
+    def test_cross_repo_prepared_lease_is_dispatchable(self) -> None:
+        """A lease prepared in a different repo than the caller's cwd must be
+        found by re-deriving the checkout's own git root, not by trusting the
+        caller's repo-local inventory alone."""
+        tool_input = {"prompt": self._wait_prompt(self.other_lease_path)}
+        with (
+            patch.object(MODULE, "resolve_checkout_repo", return_value=self.other_repo),
+            patch.object(MODULE, "wt_inventory", return_value=self.other_repo_inventory),
+        ):
+            item = MODULE.assert_spawn_allocation(
+                tool_input, inventory=[], repo=self.caller_repo
+            )
+        self.assertEqual(item["vars"]["lease"], "dep-lease")
+
+    def test_unprepared_same_repo_spawn_is_still_denied(self) -> None:
+        """An unleased path INSIDE the caller's own repo must fail closed --
+        the fix must not loosen this, only extend the lookup to other repos."""
+        tool_input = {"prompt": self._wait_prompt(self.unrelated_path)}
+        with patch.object(MODULE, "resolve_checkout_repo", return_value=self.caller_repo):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.assert_spawn_allocation(
+                    tool_input, inventory=[], repo=self.caller_repo
+                )
+
+    def test_checkout_in_a_real_other_repo_with_no_matching_lease_is_denied(self) -> None:
+        """A path that DOES resolve to a real, different git repo but was never
+        `prepare`-d there is a forged/mismatched claim and must still be
+        denied -- resolving the repo grants a lookup, not a lease."""
+        tool_input = {"prompt": self._wait_prompt(self.other_lease_path)}
+        with (
+            patch.object(MODULE, "resolve_checkout_repo", return_value=self.other_repo),
+            patch.object(MODULE, "wt_inventory", return_value=[]),
+        ):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.assert_spawn_allocation(
+                    tool_input, inventory=[], repo=self.caller_repo
+                )
+
+
 class BindingTests(unittest.TestCase):
     def test_bind_accepts_exact_context_acknowledgement(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

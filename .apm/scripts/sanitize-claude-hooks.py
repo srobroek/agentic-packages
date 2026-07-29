@@ -33,7 +33,8 @@ from pathlib import Path
 OBSOLETE_COMMAND_SUFFIXES = {
     "/agent-builder/scripts/coder-delegation-reminder.sh",
     # Retired srobroek-agentic scripts superseded by APM packages:
-    # worktree-create/cleanup moved to hooks-worktree; branch-check dropped.
+    # worktree-create/cleanup are retired: hooks-worktrunk owns the worktree
+    # lifecycle. branch-check dropped.
     "/srobroek-agentic/scripts/worktree-create.sh",
     "/srobroek-agentic/scripts/worktree-cleanup.sh",
     "/srobroek-agentic/scripts/branch-check.sh",
