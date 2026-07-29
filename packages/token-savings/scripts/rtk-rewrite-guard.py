@@ -75,6 +75,31 @@ BLOCKED_BINARIES = frozenset(
         "wc",
         # JSON/schema-oriented: passed an 89 KB HTML page through byte for byte.
         "curl",
+        # Binaries whose whole purpose is a side effect. rtk has no filter for
+        # most of them, so `_rtk_would_filter` already declines them, but they are
+        # named here so that ceasing to depend on rtk's answer cannot admit them.
+        # Splitting on `&&` is what made this reachable: `rm -rf x && ls` presents
+        # `rm -rf x` as a segment in its own right.
+        "rm",
+        "mv",
+        "cp",
+        "mkdir",
+        "rmdir",
+        "chmod",
+        "chown",
+        "ln",
+        "touch",
+        "tee",
+        "dd",
+        "kill",
+        "pkill",
+        "truncate",
+        # `rtk test` is rtk's TEST-RUNNER filter, so routing shell `test` would
+        # run something else entirely. Verified: `rtk test -f nope` printed a help
+        # dump and exited 0 where `test -f nope` exits 1, so a `test x && y` chain
+        # would invert.
+        "test",
+        "[",
     }
 )
 
@@ -94,7 +119,10 @@ BLOCKED_SUBCOMMANDS = frozenset(
 # a filtered rendering could change a result rather than just shorten it.
 # Checked against the raw string before tokenizing, because the cost of a false
 # negative here is a wrong answer the agent cannot detect.
-PIPELINE_MARKERS = (">", ">>", "<", "$(", "`", "&&", "||", ";")
+# `&&`, `||`, and `;` are NOT here: `_rewrite` splits on them first and judges
+# each segment alone, so by the time a segment reaches this check it holds no
+# separator. Leaving them in would make every segment reject itself.
+PIPELINE_MARKERS = (">", ">>", "<", "$(", "`")
 
 # A pipe is not automatically disqualifying: it depends on what CONSUMES the
 # output. `cmd 2>&1 | tail -50` is the dominant idiom in local history (8,901
@@ -153,6 +181,59 @@ AMBIGUOUS_MACHINE_FLAGS = {
 # result is short, and it is the record of a side effect the agent must read
 # exactly. Replaying real history surfaced `gh pr merge 249 --squash` and
 # `gh pr create --draft ...` being routed, which review had missed.
+#
+# SECOND-position mutating verbs, checked separately from the third-position set
+# below. `git add`, `git commit`, `git push` put the verb at position 2, where a
+# third-position check cannot see it. This did not matter while chains were
+# refused wholesale; splitting on `&&` exposed it immediately, because
+# `git add -A && git commit -m x` presents `git add -A` as a lone segment.
+#
+# Filtering a mutation is never worth it: the output is short and it is the record
+# of a side effect the agent has to read exactly.
+MUTATING_VERBS = frozenset(
+    {
+        # git, write side
+        "add",
+        "commit",
+        "push",
+        "pull",
+        "fetch",
+        "reset",
+        "revert",
+        "rebase",
+        "merge",
+        "cherry-pick",
+        "stash",
+        "tag",
+        "branch",
+        "checkout",
+        "switch",
+        "restore",
+        "clone",
+        "init",
+        "mv",
+        "rm",
+        "clean",
+        "apply",
+        "am",
+        "gc",
+        "prune",
+        "remote",
+        "submodule",
+        "worktree",
+        "config",
+    }
+)
+
+# Only `git` is checked against MUTATING_VERBS. A package manager's write verbs
+# (`pip install`, `pnpm add`) are NOT included, even though they mutate: the
+# distinction that matters is not whether a side effect happened but whether the
+# OUTPUT is the record of it. A commit prints a hash and a push prints the refs it
+# moved, both short and both the only evidence of what changed. An install prints
+# pages of resolver boilerplate, rtk ships a filter for it, and the exit code
+# survives, so filtering it loses nothing the agent needed.
+MUTATING_VERB_BINARIES = frozenset({"git"})
+
 MUTATING_SUBVERBS = frozenset(
     {
         "create",
@@ -239,36 +320,59 @@ def _bail_early(raw: bytes) -> bool:
     return b"tool_input" not in raw
 
 
-def _rewrite(command: str) -> str | None:
-    """Rewrite whatever segments of a `;`-separated command are safely routable.
+# Separators that join INDEPENDENT commands in one Bash call. Each is a sequence
+# point rather than a data pipe, so filtering one segment cannot change what
+# another segment reads. Order matters only for readability of the result.
+#
+# `&&` and `||` were excluded until their one objection was actually tested: they
+# carry exit-status control flow, so routing a segment is safe only if `rtk`
+# preserves the wrapped command's exit code. It does. Measured direct against rtk
+# on the paths that decide a chain -- `go vet` 1/1, `golangci-lint` 7/7, `grep`
+# no-match 1/1, `ls` missing-dir 1/1, `wc` missing-file 1/1, `pytest` failing 1/1,
+# `python3 -c 'exit(3)'` 3/3.
+#
+# `find` is the counter-example, and it stays in BLOCKED_BINARIES: on a missing
+# path it turns exit 1 into 0, which would invert the chain around it. Test that
+# shape before adding a separator or unblocking a binary.
+CHAIN_SEPARATORS = (";", "&&", "||")
 
-    A `;` chain is a SEQUENCE of independent commands sharing one Bash call, not
-    a data pipeline: `echo "=== A ==="; cargo build | tail -2` runs two unrelated
-    things, and filtering the second cannot affect the first. This is the single
-    biggest blocker in real traffic (649 of 1,043 rtk-filterable commands in one
-    repository's history), so each segment is considered on its own and only the
-    routable ones are rewritten. `&&` and `||` are NOT split here: they carry
-    exit-status control flow between the parts.
+
+def _rewrite(command: str) -> str | None:
+    """Rewrite whatever segments of a chained command are safely routable.
+
+    A chain is a SEQUENCE of independent commands sharing one Bash call, not a
+    data pipeline: `echo "=== A ==="; cargo build | tail -2` runs two unrelated
+    things, and filtering the second cannot affect the first. Chains are the
+    biggest blocker in real traffic: `;` covered 649 of 1,043 rtk-filterable
+    commands in one repository's history, and across 12,271 recorded Bash calls
+    `&&` appears in 17.8% with a filterable segment in 10.1%.
     """
-    if ";" in command:
-        segments = _split_unquoted(command, ";")
-        if segments is None:
-            # Unbalanced quotes, or a `;` that only appears inside a quoted
-            # string: nothing to split, so judge the whole command as one.
-            return _rewrite_segment(command)
+    for separator in CHAIN_SEPARATORS:
+        if separator not in command:
+            continue
+        segments = _split_unquoted(command, separator)
+        if segments is None or len(segments) < 2:
+            # Unbalanced quotes, or a separator that only occurs inside a quoted
+            # string: nothing to split on this one, so try the next.
+            continue
         rewritten_any = False
         results = []
         for segment in segments:
-            candidate = _rewrite_segment(segment.strip())
+            # Recurse, so a segment carrying a DIFFERENT separator is split too:
+            # `a; b && c` has to reach `c`.
+            candidate = _rewrite(segment.strip())
             if candidate is None:
                 results.append(segment)
             else:
-                # Preserve the segment's original leading whitespace so the
-                # reassembled command reads the same as the author wrote it.
+                # Preserve the ORIGINAL whitespace on both sides. Only the middle
+                # is replaced, so `a && b` cannot come back as `a&& rtk b`, which
+                # is a different command from the one the agent wrote.
+                body = segment.strip()
                 lead = segment[: len(segment) - len(segment.lstrip())]
-                results.append(lead + candidate)
+                trail = segment[len(segment.rstrip()) :] if body else ""
+                results.append(lead + candidate + trail)
                 rewritten_any = True
-        return ";".join(results) if rewritten_any else None
+        return separator.join(results) if rewritten_any else None
     return _rewrite_segment(command)
 
 
@@ -308,29 +412,43 @@ def _split_unquoted(text: str, sep: str) -> list[str] | None:
     current: list[str] = []
     quote: str | None = None
     escaped = False
-    for char in text:
+    index = 0
+    # Scans by INDEX rather than by character, because a separator can be more
+    # than one character: `&&` and `||` never match a per-character comparison,
+    # so a character loop silently splits nothing and returns the whole command.
+    while index < len(text):
+        char = text[index]
         if escaped:
             current.append(char)
             escaped = False
+            index += 1
             continue
         if char == "\\":
             current.append(char)
             escaped = True
+            index += 1
             continue
         if quote:
             current.append(char)
             if char == quote:
                 quote = None
+            index += 1
             continue
         if char in ("'", '"'):
             quote = char
             current.append(char)
+            index += 1
             continue
-        if char == sep:
+        if text.startswith(sep, index):
+            # `|` is a prefix of `||`, so a caller splitting on `|` would cut an
+            # `||` in half. Only `;`, `&&`, and `||` reach here today, and none is
+            # a prefix of another, but guard the shape rather than the caller.
             parts.append("".join(current))
             current = []
+            index += len(sep)
             continue
         current.append(char)
+        index += 1
     if quote is not None:
         return None
     parts.append("".join(current))
@@ -449,6 +567,11 @@ def _rewrite_simple(command: str) -> str | None:
     # with the wrapper attached would refuse every wrapped build and test command,
     # which is most of them in real history.
     if not _rtk_would_filter(" ".join(tokens[index:])):
+        return None
+
+    # Position 2 (`git add`) and position 3 (`gh pr merge`) are checked separately,
+    # because the keying is on the first two tokens and cannot see past them.
+    if binary in MUTATING_VERB_BINARIES and argument in MUTATING_VERBS:
         return None
 
     subverb = tokens[index + 2] if index + 2 < len(tokens) else None

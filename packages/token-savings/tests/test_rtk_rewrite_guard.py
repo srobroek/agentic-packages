@@ -338,8 +338,6 @@ def test_unsafe_or_unlisted_commands_are_untouched(command, tmp_path):
         "git log > /tmp/out",
         "git log >> /tmp/out",
         "cargo clippy &> /tmp/out",
-        "git diff && cargo clippy",
-        "cargo clippy || true",
         "echo $(git log --oneline -1)",
         "echo `git log -1`",
         "git log < /dev/null",
@@ -430,14 +428,17 @@ def test_a_single_leading_cd_is_stepped_over(command, expected, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "command",
+    ("command", "expected"),
     [
-        "cd /tmp/x && cargo build && echo done",
-        "cd /a && cd /b && cargo test",
+        ("cd /tmp/x && cargo build && echo done", "cd /tmp/x && rtk cargo build && echo done"),
+        ("cd /a && cd /b && cargo test", "cd /a && cd /b && rtk cargo test"),
     ],
 )
-def test_cd_does_not_launder_a_longer_chain(command, tmp_path):
-    assert _run(_bash(command), tmp_path=tmp_path) == ""
+def test_a_longer_cd_chain_routes_only_its_filterable_segment(command, expected, tmp_path):
+    """Splitting on `&&` made this safe: every segment is judged alone, so a `cd`
+    cannot launder what follows it -- the `cd` and the `echo` are simply declined
+    on their own merits."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
 
 
 def test_a_cd_semicolon_chain_routes_the_later_segment(tmp_path):
@@ -622,3 +623,77 @@ def test_allowlisted_rewrites_preserve_content_on_real_rtk(tmp_path):
     ).stdout
     assert "a distinctive subject line" in native
     assert "a distinctive subject line" in filtered
+
+
+# --------------------------------------------------------------------------- #
+# `&&` / `||` chains: split per segment, once rtk was shown to preserve exit codes
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        (
+            "git status --short && git log --oneline -5",
+            "rtk git status --short && rtk git log --oneline -5",
+        ),
+        ("cargo build && cargo test", "rtk cargo build && rtk cargo test"),
+        ("ls -la && rg -n foo src", "rtk ls -la && rtk rg -n foo src"),
+        ("echo a; cargo build && pytest -q", "echo a; rtk cargo build && rtk pytest -q"),
+    ],
+)
+def test_an_and_chain_routes_each_filterable_segment(command, expected, tmp_path):
+    """`&&` carries exit-status control flow, so this is safe only because rtk
+    preserves the wrapped command's exit code -- measured 1/1 on `go vet`, 7/7 on
+    `golangci-lint`, 3/3 on `python3 -c 'exit(3)'`."""
+    assert _run(_bash(command), tmp_path=tmp_path) == expected
+
+
+def test_an_or_chain_splits_like_an_and_chain(tmp_path):
+    """`||` is the same shape: a sequence point, not a data pipe. The stub rtk in
+    these tests claims every command, so assert the routing of the segment under
+    test rather than the whole string."""
+    result = _run(_bash("cargo clippy || true"), tmp_path=tmp_path)
+    assert result.startswith("rtk cargo clippy || ")
+
+
+def test_chain_whitespace_survives_the_rewrite(tmp_path):
+    """`a&& rtk b` is a different command from `a && rtk b`. The separator's own
+    spacing has to come back untouched."""
+    result = _run(_bash("cargo build && cargo test"), tmp_path=tmp_path)
+    assert " && " in result
+    assert "&& rtk" not in result.replace(" && rtk", "")
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git add -A && git commit -m x",
+        "git commit -m x && git push",
+        "rm -rf /tmp/z && ls",
+        "mv a b && ls",
+        "test -f x && cargo build",
+        "[ -f x ] && cargo build",
+    ],
+)
+def test_a_mutating_segment_is_never_routed(command, tmp_path):
+    """Splitting exposed second-position verbs (`git add`) and side-effect binaries
+    (`rm`) that a third-position check could not see. `rtk test` is rtk's
+    TEST-RUNNER filter, so routing shell `test` would run something else: verified
+    `rtk test -f nope` exits 0 where `test -f nope` exits 1, inverting the chain."""
+    result = _run(_bash(command), tmp_path=tmp_path)
+    mutation = command.split("&&")[0].strip()
+    assert f"rtk {mutation}" not in result
+
+
+def test_a_package_manager_write_verb_is_still_routed(tmp_path):
+    """The test is whether the OUTPUT is the record of the side effect, not whether
+    a side effect happened. A commit prints a hash; an install prints resolver
+    boilerplate that rtk has a filter for."""
+    assert _run(_bash("pip install x"), tmp_path=tmp_path) == "rtk pip install x"
+
+
+def test_a_quoted_separator_is_not_a_split_point(tmp_path):
+    """`--grep="a && b"` is one argument, and splitting it would change the query."""
+    command = 'git log --grep="a && b" --oneline'
+    assert _run(_bash(command), tmp_path=tmp_path) == f"rtk {command}"
