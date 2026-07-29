@@ -107,8 +107,6 @@ MUST Measure coverage in BYTES, not commands routed. Command counts flatter a
 NOT Steer agents toward "more filterable" command shapes. The ceiling stays low
   and the constraint distorts real work.
 
-MUST Use the map to LOCATE files, then read the file itself.
-
 ## Custom rtk filters, for tools rtk has no filter for
 
 `filters/rtk-filters.toml` holds filters for tools rtk ships nothing for. It is

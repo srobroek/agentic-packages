@@ -93,18 +93,21 @@ NOT Trust a whole-file `Read` to return the whole file. On a 118,893-byte,
   dropped. The model then reported reading all 4,001 lines. Pass an explicit
   `offset`/`limit`, or search with `rg` and read the range that matters.
 
-## Repository structure map, not a full pack
+## Repository pack, searched not read
 
-MUST Use the structure map to locate files, then read or search the file itself.
-  A full `repomix` pack of a 741-file repository is 1,022,188 tokens; the
-  `--no-files` map of the same repository is 6,093, a 168x reduction.
+MUST Search the committed `repomix-full.xml`, then read the source file it points
+  at. A full pack is 6,349,248 tokens on a 4,107-file repository, roughly six
+  context windows, so reading it cannot succeed; a `PreToolUse` guard denies the
+  read and names the `rg` and `awk` that answer instead.
 NOT Rely on `--compress` for a size win. Tree-sitter signature extraction
   removed 8% on source files and 1.4% repository-wide, because the bulk is test
-  fixtures and cached artifacts.
-DEFAULT `TOKEN_SAVINGS_MAP_BUDGET` (8000 tokens) decides inline versus pointer. A
-  4,107-file repository maps to 31,299 tokens against 10,365,403 for a full pack
-  of the same tree (331x), but 31k injected every session costs more than the
-  exploration it saves, so over budget the hook names the file instead.
+  fixtures and cached artifacts. Filter by PATH in `repomix.config.json`.
+NOT Build a second metadata-only artifact. A `--no-files` map is smaller (6,093
+  tokens against 1,022,188 on a 741-file repository) but redundant, because
+  `rg -o 'path="..."'` over the full pack answers where-is-X in 0.023s. It also
+  cannot be produced safely from one config: repomix has `--no-files` and no
+  `--files`, so a config carrying `files = false` cannot be overridden from the
+  command line, and a recipe naming the full pack silently emits a map instead.
 
 ## Web content
 

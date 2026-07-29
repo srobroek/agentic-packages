@@ -14,7 +14,6 @@ This proposes one scheme, derived from what broke.
 | `repomix` (default) | `<repo>/repomix.xml` | **no** | 4.7 MB to 39 MB |
 | `graphify` | `<repo>/graphify-out/` | **no** | 9.9 MB to 60 MB |
 | Serena | `<repo>/.serena/` | yes | 960 KB |
-| `token-savings` map | `$XDG_STATE_HOME/...` | n/a, outside the tree | 82 KB |
 
 Two consequences, both measured:
 
@@ -67,28 +66,23 @@ MUST A gitignore contribution for the tools that CANNOT be redirected, scaffolde
   and they feed into the NEXT artifact -- `graphify-out/` measured 38% of one
   repository's entire repomix pack.
 
-MUST A staleness convention. Read the `.head` marker, compare to `HEAD`, and
-  report the commit distance rather than rebuilding. Rebuilding at session start
-  charges every session for an artifact that goes stale on the first edit.
+MUST A `.worktreeinclude` listing the artifacts, so `wt step copy-ignored` warms a
+  new worktree instead of rebuilding. Both hold no absolute paths, so a copy is
+  valid in any checkout: `repomix-full.xml` is 1.3 to 3.2s to rebuild against 82 KB
+  to copy, `graphify-out/` 6.9s against 9.9 MB.
 
-SHOULD A single prune entry point. Each tool bounding its own store means N
-  policies; `token-savings` caps its spill store at 200 files and 7 days, and
-  nothing bounds the maps.
-
-NOT Put an artifact in the tree because agents will not otherwise find it. That
-  is a real problem with a better fix: inject the path. A subagent asked a
-  where-is-X question with no steering answered in five `ls`/`rg` calls and
-  reported seeing "no mention anywhere in my context of a pre-built repository
-  structure map" -- the parent knew, the child did not, because `SessionStart`
-  does not fire for subagents. A `SubagentStart` hook naming the absolute path
-  and the exact `rg` command to search it fixes discovery without touching the
-  tree.
+NOT Store an artifact outside the tree keyed by a hash of the repository root. It
+  was tried and lost on discovery: a subagent asked a where-is-X question answered
+  in five `ls`/`rg` calls and reported "no mention anywhere in my context of a
+  pre-built repository structure map", because `SessionStart` does not fire for
+  subagents. Injecting the path needs a `SubagentStart` hook on every spawn; an
+  in-tree file needs one steering line naming the filename. In-tree plus
+  gitignored plus `.worktreeinclude` won, and the injection hook was deleted.
 
 ## Per-worktree cost, which the scheme does not solve
 
-A Worktrunk worktree is a separate root, so every root-keyed artifact is rebuilt
-there. For the structure map that is 1.3 to 3.2s and 82 KB outside the tree, so
-`post-start` absorbs it. For graphify it is 6.9s and 9.9 MB INSIDE the tree, per
+A Worktrunk worktree is a separate root, so every artifact is rebuilt there. For
+`repomix-full.xml` that is 1.3 to 3.2s, which `copy-ignored` avoids entirely. For graphify it is 6.9s and 9.9 MB INSIDE the tree, per
 worktree, with no way to redirect it.
 
 DEFAULT Do not build a graphify graph per worktree. Point queries at the primary
