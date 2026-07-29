@@ -23,10 +23,10 @@ sweep on a repository where graphify had been used showed `graphify-out/` was
 `**/graphify-out/**` and `**/.serena/**` to the ignore set took that repository
 from a 14.9% reduction to 87%.
 
-**An artifact inside the tree dirties `git status`.** The existing
-`mcp-repomix` hook refuses to write unless its output is already gitignored,
-which no local repository had done, so it never produced a snapshot on any
-repository -- a silent no-op for as long as it shipped.
+**An artifact inside the tree dirties `git status`.** The former `mcp-repomix`
+hook refused to write unless its output was already gitignored, which no local
+repository had done, so it never produced a snapshot anywhere -- a silent no-op
+for as long as it shipped, and one reason the package is gone.
 
 ## The scheme
 

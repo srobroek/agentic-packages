@@ -122,10 +122,10 @@ def claude_only_emission(field: str) -> re.Pattern[str]:
 
 
 # Packages allowed to ship a hook script with no suite. Empty, and meant to stay
-# that way: the three that were listed when this check was introduced (beads,
-# mcp-repomix, speckit-beads) all have suites now. An entry here is recorded debt
-# rather than a silent skip, and the check fails on a stale entry, so a listing
-# cannot outlive the gap it describes.
+# that way: the packages listed when this check was introduced (beads,
+# speckit-beads) all have suites now. An entry here is recorded debt rather than
+# a silent skip, and the check fails on a stale entry, so a listing cannot
+# outlive the gap it describes.
 UNTESTED_HOOK_PACKAGES: set[str] = set()
 
 

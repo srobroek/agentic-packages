@@ -56,9 +56,9 @@
         }
       ]
     },
-    "packages/adr": {
+    "packages/adr-as-beads": {
       "release-type": "simple",
-      "component": "adr",
+      "component": "adr-as-beads",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -875,18 +875,6 @@
     "packages/mcp-playwright": {
       "release-type": "simple",
       "component": "mcp-playwright",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-repomix": {
-      "release-type": "simple",
-      "component": "mcp-repomix",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "adr",
+      "name": "adr-as-beads",
       "source": {
         "source": "local",
-        "path": "./packages/adr"
+        "path": "./packages/adr-as-beads"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -729,18 +729,6 @@
       "source": {
         "source": "local",
         "path": "./packages/mcp-playwright"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
-      "name": "mcp-repomix",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-repomix"
       },
       "policy": {
         "installation": "AVAILABLE",

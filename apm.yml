@@ -72,8 +72,8 @@ marketplace:
   build:
     tagPattern: '{name}--v{version}'
   packages:
-    - name: adr
-      source: ./packages/adr
+    - name: adr-as-beads
+      source: ./packages/adr-as-beads
       category: project-lifecycle
       tags:
         - adr
@@ -549,12 +549,6 @@ marketplace:
       tags:
         - mcp
         - browser
-    - name: mcp-repomix
-      source: ./packages/mcp-repomix
-      category: mcp
-      tags:
-        - mcp
-        - repomix
     - name: mcp-serena
       source: ./packages/mcp-serena
       category: mcp

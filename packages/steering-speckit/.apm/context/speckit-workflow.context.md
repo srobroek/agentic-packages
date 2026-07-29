@@ -44,6 +44,9 @@ MUST Register a hard-to-reverse or boundary-crossing choice when it lands, not a
 | analyze | a constraint discovered late that changes the approach |
 | implement | a deviation from the approved plan, recorded before the deviation spreads |
 | iterate | the reason an approved approach changed |
+MUST Set `--spec-id <spec>` on the decision bead, which is the native field that
+  binds a record to the spec that produced it. Without it the record survives and
+  its provenance does not.
 MUST Cite the record on the phase's bead before that phase closes. A phase that
   produced a choice and closed without a citation loses the alternatives.
 NOT Defer recording to retro or closeout. By then the rejected options are gone, and
