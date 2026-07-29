@@ -33,7 +33,7 @@ override exists to keep the default strict.
 The denial message names it, because a denial the model cannot act on is just a
 wall.
 
-Fails open: an unparseable payload, a missing file, or any exception allows.
+Fails open: an unparsable payload, a missing file, or any exception allows.
 """
 
 from __future__ import annotations
