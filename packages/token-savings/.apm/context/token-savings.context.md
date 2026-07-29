@@ -74,9 +74,11 @@ NOT Steer agents away from heredocs or chained commands to raise this. Fixing
   outputs by size are `head -100 <file>`, `wt list`, `bd ready --json`, `rg -rn`,
   and `python3` heredocs -- none of which rtk has a filter for. Steering would
   distort how agents work for a ceiling that is still under a quarter.
-MUST Prefer the spill hook for output volume. It reaches 21.7% of ALL tool bytes
-  without knowing which command produced them, which is why it covers the 76.7%
-  rtk structurally cannot.
+MUST Prefer the spill hook for output volume. It reads no command name, which is
+  why it covers the 76.7% rtk structurally cannot. Its replayed 21.7% of all tool
+  bytes is an UPPER BOUND: Claude Code truncates Bash output natively above
+  roughly 16 KB and runs first, so the hook owns 2 KB up to that threshold and the
+  replay credits it for results it never sees.
 
 The hook also sees only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it.
 
@@ -116,8 +118,8 @@ MUST Read the spill file rather than re-running the command. A `Bash` result ove
   names the exact `rg`, `sed`, and `wc -l` invocations that recover any part of
   it, so retrieval needs no special tool and works under both runtimes even
   though the compression is Claude-only.
-DEFAULT 2 KB with a 20/30-line window, tuned on 4,429 real tool results: it
-  reaches 21.7% of all tool bytes. The window must shrink WITH the threshold --
+DEFAULT 2 KB with a 20/30-line window, tuned on 4,429 real tool results. The
+  window must shrink WITH the threshold --
   at 500 bytes, 1,069 spilled results fit entirely inside a 20/30 window, so the
   hook would rewrite them and hide nothing. A guard refuses any rewrite that
   would not shrink the result.

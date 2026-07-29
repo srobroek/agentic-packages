@@ -32,6 +32,20 @@ cannot replace a tool result at all. This ships in the Claude manifest only.
 (`updatedMCPToolOutput` is deprecated upstream in favour of `updatedToolOutput`,
 which covers every tool.)
 
+WHAT THIS DOES *NOT* OWN, and why the band matters. Claude Code has its own Bash
+output cap that emits `<persisted-output>` with a HEAD-ONLY preview, and it fires
+FIRST: measured against a real session, an 18.5 KB result was truncated natively
+and this hook never ran. Bracketing the native default by reading transcript
+`tool_result` blocks: 11,892 B untouched, 18,892 B truncated, so it sits between
+12 KB and 19 KB (`BASH_MAX_OUTPUT_LENGTH=2000` lowers it, verified).
+
+So this hook owns 2 KB to roughly 16 KB, and nothing above. Any figure for its
+coverage derived by replaying transcript results against this logic ALONE is
+overstated, because it credits this hook for results the native cap already
+handles. It earns its band on shape rather than size: native previews the head,
+while a test run, build, or stack trace puts the verdict in the LAST lines, which
+is why this emits head 20 AND tail 30.
+
 Deliberately conservative. Output under the threshold is untouched, a failing
 command is never truncated (the agent needs the error), and anything unparsable
 fails open. Spill files are pruned by age and count so this cannot fill a disk.

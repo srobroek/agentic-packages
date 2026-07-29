@@ -142,8 +142,26 @@ largest outputs in that history are `head -100 <file>`, `wt list`,
 them. Constraining how agents write shell commands would distort real work for a
 ceiling still under a quarter.
 
-The spill hook reaches **21.7% of all tool bytes** without knowing which command
-produced them, which is precisely why it covers the 76.7% rtk cannot.
+The spill hook covers the 76.7% rtk cannot, because it never looks at which
+command produced the output. Replaying that transcript history against its logic
+puts it at 21.7% of all tool bytes. **Read that as an upper bound.** Claude Code
+truncates Bash output natively above roughly 16 KB, and the native path runs
+first, so the replay figure also credits this hook for results it never sees.
+
+Measured in a live session, reading what reached the model rather than what the
+hook reported:
+
+| raw output | native cap | this hook |
+|---|---|---|
+| 2,691 B | untouched | 799 B |
+| 11,892 B | untouched | in band |
+| 18,892 B | 2,242 B, hook never ran | 833 B when native was not in play |
+
+The band is 2 KB up to the native threshold. Keep the hook for the shape of what
+it leaves behind: native previews the head alone, this emits head 20 **and tail
+30**, and a test run, build, or stack trace puts the verdict in the last lines.
+`BASH_MAX_OUTPUT_LENGTH` lowers the native threshold, and setting it below 2 KB
+shadows this hook entirely.
 
 Run `rtk-configure.py` (in the skill) to set `tee.mode = "always"`, so rtk keeps
 a recovery log for every filtered command rather than only failed ones. The

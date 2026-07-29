@@ -74,47 +74,14 @@ MUST Gitignore the pack and list it in `.worktreeinclude`. Copying beats
   checkout: 1.3 to 3.2s to rebuild against 82 KB to copy, near-free on a reflink
   filesystem. `copy-ignored` runs first, so `repomix` only repacks what the branch
   changed.
-NOT Read the pack. It is 6,349,248 tokens on a 4,107-file repository; a
+NOT Read the pack whole. It is 6,349,248 tokens on a 4,107-file repository; a
   `PreToolUse` guard denies the read and names `rg`/`awk` instead.
 NOT Build a graphify graph per worktree. `graphify update` has no output flag and
-  writes `graphify-out/` into the tree: 6.9s and 9.9 MB, paid again in every
-  worktree. Query the primary checkout with
-  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which carries the
-  same staleness the primary already tolerates, and rebuild locally only when the
-  branch changed the code being queried.
-NOT Copy Python virtual environments; run `uv sync` because their paths are
-  absolute.
-NOT Copy `target/` when the repository-scoped Cargo target hook is active.
-NOT Treat `copy-ignored` as a shared writable build directory; it creates a
-  copy-on-write warm start where the filesystem supports reflinks.
-DEFAULT Run a dev server with
-  `wt step tether -- <command> --port {{ branch | hash_port }}` and expose the
-  matching `[list] url`.
-DEFAULT Build the repository structure map in `post-start` so a new checkout has
-  one before its first session, and drop it in `post-remove`. Artifacts are keyed
-  by a hash of the worktree root, so each checkout gets its own without
-  collision, and a removed worktree otherwise leaves a map nothing will use:
-
-    [post-start]
-    repomix-map = "python3 ~/.claude/hooks/token-savings/scripts/repomix-map.py refresh --force"
-
-    [post-remove]
-    repomix-map = "python3 ~/.claude/hooks/token-savings/scripts/repomix-map.py forget"
-
-  Add `--scope '<glob>'` on both when the worktree exists for one subtree: a
-  scoped map of one crate measured 54 tokens against 27,750 for the whole tree,
-  and it is keyed separately so it never clobbers the full map.
-
-  Without the `post-start` step the map is still built lazily on the first
-  HEAD-moving command, so this only removes a first-session delay.
-NOT Copy the map with `copy-ignored`. It lives outside the tree under
-  `XDG_STATE_HOME`, keyed by the ROOT PATH, so a copied map would carry the
-  parent checkout's key and be invisible to the worktree that holds it.
-NOT Build a graphify graph per worktree. `graphify update` has no output flag and
   writes `graphify-out/` into the tree: 6.9s and 9.9 MB on a 741-file repository,
-  paid again in every worktree. Query the primary checkout's graph instead with
-  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which is the same
-  staleness the primary already tolerates, and rebuild locally only when the
+  paid again in every worktree. Gitignore it, list it in `.worktreeinclude` so a
+  new checkout copies it, and query the primary checkout with
+  `--graph {{ primary_worktree_path }}/graphify-out/graph.json`, which carries the
+  same staleness the primary already tolerates. Rebuild locally only when the
   branch changed the code being queried.
 
 HOOK OWNERSHIP
