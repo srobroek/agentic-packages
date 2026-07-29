@@ -30,9 +30,10 @@ from pathlib import Path
 
 TIMEOUT = 900
 
-# Shipped defaults, kept here as the single source of truth so the sweep measures
-# what the hook actually runs. `repomix-map.py` holds the same lists; a drift
-# between them shows up as the "shipped" row not matching the best result.
+# Shipped defaults, kept here so the sweep measures the lists the package
+# recommends. They match the `include`/`ignore` in the scaffolded
+# `repomix.config.json` documented in references/repomix-ignores.md; a drift shows
+# up as the "shipped" row not matching the best result.
 INCLUDES = ",".join(
     (
         "**/*.rs", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.py",

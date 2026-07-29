@@ -316,10 +316,13 @@ model answered:
 | without the hook | "read all 4001 lines" |
 | with the hook | "I saw lines 1 through 2,860 ... did not see all of them" |
 
-`Glob` and `Grep` also reach `PostToolUse`, and both report their own truncation:
-`Glob` returns `truncated` and `countIsComplete`, `Grep` returns `numLines` beside
-`totalLines`. Neither has been observed dropping content without saying so, so
-neither carries a hook here.
+`Glob` and `Grep` also reach `PostToolUse`, and both report their own truncation,
+so neither carries a hook. `Glob` returns `truncated` and `countIsComplete`. `Grep`
+was checked against the same failure that `Read` had: a `head_limit=20` over 500
+matches returned `numLines=20`, `totalLines=500`, and an `appliedLimit` field, AND
+the result the model saw ended with `[Showing results with pagination = limit: 20]`.
+Asked afterwards, the model answered "you saw the first 20 matches ... roughly 4%",
+so the cap is visible where `Read`'s was not.
 
 ## Repository pack, searched not read
 
