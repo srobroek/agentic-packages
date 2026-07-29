@@ -1,6 +1,6 @@
 {
   ".": "26.0.0",
-  "packages/adr": "0.0.0",
+  "packages/adr-as-beads": "0.0.0",
   "packages/agent-adversarial-challenger": "4.0.0",
   "packages/agent-builder": "8.0.0",
   "packages/agent-builder-high": "3.0.0",

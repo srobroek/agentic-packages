@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "adr",
+      "name": "adr-as-beads",
       "source": {
         "source": "local",
-        "path": "./packages/adr"
+        "path": "./packages/adr-as-beads"
       },
       "policy": {
         "installation": "AVAILABLE",

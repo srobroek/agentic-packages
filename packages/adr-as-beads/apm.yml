@@ -1,4 +1,4 @@
-name: adr
+name: adr-as-beads
 version: 0.0.0
 description: >-
   Architecture decision records held as beads `decision` beads, registered as

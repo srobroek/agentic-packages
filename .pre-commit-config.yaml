@@ -205,6 +205,39 @@ repos:
         files: ^(packages/[^/]+/apm\.yml|\.release-please-manifest\.json|release-please-config\.json)$
         exclude: /apm_modules/
 
+      # The only hook here that WRITES. Every other entry is read-only, so note
+      # the mechanic: prek fails a commit when a hook modifies a tracked file and
+      # leaves it unstaged, and silently omits a newly written untracked one. The
+      # renderer stages what it writes, which is what makes the ADR land in the
+      # same commit as the work that motivated the decision.
+      #
+      # always_run because a database is not a path: no `files:` pattern can
+      # detect that a decision bead changed. It exits fast when nothing moved,
+      # and exits 0 when `bd` or the database is absent.
+      - id: render-adrs
+        name: render ADR files from decision beads
+        description: >-
+          Projects every closed beads `decision` bead into
+          docs/adr/NNNN-title.md. The bead is the record; the file is the
+          readable copy for anyone without beads installed, and for PR review.
+          Deferred (proposed) and open (being drafted) decisions are skipped.
+        entry: python3 packages/adr-as-beads/scripts/render_adrs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: bd-lint-decisions
+        name: decision beads state a rationale and a rejected alternative
+        description: >-
+          `bd lint` enforces `## Decision`, `## Rationale`, and
+          `## Alternatives Considered` on a decision bead and exits 1 when one is
+          missing. Native to bd; its help text omits the decision type, but the
+          rules are enforced.
+        entry: bash -c 'command -v bd >/dev/null || exit 0; bd lint --type decision --status all'
+        language: system
+        pass_filenames: false
+        always_run: true
+
       # pre-push, not pre-commit: 11.7s is too much to pay on every commit for a
       # suite that only breaks when the generators change, but far cheaper than
       # finding it in CI.
