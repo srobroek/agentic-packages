@@ -1352,6 +1352,18 @@
         }
       ]
     },
+    "packages/token-savings": {
+      "release-type": "simple",
+      "component": "token-savings",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/toolchain-cache-policy": {
       "release-type": "simple",
       "component": "toolchain-cache-policy",

@@ -91,9 +91,13 @@ def run_pack(repo_root: str, output_path: str, head_marker: str, lock_dir: str) 
                 timeout_bin = candidate
                 break
 
+        # The directory is POSITIONAL. repomix 1.11.1 rejects `--directory` with
+        # "error: unknown option", so every pack this hook attempted exited
+        # non-zero and wrote nothing -- silently, because the pack runs detached
+        # with output discarded and the HEAD marker is only written on success.
         cmd = (
             [timeout_bin, str(PACK_TIMEOUT_SECONDS)] if timeout_bin else []
-        ) + ["repomix", "--directory", repo_root, "--style", "xml", "--output", output_path]
+        ) + ["repomix", "--style", "xml", "--output", output_path, repo_root]
 
         completed = subprocess.run(
             cmd,

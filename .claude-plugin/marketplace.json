@@ -1291,6 +1291,20 @@
       "source": "./packages/steering-tools-scripts"
     },
     {
+      "name": "token-savings",
+      "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content. A cheap repository structure map from `repomix --no-files` replaces exploratory listing, injected only within a token budget. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report. Telemetry stays off. Requires python3 on PATH. rtk and repomix are optional; every path degrades to a no-op without them.",
+      "version": "0.1.0",
+      "tags": [
+        "tokens",
+        "context",
+        "rtk",
+        "repomix",
+        "measurement"
+      ],
+      "category": "code-intelligence",
+      "source": "./packages/token-savings"
+    },
+    {
       "name": "toolchain-cache-policy",
       "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
       "version": "2.0.1",
