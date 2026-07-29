@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/apm-outdated-check.sh",
+            "command": "python3 $(git rev-parse --show-toplevel)/./scripts/apm-outdated-check.py",
             "timeout": 30
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.sh",
+            "command": "python3 $(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.py",
             "timeout": 10
           }
         ]

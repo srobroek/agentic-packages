@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/notify.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/notify.py",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/chezmoi-sync.py",
             "timeout": 10
           }
         ]
@@ -28,7 +28,7 @@
           {
             "type": "command",
             "if": "Bash(git merge*)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/post-merge-cleanup.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/post-merge-cleanup.py",
             "timeout": 5
           }
         ]
@@ -41,7 +41,7 @@
           {
             "type": "command",
             "if": "Bash(gh *)|Bash(*gh-api.py gh *)",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/gh-rate-guard.py",
             "timeout": 10
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/failure-logger.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/failure-logger.py",
             "async": true,
             "timeout": 5
           }
@@ -78,13 +78,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/worktree-orphan-cleanup.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/worktree-orphan-cleanup.py",
             "async": true,
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/apm-outdated-check.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/apm-outdated-check.py",
             "asyncRewake": true,
             "timeout": 30
           }
@@ -96,7 +96,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/session-end-prune.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/session-end-prune.py",
             "async": true,
             "timeout": 30
           }
@@ -108,7 +108,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/./scripts/agent-metrics.sh",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/./scripts/agent-metrics.py",
             "async": true,
             "timeout": 10
           }
