@@ -32,6 +32,13 @@ TWIN_SETS: list[tuple[str, list[str]]] = [
             "packages/dep-update/tests/test_dep_update_detect.py",
         ],
     ),
+    (
+        "skill dependency detector fuzz harnesses",
+        [
+            "packages/whats-new/tests/test_whats_new_detect_fuzz.py",
+            "packages/dep-update/tests/test_dep_update_detect_fuzz.py",
+        ],
+    ),
 ]
 
 

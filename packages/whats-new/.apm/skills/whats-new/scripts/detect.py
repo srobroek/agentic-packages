@@ -32,6 +32,16 @@ from pathlib import Path
 # of these separates the name from everything that constrains it.
 _REQ_SPLIT = re.compile(r"[\[<>=!~;\s]")
 
+# A legal distribution name, per PEP 508. Anything else on a requirements line --
+# a bare URL, a `--hash` continuation, an option -- is not a named dependency,
+# and emitting it as one sends the research step to a registry with a URL for a
+# package name.
+_REQ_NAME = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
+
+# Files may carry a UTF-8 BOM: a Windows editor writes one, and both `json` and
+# `tomllib` reject it outright, which silently discarded the whole manifest.
+_ENCODING = "utf-8-sig"
+
 # `gem "rails", "~> 7.1"` / `gem 'puma'`
 _GEM = re.compile(
     r"""^\s*gem\s+(['"])(?P<name>[^'"]+)\1"""
@@ -70,21 +80,25 @@ class Detector:
         ecosystem never hides the others.
         """
         path = self.root / name
-        if not path.is_file():
+        if not _is_file(path):
             return None
         try:
-            with path.open("rb") as handle:
-                return tomllib.load(handle)
-        except (OSError, tomllib.TOMLDecodeError) as exc:
+            # Decoded here rather than by `tomllib.load`, which reads bytes and
+            # raises UnicodeDecodeError -- NOT TOMLDecodeError -- on a manifest
+            # holding one invalid byte. That escaped this handler and crashed the
+            # detector with a traceback, taking every other ecosystem with it.
+            body = path.read_text(encoding=_ENCODING, errors="replace")
+            return tomllib.loads(body)
+        except (OSError, ValueError) as exc:
             note(f"detect: {name} is unreadable ({exc}); skipping")
             return None
 
     def _read_json(self, name: str) -> dict | None:
         path = self.root / name
-        if not path.is_file():
+        if not _is_file(path):
             return None
         try:
-            data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+            data = json.loads(path.read_text(encoding=_ENCODING, errors="replace"))
         except (OSError, ValueError) as exc:
             note(f"detect: {name} is unreadable ({exc}); skipping")
             return None
@@ -92,10 +106,10 @@ class Detector:
 
     def _read_lines(self, name: str) -> list[str] | None:
         path = self.root / name
-        if not path.is_file():
+        if not _is_file(path):
             return None
         try:
-            return path.read_text(encoding="utf-8", errors="replace").splitlines()
+            return path.read_text(encoding=_ENCODING, errors="replace").splitlines()
         except OSError as exc:
             note(f"detect: {name} is unreadable ({exc}); skipping")
             return None
@@ -283,6 +297,29 @@ class Detector:
                 self.emit("packagist", name, _scalar(spec))
 
 
+def _is_file(path: Path) -> bool:
+    """`path.is_file()`, but False rather than a raise on a hostile path.
+
+    Which OSErrors `Path.is_file` swallows is platform and version dependent:
+    ENAMETOOLONG for an over-long component, and a ValueError for an embedded
+    NUL, both return False on CPython 3.14/macOS and have raised elsewhere.
+    A detector that raises there exits nonzero and reports no ecosystem at all,
+    so the cost of guarding is two lines and the cost of assuming is total.
+    """
+    try:
+        return path.is_file()
+    except (OSError, ValueError):
+        return False
+
+
+def _is_dir(path: Path) -> bool:
+    """`path.is_dir()` with the same platform guard as `_is_file`."""
+    try:
+        return path.is_dir()
+    except (OSError, ValueError):
+        return False
+
+
 def _scalar(value: object) -> str:
     """Render a manifest value as the version string, or `?` when absent."""
     if value is None or isinstance(value, (dict, list)):
@@ -315,14 +352,23 @@ def _parse_requirement(raw: str) -> tuple[str, str]:
     `("requests", ">=2.31")`.
     """
     line = raw.split("#", 1)[0].strip()
+    # A trailing backslash continues the line, most often onto a `--hash=` block;
+    # left in place it became part of the version, as `==1.0 \`.
+    line = line.rstrip("\\").strip()
     if not line or line.startswith(("-", ".", "/")):
         # -r/-e directives and bare paths are not named dependencies.
         return "", ""
     line = line.split(";", 1)[0].strip()
     match = _REQ_SPLIT.search(line)
     if not match:
-        return line, _MISSING
+        return (line, _MISSING) if _REQ_NAME.match(line) else ("", "")
     name = line[: match.start()].strip()
+    # A direct-reference URL (`https://host/pkg.whl`) splits at its `:` scheme or
+    # not at all, leaving the whole URL as the "name". Emitting it sent the
+    # research step to a registry with a URL for a package name; a `pkg @ url`
+    # requirement still yields `pkg`, because the name precedes the separator.
+    if not _REQ_NAME.match(name):
+        return "", ""
     rest = line[match.start() :]
     # Drop an extras bracket wherever it sits, then keep the specifier.
     version = re.sub(r"\[[^\]]*\]", "", rest).strip()
@@ -340,7 +386,7 @@ def note(message: str) -> None:
 def main(argv: list[str]) -> int:
     target = argv[1] if len(argv) > 1 else "."
     root = Path(target)
-    if not root.is_dir():
+    if not _is_dir(root):
         note(f"detect.py: '{target}' is not a directory")
         return 2
 
