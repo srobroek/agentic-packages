@@ -91,11 +91,25 @@ On the 4,107-file repository with the allowlist already applied (baseline
 | `--style markdown` | -0.1% |
 | `--style plain` | 0.0% |
 | `--style json` | **-10.9%** (worse) |
+| `--parsable-style` | **-10.2%** (worse) |
 
 So the output FORMAT is noise: xml, markdown, and plain land within 0.1% of each
 other, and json is 11% WORSE because of key repetition and escaping. Pick a style
 for readability, not for size. `--remove-empty-lines` and `--truncate-base64` do
 nothing measurable on a real tree.
+
+`--parsable-style` costs 10.2% and buys a property worth knowing about: **the
+default `--style xml` output is NOT valid XML.** Verified by parsing both with
+`ElementTree` -- the default raises `ParseError`, the parsable form parses
+cleanly. It escapes every `<`, `>`, and `"` inside file contents (on one pack:
+`&lt;` 6 to 31,213 occurrences, `&quot;` 3 to 195,040), which is why it grows.
+
+MUST Leave `--parsable-style` off for a pack an AGENT reads. The escaping makes
+  every quote in every shell script and every generic in every Rust signature
+  render as an entity, which is harder for a model to read AND 10% larger.
+NOT Feed a default-style pack to an XML parser. It is a text format with
+  XML-shaped delimiters, not XML. Reach for `--parsable-style` only when a real
+  parser consumes the output, and accept the 10% then.
 
 NOT Enable `--remove-comments` by default, despite it being the only knob that
   moves. It keeps Rust doc comments (`///`) but strips every `//` and `#`, which
