@@ -1,28 +1,45 @@
 #!/usr/bin/env python3
-"""Warn -- never block -- on manual release-please operations.
+"""Warn -- never block -- on manual release-please operations, and report config.
 
-On a repo managed by release-please, manually cutting a release, tagging a
-version, pushing tags, or hand-merging a release branch to a protected branch is
-the way to botch the release loop indefinitely: release-please then sees an
-untagged/mislabeled release and stops auto-tagging. This hook does not block --
-it injects an advisory (`additionalContext`) so the model reconsiders and reads
-the release-please skill. The command still runs.
+Two entry points in one process:
+
+- no arguments: a PreToolUse:Bash hook reading a payload on stdin. On a repo
+  managed by release-please, manually cutting a release, tagging a version,
+  pushing tags, or hand-merging a release branch to a protected branch is the way
+  to botch the release loop indefinitely: release-please then sees an
+  untagged or mislabeled release and stops auto-tagging. The hook does not
+  block -- it injects an advisory (`additionalContext`) so the model reconsiders
+  and reads the release-please skill. The command still runs.
+- ``detect [--json] [DIR]``: prints how the repo is configured and exits 0 when
+  release-please manages it, 1 when it does not, 2 on a usage error. The skill's
+  step-0 gate reads these facts.
+
+The detector was a second script that parsed its own JSON with `grep -E` and
+emitted more by string interpolation. It is folded in here rather than shipped
+alongside, because the hook already ran it as a subprocess and read only its
+exit code -- one process now answers both questions, and `json` replaces the
+pattern matching.
 
 Never emits `permissionDecision: "deny"` or `"ask"`: per the repo hook policy,
 blocking decisions stall autonomous runs, and these operations are legitimate in
 recovery scenarios. The note is the whole point.
 
-Ported from shell almost line-for-line; the regexes are the load-bearing part and
-are kept as close to the original ERE as re.IGNORECASE + word-boundary substitutes
-allow, so behaviour matches the existing bats oracle.
+The guard regexes are the load-bearing part and stay as close to the original
+ERE as re.IGNORECASE and word-boundary substitutes allow, so behavior matches
+the existing bats oracle.
 """
 
 from __future__ import annotations
 
 import sys
 
-# Only `sys` at module scope. This is a PreToolUse:Bash hook, so it runs on every
-# shell command; everything else is imported inside the functions that need it.
+# Only `sys` at module scope. The hook path is a PreToolUse:Bash handler, so it
+# runs on every shell command; everything else is imported inside the functions
+# that need it.
+
+CONFIG_NAMES = ("release-please-config.json", ".release-please-config.json")
+MANIFEST_NAME = ".release-please-manifest.json"
+WORKFLOW_MARKERS = ("release-please-action", "googleapis/release-please")
 
 
 def extract(payload: str) -> tuple[str, str]:
@@ -44,39 +61,115 @@ def extract(payload: str) -> tuple[str, str]:
     return command, cwd if isinstance(cwd, str) else ""
 
 
-def is_release_please_repo(cwd: str) -> bool:
-    """Whether this repo is release-please managed, at `cwd`.
+def detect(directory: str) -> dict:
+    """How release-please is configured at `directory`.
 
-    Prefers the detector script shipped with the skill (same package); falls back
-    to a cheap inline config-file check when the detector cannot be found, so the
-    guard still works when co-location differs (e.g. installed layout).
+    Reports `present`, `mode`, the config and manifest paths, the workflows that
+    invoke the action, three load-bearing config values, and `package_count`.
+    Every value is read with `json` rather than matched with a pattern, which is
+    what the shell predecessor got wrong in two places -- see `_top_level_flag`
+    and `package_count` below.
     """
     import os
-    import subprocess
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    candidates = (
-        os.path.join(here, "..", ".apm", "skills", "release-please", "scripts", "detect-release-please.sh"),
-        os.path.join(here, "..", "skills", "release-please", "scripts", "detect-release-please.sh"),
-        os.path.join(here, "detect-release-please.sh"),
-    )
-    detect = next((c for c in candidates if os.path.isfile(c)), None)
-    if detect is not None:
-        try:
-            completed = subprocess.run(
-                ["bash", detect],
-                cwd=cwd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-                timeout=10,
-            )
-            return completed.returncode == 0
-        except (subprocess.SubprocessError, OSError):
-            return False
-    return os.path.isfile(os.path.join(cwd, "release-please-config.json")) or os.path.isfile(
-        os.path.join(cwd, ".release-please-manifest.json")
-    )
+    config_file = ""
+    for name in CONFIG_NAMES:
+        candidate = os.path.join(directory, name)
+        if os.path.isfile(candidate):
+            config_file = candidate
+            break
+
+    manifest_path = os.path.join(directory, MANIFEST_NAME)
+    manifest_file = manifest_path if os.path.isfile(manifest_path) else ""
+
+    workflow_files = _workflow_files(directory)
+
+    if config_file and manifest_file:
+        present, mode = True, "manifest"
+    elif config_file:
+        present, mode = True, "config-only"
+    elif workflow_files:
+        # No config file, but the action is wired into a workflow: release-please
+        # can run purely from action inputs.
+        present, mode = True, "inline-action"
+    else:
+        present, mode = False, "none"
+
+    config = _load_json(config_file) if config_file else None
+    manifest = _load_json(manifest_file) if manifest_file else None
+
+    return {
+        "present": present,
+        "mode": mode,
+        "config_file": config_file,
+        "manifest_file": manifest_file,
+        "workflow_files": ",".join(workflow_files),
+        "separate_pull_requests": _top_level_flag(config, "separate-pull-requests"),
+        "include_component_in_tag": _top_level_flag(config, "include-component-in-tag"),
+        "tag_separator": _top_level_string(config, "tag-separator"),
+        # DEFECT (shell): `grep -Ec '"[^"]+"[[:space:]]*:'` counted LINES that
+        # hold at least one key, so a minified three-package manifest reported 1.
+        "package_count": len(manifest) if isinstance(manifest, dict) else 0,
+    }
+
+
+def _load_json(path: str) -> object | None:
+    """Parsed JSON, or None when the file is missing or malformed (fail open)."""
+    import json
+
+    try:
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return None
+
+
+def _top_level_flag(config: object, key: str) -> str:
+    """A top-level boolean as "true"/"false", or "unknown" when unset.
+
+    DEFECT (shell): the pattern matched ANYWHERE in the file, so a per-package
+    override reported itself as the top-level value. Reading the top-level key
+    means a `packages` entry cannot answer for the repo.
+    """
+    if not isinstance(config, dict):
+        return "unknown"
+    value = config.get(key)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return "unknown"
+
+
+def _top_level_string(config: object, key: str) -> str:
+    if not isinstance(config, dict):
+        return "unknown"
+    value = config.get(key)
+    return value if isinstance(value, str) and value else "unknown"
+
+
+def _workflow_files(directory: str) -> list[str]:
+    """Workflow paths, relative to `directory`, that reference the action."""
+    import os
+
+    workflows = os.path.join(directory, ".github", "workflows")
+    if not os.path.isdir(workflows):
+        return []
+    found: list[str] = []
+    for root, _dirs, names in os.walk(workflows):
+        for name in sorted(names):
+            path = os.path.join(root, name)
+            try:
+                with open(path, encoding="utf-8", errors="replace") as handle:
+                    body = handle.read()
+            except OSError:
+                continue
+            if any(marker in body for marker in WORKFLOW_MARKERS):
+                found.append(os.path.relpath(path, directory))
+    return sorted(found)
+
+
+def is_release_please_repo(cwd: str) -> bool:
+    """Whether release-please manages the repo at `cwd`."""
+    return detect(cwd)["present"]
 
 
 def violation(command: str, cwd: str) -> str | None:
@@ -160,7 +253,81 @@ def _current_branch(cwd: str) -> str:
     return completed.stdout.strip()
 
 
+FIELD_ORDER = (
+    "present",
+    "mode",
+    "config_file",
+    "manifest_file",
+    "workflow_files",
+    "separate_pull_requests",
+    "include_component_in_tag",
+    "tag_separator",
+    "package_count",
+)
+
+
+def detect_cli(argv: list[str]) -> int:
+    """`detect [--json] [DIR]`: 0 when managed, 1 when not, 2 on a usage error."""
+    import json
+    import os
+    import subprocess
+
+    as_json = False
+    directory = ""
+    for arg in argv:
+        if arg == "--json":
+            as_json = True
+        elif arg in ("--help", "-h"):
+            print(__doc__.strip())
+            return 0
+        elif arg.startswith("-"):
+            print(f"detect: unknown option: {arg}", file=sys.stderr)
+            return 2
+        elif directory:
+            print("detect: too many arguments", file=sys.stderr)
+            return 2
+        else:
+            directory = arg
+
+    if not directory:
+        # Prefer git's toplevel so the gate works from any subdirectory.
+        try:
+            completed = subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=10,
+                text=True,
+            )
+            directory = completed.stdout.strip()
+        except (subprocess.SubprocessError, OSError):
+            directory = ""
+        directory = directory or os.getcwd()
+
+    if not os.path.isdir(directory):
+        print(f"detect: not a directory: {directory}", file=sys.stderr)
+        return 2
+
+    facts = detect(directory)
+    if as_json:
+        print(json.dumps({key: facts[key] for key in FIELD_ORDER}))
+    else:
+        for key in FIELD_ORDER:
+            value = facts[key]
+            if isinstance(value, bool):
+                value = "true" if value else "false"
+            print(f"{key}={value}")
+    return 0 if facts["present"] else 1
+
+
 def main() -> int:
+    if len(sys.argv) > 1:
+        if sys.argv[1] != "detect":
+            print(f"release-please-guard: unknown command: {sys.argv[1]}", file=sys.stderr)
+            return 2
+        return detect_cli(sys.argv[2:])
+
     payload = sys.stdin.read()
     if not payload:
         return 0
