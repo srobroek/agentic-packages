@@ -100,8 +100,13 @@ observation. `replies-to` threads wisp messages and dies with them, so it cannot
 hold a durable finding. `related` stores as a distinct string from `relates-to`
 with no documented meaning; leave it alone.
 
-`--type` is NOT validated. Every string is accepted and stored verbatim, including
-a typo, which yields an edge no query matches. Copy the type rather than typing it.
+`blocks` is the only type that gates `bd ready`; every other type, `until` included,
+documents a relationship rather than enforcing one.
+
+`--type` is NOT validated. Every string is accepted and stored verbatim, including a
+typo, which creates a real edge: `bd dep tree` traverses it and `bd show` renders it
+under DEPENDS ON, the `blocks` heading, while the far bead shows nothing. A typo
+reads as a dependency that does not exist. Copy the type rather than typing it.
 
 An edge carries no annotation. `bd dep add` has no note field, and `note`,
 `reason`, and `metadata` keys in the `--file` JSONL are accepted and then dropped,

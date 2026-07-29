@@ -77,7 +77,7 @@ Reach for the most specific type the relationship supports:
 | A surfaced while working B | `discovered-from` |
 | A is the same defect as B | `duplicates` |
 | B is an umbrella tracking A | `tracks` |
-| A holds until B resolves | `until` |
+| A waits on B, as a note to a reader | `until` |
 | affected work, nothing sharper fits | `relates-to` |
 
 `discovered-from` is the one you will reach for least: a specialist files its own
@@ -94,9 +94,15 @@ gate or reparent the work it describes. `replies-to` threads wisp messages and d
 with them, so it cannot hold a durable finding. `related` is a distinct stored
 string from `relates-to` with no documented meaning -- do not use it.
 
+`blocks` is the only type that gates `bd ready`. Every other type here, `until`
+included, is documentation for a reader rather than enforcement.
+
 `--type` is NOT validated: every string is accepted and stored verbatim, `typo-xyz`
-included, so a misspelling creates an edge no query will ever match. Copy the type
-from the table rather than typing it.
+included. A misspelling does not fail, and it does not vanish -- it creates a real
+edge that `bd dep tree` traverses and that `bd show` renders under DEPENDS ON, the
+`blocks` heading, while the other bead shows nothing at all. A typo therefore reads
+as a dependency that does not exist. Copy the type from the table rather than typing
+it.
 
 An edge cannot be annotated. `bd dep add` has no note field; the JSONL `--file`
 form accepts `note`, `reason`, and even `metadata`, reports success, and stores
