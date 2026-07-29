@@ -1039,6 +1039,56 @@ def stale_binding(repo: Path, item: dict[str, Any]) -> bool:
     return not issue.get("assignee") and status not in {"in_progress", "blocked"}
 
 
+def subagent_exit() -> int:
+    """SubagentStop hook. Records that a bound context exited; releases nothing.
+
+    A stop is not an ending. `domain-specialist` is explicitly resumable, and its
+    review/fix loop depends on being woken again for the same node, so clearing the
+    binding here would strand a live actor between review rounds. `SubagentStop`
+    cannot tell "finished" from "paused"; only the activation resource can, which is
+    what `stale_binding` reads.
+
+    So this is a trigger, not an actor. It stamps `exited` on the checkout, and
+    releases the binding only in the case the resource ALREADY proves is over. The
+    stamp is what makes a later prune or `pre-start` event-driven instead of a guess.
+
+    Always exits 0: a stop hook that fails cannot be allowed to trap a subagent.
+    """
+    try:
+        payload = json.load(sys.stdin)
+    except (json.JSONDecodeError, OSError):
+        return 0
+    if not isinstance(payload, dict):
+        return 0
+    context = runtime_context(payload)
+    if not context:
+        return 0
+    cwd = Path(str(payload.get("cwd") or ".")).resolve()
+    try:
+        repo = Path(run(["git", "-C", str(cwd), "rev-parse", "--show-toplevel"]).stdout.strip())
+        inventory = wt_inventory(repo)
+        holders = [item for item in inventory if context in bound_contexts(item)]
+        if len(holders) != 1:
+            return 0
+        item = holders[0]
+        variables = worktrunk_vars(item)
+        if not variables.get("lease"):
+            return 0
+        branch = str(item.get("branch") or "")
+        set_var(repo, branch, "exited", context)
+        if stale_binding(repo, item):
+            for key in ("context", "contexts", RUNTIME_BINDINGS_KEY):
+                clear_var(repo, branch, key)
+            print(
+                f"worktrunk-writer: {context} exited and its resource is resolved; "
+                f"released the binding on {branch!r}.",
+                file=sys.stderr,
+            )
+    except (ContractError, OSError, ValueError, json.JSONDecodeError) as error:
+        print(f"worktrunk-writer: subagent-exit skipped ({error})", file=sys.stderr)
+    return 0
+
+
 def runtime_context(payload: dict[str, Any]) -> str | None:
     for key in ("agent_id", "subagent_id"):
         value = payload.get(key)
@@ -1748,6 +1798,7 @@ def parser() -> argparse.ArgumentParser:
     fleet.add_argument("--repo", required=True)
     fleet.add_argument("--full", action="store_true")
     sub.add_parser("hook")
+    sub.add_parser("subagent-exit")
     return root
 
 
@@ -1755,6 +1806,8 @@ def main() -> int:
     args = parser().parse_args()
     if args.command == "hook":
         return hook()
+    if args.command == "subagent-exit":
+        return subagent_exit()
     if args.command == "lifecycle":
         return lifecycle(args)
     try:
