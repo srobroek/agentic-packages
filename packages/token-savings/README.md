@@ -145,23 +145,41 @@ ceiling still under a quarter.
 The spill hook covers the 76.7% rtk cannot, because it never looks at which
 command produced the output. Replaying that transcript history against its logic
 puts it at 21.7% of all tool bytes. **Read that as an upper bound.** Claude Code
-truncates Bash output natively above roughly 16 KB, and the native path runs
-first, so the replay figure also credits this hook for results it never sees.
+truncates Bash output natively into a `<persisted-output>` block, so the replay
+figure also credits this hook for the largest results, which the native path takes
+first.
 
-Measured in a live session, reading what reached the model rather than what the
-hook reported:
+The native default is between 24 KB and 31 KB, measured by reading what reached
+the model rather than what any tool reported:
 
-| raw output | native cap | this hook |
+| raw output | native default | with `BASH_MAX_OUTPUT_LENGTH=2000` |
 |---|---|---|
-| 2,691 B | untouched | 799 B |
-| 11,892 B | untouched | in band |
-| 18,892 B | 2,242 B, hook never ran | 833 B when native was not in play |
+| 18,892 B | untouched | truncated |
+| 23,892 B | untouched | truncated |
+| 31,393 B | truncated to 2,246 B | truncated |
+| 223,522 B | truncated to 2,247 B | truncated |
 
-The band is 2 KB up to the native threshold. Keep the hook for the shape of what
-it leaves behind: native previews the head alone, this emits head 20 **and tail
-30**, and a test run, build, or stack trace puts the verdict in the last lines.
-`BASH_MAX_OUTPUT_LENGTH` lowers the native threshold, and setting it below 2 KB
-shadows this hook entirely.
+So this hook owns everything from 2 KB to about 30 KB, which is most real output.
+
+### Why `BASH_MAX_OUTPUT_LENGTH=2000` is not a replacement
+
+Lowering the native threshold to 2 KB covers the same range, and it is worse,
+because native keeps the HEAD and this keeps head 20 **and tail 30**. A test run,
+a build, and a stack trace all put the verdict in the last lines.
+
+Measured on a 20,704-byte test log whose only failure is on the second-to-last
+line, asking which test failed:
+
+| | native at 2 KB | this hook |
+|---|---|---|
+| tool calls | 4 (`Bash`, then `Read`) | 2 (`Bash`) |
+| tool-result bytes | 26,456 | **1,798** |
+| answered correctly | yes | yes |
+
+Both answered. Native answered by reading the spill file back, so the truncation
+bought nothing and cost a round trip: 26,456 bytes against 1,798, worse than the
+20,704-byte raw output it replaced. The tail is what makes the difference between
+a summary that answers the question and a pointer that defers it.
 
 Run `rtk-configure.py` (in the skill) to set `tee.mode = "always"`, so rtk keeps
 a recovery log for every filtered command rather than only failed ones. The

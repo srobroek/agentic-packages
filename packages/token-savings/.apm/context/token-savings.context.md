@@ -76,11 +76,22 @@ NOT Steer agents away from heredocs or chained commands to raise this. Fixing
   distort how agents work for a ceiling that is still under a quarter.
 MUST Prefer the spill hook for output volume. It reads no command name, which is
   why it covers the 76.7% rtk structurally cannot. Its replayed 21.7% of all tool
-  bytes is an UPPER BOUND: Claude Code truncates Bash output natively above
-  roughly 16 KB and runs first, so the hook owns 2 KB up to that threshold and the
-  replay credits it for results it never sees.
+  bytes is an UPPER BOUND: Claude Code truncates Bash output natively between 24 KB
+  and 31 KB and runs first, so the hook owns 2 KB to about 30 KB and the replay
+  counts the largest results too.
+NOT Set `BASH_MAX_OUTPUT_LENGTH=2000` as a substitute for the hook. It covers the
+  same range and keeps only the HEAD. On a 20,704-byte test log with its one
+  failure on the second-to-last line, native needed a follow-up `Read` and put
+  26,456 bytes in context, more than the raw output; the hook answered from its
+  summary in 1,798 bytes.
 
 The hook also sees only `Bash`, so native `Read`, `Grep`, and `Glob` bypass it.
+
+NOT Trust a whole-file `Read` to return the whole file. On a 118,893-byte,
+  4,001-line file it returned 97,885 bytes and stopped at line 2,860 with no
+  `<persisted-output>` block, no truncation notice, and nothing naming what was
+  dropped. The model then reported reading all 4,001 lines. Pass an explicit
+  `offset`/`limit`, or search with `rg` and read the range that matters.
 
 ## Repository structure map, not a full pack
 

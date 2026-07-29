@@ -32,19 +32,21 @@ cannot replace a tool result at all. This ships in the Claude manifest only.
 (`updatedMCPToolOutput` is deprecated upstream in favour of `updatedToolOutput`,
 which covers every tool.)
 
-WHAT THIS DOES *NOT* OWN, and why the band matters. Claude Code has its own Bash
-output cap that emits `<persisted-output>` with a HEAD-ONLY preview, and it fires
-FIRST: measured against a real session, an 18.5 KB result was truncated natively
-and this hook never ran. Bracketing the native default by reading transcript
-`tool_result` blocks: 11,892 B untouched, 18,892 B truncated, so it sits between
-12 KB and 19 KB (`BASH_MAX_OUTPUT_LENGTH=2000` lowers it, verified).
+WHERE THE NATIVE CAP TAKES OVER. Claude Code truncates oversized Bash output on
+its own, into a `<persisted-output>` block with a HEAD-ONLY preview, and it runs
+FIRST -- when it fires, this hook never sees the result. Bracketed by reading
+transcript `tool_result` blocks: 23,892 B untouched, 31,393 B truncated, so the
+native default sits between 24 KB and 31 KB. This hook owns 2 KB to about 30 KB.
+Any coverage figure derived by replaying transcript results against this logic
+ALONE is an upper bound, because it counts the largest results too.
 
-So this hook owns 2 KB to roughly 16 KB, and nothing above. Any figure for its
-coverage derived by replaying transcript results against this logic ALONE is
-overstated, because it credits this hook for results the native cap already
-handles. It earns its band on shape rather than size: native previews the head,
-while a test run, build, or stack trace puts the verdict in the LAST lines, which
-is why this emits head 20 AND tail 30.
+WHY `BASH_MAX_OUTPUT_LENGTH=2000` IS NOT A SUBSTITUTE. It moves the native cap
+down over this same range, and the result is worse, because native keeps the head
+while this keeps head 20 AND tail 30. On a 20,704-byte test log whose only failure
+sits on the second-to-last line, asked which test failed: native needed 4 tool
+calls (it followed up with `Read`) and put 26,456 bytes of tool results in context,
+MORE than the untruncated output. This hook answered from the summary in 2 calls
+and 1,798 bytes. A test run, a build, and a stack trace all put the verdict last.
 
 Deliberately conservative. Output under the threshold is untouched, a failing
 command is never truncated (the agent needs the error), and anything unparsable
