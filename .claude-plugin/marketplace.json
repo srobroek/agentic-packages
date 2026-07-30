@@ -58,7 +58,7 @@
     {
       "name": "agent-conformance",
       "description": "Deterministic conformance harness for agent contract testing: check coverage and drift, stage per-case sandboxes, assert captured replies, and assemble run reports -- no LLM required for the engine.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "tags": [
         "testing",
         "agents",
@@ -94,7 +94,7 @@
     {
       "name": "agent-hook-contract",
       "description": "Cross-tool agent hook contract for Claude Code and Codex CLI: supported events, matcher behavior, payloads, decisions, trust, and runtime limits, plus the authoring rules this repo holds its hooks to. Hooks are written in Python unless the script only forwards to one command: a hook that parses shell with grep and sed is a tokenizer without a lexer, and every gap is a bypass. Python is also faster once a hook touches jq, since one jq spawn costs more than the whole bash-vs-Python startup gap. Covers the per-call performance budget (no uv run on a per-tool-call hook, stdlib only on the hot path, in-process repo root discovery, batched git calls, cheap pre-parse bail) and the reliability rules (fail open, never emit ask, write denials to the model, accept a string tool_input, self-filter inside the script). Documentation only.",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "tags": [
         "hooks",
         "claude",
@@ -191,7 +191,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "11.0.0",
+      "version": "12.0.0",
       "tags": [
         "bundle",
         "steering"
@@ -286,7 +286,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "17.0.0",
+      "version": "18.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -381,7 +381,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch).",
-      "version": "5.0.3",
+      "version": "5.1.0",
       "tags": [
         "bundle",
         "frontend"
@@ -853,7 +853,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "15.1.0",
+      "version": "16.0.0",
       "tags": [
         "skill",
         "agent",
@@ -888,7 +888,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -913,7 +913,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "5.0.0",
+      "version": "6.0.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -986,7 +986,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "5.0.4",
+      "version": "6.0.0",
       "tags": [
         "bundle",
         "review"
@@ -1105,7 +1105,7 @@
     {
       "name": "steering-git-workflow",
       "description": "Git workflow policy: branch discipline, ship-path choice (merge vs PR), merge flags, draft-first PRs, Beads merge-bead linkage, and pre-push verification. Ships a dual-runtime PreToolUse guard that denies non-draft PR creation. Replaces the retired commit-push-* skills and git nudge hooks.",
-      "version": "3.0.0",
+      "version": "4.0.0",
       "tags": [
         "steering",
         "git"
@@ -1153,7 +1153,7 @@
     {
       "name": "steering-pragmatic",
       "description": "Rules for what an agent PRODUCES: code economy (prefer deletion, stdlib, and minimal solutions over new abstractions), comment discipline, written-artifact register, and no justification for a choice inside the artifact that ships. Always-on steering as main-session instructions, plus a SubagentStart hook that injects the same discipline into every subagent in MUST register, since a subagent writes files too. Conversational register is not here: on Claude it is the `Pragmatic` output style, which reaches the main session's system prompt. Requires python3 on PATH. Opt-in.",
-      "version": "6.0.0",
+      "version": "6.0.1",
       "tags": [
         "steering",
         "pragmatic",
@@ -1252,7 +1252,7 @@
     {
       "name": "user-journeys",
       "description": "Service-agnostic user-journey lifecycle: author end-to-end journeys as living documents (current-truth body plus a windowed delta log), validate them against the running product through whatever interface it exposes (web, desktop via MCP, CLI, TUI, API), triage mismatches with intent-gated amendment authority, report findings through a pluggable reporter (GitHub issues or a local tracker), and run multi-journey campaigns with a bounded dispatch-coder fix loop. Ships six skills (init, write, verify, verify-changed, consolidate, campaign), two agents (journey-scribe, journey-validator), agent-only and human-gated Beads verification formulas, the journey format spec and templates, and deterministic index, lint, and formula-install scripts.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": [
         "journeys",
         "validation",
@@ -1306,7 +1306,7 @@
     {
       "name": "worktrunk-writer",
       "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
-      "version": "2.1.1",
+      "version": "2.2.0",
       "tags": [
         "worktrunk",
         "worktree",
