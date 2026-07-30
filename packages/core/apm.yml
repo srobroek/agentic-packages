@@ -14,9 +14,9 @@ tags:
   - baseline
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/project-lifecycle#>=5.0.0 <6.0.0
+    - srobroek/agentic-packages/packages/project-lifecycle#>=6.0.0 <7.0.0
     - srobroek/agentic-packages/packages/code-intelligence#>=9.0.0 <10.0.0
-    - srobroek/agentic-packages/packages/agentic-maintenance#>=11.0.0 <12.0.0
+    - srobroek/agentic-packages/packages/agentic-maintenance#>=12.0.0 <13.0.0
     - srobroek/agentic-packages/packages/resume-session#>=2.1.1 <3.0.0
     - srobroek/agentic-packages/packages/steering-delivery#>=1.1.4 <2.0.0
     - srobroek/agentic-packages/packages/beads#>=2.0.0 <3.0.0
