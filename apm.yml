@@ -670,15 +670,6 @@ marketplace:
         - refactoring
         - code-smells
         - tech-debt
-    - name: speckit
-      source: ./packages/speckit
-      category: speckit
-      tags:
-        - bundle
-        - speckit
-        - beads
-        - workflow
-        - gates
     - name: steering-architecture
       source: ./packages/steering-architecture
       category: steering

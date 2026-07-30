@@ -18,16 +18,16 @@ Shipping (choose one, confirm if ambiguous):
   Use `git merge --no-ff` for feature branches; pass an explicit strategy
   flag to `gh pr merge` (`--squash`/`--merge`/`--rebase`).
 
-Beads linkage (when `bd where` succeeds):
+Beads linkage (PRs entering the PR-shepherd merge queue):
+
+The merge bead carries the linkage. The PR body carries none of it: the shepherd
+discovers work by label and proves it against bead metadata, so a trailer in the
+body would be read by nothing.
 
 - Before PR creation, create one open, unassigned task bead labeled `pr:merge` and
-  `agent:integrator`, with `branch`, `repo`, `origin_actor`, `tracks_beads`,
-  and `closes_beads` metadata. For every closing work bead, add `bd dep add
-  <work-bead> <merge-bead>` before approval freezes the graph.
-- Add a final `## Beads` section with one `Tracks-Bead: <id>` line for each
-  work bead represented by the PR, exactly one `Merge-Bead: <id>`, and
-  `Closes-Bead: <id>` for each predeclared completion edge. Tracking alone
-  does not imply automatic closure.
+  `agent:integrator`, with `branch`, `repo`, and `origin_actor` metadata. For
+  every closing work bead, add `bd dep add <work-bead> <merge-bead>` before
+  approval freezes the graph.
 - Immediately after creation, stamp the PR number/base/head anchors onto the
   merge bead. The merge bead is durable discovery; GitHub history scans are
   not the queue.

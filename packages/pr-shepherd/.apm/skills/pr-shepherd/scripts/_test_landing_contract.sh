@@ -789,6 +789,61 @@ assert_not_contains_file "landing_state=merged" "$state/bd.log" \
 assert_not_contains_file "close merge-1" "$state/bd.log" \
   "an undetectable queue never closes the merge bead"
 
+# --- the merge bead's anchors must describe the PR it names -------------------
+#
+# A merge bead pointing at the wrong PR was previously meant to be caught by a
+# `Merge-Bead:` trailer in the PR body, but no code ever compared the two. The
+# bead is authoritative, so the comparison reads the bead and the live PR.
+
+new_state anchor-ok
+scenario=anchor-ok
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "matching anchors pass"
+assert_contains ANCHOR_OK "$last_output" "a matching bead is announced"
+
+new_state anchor-branch-mismatch
+scenario=anchor-branch-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead whose branch is not the PR's head branch fails"
+assert_contains "ANCHOR_MISMATCH" "$last_output" "the mismatched field is named"
+assert_contains "field=branch" "$last_output" "the branch field is identified"
+
+new_state anchor-pr-mismatch
+scenario=anchor-pr-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead anchored to a different PR number fails"
+assert_contains "field=pr" "$last_output" "the pr field is identified"
+
+new_state anchor-repo-mismatch
+scenario=anchor-repo-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead anchored to a different repository fails"
+assert_contains "field=repo" "$last_output" "the repo field is identified"
+
+new_state anchor-unanchored
+scenario=anchor-unanchored
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "a bead predating the branch anchor is not a mismatch"
+assert_contains "branch=unanchored" "$last_output" "the absent anchor is announced"
+
+new_state anchor-bd-error
+scenario=anchor-bd-error
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 2 "$last_rc" "an unavailable bd is unknown, not a mismatch"
+assert_contains ANCHOR_UNKNOWN "$last_output" "an unavailable lookup is announced"
+
+new_state anchor-no-metadata
+scenario=anchor-no-metadata
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "a bead carrying no metadata at all is unanchored, not a mismatch"
+assert_contains "branch=unanchored" "$last_output" "no metadata reads as unanchored"
+
+new_state anchor-bad-metadata
+scenario=anchor-bad-metadata
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 2 "$last_rc" "metadata that is not an object is unknown, not a mismatch"
+assert_contains ANCHOR_UNKNOWN "$last_output" "malformed metadata is announced"
+
 new_state ready-order
 scenario=ready-order
 run_contract ready-ids
