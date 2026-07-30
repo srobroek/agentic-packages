@@ -320,6 +320,22 @@ if [[ "${1:-}" == "list" ]]; then
 fi
 
 if [[ "${1:-}" == "show" ]]; then
+  if [[ "$FAKE_SCENARIO" == anchor-* && "${2:-}" != "slot-1" ]]; then
+    case "$FAKE_SCENARIO" in
+    anchor-bd-error) exit 88 ;;
+    anchor-no-metadata) printf '[{"id":"merge-1"}]\n' ;;
+    anchor-bad-metadata) printf '[{"id":"merge-1","metadata":"not-an-object"}]\n' ;;
+    anchor-pr-mismatch)
+      printf '[{"id":"merge-1","metadata":{"pr":999,"repo":"owner/repo","branch":"fix/test"}}]\n' ;;
+    anchor-repo-mismatch)
+      printf '[{"id":"merge-1","metadata":{"pr":7,"repo":"other/repo","branch":"fix/test"}}]\n' ;;
+    anchor-unanchored)
+      printf '[{"id":"merge-1","metadata":{"pr":7,"repo":"owner/repo"}}]\n' ;;
+    *)
+      printf '[{"id":"merge-1","metadata":{"pr":7,"repo":"owner/repo","branch":"fix/test"}}]\n' ;;
+    esac
+    exit 0
+  fi
   if [[ "${2:-}" == "slot-1" ]]; then
     holder="stable-holder"
     if [[ -f "$FAKE_STATE/holder" ]]; then

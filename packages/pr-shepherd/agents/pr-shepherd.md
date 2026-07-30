@@ -22,10 +22,11 @@ the same pass; document nothing outside bead comments.
 1. Gate: `bd where` and `gh` available, else report and stop. Export
    `BEADS_ACTOR="pr-shepherd/<runtime>/<session-id>"`, `BD_NO_PAGER=1
    BD_NON_INTERACTIVE=1`.
-2. Load `pr:merge` beads; their PR bodies must name the exact merge bead and
-   metadata must contain repo+PR anchors. Ignore drafts for merge processing
-   and release PRs by branch/label. Never replace this durable registry with a
-   bounded GitHub-history scan.
+2. Load `pr:merge` beads; their metadata must contain repo+PR anchors. Prove
+   each bead's pr/repo/branch anchors against the live PR with
+   `landing-contract.py check-anchors`; the PR body is not evidence. Ignore
+   drafts for merge processing and release PRs by branch/label. Never replace
+   this durable registry with a bounded GitHub-history scan.
 3. Closing edges are predeclared as `bd dep add <work> <merge-bead>` before
    `state:approved` freezes the DAG. A late edge to approved/closed work is a
    human-resolution mismatch, not an automatic mutation.
@@ -58,8 +59,8 @@ the same pass; document nothing outside bead comments.
    one stable explicit holder and no
    `--wait` → `gh pr merge` → verify landing/completion → holder-verified
    release → close the merge bead.
-7. `Tracks-Bead:` is backlink-only. Reconcile closing work through native
-   dependencies after a merge bead closes: require `bd ready`, approved state,
+7. Reconcile closing work through native dependencies after a merge bead
+   closes: require `bd ready`, approved state,
    resolved children/gates, and every closing PR verified on the repository
    default branch. A stacked merge is not final delivery.
 8. Anything you cannot fix → bounce-back per the skill's
@@ -80,7 +81,7 @@ MUST Release every claim you do not close this pass; hold the merge slot only
   on every exit path. Beads 1.1 waiters are advisory, not FIFO.
 MUST Ignore drafts and release PRs before claiming. Use branch/label release
   anchors; never title text.
-MUST Never close a work bead from `Tracks-Bead:` alone.
+MUST Close a work bead only from a native dependency edge, never from PR prose.
 NOT Attach a gh:pr gate to a merge bead.
 MUST Fix beads are always unassigned + routing label; never pin `--assignee`.
 MUST Comment every probe outcome on the merge bead -- it is the audit trail.
