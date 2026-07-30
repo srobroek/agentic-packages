@@ -28,6 +28,34 @@ Required node metadata:
 every Worktrunk checkout. Create it and read the stamped value back before
 spawning. Relative or checkout-contained paths are invalid.
 
+`base_ref` is the ref where the target work ACTUALLY lives, which is often not
+`main`. Stamping `main` for a defect that exists only on an unmerged branch
+forces the node to merge that branch inside its own checkout, and any conflict it
+hits there belongs to another node. That is how a node ends up either resolving
+someone else's conflicts or switching branches to escape them, which strands its
+own lease anchors. Confirm the ref carries the target before stamping.
+
+Set `metadata.integration_owner=orchestrate` on every merge bead this run
+creates, or the repository-global `pr-shepherd` may drain the run's PRs mid-flight.
+
+## Preflight before every dispatch
+
+Read each back rather than assuming the write landed.
+
+1. `prepare` returned `status=ready`, and `--source` was a BRANCH name. A
+   filesystem path fails as `Branch <path> has no worktree`.
+2. `base_ref` and `base_sha` name the ref that carries the target work.
+3. Node metadata has all of `scope`, `base_ref`, `base_sha`,
+   `execution_task_kind`, `execution_kind`, `artifacts_dir`,
+   `execution_dispatch`, `execution_agent`, `complexity_tier`, `actor`, `branch`,
+   `worktree`, and `lease_token`.
+4. One `BRIEF` comment exists on the resource. `bd show --json` omits comments,
+   so verify with plain `bd show`.
+5. `scope-check.py` reports the candidate disjoint from every in-flight node.
+6. The spawn prompt is one of the three bootstraps below, byte-exact, and carries
+   no task text. Task data belongs on the resource.
+7. `bind` returned `status=bound` before any `CLAIM` is sent.
+
 The `BRIEF` comment carries the objective, acceptance checks, verification
 method, dependencies, skill hints, and linked domain context. Review and
 escalation wisps carry their question or review dimension in the wisp body and
@@ -41,14 +69,8 @@ The orchestrator performs this sequence:
 1. Run `worktrunk-writer prepare` without `--bead`.
 2. Stamp its exact `branch`, canonical `worktree`, `base_sha`, `actor`, and
    `lease_token` on the unclaimed bead or wisp.
-3. Spawn using only this bootstrap:
-
-   ```text
-   WAIT checkout={absolute-worktree}
-   RESOURCE {bead-or-wisp-id}
-   Do not invoke tools or start work.
-   The controlling parent will release you with exactly CLAIM {bead-or-wisp-id}.
-   ```
+3. Spawn using only the resource bootstrap shown below. Send it with no leading
+   whitespace: the match is anchored, so an indented copy is rejected.
 
 4. Record the returned `runtime_handle` and require the waiting actor's entire
    first response to be `WAIT context={runtime_context}`. Bind both values to
@@ -66,6 +88,15 @@ The canonical WAIT text carries no task, command, question, review item, or
 protocol appendix. The activation resource must exist and remain unclaimed.
 Its canonical worktree and lease must already be stamped on that resource.
 
+A claim-holder gets the resource form:
+
+```text
+WAIT checkout={absolute-worktree}
+RESOURCE {bead-or-wisp-id}
+Do not invoke tools or start work.
+The controlling parent will release you with exactly CLAIM {bead-or-wisp-id}.
+```
+
 A queue actor uses its prepared checkout:
 
 ```text
@@ -74,6 +105,23 @@ QUEUE {filter}
 Do not invoke tools or start work.
 The controlling parent will release you with exactly CLAIM queue:{filter}.
 ```
+
+An actor that receives its task by resume rather than by claiming a resource uses
+the generic form, whose last line differs:
+
+```text
+WAIT checkout={absolute-worktree}
+Do not invoke tools or start work.
+The controlling parent will send your task after binding your Worktrunk lease.
+```
+
+Those three are the whole accepted set, matched byte-exact against
+`GENERIC_WAIT_RE`, `RESOURCE_WAIT_RE`, and `QUEUE_WAIT_RE`. Wording, line breaks,
+and trailing full stops all count, and the checkout must be absolute. A spawn
+carrying a `RESOURCE` line promises a `CLAIM`, so mixing the resource form with
+the generic closing line is rejected. Everything else is denied with
+`tool-using agent spawn is not parent-prepared`, including a bootstrap that is
+correct except for one reworded line.
 
 Claude has no checkout `cwd` field. Its wait bootstrap preserves the absolute
 path so every Bash call can start with `cd -- {absolute-worktree}`. Codex sets

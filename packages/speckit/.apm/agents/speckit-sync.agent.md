@@ -57,7 +57,7 @@ Expect:
 ### MCP Tool Use
 
 - Use Serena to find implementations, symbols, references, routes, and contracts that correspond to spec requirements; use `rg` for exact text and paths.
-- Use `repomix` to gather broad but bounded repository context for covered packages or cross-cutting workflows.
+- Run `repomix . --include "<glob>" --stdout` to gather broad but bounded repository context for covered packages or cross-cutting workflows.
 - Use GitHub tooling only when the spec/task source is issue-backed or the parent asks for issue/PR evidence.
 - If semantic output is incomplete, cite that limitation and verify critical findings through direct file inspection.
 
@@ -121,7 +121,7 @@ Expect:
 ### MCP Tool Use
 
 - Use Serena to locate shared interfaces, types, routes, references, and packages touched by multiple specs; use `rg` for exact text and paths.
-- Use `repomix` when several specs or shared contracts require broad context for comparison.
+- Run `repomix . --include "<glob>" --stdout` when several specs or shared contracts require broad context for comparison.
 - Use GitHub tooling only for issue-backed specs or parent-provided issue/PR references.
 - Do not treat MCP overlap results as conflicts by themselves; confirm contradictions in spec text or shared contracts.
 

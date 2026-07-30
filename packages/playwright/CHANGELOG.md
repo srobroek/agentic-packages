@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/srobroek/agentic-packages/compare/playwright--v4.1.2...playwright--v4.2.0) (2026-07-30)
+
+
+### Features
+
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
 ## [4.1.2](https://github.com/srobroek/agentic-packages/compare/playwright--v4.1.1...playwright--v4.1.2) (2026-07-25)
 
 

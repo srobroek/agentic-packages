@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.2.1...mcp-playwright--v1.3.0) (2026-07-30)
+
+
+### Features
+
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.2.0...mcp-playwright--v1.2.1) (2026-07-25)
 
 

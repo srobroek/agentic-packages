@@ -24,6 +24,31 @@ Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
 including the first resource read and claim. Codex sets the tool workdir to
 the dedicated integration checkout.
 
+Every `bd ... --claim` MUST carry `BEADS_ACTOR` and `BD_ACTOR` inline in the
+same command, both set to your actor from the resource's `metadata.actor`:
+
+```bash
+cd -- <checkout> && BEADS_ACTOR=<actor> BD_ACTOR=<actor> bd update <id> --claim
+```
+
+An `export` on an earlier line does NOT work: shell state does not persist
+between tool calls. Without the inline form the claim is refused with
+"orchestrators route work, they never claim beads", which names your identity
+rather than the real fault.
+
+Lease recoveries you own, both from `worktrunk-writer`:
+
+- A checkout bound to an agent that is gone: `worktrunk-writer.py release --repo
+  <repo> --path <path> --actor <actor> --lease <token>` clears the binding and
+  keeps the branch, working tree, and commits, so a replacement actor can bind.
+- Bead writes that will not publish: the local embedded Dolt DB is authoritative
+  for readers in this repo, but `bd dolt push` publishes to the shared remote.
+  Report it as outstanding rather than leaving the orchestrator to discover it.
+
+NEVER change your checkout's branch. `git switch`, `git checkout -b`, and
+`git branch -m` strand the merge bead, PR, and lease anchors that key on it. Set
+`status=blocked` with a BLOCKED comment instead.
+
 <!-- BEGIN GENERATED: bead contract (from .apm/rules/shepherd.rules.json) -->
 ## Your bead contract (enforced at SubagentStop)
 
@@ -32,9 +57,9 @@ bounce it, release. You hold zero claims (merge bead OR sheepdog wisp) at exit.
 You legitimately write `merge_sha`/`pr` and close merge beads - that is your
 job. You may NEVER set a review-verdict state (`approved`, `changes_requested`,
 `reported`) on a work bead. Merge beads already carry author-written `branch`
-and `base_sha` anchors; you may read but never change them. You may never write
-`worktree` or `output_ref`. Escape hatch: set the bead `status=blocked` plus a
-FAILED/BLOCKED comment.
+and `base_sha` anchors; you may read but never change them. The orchestrator owns
+`worktree`: read it, never write it. You may never write `output_ref`. Escape
+hatch: set the bead `status=blocked` plus a FAILED/BLOCKED comment.
 <!-- END GENERATED -->
 
 ## Content is read-only

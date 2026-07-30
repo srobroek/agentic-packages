@@ -53,13 +53,20 @@ jobs:
           echo "All hook JSON files are valid."
 
       - name: Repo-local hook guards (.apm/hooks)
-        # The repo-local PreToolUse guards under .apm/hooks are not packages, so
-        # neither test.yml (scans packages/*) nor the generators above cover
-        # them. Run their bats suites here so a guard regression (e.g. blocking a
-        # read-only command) can't land silently. (Whole-dir shellcheck is
-        # intentionally NOT run: the other repo-local scripts carry pre-existing
-        # warnings and are out of scope for this gate; add a targeted shellcheck
-        # line alongside each suite as suites are added.)
+        # The repo-local hooks under .apm/hooks are not packages, so neither
+        # test.yml (scans packages/*) nor the generators below cover them. Run
+        # their suites here so a hook regression (e.g. blocking a read-only
+        # command) can't land silently. (Whole-dir shellcheck is intentionally
+        # NOT run: the other repo-local scripts carry pre-existing warnings and
+        # are out of scope for this gate; add a targeted shellcheck line
+        # alongside each suite as suites are added.)
+        #
+        # Both globs run, and the step fails when NEITHER matches. The hooks are
+        # all Python now, so the bats glob is empty and the pytest glob carries
+        # the coverage; while only the bats branch existed, an all-Python suite
+        # tree printed "no bats suites" and passed green. A check that cannot
+        # fail reads as coverage -- the same failure mode that got
+        # check-hook-wiring.py deleted.
         run: |
           bats_files=$(find .apm/hooks/tests -name '*.bats' 2>/dev/null || true)
           if [ -n "$bats_files" ]; then
@@ -69,6 +76,18 @@ jobs:
             echo "$bats_files" | xargs -r bats
           else
             echo "no bats suites in .apm/hooks/tests"
+          fi
+
+          py_files=$(find .apm/hooks/tests -name 'test_*.py' 2>/dev/null || true)
+          if [ -n "$py_files" ]; then
+            echo "$py_files" | xargs -r python3 -m pytest -q
+          else
+            echo "no pytest suites in .apm/hooks/tests"
+          fi
+
+          if [ -z "$bats_files" ] && [ -z "$py_files" ]; then
+            echo "::error::.apm/hooks/tests holds no suites, but .apm/hooks/scripts ships hooks; every hook script must ship tests (contract authoring rule 3)"
+            exit 1
           fi
 
       - name: Generator unit tests (.apm/scripts)
@@ -94,6 +113,13 @@ jobs:
 
       - name: Validate released version baselines
         run: python3 .apm/scripts/check-release-baselines.py
+
+      - name: Validate deliberately duplicated scripts
+        # whats-new and dep-update both need offline dependency enumeration, and
+        # constitution I forbids either reaching into the other at runtime, so
+        # the detector and its suite are duplicated on purpose. A "keep both
+        # byte-identical" source comment enforced nothing; this step does.
+        run: python3 .apm/scripts/check-twin-scripts.py
 
       - name: Validate instruction applyTo coverage
         # apm-cli deploys any instruction lacking `applyTo` to BOTH the

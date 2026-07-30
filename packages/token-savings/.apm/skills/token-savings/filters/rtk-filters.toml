@@ -1,0 +1,40 @@
+# Project-local rtk filters shipped by token-savings.
+#
+# Copy to `<repo>/.rtk/filters.toml` (or the user-global rtk config dir) and run
+# `rtk trust --yes` once. Filters rewrite what the agent sees, so rtk gates them
+# behind a content hash on purpose; editing this file invalidates the trust.
+#
+# Each filter here targets a tool rtk has NO built-in filter for. That matters:
+# 76.7% of real Bash output bytes come from such tools, so a custom filter is the
+# only route into them.
+#
+# `rtk verify` runs the inline tests below alongside rtk's own 154.
+
+schema_version = 1
+
+# `wt list` is ~7.4 KB for 23 rows because it is mostly ANSI styling. Measured on
+# a real 21-worktree repository: 7,244 -> 5,257 bytes (27%) with EVERY row and
+# branch name preserved, because stripping colour is lossless for a reader.
+[filters.wt-list]
+description = "Compact wt list: strip ansi styling, which is 27% of its bytes"
+match_command = "^wt\\s+list\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+max_lines = 60
+on_empty = "wt list: no worktrees"
+
+[[tests.wt-list]]
+name = "strips ansi, preserves every row verbatim"
+input = "\u001B[1mBranch\u001B[0m  Path\nmain  /repo\nfeature-x  /wt"
+expected = "Branch  Path\nmain  /repo\nfeature-x  /wt"
+
+[[tests.wt-list]]
+name = "blank lines dropped, content kept"
+input = "main  /repo\n\n\nfeature-x  /wt"
+expected = "main  /repo\nfeature-x  /wt"
+
+# NOTE ON `bd`: deliberately NOT filtered. `bd list` measured 23,425 bytes across
+# 222 rows, 105 bytes per row, with no ANSI at all -- it is already dense. The
+# only available saving was truncating rows to 90 characters for 19%, which cuts
+# issue titles off. A filter that loses the titles is worse than the bytes it
+# saves, so `bd` output belongs to the spill hook instead.

@@ -27,10 +27,39 @@ run_cmd() {
   fi
 }
 
+json_parser() {
+  # jq is preferred, but a JS project reliably has node and most hosts have
+  # python3; without this fallback `has_script` answered false for every script
+  # whenever jq was absent, so a repo with a working `verify` script reported
+  # "No supported verification workflow detected" and exited 1.
+  if command -v jq >/dev/null 2>&1; then
+    echo jq
+  elif command -v node >/dev/null 2>&1; then
+    echo node
+  elif command -v python3 >/dev/null 2>&1; then
+    echo python3
+  fi
+}
+
 has_script() {
   local name="$1"
-  command -v jq >/dev/null 2>&1 &&
-    jq -e --arg name "$name" '.scripts[$name] // empty' package.json >/dev/null 2>&1
+  case "$(json_parser)" in
+  jq) jq -e --arg name "$name" '.scripts[$name] // empty' package.json >/dev/null 2>&1 ;;
+  node) node -e '
+      const fs = require("fs");
+      const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+      const v = (pkg.scripts || {})[process.argv[1]];
+      process.exit(typeof v === "string" && v.length > 0 ? 0 : 1);
+    ' "$name" >/dev/null 2>&1 ;;
+  python3) python3 -c '
+import json, sys
+with open("package.json") as fh:
+    scripts = json.load(fh).get("scripts") or {}
+value = scripts.get(sys.argv[1])
+sys.exit(0 if isinstance(value, str) and value else 1)
+' "$name" >/dev/null 2>&1 ;;
+  *) return 1 ;;
+  esac
 }
 
 detect_js_runner() {
@@ -92,6 +121,8 @@ if [ -f package.json ]; then
   runner="$(detect_js_runner || true)"
   if [ -z "${runner:-}" ]; then
     skip "package.json present but no supported JS package runner is installed"
+  elif [ -z "$(json_parser)" ]; then
+    skip "package.json present but no JSON parser (jq, node, python3) is installed"
   elif has_script verify; then
     run_js_script "$runner" verify
   else

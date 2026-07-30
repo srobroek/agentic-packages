@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "adr-as-beads",
+      "source": {
+        "source": "local",
+        "path": "./packages/adr-as-beads"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "source": {
         "source": "local",
@@ -293,18 +305,6 @@
       "category": "planning-product"
     },
     {
-      "name": "dep-audit",
-      "source": {
-        "source": "local",
-        "path": "./packages/dep-audit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
       "name": "dep-update",
       "source": {
         "source": "local",
@@ -533,18 +533,6 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-worktree",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-worktree"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-worktrunk",
       "source": {
         "source": "local",
@@ -689,18 +677,6 @@
       "category": "planning-product"
     },
     {
-      "name": "mcp-1mcp",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-1mcp"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-codebase-memory",
       "source": {
         "source": "local",
@@ -737,18 +713,6 @@
       "category": "mcp"
     },
     {
-      "name": "mcp-mempalace",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-mempalace"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-package-version",
       "source": {
         "source": "local",
@@ -765,18 +729,6 @@
       "source": {
         "source": "local",
         "path": "./packages/mcp-playwright"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
-      "name": "mcp-repomix",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-repomix"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1001,18 +953,6 @@
       "category": "speckit"
     },
     {
-      "name": "speckit-beads",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit-beads"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
-    },
-    {
       "name": "steering-architecture",
       "source": {
         "source": "local",
@@ -1157,18 +1097,6 @@
       "category": "steering"
     },
     {
-      "name": "steering-speckit",
-      "source": {
-        "source": "local",
-        "path": "./packages/steering-speckit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "steering"
-    },
-    {
       "name": "steering-subagent-routing",
       "source": {
         "source": "local",
@@ -1203,6 +1131,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "steering"
+    },
+    {
+      "name": "token-savings",
+      "source": {
+        "source": "local",
+        "path": "./packages/token-savings"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
     },
     {
       "name": "toolchain-cache-policy",

@@ -97,19 +97,26 @@ class InventoryTests(unittest.TestCase):
 
 
 class ContextHandshakeTests(unittest.TestCase):
-    def invoke(self, payload: dict) -> dict:
+    def invoke(self, payload: dict, env: dict[str, str] | None = None) -> dict:
+        # PATH="" hides `wt`, so an unset WORKTRUNK_WRITER_ENFORCE reads as "no
+        # protocol" regardless of whatever real repository the test runs inside.
+        process_env = {"PATH": "", **(env or {})}
         process = subprocess.run(
             [sys.executable, str(HANDSHAKE)],
             input=json.dumps(payload),
             capture_output=True,
             text=True,
             check=False,
+            env=process_env,
         )
         self.assertEqual(process.returncode, 0, process.stderr)
         return json.loads(process.stdout or "{}")
 
-    def test_agent_id_is_exposed_without_a_tool_call(self) -> None:
-        output = self.invoke({"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"})
+    def test_engaged_agent_id_is_exposed_without_a_tool_call(self) -> None:
+        output = self.invoke(
+            {"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"},
+            env={"WORKTRUNK_WRITER_ENFORCE": "1"},
+        )
         context = output["hookSpecificOutput"]["additionalContext"]
         self.assertIn(
             "WAIT context=aresearcher-r1-cb8a2c084ff1c7fa",
@@ -119,15 +126,85 @@ class ContextHandshakeTests(unittest.TestCase):
         self.assertIn("completion notification", context)
         self.assertIn("not the spawn handle", context)
 
-    def test_subagent_id_is_supported(self) -> None:
-        output = self.invoke({"subagent_id": "438444453a695885"})
+    def test_engaged_subagent_id_is_supported(self) -> None:
+        output = self.invoke(
+            {"subagent_id": "438444453a695885"},
+            env={"WORKTRUNK_WRITER_ENFORCE": "1"},
+        )
         self.assertIn(
             "WAIT context=438444453a695885",
             output["hookSpecificOutput"]["additionalContext"],
         )
 
     def test_missing_runtime_context_is_silent(self) -> None:
-        self.assertEqual(self.invoke({"session_id": "parent"}), {})
+        self.assertEqual(
+            self.invoke({"session_id": "parent"}, env={"WORKTRUNK_WRITER_ENFORCE": "1"}),
+            {},
+        )
+
+    def test_spawn_outside_the_protocol_gets_no_wait_demand(self) -> None:
+        """The reported stall: a plain spawn with no lease got a bare WAIT.
+
+        With no operator opt-in and no reachable `wt` lease, the handshake must
+        stay silent so an ordinary delegated child never believes it owes a WAIT
+        reply it has no lease to bind to.
+        """
+        self.assertEqual(self.invoke({"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"}), {})
+
+
+class HandshakeEngagementTests(unittest.TestCase):
+    """protocol_engaged decides WAIT injection purely from observable evidence."""
+
+    def setUp(self) -> None:
+        spec = importlib.util.spec_from_file_location("context_handshake", HANDSHAKE)
+        assert spec and spec.loader
+        self.mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.mod)
+
+    def test_operator_opt_in_engages_without_a_lease(self) -> None:
+        with patch.dict(os.environ, {"WORKTRUNK_WRITER_ENFORCE": "1"}, clear=True):
+            self.assertTrue(self.mod.protocol_engaged({}))
+
+    def test_external_writer_env_engages(self) -> None:
+        with patch.dict(os.environ, {"WORKTRUNK_WRITER_LEASE": "l"}, clear=True):
+            self.assertTrue(self.mod.protocol_engaged({}))
+
+    def test_absent_wt_reads_as_no_protocol(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value=None),
+        ):
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_a_repository_holding_a_lease_engages(self) -> None:
+        inventory = [{"branch": "w/a", "path": "/tmp/w-a", "vars": {"actor": "a", "lease": "l"}}]
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.return_value = inventory
+            loader.return_value.repo_has_leases.return_value = True
+            self.assertTrue(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_a_repository_with_no_lease_does_not_engage(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.return_value = [{"branch": "main", "path": "/tmp"}]
+            loader.return_value.repo_has_leases.return_value = False
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_an_inventory_error_fails_toward_no_protocol(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.side_effect = RuntimeError("no wt")
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
 
 
 class BeadsConflictTests(unittest.TestCase):
@@ -170,6 +247,88 @@ class BeadsConflictTests(unittest.TestCase):
             )
         finally:
             MODULE.beads_json = original
+
+    def _conflicts(self, issues: list[dict[str, object]], path: str = "/tmp/wt") -> list[str]:
+        original = MODULE.beads_json
+        MODULE.beads_json = lambda *_args, **_kwargs: issues
+        try:
+            return MODULE.active_bead_conflicts(
+                Path("/tmp"), "active-1", "agent/task", Path(path)
+            )
+        finally:
+            MODULE.beads_json = original
+
+    def test_tracking_merge_bead_sharing_branch_is_not_a_conflict(self) -> None:
+        # A merge bead names the implementer's branch by design and holds no
+        # checkout. Treating it as a competing writer denied the implementer its
+        # own lease and blocked all work on the PR.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-1",
+                        "status": "open",
+                        "metadata": {
+                            "branch": "agent/task",
+                            "head": "agent/task",
+                            "pr": 1623,
+                            "tracks_beads": ["active-1"],
+                            "closes_beads": ["active-1"],
+                        },
+                    }
+                ]
+            ),
+            [],
+        )
+
+    def test_closes_beads_scalar_also_exempts(self) -> None:
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-1",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "closes_beads": "active-1"},
+                    }
+                ]
+            ),
+            [],
+        )
+
+    def test_merge_bead_tracking_a_different_bead_still_conflicts(self) -> None:
+        # The exemption is per-bead, not a blanket pass for anything with a
+        # tracks_beads key: this one claims our branch while tracking someone else.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-2",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "tracks_beads": ["other-9"]},
+                    }
+                ]
+            ),
+            ["merge-2"],
+        )
+
+    def test_tracking_bead_sharing_the_checkout_still_conflicts(self) -> None:
+        # Two actors in one checkout is a real conflict regardless of tracking.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-3",
+                        "status": "open",
+                        "metadata": {
+                            "branch": "agent/task",
+                            "worktree_path": "/tmp/wt",
+                            "tracks_beads": ["active-1"],
+                        },
+                    }
+                ]
+            ),
+            ["merge-3"],
+        )
 
 
 class RuntimeHookTests(unittest.TestCase):
@@ -962,6 +1121,92 @@ class RuntimeHookTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
 
 
+class SpawnAllocationCrossRepoTests(unittest.TestCase):
+    """assert_spawn_allocation must find a lease prepared in a DIFFERENT repo
+    than the session cwd (dep-repo-worker / external-repo-worker dispatch),
+    while still failing closed for an unprepared checkout inside the caller's
+    own repo -- and for a checkout whose OWN repo has no matching lease
+    either, which is what a forged or mismatched claim would look like."""
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.caller_repo = root / "caller-repo"
+        self.other_repo = root / "other-repo"
+        self.other_lease_path = self.other_repo / "worktree" / "feature"
+        self.other_lease_path.mkdir(parents=True)
+        self.caller_repo.mkdir()
+        self.unrelated_path = root / "unrelated"
+        self.unrelated_path.mkdir()
+        self.other_repo_inventory = [
+            {
+                "branch": "writer/dep-1",
+                "path": str(self.other_lease_path),
+                "kind": "worktree",
+                "vars": {"actor": "dep-actor", "lease": "dep-lease"},
+            }
+        ]
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def _wait_prompt(self, checkout: Path) -> str:
+        return (
+            f"WAIT checkout={checkout}\n"
+            "Do not invoke tools or start work.\n"
+            "The controlling parent will send your task after binding "
+            "your Worktrunk lease."
+        )
+
+    def test_cross_repo_prepared_lease_is_dispatchable(self) -> None:
+        """A lease prepared in a different repo than the caller's cwd must be
+        found by re-deriving the checkout's own git root, not by trusting the
+        caller's repo-local inventory alone."""
+        tool_input = {"prompt": self._wait_prompt(self.other_lease_path)}
+        with (
+            patch.object(MODULE, "resolve_checkout_repo", return_value=self.other_repo),
+            patch.object(MODULE, "wt_inventory", return_value=self.other_repo_inventory),
+        ):
+            item = MODULE.assert_spawn_allocation(
+                tool_input, inventory=[], repo=self.caller_repo
+            )
+        self.assertEqual(item["vars"]["lease"], "dep-lease")
+
+    def test_unprepared_same_repo_spawn_is_still_denied(self) -> None:
+        """An unleased path INSIDE the caller's own repo must fail closed --
+        the fix must not loosen this, only extend the lookup to other repos."""
+        tool_input = {"prompt": self._wait_prompt(self.unrelated_path)}
+        with patch.object(MODULE, "resolve_checkout_repo", return_value=self.caller_repo):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.assert_spawn_allocation(
+                    tool_input, inventory=[], repo=self.caller_repo
+                )
+
+    def test_checkout_in_a_real_other_repo_with_no_matching_lease_is_denied(self) -> None:
+        """A path that DOES resolve to a real, different git repo but was never
+        `prepare`-d there is a forged/mismatched claim and must still be
+        denied -- resolving the repo grants a lookup, not a lease."""
+        tool_input = {"prompt": self._wait_prompt(self.other_lease_path)}
+        with (
+            patch.object(MODULE, "resolve_checkout_repo", return_value=self.other_repo),
+            patch.object(MODULE, "wt_inventory", return_value=[]),
+        ):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.assert_spawn_allocation(
+                    tool_input, inventory=[], repo=self.caller_repo
+                )
+COMPLETE_ENVELOPE = {
+    "scope": ["src/**"],
+    "base_ref": "main",
+    "base_sha": "0" * 40,
+    "execution_task_kind": "rust",
+    "execution_kind": "implementation",
+    "execution_dispatch": "subagent",
+    "execution_agent": "domain-specialist",
+    "complexity_tier": "medium",
+}
+
+
 class BindingTests(unittest.TestCase):
     def test_bind_accepts_exact_context_acknowledgement(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -1137,6 +1382,7 @@ class BindingTests(unittest.TestCase):
                     "branch": "writer/a",
                     "lease_token": "lease-a",
                     "worktree": str(path),
+                    **COMPLETE_ENVELOPE,
                 },
             }
             writes: list[tuple[str, str]] = []
@@ -1638,6 +1884,391 @@ class InventorySchemaTests(unittest.TestCase):
     def test_envelope_without_items_is_rejected(self) -> None:
         with self.assertRaises(MODULE.ContractError):
             MODULE.normalize_inventory({"schema": 2})
+
+
+class ChildSpawnTests(unittest.TestCase):
+    """A claim-holder delegates inside its own lease, and cannot leave it.
+
+    Both SKILL.md files promised this; the code had no branch for it, so every
+    delegation-first specialist did its own bulk work. One burned 295k tokens and
+    280 tool calls on work it was designed to hand off.
+    """
+
+    def setUp(self) -> None:
+        self.parent_path = Path("/tmp/leased-parent")
+        self.other_path = Path("/tmp/leased-other")
+        self.inventory = [
+            {
+                "branch": "writer/parent",
+                "path": str(self.parent_path),
+                "vars": {
+                    "actor": "parent-actor",
+                    "lease": "parent-lease",
+                    "contexts": json.dumps(["parent-ctx"]),
+                    "runtime-bindings": json.dumps(
+                        [{"context": "parent-ctx", "handle": "parent-ctx"}]
+                    ),
+                },
+            },
+            {
+                "branch": "writer/other",
+                "path": str(self.other_path),
+                "vars": {
+                    "actor": "other-actor",
+                    "lease": "other-lease",
+                    "contexts": json.dumps(["other-ctx"]),
+                    "runtime-bindings": json.dumps(
+                        [{"context": "other-ctx", "handle": "other-ctx"}]
+                    ),
+                },
+            },
+        ]
+
+    def spawn(self, tool_input, context=None):
+        payload = {"agent_id": context} if context else {}
+        return MODULE.assert_spawn_allocation(tool_input, self.inventory, payload)
+
+    def wait_for(self, path):
+        return (
+            f"WAIT checkout={path}\n"
+            "Do not invoke tools or start work.\n"
+            "The controlling parent will send your task after binding your Worktrunk lease."
+        )
+
+    def test_child_may_name_the_parents_own_checkout(self) -> None:
+        item = self.spawn({"prompt": self.wait_for(self.parent_path)}, "parent-ctx")
+        self.assertEqual(item["branch"], "writer/parent")
+
+    def test_a_task_bearing_child_is_told_to_be_wait_only(self) -> None:
+        """Admitting it would spawn a child that cannot act.
+
+        An unbound context is refused by assert_runtime_lease on its first Bash or
+        Edit, so the useful failure is here, naming the wait-only sequence.
+        """
+        with self.assertRaisesRegex(MODULE.ContractError, "must be wait-only"):
+            self.spawn(
+                {"subagent_type": "general-purpose", "prompt": "Grep callers"}, "parent-ctx"
+            )
+
+    def test_child_may_not_escape_to_another_lease(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "stay in its parent's leased checkout"):
+            self.spawn({"prompt": self.wait_for(self.other_path)}, "parent-ctx")
+
+    def test_unbound_spawner_is_still_denied(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "Do work"}, "stranger")
+
+    def test_spawn_without_a_context_is_still_denied(self) -> None:
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "Do work"})
+
+    def test_exemption_ignores_agent_type_and_reads_only_the_binding(self) -> None:
+        """Classifying by subagent_type is what got the 1.x deny gate reverted."""
+        for kind in ("general-purpose", "domain-specialist", "reviewer", ""):
+            item = self.spawn(
+                {"subagent_type": kind, "prompt": self.wait_for(self.parent_path)},
+                "parent-ctx",
+            )
+            self.assertEqual(item["branch"], "writer/parent")
+
+    def test_a_context_bound_twice_grants_no_exemption(self) -> None:
+        for item in self.inventory:
+            item["vars"]["contexts"] = json.dumps(["dupe-ctx"])
+            item["vars"]["runtime-bindings"] = json.dumps(
+                [{"context": "dupe-ctx", "handle": "dupe-ctx"}]
+            )
+        with self.assertRaisesRegex(MODULE.ContractError, "not parent-prepared"):
+            self.spawn({"subagent_type": "general-purpose", "prompt": "work"}, "dupe-ctx")
+
+
+class MarkerLivenessTests(unittest.TestCase):
+    """A run marker engages the protocol only while its run is going.
+
+    Every uncertainty resolves toward live: this narrows a guard, so an
+    unreadable marker or an absent task system must not switch it off.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.cwd = Path(self.temp.name)
+        self.marker = self.cwd / ".active-run"
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def live(self, text, issue=None, beads=True):
+        self.marker.write_text(text)
+        with patch.object(MODULE, "beads_active", return_value=beads):
+            with patch.object(MODULE, "beads_json", return_value=[issue] if issue else []):
+                return MODULE.marker_run_live(self.cwd, self.marker)
+
+    def test_open_run_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "run-1"}', {"id": "run-1", "status": "open"}))
+
+    def test_closed_run_is_not_live(self) -> None:
+        self.assertFalse(self.live('{"run_id": "run-1"}', {"id": "run-1", "status": "closed"}))
+
+    def test_pending_marker_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "pending"}'))
+
+    def test_unparseable_marker_is_live(self) -> None:
+        self.assertTrue(self.live("not json at all"))
+
+    def test_absent_task_system_is_live(self) -> None:
+        self.assertTrue(self.live('{"run_id": "run-1"}', {"status": "closed"}, beads=False))
+
+    def test_unreadable_resource_is_live(self) -> None:
+        self.marker.write_text('{"run_id": "run-1"}')
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(MODULE, "beads_json", side_effect=MODULE.ContractError("no bd")):
+                self.assertTrue(MODULE.marker_run_live(self.cwd, self.marker))
+
+
+class ProtocolEngagementTests(unittest.TestCase):
+    """A marker alone is not enough; a lease must be reachable.
+
+    Escalating on the marker alone turned the documented advise-not-deny default
+    into a deny for every spawn from the primary checkout during a run, including
+    read-only work aimed at a different repository.
+    """
+
+    def engaged(self, inventory, cwd="/tmp/elsewhere"):
+        payload = {"tool_input": {"subagent_type": "general-purpose", "prompt": "work"}}
+        with patch.object(MODULE, "orchestration_active", return_value=True):
+            return MODULE.protocol_engaged(payload, inventory, Path(cwd))
+
+    def test_a_repo_with_no_leases_does_not_engage(self) -> None:
+        self.assertFalse(self.engaged([{"branch": "main", "path": "/tmp/primary"}]))
+
+    def test_a_repo_holding_a_lease_still_engages(self) -> None:
+        inventory = [
+            {"branch": "main", "path": "/tmp/primary"},
+            {"branch": "w/a", "path": "/tmp/w-a", "vars": {"actor": "a", "lease": "l"}},
+        ]
+        self.assertTrue(self.engaged(inventory))
+
+
+class EnvelopeCompletenessTests(unittest.TestCase):
+    def test_missing_fields_are_named(self) -> None:
+        metadata = dict(COMPLETE_ENVELOPE)
+        del metadata["scope"]
+        del metadata["complexity_tier"]
+        with self.assertRaises(MODULE.ContractError) as caught:
+            MODULE.assert_envelope_complete("demo-1", metadata)
+        message = str(caught.exception)
+        self.assertIn("scope", message)
+        self.assertIn("complexity_tier", message)
+        self.assertNotIn("base_ref", message)
+
+    def test_a_complete_envelope_passes(self) -> None:
+        MODULE.assert_envelope_complete("demo-1", dict(COMPLETE_ENVELOPE))
+
+    def test_an_empty_value_counts_as_missing(self) -> None:
+        metadata = dict(COMPLETE_ENVELOPE, base_sha="")
+        with self.assertRaisesRegex(MODULE.ContractError, "base_sha"):
+            MODULE.assert_envelope_complete("demo-1", metadata)
+
+
+class MergeBeadOwnerTests(unittest.TestCase):
+    """An unowned merge bead can be drained mid-run by the global shepherd."""
+
+    def check(self, issues, metadata={"run_id": "run-1"}):
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(MODULE, "beads_json", return_value=issues):
+                MODULE.assert_merge_beads_owned(Path("/tmp/repo"), "demo-1", metadata)
+
+    def merge_bead(self, **over):
+        issue = {
+            "id": "merge-1",
+            "status": "open",
+            "labels": ["agent:integrator"],
+            "metadata": {"run_id": "run-1", "integration_owner": "orchestrate"},
+        }
+        issue.update(over)
+        return issue
+
+    def test_owned_merge_beads_pass(self) -> None:
+        self.check([self.merge_bead()])
+
+    def test_unowned_merge_bead_in_this_run_is_reported(self) -> None:
+        bead = self.merge_bead(metadata={"run_id": "run-1"})
+        with self.assertRaisesRegex(MODULE.ContractError, "merge-1"):
+            self.check([bead])
+
+    def test_another_runs_merge_bead_is_not_our_business(self) -> None:
+        self.check([self.merge_bead(metadata={"run_id": "run-2"})])
+
+    def test_closed_merge_bead_is_ignored(self) -> None:
+        self.check([self.merge_bead(status="closed", metadata={"run_id": "run-1"})])
+
+    def test_non_merge_beads_are_ignored(self) -> None:
+        self.check([self.merge_bead(labels=["orc-node"], metadata={"run_id": "run-1"})])
+
+    def test_a_run_without_an_id_is_skipped(self) -> None:
+        self.check([self.merge_bead(metadata={"run_id": "run-1"})], metadata={})
+
+
+class LifecycleHookTests(unittest.TestCase):
+    """The wt hook entry point. A leased checkout is guarded; nothing else is.
+
+    Regression cover for a live lockout: a specialist ran `git switch -c` inside
+    its leased checkout, which moved it off the stamped branch and left it unable
+    to run any tool, including the `bd` call that would have reported the failure.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.primary = root / "primary"
+        self.leased = root / "leased"
+        self.plain = root / "plain"
+        for path in (self.primary, self.leased, self.plain):
+            path.mkdir()
+        self.inventory = [
+            {"branch": "main", "path": str(self.primary), "kind": "worktree"},
+            {"branch": "plain/branch", "path": str(self.plain), "kind": "worktree"},
+            {
+                "branch": "writer/leased",
+                "path": str(self.leased),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "leased-actor",
+                    "lease": "leased-token",
+                    "context": "agent-1",
+                    "contexts": json.dumps(["agent-1"]),
+                    "runtime-bindings": json.dumps([{"context": "agent-1", "handle": "agent-1"}]),
+                    "resource": "demo-1",
+                },
+            },
+        ]
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def invoke(self, **kwargs):
+        fields = {"repo": str(self.primary), "path": None, "target": None, "event": "pre-start"}
+        fields.update(kwargs)
+        args = SimpleNamespace(**fields)
+        with patch.object(MODULE, "wt_inventory", return_value=self.inventory):
+            with patch.object(MODULE, "clear_var") as cleared:
+                code = MODULE.lifecycle(args)
+        return code, [call.args[2] for call in cleared.call_args_list]
+
+    def test_unleased_checkout_is_a_silent_noop_on_every_event(self) -> None:
+        for event in ("pre-start", "pre-switch", "pre-remove"):
+            code, cleared = self.invoke(event=event, path=str(self.plain), target="elsewhere")
+            self.assertEqual((event, code, cleared), (event, 0, []))
+
+    def test_pre_switch_refuses_to_leave_the_stamped_branch(self) -> None:
+        code, cleared = self.invoke(event="pre-switch", path=str(self.leased), target="main")
+        self.assertEqual(code, 1)
+        self.assertEqual(cleared, [])
+
+    def test_pre_switch_allows_a_switch_to_the_stamped_branch(self) -> None:
+        code, _ = self.invoke(
+            event="pre-switch", path=str(self.leased), target="writer/leased"
+        )
+        self.assertEqual(code, 0)
+
+    def test_pre_remove_always_clears_the_binding(self) -> None:
+        code, cleared = self.invoke(event="pre-remove", path=str(self.leased))
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+
+    def test_pre_start_keeps_a_binding_whose_resource_is_still_working(self) -> None:
+        with patch.object(MODULE, "stale_binding", return_value=False):
+            code, cleared = self.invoke(event="pre-start", path=str(self.leased))
+        self.assertEqual((code, cleared), (0, []))
+
+    def test_pre_start_releases_a_binding_the_resource_proves_finished(self) -> None:
+        with patch.object(MODULE, "stale_binding", return_value=True):
+            code, cleared = self.invoke(event="pre-start", path=str(self.leased))
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+
+    def test_an_internal_error_fails_open(self) -> None:
+        args = SimpleNamespace(
+            repo=str(self.primary), path=str(self.leased), target=None, event="pre-remove"
+        )
+        with patch.object(MODULE, "wt_inventory", side_effect=MODULE.ContractError("no wt")):
+            self.assertEqual(MODULE.lifecycle(args), 0)
+
+
+class StaleBindingTests(unittest.TestCase):
+    """Liveness is never guessed: only the task system can prove an actor is done."""
+
+    def setUp(self) -> None:
+        self.repo = Path("/tmp/repo")
+        self.item = {"branch": "writer/leased", "vars": {"resource": "demo-1"}}
+
+    def stale(self, issue, *, beads=True):
+        with patch.object(MODULE, "beads_active", return_value=beads):
+            with patch.object(MODULE, "beads_json", return_value=[issue]):
+                return MODULE.stale_binding(self.repo, self.item)
+
+    def test_closed_resource_is_stale(self) -> None:
+        self.assertTrue(self.stale({"status": "closed", "assignee": "someone"}))
+
+    def test_unassigned_and_not_in_progress_is_stale(self) -> None:
+        self.assertTrue(self.stale({"status": "open", "assignee": None}))
+
+    def test_claimed_in_progress_resource_is_live(self) -> None:
+        self.assertFalse(self.stale({"status": "in_progress", "assignee": "orc-a"}))
+
+    def test_unassigned_but_in_progress_is_left_alone(self) -> None:
+        self.assertFalse(self.stale({"status": "in_progress", "assignee": None}))
+
+    def test_blocked_resource_is_left_alone(self) -> None:
+        self.assertFalse(self.stale({"status": "blocked", "assignee": None}))
+
+    def test_no_resource_var_is_never_stale(self) -> None:
+        self.assertFalse(MODULE.stale_binding(self.repo, {"vars": {}}))
+
+    def test_absent_beads_workspace_is_never_stale(self) -> None:
+        self.assertFalse(self.stale({"status": "closed"}, beads=False))
+
+    def test_unreadable_resource_is_never_stale(self) -> None:
+        with patch.object(MODULE, "beads_active", return_value=True):
+            with patch.object(
+                MODULE, "beads_json", side_effect=MODULE.ContractError("bd missing")
+            ):
+                self.assertFalse(MODULE.stale_binding(self.repo, self.item))
+
+
+class ReleaseTests(unittest.TestCase):
+    def test_release_clears_only_binding_vars(self) -> None:
+        item = {
+            "branch": "writer/leased",
+            "path": "/tmp/leased",
+            "vars": {
+                "actor": "a",
+                "lease": "l",
+                "context": "agent-1",
+                "contexts": json.dumps(["agent-1"]),
+                "runtime-bindings": json.dumps([{"context": "agent-1", "handle": "agent-1"}]),
+            },
+        }
+        args = SimpleNamespace(repo="/tmp/repo", path="/tmp/leased", actor="a", lease="l")
+        with patch.object(MODULE, "wt_inventory", return_value=[item]):
+            with patch.object(MODULE, "validate", return_value={"status": "valid"}):
+                with patch.object(MODULE, "find_item", return_value=item):
+                    with patch.object(MODULE, "clear_var") as cleared:
+                        result = MODULE.release(args)
+        self.assertEqual(result["status"], "released")
+        self.assertEqual(result["released_contexts"], ["agent-1"])
+        self.assertEqual(
+            sorted(call.args[2] for call in cleared.call_args_list),
+            ["context", "contexts", "runtime-bindings"],
+        )
+
+    def test_release_rejects_a_mismatched_lease(self) -> None:
+        args = SimpleNamespace(repo="/tmp/repo", path="/tmp/leased", actor="a", lease="wrong")
+        with patch.object(MODULE, "wt_inventory", return_value=[]):
+            with patch.object(
+                MODULE, "validate", side_effect=MODULE.ContractError("lease mismatch")
+            ):
+                with self.assertRaises(MODULE.ContractError):
+                    MODULE.release(args)
 
 
 if __name__ == "__main__":

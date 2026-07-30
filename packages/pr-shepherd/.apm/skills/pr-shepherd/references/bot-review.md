@@ -103,8 +103,8 @@ Generate the key from the round's identity so repeat passes reconcile instead of
 filing duplicates:
 
 ```bash
-scripts/landing-contract.sh failure-key <repo> review "bot:<slug>@<head_sha>"
-scripts/landing-contract.sh ensure-bounce <merge-bead> <key> agent:coder \
+scripts/landing-contract.py failure-key <repo> review "bot:<slug>@<head_sha>"
+scripts/landing-contract.py ensure-bounce <merge-bead> <key> agent:coder \
   <title> <metadata-json> <description>
 ```
 

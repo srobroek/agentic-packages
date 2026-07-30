@@ -1,13 +1,15 @@
 name: pr-shepherd
-version: 4.0.0
+version: 5.0.0
 description: >-
   Cross-session PR shepherd with beads as its durable state store. It validates
   exact check and head identity, honors persisted merge-slot order, merges with
   an atomic head guard, proves exact content on the final landing branch, and
   reconciles partial bounce writes through durable receipts. Stacked PRs remain
   open after their intermediate merge until their content reaches the landing
-  branch. The skill and standalone agent optionally consume release-queue-watch
-  records with crash-replay receipts. Requires bd, gh, git, and jq; inert in
+  branch. On a base with a GitHub merge queue it records the enqueue, proves the
+  landing on a later pass, and bounces an ejection instead of reporting a merge.
+  The skill and standalone agent optionally consume release-queue-watch records
+  with crash-replay receipts. Requires bd, gh, git, and jq; inert in
   repositories without .beads/.
 author: Sjors Robroek
 license: Apache-2.0
@@ -26,10 +28,10 @@ includes:
   - .apm/skills/pr-shepherd/scripts/_test_sheepdog_real_db.sh
   - .apm/skills/pr-shepherd/scripts/_test_waiter_real_db.sh
   - .apm/skills/pr-shepherd/scripts/bot-review-probe.py
-  - .apm/skills/pr-shepherd/scripts/landing-contract.sh
+  - .apm/skills/pr-shepherd/scripts/landing-contract.py
   - .apm/skills/pr-shepherd/scripts/merge-probe.sh
   - .apm/skills/pr-shepherd/scripts/resolve-queue-event.py
-  - .apm/skills/pr-shepherd/scripts/watch-queue.sh
+  - .apm/skills/pr-shepherd/scripts/watch-queue.py
   - .apm/skills/pr-shepherd/scripts/test-fixtures
 category: project-lifecycle
 tags:
@@ -40,5 +42,5 @@ tags:
   - multi-agent
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/beads#>=1.0.0 <2.0.0
+    - srobroek/agentic-packages/packages/beads#>=2.0.0 <3.0.0
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.2 <1.0.0

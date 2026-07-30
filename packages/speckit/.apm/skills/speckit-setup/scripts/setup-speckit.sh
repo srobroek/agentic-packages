@@ -360,9 +360,9 @@ for wf in "${LEGACY_WORKFLOWS[@]}"; do
   fi
 done
 
-echo "==> 5/6 provision beads workflow (speckit-beads formula)"
+echo "==> 5/6 provision beads workflow (speckit-feature formula)"
 # Workflow state lives in beads (bd). speckit-gate (PyPI, gates.yaml) is
-# retired/archived; the speckit-beads package supplies a bd formula whose
+# retired/archived; this package supplies a bd formula whose
 # poured molecule IS the phase DAG (human gates included). Guard: skip
 # gracefully when bd is absent rather than aborting setup.
 if command -v bd >/dev/null 2>&1; then
@@ -376,16 +376,18 @@ if command -v bd >/dev/null 2>&1; then
     echo "    beads workspace already present"
   fi
 
-  # Install the feature-lifecycle formula from the speckit-beads package.
-  # Resolution order mirrors how hook scripts locate their plugin root:
-  # installed plugin dir first, then the monorepo source (dev checkouts).
+  # Install the feature-lifecycle formula, which this package ships under
+  # formulas/. Resolution order mirrors how hook scripts locate their plugin
+  # root: installed plugin dir first, then the monorepo source (dev checkouts).
+  # The last candidate is the in-package path, four levels up from
+  # .apm/skills/speckit-setup/scripts.
   FORMULA_NAME="speckit-feature.formula.toml"
   FORMULA_SRC=""
   for cand in \
     "$HOME/.beads/formulas/$FORMULA_NAME" \
-    "$HOME/.apm/apm_modules/srobroek/agentic-packages/packages/speckit-beads/formulas/$FORMULA_NAME" \
-    "$HOME/.claude/plugins/agentic-packages-speckit-beads/formulas/$FORMULA_NAME" \
-    "$SCRIPT_DIR/../../../../../speckit-beads/formulas/$FORMULA_NAME"; do
+    "$HOME/.apm/apm_modules/srobroek/agentic-packages/packages/speckit/formulas/$FORMULA_NAME" \
+    "$HOME/.claude/plugins/agentic-packages-speckit/formulas/$FORMULA_NAME" \
+    "$SCRIPT_DIR/../../../../formulas/$FORMULA_NAME"; do
     if [ -f "$cand" ]; then FORMULA_SRC="$cand"; break; fi
   done
   if [ "$FORMULA_SRC" = "$HOME/.beads/formulas/$FORMULA_NAME" ]; then
@@ -399,7 +401,7 @@ if command -v bd >/dev/null 2>&1; then
       echo "    WARNING: formula copied but bd formula show failed -- check bd version (need >= 1.1.0)" >&2
     fi
   else
-    echo "    WARNING: speckit-feature formula not found -- install the speckit-beads package, then re-run" >&2
+    echo "    WARNING: speckit-feature formula not found -- reinstall the speckit package, then re-run" >&2
   fi
 else
   echo "    SKIP: bd (beads) not on PATH" >&2

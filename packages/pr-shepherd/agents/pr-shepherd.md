@@ -31,7 +31,7 @@ the same pass; document nothing outside bead comments.
    human-resolution mismatch, not an automatic mutation.
 4. `bd gate check`, then `bd merge-slot create` (idempotent).
 4b. Claim the repository sheepdog per repository you are about to drain:
-   `landing-contract.sh acquire-sheepdog <repo>`. Exit 75 (`SHEEPDOG_HELD`) means
+   `landing-contract.py acquire-sheepdog <repo>`. Exit 75 (`SHEEPDOG_HELD`) means
    another drain already owns that repository -- skip it, do not wait, and do not
    claim any of its merge beads. Touch it each cycle (`touch-sheepdog`) and
    `release-sheepdog` on every exit path. The wisp is derived from the repository

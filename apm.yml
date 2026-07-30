@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 26.0.0
+version: 28.0.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -72,6 +72,14 @@ marketplace:
   build:
     tagPattern: '{name}--v{version}'
   packages:
+    - name: adr-as-beads
+      source: ./packages/adr-as-beads
+      category: project-lifecycle
+      tags:
+        - adr
+        - decisions
+        - madr
+        - architecture
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger
       category: quality
@@ -246,15 +254,6 @@ marketplace:
         - skill
         - planning
         - analysis
-    - name: dep-audit
-      source: ./packages/dep-audit
-      category: security
-      tags:
-        - skill
-        - security
-        - dependencies
-        - audit
-        - cve
     - name: dep-update
       source: ./packages/dep-update
       category: code-intelligence
@@ -404,13 +403,6 @@ marketplace:
         - subagent
         - isolation
         - policy
-    - name: hooks-worktree
-      source: ./packages/hooks-worktree
-      category: project-lifecycle
-      tags:
-        - hooks
-        - worktree
-        - lifecycle
     - name: hooks-worktrunk
       source: ./packages/hooks-worktrunk
       category: project-lifecycle
@@ -527,12 +519,6 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
-    - name: mcp-1mcp
-      source: ./packages/mcp-1mcp
-      category: mcp
-      tags:
-        - mcp
-        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp
@@ -551,13 +537,6 @@ marketplace:
       tags:
         - mcp
         - web
-    - name: mcp-mempalace
-      source: ./packages/mcp-mempalace
-      category: mcp
-      tags:
-        - mcp
-        - memory
-        - cross-session
     - name: mcp-package-version
       source: ./packages/mcp-package-version
       category: mcp
@@ -570,12 +549,6 @@ marketplace:
       tags:
         - mcp
         - browser
-    - name: mcp-repomix
-      source: ./packages/mcp-repomix
-      category: mcp
-      tags:
-        - mcp
-        - repomix
     - name: mcp-serena
       source: ./packages/mcp-serena
       category: mcp
@@ -703,11 +676,6 @@ marketplace:
       tags:
         - bundle
         - speckit
-    - name: speckit-beads
-      source: ./packages/speckit-beads
-      category: speckit
-      tags:
-        - speckit
         - beads
         - workflow
         - gates
@@ -793,12 +761,6 @@ marketplace:
       tags:
         - steering
         - structure
-    - name: steering-speckit
-      source: ./packages/steering-speckit
-      category: steering
-      tags:
-        - steering
-        - speckit
     - name: steering-subagent-routing
       source: ./packages/steering-subagent-routing
       category: steering
@@ -817,6 +779,15 @@ marketplace:
       tags:
         - steering
         - tooling
+    - name: token-savings
+      source: ./packages/token-savings
+      category: code-intelligence
+      tags:
+        - tokens
+        - context
+        - rtk
+        - repomix
+        - measurement
     - name: toolchain-cache-policy
       source: ./packages/toolchain-cache-policy
       category: project-lifecycle

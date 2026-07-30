@@ -1,5 +1,12 @@
 # Changelog
 
+## [15.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v15.0.0...orchestrate--v15.1.0) (2026-07-30)
+
+
+### Features
+
+* recover a stuck agent worktree instead of rebuilding it ([#810](https://github.com/srobroek/agentic-packages/issues/810)) ([2b3a06c](https://github.com/srobroek/agentic-packages/commit/2b3a06c87bfb956da078c370268a851a380d5f8b))
+
 ## [15.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v14.0.0...orchestrate--v15.0.0) (2026-07-28)
 
 

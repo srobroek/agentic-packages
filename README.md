@@ -5,12 +5,12 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
 <!-- BEGIN:intro-counts -->
-- **30 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **29 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **35 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
-- **18 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **13 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
+- **17 steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **7 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, serena, ...)
+- **12 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
 Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-builder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
@@ -193,8 +193,8 @@ apm install code-review@srobroek-agentic
 # A single agent
 apm install agent-pr-reviewer@srobroek-agentic
 
-# A shared MCP aggregation package
-apm install mcp-1mcp@srobroek-agentic
+# An MCP server package
+apm install mcp-serena@srobroek-agentic
 ```
 
 `--target` is **optional** -- plain `apm install` and `apm compile` auto-detect which runtimes to deploy for from what's already in your project (`.claude/`, `.codex/`, etc.). Only pass `--target` when you want to force a specific set, e.g. on a fresh project that doesn't have those dirs yet:
@@ -244,7 +244,7 @@ apm install hooks-bash-safety@srobroek-agentic --global --target claude,codex
 
 User-scope support varies by runtime: **fully supported for `claude`, `codex`, and `agent-skills`** (the cross-client `~/.agents/skills/` dir, which Codex also reads); MCP servers at global scope only target Copilot/Codex CLI. Skills, agents, hooks, and instructions all deploy globally for Claude and Codex.
 
-**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
+**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-subagent-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
 
 > **Caveat -- symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
 
@@ -315,15 +315,9 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 ## SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (bugfix/setup skills, workflow guard hooks, and its task agents), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-beads` (a beads formula whose poured molecule is the phase DAG, plus guards keeping task state in beads). APM transforms the bundled agents for both Claude and Codex.
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. The `speckit` package delivers it whole: the bugfix and setup skills, four task agents, workflow steering, a guard that keeps task state in beads, and the `speckit-feature` beads formula whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off. APM transforms the bundled agents for both Claude and Codex.
 
-```
-specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
-        -> analyze -> issues -> checkpoint
-        -> assign -> validate -> execute (checkpoint per task)
-        -> verify-tasks -> verify -> review -> qa -> code-review + security-review
-        -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
-```
+`packages/speckit/formulas/speckit-feature.formula.toml` is the only statement of step order; read it with `bd formula show speckit-feature --json`.
 
 Quick start: `apm install speckit@srobroek-agentic`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
 

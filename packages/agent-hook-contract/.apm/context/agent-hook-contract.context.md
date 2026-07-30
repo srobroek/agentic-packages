@@ -1,7 +1,7 @@
 ---
 x-lint:
-  allow: [W6]
-  reason: "the hook contract keeps complete event, payload, decision, and limitation reference tables"
+  allow: [W6, prose-scope.ImplementationLeak]
+  reason: "the hook contract keeps complete event, payload, decision, and limitation reference tables; the per-call millisecond measurements ARE the actionable content of the language and performance rules"
 ---
 
 # Agent hook contract
@@ -55,13 +55,17 @@ So the startup gap is 18.5 ms against 10.5 ms per `jq`. A hook doing one `jq`
 parse is FASTER in shell on this host; the ported guards all did three to seven,
 so they still win when they do their work.
 
-Two corollaries the earlier numbers hid. A hook whose cheap bail exits before its
-first `jq` pays only startup, so shell beats Python on that path -- measured on
-`package-investigate`, 20.6 ms shell against 28.3 ms Python for a payload that
-bails. And because matching hooks launch CONCURRENTLY, the wall-clock floor per
-tool call is the SLOWEST hook, not the sum: where several Python hooks already
-share a matcher, one more costs nothing observable. Judge a port on the work path
-and on what else shares its matcher, not on the bail path alone.
+The earlier numbers hid two effects:
+
+- A hook whose cheap bail exits before its first `jq` pays only startup, so shell
+  beats Python on that path (measured on `package-investigate`: 20.6 ms shell
+  against 28.3 ms Python for a payload that bails).
+- Matching hooks launch CONCURRENTLY, so the wall-clock floor per tool call is
+  the SLOWEST hook rather than the sum. Where several Python hooks already share
+  a matcher, one more costs nothing observable.
+
+Judge a port on its work path and on what else shares its matcher. The bail path
+alone will mislead.
 
 Measure on the host that matters rather than trusting any of these numbers: the
 ranking holds, the margins move a lot, and the interpreter is the variable.
@@ -189,8 +193,22 @@ For a denial, add `decision.message`.
 
 `SessionStart`, `SubagentStart`, and `UserPromptSubmit` inject developer context
 through `hookSpecificOutput.additionalContext`. `Stop` and `SubagentStop` use
-`{"decision":"block","reason":"..."}` to continue work. `PostToolUse` can replace
-model-visible feedback but cannot undo side effects.
+`{"decision":"block","reason":"..."}` to continue work.
+
+`PostToolUse` cannot replace a tool result under Codex. Claude accepts
+`hookSpecificOutput.updatedToolOutput` (and `updatedMCPToolOutput`) to rewrite
+what the model sees. Codex's `PostToolUseHookSpecificOutputWire` carries three
+fields (`hookEventName`, `additionalContext`, `updatedMCPToolOutput`) and the
+binary rejects the last with `PostToolUse hook returned unsupported
+updatedMCPToolOutput`. So a Codex `PostToolUse` hook may only ADD context, and a
+`target: all` package cannot compress or archive tool output in a hook. Neither
+tool can undo a side effect.
+
+`PreToolUse` rewriting IS cross-tool: both accept
+`hookSpecificOutput.updatedInput`, and Codex requires it be paired with
+`permissionDecision: "allow"` (`PreToolUse hook returned updatedInput without
+permissionDecision:allow`). Rewriting the command before it runs is therefore
+the portable way to change what enters context.
 
 Emit JSON for anything the model must see. Plain stdout is ignored on tool
 events.
@@ -228,11 +246,11 @@ workaround for Claude's `PostToolUseFailure`.
 5. Fold narrow guards together while porting them, not as a separate pass. Two
    guards in one package that share a matcher pay two process startups and two
    payload parses to answer one question, so merging them during the rewrite is
-   nearly free. Merging them first, in shell, does the work twice.
+   nearly free. Merging them first, in shell, repeats the same rewrite twice.
 6. Keep a rollup inside one package. Guards in different packages that inspect
    the same command stay separate processes, because a shared runtime would break
-   the rule that no package reaches into another's internals. Collapsing those is
-   a decision to merge the packages, not a porting step.
+   the rule that no package reaches into another's internals. Collapsing those
+   means deciding to merge the packages themselves.
 7. Keep destructive enforcement in Codex sandbox and command rules as well as in
    hooks.
 8. Run `.apm/scripts/audit-codex-config.py` after changing manifests, hooks, MCP

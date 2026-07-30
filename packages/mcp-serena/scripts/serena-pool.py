@@ -23,6 +23,17 @@ from typing import Any, Iterator, TextIO
 
 
 PROXY_VERSION = "0.12.0"
+
+# `mcp-proxy` 0.12.0 declares `mcp>=1.17.0` with NO upper bound, and `mcp` 2.0.0
+# removed `mcp.server.lowlevel.server.request_ctx`, which the proxy imports at
+# module scope. So a fresh resolve pairs the two and every proxy start dies with
+# `ImportError: cannot import name 'request_ctx'`. The failure is silent from the
+# client's side: Serena is the only MCP server that reports "Failed to connect",
+# and the agent simply has no semantic tools.
+#
+# Constrain `mcp` alongside the proxy so the resolver cannot pick 2.x. Verified:
+# `uv run --with 'mcp-proxy==0.12.0' --with 'mcp>=1.17,<2'` imports cleanly.
+PROXY_MCP_CONSTRAINT = "mcp>=1.17,<2"
 STATE_VERSION = 1
 HOST = "127.0.0.1"
 
@@ -790,7 +801,14 @@ def proxy_command(url: str) -> list[str]:
     elif binary := shutil.which("mcp-proxy"):
         command = [binary]
     elif uvx := shutil.which("uvx"):
-        command = [uvx, "--from", f"mcp-proxy=={PROXY_VERSION}", "mcp-proxy"]
+        command = [
+            uvx,
+            "--from",
+            f"mcp-proxy=={PROXY_VERSION}",
+            "--with",
+            PROXY_MCP_CONSTRAINT,
+            "mcp-proxy",
+        ]
     else:
         raise PoolError("mcp-proxy or uvx is required for pooled Serena")
     return [*command, "--transport", "streamablehttp", url]

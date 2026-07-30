@@ -86,6 +86,71 @@ separate task dependency. An accepted, rejected, duplicate, or superseded
 decision is closed with a disposition-specific reason; closed means resolved,
 not erased.
 
+## How an edge type renders
+
+`bd show` has a heading for four types only:
+
+| Type | Near end | Far end | Gates `bd ready` |
+|---|---|---|---|
+| `blocks` | `DEPENDS ON` | `BLOCKS` | yes |
+| `parent-child` | `PARENT` | `CHILDREN` | no |
+| `discovered-from` | `DISCOVERED FROM` | `DISCOVERED` | no |
+| `relates-to` | `RELATED` | `RELATED` | no |
+
+`caused-by`, `validates`, `supersedes`, `duplicates`, `tracks`, and `until` store
+correctly and print their type in `bd dep tree`, but `bd show` renders each as
+`DEPENDS ON` near-side and `BLOCKS` far-side. A reader of `bd show` therefore sees
+ordering that does not exist. Where the precise type carries policy meaning, as
+`validates` and `supersedes` do for decision beads above, keep it and rely on
+`bd dep tree`. Anywhere a reader is the audience, prefer a rendering type and put
+the distinction in `notes`.
+
+`blocks` is the only type that gates `bd ready`. Every other type documents a
+relationship rather than enforcing one, `until` included.
+
+`--type` is NOT validated. Every string is accepted and stored verbatim, including a
+typo, which creates a real edge: `bd dep tree` traverses it and `bd show` renders it
+under DEPENDS ON. A typo reads as a dependency that does not exist. Copy the type
+rather than typing it.
+
+`replies-to` threads wisp messages and dies with them, so it cannot carry a durable
+finding. `related` stores as a distinct string from `relates-to` with no documented
+meaning; leave it alone.
+
+## Duplicates
+
+Two beads that are the same work get `bd duplicate <id> --of <canonical>`, never a
+hand-built edge. The command closes the duplicate and leaves the canonical open,
+which is the outcome a reader needs; a `relates-to` edge would leave both open and
+still competing for a claim.
+
+```text
+bd duplicate <duplicate-id> --of <canonical-id>
+bd update <canonical-id> --append-notes "DUPLICATE <duplicate-id>: <what matched>"
+```
+
+The stored edge type is `duplicates`, and `bd show` renders it as `DEPENDS ON` on
+the duplicate and `BLOCKS` on the canonical, so the closed status carries the
+meaning rather than the heading. Note on the canonical, because that is the bead
+that survives. Search first: `bd search` or `bd duplicates` surfaces candidates, and
+closing the wrong side loses the bead a reader will look for.
+
+An edge carries no annotation. `bd dep add` has no note field, and `note`,
+`reason`, and `metadata` keys in the `--file` JSONL are accepted and then dropped,
+so an annotated bulk write reports success while storing nothing. Each edge's
+reasoning therefore goes in the ORIGINATING bead's `notes`, naming the other bead
+by id:
+
+```text
+bd dep relate <finding> <root-cause>
+bd update <finding> --append-notes "ROOT CAUSE <root-cause-id>: <evidence>"
+```
+
+`--append-notes` preserves earlier lines, so multiple edges accumulate. `bd show`
+renders `notes` directly above the edge list, which puts the reasoning next to the
+relationship it explains. One line per edge, on the originating side only: the edge
+already renders from both ends.
+
 Before creation, after restart, and before action, list every decision under the
 epic with `bd list --type decision --parent <epic> --all --json`. Decisions
 compete only when their nonempty `decision_key` values match.

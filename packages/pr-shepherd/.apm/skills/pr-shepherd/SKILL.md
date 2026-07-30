@@ -63,7 +63,9 @@ TRIGGER
 | bot review pending | comment once, release the claim, continue; the next pass re-probes. Never poll it in-session |
 | bot review stale | the bot reviewed an older head; treat as pending, never as clean |
 | bot review actionable | bounce → agent:coder with the summary URL and the bot's comment paths (references/bot-review.md) |
-| clean + checks green + approved + bot review absent/clean | LOAD references/landing-contract.md, then `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
+| clean + checks green + approved + bot review absent/clean | LOAD references/landing-contract.md, then `scripts/landing-contract.py land …`, which owns the whole transaction: merge slot under a stable holder, exact-head merge, landing proof, release, bead closure |
+| enqueued in a GitHub merge queue (exit 10, `landing_state=queued`) | leave the bead open, release the claim; the next pass proves or bounces it. Never treat an enqueue as a landing |
+| ejected from a GitHub merge queue (exit 12, `landing_state=ejected`) | bounce → agent:coder with the `QUEUE_EJECTED` receipt; the merge group failed |
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |

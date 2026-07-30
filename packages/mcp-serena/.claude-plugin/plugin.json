@@ -1,6 +1,6 @@
 {
   "name": "mcp-serena",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "MCP server package for Serena semantic code tools. The launcher shares one Serena backend across agents in the same checkout, isolates linked worktrees, and applies resource and capacity limits to worktree backends.",
   "author": {
     "name": "Sjors Robroek"

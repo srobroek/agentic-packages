@@ -17,7 +17,7 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `beads`, `grilling`^, `grill-with-docs`^ |
 | `data-ai` | Data and AI toolkit | `steering-data` |
-| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate`, `dep-audit` |
+| `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate` |
 | `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^ |
 | `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure` |
@@ -39,7 +39,6 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `steering-git-workflow`, `verify`, `agent-pr-reviewer` |
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer` |
-| `speckit-beads` | Beads-native SpecKit workflow | `speckit`, `beads` |
 | `toolchain-cache-policy` | Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories | self-contained |
 <!-- END:bundles -->
 

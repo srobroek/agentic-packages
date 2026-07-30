@@ -60,6 +60,7 @@ CLAUDE_EVENTS = {
     "ElicitationResult",
 }
 CODEX_DIFFERENCE_PACKAGES = {
+    "adr-as-beads",
     "agent-builder",
     "hooks-attribution-guard",
     "hooks-bash-safety",
@@ -81,8 +82,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "lsp-shell",
     "lsp-terraform",
     "lsp-typescript",
-    "mcp-mempalace",
-    "mcp-repomix",
     "orchestrate",
     "release-please",
     "speckit",
@@ -90,6 +89,7 @@ CODEX_DIFFERENCE_PACKAGES = {
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
 HOOK_MANIFEST_CLASSIFICATION = {
+    "packages/adr-as-beads/.apm/hooks/hooks.json": "native-required",
     "packages/beads/.apm/hooks/beads-claude-hooks.json": "target-specific compatibility",
     "packages/beads/.apm/hooks/beads-codex-hooks.json": "target-specific compatibility",
     "packages/code-intelligence/.apm/hooks/hooks.json": "native-required",
@@ -107,17 +107,13 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
     "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-claude-hooks.json": "target-specific compatibility",
     "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-codex-hooks.json": "target-specific compatibility",
-    "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
     "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
     "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-claude-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-codex-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
-    "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
     "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
@@ -128,6 +124,12 @@ HOOK_MANIFEST_CLASSIFICATION = {
 }
 OBSOLETE_HOOK_MANIFESTS = {
     "packages/agent-builder/.apm/hooks/agent-builder-claude-hooks.json",
+    # speckit absorbed speckit-beads; its guard now rides the speckit-workflow
+    # manifests. Only one *-claude-hooks.json per package is read
+    # (build-native-plugins._hook_sources takes claude[0]), so a second manifest
+    # here would deploy nothing while looking wired.
+    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json",
+    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json",
 }
 COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
     "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",

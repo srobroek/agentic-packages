@@ -24,7 +24,7 @@ Requires `specify-cli` >= 0.12.0 (install/upgrade with `uv tool install specify-
 2. **Register the community catalog** -- `specify extension catalog add --name community --install-allowed <catalog.community.json>`.
 3. **Install + enable 12 required extensions** -- `agent-assign`, `cleanup`, `critique`, `fix-findings`, `iterate`, `qa`, `retro`, `review`, `roadmap`, `security-review`, `status-report`, `tinyspec`. `agent-assign` is mandatory; the DAG hard-blocks `/speckit.implement`. Custom-source installs via `name=<archive-url>` or `name=latest-release:<owner>/<repo>` are best-effort: an unreachable source warns and is skipped rather than aborting setup.
 4. **Register extension commands** -- forces a (re-)registration for the requested integration via `integration switch` bounce to ensure commands are rendered correctly.
-5. **Provision the beads workflow** -- runs `bd init --skip-hooks` (unless a workspace exists) and installs the `speckit-feature` formula from the speckit-beads package into `.beads/formulas/`; the poured molecule is the phase DAG with human gates. Guard: skipped with a clear message when `bd` is absent. (Replaces the retired speckit-gate PyPI tool.) Before provisioning, best-effort removes any `speckit`/`speckit-quality`/`speckit-full` `specify workflow` definitions left by earlier package versions -- this package no longer ships those workflow.yml assets; the beads formula is the DAG now.
+5. **Provision the beads workflow** -- runs `bd init --skip-hooks` (unless a workspace exists) and installs this package's `formulas/speckit-feature.formula.toml` into `.beads/formulas/`; the poured molecule is the phase DAG with human gates. Guard: skipped with a clear message when `bd` is absent. (Replaces the retired speckit-gate PyPI tool.) Before provisioning, best-effort removes any `speckit`/`speckit-quality`/`speckit-full` `specify workflow` definitions left by earlier package versions -- this package no longer ships those workflow.yml assets; the beads formula is the DAG now.
 6. **Ignore status-report artefact** -- appends `specs/**/spec-status.md` to `.gitignore`.
 
 ## How to run
@@ -46,7 +46,7 @@ Start the workflow with `/speckit.specify`.
 
 ## Workflow ordering and current position
 
-Workflow ordering is enforced by the beads molecule (dependency edges + gate beads; see the speckit-beads steering) and described in the speckit steering; run `bd mol current <root>` or `/speckit.status-report.show` to see current position.
+Workflow ordering is enforced by the beads molecule: dependency edges plus gate beads. The poured molecule is the only statement of step order; run `bd mol current <root>` or `/speckit.status-report.show` to see current position.
 
 ## Rules
 

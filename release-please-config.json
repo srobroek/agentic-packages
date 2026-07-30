@@ -56,6 +56,18 @@
         }
       ]
     },
+    "packages/adr-as-beads": {
+      "release-type": "simple",
+      "component": "adr-as-beads",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-adversarial-challenger": {
       "release-type": "simple",
       "component": "agent-adversarial-challenger",
@@ -356,18 +368,6 @@
         }
       ]
     },
-    "packages/dep-audit": {
-      "release-type": "simple",
-      "component": "dep-audit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/dep-update": {
       "release-type": "simple",
       "component": "dep-update",
@@ -608,18 +608,6 @@
         }
       ]
     },
-    "packages/hooks-worktree": {
-      "release-type": "simple",
-      "component": "hooks-worktree",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-worktrunk": {
       "release-type": "simple",
       "component": "hooks-worktrunk",
@@ -836,18 +824,6 @@
         }
       ]
     },
-    "packages/mcp-1mcp": {
-      "release-type": "simple",
-      "component": "mcp-1mcp",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-codebase-memory": {
       "release-type": "simple",
       "component": "mcp-codebase-memory",
@@ -884,18 +860,6 @@
         }
       ]
     },
-    "packages/mcp-mempalace": {
-      "release-type": "simple",
-      "component": "mcp-mempalace",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-package-version": {
       "release-type": "simple",
       "component": "mcp-package-version",
@@ -911,18 +875,6 @@
     "packages/mcp-playwright": {
       "release-type": "simple",
       "component": "mcp-playwright",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-repomix": {
-      "release-type": "simple",
-      "component": "mcp-repomix",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1148,18 +1100,6 @@
         }
       ]
     },
-    "packages/speckit-beads": {
-      "release-type": "simple",
-      "component": "speckit-beads",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/steering-architecture": {
       "release-type": "simple",
       "component": "steering-architecture",
@@ -1304,18 +1244,6 @@
         }
       ]
     },
-    "packages/steering-speckit": {
-      "release-type": "simple",
-      "component": "steering-speckit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/steering-subagent-routing": {
       "release-type": "simple",
       "component": "steering-subagent-routing",
@@ -1343,6 +1271,18 @@
     "packages/steering-tools-scripts": {
       "release-type": "simple",
       "component": "steering-tools-scripts",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/token-savings": {
+      "release-type": "simple",
+      "component": "token-savings",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
