@@ -1,6 +1,6 @@
 {
   "name": "hooks-attribution-guard",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Advises against AI authorship attribution in git commits so the human stays the sole author of record. Covers agent trailers from any vendor (Co-Authored-By / Signed-off-by / Assisted-by naming Claude, Codex, Copilot, Cursor, Devin, aider, Gemini, OpenHands, Windsurf and others, or pointing at an agent noreply address), \"Generated with/by\" phrases, agent signature URLs, robot-emoji signature lines, and hyphenated AI-assisted/AI-generated qualifiers. Emits a non-blocking advisory (allow + additionalContext, exit 0); a commit message is trivially fixable, so it never blocks. Scoped to authorship constructs, so ordinary work that merely names an agent or a model (\"fix AI model loading bug\", \"bump anthropic sdk\") is not flagged. Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

@@ -1,6 +1,6 @@
 {
   "name": "hooks-serena",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serena lifecycle hooks for Claude Code and Codex. Activates Serena at session start, reminds agents to use symbolic tools, and clears hook state at session end without configuring MCP transport.",
   "author": {
     "name": "Sjors Robroek"

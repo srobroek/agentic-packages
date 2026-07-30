@@ -1,6 +1,6 @@
 {
   "name": "steering-subagent-routing",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Opt-in steering: model routing and verification policy for delegated subagents -- when to delegate, model/effort choice, parallel work, and who owns verification.",
   "author": {
     "name": "Sjors Robroek"

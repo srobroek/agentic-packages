@@ -1,6 +1,6 @@
 {
   "name": "debate",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Deep tradeoff analysis for architectural decisions, technology choices, and feature proposals. Tests an idea from both sides before recommending a path.",
   "author": {
     "name": "Sjors Robroek"

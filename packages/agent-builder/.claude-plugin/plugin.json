@@ -1,6 +1,6 @@
 {
   "name": "agent-builder",
-  "version": "9.0.0",
+  "version": "9.0.1",
   "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which runs in one of two modes the caller must name: `direct-edit` (edits the caller's tree in place; the caller commits) or `isolated` (own git worktree, commits continuously, hands back a reviewable branch). It refuses to start when the mode is unstated, because the two modes fail in opposite and unrecoverable directions.",
   "author": {
     "name": "Sjors Robroek"

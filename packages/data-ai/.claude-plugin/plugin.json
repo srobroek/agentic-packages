@@ -1,6 +1,6 @@
 {
   "name": "data-ai",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases.",
   "author": {
     "name": "Sjors Robroek"

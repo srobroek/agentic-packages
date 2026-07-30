@@ -1,6 +1,6 @@
 {
   "name": "mcp-codebase-memory",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "MCP server package for the Codebase Memory MCP, providing graph-aware project orientation (symbol search, call paths, code snippets). Available but not wired by default; requires explicit installation and index build.",
   "author": {
     "name": "Sjors Robroek"
