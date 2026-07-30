@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Block non-draft or unlinked agent-issued ``gh pr create`` commands."""
+"""Guard agent-issued ``gh pr create`` commands.
+
+Two rules with two different decisions, because they carry different cost:
+
+* Draft-first is denied. It is unrecoverable in the sense that matters -- a
+  non-draft PR has already notified reviewers and started CI by the time anyone
+  notices, and `gh pr ready` cannot un-send that.
+* Merge-queue bead linkage is advised, never denied, and only inside an
+  orchestrate run or under an explicit PR_MERGE_QUEUE_ENFORCE opt-in. A PR body
+  is editable with `gh pr edit`, and the shepherd re-checks the linkage before it
+  merges anything.
+"""
 
 from __future__ import annotations
 
@@ -352,6 +363,45 @@ def draft_enabled(invocation: list[str]) -> bool:
     return enabled
 
 
+def orchestration_active(cwd: Path) -> bool:
+    """Whether an orchestrate run owns this session.
+
+    The same signals `orchestrator-claim-deny.py` and
+    `orchestrator-activation-guard.py` read, so the three guards cannot disagree
+    about whether a run is live. The marker is resolved against the command's
+    directory rather than the process cwd, because a hook fires from wherever
+    the session sits while the command may run in a worktree.
+    """
+    if os.environ.get("ORCHESTRATE_RUN"):
+        return True
+    marker = os.environ.get("ORCHESTRATE_MARKER_FILE", "")
+    if marker:
+        return Path(marker).is_file()
+    return (cwd / ".orchestration" / ".active-run").is_file()
+
+
+def merge_queue_enforced(cwd: Path) -> bool:
+    """Whether the merge-bead contract applies to this PR.
+
+    The contract exists to keep the PR-shepherd merge queue discoverable, so it
+    binds the runs that feed that queue -- an orchestrate run, or a caller who
+    opts in with PR_MERGE_QUEUE_ENFORCE. It deliberately does not bind every
+    beads repository: a repository cannot distinguish an orchestrated PR from a
+    human's PR in the same repository, and treating the repository as the
+    trigger demanded merge beads from three unrelated projects in one session.
+
+    Unlike the worktrunk writer's equivalent gate, the run marker alone is
+    enough here: this hook fires only on `gh pr create`, and every PR opened
+    during a run is a PR that run's shepherd must land. `beads_workspace` stays
+    as the second condition because a run's marker lives in the primary
+    checkout while the command may target a different repository entirely, and
+    a repository with no bead store can hold no merge bead.
+    """
+    if os.environ.get("PR_MERGE_QUEUE_ENFORCE"):
+        return beads_workspace(cwd)
+    return orchestration_active(cwd) and beads_workspace(cwd)
+
+
 def beads_workspace(cwd: Path) -> bool:
     """Report whether beads is actually initialised for this directory.
 
@@ -467,76 +517,96 @@ def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
 
 
 def validate(invocation: list[str], cwd: Path) -> str | None:
+    """Return a denial reason, or None when the invocation may proceed."""
     if not draft_enabled(invocation):
         return (
             "Agent-authored PRs must start as drafts. Re-run every gh pr create "
             "invocation with --draft; use gh pr ready only after implementation, "
             "local validation, and required review are complete."
         )
-    if not beads_workspace(cwd):
-        return None
+    return None
 
+
+def merge_queue_findings(invocation: list[str], cwd: Path) -> list[str]:
+    """Report every merge-queue trailer defect in an inline PR body.
+
+    Advisory rather than denial: a PR body is editable with `gh pr edit`, so no
+    defect here is catastrophic or unrecoverable, and the shepherd's own queue
+    pass rejects a body/DAG mismatch anyway
+    (packages/pr-shepherd/.apm/skills/pr-shepherd/SKILL.md:23). Denying instead
+    blocked ordinary bounded work until a shepherd landed an unrelated PR.
+
+    Only an inline `--body` is inspected. `--body-file` is deliberately not read:
+    the hook runs before the command, so a file the same command is about to
+    write does not exist yet, and an absent file is indistinguishable from a
+    not-yet-written one. Every failed rule is reported together, because
+    stopping at the first one hid the more fixable ones behind it.
+    """
     body = argument(invocation, "--body", "-b")
-    body_file = argument(invocation, "--body-file", "-F")
-    if body_file:
-        body_path = Path(body_file)
-        if not body_path.is_absolute():
-            body_path = cwd / body_path
-        try:
-            body = body_path.read_text(encoding="utf-8")
-        except OSError:
-            return (
-                f"Cannot verify PR body file '{body_file}'. Supply a readable "
-                "--body-file containing Tracks-Bead: <id>."
-            )
     if not body:
-        return (
-            "PRs created in a Beads repository must supply --body or --body-file "
-            "with Tracks-Bead: <id>; implicit --fill/editor bodies cannot be verified."
-        )
-
+        return []
     tracks = trailer_ids(body, "Tracks-Bead")
     closes = trailer_ids(body, "Closes-Bead")
     merges = trailer_ids(body, "Merge-Bead")
+    if not (tracks or closes or merges):
+        return [
+            "PR body carries no bead trailers. A PR opened during an orchestrate "
+            "run needs exactly one Merge-Bead: <id> line so the shepherd can "
+            "cross-check its merge bead."
+        ]
+    findings: list[str] = []
     if not tracks:
-        return "PR body must include at least one exact Tracks-Bead: <id> line."
+        findings.append("PR body must include at least one exact Tracks-Bead: <id> line.")
     if len(merges) != 1:
-        return "PR body must include exactly one Merge-Bead: <id> line."
+        findings.append("PR body must include exactly one Merge-Bead: <id> line.")
+        return findings
     merge_id = merges[0]
     merge_record = bead_record(cwd, merge_id)
     if merge_record is None:
-        return f"Merge-Bead '{merge_id}' is not resolvable from this repository."
+        findings.append(
+            f"Merge-Bead '{merge_id}' is not resolvable from this repository."
+        )
+        return findings
     labels = set(merge_record.get("labels", []))
     if merge_record.get("status") != "open" or not {
         "pr:merge",
         "agent:integrator",
     }.issubset(labels):
-        return (
+        findings.append(
             f"Merge-Bead '{merge_id}' must be open and labeled pr:merge "
             "and agent:integrator."
         )
     if merge_record.get("assignee"):
-        return f"Merge-Bead '{merge_id}' must be unassigned for PR Shepherd discovery."
+        findings.append(
+            f"Merge-Bead '{merge_id}' must be unassigned for PR Shepherd discovery."
+        )
     metadata = merge_record.get("metadata")
-    required_metadata = {"branch", "repo", "origin_actor"}
     if not isinstance(metadata, dict) or any(
-        not metadata.get(name) for name in required_metadata
+        not metadata.get(name) for name in ("branch", "repo", "origin_actor")
     ):
-        return (
+        findings.append(
             f"Merge-Bead '{merge_id}' must have branch, repo, and origin_actor "
             "metadata before PR creation."
         )
     for bead_id in tracks:
         if bead_record(cwd, bead_id) is None:
-            return f"Tracks-Bead '{bead_id}' is not resolvable from this repository."
+            findings.append(
+                f"Tracks-Bead '{bead_id}' is not resolvable from this repository."
+            )
     for bead_id in closes:
         if bead_id not in tracks:
-            return f"Closes-Bead '{bead_id}' must also appear as Tracks-Bead."
+            findings.append(f"Closes-Bead '{bead_id}' must also appear as Tracks-Bead.")
         work_record = bead_record(cwd, bead_id)
         if work_record is None:
-            return f"Closes-Bead '{bead_id}' is not resolvable from this repository."
+            findings.append(
+                f"Closes-Bead '{bead_id}' is not resolvable from this repository."
+            )
+            continue
         if work_record.get("status") == "closed":
-            return f"Closes-Bead '{bead_id}' is already closed; late closing edges are denied."
+            findings.append(
+                f"Closes-Bead '{bead_id}' is already closed; a late closing edge "
+                "cannot be honoured."
+            )
         dependencies = work_record.get("dependencies", [])
         edge_exists = any(
             dependency.get("id") == merge_id
@@ -545,18 +615,12 @@ def validate(invocation: list[str], cwd: Path) -> str | None:
             if isinstance(dependency, dict)
         )
         if not edge_exists:
-            return (
-                f"Closes-Bead '{bead_id}' must already depend on Merge-Bead "
-                f"'{merge_id}' before PR creation."
+            findings.append(
+                f"Closes-Bead '{bead_id}' should depend on Merge-Bead "
+                f"'{merge_id}' before review freezes the graph "
+                f"(bd dep add {bead_id} {merge_id})."
             )
-    if set(metadata.get("tracks_beads", [])) != set(tracks) or set(
-        metadata.get("closes_beads", [])
-    ) != set(closes):
-        return (
-            f"Merge-Bead '{merge_id}' tracked/closing metadata must match the "
-            "PR body trailers."
-        )
-    return None
+    return findings
 
 
 def main() -> int:
@@ -574,33 +638,40 @@ def main() -> int:
     # have flagged.
     if not all(word in command for word in ("gh", "pr", "create")):
         return 0
-    likely_pr_create = True
     try:
         invocations = invocation_spans(command)
     except ValueError as error:
-        if likely_pr_create:
-            # Allow, do not deny. PR bodies carry markdown: apostrophes,
-            # backticks, and nested quotes all make the tokenizer give up, and a
-            # command this guard cannot read is not evidence of a policy breach.
-            advise(
-                f"PR policy not verified: this command could not be parsed ({error}). "
-                "Ensure the invocation uses --draft and, in a Beads repository, a "
-                "PR body carrying Tracks-Bead and Merge-Bead trailers."
-            )
+        # Allow, do not deny. PR bodies carry markdown: apostrophes, backticks,
+        # and nested quotes all make the tokenizer give up, and a command this
+        # guard cannot read is not evidence of a policy breach.
+        advise(
+            f"PR policy not verified: this command could not be parsed ({error}). "
+            "Ensure the invocation uses --draft, and during an orchestrate run "
+            "that the body carries its Merge-Bead trailer."
+        )
         return 0
     for invocation in invocations:
-        try:
-            reason = validate(invocation, cwd)
-        except BeadUnavailable as error:
-            advise(
-                f"PR policy not fully verified: a bead lookup could not complete "
-                f"({error}). The draft and trailer requirements still apply; "
-                "re-check the bead state if the PR is rejected downstream."
-            )
-            return 0
-        if reason:
+        if reason := validate(invocation, cwd):
             deny(reason)
             return 0
+    if not merge_queue_enforced(cwd):
+        return 0
+    findings: list[str] = []
+    for invocation in invocations:
+        try:
+            findings.extend(merge_queue_findings(invocation, cwd))
+        except BeadUnavailable as error:
+            advise(
+                f"Merge-queue linkage not verified: a bead lookup could not complete "
+                f"({error}). The trailer requirements still apply; re-check the bead "
+                "state if the PR is rejected downstream."
+            )
+            return 0
+    if findings:
+        advise(
+            "Merge-queue linkage is incomplete; fix it with gh pr edit and bd before "
+            "requesting review:\n- " + "\n- ".join(findings)
+        )
     return 0
 
 

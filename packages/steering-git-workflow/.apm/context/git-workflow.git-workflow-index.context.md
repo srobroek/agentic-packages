@@ -18,7 +18,11 @@ Shipping (choose one, confirm if ambiguous):
   Use `git merge --no-ff` for feature branches; pass an explicit strategy
   flag to `gh pr merge` (`--squash`/`--merge`/`--rebase`).
 
-Beads linkage (when `bd where` succeeds):
+Beads linkage (orchestrate runs, and wherever `PR_MERGE_QUEUE_ENFORCE` is set):
+
+These rules feed the PR-shepherd merge queue. A PR outside a run needs none of
+them: `--draft`, a body, and close keywords are the whole contract. The hook
+reports a gap here as an advisory, and `gh pr edit` fixes a body after the fact.
 
 - Before PR creation, create one open, unassigned task bead labeled `pr:merge` and
   `agent:integrator`, with `branch`, `repo`, `origin_actor`, `tracks_beads`,
