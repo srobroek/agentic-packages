@@ -8,7 +8,7 @@ starting point, refined by what the catalog actually offers.
 | Role | Agent (default → alternatives) | Model / effort | Persistence | Escalation |
 |---|---|---|---|---|
 | **Orchestrator** | you (lead session) | your session model | whole run | delegate deep planning / disputes |
-| **Researcher** | `Explore` → `general-purpose`, `speckit-research` | **cheap tier** low/med | ephemeral (reuse for follow-ups) | → mid tier when a single task is synthesis-heavy (see fan-out/fan-in below) |
+| **Researcher** | `Explore` → `general-purpose`, `researcher` | **cheap tier** low/med | ephemeral (reuse for follow-ups) | → mid tier when a single task is synthesis-heavy (see fan-out/fan-in below) |
 | **Docs-guard** | `docs-guard` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → reviewer when policy or meaning is disputed |
 | **Data-metrics-summarizer** | `data-metrics-summarizer` (`agent-quality-guards`) | **cheap tier** medium, read-only | ephemeral | → researcher when interpretation is required |
 | **Lint-guard** | `lint-guard` (`agent-quality-guards`) | **cheap tier** high, read-only | ephemeral | → reviewer when rule intent is disputed |
