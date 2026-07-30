@@ -1,5 +1,16 @@
 # Changelog
 
+## [28.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v27.0.0...srobroek-agentic--v28.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820))
+
+### Refactors
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820)) ([c1b2007](https://github.com/srobroek/agentic-packages/commit/c1b200754c9dd4a21c33035f28fd45052a827bd1))
+
 ## [27.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v26.0.0...srobroek-agentic--v27.0.0) (2026-07-30)
 
 
