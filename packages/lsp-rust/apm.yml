@@ -1,5 +1,5 @@
 name: lsp-rust
-version: 0.4.1
+version: 0.4.2
 description: >-
   Rust LSP server: registers rust-analyzer so agents get hover, diagnostics,
   go-to-definition, and references on Rust sources. Installed transitively by

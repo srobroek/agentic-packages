@@ -1,6 +1,6 @@
 {
   "name": "agentic-maintenance",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
   "author": {
     "name": "Sjors Robroek"

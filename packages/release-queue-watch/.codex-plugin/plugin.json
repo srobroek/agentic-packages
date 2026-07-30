@@ -1,6 +1,6 @@
 {
   "name": "release-queue-watch",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Runs a signed local GitHub webhook receiver that emits deterministic PR lifecycle records, tracks agent-owned priority and merge-slot state, and retains Octokit REST reconciliation without mutating GitHub or Beads.",
   "author": {
     "name": "Sjors Robroek"

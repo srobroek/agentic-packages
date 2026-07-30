@@ -1,6 +1,6 @@
 {
   "name": "dependency-quality",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Dependency hygiene bundle: nudges to investigate a dependency before adding it. Manifest-edit and latest-version guidance lives in steering-toolchain-defaults. CVE scanning is deliberately absent -- vulnerability discovery is time-based rather than commit-based, so it belongs to continuous alerts (Dependabot or Renovate) plus a CI job, neither of which an on-demand skill can substitute for.",
   "author": {
     "name": "Sjors Robroek"

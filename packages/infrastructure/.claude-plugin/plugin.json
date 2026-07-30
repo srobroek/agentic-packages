@@ -1,6 +1,6 @@
 {
   "name": "infrastructure",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Infrastructure and operations toolkit: infrastructure steering.",
   "author": {
     "name": "Sjors Robroek"

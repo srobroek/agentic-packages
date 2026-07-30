@@ -1,6 +1,6 @@
 {
   "name": "steering-delivery",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Opinionated delivery cadence: work like a developer who commits continuously. Commit and push after every meaningful, self-contained step; keep commits atomic; leave no unpushed local work stranded in a local or disposable worktree. Always-on steering. Opt-in.",
   "author": {
     "name": "Sjors Robroek"

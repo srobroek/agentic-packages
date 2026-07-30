@@ -1,5 +1,21 @@
 # Changelog
 
+## [19.0.0](https://github.com/srobroek/agentic-packages/compare/core--v18.0.0...core--v19.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([2426e23](https://github.com/srobroek/agentic-packages/commit/2426e235338957156b64710fd8d306ece82d3e94))
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
 ## [18.0.0](https://github.com/srobroek/agentic-packages/compare/core--v17.0.0...core--v18.0.0) (2026-07-30)
 
 

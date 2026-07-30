@@ -1,5 +1,5 @@
 name: language-terraform
-version: 3.0.2
+version: 3.0.3
 description: >-
   Terraform and HCL toolkit: opinionated Terraform steering. No dedicated
   quality skill yet.

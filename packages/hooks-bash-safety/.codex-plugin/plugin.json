@@ -1,6 +1,6 @@
 {
   "name": "hooks-bash-safety",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Bash safety guard tuned for autonomous agents, in one Python module with a real shell tokenizer. Denies only the unrecoverable: rm -rf on the filesystem root, a home root, or a system-critical tree (BS-4/BS-8), rm -rf whose target hides behind an unexpanded variable so the guard cannot verify it (BS-9), mkfs (BS-5), dd onto a real block device while allowing the pseudo-devices (BS-6), and the sandbox-bypass flag (BS-3). Warns without blocking on a curl-to-shell pipe, sudo with a destructive verb, and rm -rf outside the git working tree (BS-7, BS-10). Anything inside the working tree is assumed git-recoverable and passes silently, so wiping node_modules or a build directory says nothing. Because the command is tokenized rather than pattern-matched, wrapper prefixes, env assignments, leading tabs, quoted targets, flags after the target, path traversal, subshells, loop bodies, and a rebasing cd are all covered by construction. Never emits \"ask\". Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"

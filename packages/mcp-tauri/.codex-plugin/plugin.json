@@ -1,6 +1,6 @@
 {
   "name": "mcp-tauri",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Tauri MCP workflow guidance for building, testing, debugging, and driving Tauri v2 apps through an MCP runtime supplied separately by the environment.",
   "author": {
     "name": "Sjors Robroek"

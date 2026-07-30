@@ -1,5 +1,5 @@
 name: rust-quality
-version: 2.1.2
+version: 2.1.3
 description: Run Rust format, lint, and test checks with the project toolchain.
 author: Sjors Robroek
 license: Apache-2.0

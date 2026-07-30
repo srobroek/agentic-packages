@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.3...planning-product--v3.2.4) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
 ## [3.2.3](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.2...planning-product--v3.2.3) (2026-07-25)
 
 

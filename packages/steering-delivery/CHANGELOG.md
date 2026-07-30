@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/srobroek/agentic-packages/compare/steering-delivery--v1.1.4...steering-delivery--v1.1.5) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
 ## [1.1.4](https://github.com/srobroek/agentic-packages/compare/steering-delivery--v1.1.3...steering-delivery--v1.1.4) (2026-07-27)
 
 

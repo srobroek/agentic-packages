@@ -1,5 +1,5 @@
 name: language-rust
-version: 6.0.0
+version: 6.0.1
 description: 'Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.'
 author: Sjors Robroek
 license: Apache-2.0

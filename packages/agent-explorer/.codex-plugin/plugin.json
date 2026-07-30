@@ -1,6 +1,6 @@
 {
   "name": "agent-explorer",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Read-only exploration agent for bounded code and configuration discovery.",
   "author": {
     "name": "Sjors Robroek"
