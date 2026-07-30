@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import unittest
+from datetime import UTC, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROBE = os.path.join(HERE, "bot-review-probe.py")
@@ -28,12 +29,28 @@ def comment(path="a.py", line=12, commit=HEAD, login=CODERABBIT, url="c"):
     return {"login": login, "path": path, "line": line, "commit": commit, "url": url}
 
 
-def payload(checks=None, reviews=None, comments=None):
-    return {"checks": checks or [], "reviews": reviews or [], "comments": comments or []}
+def payload(checks=None, reviews=None, comments=None, notices=None):
+    return {"checks": checks or [], "reviews": reviews or [], "comments": comments or [],
+            "notices": notices or []}
 
 
-def classify(data, head=HEAD, bots="coderabbitai"):
-    return MODULE.classify(data, head, MODULE.configured_slugs(bots))
+NOW = datetime(2026, 7, 30, 12, 0, tzinfo=UTC)
+POSTED = "2026-07-30T11:00:00Z"
+# CodeRabbit's wording at the time of the incident. The probe must not depend on
+# this exact sentence -- see the reworded variants below.
+LIMIT_BODY = (
+    "Your included review limit is currently reached under our Fair Usage Limits "
+    "Policy. This review may still proceed through usage-based billing if eligible. "
+    "Your next included review will be available in 48 minutes."
+)
+
+
+def notice(body=LIMIT_BODY, at=POSTED, login=CODERABBIT):
+    return {"login": login, "body": body, "at": at}
+
+
+def classify(data, head=HEAD, bots="coderabbitai", now=NOW):
+    return MODULE.classify(data, head, MODULE.configured_slugs(bots), now=now)
 
 
 def run_cli(data, head=HEAD, env_extra=None, raw=None):
@@ -206,6 +223,134 @@ class SlugMatchingTest(unittest.TestCase):
         self.assertEqual(classify(data, bots="coderabbitai, greptile-apps")["state"], "clean")
 
 
+class DeclineTest(unittest.TestCase):
+    def test_limit_notice_with_no_review_is_declined(self):
+        data = payload(checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+                       notices=[notice()])
+        result = classify(data)
+        self.assertEqual(result["state"], "declined")
+        self.assertEqual(result["code"], MODULE.EXIT_DECLINED)
+
+    def test_reopen_instant_is_relative_to_when_the_notice_was_posted(self):
+        data = payload(notices=[notice()])
+        # Posted 11:00 + 48m = 11:48, already past at NOW=12:00.
+        self.assertIn("reopened", classify(data)["detail"])
+        self.assertIn("2026-07-30T11:48:00", classify(data)["wait"])
+
+    def test_a_live_window_says_retry_after_not_reopened(self):
+        data = payload(notices=[notice(at="2026-07-30T11:59:00Z")])
+        result = classify(data)
+        self.assertIn("retry after", result["detail"])
+        self.assertNotIn("reopened", result["detail"])
+
+    def test_hours_are_converted_to_minutes(self):
+        data = payload(notices=[notice(body="Rate limited. Try again in 2 hours.",
+                                      at="2026-07-30T11:59:00Z")])
+        result = classify(data)
+        self.assertEqual(result["state"], "declined")
+        self.assertIn("2026-07-30T13:59:00", result["wait"])
+
+    def test_no_parseable_figure_is_declined_with_an_unknown_wait(self):
+        """An unparsed deadline must read as re-check, never as a reopened window."""
+        data = payload(notices=[notice(body="Your review limit is currently reached.")])
+        result = classify(data)
+        self.assertEqual(result["state"], "declined")
+        self.assertEqual(result["wait"], "UNKNOWN")
+        self.assertIn("re-check", result["detail"])
+        self.assertNotIn("reopened", result["detail"])
+
+    def test_reworded_notices_still_parse(self):
+        """The match is deliberately loose: wording, order, and markup all vary."""
+        variants = [
+            "**Review limit reached.** Your next included review will be available in: 30 minutes",
+            "Fair Usage Limits Policy — next review in 30 minutes.",
+            "Rate limited; 30 minute cooldown remains before the next review.",
+            "Quota reached. In 30 minutes your next review becomes available.",
+        ]
+        for body in variants:
+            with self.subTest(body=body):
+                result = classify(payload(notices=[notice(body=body)]))
+                self.assertEqual(result["state"], "declined")
+                self.assertIn("2026-07-30T11:30:00", result["wait"])
+
+    def test_a_duration_without_a_refusal_indicator_is_not_a_decline(self):
+        data = payload(notices=[notice(body="I will re-review in 30 minutes if you push.")])
+        self.assertEqual(classify(data)["state"], "absent")
+
+    def test_a_declining_review_body_is_not_counted_as_a_review_round(self):
+        data = payload(checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+                       reviews=[review(body=LIMIT_BODY, at=POSTED)])
+        self.assertEqual(classify(data)["state"], "declined")
+
+    def test_an_unconfigured_bots_notice_is_invisible(self):
+        data = payload(notices=[notice(login="greptile-apps[bot]")])
+        self.assertEqual(classify(data)["state"], "absent")
+
+    def test_the_newest_notice_sets_the_window(self):
+        data = payload(notices=[
+            notice(body="Rate limited, retry in 5 minutes.", at="2026-07-30T09:00:00Z"),
+            notice(body="Rate limited, retry in 90 minutes.", at="2026-07-30T11:30:00Z"),
+        ])
+        self.assertIn("2026-07-30T13:00:00", classify(data)["wait"])
+
+
+class EvidenceBeatsNoticeTest(unittest.TestCase):
+    """A refusal notice lives in comment history forever; a real review outranks it."""
+
+    def test_a_review_at_head_beats_an_old_limit_notice(self):
+        data = payload(
+            checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+            reviews=[review(body="Actionable comments posted: 0", at="2026-07-30T11:50:00Z")],
+            notices=[notice(at="2026-07-30T09:00:00Z")],
+        )
+        result = classify(data)
+        self.assertEqual(result["state"], "clean")
+        self.assertEqual(result["code"], 0)
+
+    def test_an_actionable_review_at_head_beats_an_old_limit_notice(self):
+        data = payload(
+            checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+            reviews=[review(body="Actionable comments posted: 3", at="2026-07-30T11:50:00Z")],
+            notices=[notice(at="2026-07-30T09:00:00Z")],
+        )
+        result = classify(data)
+        self.assertEqual(result["state"], "actionable")
+        self.assertEqual(result["actionable"], 3)
+
+    def test_a_decline_from_an_earlier_commit_does_not_mask_the_head_review(self):
+        data = payload(
+            checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+            reviews=[
+                review(body=LIMIT_BODY, commit=OLD_HEAD, at="2026-07-30T09:00:00Z"),
+                review(body="Actionable comments posted: 0", at="2026-07-30T11:50:00Z"),
+            ],
+        )
+        self.assertEqual(classify(data)["state"], "clean")
+
+    def test_a_review_at_an_older_head_only_is_stale_not_declined(self):
+        data = payload(
+            checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+            reviews=[review(body="Actionable comments posted: 3", commit=OLD_HEAD)],
+            notices=[notice(at="2026-07-30T09:00:00Z")],
+        )
+        result = classify(data)
+        self.assertEqual(result["state"], "stale")
+        self.assertEqual(result["code"], MODULE.EXIT_STALE)
+
+    def test_a_running_check_still_wins_over_a_limit_notice(self):
+        data = payload(checks=[{"name": "CodeRabbit", "status": "IN_PROGRESS"}],
+                       notices=[notice()])
+        result = classify(data)
+        self.assertEqual(result["state"], "pending")
+        self.assertEqual(result["code"], MODULE.EXIT_WAITING)
+
+    def test_no_notice_keeps_the_existing_pending_case(self):
+        data = payload(checks=[{"name": "CodeRabbit", "status": "COMPLETED"}])
+        result = classify(data)
+        self.assertEqual(result["state"], "pending")
+        self.assertIn("no review posted yet", result["detail"])
+
+
 class MalformedTest(unittest.TestCase):
     def test_non_object_payload_raises(self):
         with self.assertRaises(ValueError):
@@ -214,6 +359,10 @@ class MalformedTest(unittest.TestCase):
     def test_non_array_reviews_raise(self):
         with self.assertRaises(ValueError):
             classify({"checks": [], "reviews": {"login": CODERABBIT}, "comments": []})
+
+    def test_non_array_notices_raise(self):
+        with self.assertRaises(ValueError):
+            classify({"checks": [], "reviews": [], "comments": [], "notices": {"a": 1}})
 
 
 class CliTest(unittest.TestCase):
@@ -226,6 +375,13 @@ class CliTest(unittest.TestCase):
         self.assertEqual(result.returncode, MODULE.EXIT_ACTIONABLE)
         self.assertIn("BOT_REVIEW actionable", result.stdout)
         self.assertIn("COMMENT a.py:12 c1", result.stdout)
+
+    def test_declined_exits_thirteen_and_renders_the_wait(self):
+        result = run_cli(payload(checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+                                notices=[notice()]))
+        self.assertEqual(result.returncode, MODULE.EXIT_DECLINED)
+        self.assertIn("BOT_REVIEW declined", result.stdout)
+        self.assertIn("wait=2026-07-30T11:48:00", result.stdout)
 
     def test_malformed_json_is_unknown_never_clean(self):
         result = run_cli(None, raw="notjson")

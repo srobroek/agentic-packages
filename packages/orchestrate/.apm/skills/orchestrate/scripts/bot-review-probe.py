@@ -19,6 +19,7 @@ Exit codes match the landing contract's vocabulary:
   10 pending check still running, or no review at this head yet
   11 stale   the bot reviewed an older head only
   12 actionable
+  13 declined the bot refused the round (quota/rate limit); re-trigger, do not wait
   2  unknown malformed or unreadable evidence -- never treated as clean
 """
 
@@ -30,12 +31,15 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any, Callable, NamedTuple
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any, NamedTuple
 
 EXIT_UNKNOWN = 2
 EXIT_WAITING = 10
 EXIT_STALE = 11
 EXIT_ACTIONABLE = 12
+EXIT_DECLINED = 13
 
 DEFAULT_BOTS = "coderabbitai"
 # A bot slug is matched against check names and details URLs by alphanumeric
@@ -53,6 +57,31 @@ class Round(NamedTuple):
     at: str
 
 
+# A decline notice is matched LOOSELY ON PURPOSE, in two independent halves: an
+# indicator that the bot refused, and -- separately -- any duration figure
+# anywhere in the body. A downstream script once matched the bot's exact
+# sentence ("next review available in: N minutes"); the bot reworded it to "your
+# next included review will be available in N minutes", the match returned
+# empty, the caller read that as "no limit notice" and reported the quota window
+# as reopened while it was exhausted, burning four re-triggers. Tightening
+# either half into one sentence pattern reintroduces that bug: word order,
+# "included", "will be", bold markers, and minutes-vs-hours all vary.
+DECLINE_INDICATORS = re.compile(
+    r"limit\s+(?:is\s+)?(?:currently\s+)?reached"
+    r"|fair\s+usage"
+    r"|rate[-\s]?limit"
+    r"|quota"
+    r"|usage\s+limit"
+    r"|review\s+skipped",
+    re.IGNORECASE,
+)
+WAIT_FIGURE = re.compile(r"(\d+)\s*\**\s*(minute|hour)s?", re.IGNORECASE)
+
+
+def indicates_decline(body: str) -> bool:
+    return DECLINE_INDICATORS.search(body or "") is not None
+
+
 class Adapter(NamedTuple):
     """Per-bot knowledge: how this bot says "here is what you must fix"."""
 
@@ -61,6 +90,10 @@ class Adapter(NamedTuple):
     # body carries no verdict the adapter recognises.
     count: Callable[[str], int | None]
     note: str
+    # True when this body is the bot saying it refused the round. Defaults to
+    # the cross-bot indicator set; override only to ADD wording, never to
+    # narrow it to one sentence.
+    declined: Callable[[str], bool] = indicates_decline
 
 
 def _regex_count(pattern: str) -> Callable[[str], int | None]:
@@ -71,6 +104,30 @@ def _regex_count(pattern: str) -> Callable[[str], int | None]:
         return int(match.group("n")) if match else None
 
     return read
+
+
+def wait_minutes(body: str) -> int | None:
+    """Minutes until the bot says it will review again, from any wording."""
+    match = WAIT_FIGURE.search(body or "")
+    if not match:
+        return None
+    value = int(match.group(1))
+    return value * 60 if match.group(2).lower() == "hour" else value
+
+
+def reopen_instant(at: str, minutes: int) -> datetime | None:
+    """Absolute reopen time, or None when the notice has no usable timestamp.
+
+    The bot's figure is relative to when it POSTED the notice, so it decays; a
+    stored figure alone cannot say whether the window is open.
+    """
+    try:
+        posted = datetime.fromisoformat((at or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if posted.tzinfo is None:
+        posted = posted.replace(tzinfo=UTC)
+    return posted + timedelta(minutes=minutes)
 
 
 # CodeRabbit posts one summary review per round whose body carries
@@ -140,23 +197,75 @@ def check_state(check: dict[str, Any]) -> str:
     return str(check.get("status") or check.get("state") or "").lower()
 
 
-def classify(payload: dict[str, Any], head: str, slugs: list[str]) -> dict[str, Any]:
-    """Pure classification. Raises ValueError on evidence it cannot read."""
+def declines(
+    notices: list[Any], slugs: list[str], now: datetime
+) -> dict[str, Any] | None:
+    """The bot's newest refusal notice, or None.
+
+    Advisory only: the caller must consult this AFTER evidence of a real review,
+    because a refusal notice stays in the comment history forever and would
+    otherwise mask the genuine review that landed after it.
+    """
+    found = []
+    for notice in notices:
+        if not isinstance(notice, dict):
+            raise ValueError("each notice must be an object")
+        slug = login_slug(str(notice.get("login") or ""), slugs)
+        body = str(notice.get("body") or "")
+        if slug is None or not adapter_for(slug).declined(body):
+            continue
+        found.append((str(notice.get("at") or ""), body))
+    if not found:
+        return None
+    at, body = max(found)
+    minutes = wait_minutes(body)
+    if minutes is None:
+        return {"wait": "UNKNOWN", "detail": "bot declined the round; re-check before re-trigger"}
+    reopen = reopen_instant(at, minutes)
+    if reopen is None:
+        return {"wait": f"{minutes}m", "detail": f"bot declined the round for {minutes}m from an unreadable timestamp; re-check before re-trigger"}
+    if reopen <= now:
+        return {"wait": reopen.isoformat(), "detail": f"bot declined the round; window reopened at {reopen.isoformat()}, re-trigger"}
+    return {"wait": reopen.isoformat(), "detail": f"bot declined the round; retry after {reopen.isoformat()}"}
+
+
+def classify(
+    payload: dict[str, Any], head: str, slugs: list[str], now: datetime | None = None
+) -> dict[str, Any]:
+    """Pure classification. Raises ValueError on evidence it cannot read.
+
+    `now` is injected so decline-window arithmetic stays deterministic in tests.
+    """
+    now = now or datetime.now(UTC)
     if not isinstance(payload, dict):
         raise ValueError("payload must be a JSON object")
     checks = payload.get("checks") or []
     reviews = payload.get("reviews") or []
     comments = payload.get("comments") or []
-    if not isinstance(checks, list) or not isinstance(reviews, list) or not isinstance(comments, list):
-        raise ValueError("checks, reviews, and comments must be arrays")
+    notices = payload.get("notices") or []
+    if (
+        not isinstance(checks, list)
+        or not isinstance(reviews, list)
+        or not isinstance(comments, list)
+        or not isinstance(notices, list)
+    ):
+        raise ValueError("checks, reviews, comments, and notices must be arrays")
 
     bot_checks = [c for c in checks if isinstance(c, dict) and is_bot_check(c, slugs)]
     bot_reviews = []
+    refusals = list(notices)
     for review in reviews:
         if not isinstance(review, dict):
             raise ValueError("each review must be an object")
         slug = login_slug(str(review.get("login") or ""), slugs)
-        if slug is not None:
+        if slug is None:
+            continue
+        # A refusal is not a review round. Left in `bot_reviews` it would read as
+        # `pending`/`stale` -- "keep waiting" -- exactly the ambiguity that cost
+        # the wasted re-triggers.
+        if adapter_for(slug).declined(str(review.get("body") or "")):
+            refusals.append(review)
+        else:
             bot_reviews.append((slug, review))
 
     result: dict[str, Any] = {
@@ -169,10 +278,12 @@ def classify(payload: dict[str, Any], head: str, slugs: list[str]) -> dict[str, 
         "actionable": 0,
         "changes_requested": 0,
         "summary": "none",
+        "wait": "none",
         "files": [],
     }
 
-    if not bot_checks and not bot_reviews:
+    decline = declines(refusals, slugs, now)
+    if not bot_checks and not bot_reviews and decline is None:
         return {**result, "state": "absent", "code": 0,
                 "detail": "no configured review bot on this PR"}
 
@@ -189,8 +300,15 @@ def classify(payload: dict[str, Any], head: str, slugs: list[str]) -> dict[str, 
     ]
     at_head.sort(key=lambda pair: str(pair[1].get("at") or ""))
 
+    # A REAL REVIEW ALWAYS BEATS A NOTICE. The decline notice is only consulted
+    # where there is no review to read at all: with a review at this head the
+    # count decides, and with a review at an older head only the answer is
+    # `stale`. A refusal notice from an earlier commit must never mask either.
     if not at_head:
         if not bot_reviews:
+            if decline is not None:
+                return {**result, "state": "declined", "code": EXIT_DECLINED,
+                        "wait": decline["wait"], "detail": decline["detail"]}
             return {**result, "state": "pending", "code": EXIT_WAITING,
                     "detail": "bot check complete, no review posted yet"}
         return {**result, "state": "stale", "code": EXIT_STALE,
@@ -241,7 +359,7 @@ def render(result: dict[str, Any]) -> str:
     lines = [
         "BOT_REVIEW {state} bots={bots} head={head} check={check} "
         "actionable={actionable} changes_requested={changes_requested} "
-        'summary={summary} detail="{detail}"'.format(**result)
+        'summary={summary} wait={wait} detail="{detail}"'.format(**result)
     ]
     lines.extend(f"COMMENT {entry}" for entry in result["files"])
     return "\n".join(lines)
@@ -261,11 +379,22 @@ def fetch(repo: str, pr: str) -> dict[str, Any]:
 
     `gh pr view` omits each review's commit id, so the reviews and their inline
     comments come from REST, paginated because one bot round can exceed a page.
+    Issue comments are read as well because a quota refusal arrives there, not as
+    a review.
     """
     view = gh_json("pr", "view", pr, "--repo", repo, "--json", "headRefOid,statusCheckRollup")
     reviews = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/reviews")
     comments = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/comments")
+    notices = gh_json("api", "--paginate", f"repos/{repo}/issues/{pr}/comments")
     return {
+        "notices": [
+            {
+                "login": (n.get("user") or {}).get("login") or "",
+                "body": n.get("body") or "",
+                "at": n.get("created_at") or "",
+            }
+            for n in (notices or [])
+        ],
         "head": (view or {}).get("headRefOid") or "",
         "checks": (view or {}).get("statusCheckRollup") or [],
         "reviews": [
