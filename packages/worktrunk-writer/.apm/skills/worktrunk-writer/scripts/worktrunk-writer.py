@@ -1622,7 +1622,20 @@ def assert_runtime_lease(
         if bound and repo and artifact_target_allowed(repo, bound[0], target):
             return bound[0]
         if expected_lease or bound:
-            raise ContractError("writer mutation targets an unleased checkout")
+            # Name the leased checkout the actor should have targeted. Without it
+            # the message reads as "the lease is broken" when the actual cause is
+            # almost always a Bash call that inherited the parent directory
+            # because it did not start with `cd -- <leased-path>`. Agents have
+            # burned whole rounds re-validating a lease that was never at fault,
+            # and one wrote it up as a multiline-command bug because the failing
+            # calls happened to be multiline.
+            leased = item_path(bound[0]) if bound else None
+            detail = f"; expected a path under {str(leased)!r}" if leased else ""
+            raise ContractError(
+                f"writer mutation targets {str(target)!r}, which is not a leased "
+                f"checkout{detail}. A Bash command must begin with "
+                f"'cd -- <leased-path>'"
+            )
         return None
 
     if not variables.get("actor") or not bound_contexts(item):
