@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.1.1...worktrunk-writer--v2.2.0) (2026-07-30)
+
+
+### Features
+
+* **worktrunk-writer:** a SubagentStop trigger that records the exit ([#817](https://github.com/srobroek/agentic-packages/issues/817)) ([5616f53](https://github.com/srobroek/agentic-packages/commit/5616f534abfef3c1943d9b191a059d965439c5af))
+
+
+### Bug Fixes
+
+* **worktrunk-writer:** say which path was rejected and that a leading cd is missing ([#830](https://github.com/srobroek/agentic-packages/issues/830)) ([f7275c4](https://github.com/srobroek/agentic-packages/commit/f7275c403345e306585760488c8c96fb773bcc90))
+
 ## [2.1.1](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.1.0...worktrunk-writer--v2.1.1) (2026-07-30)
 
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [29.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v28.0.0...srobroek-agentic--v29.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* merge-bead trailers are no longer required outside an orchestrate run, and are advisory rather than blocking inside one. A repository that relied on this hook to enforce merge-queue linkage on every PR must set PR_MERGE_QUEUE_ENFORCE, and must treat the advisory rather than a denial as the signal.
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829))
+
+### Bug Fixes
+
+* drop the PR bead trailers, and have the shepherd verify its own anchors ([#824](https://github.com/srobroek/agentic-packages/issues/824)) ([4ea4081](https://github.com/srobroek/agentic-packages/commit/4ea4081e6f7acb95d49cb977c69e1e119471f983))
+* quote frontmatter values holding a colon, so six primitives deploy at all ([#826](https://github.com/srobroek/agentic-packages/issues/826)) ([b3b6325](https://github.com/srobroek/agentic-packages/commit/b3b6325f0bf881160f6977c5257bc76d3c8ccae1))
+
+
+### Refactors
+
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829)) ([583c6ab](https://github.com/srobroek/agentic-packages/commit/583c6ab411201cfda3bd3a2c0911652467b27989))
+
 ## [28.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v27.0.0...srobroek-agentic--v28.0.0) (2026-07-30)
 
 

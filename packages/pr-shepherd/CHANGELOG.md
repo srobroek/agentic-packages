@@ -1,5 +1,23 @@
 # Changelog
 
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v5.0.0...pr-shepherd--v6.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* merge-bead trailers are no longer required outside an orchestrate run, and are advisory rather than blocking inside one. A repository that relied on this hook to enforce merge-queue linkage on every PR must set PR_MERGE_QUEUE_ENFORCE, and must treat the advisory rather than a denial as the signal.
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7b63b60](https://github.com/srobroek/agentic-packages/commit/7b63b60828a8f675244f6cb99554723d07ca6a8f))
+
+
+### Bug Fixes
+
+* drop the PR bead trailers, and have the shepherd verify its own anchors ([#824](https://github.com/srobroek/agentic-packages/issues/824)) ([4ea4081](https://github.com/srobroek/agentic-packages/commit/4ea4081e6f7acb95d49cb977c69e1e119471f983))
+* **pr-shepherd,orchestrate:** distinguish a rate-limited review bot from a working one ([#823](https://github.com/srobroek/agentic-packages/issues/823)) ([6d31687](https://github.com/srobroek/agentic-packages/commit/6d316871cef1b6b50837455e5ec95084185c1c29))
+
 ## [5.0.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v4.0.0...pr-shepherd--v5.0.0) (2026-07-30)
 
 

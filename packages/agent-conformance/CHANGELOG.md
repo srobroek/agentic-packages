@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v5.0.0...agent-conformance--v6.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829))
+
+### Refactors
+
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829)) ([583c6ab](https://github.com/srobroek/agentic-packages/commit/583c6ab411201cfda3bd3a2c0911652467b27989))
+
 ## [5.0.0](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v4.0.0...agent-conformance--v5.0.0) (2026-07-27)
 
 

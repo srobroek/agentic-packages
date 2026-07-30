@@ -1,5 +1,22 @@
 # Changelog
 
+## [16.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v15.1.0...orchestrate--v16.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7b63b60](https://github.com/srobroek/agentic-packages/commit/7b63b60828a8f675244f6cb99554723d07ca6a8f))
+
+
+### Bug Fixes
+
+* **pr-shepherd,orchestrate:** distinguish a rate-limited review bot from a working one ([#823](https://github.com/srobroek/agentic-packages/issues/823)) ([6d31687](https://github.com/srobroek/agentic-packages/commit/6d316871cef1b6b50837455e5ec95084185c1c29))
+* specialists pick a narrow child agent instead of defaulting to general-purpose ([#828](https://github.com/srobroek/agentic-packages/issues/828)) ([65a04bf](https://github.com/srobroek/agentic-packages/commit/65a04bf78a4b4590aa134af582334ade5fb190ef))
+
 ## [15.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v15.0.0...orchestrate--v15.1.0) (2026-07-30)
 
 
