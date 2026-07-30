@@ -860,6 +860,76 @@ def check_run(repo: str, run_id: str, expected_head: str) -> int:
     fail(f"run {run_id} has unknown conclusion {conclusion or 'empty'}")
 
 
+PR_ANCHOR_JQ = '[(.headRefName // "NONE"),(.baseRefName // "NONE"),(.url // "NONE")] | @tsv'
+
+
+def check_bead_anchors(merge_bead: str, repo: str, pr: str) -> int:
+    """Verify the merge bead's own anchors describe the PR it names.
+
+    A merge bead pointing at the wrong PR would otherwise be landed on the
+    strength of its `metadata.pr` alone. Previously a PR-body `Merge-Bead:`
+    trailer was supposed to catch that, but no code ever compared the two, so the
+    check existed only as prose. The bead is authoritative here, per the carrier
+    doctrine, so this reads the bead and the live PR and never the PR body.
+
+    `repo` and `branch` are compared because both are stable for the life of the
+    PR. `head_sha` deliberately is not: it advances on every push, so a mismatch
+    means stale rather than wrong, and `land_owned` already rejects a stale head
+    against the caller's expected head.
+
+    Absent anchors return 0. A bead that predates the anchor convention is not
+    evidence of a mismatch, and this is a guard against a wrong pointer, not a
+    completeness check on metadata.
+    """
+    try:
+        records = bd_json("show", merge_bead, "--json", quiet=True)
+    except QueryError:
+        print(f"ANCHOR_UNKNOWN merge={merge_bead} reason=bd-unavailable", file=sys.stderr)
+        return EXIT_UNKNOWN
+    record = records[0] if isinstance(records, list) and records else records
+    if not isinstance(record, dict):
+        print(f"ANCHOR_UNKNOWN merge={merge_bead} reason=no-record", file=sys.stderr)
+        return EXIT_UNKNOWN
+    metadata = record.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        print(f"ANCHOR_UNKNOWN merge={merge_bead} reason=no-metadata", file=sys.stderr)
+        return EXIT_UNKNOWN
+
+    anchored_pr = metadata.get("pr")
+    if anchored_pr is not None and str(anchored_pr) != str(pr):
+        print(
+            f"ANCHOR_MISMATCH merge={merge_bead} field=pr "
+            f"anchored={anchored_pr} actual={pr}"
+        )
+        return EXIT_FAILED
+    anchored_repo = metadata.get("repo")
+    if anchored_repo is not None and anchored_repo != repo:
+        print(
+            f"ANCHOR_MISMATCH merge={merge_bead} field=repo "
+            f"anchored={anchored_repo} actual={repo}"
+        )
+        return EXIT_FAILED
+
+    anchored_branch = metadata.get("branch")
+    if anchored_branch is None:
+        print(f"ANCHOR_OK merge={merge_bead} pr={pr} branch=unanchored")
+        return 0
+    head_branch, base_branch, url = gh_tsv(
+        ["pr", "view", pr, "--repo", repo, "--json", "headRefName,baseRefName,url",
+         "--jq", PR_ANCHOR_JQ],
+        f"cannot read PR {pr} anchors",
+    )
+    if head_branch != anchored_branch:
+        print(
+            f"ANCHOR_MISMATCH merge={merge_bead} field=branch "
+            f"anchored={anchored_branch} actual={head_branch or 'unknown'} "
+            f"url={url or 'unknown'}"
+        )
+        return EXIT_FAILED
+    print(f"ANCHOR_OK merge={merge_bead} pr={pr} branch={head_branch} base={base_branch}")
+    return 0
+
+
 def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
              approval_mode: str = "github") -> int:
     require_sha(expected_head, "expected head")
@@ -1172,6 +1242,11 @@ def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: 
     require_sha(expected_head, "expected head")
     if method not in ("merge", "rebase", "squash"):
         fail("merge method must be merge, rebase, or squash")
+
+    # Before anything reads the PR as this bead's PR, prove that it is.
+    anchors = check_bead_anchors(merge_bead, repo, pr)
+    if anchors != 0:
+        return anchors
 
     state, actual_head, merge_sha = gh_tsv(
         ["pr", "view", pr, "--repo", repo, "--json", "state,headRefOid,mergeCommit",
@@ -2045,6 +2120,7 @@ def ready_ids() -> int:
 
 USAGE = """usage: landing-contract.py check-run <repo> <run-id> <head-sha>
        landing-contract.py check-pr <repo> <pr> <head-sha> <pr-base> [github|external]
+       landing-contract.py check-anchors <merge-bead> <repo> <pr>
        landing-contract.py verify-landed <repo> <pr> <base> <recorded-base-sha> <head-sha> <merge-sha>
        landing-contract.py land <merge-bead> <repo> <pr> <pr-base> <landing-base> <recorded-base-sha> <head-sha> <merge|rebase|squash> [github|external]
        landing-contract.py acquire-slot <stable-holder> [attempts] [poll-seconds] [resume|requeue]
@@ -2084,6 +2160,7 @@ def queue_state_cli(repo: str, pr: str) -> int:
 COMMANDS = {
     "check-run": (3, 3, check_run),
     "check-pr": (4, 5, check_pr),
+    "check-anchors": (3, 3, check_bead_anchors),
     "verify-landed": (6, 6, verify_landed),
     "land": (8, 9, land_pr),
     "acquire-slot": (1, 4, None),
@@ -2105,6 +2182,7 @@ COMMANDS = {
 ARITY_MESSAGE = {
     "check-run": "check-run expects 3 arguments",
     "check-pr": "check-pr expects 4-5 arguments",
+    "check-anchors": "check-anchors expects 3 arguments",
     "verify-landed": "verify-landed expects 6 arguments",
     "land": "land expects 8-9 arguments",
     "acquire-slot": "acquire-slot expects 1-4 arguments",

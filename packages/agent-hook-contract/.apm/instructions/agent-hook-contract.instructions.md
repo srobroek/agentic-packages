@@ -1,5 +1,5 @@
 ---
-description: Claude and Codex hook authoring: Python-first rule, performance budget, events, payloads, decisions.
+description: "Claude and Codex hook authoring: Python-first rule, performance budget, events, payloads, decisions."
 applyTo: "{**/*-codex-hooks.json,**/*-claude-hooks.json,**/hooks/hooks.json,**/hooks/*.sh,**/hooks/*.py,**/scripts/*-guard.sh,**/scripts/*-guard.py,**/scripts/*guard*.sh,**/scripts/*guard*.py}"
 ---
 
