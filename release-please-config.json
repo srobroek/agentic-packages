@@ -1100,18 +1100,6 @@
         }
       ]
     },
-    "packages/speckit-beads": {
-      "release-type": "simple",
-      "component": "speckit-beads",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/steering-architecture": {
       "release-type": "simple",
       "component": "steering-architecture",
@@ -1247,18 +1235,6 @@
     "packages/steering-project-structure": {
       "release-type": "simple",
       "component": "steering-project-structure",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/steering-speckit": {
-      "release-type": "simple",
-      "component": "steering-speckit",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
