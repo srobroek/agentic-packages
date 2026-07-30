@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.0](https://github.com/srobroek/agentic-packages/compare/frontend--v5.0.3...frontend--v5.1.0) (2026-07-30)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([ad2ac26](https://github.com/srobroek/agentic-packages/commit/ad2ac264efd161ff233315c4d34ab40fcdc383ee))
+
 ## [5.0.3](https://github.com/srobroek/agentic-packages/compare/frontend--v5.0.2...frontend--v5.0.3) (2026-07-25)
 
 

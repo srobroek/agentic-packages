@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v3.0.0...steering-git-workflow--v4.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* merge-bead trailers are no longer required outside an orchestrate run, and are advisory rather than blocking inside one. A repository that relied on this hook to enforce merge-queue linkage on every PR must set PR_MERGE_QUEUE_ENFORCE, and must treat the advisory rather than a denial as the signal.
+
+### Bug Fixes
+
+* drop the PR bead trailers, and have the shepherd verify its own anchors ([#824](https://github.com/srobroek/agentic-packages/issues/824)) ([4ea4081](https://github.com/srobroek/agentic-packages/commit/4ea4081e6f7acb95d49cb977c69e1e119471f983))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/steering-git-workflow--v2.3.6...steering-git-workflow--v3.0.0) (2026-07-28)
 
 

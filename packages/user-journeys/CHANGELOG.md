@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/user-journeys--v1.0.0...user-journeys--v1.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* quote frontmatter values holding a colon, so six primitives deploy at all ([#826](https://github.com/srobroek/agentic-packages/issues/826)) ([b3b6325](https://github.com/srobroek/agentic-packages/commit/b3b6325f0bf881160f6977c5257bc76d3c8ccae1))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.7.2...user-journeys--v1.0.0) (2026-07-27)
 
 
