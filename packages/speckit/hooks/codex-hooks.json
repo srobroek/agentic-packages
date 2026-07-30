@@ -10,6 +10,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "apply_patch|Edit|Write|MultiEdit|Bash|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-tasks-guard.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

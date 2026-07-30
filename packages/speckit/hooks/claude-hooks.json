@@ -9,6 +9,16 @@
             "command": "${PLUGIN_ROOT}/scripts/speckit-pr-title.py"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/speckit-tasks-guard.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
