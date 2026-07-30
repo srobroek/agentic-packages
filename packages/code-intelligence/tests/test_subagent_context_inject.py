@@ -57,7 +57,7 @@ def run_hook(stdin: str, repo: Path) -> subprocess.CompletedProcess:
 
 
 def test_backslash_quote_repo_name_yields_valid_json(repo):
-    payload = json.dumps({"agent_id": "a1", "agent_type": "speckit-implement-task", "cwd": str(repo)})
+    payload = json.dumps({"agent_id": "a1", "agent_type": "builder", "cwd": str(repo)})
     result = run_hook(payload, repo)
     assert result.returncode == 0
     json.loads(result.stdout)

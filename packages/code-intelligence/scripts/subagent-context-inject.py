@@ -72,37 +72,6 @@ def main() -> int:
             "You may read source code, run tests, and grep -- but form your own hypotheses. "
         )
 
-    if agent_type == "speckit-implement-task":
-        if (repo_root / "justfile").is_file():
-            ctx += "Verify changes with: just check (see justfile for details). "
-        elif (repo_root / "Taskfile.yml").is_file() or (repo_root / "Taskfile.yaml").is_file():
-            ctx += "Verify changes with: task check (see Taskfile for details). "
-        elif (repo_root / "package.json").is_file():
-            ctx += "Verify changes with: pnpm test. "
-        ctx += "Commit with conventional format (feat/fix/docs/refactor/chore). "
-
-        main_branch_result = subprocess.run(
-            ["git", "-C", str(repo_root), "symbolic-ref", "refs/remotes/origin/HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        main_branch = main_branch_result.stdout.strip().removeprefix("refs/remotes/origin/")
-        if not main_branch:
-            main_branch = "main"
-
-        diff_result = subprocess.run(
-            ["git", "-C", str(repo_root), "diff", "--name-only", main_branch],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        changed = " ".join(diff_result.stdout.splitlines()[:10])
-        if changed:
-            ctx += f"Files changed on branch: {changed}. "
-
     json.dump(
         {
             "hookSpecificOutput": {

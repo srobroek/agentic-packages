@@ -12,8 +12,9 @@ orchestrator stays lean so its context lasts the whole run.
 ## Decide the planning system
 
 - **External framework in play (SpecKit or similar):** be aware of it and delegate
-  the actual **speccing** to its agents (`speckit-research`, `speckit-implement-task`,
-  the `speckit-*` verify/sync agents). Use *that* system's graph/tasks as the unit
+  the actual **speccing** to its own commands and agents (the `speckit-*` skills
+  its extensions install, plus the `speckit-verify` and `speckit-sync` agents).
+  Use *that* system's graph/tasks as the unit
   of work and **skip the default decomposition below**. A beads-managed SpecKit
   molecule already IS a dependency-aware run DAG --
   label its step beads `orc-node` and add `scope` metadata rather than building
