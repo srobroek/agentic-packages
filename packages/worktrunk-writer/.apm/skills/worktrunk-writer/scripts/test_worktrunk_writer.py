@@ -171,6 +171,88 @@ class BeadsConflictTests(unittest.TestCase):
         finally:
             MODULE.beads_json = original
 
+    def _conflicts(self, issues: list[dict[str, object]], path: str = "/tmp/wt") -> list[str]:
+        original = MODULE.beads_json
+        MODULE.beads_json = lambda *_args, **_kwargs: issues
+        try:
+            return MODULE.active_bead_conflicts(
+                Path("/tmp"), "active-1", "agent/task", Path(path)
+            )
+        finally:
+            MODULE.beads_json = original
+
+    def test_tracking_merge_bead_sharing_branch_is_not_a_conflict(self) -> None:
+        # A merge bead names the implementer's branch by design and holds no
+        # checkout. Treating it as a competing writer denied the implementer its
+        # own lease and blocked all work on the PR.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-1",
+                        "status": "open",
+                        "metadata": {
+                            "branch": "agent/task",
+                            "head": "agent/task",
+                            "pr": 1623,
+                            "tracks_beads": ["active-1"],
+                            "closes_beads": ["active-1"],
+                        },
+                    }
+                ]
+            ),
+            [],
+        )
+
+    def test_closes_beads_scalar_also_exempts(self) -> None:
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-1",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "closes_beads": "active-1"},
+                    }
+                ]
+            ),
+            [],
+        )
+
+    def test_merge_bead_tracking_a_different_bead_still_conflicts(self) -> None:
+        # The exemption is per-bead, not a blanket pass for anything with a
+        # tracks_beads key: this one claims our branch while tracking someone else.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-2",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "tracks_beads": ["other-9"]},
+                    }
+                ]
+            ),
+            ["merge-2"],
+        )
+
+    def test_tracking_bead_sharing_the_checkout_still_conflicts(self) -> None:
+        # Two actors in one checkout is a real conflict regardless of tracking.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-3",
+                        "status": "open",
+                        "metadata": {
+                            "branch": "agent/task",
+                            "worktree_path": "/tmp/wt",
+                            "tracks_beads": ["active-1"],
+                        },
+                    }
+                ]
+            ),
+            ["merge-3"],
+        )
+
 
 class RuntimeHookTests(unittest.TestCase):
     def setUp(self) -> None:
