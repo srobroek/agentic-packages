@@ -1,3 +1,17 @@
+[tool.pytest.ini_options]
+# Twelve test-file basenames are duplicated across packages -- `bot-review-probe`
+# and `worktrunk-writer` are deliberately copied per package so no package reaches
+# into another's scripts at runtime, and their suites are copied with them. Under
+# pytest's default `prepend` import mode those copies collide on module name
+# ("import file mismatch") the moment two of them are collected in one run, and
+# adding `__init__.py` is not an option: these directories ship as skill payloads,
+# not importable packages.
+#
+# `importlib` gives each file its own module identity, so duplicate basenames stop
+# colliding. CI never hit this because it runs one package per job; a whole-repo
+# `pytest` run did.
+addopts = "--import-mode=importlib"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
