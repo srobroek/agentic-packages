@@ -1,6 +1,6 @@
 {
   "name": "speckit",
-  "version": "11.0.0",
+  "version": "12.0.0",
   "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
   "author": {
     "name": "Sjors Robroek"
