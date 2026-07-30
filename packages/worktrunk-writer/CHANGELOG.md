@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.1.0...worktrunk-writer--v2.1.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **worktrunk-writer:** a tracking merge bead is not a competing lease ([#818](https://github.com/srobroek/agentic-packages/issues/818)) ([1761d0d](https://github.com/srobroek/agentic-packages/commit/1761d0d5f4b4c66d752cb7ed7cfeae4c1ab0b6d8))
+
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.0.1...worktrunk-writer--v2.1.0) (2026-07-30)
+
+
+### Features
+
+* recover a stuck agent worktree instead of rebuilding it ([#810](https://github.com/srobroek/agentic-packages/issues/810)) ([2b3a06c](https://github.com/srobroek/agentic-packages/commit/2b3a06c87bfb956da078c370268a851a380d5f8b))
+
+
+### Bug Fixes
+
+* **worktrunk-writer:** gate the SubagentStart handshake on protocol engagement ([#819](https://github.com/srobroek/agentic-packages/issues/819)) ([74e1959](https://github.com/srobroek/agentic-packages/commit/74e1959c718f849a195374a5b33b42896cb2e103))
+* **worktrunk-writer:** resolve a WAIT checkout against its own repo ([#805](https://github.com/srobroek/agentic-packages/issues/805)) ([106254f](https://github.com/srobroek/agentic-packages/commit/106254fc7246441232a2a805e35e78a7e9b3e4c5))
+
 ## [2.0.1](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.0.0...worktrunk-writer--v2.0.1) (2026-07-27)
 
 

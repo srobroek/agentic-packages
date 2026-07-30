@@ -1,5 +1,53 @@
 # Changelog
 
+## [28.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v27.0.0...srobroek-agentic--v28.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820))
+
+### Refactors
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820)) ([c1b2007](https://github.com/srobroek/agentic-packages/commit/c1b200754c9dd4a21c33035f28fd45052a827bd1))
+
+## [27.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v26.0.0...srobroek-agentic--v27.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **pr-shepherd:** scripts/landing-contract.sh is replaced by scripts/landing-contract.py. Callers invoking the path directly must update it.
+* **adr-as-beads:** hold ADRs as beads decision beads, generate the MADR files ([#813](https://github.com/srobroek/agentic-packages/issues/813))
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814))
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* **beads:** the beads sync hooks are now Python and require python3 on PATH. beads-sync-hydrate.sh and beads-maintenance-check.sh are replaced by the single beads-sync-session.py; a machine-local override naming either old script by path must be repointed.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* port the repo-local hooks to Python ([#802](https://github.com/srobroek/agentic-packages/issues/802))
+
+### Features
+
+* **adr-as-beads:** hold ADRs as beads decision beads, generate the MADR files ([#813](https://github.com/srobroek/agentic-packages/issues/813)) ([c155600](https://github.com/srobroek/agentic-packages/commit/c155600d6da405d50b2839a9a0e9111883391fd0))
+* **adr:** record decisions as they land, not at closeout ([#808](https://github.com/srobroek/agentic-packages/issues/808)) ([e9eea09](https://github.com/srobroek/agentic-packages/commit/e9eea09282b8c1654e0735caa1a7a277f53b7120))
+* **beads:** opt-in sync hooks — Dolt first, JSONL fallback ([#779](https://github.com/srobroek/agentic-packages/issues/779)) ([c7047fc](https://github.com/srobroek/agentic-packages/commit/c7047fc46a6b6b474b48e743516745921f9d22f5))
+* **pr-shepherd:** port the landing contract to Python and prove merge-queue landings ([#807](https://github.com/srobroek/agentic-packages/issues/807)) ([841df3f](https://github.com/srobroek/agentic-packages/commit/841df3fe224004acb42e707bcca7624738def973))
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
+
+### Bug Fixes
+
+* close two guard bypasses found by fuzzing the Python hooks ([#806](https://github.com/srobroek/agentic-packages/issues/806)) ([7505cc7](https://github.com/srobroek/agentic-packages/commit/7505cc76fccad74c1ba0c5d2d017320b721475ff))
+
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+* port the repo-local hooks to Python ([#802](https://github.com/srobroek/agentic-packages/issues/802)) ([db7dd5a](https://github.com/srobroek/agentic-packages/commit/db7dd5a7aa7bacfbff3ca4a79587cea7e19c8cd0))
+* port the skill scripts to Python and fuzz every port ([#811](https://github.com/srobroek/agentic-packages/issues/811)) ([773ac2b](https://github.com/srobroek/agentic-packages/commit/773ac2bced832cb0144b7e21e6937e69b9e3b631))
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814)) ([aea023b](https://github.com/srobroek/agentic-packages/commit/aea023bba47a18a87ee1d366e9c1d7e54470b9b4))
+
 ## [26.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v25.0.0...srobroek-agentic--v26.0.0) (2026-07-28)
 
 

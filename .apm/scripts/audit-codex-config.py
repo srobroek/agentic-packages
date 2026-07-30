@@ -84,7 +84,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "lsp-typescript",
     "orchestrate",
     "release-please",
-    "speckit",
     "worktrunk-writer",
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
@@ -114,10 +113,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
-    "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-codex-hooks.json": "target-specific compatibility",

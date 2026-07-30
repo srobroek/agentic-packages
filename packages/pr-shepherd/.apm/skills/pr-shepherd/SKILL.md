@@ -14,7 +14,7 @@ TRIGGER
 + Stop-hook reminder reports ready merge beads or open GitHub gates
 - Reviewing PR code quality → pr-reviewer agent
 - Authoring or editing a PR → git-workflow steering; this skill discovers only
-  ready, non-release PRs whose bodies carry Beads backlinks
+  ready, non-release PRs carried by a `pr:merge` bead
 
 ## Workflow
 
@@ -22,14 +22,17 @@ TRIGGER
    missing and stop. Export `BEADS_ACTOR="pr-shepherd/<runtime>/<session-id>"`,
    `BD_NO_PAGER=1 BD_NON_INTERACTIVE=1`.
 2. Load durable PR nodes with `bd list --label pr:merge --status all --json`.
-   Each open node must remain unassigned, have repo+PR metadata, and its PR
-   body must name that exact `Merge-Bead`. Ignore drafts for merge processing and ignore automated
-   release PRs. Missing anchors or body/DAG mismatches are author-contract
-   failures, not reasons to scan a bounded GitHub history.
+   Each open node must remain unassigned and carry repo+PR metadata. Ignore
+   drafts for merge processing and ignore automated release PRs. Missing anchors
+   or DAG mismatches are author-contract failures, not reasons to scan a bounded
+   GitHub history. `scripts/landing-contract.py check-anchors <merge-bead> <repo>
+   <pr>` proves the bead's own `pr`, `repo`, and `branch` anchors describe the PR
+   it names; `land` runs it before every merge. The PR body is not evidence: the
+   bead is the carrier.
 3. Before creation/approval, authors add `bd dep add <work> <merge-bead>` for
-   each `Closes-Bead`; one merge bead may block many work beads and one work
-   bead may depend on many merge beads. `state:approved` freezes these edges;
-   never mutate approved/closed work for a late closing trailer.
+   each work bead the PR completes; one merge bead may block many work beads and
+   one work bead may depend on many merge beads. `state:approved` freezes these
+   edges; never mutate approved/closed work for a late closing edge.
 4. `bd gate check` evaluates CI gates. Never attach a gh:pr gate to the merge
    bead: that gate resolves only after the merge this bead must perform.
 5. `bd merge-slot create` (idempotent) so the repo's slot exists.
@@ -63,7 +66,9 @@ TRIGGER
 | bot review pending | comment once, release the claim, continue; the next pass re-probes. Never poll it in-session |
 | bot review stale | the bot reviewed an older head; treat as pending, never as clean |
 | bot review actionable | bounce → agent:coder with the summary URL and the bot's comment paths (references/bot-review.md) |
-| clean + checks green + approved + bot review absent/clean | LOAD references/landing-contract.md, then `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
+| clean + checks green + approved + bot review absent/clean | LOAD references/landing-contract.md, then `scripts/landing-contract.py land …`, which owns the whole transaction: merge slot under a stable holder, exact-head merge, landing proof, release, bead closure |
+| enqueued in a GitHub merge queue (exit 10, `landing_state=queued`) | leave the bead open, release the claim; the next pass proves or bounces it. Never treat an enqueue as a landing |
+| ejected from a GitHub merge queue (exit 12, `landing_state=ejected`) | bounce → agent:coder with the `QUEUE_EJECTED` receipt; the merge group failed |
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |
@@ -77,7 +82,6 @@ TRIGGER
    not manual PR counts. A work bead may close only when `bd ready` reports it,
    it has the exact `state:approved` label, children/gates are resolved, and
    every closing PR was verified on the repository default branch.
-   `Tracks-Bead:` never closes.
 11. Repeat step 6 until nothing is claimable, then report; `bd dolt push` per
    beads steering when beads changed.
 
@@ -92,9 +96,9 @@ MUST Hold the merge slot across acquire → merge → release; release on every
 MUST Ignore draft and automated release PRs before claim or merge-slot
   acquisition. Release detection uses branch prefix or autorelease label,
   never title text.
-MUST Never close a work bead from `Tracks-Bead:` alone; only a matching
-  `Closes-Bead:` dependency graph plus native readiness, the exact
-  `state:approved` label, and verified terminal landing authorizes closure.
+MUST Close a work bead only on its native dependency edge plus native
+  readiness, the exact `state:approved` label, and verified terminal landing.
+  PR prose authorizes nothing.
 NOT A gh:pr gate on a merge bead; use dependency edges for landing fan-in and
   a concrete gh:run gate only for CI.
 MUST Release the claim (`bd update <id> --assignee "" --status open`) whenever

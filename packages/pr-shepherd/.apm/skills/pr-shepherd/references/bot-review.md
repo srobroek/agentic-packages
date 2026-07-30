@@ -46,6 +46,7 @@ the same vocabulary as the rest of the contract:
 | 10 | `pending` | the check is running, or completed with no review at this head yet |
 | 11 | `stale` | the bot reviewed an older head only |
 | 12 | `actionable` | the latest round at this head has actionable comments |
+| 13 | `declined` | the bot refused the round on quota or rate limit; re-trigger, do not wait |
 | 2 | unknown | malformed or unreadable evidence |
 
 Actionability comes from the bot's own summary review through its adapter. For
@@ -60,6 +61,18 @@ PR forever.
 
 `pending`, `stale`, and unknown are all not-yet-mergeable. A completed bot check
 with no review at the exact head is a wait: silence is not approval.
+
+`declined` is the state no further round ends on its own: the bot refused this
+round under its quota or rate limit, so it must be re-triggered once the window
+reopens. `wait=` carries that reopen instant, computed from the notice's post
+time plus the figure the bot gave, because the figure decays from the moment it
+is posted. `wait=UNKNOWN` means no figure was readable, so re-check the PR
+instead of re-triggering.
+
+A refusal notice does not expire out of the PR's comment history, so the probe
+reads it last. A review at the probed head decides the state by its count, a
+review at an older head only reads `stale`, and a running check still reads
+`pending`; a notice from an earlier commit cannot mask any of them.
 
 ## Waiting without polling
 
@@ -90,8 +103,8 @@ Generate the key from the round's identity so repeat passes reconcile instead of
 filing duplicates:
 
 ```bash
-scripts/landing-contract.sh failure-key <repo> review "bot:<slug>@<head_sha>"
-scripts/landing-contract.sh ensure-bounce <merge-bead> <key> agent:coder \
+scripts/landing-contract.py failure-key <repo> review "bot:<slug>@<head_sha>"
+scripts/landing-contract.py ensure-bounce <merge-bead> <key> agent:coder \
   <title> <metadata-json> <description>
 ```
 

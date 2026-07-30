@@ -2,20 +2,24 @@
 set -Eeuo pipefail
 
 # git-blob digest of stdin, matching `git hash-object --stdin`, which is what
-# landing-contract.sh actually calls. Recomputing it as a bare sha1 -- which both
+# landing-contract.py actually calls. Recomputing it as a bare sha1 -- which both
 # this suite and the fake git used to do -- made the oracle self-consistent but
 # blind: the ids it verified were not the ids production computes, so digest drift
 # could not fail a test.
 blob_sha1() {
-  local payload
-  payload="$(cat)"
-  printf 'blob %d\0%s' "${#payload}" "$payload" | shasum -a 1 | awk '{print $1}'
+  # Read stdin as BYTES. Every identity payload is NUL-separated, and `$(cat)`
+  # strips NUL bytes, so a shell round trip hashed "slot-1stable-holder1" where
+  # git hashes "slot-1\0stable-holder\01\0". The helper and the fake agreed with
+  # each other and disagreed with production -- the drift this suite must catch.
+  python3 -c 'import hashlib,sys
+d=sys.stdin.buffer.read()
+print(hashlib.sha1(b"blob %d\0"%len(d)+d).hexdigest())'
 }
 
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
-readonly CONTRACT="$SCRIPT_DIR/landing-contract.sh"
+readonly CONTRACT="$SCRIPT_DIR/landing-contract.py"
 readonly PROBE="$SCRIPT_DIR/merge-probe.sh"
 readonly FIXTURE_BIN="$SCRIPT_DIR/test-fixtures/bin"
 readonly SYSTEM_PATH="$PATH"
@@ -708,6 +712,137 @@ assert_eq 10 "$last_rc" "stacked merge remains open until its content reaches ma
 assert_contains LANDING_HOLD "$last_output" "stacked merge emits a durable hold state"
 assert_contains "landing_state=waiting_base" "$(<"$state/bd.log")" "stacked hold is persisted"
 assert_not_contains_file "close merge-1" "$state/bd.log" "stacked merge does not close before main proof"
+
+# GitHub merge queue. On a queue-enabled base `gh pr merge` ENQUEUES: there is no
+# merge commit and the head is not on landing_base. Stamping `merged` there would
+# report success for a PR a failing merge group can still eject, so these cases
+# pin the queued state, the later proof, and the ejection bounce.
+new_state queue-enqueue
+scenario=queue-enqueue
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" squash external
+assert_eq 10 "$last_rc" "an enqueued PR waits instead of claiming a landing"
+assert_contains LANDING_ENQUEUED "$last_output" "enqueue is reported distinctly"
+assert_contains "landing_state=queued" "$last_output" "enqueue names the queued state"
+assert_eq queued "$(<"$state/landing-state")" "enqueue persists landing_state=queued"
+assert_contains "comment merge-1 ENQUEUED" "$(<"$state/bd.log")" "enqueue writes a durable receipt"
+assert_not_contains_file "landing_state=merged" "$state/bd.log" \
+  "an enqueued PR is never stamped merged"
+assert_not_contains_file "landing_state=proved" "$state/bd.log" \
+  "an enqueued PR is never stamped proved"
+assert_not_contains_file "close merge-1" "$state/bd.log" "an enqueued PR does not close its bead"
+assert_file "$state/released" "enqueue releases the beads merge slot"
+assert_file "$state/atomic-head-guard" "the enqueue call still carries the exact head"
+
+new_state queue-proved
+scenario=queue-proved
+printf 'queued\n' >"$state/landing-state"
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" squash external
+assert_eq 0 "$last_rc" "a queued PR that merged proves and closes"
+assert_contains LANDING_QUEUE_PROVED "$last_output" "queued proof is reported"
+assert_contains LANDING_COMPLETE "$last_output" "queued landing completes"
+assert_contains "close merge-1" "$(<"$state/bd.log")" "queued proof closes the merge bead"
+assert_not_contains_file "pr merge" "$state/gh.log" "a queued resume never merges again"
+assert_not_contains_file "merge-slot acquire" "$state/bd.log" \
+  "a queued resume does not hold the beads slot"
+
+new_state queue-ejected
+scenario=queue-ejected
+printf 'queued\n' >"$state/landing-state"
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" squash external
+assert_eq 12 "$last_rc" "an ejected PR is a bounce, never a success"
+assert_contains LANDING_QUEUE_EJECTED "$last_output" "ejection is reported distinctly"
+assert_contains "entry=absent" "$last_output" "ejection cites the absent queue entry"
+assert_contains "prior_state=queued" "$last_output" "ejection cites the state it left"
+assert_eq ejected "$(<"$state/landing-state")" "ejection persists landing_state=ejected"
+assert_contains "comment merge-1 QUEUE_EJECTED" "$(<"$state/bd.log")" \
+  "ejection writes a durable receipt"
+assert_not_contains "LANDED" "$last_output" "ejection cannot read as a landing"
+assert_not_contains_file "close merge-1" "$state/bd.log" "ejection does not close the merge bead"
+
+new_state queue-absent
+scenario=queue-absent
+run_contract queue-state owner/repo 7
+assert_eq 0 "$last_rc" "queue detection succeeds on a non-queue base"
+assert_contains QUEUE_ABSENT "$last_output" "a non-queue base is reported explicitly"
+
+new_state queue-present
+scenario=queue-present
+run_contract queue-state owner/repo 7
+assert_eq 0 "$last_rc" "queue detection succeeds on a queue base"
+assert_contains QUEUE_PRESENT "$last_output" "a queue base is reported explicitly"
+
+# Detection failure must SAY so and be treated as non-queue, never guessed.
+new_state queue-detect-failure
+scenario=queue-detect-failure
+run_contract queue-state owner/repo 7
+assert_eq 2 "$last_rc" "a failed queue probe is unknown, not a guess"
+assert_contains QUEUE_UNKNOWN "$last_output" "probe failure is stated explicitly"
+assert_contains "treated=non-queue" "$last_output" "probe failure names its fallback"
+
+new_state queue-detect-malformed
+scenario=queue-detect-malformed
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" squash external
+assert_eq 2 "$last_rc" "an undetectable queue fails closed rather than stamping merged"
+assert_contains QUEUE_DETECT_FAILED "$last_output" "undetectable queue state is announced"
+assert_not_contains_file "landing_state=merged" "$state/bd.log" \
+  "an undetectable queue never stamps merged"
+assert_not_contains_file "close merge-1" "$state/bd.log" \
+  "an undetectable queue never closes the merge bead"
+
+# --- the merge bead's anchors must describe the PR it names -------------------
+#
+# A merge bead pointing at the wrong PR was previously meant to be caught by a
+# `Merge-Bead:` trailer in the PR body, but no code ever compared the two. The
+# bead is authoritative, so the comparison reads the bead and the live PR.
+
+new_state anchor-ok
+scenario=anchor-ok
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "matching anchors pass"
+assert_contains ANCHOR_OK "$last_output" "a matching bead is announced"
+
+new_state anchor-branch-mismatch
+scenario=anchor-branch-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead whose branch is not the PR's head branch fails"
+assert_contains "ANCHOR_MISMATCH" "$last_output" "the mismatched field is named"
+assert_contains "field=branch" "$last_output" "the branch field is identified"
+
+new_state anchor-pr-mismatch
+scenario=anchor-pr-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead anchored to a different PR number fails"
+assert_contains "field=pr" "$last_output" "the pr field is identified"
+
+new_state anchor-repo-mismatch
+scenario=anchor-repo-mismatch
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 12 "$last_rc" "a bead anchored to a different repository fails"
+assert_contains "field=repo" "$last_output" "the repo field is identified"
+
+new_state anchor-unanchored
+scenario=anchor-unanchored
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "a bead predating the branch anchor is not a mismatch"
+assert_contains "branch=unanchored" "$last_output" "the absent anchor is announced"
+
+new_state anchor-bd-error
+scenario=anchor-bd-error
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 2 "$last_rc" "an unavailable bd is unknown, not a mismatch"
+assert_contains ANCHOR_UNKNOWN "$last_output" "an unavailable lookup is announced"
+
+new_state anchor-no-metadata
+scenario=anchor-no-metadata
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 0 "$last_rc" "a bead carrying no metadata at all is unanchored, not a mismatch"
+assert_contains "branch=unanchored" "$last_output" "no metadata reads as unanchored"
+
+new_state anchor-bad-metadata
+scenario=anchor-bad-metadata
+run_contract check-anchors merge-1 owner/repo 7
+assert_eq 2 "$last_rc" "metadata that is not an object is unknown, not a mismatch"
+assert_contains ANCHOR_UNKNOWN "$last_output" "malformed metadata is announced"
 
 new_state ready-order
 scenario=ready-order

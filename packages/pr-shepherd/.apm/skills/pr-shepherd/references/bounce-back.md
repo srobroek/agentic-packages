@@ -1,17 +1,18 @@
 # Bounce-back protocol
 
-Bounce a CI failure, conflict, or requested change behind one routed fix bead.
-The fix bead is always unassigned. Its routing label is `agent:coder` or
-`agent:reviewer`.
+Bounce a CI failure, conflict, requested change, or merge-queue ejection behind
+one routed fix bead. The fix bead is always unassigned. Its routing label is
+`agent:coder` or `agent:reviewer`.
 
 ## Failure identity
 
 Generate `failure_key` with the executable contract:
 
 ```bash
-scripts/landing-contract.sh failure-key <repo> ci <check-name>
-scripts/landing-contract.sh failure-key <repo> conflict <sorted-path>...
-scripts/landing-contract.sh failure-key <repo> review <review-thread-or-summary-id>
+scripts/landing-contract.py failure-key <repo> ci <check-name>
+scripts/landing-contract.py failure-key <repo> conflict <sorted-path>...
+scripts/landing-contract.py failure-key <repo> review <review-thread-or-summary-id>
+scripts/landing-contract.py failure-key <repo> queue <landing-base> <ejected-head-sha>
 ```
 
 Conflict paths must use the sorted order emitted by `merge-probe.sh`. The key
@@ -40,7 +41,7 @@ paths, and known `origin_actor`/`origin_bead` pointers. The contract adds
 Run:
 
 ```bash
-scripts/landing-contract.sh ensure-bounce \
+scripts/landing-contract.py ensure-bounce \
   <merge-bead> <failure-key> <agent:coder|agent:reviewer> \
   <title> <metadata-json> <description>
 ```

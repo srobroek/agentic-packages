@@ -17,8 +17,15 @@ hash-object)
   # the fake computed a bare sha1 and the test helpers recomputed it the same way,
   # the suite was self-consistent but could not detect digest drift -- the one
   # failure a rewrite is most likely to introduce.
-  _payload="$(cat)"
-  printf 'blob %d\0%s' "${#_payload}" "$_payload" | shasum -a 1 | awk '{print $1}'
+  # Read stdin as BYTES. Every identity payload the contract hashes is
+  # NUL-separated, and `$(cat)` strips NUL bytes -- so a shell round trip hashed
+  # "slot-1stable-holder1" where git hashes "slot-1\0stable-holder\01\0". The two
+  # differ for every waiter id, holder token, failure key, and wisp id. The fake
+  # and the test helpers agreed with each other and disagreed with production,
+  # which is exactly the drift this fixture exists to catch.
+  python3 -c 'import hashlib,sys
+d=sys.stdin.buffer.read()
+print(hashlib.sha1(b"blob %d\0"%len(d)+d).hexdigest())'
   ;;
 fetch | cat-file)
   exit 0

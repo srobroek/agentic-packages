@@ -1,6 +1,6 @@
 {
   "name": "release-please",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Drive releases with googleapis/release-please. Use for any release, tagging, changelog, or version-bump work, and whenever the repo has a release-please-config.json / .release-please-manifest.json or a release-please workflow -- then following release-please is mandatory. Also use to set up release-please in a repo. Covers setup, the git/commit process, publishing, monorepo/manifest config, and diagnosing and recovering stuck or botched releases. Ships one Python script (requires python3 on PATH) serving both a warn-only cross-tool advisory hook, which never blocks, and a `detect` subcommand that reports how the repo configures release-please.",
   "author": {
     "name": "Sjors Robroek"

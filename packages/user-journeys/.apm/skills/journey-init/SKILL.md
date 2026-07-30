@@ -1,6 +1,6 @@
 ---
 name: journey-init
-description: Use when setting up a user-journeys directory for a repo that has none: investigates, interviews, and scaffolds the format spec.
+description: "Use when setting up a user-journeys directory for a repo that has none: investigates, interviews, and scaffolds the format spec."
 ---
 
 # journey-init

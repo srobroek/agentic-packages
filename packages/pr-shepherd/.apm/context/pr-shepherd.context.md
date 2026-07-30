@@ -3,11 +3,9 @@
 MERGE BEADS
 MUST Before `gh pr create`, create one open, unassigned merge bead labeled
   `pr:merge` + `agent:integrator`; store `branch`, `repo`, `origin_actor`,
-  `tracks_beads`, `closes_beads` metadata; stamp pr/base/head after creation.
-  PR body carries the exact `Merge-Bead` id; dedupe on repo+PR.
-MUST For every `Closes-Bead: <work>` add `bd dep add <work> <merge-bead>`.
+  metadata; stamp pr/base/head after creation. Dedupe on repo+PR.
+MUST For every work bead the PR completes, add `bd dep add <work> <merge-bead>`.
   One work bead may depend on many merge beads; one merge bead may block many.
-  `Tracks-Bead` adds no blocking edge.
 NOT A gh:pr gate blocking a merge bead -- deadlocks integrator queue.
   A gh:run gate may block merge work for CI.
 DEFAULT `bd graph` for fan-in/fan-out; `bd ready` for dependency satisfaction;
@@ -40,6 +38,10 @@ MUST Treat a configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
   as part of merge readiness: probe `merge-probe.sh bot-review` at the exact head
   before every merge. Only `absent` or `clean` clears; `pending`, `stale`, and
   unknown are waits. Silence is not approval.
+MUST Treat `declined` (13) as a re-trigger rather than a wait: the bot refused
+  the round under its quota, so no further round arrives unprompted. Act on the
+  probe's `wait=` reopen instant. `wait=UNKNOWN` means re-check the PR before
+  re-triggering, because a wrong "window reopened" burns quota for no review.
 MUST Read actionability from the bot's own summary review body through its
   adapter (CodeRabbit: `Actionable comments posted: N`) at the current head,
   taking the LATEST round rather than the highest count -- every fix suggestion
@@ -64,9 +66,11 @@ MUST Ignore automated release PRs (head branch `release-please--branches--` or
   label `autorelease: pending`). Merged release PRs remain excluded.
 MUST Closed-unmerged PR marks its merge bead blocked/failed; dependent work
   beads stay blocked; never close as successful.
-MUST `Tracks-Bead` is a backlink only. Closing a verified PR closes its merge
-  bead; native dependency readiness performs fan-in.
-MUST Close a `Closes-Bead` work item only when: `bd ready` reports it, it has
+MUST Prove a merge bead's pr/repo/branch anchors against the live PR with
+  `landing-contract.py check-anchors` before merging; the PR body is not
+  evidence. Closing a verified PR closes its merge bead; native dependency
+  readiness performs fan-in.
+MUST Close a dependent work item only when: `bd ready` reports it, it has
   `state:approved`, children/gates resolved, and every closing PR targets the
   default branch with its merge commit proven there.
 

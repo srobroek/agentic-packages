@@ -39,7 +39,6 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `steering-git-workflow`, `verify`, `agent-pr-reviewer` |
 | `resume-cv` | CV / career-resume bundle | `resume-tailoring`^, `ResumeSkills`^ |
 | `review` | Code review and verification toolkit | `verify`, `agent-pr-reviewer` |
-| `speckit-beads` | Beads-native SpecKit workflow | `speckit`, `beads` |
 | `toolchain-cache-policy` | Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories | self-contained |
 <!-- END:bundles -->
 
