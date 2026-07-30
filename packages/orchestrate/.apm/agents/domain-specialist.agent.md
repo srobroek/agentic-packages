@@ -70,9 +70,17 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 
 ### Choosing a child agent type
 
-Pick the **narrowest** agent that covers the task. A specialised agent carries a
-tighter prompt and cheaper defaults, so it returns the same answer for fewer
-tokens than a generalist that has to be told what to be.
+**Always prefer a named agent.** If the catalog has an agent for the task, spawn
+that one. A named agent carries a tighter prompt and cheaper defaults, so it
+returns the same answer for fewer tokens than a generalist that has to be told
+what to be.
+
+The table below is the common routing, not the whole catalog. Your runtime may
+offer named agents for the language, framework, or concern in front of you
+(`rust-pro`, `typescript-pro`, `security-auditor`, `debugger`, `test-automator`
+and similar). A matching named agent beats every generic option, including the
+ones listed here. If `metadata.skill_hints` names a skill, an agent specialised
+for that area is likely present -- look before you settle for a generalist.
 
 | Child task | Agent type |
 |---|---|

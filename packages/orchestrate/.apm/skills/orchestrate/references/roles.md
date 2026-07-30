@@ -84,14 +84,18 @@ children in its own prepared checkout. It binds every child runtime to the
 same Worktrunk actor/lease, and collects the child before reporting. No other
 worker nests (SKILL.md core rule 5).
 
-A nested child takes the **narrowest** agent that covers its task:
+A nested child takes a **named** agent whenever the catalog has one for the task.
+The table below is the common routing, not the whole catalog: a named agent for
+the language or concern at hand (`rust-pro`, `typescript-pro`,
+`security-auditor`, `debugger`, `test-automator` and similar) beats every generic
+option in it. Check `discover-agents.py` output before settling for a generalist.
 
 | Child task | Agent |
 |---|---|
 | File discovery, call-path tracing | `Explore` |
 | Read-only investigation, synthesis | `researcher`, else `Explore` |
 | Bulk edits, mechanical implementation | `coder` / `builder` |
-| Mixed tool use no narrower agent covers | `general-purpose` |
+| Mixed tool use no named agent covers | `general-purpose` |
 
 `general-purpose` is the last resort, justified only when no narrower agent has
 the capability, since it costs a full generalist context to be told what to be.
