@@ -953,18 +953,6 @@
       "category": "speckit"
     },
     {
-      "name": "speckit-beads",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit-beads"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
-    },
-    {
       "name": "steering-architecture",
       "source": {
         "source": "local",
@@ -1101,18 +1089,6 @@
       "source": {
         "source": "local",
         "path": "./packages/steering-project-structure"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "steering"
-    },
-    {
-      "name": "steering-speckit",
-      "source": {
-        "source": "local",
-        "path": "./packages/steering-speckit"
       },
       "policy": {
         "installation": "AVAILABLE",

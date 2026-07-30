@@ -1,4 +1,4 @@
-"""Coverage for speckit-beads-tasks-guard.py, which has three roles branched on
+"""Coverage for speckit-tasks-guard.py, which has three roles branched on
 the tool: a DENY on writes to specs/*/tasks.md, and advisories on a Bash
 command or a Skill invocation that touches the same ground.
 
@@ -11,7 +11,7 @@ everything in a repository with no beads workspace.
 `bd` is stubbed on PATH so these tests describe the guard's logic rather than
 the machine's beads state.
 
-Ported from speckit-beads-tasks-guard.bats; every bats case has a matching
+Ported from the retired speckit-beads-tasks-guard.bats; every bats case has a matching
 test here.
 """
 
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-GUARD = Path(__file__).resolve().parent.parent / "scripts" / "speckit-beads-tasks-guard.py"
+GUARD = Path(__file__).resolve().parent.parent / "scripts" / "speckit-tasks-guard.py"
 
 
 @pytest.fixture

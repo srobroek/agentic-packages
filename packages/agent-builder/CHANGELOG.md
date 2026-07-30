@@ -1,5 +1,16 @@
 # Changelog
 
+## [9.0.0](https://github.com/srobroek/agentic-packages/compare/agent-builder--v8.0.0...agent-builder--v9.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+
+### Refactors
+
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+
 ## [8.0.0](https://github.com/srobroek/agentic-packages/compare/agent-builder--v7.0.2...agent-builder--v8.0.0) (2026-07-27)
 
 

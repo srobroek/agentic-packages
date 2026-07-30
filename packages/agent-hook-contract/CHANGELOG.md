@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/agent-hook-contract--v2.0.0...agent-hook-contract--v2.1.0) (2026-07-30)
+
+
+### Features
+
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
 ## [2.0.0](https://github.com/srobroek/agentic-packages/compare/agent-hook-contract--v1.0.0...agent-hook-contract--v2.0.0) (2026-07-28)
 
 

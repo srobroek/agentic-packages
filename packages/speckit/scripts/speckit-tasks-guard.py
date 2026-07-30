@@ -18,8 +18,7 @@ through the agent-assign chain instead.
 DELIBERATE DESIGN CHOICE, do not change: a bare-string `tool_input` has no path
 to judge, so it ALLOWS rather than denying -- the deny needs a specific named
 path. This is documented and pinned by
-packages/speckit-beads/tests/speckit-beads-tasks-guard.bats /
-test_speckit_beads_tasks_guard.py ("string-form tool_input allows").
+packages/speckit/tests/test_speckit_tasks_guard.py ("string-form tool_input allows").
 
 Self-gating (never rely on the matcher): exits 0 silently when the payload is
 empty, `bd` is missing, the target path is not specs/*/tasks.md, or the repo has
@@ -31,12 +30,12 @@ from __future__ import annotations
 import sys
 
 # Only `sys` at module scope. This hook is bound to Write/Edit/MultiEdit/Bash/
-# Skill/apply_patch and runs on most tool calls in a speckit-beads repo, so the
+# Skill/apply_patch and runs on most tool calls in a SpecKit beads repo, so the
 # cheap substring bail in main() must precede any import.
 
 
 DENY_REASON = (
-    "blocked by speckit-beads (task state lives in beads, tasks.md is never "
+    "blocked by speckit (task state lives in beads, tasks.md is never "
     "authored): this repo has an active beads workspace, so specs/*/tasks.md is "
     "read-only legacy and must not be written or created. Create implementation "
     "tasks as beads under the feature molecule's implement step instead: bd "
@@ -49,13 +48,13 @@ DENY_REASON = (
 )
 
 BASH_ADVICE = (
-    "SPECKIT-BEADS: tasks.md is not authored in beads repos; task state lives "
+    "SPECKIT: tasks.md is not authored in beads repos; task state lives "
     "in beads: bd ready / bd update <id> --claim / bd close <id> --reason. If "
     "reading legacy tasks.md for migration, that's fine."
 )
 
 IMPLEMENT_ADVICE = (
-    "SPECKIT-BEADS: /speckit.implement is deprecated in beads repos; route "
+    "SPECKIT: /speckit.implement is deprecated in beads repos; route "
     "through the agent-assign chain instead (/speckit.agent-assign.assign -> "
     "validate -> execute), working the molecule steps via bd mol current / bd "
     "ready / bd update --claim / bd close."

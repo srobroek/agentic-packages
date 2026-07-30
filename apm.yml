@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 26.0.0
+version: 27.0.0
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -676,11 +676,6 @@ marketplace:
       tags:
         - bundle
         - speckit
-    - name: speckit-beads
-      source: ./packages/speckit-beads
-      category: speckit
-      tags:
-        - speckit
         - beads
         - workflow
         - gates
@@ -766,12 +761,6 @@ marketplace:
       tags:
         - steering
         - structure
-    - name: steering-speckit
-      source: ./packages/steering-speckit
-      category: steering
-      tags:
-        - steering
-        - speckit
     - name: steering-subagent-routing
       source: ./packages/steering-subagent-routing
       category: steering
