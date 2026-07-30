@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.6.2...release-queue-watch--v0.6.3) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
 ## [0.6.2](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.6.1...release-queue-watch--v0.6.2) (2026-07-25)
 
 

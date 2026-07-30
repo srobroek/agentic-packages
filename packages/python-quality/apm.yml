@@ -1,5 +1,5 @@
 name: python-quality
-version: 2.1.2
+version: 2.1.3
 description: >-
   Run Python format, lint, type-check, and test commands with the project
   toolchain.

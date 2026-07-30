@@ -1,5 +1,5 @@
 name: mcp-context7
-version: 1.2.1
+version: 1.2.2
 description: >-
   MCP server package for Context7, providing current library and framework
   documentation lookups.

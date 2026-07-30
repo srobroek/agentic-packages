@@ -1,5 +1,17 @@
 # Changelog
 
+## [16.1.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.0.0...orchestrate--v16.1.0) (2026-07-30)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([b0a71c8](https://github.com/srobroek/agentic-packages/commit/b0a71c8df3eea63d7a6570ad7bc9f689f46a412e))
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
 ## [16.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v15.1.0...orchestrate--v16.0.0) (2026-07-30)
 
 
