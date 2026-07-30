@@ -1088,18 +1088,6 @@
         }
       ]
     },
-    "packages/speckit": {
-      "release-type": "simple",
-      "component": "speckit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/steering-architecture": {
       "release-type": "simple",
       "component": "steering-architecture",

@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
-"""Block non-draft or unlinked agent-issued ``gh pr create`` commands."""
+"""Deny agent-issued ``gh pr create`` that does not pass ``--draft``.
+
+One rule, because one rule earns a denial: a non-draft PR has already notified
+reviewers and started CI by the time anyone notices, and `gh pr ready` cannot
+un-send that.
+
+This guard also demanded Beads trailers in the body -- Tracks-Bead, Merge-Bead,
+Closes-Bead -- plus a matching merge bead and a predeclared dependency edge. No
+code anywhere read those trailers except this file, so the guard required a
+trailer in order to check the trailer. The merge queue discovers work through
+`bd list --label pr:merge` and probes it through bead metadata; the shepherd now
+verifies its own anchors against the live PR, which is the check the trailer only
+appeared to provide.
+"""
 
 from __future__ import annotations
 
 import json
 import os
-import re
-from pathlib import Path
 import shlex
-import shutil
-import subprocess
 import sys
 from typing import Any
-
 
 CONTROL = {";", "&&", "||", "|", "&", "(", ")"}
 SHELLS = {"bash", "sh", "zsh", "dash", "fish", "ksh"}
@@ -68,10 +76,8 @@ def deny(reason: str) -> None:
 def advise(context: str) -> None:
     """Allow the command but tell the model what could not be verified.
 
-    Used where the guard cannot reach a verdict: an unparsable command, or a
-    `bd` lookup that failed for reasons unrelated to the bead existing. Denying
-    on an inconclusive check turns every parser gap and every slow database into
-    a blocked PR, which is the opposite of what a guard is for.
+    Used for an unparsable command. Denying on an inconclusive check turns every
+    parser gap into a blocked PR, which is the opposite of what a guard is for.
     """
     print(
         json.dumps(
@@ -86,54 +92,15 @@ def advise(context: str) -> None:
     )
 
 
-def payload_command(payload: Any) -> tuple[str, Path]:
+def payload_command(payload: Any) -> str:
+    """Extract the command. Codex sends a bare string, Claude sends an object."""
     if isinstance(payload, str):
-        return payload, Path.cwd()
+        return payload
     if not isinstance(payload, dict):
-        return "", Path.cwd()
+        return ""
     tool_input = payload.get("tool_input", "")
-    if isinstance(tool_input, dict):
-        command = tool_input.get("command", "")
-    else:
-        command = tool_input
-    raw_cwd = payload.get("cwd") or os.getcwd()
-    cwd = Path(raw_cwd)
-    if not cwd.is_dir():
-        cwd = Path.cwd()
-    command = command if isinstance(command, str) else ""
-    return command, effective_cwd(command, cwd)
-
-
-def effective_cwd(command: str, session_cwd: Path) -> Path:
-    """Resolve the directory the command actually runs in.
-
-    The payload `cwd` is the session's directory, but a Bash call routinely starts
-    with `cd <path> &&`. Resolving beads against the session directory instead of
-    the command's directory made this guard deny a valid PR whose merge bead lived
-    in the target repository, and no `cd` prefix could correct it.
-    """
-    try:
-        tokens = shell_tokens(command)
-    except ValueError:
-        return session_cwd
-    segment: list[str] = []
-    for token in tokens:
-        if token in {";", "&&", "||", "&", "|"}:
-            break
-        segment.append(token)
-    if segment[:1] != ["cd"]:
-        return session_cwd
-    args = [token for token in segment[1:] if token != "--"]
-    if len(args) != 1 or args[0] in {"", "-"}:
-        return session_cwd
-    target = Path(args[0]).expanduser()
-    if not target.is_absolute():
-        target = session_cwd / target
-    try:
-        resolved = target.resolve()
-    except OSError:
-        return session_cwd
-    return resolved if resolved.is_dir() else session_cwd
+    command = tool_input.get("command", "") if isinstance(tool_input, dict) else tool_input
+    return command if isinstance(command, str) else ""
 
 
 def shell_tokens(command: str) -> list[str]:
@@ -331,16 +298,6 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
     return found
 
 
-def argument(invocation: list[str], long: str, short: str) -> str | None:
-    args = invocation[3:]
-    for index, token in enumerate(args):
-        if token in {long, short}:
-            return args[index + 1] if index + 1 < len(args) else None
-        if token.startswith(f"{long}=") or token.startswith(f"{short}="):
-            return token.split("=", 1)[1]
-    return None
-
-
 def draft_enabled(invocation: list[str]) -> bool:
     enabled = False
     true_values = {"1", "t", "true", "yes", "y", "on"}
@@ -352,220 +309,13 @@ def draft_enabled(invocation: list[str]) -> bool:
     return enabled
 
 
-def beads_workspace(cwd: Path) -> bool:
-    """Report whether beads is actually initialised for this directory.
-
-    Ask `bd` rather than walking for a `.beads` directory. A workspace in a shared
-    ancestor -- `~/.beads` is common -- made every repository under the home
-    directory look beads-enabled, so this guard demanded bead trailers from
-    projects that track no beads at all. `bd where` resolves the same workspace the
-    later lookups will use, so the gate and the lookups cannot disagree.
-    """
-    if not shutil.which("bd"):
-        return False
-    try:
-        result = subprocess.run(
-            ["bd", "-C", str(cwd), "where"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=30,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        # An unreachable `bd` is not evidence of a beads workspace, so the bead
-        # trailer requirements below are skipped rather than demanded blindly.
-        return False
-    return result.returncode == 0
-
-
-def trailer_ids(body: str, name: str) -> list[str]:
-    prefix = f"{name}:"
-    ids: list[str] = []
-    for line in body.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith(prefix):
-            continue
-        value = stripped[len(prefix) :].strip()
-        if value and all(
-            character.isalnum() or character in "._-" for character in value
-        ):
-            ids.append(value)
-    return ids
-
-
-MISS_MESSAGE = re.compile(
-    r"no issue(s)? found|not found|no such|does not exist|unknown (bead|issue)", re.I
-)
-
-
-class BeadUnavailable(Exception):
-    """`bd` could not answer, so absence of a record proves nothing.
-
-    Raised instead of returning None when the lookup itself failed: binary
-    missing, timeout, crash, or unparsable output. The caller turns this into an
-    advisory rather than a denial, because a slow or unhealthy database must not
-    read as "that bead does not exist".
-    """
-
-
-def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
-    """Return the bead record, None when the bead genuinely does not exist.
-
-    Raises BeadUnavailable when the lookup could not be completed. The timeout is
-    generous because `bd` is Dolt-backed: a healthy call still takes about a
-    second, and system load pushes it well past that. One retry absorbs a
-    transient stall.
-    """
-    if not shutil.which("bd"):
-        raise BeadUnavailable("bd is not installed")
-    last_error = "unknown error"
-    for attempt in range(2):
-        try:
-            result = subprocess.run(
-                ["bd", "-C", str(cwd), "show", bead_id, "--json"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=30,
-                check=False,
-            )
-        except subprocess.TimeoutExpired:
-            last_error = "bd show timed out"
-            continue
-        except OSError as error:
-            raise BeadUnavailable(f"could not run bd: {error}") from error
-
-        stdout = result.stdout.decode("utf-8", "replace").strip()
-        stderr = result.stderr.decode("utf-8", "replace").strip()
-        if result.returncode != 0:
-            # An explicit "no such bead" is a genuine miss. Anything else --
-            # schema skew, a locked database, a crash -- is an unavailable
-            # lookup, and must not read as "that bead does not exist". A bare
-            # non-zero exit with no message is treated as a miss, because that is
-            # how the simplest callers report one.
-            if not stderr or MISS_MESSAGE.search(stderr):
-                return None
-            last_error = stderr.splitlines()[0]
-            continue
-
-        if not stdout:
-            return None
-        try:
-            payload = json.loads(stdout)
-        except json.JSONDecodeError:
-            last_error = "bd returned unparsable JSON"
-            continue
-        # bd reports an unknown id as {"error": ...} on stdout with exit 0.
-        if isinstance(payload, dict) and payload.get("error"):
-            # An error object on a zero exit is how bd reports an unknown id.
-            return None
-        if isinstance(payload, list):
-            return payload[0] if payload and isinstance(payload[0], dict) else None
-        if isinstance(payload, dict):
-            return payload
-        return None
-    raise BeadUnavailable(last_error)
-
-
-def validate(invocation: list[str], cwd: Path) -> str | None:
-    if not draft_enabled(invocation):
-        return (
-            "Agent-authored PRs must start as drafts. Re-run every gh pr create "
-            "invocation with --draft; use gh pr ready only after implementation, "
-            "local validation, and required review are complete."
-        )
-    if not beads_workspace(cwd):
-        return None
-
-    body = argument(invocation, "--body", "-b")
-    body_file = argument(invocation, "--body-file", "-F")
-    if body_file:
-        body_path = Path(body_file)
-        if not body_path.is_absolute():
-            body_path = cwd / body_path
-        try:
-            body = body_path.read_text(encoding="utf-8")
-        except OSError:
-            return (
-                f"Cannot verify PR body file '{body_file}'. Supply a readable "
-                "--body-file containing Tracks-Bead: <id>."
-            )
-    if not body:
-        return (
-            "PRs created in a Beads repository must supply --body or --body-file "
-            "with Tracks-Bead: <id>; implicit --fill/editor bodies cannot be verified."
-        )
-
-    tracks = trailer_ids(body, "Tracks-Bead")
-    closes = trailer_ids(body, "Closes-Bead")
-    merges = trailer_ids(body, "Merge-Bead")
-    if not tracks:
-        return "PR body must include at least one exact Tracks-Bead: <id> line."
-    if len(merges) != 1:
-        return "PR body must include exactly one Merge-Bead: <id> line."
-    merge_id = merges[0]
-    merge_record = bead_record(cwd, merge_id)
-    if merge_record is None:
-        return f"Merge-Bead '{merge_id}' is not resolvable from this repository."
-    labels = set(merge_record.get("labels", []))
-    if merge_record.get("status") != "open" or not {
-        "pr:merge",
-        "agent:integrator",
-    }.issubset(labels):
-        return (
-            f"Merge-Bead '{merge_id}' must be open and labeled pr:merge "
-            "and agent:integrator."
-        )
-    if merge_record.get("assignee"):
-        return f"Merge-Bead '{merge_id}' must be unassigned for PR Shepherd discovery."
-    metadata = merge_record.get("metadata")
-    required_metadata = {"branch", "repo", "origin_actor"}
-    if not isinstance(metadata, dict) or any(
-        not metadata.get(name) for name in required_metadata
-    ):
-        return (
-            f"Merge-Bead '{merge_id}' must have branch, repo, and origin_actor "
-            "metadata before PR creation."
-        )
-    for bead_id in tracks:
-        if bead_record(cwd, bead_id) is None:
-            return f"Tracks-Bead '{bead_id}' is not resolvable from this repository."
-    for bead_id in closes:
-        if bead_id not in tracks:
-            return f"Closes-Bead '{bead_id}' must also appear as Tracks-Bead."
-        work_record = bead_record(cwd, bead_id)
-        if work_record is None:
-            return f"Closes-Bead '{bead_id}' is not resolvable from this repository."
-        if work_record.get("status") == "closed":
-            return f"Closes-Bead '{bead_id}' is already closed; late closing edges are denied."
-        dependencies = work_record.get("dependencies", [])
-        edge_exists = any(
-            dependency.get("id") == merge_id
-            and dependency.get("dependency_type") == "blocks"
-            for dependency in dependencies
-            if isinstance(dependency, dict)
-        )
-        if not edge_exists:
-            return (
-                f"Closes-Bead '{bead_id}' must already depend on Merge-Bead "
-                f"'{merge_id}' before PR creation."
-            )
-    if set(metadata.get("tracks_beads", [])) != set(tracks) or set(
-        metadata.get("closes_beads", [])
-    ) != set(closes):
-        return (
-            f"Merge-Bead '{merge_id}' tracked/closing metadata must match the "
-            "PR body trailers."
-        )
-    return None
-
-
 def main() -> int:
     raw = sys.stdin.read()
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
         payload = raw
-    command, cwd = payload_command(payload)
+    command = payload_command(payload)
     if not command:
         return 0
     # Cheap bail before tokenizing. This hook is registered on every Bash call,
@@ -574,33 +324,23 @@ def main() -> int:
     # have flagged.
     if not all(word in command for word in ("gh", "pr", "create")):
         return 0
-    likely_pr_create = True
     try:
         invocations = invocation_spans(command)
     except ValueError as error:
-        if likely_pr_create:
-            # Allow, do not deny. PR bodies carry markdown: apostrophes,
-            # backticks, and nested quotes all make the tokenizer give up, and a
-            # command this guard cannot read is not evidence of a policy breach.
-            advise(
-                f"PR policy not verified: this command could not be parsed ({error}). "
-                "Ensure the invocation uses --draft and, in a Beads repository, a "
-                "PR body carrying Tracks-Bead and Merge-Bead trailers."
-            )
+        # Allow, do not deny. PR bodies carry markdown: apostrophes, backticks,
+        # and nested quotes all make the tokenizer give up, and a command this
+        # guard cannot read is not evidence of a policy breach.
+        advise(
+            f"PR policy not verified: this command could not be parsed ({error}). "
+            "Ensure the invocation uses --draft."
+        )
         return 0
-    for invocation in invocations:
-        try:
-            reason = validate(invocation, cwd)
-        except BeadUnavailable as error:
-            advise(
-                f"PR policy not fully verified: a bead lookup could not complete "
-                f"({error}). The draft and trailer requirements still apply; "
-                "re-check the bead state if the PR is rejected downstream."
-            )
-            return 0
-        if reason:
-            deny(reason)
-            return 0
+    if any(not draft_enabled(invocation) for invocation in invocations):
+        deny(
+            "Agent-authored PRs must start as drafts. Re-run every gh pr create "
+            "invocation with --draft; use gh pr ready only after implementation, "
+            "local validation, and required review are complete."
+        )
     return 0
 
 
