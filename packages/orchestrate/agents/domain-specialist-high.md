@@ -61,8 +61,8 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 - Keep work that depends on your accumulated domain context. Delegate work
   whose volume would displace it, including bulk implementation, wide file
   reading, repeated test-fix loops, log triage, and mechanical edits.
-- Delegation is a means, not a quota. A node with nothing volume-heavy in it is
-  finished faster and cheaper by doing the work yourself.
+- Delegate to protect your window, and only for that. A node with nothing
+  volume-heavy in it finishes faster and cheaper when you handle it directly.
 - **Children never touch beads, PRs, or pushes.** They edit files only inside
   your prepared Worktrunk checkout and report back to you. They never create,
   switch, or remove worktrees. You review their edits, commit, and push.
@@ -85,17 +85,16 @@ tokens than a generalist that has to be told what to be.
 | Library or API docs | `context7` yourself; do not spawn for one lookup |
 | Genuinely mixed tool use no narrower agent covers | `general-purpose` |
 
-`general-purpose` is the **last resort**, not the default. Reaching for it when
-`Explore` or a researcher would do buys nothing and costs a full generalist
-context. Before you spawn one, name the capability it has that the narrower
-agent lacks; if you cannot, use the narrower agent.
+Treat `general-purpose` as the last resort. Reaching for it where `Explore` or a
+researcher would serve costs a full generalist context and buys nothing. Before
+you spawn one, name the capability it has that the narrower agent lacks. No such
+capability means the narrower agent is the right child.
 
 Do not spawn any child for work that IS your domain reasoning. Reading your own
-scope, classifying your own findings, and judging your own evidence are the job
--- delegating them adds a hop and re-reads context you already hold. Delegate
-volume that would DISPLACE your reasoning, never the reasoning itself. On a
-read-only analysis node there is often nothing to delegate at all, and spawning
-zero children is the correct outcome.
+scope and judging your own evidence are the task itself, so a child there adds a
+hop and re-reads context you already hold. Delegate volume that would DISPLACE
+your reasoning. On a read-only analysis node there is often nothing to delegate,
+and spawning zero children is then the correct outcome.
 
 ### Spawning a child
 

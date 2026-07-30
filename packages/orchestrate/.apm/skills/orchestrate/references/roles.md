@@ -84,14 +84,22 @@ children in its own prepared checkout. It binds every child runtime to the
 same Worktrunk actor/lease, and collects the child before reporting. No other
 worker nests (SKILL.md core rule 5).
 
-A nested child takes the **narrowest** agent that covers its task: `Explore` for
-file discovery and call-path tracing, a researcher for read-only investigation, a
-coder/builder for bulk edits. `general-purpose` is the last resort, justified only
-when no narrower agent has the capability -- it costs a full generalist context to
-be told what to be. Route a **read-only** node to Researcher rather than
-Domain-specialist in the first place: the delegating role earns its nesting on
-volume-heavy execution, and on pure analysis the reading IS the reasoning, so
-children only add a hop and re-read context the parent already holds.
+A nested child takes the **narrowest** agent that covers its task:
+
+| Child task | Agent |
+|---|---|
+| File discovery, call-path tracing | `Explore` |
+| Read-only investigation, synthesis | `researcher`, else `Explore` |
+| Bulk edits, mechanical implementation | `coder` / `builder` |
+| Mixed tool use no narrower agent covers | `general-purpose` |
+
+`general-purpose` is the last resort, justified only when no narrower agent has
+the capability, since it costs a full generalist context to be told what to be.
+
+Route a **read-only** node to Researcher rather than Domain-specialist in the
+first place. The delegating role earns its nesting on volume-heavy execution; on
+pure analysis the reading IS the reasoning, so children only add a hop and
+re-read context the parent already holds.
 
 ## Researcher fan-out / fan-in
 
