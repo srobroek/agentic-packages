@@ -941,18 +941,6 @@
       "category": "quality"
     },
     {
-      "name": "speckit",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
-    },
-    {
       "name": "steering-architecture",
       "source": {
         "source": "local",

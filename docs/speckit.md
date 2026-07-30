@@ -1,90 +1,53 @@
 # SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. The `speckit` package delivers it whole:
+The SpecKit workflow lives in its own repository:
+**[srobroek/speckit-conductor](https://github.com/srobroek/speckit-conductor)**.
 
-- The `speckit-bugfix` and `speckit-setup` skills, and four task agents. APM deploys the agents to both Claude and Codex.
-- The `speckit-feature` beads (`bd`) formula, whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off.
-- Workflow steering, and a guard that keeps task state in beads.
+It was three packages here (`speckit`, `speckit-beads`, `steering-speckit`), merged
+into one and then extracted. This repository no longer ships it.
 
-`formulas/speckit-feature.formula.toml` is the only statement of step order. Read
-the graph with `bd formula show speckit-feature --json`, or a poured molecule's
-position with `bd mol current <root-id>`.
-
-In repos with a beads workspace, task state lives in beads (`bd ready` /
-`bd update --claim` / `bd close`), not in tasks.md or GitHub issues.
-
-Conditional loop-backs branch off this spine: `iterate` (scope/intent change),
-`bugfix` (defect in built code), `fix-findings` (review/QA findings), and
-`converge` (spec is right but code is incomplete -- assesses the code against
-spec/plan/tasks and appends the unbuilt work as new tasks, append-only, to be
-implemented via the agent-assign flow).
-
-## The four sub-agents
-
-Read-only analysts except where noted:
-
-| Agent | Role |
-| --- | --- |
-| `speckit-research` | Pulls current library/API docs (Context7, official sources) tied to a spec decision; returns cited findings. |
-| `speckit-implement-task` | Executes scoped tasks from `tasks.md`, or delegates substantial code work to a coder. |
-| `speckit-verify` | Checks implementation against FR/SC (mode: requirements) or detects phantom completions (mode: tasks). |
-| `speckit-sync` | Detects drift between specs and implementation (scope: drift) or contradictions between specs (scope: conflicts). |
-
-## Setting up a SpecKit project
-
-The `/speckit.*` slash commands come from the upstream [`github/spec-kit`](https://github.com/github/spec-kit) `specify` CLI plus community extensions. This repo's packages supply the orchestration on top.
-
-**Recommended -- via the `speckit-setup` skill**:
+## Install
 
 ```bash
-apm install speckit@srobroek-agentic --target claude,codex
+apm install srobroek/speckit-conductor --target claude,codex
 ```
 
-Then invoke the skill (it is self-describing -- ask the agent to "set up SpecKit"). It bootstraps end-to-end:
+Or as a dependency:
 
-1. `specify init --here --integration codex --script sh` -- scaffolds `.specify/` (constitution, feature dirs, workflow state).
-2. Registers the community extension catalog: `https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json`
-3. Installs and enables the required extension set (including `agent-assign`).
-4. Provisions the beads workflow: the `speckit-feature` formula is the phase DAG (human gates included), replacing the `specify workflow` primitive this package used to ship. Any leftover `speckit`/`speckit-quality`/`speckit-full` `specify workflow` definitions from earlier package versions are removed as part of this step.
-
-**Manual setup** -- if you prefer to drive `specify` yourself:
-
-```bash
-# 1. Install the specify CLI (see github/spec-kit for current install)
-uv tool install specify-cli
-
-# 2. Scaffold .specify/ in your project
-specify init --here --integration codex --script sh
-
-# 3. Register the community extension catalog
-specify extension catalog add --name community --install-allowed \
-  https://raw.githubusercontent.com/github/spec-kit/main/extensions/catalog.community.json
-
-# 4. Install the speckit package (pulls beads and adr-as-beads)
-apm install speckit@srobroek-agentic --target claude,codex
-apm compile --target codex,claude --no-constitution
+```yaml
+dependencies:
+  apm:
+    - git: srobroek/speckit-conductor
+      ref: '>=3.0.0 <4.0.0'
+      targets: [claude, codex]
 ```
 
-Enforcement keys off the feature molecule: `speckit-setup` runs `bd init --skip-hooks` and installs the `speckit-feature` formula; pouring it (`bd mol pour speckit-feature --var feature=<NNN-slug>`) creates the phase DAG whose dependency edges and human-gate beads do the ordering.
+APM install is the supported path. `apm pack` synthesises a `plugin.json` with no
+`dependencies` field, and a Codex plugin manifest has no such field at all, so a
+native `/plugin` install resolves that package's skills and hooks but none of its
+dependencies. APM composes the full graph; a native install does not.
 
-## Architecture: the how and why
+## What it still depends on from here
 
-**Why.** LLM coding agents skip steps. Left to their own judgment they call a security review "overkill," mark tasks complete that were never implemented, and let specs drift from code. The orchestration system removes that discretion: every step is mandatory by default, the ordering is fixed, and a hook layer can hard-block out-of-order or precondition-violating moves before the model acts.
+Two packages, resolved from published tags rather than vendored:
 
-**How -- three layers.**
+| Package | Supplies |
+|---|---|
+| [`beads`](../packages/beads) | the `bd` workflow engine the phase DAG is poured into |
+| [`adr-as-beads`](../packages/adr-as-beads) | decisions as `decision` beads, rendered to `docs/adr/` |
 
-1. **The workflow molecule** -- [`packages/speckit/formulas/speckit-feature.formula.toml`](../packages/speckit/formulas/speckit-feature.formula.toml) is the single hand-authored source for the graph: `[[steps]]` with `needs` edges plus human-gate beads at clarify, analyze, and verify sign-off. Pouring it instantiates real beads; `bd ready` exposes only unblocked steps, so ordering is graph-native rather than hook-enforced.
+A copy across a repository boundary has no checker behind it, and a drifted guard
+script is not recoverable the way a drifted generated file is. So `speckit-conductor`
+references these rather than carrying them, and a breaking change here needs a
+release before that repository can adopt it.
 
-2. **Steering** -- [`packages/speckit/.apm/context/speckit-workflow.context.md`](../packages/speckit/.apm/context/speckit-workflow.context.md) carries the judgement the graph cannot: which phases produce a decision record, where a defect routes, and the spec-id convention. It states no step order.
+## Why it moved
 
-3. **The guard layer** -- [`packages/speckit/scripts/speckit-tasks-guard.py`](../packages/speckit/scripts/speckit-tasks-guard.py) keeps state in the molecule: it denies Write/Edit of `specs/*/tasks.md` (the deny reason teaches the `bd create`/`bd dep add`/`bd ready` replacement), advises on Bash mentions of tasks.md and on deprecated `/speckit.implement` invocations, and stays inert in repos without a beads workspace. Human gates are resolved with `bd gate resolve`; `bd gate check` closes gh:pr/gh:run gates.
+The workflow had grown past one package: formulas planned at three depths, bonded
+loop formulas for the review and iterate cycles, four agents, two skills, a Python
+guard with tests, and a 432-line setup script. It also releases on its own rhythm,
+which a monorepo release train serialises for no benefit.
 
-**Hook events.** Claude wires `UserPromptExpansion`, `PreToolUse`, and `PostToolUse`. The deprecated DAG adapter uses only Codex `UserPromptSubmit`, which can gate an explicit `/speckit.*` prompt before invocation; Codex has no exact skill-completion event. The current `speckit` package separately uses supported Bash, prompt, edit, and stop hooks.
-
-**Mandatory-step enforcement.** Node `pre` blocks phrase skips as *"only if the user explicitly skips X"* rather than *"acceptable if X skipped"* -- combined with the standing rule that steps are mandatory, the agent suggests the next step every time and only omits one on explicit user request. The May-2026 DAG reorder moved `critique` and `security-review` to run in parallel right after `tasks`, and made the post-implementation QA steps (verify-tasks, verify, review, qa, code-review, security-review) mandatory rather than optional.
-
-**The payoff.** Security review and phantom-completion detection can't be silently dropped; specs can't be hand-edited around the Skill tool; and the same gated flow compiles to both Claude and Codex from one definition.
-
----
-
-See also: [bundles](bundles.md) · [skills](skills.md) · [agents](agents.md) · [steering](steering.md) · [hooks and MCP](hooks-and-mcp.md) · [external repos](external-repos.md)
+The same reasoning extracted `project-setup` earlier, and this followed that
+precedent: merge first, migrate the dependents, then extract, so no consumer sees a
+package renamed and relocated in one step.
