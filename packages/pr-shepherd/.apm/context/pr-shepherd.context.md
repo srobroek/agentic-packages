@@ -40,6 +40,10 @@ MUST Treat a configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
   as part of merge readiness: probe `merge-probe.sh bot-review` at the exact head
   before every merge. Only `absent` or `clean` clears; `pending`, `stale`, and
   unknown are waits. Silence is not approval.
+MUST Treat `declined` (13) as a re-trigger rather than a wait: the bot refused
+  the round under its quota, so no further round arrives unprompted. Act on the
+  probe's `wait=` reopen instant. `wait=UNKNOWN` means re-check the PR before
+  re-triggering, because a wrong "window reopened" burns quota for no review.
 MUST Read actionability from the bot's own summary review body through its
   adapter (CodeRabbit: `Actionable comments posted: N`) at the current head,
   taking the LATEST round rather than the highest count -- every fix suggestion
