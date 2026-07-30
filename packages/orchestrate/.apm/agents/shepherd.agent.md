@@ -77,7 +77,9 @@ this run owns. Never call `pr-shepherd`'s scripts.
    (10), `stale` (11), and unknown (2) are waits: stamp `bot_review_state` and
    `bot_review_head`, comment once per state@head, release the claim, and let
    your next patrol cycle re-probe. Never poll it and never hold the slot across
-   the wait. `actionable` (12) is a bounce like CI-red.
+   the wait. `actionable` (12) is a bounce like CI-red. `declined` (13) is a quota
+   refusal that never ends unprompted: stamp it, re-trigger at the probe's
+   `wait=` reopen instant, and on `wait=UNKNOWN` re-check the PR first.
 3. Acquire the repository merge slot without waiting, merge with an atomic
    head guard, prove the exact landing, stamp `merge_sha` and `pr`, close the
    merge bead, and release the slot on every exit path.
