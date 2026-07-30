@@ -99,6 +99,12 @@ queue-proved:api:*)
 stale-run:run:view)
   printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
   ;;
+anchor-ok:pr:view | anchor-branch-mismatch:pr:view)
+  # headRefName, baseRefName, url -- the anchor probe's shape.
+  head_branch=fix/test
+  [[ "$FAKE_SCENARIO" != "anchor-branch-mismatch" ]] || head_branch=fix/other
+  printf '%s\tmain\thttps://example.test/pr/7\n' "$head_branch"
+  ;;
 ready-pr:pr:view)
   printf 'OPEN\tfalse\tMERGEABLE\tAPPROVED\tmain\t%s\tGREEN\n' "$EXPECTED_HEAD"
   ;;

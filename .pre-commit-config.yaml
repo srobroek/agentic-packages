@@ -75,6 +75,20 @@ repos:
         files: ^packages/[^/]+/\.apm/instructions/.*\.instructions\.md$
         exclude: /apm_modules/
 
+      - id: check-frontmatter-parses
+        name: primitive frontmatter parses as YAML
+        description: >-
+          APM skips a primitive whose frontmatter does not parse and still
+          reports the install as successful, so the failure surfaces as an absent
+          rule or skill rather than an error. Six files were in that state when
+          this was added, every one for the same reason: an unquoted colon-space
+          inside a scalar value. 0.3s over 267 files.
+        entry: python3 .apm/scripts/check-frontmatter-parses.py
+        language: system
+        pass_filenames: false
+        files: ^packages/[^/]+/\.apm/.*\.md$
+        exclude: /apm_modules/
+
       - id: check-twin-scripts
         name: duplicated scripts stay byte-identical
         description: >-
