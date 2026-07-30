@@ -424,6 +424,19 @@ class RuntimeHookTests(unittest.TestCase):
                 {"agent_id": "claude-agent-1"}, self.inventory, self.primary
             )
 
+    def test_denial_names_the_target_and_the_leased_path(self) -> None:
+        # The old message said only "targets an unleased checkout", which reads as
+        # a broken lease. The real cause is a Bash call that never ran
+        # `cd -- <leased-path>`, so the message has to name both paths and the fix.
+        with self.assertRaises(MODULE.ContractError) as caught:
+            MODULE.assert_runtime_lease(
+                {"agent_id": "claude-agent-1"}, self.inventory, self.primary
+            )
+        message = str(caught.exception)
+        self.assertIn(str(self.primary), message)
+        self.assertIn(str(self.claude), message)
+        self.assertIn("cd -- <leased-path>", message)
+
     def test_unbound_harness_subagent_is_denied_in_primary_checkout(self) -> None:
         with self.assertRaises(MODULE.ContractError):
             MODULE.assert_runtime_lease({"agent_id": "unbound-agent"}, self.inventory, self.primary)
