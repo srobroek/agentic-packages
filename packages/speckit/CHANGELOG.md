@@ -1,5 +1,27 @@
 # Changelog
 
+## [13.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v12.0.0...speckit--v13.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820))
+
+### Refactors
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820)) ([c1b2007](https://github.com/srobroek/agentic-packages/commit/c1b200754c9dd4a21c33035f28fd45052a827bd1))
+
+## [12.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v11.0.0...speckit--v12.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+
+### Refactors
+
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+
 ## [11.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v10.0.0...speckit--v11.0.0) (2026-07-28)
 
 

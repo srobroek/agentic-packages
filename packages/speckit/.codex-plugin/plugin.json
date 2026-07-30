@@ -1,7 +1,7 @@
 {
   "name": "speckit",
-  "version": "11.0.0",
-  "description": "SpecKit mechanism: the six SpecKit agents and the bugfix and setup skills. Opt into the opinionated layers separately: steering-speckit (the mandatory-gated workflow); workflow gates are beads gate beads provisioned by the speckit-beads formula during setup.",
+  "version": "13.0.0",
+  "description": "Beads-native SpecKit workflow, whole: four SpecKit agents, the bugfix and setup skills, the `speckit-feature` bd formula whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off, steering that maps one spec dir to one molecule root, and a PreToolUse guard that denies every Write/Edit to specs/*/tasks.md when a beads workspace is active. Task state lives in beads and tasks.md is never authored; reads stay allowed for legacy migration. Requires the bd CLI (gastownhall/beads >= 1.1.0) and python3 on PATH; guard and steering are inert in repos without .beads/. The setup skill installs the formula into the repo's .beads/formulas/.",
   "author": {
     "name": "Sjors Robroek"
   },

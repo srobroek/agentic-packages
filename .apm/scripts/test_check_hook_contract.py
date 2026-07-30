@@ -200,7 +200,7 @@ def test_one_manifest_cannot_mask_a_gap_in_another(tmp_path: Path) -> None:
 def test_a_codex_only_tool_is_not_required_in_a_claude_manifest(tmp_path: Path) -> None:
     """`apply_patch` is Codex's tool, so a claude-hooks.json is right to omit it.
 
-    `speckit-beads` splits this way deliberately, and an earlier revision of this
+    `speckit` splits this way deliberately, and an earlier revision of this
     check reported it as a defect.
     """
     package = build_package(

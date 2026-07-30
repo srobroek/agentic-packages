@@ -64,7 +64,7 @@ TOOL_SURFACES = (
 
 # Tools only one agent exposes. A manifest is not at fault for omitting a tool the
 # tool's own agent does not have, so these are required only in a manifest that
-# faces the agent providing them. `speckit-beads` splits exactly this way: its
+# faces the agent providing them. `speckit` splits exactly this way: its
 # codex-hooks.json binds `apply_patch` and its claude-hooks.json correctly does not.
 TOOL_OWNER = {"apply_patch": "codex"}
 
@@ -123,7 +123,7 @@ def claude_only_emission(field: str) -> re.Pattern[str]:
 
 # Packages allowed to ship a hook script with no suite. Empty, and meant to stay
 # that way: the packages listed when this check was introduced (beads,
-# speckit-beads) all have suites now. An entry here is recorded debt rather than
+# speckit) all have suites now. An entry here is recorded debt rather than
 # a silent skip, and the check fails on a stale entry, so a listing cannot
 # outlive the gap it describes.
 UNTESTED_HOOK_PACKAGES: set[str] = set()

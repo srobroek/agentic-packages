@@ -274,6 +274,25 @@ def one_bead(repo: Path, bead: str) -> dict[str, Any]:
     raise ContractError(f"expected one Bead for {bead}")
 
 
+def tracks_bead(metadata: dict[str, Any], bead: str) -> bool:
+    """True when `metadata` belongs to a bead that tracks `bead` rather than competing with it.
+
+    A merge bead names the same branch as the implementer whose work it lands, and
+    declares that relationship through `tracks_beads`/`closes_beads`. It holds no
+    lease and no checkout, so it is not a second writer -- but a branch-keyed
+    conflict scan cannot tell the two apart, and refuses the implementer its own
+    lease.
+    """
+    for key in ("tracks_beads", "closes_beads"):
+        value = metadata.get(key)
+        if isinstance(value, str):
+            if value == bead:
+                return True
+        elif isinstance(value, (list, tuple)) and bead in value:
+            return True
+    return False
+
+
 def active_bead_conflicts(repo: Path, bead: str, branch: str, path: Path) -> list[str]:
     payload = beads_json(["list", "--all", "--json"], repo)
     conflicts = []
@@ -282,9 +301,10 @@ def active_bead_conflicts(repo: Path, bead: str, branch: str, path: Path) -> lis
             continue
         metadata = issue.get("metadata") or {}
         other_path = metadata.get("worktree_path") or metadata.get("worktree")
-        if metadata.get("branch") == branch or (
-            other_path and Path(other_path).resolve() == path.resolve()
-        ):
+        shares_path = bool(other_path) and Path(str(other_path)).resolve() == path.resolve()
+        # A tracking merge bead is exempt on branch alone; a shared checkout is
+        # still a genuine conflict no matter who tracks whom.
+        if shares_path or (metadata.get("branch") == branch and not tracks_bead(metadata, bead)):
             conflicts.append(issue.get("id", "unknown"))
     return conflicts
 

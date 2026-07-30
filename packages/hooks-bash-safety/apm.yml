@@ -1,5 +1,5 @@
 name: hooks-bash-safety
-version: 4.0.0
+version: 5.0.0
 description: >-
   Bash safety guard tuned for autonomous agents, in one Python module with a
   real shell tokenizer. Denies only the unrecoverable: rm -rf on the filesystem
