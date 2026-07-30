@@ -25,5 +25,5 @@ tags:
   - gates
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/beads#>=1.0.0 <2.0.0
+    - srobroek/agentic-packages/packages/beads#>=2.0.0 <3.0.0
     - srobroek/agentic-packages/packages/adr-as-beads#>=1.0.0 <2.0.0
