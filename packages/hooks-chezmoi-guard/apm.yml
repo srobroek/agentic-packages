@@ -1,5 +1,5 @@
 name: hooks-chezmoi-guard
-version: 4.0.0
+version: 4.0.1
 description: >-
   PreToolUse advisory (non-blocking) for writes to files chezmoi ACTUALLY
   manages (exact membership in `chezmoi managed`, 60s cache). A managed target

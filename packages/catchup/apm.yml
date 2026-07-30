@@ -1,5 +1,5 @@
 name: catchup
-version: 2.2.1
+version: 2.2.2
 description: >-
   Resume interrupted project work from the best handover and, in beads (bd)
   repos, live task state -- after context loss, /clear, or a continue/resume
