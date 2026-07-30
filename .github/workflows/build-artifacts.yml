@@ -129,6 +129,14 @@ jobs:
         # exactly one target.
         run: python3 .apm/scripts/check-instructions-apply-to.py
 
+      - name: Validate primitive frontmatter parses
+        # APM reads each primitive's frontmatter to decide where it deploys. A block
+        # that does not parse is skipped with a stderr warning and the install still
+        # reports success, so the failure shows up as an absent rule or skill rather
+        # than an error. Six files were in that state, all from an unquoted
+        # colon-space inside a scalar value.
+        run: python3 .apm/scripts/check-frontmatter-parses.py
+
       - name: Validate hook scripts against their manifests
         # The checks above validate invocation modes, release baselines, applyTo
         # coverage, and Codex manifest shape; none reads what a hook script DOES

@@ -1,6 +1,6 @@
 ---
 name: journey-campaign
-description: Use when running journey or issue-driven validation at fleet scale: fan out validators, fix defects, and re-validate until green.
+description: "Use when running journey or issue-driven validation at fleet scale: fan out validators, fix defects, and re-validate until green."
 ---
 
 # journey-campaign

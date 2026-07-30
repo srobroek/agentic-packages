@@ -1,6 +1,6 @@
 ---
 name: journey-consolidate
-description: Use when advancing a journey checkpoint with human approval: flush delta-log entries, prune old runs, and regenerate the index.
+description: "Use when advancing a journey checkpoint with human approval: flush delta-log entries, prune old runs, and regenerate the index."
 ---
 
 # journey-consolidate

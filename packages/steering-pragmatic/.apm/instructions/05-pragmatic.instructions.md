@@ -1,5 +1,5 @@
 ---
-description: Rules for what the agent produces: code economy, comments, artifact register.
+description: "Rules for what the agent produces: code economy, comments, artifact register."
 applyTo: "**/*"
 ---
 
