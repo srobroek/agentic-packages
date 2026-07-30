@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v12.0.0...speckit--v13.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820))
+
+### Refactors
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820)) ([c1b2007](https://github.com/srobroek/agentic-packages/commit/c1b200754c9dd4a21c33035f28fd45052a827bd1))
+
 ## [12.0.0](https://github.com/srobroek/agentic-packages/compare/speckit--v11.0.0...speckit--v12.0.0) (2026-07-30)
 
 
