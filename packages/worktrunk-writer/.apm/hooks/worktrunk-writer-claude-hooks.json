@@ -33,6 +33,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "domain-specialist|domain-specialist-high|shepherd|reviewer|researcher|advisor|scribe",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && python3 ${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/scripts/worktrunk-writer.py subagent-exit",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

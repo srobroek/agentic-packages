@@ -2121,6 +2121,85 @@ class MergeBeadOwnerTests(unittest.TestCase):
         self.check([self.merge_bead(metadata={"run_id": "run-1"})], metadata={})
 
 
+class SubagentExitTests(unittest.TestCase):
+    """SubagentStop is a trigger, not an actor.
+
+    A stop is not an ending: `domain-specialist` is resumable and its review/fix
+    loop depends on being woken for the same node, so clearing the binding on every
+    stop would strand a live actor between review rounds.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp.name).resolve()
+        self.leased = self.repo / "leased"
+        self.leased.mkdir()
+        self.item = {
+            "branch": "writer/leased",
+            "path": str(self.leased),
+            "vars": {
+                "actor": "a",
+                "lease": "l",
+                "context": "ctx-1",
+                "runtime-bindings": json.dumps([{"context": "ctx-1", "handle": "ctx-1"}]),
+                "resource": "demo-1",
+            },
+        }
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def invoke(self, payload, *, stale):
+        stamped, cleared = [], []
+        with patch.object(MODULE, "run") as command:
+            command.return_value = SimpleNamespace(stdout=str(self.repo), stderr="")
+            with patch.object(MODULE, "wt_inventory", return_value=[self.item]):
+                with patch.object(MODULE, "stale_binding", return_value=stale):
+                    with patch.object(MODULE, "set_var", side_effect=lambda r, b, k, v: stamped.append(k)):
+                        with patch.object(MODULE, "clear_var", side_effect=lambda r, b, k: cleared.append(k)):
+                            with patch("sys.stdin", io.StringIO(json.dumps(payload))):
+                                code = MODULE.subagent_exit()
+        return code, stamped, cleared
+
+    def test_a_resumable_actor_keeps_its_binding(self) -> None:
+        code, stamped, cleared = self.invoke(
+            {"agent_type": "domain-specialist", "agent_id": "ctx-1", "cwd": str(self.leased)},
+            stale=False,
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(stamped, ["exited"])
+        self.assertEqual(cleared, [])
+
+    def test_a_resolved_resource_releases_the_binding(self) -> None:
+        code, stamped, cleared = self.invoke(
+            {"agent_type": "domain-specialist", "agent_id": "ctx-1", "cwd": str(self.leased)},
+            stale=True,
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("exited", stamped)
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+
+    def test_an_unknown_context_is_a_noop(self) -> None:
+        code, stamped, cleared = self.invoke(
+            {"agent_type": "domain-specialist", "agent_id": "stranger", "cwd": str(self.leased)},
+            stale=True,
+        )
+        self.assertEqual((code, stamped, cleared), (0, [], []))
+
+    def test_a_payload_without_a_context_is_a_noop(self) -> None:
+        code, stamped, cleared = self.invoke({"cwd": str(self.leased)}, stale=True)
+        self.assertEqual((code, stamped, cleared), (0, [], []))
+
+    def test_an_error_never_traps_the_subagent(self) -> None:
+        with patch.object(MODULE, "run", side_effect=MODULE.ContractError("no git")):
+            with patch("sys.stdin", io.StringIO(json.dumps({"agent_id": "ctx-1"}))):
+                self.assertEqual(MODULE.subagent_exit(), 0)
+
+    def test_unparseable_stdin_exits_clean(self) -> None:
+        with patch("sys.stdin", io.StringIO("not json")):
+            self.assertEqual(MODULE.subagent_exit(), 0)
+
+
 class LifecycleHookTests(unittest.TestCase):
     """The wt hook entry point. A leased checkout is guarded; nothing else is.
 

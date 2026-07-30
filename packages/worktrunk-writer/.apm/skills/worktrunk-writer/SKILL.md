@@ -41,6 +41,8 @@ TRIGGER
 
 An unleased checkout is a silent no-op on every event, keyed on the checkout's own `actor`/`lease` vars and never on whether an orchestrator is running. Every internal error fails OPEN: lease bookkeeping must never stop a worktree from starting.
 
+`subagent-exit` is the `SubagentStop` half, matched to the claim-holder roles. It stamps `exited` on the checkout and releases the binding ONLY when the activation resource already proves the work is over. A stop is not an ending: a claim-holder is resumable and its review loop depends on being woken for the same node, so releasing on every stop would strand a live actor between review rounds. The stamp is what lets a later prune be event-driven instead of a guess.
+
 ## Rules
 
 MUST `prepare` complete blocking `copy-ignored --require-include` from the explicit source before delegation.
