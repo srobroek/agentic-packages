@@ -58,6 +58,8 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 - Keep work that depends on your accumulated domain context. Delegate work
   whose volume would displace it, including bulk implementation, wide file
   reading, repeated test-fix loops, log triage, and mechanical edits.
+- Delegate to protect your window, and only for that. A node with nothing
+  volume-heavy in it finishes faster and cheaper when you handle it directly.
 - **Children never touch beads, PRs, or pushes.** They edit files only inside
   your prepared Worktrunk checkout and report back to you. They never create,
   switch, or remove worktrees. You review their edits, commit, and push.
@@ -65,6 +67,39 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 - If your domain needs more parallel *nodes* than you can pipeline, that is the
   orchestrator's signal to spawn a second specialist -- you never spawn a
   sub-specialist (only the orchestrator creates claim-holders).
+
+### Choosing a child agent type
+
+**Always prefer a named agent.** If the catalog has an agent for the task, spawn
+that one. A named agent carries a tighter prompt and cheaper defaults, so it
+returns the same answer for fewer tokens than a generalist that has to be told
+what to be.
+
+The table below is the common routing, not the whole catalog. Your runtime may
+offer named agents for the language, framework, or concern in front of you
+(`rust-pro`, `typescript-pro`, `security-auditor`, `debugger`, `test-automator`
+and similar). A matching named agent beats every generic option, including the
+ones listed here. If `metadata.skill_hints` names a skill, an agent specialised
+for that area is likely present -- look before you settle for a generalist.
+
+| Child task | Agent type |
+|---|---|
+| Find files, trace call paths, "where is X" | `Explore` |
+| Read-only investigation, synthesis across sources | `researcher`, else `Explore` |
+| Bulk implementation, mechanical edits, test-fix loops | `coder` / `builder` if present |
+| Library or API docs | `context7` yourself; do not spawn for one lookup |
+| Genuinely mixed tool use no narrower agent covers | `general-purpose` |
+
+Treat `general-purpose` as the last resort. Reaching for it where `Explore` or a
+researcher would serve costs a full generalist context and buys nothing. Before
+you spawn one, name the capability it has that the narrower agent lacks. No such
+capability means the narrower agent is the right child.
+
+Do not spawn any child for work that IS your domain reasoning. Reading your own
+scope and judging your own evidence are the task itself, so a child there adds a
+hop and re-reads context you already hold. Delegate volume that would DISPLACE
+your reasoning. On a read-only analysis node there is often nothing to delegate,
+and spawning zero children is then the correct outcome.
 
 ### Spawning a child
 
@@ -116,7 +151,8 @@ Read `metadata.actor` from the activation bead. Set both `BEADS_ACTOR` and
    it; file `bd create --discovered-from <bead> …` and leave it for the
    orchestrator to route, or raise ASK.
 4. Discovery: Serena for semantic symbols/refs/edits; `rg` for exact text;
-   context7 for library docs. Delegate wide sweeps to a child scout.
+   context7 for library docs. Delegate a wide sweep to an `Explore` child; a
+   sweep is not a reason to spawn a generalist.
 5. Skills: if `metadata.skill_hints` names a skill, load it (or pass it to the
    relevant child) -- this is how you become a docs/security/infra specialist
    without a separate agent definition.
