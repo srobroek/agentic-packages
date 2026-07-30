@@ -97,19 +97,26 @@ class InventoryTests(unittest.TestCase):
 
 
 class ContextHandshakeTests(unittest.TestCase):
-    def invoke(self, payload: dict) -> dict:
+    def invoke(self, payload: dict, env: dict[str, str] | None = None) -> dict:
+        # PATH="" hides `wt`, so an unset WORKTRUNK_WRITER_ENFORCE reads as "no
+        # protocol" regardless of whatever real repository the test runs inside.
+        process_env = {"PATH": "", **(env or {})}
         process = subprocess.run(
             [sys.executable, str(HANDSHAKE)],
             input=json.dumps(payload),
             capture_output=True,
             text=True,
             check=False,
+            env=process_env,
         )
         self.assertEqual(process.returncode, 0, process.stderr)
         return json.loads(process.stdout or "{}")
 
-    def test_agent_id_is_exposed_without_a_tool_call(self) -> None:
-        output = self.invoke({"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"})
+    def test_engaged_agent_id_is_exposed_without_a_tool_call(self) -> None:
+        output = self.invoke(
+            {"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"},
+            env={"WORKTRUNK_WRITER_ENFORCE": "1"},
+        )
         context = output["hookSpecificOutput"]["additionalContext"]
         self.assertIn(
             "WAIT context=aresearcher-r1-cb8a2c084ff1c7fa",
@@ -119,15 +126,85 @@ class ContextHandshakeTests(unittest.TestCase):
         self.assertIn("completion notification", context)
         self.assertIn("not the spawn handle", context)
 
-    def test_subagent_id_is_supported(self) -> None:
-        output = self.invoke({"subagent_id": "438444453a695885"})
+    def test_engaged_subagent_id_is_supported(self) -> None:
+        output = self.invoke(
+            {"subagent_id": "438444453a695885"},
+            env={"WORKTRUNK_WRITER_ENFORCE": "1"},
+        )
         self.assertIn(
             "WAIT context=438444453a695885",
             output["hookSpecificOutput"]["additionalContext"],
         )
 
     def test_missing_runtime_context_is_silent(self) -> None:
-        self.assertEqual(self.invoke({"session_id": "parent"}), {})
+        self.assertEqual(
+            self.invoke({"session_id": "parent"}, env={"WORKTRUNK_WRITER_ENFORCE": "1"}),
+            {},
+        )
+
+    def test_spawn_outside_the_protocol_gets_no_wait_demand(self) -> None:
+        """The reported stall: a plain spawn with no lease got a bare WAIT.
+
+        With no operator opt-in and no reachable `wt` lease, the handshake must
+        stay silent so an ordinary delegated child never believes it owes a WAIT
+        reply it has no lease to bind to.
+        """
+        self.assertEqual(self.invoke({"agent_id": "aresearcher-r1-cb8a2c084ff1c7fa"}), {})
+
+
+class HandshakeEngagementTests(unittest.TestCase):
+    """protocol_engaged decides WAIT injection purely from observable evidence."""
+
+    def setUp(self) -> None:
+        spec = importlib.util.spec_from_file_location("context_handshake", HANDSHAKE)
+        assert spec and spec.loader
+        self.mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.mod)
+
+    def test_operator_opt_in_engages_without_a_lease(self) -> None:
+        with patch.dict(os.environ, {"WORKTRUNK_WRITER_ENFORCE": "1"}, clear=True):
+            self.assertTrue(self.mod.protocol_engaged({}))
+
+    def test_external_writer_env_engages(self) -> None:
+        with patch.dict(os.environ, {"WORKTRUNK_WRITER_LEASE": "l"}, clear=True):
+            self.assertTrue(self.mod.protocol_engaged({}))
+
+    def test_absent_wt_reads_as_no_protocol(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value=None),
+        ):
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_a_repository_holding_a_lease_engages(self) -> None:
+        inventory = [{"branch": "w/a", "path": "/tmp/w-a", "vars": {"actor": "a", "lease": "l"}}]
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.return_value = inventory
+            loader.return_value.repo_has_leases.return_value = True
+            self.assertTrue(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_a_repository_with_no_lease_does_not_engage(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.return_value = [{"branch": "main", "path": "/tmp"}]
+            loader.return_value.repo_has_leases.return_value = False
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
+
+    def test_an_inventory_error_fails_toward_no_protocol(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(self.mod, "_writer") as loader,
+        ):
+            loader.return_value.wt_inventory.side_effect = RuntimeError("no wt")
+            self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
 
 
 class BeadsConflictTests(unittest.TestCase):
