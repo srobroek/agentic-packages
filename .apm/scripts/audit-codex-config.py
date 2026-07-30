@@ -84,7 +84,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "lsp-typescript",
     "orchestrate",
     "release-please",
-    "speckit",
     "worktrunk-writer",
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
@@ -114,8 +113,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
     "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
-    "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-codex-hooks.json": "target-specific compatibility",
@@ -124,12 +121,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
 }
 OBSOLETE_HOOK_MANIFESTS = {
     "packages/agent-builder/.apm/hooks/agent-builder-claude-hooks.json",
-    # speckit absorbed speckit-beads; its guard now rides the speckit-workflow
-    # manifests. Only one *-claude-hooks.json per package is read
-    # (build-native-plugins._hook_sources takes claude[0]), so a second manifest
-    # here would deploy nothing while looking wired.
-    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json",
 }
 COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
     "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",

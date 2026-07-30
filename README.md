@@ -6,7 +6,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 
 <!-- BEGIN:intro-counts -->
 - **29 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **35 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **17 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **7 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, serena, ...)
@@ -315,11 +315,11 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 ## SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline. The `speckit` package delivers it whole: the bugfix and setup skills, four task agents, workflow steering, a guard that keeps task state in beads, and the `speckit-feature` beads formula whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off. APM transforms the bundled agents for both Claude and Codex.
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline: the bugfix and setup skills, four task agents, workflow steering, a guard that keeps task state in beads, and the `speckit-feature` beads formula whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off.
 
-`packages/speckit/formulas/speckit-feature.formula.toml` is the only statement of step order; read it with `bd formula show speckit-feature --json`.
+It lives in its own repository now, [srobroek/speckit-conductor](https://github.com/srobroek/speckit-conductor), and pulls `beads` and `adr-as-beads` back from here as cross-repo dependencies. See [docs/speckit.md](docs/speckit.md) for why it moved and why APM install is the supported path.
 
-Quick start: `apm install speckit@srobroek-agentic`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
+Quick start: `apm install srobroek/speckit-conductor --target claude,codex`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
 
 Full setup, the agent roster, the DAG node store, and the hook-dispatcher architecture (how/why) live in **[docs/speckit.md](docs/speckit.md)**.
 
