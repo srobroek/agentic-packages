@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/beads--v1.0.0...beads--v2.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **beads:** the beads sync hooks are now Python and require python3 on PATH. beads-sync-hydrate.sh and beads-maintenance-check.sh are replaced by the single beads-sync-session.py; a machine-local override naming either old script by path must be repointed.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Features
+
+* **beads:** opt-in sync hooks — Dolt first, JSONL fallback ([#779](https://github.com/srobroek/agentic-packages/issues/779)) ([c7047fc](https://github.com/srobroek/agentic-packages/commit/c7047fc46a6b6b474b48e743516745921f9d22f5))
+
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/beads--v0.7.2...beads--v1.0.0) (2026-07-28)
 
 

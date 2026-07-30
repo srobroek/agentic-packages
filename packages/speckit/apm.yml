@@ -1,5 +1,5 @@
 name: speckit
-version: 11.0.0
+version: 12.0.0
 description: >-
   Beads-native SpecKit workflow, whole: four SpecKit agents, the bugfix and setup
   skills, the `speckit-feature` bd formula whose poured molecule is the phase DAG

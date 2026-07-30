@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v1.1.2...brownfield-project--v2.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+
+### Refactors
+
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+
 ## [1.1.2](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v1.1.1...brownfield-project--v1.1.2) (2026-07-25)
 
 
