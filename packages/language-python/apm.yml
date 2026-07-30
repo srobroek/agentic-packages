@@ -14,5 +14,5 @@ tags:
   - python
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/python-quality#>=2.1.2 <3.0.0
-    - srobroek/agentic-packages/packages/lsp-python#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/python-quality#>=2.1.3 <3.0.0
+    - srobroek/agentic-packages/packages/lsp-python#>=0.4.2 <1.0.0
