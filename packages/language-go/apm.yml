@@ -12,5 +12,5 @@ tags:
   - go
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/go-quality#>=2.1.2 <3.0.0
-    - srobroek/agentic-packages/packages/lsp-go#>=0.4.1 <1.0.0
+    - srobroek/agentic-packages/packages/go-quality#>=2.1.3 <3.0.0
+    - srobroek/agentic-packages/packages/lsp-go#>=0.4.2 <1.0.0
