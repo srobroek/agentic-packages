@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v3.0.0...hooks-chezmoi-guard--v4.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Bug Fixes
+
+* close two guard bypasses found by fuzzing the Python hooks ([#806](https://github.com/srobroek/agentic-packages/issues/806)) ([7505cc7](https://github.com/srobroek/agentic-packages/commit/7505cc76fccad74c1ba0c5d2d017320b721475ff))
+
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+
 ## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.1.1...hooks-chezmoi-guard--v3.0.0) (2026-07-28)
 
 

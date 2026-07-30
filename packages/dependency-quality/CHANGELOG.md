@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/dependency-quality--v4.0.2...dependency-quality--v5.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+
 ## [4.0.2](https://github.com/srobroek/agentic-packages/compare/dependency-quality--v4.0.1...dependency-quality--v4.0.2) (2026-07-25)
 
 

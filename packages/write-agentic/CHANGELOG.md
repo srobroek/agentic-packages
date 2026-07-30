@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v4.0.1...write-agentic--v5.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814))
+
+### Refactors
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814)) ([aea023b](https://github.com/srobroek/agentic-packages/commit/aea023bba47a18a87ee1d366e9c1d7e54470b9b4))
+
 ## [4.0.1](https://github.com/srobroek/agentic-packages/compare/write-agentic--v4.0.0...write-agentic--v4.0.1) (2026-07-25)
 
 
