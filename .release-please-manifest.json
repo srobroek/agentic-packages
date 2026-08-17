@@ -23,7 +23,7 @@
   "packages/chezmoi-editor": "1.4.0",
   "packages/cmux": "1.2.0",
   "packages/code-intelligence": "9.2.0",
-  "packages/core": "20.2.0",
+  "packages/core": "20.3.0",
   "packages/data-ai": "3.2.0",
   "packages/debate": "2.3.0",
   "packages/dep-update": "4.1.0",
