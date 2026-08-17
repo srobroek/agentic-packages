@@ -911,7 +911,11 @@ def cd_target(words: list[str], cwd: Path) -> str | None:
 
 
 def main() -> int:
-    payload = sys.stdin.read()
+    # Read BYTES and decode leniently. `sys.stdin.read()` raises UnicodeDecodeError
+    # on one undecodable byte anywhere in the payload -- including in a field this
+    # guard never looks at -- and the fail-open wrapper then swallowed the error, so
+    # a single stray byte silenced the guard on a command it would otherwise deny.
+    payload = sys.stdin.buffer.read().decode("utf-8", "replace")
     if not payload.strip():
         return 0
 

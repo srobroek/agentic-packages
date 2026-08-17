@@ -155,6 +155,25 @@ def test_wrapper_and_flag_escapes_are_closed(command: str) -> None:
     assert verdict(command) == "deny", f"{command!r} escaped the guard"
 
 
+def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
+    """`sys.stdin.read()` raised UnicodeDecodeError and the fail-open swallowed it.
+
+    So a single stray byte ANYWHERE in the payload -- including in a field this guard
+    never looks at -- turned a deny into silence. Reading bytes and decoding with
+    "replace" keeps the decision.
+    """
+    for raw in (
+        b'{"cwd":"/tmp","tool_name":"Bash","tool_input":{"command":"rm -rf /caf\xe9"}}',
+        b'{"cwd":"/tmp","tool_name":"Bash","tool_use_id":"a\xe9b",'
+        b'"tool_input":{"command":"rm -rf /"}}',
+    ):
+        result = subprocess.run(  # noqa: S603
+            [sys.executable, str(GUARD)], input=raw, capture_output=True, timeout=30
+        )
+        assert result.returncode == 0
+        assert result.stdout.strip(), "an undecodable byte erased the decision"
+
+
 def test_bs3_no_longer_denies_merely_naming_the_flag() -> None:
     """The substring test was wrong in BOTH directions at once.
 
