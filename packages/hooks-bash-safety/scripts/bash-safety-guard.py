@@ -397,13 +397,24 @@ def has_recursive_force(flags: list[str]) -> bool:
     """True when the flags request both recursion and force, in any spelling."""
     recursive = force = False
     for flag in flags:
-        if flag == "--recursive":
-            recursive = True
-        elif flag == "--force":
-            force = True
-        elif flag.startswith("--"):
+        # GNU accepts any unambiguous ABBREVIATION of a long option, so `rm --rec
+        # --fo /` really deletes -- verified with GNU rm, which removed the tree while
+        # the exact-match test read it as two unknown flags and returned False. BSD rm
+        # rejects them, so the honest-mistake path is Linux, but the guard has to
+        # judge the command it is handed rather than the platform it happens to be on.
+        #
+        # `--r` is deliberately enough for recursive: no other rm long option starts
+        # with r, so the abbreviation is unambiguous exactly as GNU treats it.
+        if flag.startswith("--") and len(flag) > 2:
+            name = flag[2:].split("=", 1)[0]
+            if "recursive".startswith(name):
+                recursive = True
+                continue
+            if "force".startswith(name):
+                force = True
+                continue
             continue
-        elif flag.startswith("-"):
+        if flag.startswith("-"):
             recursive = recursive or "r" in flag or "R" in flag
             force = force or "f" in flag
     return recursive and force

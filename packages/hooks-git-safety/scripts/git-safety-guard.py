@@ -85,7 +85,12 @@ GIT_OPTIONS_WITH_VALUE = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--n
 # precisely the case GS-2 exists to stop.
 UNVERIFIABLE_REDIRECT = re.compile(
     r"""(?:^|\s)(?:-C\s+|--git-dir[\s=]|--work-tree[\s=]|GIT_DIR=|GIT_WORK_TREE=)"""
-    r"""["']?[^"';&|]*[$~]"""
+    # A `~` is a home reference only at the START of the value (or right after the
+    # opening quote). Mid-path it is an ordinary character -- `/tmp/has~tilde/x` is a
+    # real directory name, and denying it was a false positive on a path the guard
+    # could have resolved perfectly well. `$` stays unrestricted: a variable anywhere
+    # in the value makes the whole path unresolvable.
+    r"""["']?(?:~|[^"';&|]*\$)"""
 )
 
 

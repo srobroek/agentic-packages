@@ -283,6 +283,21 @@ def test_an_unresolvable_redirect_still_denies_rather_than_resolving(repo: Path)
     assert verdict("GIT_DIR=$D/.git git clean -fdx", repo) == "deny"
 
 
+def test_a_literal_tilde_mid_path_is_not_treated_as_a_home_reference(repo: Path) -> None:
+    """`~` means home only at the START of a value; mid-path it is an ordinary
+    character.
+
+    `/tmp/has~tilde/x` is a real directory name, and denying it was a false positive
+    on a path the guard could resolve perfectly well. A guard that fires on correct
+    work gets ignored, so the over-deny matters as much as a miss.
+    """
+    for literal in ("git -C /tmp/has~tilde/x reset --hard", "git -C /tmp/a~b clean -fd"):
+        assert verdict(literal, repo) != "deny", f"{literal!r} names a literal path"
+    for home in ('git -C ~/other reset --hard', 'git -C "~/other" clean -fd'):
+        assert verdict(home, repo) == "deny", f"{home!r} is an unresolvable home reference"
+    assert verdict("git -C /tmp/$X reset --hard", repo) == "deny", "a variable anywhere still denies"
+
+
 def test_an_outsized_command_does_not_stall_the_hook(repo: Path) -> None:
     """UNVERIFIABLE_REDIRECT degrades badly on one long token, and this hook has a
     10s budget in hooks.json.

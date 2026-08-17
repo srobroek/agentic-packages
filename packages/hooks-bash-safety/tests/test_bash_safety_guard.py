@@ -169,6 +169,21 @@ def test_dd_to_a_non_canonical_pseudo_device_is_allowed() -> None:
     assert verdict("dd if=x of=/dev/./disk0") == "deny", "a real device must still deny"
 
 
+def test_abbreviated_long_flags_still_count_as_recursive_force() -> None:
+    """GNU accepts any unambiguous abbreviation of a long option.
+
+    `rm --rec --fo /` really deletes -- verified with GNU rm, which removed the tree
+    while the exact-match test read it as two unknown flags and allowed it. BSD rm
+    rejects them, so the honest-mistake path is Linux, but the guard judges the
+    command it is handed, not the platform it happens to run on.
+    """
+    for spelling in ("rm --rec --fo /", "rm --recu --forc /etc", "rm --r --f /"):
+        assert verdict(spelling) == "deny", f"{spelling!r} is recursive+force on a critical path"
+    # Recursion alone is not force, and a project path is not critical.
+    for fine in ("rm --rec /tmp/x", "rm --force ./f.txt", "rm --interactive -rf ./build"):
+        assert verdict(fine) != "deny", f"{fine!r} must not block"
+
+
 def test_dd_to_an_unresolvable_operand_is_denied() -> None:
     """The repo already denies `rm -rf $VAR`, and dd is the LESS recoverable of the
     two: writing over the wrong block device destroys a partition table.
