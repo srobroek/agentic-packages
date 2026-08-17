@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.1.0...beads--v2.1.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **pr-shepherd:** close the four remaining fuzz defects, unblock bats CI, and clear the ruff backlog ([#863](https://github.com/srobroek/agentic-packages/issues/863)) ([80ef3db](https://github.com/srobroek/agentic-packages/commit/80ef3db32dc2d604e7d9d65a904d712acb15e85f))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.0.1...beads--v2.1.0) (2026-08-17)
 
 
