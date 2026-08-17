@@ -214,7 +214,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached push at session end once a `git push --dry-run` probe confirms it goes through, with a configurable pusher for hosts that need a wrapper -- and fall back to JSONL over ordinary git otherwise. The same session-start hook reports when Dolt history has grown enough to trim, and never trims it. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "tags": [
         "beads",
         "issue-tracking",
@@ -320,7 +320,7 @@
     {
       "name": "dep-update",
       "description": "Research each dependency's current latest version against installed lockfile pins, classify patch/minor/major bumps by safety, surface CVEs via native scanners, and produce a severity-grouped cited upgrade plan. Applies only patch and minor bumps interactively -- one at a time behind a per-bump confirm; major bumps are advisory-only and never applied. Reads .project-setup/ answers.toml opportunistically; never writes it.",
-      "version": "4.1.0",
+      "version": "4.1.1",
       "tags": [
         "skill",
         "dependencies",
@@ -811,7 +811,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "6.2.0",
+      "version": "6.2.1",
       "tags": [
         "beads",
         "merge-queue",
@@ -897,7 +897,7 @@
     {
       "name": "resume-session",
       "description": "Resume a previous agent session in the current repository from its transcript, reading only the latest context incrementally instead of reloading the full history. Discovers prior Claude Code and Codex sessions, summarizes the leftoff state, confirms ambiguities, then continues the work.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "skill",
         "lifecycle",
@@ -1243,7 +1243,7 @@
     {
       "name": "write-agentic",
       "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
-      "version": "5.1.0",
+      "version": "5.1.1",
       "tags": [
         "skill",
         "maintenance",

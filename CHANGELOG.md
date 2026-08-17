@@ -1,5 +1,13 @@
 # Changelog
 
+## [29.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.0...srobroek-agentic--v29.1.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **ci:** use GitHub App client ID input ([a754415](https://github.com/srobroek/agentic-packages/commit/a75441515f1f5e4a1f902230ffcb1b59ce8e1b00))
+* **pr-shepherd:** close the four remaining fuzz defects, unblock bats CI, and clear the ruff backlog ([#863](https://github.com/srobroek/agentic-packages/issues/863)) ([80ef3db](https://github.com/srobroek/agentic-packages/commit/80ef3db32dc2d604e7d9d65a904d712acb15e85f))
+
 ## [29.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.0.1...srobroek-agentic--v29.1.0) (2026-08-17)
 
 
