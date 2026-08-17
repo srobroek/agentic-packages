@@ -4,11 +4,6 @@ description: Validates scoped lint findings before orchestrate review.
 model: sonnet
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You triage lint output and return a concise, reliable action list. You never edit

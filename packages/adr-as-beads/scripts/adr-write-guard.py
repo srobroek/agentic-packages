@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""PreToolUse:Write|Edit|NotebookEdit -- deny an edit to a generated ADR file and
-name the bead to edit instead.
+"""PreToolUse:apply_patch|Write|Edit|NotebookEdit -- deny an edit to a generated
+ADR file and name the bead to edit instead.
 
 A banner inside the file cannot prevent the edit it warns about. The agent has
 already decided to write by the time it reads the file, the write succeeds, and
@@ -63,12 +63,37 @@ def deny(reason: str) -> None:
 
 
 def target_path(tool_input: dict) -> str:
-    """Extract the written path across the tools that write files."""
+    """Extract a written path from the file-writing tool payload."""
     for key in ("file_path", "notebook_path", "path"):
         value = tool_input.get(key)
         if isinstance(value, str) and value:
             return value
     return ""
+
+
+def target_paths(tool: str, tool_input: dict) -> list[str]:
+    """Extract every written path, including Codex's whole-patch payload."""
+    if tool == "apply_patch":
+        command = tool_input.get("command") or tool_input.get("patch")
+        if isinstance(command, str):
+            paths = []
+            prefixes = (
+                "*** Update File: ",
+                "*** Add File: ",
+                "*** Delete File: ",
+                "*** Move to: ",
+            )
+            for line in command.splitlines():
+                for prefix in prefixes:
+                    if line.startswith(prefix):
+                        path = line[len(prefix) :].strip()
+                        if path:
+                            paths.append(path)
+                        break
+            return paths
+        return []
+    path = target_path(tool_input)
+    return [path] if path else []
 
 
 def bead_id_from(text: str) -> str:
@@ -98,48 +123,55 @@ def main() -> None:
     if not isinstance(tool_input, dict):
         allow()
 
-    path = target_path(tool_input)
-    if not path:
-        allow()
-
-    # Normalize separators before matching, so a Windows-style payload is judged
-    # the same as a POSIX one.
-    normalized = path.replace("\\", "/")
-    if not any(hint in normalized for hint in ADR_PATH_HINTS):
+    paths = target_paths(tool, tool_input)
+    if not paths:
         allow()
 
     from pathlib import Path
 
-    try:
-        existing = Path(path)
-        if not existing.is_file():
-            # A NEW file under docs/adr/ is not judged here. The renderer owns the
-            # numbering, so a hand-created file collides on the next run rather
-            # than being silently lost, and the pre-commit gate reports it.
-            allow()
-        # Read only the head: the marker is on line one, and an ADR can be long.
-        head = existing.read_text(encoding="utf-8", errors="replace")[:4096]
-    except Exception:  # noqa: BLE001
-        allow()
+    for path in paths:
+        # Normalize separators before matching, so a Windows-style payload is
+        # judged the same as a POSIX one.
+        normalized = path.replace("\\", "/")
+        if not any(hint in normalized for hint in ADR_PATH_HINTS):
+            continue
 
-    if MARKER not in head:
-        allow()
+        try:
+            existing = Path(path)
+            if not existing.is_file():
+                # A NEW file under docs/adr/ is not judged here. The renderer
+                # owns the numbering, so a hand-created file collides on the
+                # next run rather than being silently lost, and the pre-commit
+                # gate reports it.
+                continue
+            # Read only the head: the marker is on line one, and an ADR can be
+            # long.
+            head = existing.read_text(encoding="utf-8", errors="replace")[:4096]
+        except Exception:  # noqa: BLE001
+            continue
 
-    bead = bead_id_from(head)
-    where = f"`bd show {bead}`" if bead else "its decision bead"
-    edit_cmd = (
-        f"bd update {bead} --notes '...'" if bead else "bd update <bead-id> --notes '...'"
-    )
+        if MARKER not in head:
+            continue
 
-    deny(
-        f"{normalized} is generated from a beads decision bead and is overwritten on "
-        f"the next commit, so an edit here is lost with nothing to recover from. "
-        f"Edit the record instead: {where}, then {edit_cmd} (or "
-        f"`bd update {bead or '<bead-id>'} -d '...'` to change a MADR section). "
-        f"The render-adrs pre-commit hook rewrites this file from the bead. To "
-        f"replace the decision rather than correct it, use "
-        f"`bd supersede {bead or '<old>'} --with <new>`."
-    )
+        bead = bead_id_from(head)
+        where = f"`bd show {bead}`" if bead else "its decision bead"
+        edit_cmd = (
+            f"bd update {bead} --notes '...'"
+            if bead
+            else "bd update <bead-id> --notes '...'"
+        )
+
+        deny(
+            f"{normalized} is generated from a beads decision bead and is overwritten "
+            f"on the next commit, so an edit here is lost with nothing to recover "
+            f"from. Edit the record instead: {where}, then {edit_cmd} (or "
+            f"`bd update {bead or '<bead-id>'} -d '...'` to change a MADR section). "
+            f"The render-adrs pre-commit hook rewrites this file from the bead. To "
+            f"replace the decision rather than correct it, use "
+            f"`bd supersede {bead or '<old>'} --with <new>`."
+        )
+
+    allow()
 
 
 if __name__ == "__main__":

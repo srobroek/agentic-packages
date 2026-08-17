@@ -13,27 +13,20 @@ In the **Includes** column, each entry is a member package; an entry marked with
 | --- | --- | --- |
 | `agent-hook-contract` | Cross-tool agent hook contract for Claude Code and Codex CLI | self-contained |
 | `agentic-maintenance` | Maintain your agentic assets | `audit-steering`, `write-agentic`, `agent-builder`, `agent-pr-reviewer` |
-| `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
+| `cmux` | cmux terminal control bundle | `cmux`^, `cmux-workspace`^, `cmux-browser`^, `cmux-markdown`^, `cmux-customization`^, `cmux-settings`^, `cmux-diagnostics`^, `cmux-socket-policy`^, `cmux-ghostty`^, `cmux-keyboard-shortcuts`^, `cmux-shared-behavior`^ |
 | `code-intelligence` | Codebase understanding toolkit | `web-fetch`, `agent-pr-reviewer`, `steering-project-structure` |
 | `core` | Baseline bundle for any repo | `project-lifecycle`, `code-intelligence`, `agentic-maintenance`, `resume-session`, `steering-delivery`, `beads`, `grilling`^, `grill-with-docs`^ |
 | `data-ai` | Data and AI toolkit | `steering-data` |
 | `dependency-quality` | Dependency hygiene bundle | `hooks-package-investigate` |
-| `diagrams` | Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams | `drawio-skill`^, `excalidraw-diagram-skill`^, `d2-diagram`^ |
 | `frontend` | Frontend development and design toolkit | `playwright`, `steering-frontend`, `impeccable`^, `interface-design`^, `stitch-design`^ |
 | `infrastructure` | Infrastructure and operations toolkit | `steering-infrastructure` |
-| `language-go` | Go toolkit | `go-quality`, `lsp-go` |
-| `language-python` | Python toolkit | `python-quality`, `lsp-python` |
-| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `lsp-rust` |
-| `language-shell` | Shell scripting toolkit with Shell LSP | `lsp-shell` |
-| `language-terraform` | Terraform and HCL toolkit | `language-steering-terraform`, `lsp-terraform` |
-| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `lsp-typescript` |
-| `lsp-go` | Go LSP server | external packages |
-| `lsp-python` | Python LSP server | external packages |
-| `lsp-rust` | Rust LSP server | external packages |
-| `lsp-shell` | Shell LSP server | external packages |
-| `lsp-terraform` | Terraform LSP server | external packages |
-| `lsp-typescript` | TypeScript/JavaScript LSP server | external packages |
-| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grilling`^, `grill-with-docs`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
+| `language-go` | Go toolkit | `go-quality`, `mcp-serena` |
+| `language-python` | Python toolkit | `python-quality`, `mcp-serena` |
+| `language-rust` | Rust toolkit | `rust-quality`, `language-steering-rust`, `mcp-serena` |
+| `language-shell` | Shell toolkit with portable steering and Serena semantic code tools | `mcp-serena` |
+| `language-terraform` | Terraform and HCL toolkit | `mcp-serena` |
+| `language-typescript` | TypeScript and JavaScript toolkit | `typescript-quality`, `language-steering-typescript`, `mcp-serena` |
+| `matt-skills` | Bundle of Matt Pocock's engineering and productivity skills | `grilling`^, `grill-with-docs`^, `codebase-design`^, `domain-modeling`^, `improve-codebase-architecture`^, `setup-matt-pocock-skills`^, `tdd`^, `to-issues`^, `to-prd`^, `triage`^ |
 | `planning-product` | Planning and product toolkit | `debate`, `eli5`, `web-fetch`, `to-prd`^, `to-issues`^, `tdd`^, `triage`^, `improve-codebase-architecture`^ |
 | `presentation` | Presentation bundle for general decks, Marp slides, and PowerPoint template workflows | `ppt-creator`^, `marp-slide`^, `pptx-from-layouts`^ |
 | `project-lifecycle` | Day-to-day project lifecycle workflows | `catchup`, `handover`, `steering-git-workflow`, `verify`, `agent-pr-reviewer` |
@@ -71,15 +64,12 @@ Bundles also pull in third-party skills and agents (marked `^` in the **Includes
 <!-- BEGIN:external-sources -->
 | Source repo | Count | Members pulled |
 | --- | --- | --- |
-| [`Agents365-ai/drawio-skill`](https://github.com/Agents365-ai/drawio-skill) | 1 | `drawio-skill` |
 | [`Dammyjay93/interface-design`](https://github.com/Dammyjay93/interface-design) | 1 | `interface-design` |
 | [`Paramchoudhary/ResumeSkills`](https://github.com/Paramchoudhary/ResumeSkills) | 1 | `ResumeSkills` |
-| [`coleam00/excalidraw-diagram-skill`](https://github.com/coleam00/excalidraw-diagram-skill) | 1 | `excalidraw-diagram-skill` |
 | [`daymade/claude-code-skills`](https://github.com/daymade/claude-code-skills) | 1 | `ppt-creator` |
 | [`google-labs-code/stitch-skills`](https://github.com/google-labs-code/stitch-skills) | 1 | `stitch-design` |
-| [`manaflow-ai/cmux`](https://github.com/manaflow-ai/cmux) | 9 | `cmux`, `cmux-customization`, `cmux-diagnostics`, `cmux-ghostty`, `cmux-keyboard-shortcuts`, `cmux-settings`, `cmux-shared-behavior`, `cmux-socket-policy`, `cmux-workspace` |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 8 | `grill-with-docs`, `grilling`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage` |
-| [`neuro-synapse/network-topology-agent`](https://github.com/neuro-synapse/network-topology-agent) | 1 | `d2-diagram` |
+| [`manaflow-ai/cmux`](https://github.com/manaflow-ai/cmux) | 11 | `cmux`, `cmux-browser`, `cmux-customization`, `cmux-diagnostics`, `cmux-ghostty`, `cmux-keyboard-shortcuts`, `cmux-markdown`, `cmux-settings`, `cmux-shared-behavior`, `cmux-socket-policy`, `cmux-workspace` |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 10 | `codebase-design`, `domain-modeling`, `grill-with-docs`, `grilling`, `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, `triage` |
 | [`pbakaus/impeccable`](https://github.com/pbakaus/impeccable) | 1 | `impeccable` |
 | [`softaworks/agent-toolkit`](https://github.com/softaworks/agent-toolkit) | 1 | `marp-slide` |
 | [`tristan-mcinnis/pptx-from-layouts-skill`](https://github.com/tristan-mcinnis/pptx-from-layouts-skill) | 1 | `pptx-from-layouts` |

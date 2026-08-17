@@ -239,7 +239,7 @@ bounded targets.
 | OpenAPI | oasdiff | **baseline** | `oasdiff breaking <base> <head>` | breaking-change vs. base ref (ref targets) |
 | GraphQL | graphql-eslint | local | via ESLint config | SDL smells |
 | GraphQL | graphql-inspector | **baseline** | `graphql-inspector diff <old> <new>` | breaking-change detection |
-| Protobuf | buf | local + **baseline** | `buf lint` (local) / `buf breaking --against <ref>` (baseline) | AST lint + breaking-change |
+| Protobuf | buf | local + **baseline** | `buf lint` (local) / `buf breaking --against "<buf-input>"` (baseline; e.g. `.git#ref=<base-ref>,subdir=<proto-dir>`) | AST lint + breaking-change |
 | Terraform | tflint | local | `tflint -f json` | provider-aware rules |
 | Terraform | trivy/checkov | local | `trivy config --format json .` / `checkov -d . -o json` | misconfig |
 | Dockerfile | hadolint | local | `hadolint -f json <Dockerfile>` | AST; embeds shellcheck for RUN |

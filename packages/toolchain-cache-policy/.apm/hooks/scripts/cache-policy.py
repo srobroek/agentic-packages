@@ -9,8 +9,10 @@ Package-manager downloads and content-addressed compiler results should be
 shared across worktrees. Mutable dependencies and branch-derived output must
 not be redirected into a machine-global writable directory.
 
-This hook writes safe cache locations to the session environment and evicts
-only regenerable compiler caches when free disk drops below a floor:
+This hook writes safe cache locations to Claude's session environment and
+evicts only regenerable compiler caches when free disk drops below a floor.
+Codex cannot persist hook environment changes, so its target-specific mode
+emits valid SessionStart context describing the launcher/direnv setup:
 
   1. $CLAUDE_ENV_FILE receives cache variables for sccache, Python, Go, Node,
      Deno, Gradle, and NuGet.
@@ -30,11 +32,32 @@ Never blocks a session (fail-open). Config knobs via env:
 from __future__ import annotations
 
 import json
+import math
 import os
+import shlex
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+GIB = 1024 ** 3
+
+
+def _float_env(name: str, default: float) -> float:
+    try:
+        value = float(os.environ.get(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+    return value if math.isfinite(value) and value >= 0 else default
+
+
+def _int_env(name: str, default: int) -> int:
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+    return value if value >= 0 else default
+
 
 HOME = Path.home()
 ROOT = Path(
@@ -42,9 +65,8 @@ ROOT = Path(
     or os.environ.get("DEVELOPMENT_CACHE_HOME")
     or HOME / ".cache" / "development"
 )
-FLOOR_GIB = float(os.environ.get("CACHE_POLICY_FLOOR_GIB", "25"))
-SCCACHE_GIB = int(os.environ.get("CACHE_POLICY_SCCACHE_GIB", "20"))
-GIB = 1024 ** 3
+FLOOR_GIB = _float_env("CACHE_POLICY_FLOOR_GIB", 25)
+SCCACHE_GIB = _int_env("CACHE_POLICY_SCCACHE_GIB", 20)
 
 log = []
 
@@ -110,7 +132,7 @@ def write_env_file(env: dict):
                 Path(v).mkdir(parents=True, exist_ok=True)
             except Exception:
                 pass
-        lines.append(f'export {k}="{v}"')
+        lines.append(f"export {k}={shlex.quote(str(v))}")
     try:
         with open(envfile, "a") as fh:  # append: preserve other hooks' vars
             fh.write("\n# toolchain-cache-policy: shared bounded caches\n")
@@ -188,19 +210,58 @@ def gc_if_pressured(env: dict):
          + ("" if final >= FLOOR_GIB else " — STILL below floor, manual cleanup needed"))
 
 
+def codex_context() -> str:
+    actions = "; ".join(log)
+    summary = f" Hook actions: {actions}" if actions else ""
+    return (
+        "toolchain-cache-policy ran at Codex SessionStart. Codex does not "
+        "persist environment changes made by hooks, so cache variables were "
+        "not exported for later commands. Configure DEVELOPMENT_CACHE_HOME "
+        "and the cache variables in the Codex launcher or direnv; Cargo "
+        "target output remains repository-scoped."
+        + summary
+    )
+
+
 def main():
+    codex = "--codex" in sys.argv[1:]
     if os.environ.get("CACHE_POLICY_DISABLE"):
-        print(json.dumps({"cache_policy": "disabled"}))
+        if codex:
+            print(json.dumps({
+                "hookSpecificOutput": {
+                    "hookEventName": "SessionStart",
+                    "additionalContext": (
+                        "toolchain-cache-policy is disabled by "
+                        "CACHE_POLICY_DISABLE."
+                    ),
+                }
+            }))
+        else:
+            print(json.dumps({"cache_policy": "disabled"}))
         return
     try:
         ROOT.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         note(f"cannot create cache root {ROOT}: {e}")
     env = shared_env()
-    write_env_file(env)
-    gc_if_pressured(env)
-    print(json.dumps({"cache_policy": "applied", "root": str(ROOT),
-                      "floor_gib": FLOOR_GIB, "actions": log}))
+    if codex:
+        note("Codex cannot persist the Claude environment file; context only")
+    else:
+        write_env_file(env)
+    try:
+        gc_if_pressured(env)
+    except Exception as e:
+        note(f"GC failed (non-fatal): {e}")
+    if codex:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": codex_context(),
+            }
+        }))
+    else:
+        print(json.dumps({"cache_policy": "applied", "root": str(ROOT),
+                          "floor_gib": FLOOR_GIB, "actions": log}))
 
 
 if __name__ == "__main__":

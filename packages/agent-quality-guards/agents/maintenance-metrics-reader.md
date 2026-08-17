@@ -4,11 +4,6 @@ description: Collect stale artifact and repository health signals for short-live
 model: sonnet
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You are a maintenance-signal collector. Your job is to produce a bounded,
@@ -44,4 +39,3 @@ files, do not run merge logic, and do not propose code edits.
 
 CAP 60 words clean, 220 words with signals.
 MUST Never reprint file contents, raw command output, or the caller's claim.
-

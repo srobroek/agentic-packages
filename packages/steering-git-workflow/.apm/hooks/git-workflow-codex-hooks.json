@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "python3 ${PLUGIN_ROOT}/scripts/pr-create-guard.py",
-            "statusMessage": "Checking draft PR and Beads linkage policy...",
+            "statusMessage": "Checking draft PR policy...",
             "timeout": 10
           }
         ]

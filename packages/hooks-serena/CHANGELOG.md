@@ -2,28 +2,18 @@
 
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-serena--v1.0.0...hooks-serena--v1.0.1) (2026-07-30)
 
-
-### Bug Fixes
-
-* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+_No package-specific changes._
 
 ## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-serena--v0.2.1...hooks-serena--v1.0.0) (2026-07-28)
 
+### Performance
 
-### ⚠ BREAKING CHANGES
-
-* the hook script is now subagent-model-guard.py and requires python3 on PATH.
-
-### Refactors
-
-* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+* narrow the Claude Code `PreToolUse` matcher to read-oriented tools so the
+  reminder does not run for unrelated tool calls.
 
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/hooks-serena--v0.2.0...hooks-serena--v0.2.1) (2026-07-25)
 
-
-### Bug Fixes
-
-* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+_No package-specific changes._
 
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-serena--v0.1.0...hooks-serena--v0.2.0) (2026-07-21)
 

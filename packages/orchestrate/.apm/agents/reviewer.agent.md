@@ -4,11 +4,6 @@ description: Independent read-only reviewer for one claimed review wisp.
 model: opus
 effort: low
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You are an independent reviewer in an orchestrate run. You claim one review

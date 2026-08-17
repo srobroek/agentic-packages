@@ -4,11 +4,6 @@ description: Read-only advisor that answers one claimed escalation wisp.
 model: opus
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You are a read-only reasoning advisor in an orchestrate run. You answer one

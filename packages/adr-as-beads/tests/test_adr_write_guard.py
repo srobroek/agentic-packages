@@ -102,6 +102,31 @@ def test_every_writing_tool_is_judged(generated, tool):
     assert decision_of(result) == "deny"
 
 
+def test_codex_apply_patch_of_generated_file_is_denied(generated):
+    patch = (
+        "*** Begin Patch\n"
+        f"*** Update File: {generated}\n"
+        "@@\n"
+        "-old\n"
+        "+new\n"
+        "*** End Patch\n"
+    )
+    _, result = run(
+        {"tool_name": "apply_patch", "tool_input": {"command": patch}}
+    )
+    assert decision_of(result) == "deny"
+
+
+def test_codex_apply_patch_can_add_a_new_adr(tmp_path):
+    path = tmp_path / "docs" / "adr" / "0002-new.md"
+    path.parent.mkdir(parents=True)
+    patch = f"*** Begin Patch\n*** Add File: {path}\n+new\n*** End Patch\n"
+    _, result = run(
+        {"tool_name": "apply_patch", "tool_input": {"command": patch}}
+    )
+    assert decision_of(result) == "allow"
+
+
 def test_doc_adr_directory_is_also_covered(tmp_path):
     # adr-tools' historic default is doc/adr, not docs/adr.
     path = tmp_path / "doc" / "adr" / "0001-x.md"

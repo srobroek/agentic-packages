@@ -90,7 +90,8 @@ audit fails stays `status: draft`.
    - Status `draft` until first validated; `version: 1`;
      `last_reviewed:` today.
 3. Lint + reindex:
-   `python3 <journeys-dir>/journeys.py lint <journeys-dir>` then `index`.
+   `python3 <journeys-dir>/journeys.py lint <journeys-dir>` then
+   `python3 <journeys-dir>/journeys.py index <journeys-dir>`.
 
 ## Amend an existing journey
 

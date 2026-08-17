@@ -14,11 +14,18 @@ permanently stuck release loop.
 ## Step 0 -- Detect (mandatory gate)
 
 Before any release, tag, changelog, or version-bump action, check whether the
-repo is release-please-managed:
+repo is release-please-managed. Run the installed guard for the active runtime:
 
 ```bash
-.claude/hooks/release-please/scripts/release-please-guard.py detect   # exit 0 = managed, 1 = not; prints config facts
+# Codex
+.codex/hooks/release-please/scripts/release-please-guard.py detect
+
+# Claude Code
+.claude/hooks/release-please/scripts/release-please-guard.py detect
 ```
+
+The command exits `0` when the repo is managed and `1` when it is not; it also
+prints the detected config facts.
 
 - **Managed (exit 0)** → using release-please is **MANDATORY**. Do NOT hand-cut
   tags or run `gh release create`; do NOT hand-merge a `release-please--branches--*`

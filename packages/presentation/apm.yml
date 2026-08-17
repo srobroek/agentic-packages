@@ -6,7 +6,6 @@ description: >-
 author: Sjors Robroek
 license: MIT
 type: skill
-target: all
 includes: auto
 category: presentation
 tags:

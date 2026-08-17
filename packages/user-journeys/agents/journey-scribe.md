@@ -5,7 +5,6 @@ description: >-
 model: opus
 effort: medium
 permissionMode: acceptEdits
-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
 You write and amend user-journey documents. Inputs (from the spawning
@@ -50,7 +49,8 @@ before writing anything.
   Migrated journeys start at `version: 1`, `status: draft`, legacy doc in
   `trace:`.
 - Finish every task with the journey-init skill's helper:
-  `journeys.py lint <dir>` (must exit 0) and `journeys.py index <dir>`.
+  `python3 <journeys-dir>/journeys.py lint <journeys-dir>` (must exit 0) and
+  `python3 <journeys-dir>/journeys.py index <journeys-dir>`.
 - Commit convention: `journey(J<id>): <create|amend|correct|migrate> ...`.
 
 ## Output contract

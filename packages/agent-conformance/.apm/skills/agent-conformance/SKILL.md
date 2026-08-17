@@ -7,7 +7,7 @@ description: Run the agent contract-conformance sweep -- stage fixtures, spawn a
 
 Behavioral regression suite for shipped agents: every judgment is made by the
 deterministic engine (`scripts/conformance.py`); this skill only orchestrates
-spawns. Engine subcommands are documented in the package README and the CLI
+spawns. Engine subcommands are documented in the script's module help and CLI
 contract; invoke as:
 
 ```bash
@@ -25,12 +25,14 @@ where `<pkg>` is this package's root (in the monorepo:
    `--package PKG` for a scoped sweep). Note the printed manifest path and
    out-dir.
 3. **Execute** -- for each manifest entry, in parallel batches of 4:
-   - Spawn the entry's `agent` via the Task tool with the entry's `prompt`
-     as the task prompt, instructing the subagent that its working directory
-     for any file operations is the entry's `sandbox_path`.
+   - Spawn the entry's `agent` with the host runtime's subagent/delegation tool,
+     using the entry's `prompt` as the task prompt. Instruct the subagent that
+     its working directory for any file operations is the entry's
+     `sandbox_path`.
    - MUST save the subagent's final reply to the entry's `reply_path`
      verbatim -- the exact returned text, no summarizing, no reformatting, no
-     added framing. Write it with the Write tool immediately on receipt.
+     added framing. Use the host runtime's file-writing tool immediately on
+     receipt.
    - Run `conformance.py assert --manifest <path> --case <agent>/<case>`.
    - On a failed attempt (exit 1): re-spawn the same entry fresh (retry ≤ 2)
      and assert again; the engine tracks attempts and finalizes the verdict.
@@ -43,8 +45,8 @@ MUST Save replies verbatim -- a paraphrased reply invalidates the verdict; the
   engine's plausibility floor flags suspicious saves as ERROR.
 MUST Work every manifest entry or none -- `report` marks unworked entries as
   ERROR missing-result; never hand-edit the journal.
-MUST Model overrides (scoped iteration only): pass the override to the Task
-  spawn and note it when reporting -- overridden verdicts are not
+MUST Model overrides (scoped iteration only): pass the override to the
+subagent spawn and note it when reporting -- overridden verdicts are not
   shipped-config evidence.
 NOT Judge replies yourself, relax an assertion, or skip `check`. The engine
   is the only judge.

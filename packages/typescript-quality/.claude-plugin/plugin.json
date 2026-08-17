@@ -1,7 +1,7 @@
 {
   "name": "typescript-quality",
   "version": "2.1.3",
-  "description": "Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain.",
+  "description": "Run TypeScript or JavaScript format, lint, and type-check commands with the project toolchain.",
   "author": {
     "name": "Sjors Robroek"
   },

@@ -154,6 +154,11 @@ def test_generated_banner_names_the_bead():
     assert "bd show adr-1" in out
 
 
+def test_title_is_yaml_safe_when_it_contains_a_colon():
+    out = mod.render_one(bead(title="Use X: Y"), 1)
+    assert 'title: "Use X: Y"' in out
+
+
 def test_spec_id_is_emitted_when_set():
     assert "spec: 042-x" in mod.render_one(bead(spec_id="042-x"), 1)
 
@@ -249,6 +254,33 @@ def test_no_decisions_is_not_a_failure(tmp_path, stub_export):
     assert skipped == "no closed decision beads"
 
 
+def test_renamed_decision_removes_old_projection(tmp_path, stub_export):
+    stub_export([bead(title="Old title")])
+    mod.render_all(tmp_path)
+    old = tmp_path / "docs/adr/0001-old-title.md"
+
+    stub_export([bead(title="New title")])
+    changed, skipped = mod.render_all(tmp_path)
+
+    assert skipped is None
+    assert old in changed
+    assert not old.exists()
+    assert (tmp_path / "docs/adr/0001-new-title.md").exists()
+
+
+def test_removed_decisions_remove_all_projections(tmp_path, stub_export):
+    stub_export([bead()])
+    mod.render_all(tmp_path)
+    old = tmp_path / "docs/adr/0001-adopt-x-for-y.md"
+
+    stub_export([])
+    changed, skipped = mod.render_all(tmp_path)
+
+    assert skipped is None
+    assert changed == [old]
+    assert not old.exists()
+
+
 def test_second_run_rewrites_nothing(tmp_path, stub_export):
     stub_export([bead()])
     first, _ = mod.render_all(tmp_path)
@@ -314,7 +346,7 @@ def test_main_returns_one_when_rendering_raises(tmp_path, monkeypatch):
 
 def test_malformed_export_line_does_not_discard_the_rest(tmp_path, monkeypatch):
     """One bad JSONL line must not lose every other decision."""
-    payload = '{"id":"adr-1","issue_type":"decision"}\nNOT JSON\n'
+    payload = '{"id":"adr-1","issue_type":"decision"}\n[]\nNOT JSON\n'
 
     def fake_run_bd(args, cwd):
         out = Path(args[args.index("--output") + 1])

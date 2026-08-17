@@ -11,9 +11,10 @@ the events each tool fires, the payload shape, the accepted decisions, and the
 language and performance rules this repository applies to its own hooks.
 
 The Codex behavior tracks the released contract at
-<https://learn.chatgpt.com/docs/hooks>, refreshed 2026-07-22 for Codex CLI
-0.144.5. Prefer that release documentation over schemas from Codex `main`, which
-may carry unreleased fields.
+<https://learn.chatgpt.com/docs/hooks>, refreshed 2026-08-17 for Codex CLI
+0.146.1. Prefer that release documentation over schemas from Codex `main`,
+which may carry unreleased fields. Re-check this reference when the Codex
+release changes: the hook surface is versioned independently of this package.
 
 ## Language: Python by default
 
@@ -128,6 +129,7 @@ a `*-claude-hooks.json` variant.
 | Event | Matcher input |
 | --- | --- |
 | `SessionStart` | `startup`, `resume`, `clear`, or `compact` |
+| `SessionEnd` | `other` |
 | `SubagentStart` | subagent type |
 | `PreToolUse` | local tool name, including `Bash`, `apply_patch` (`Edit`/`Write` aliases), MCP tools, and `Agent` for `spawn_agent` |
 | `PermissionRequest` | same tool names as `PreToolUse` |
@@ -141,10 +143,12 @@ a `*-claude-hooks.json` variant.
 Hooks are enabled by default. `[features] hooks = true|false` is the canonical
 Codex configuration key; `features.codex_hooks` is a deprecated alias.
 
-Only synchronous `type: "command"` handlers run under Codex. It parses but skips
-`prompt`, `agent`, and asynchronous command handlers. Non-managed hooks,
-including plugin hooks, are skipped until the user reviews and trusts their
-current hash through `/hooks`.
+Only `type: "command"` handlers run under Codex; `prompt` and `agent` handlers
+are parsed but skipped. Asynchronous command handlers run in the background for
+informational output, but cannot block, approve, rewrite, or otherwise control
+the operation that triggered them. Only synchronous command handlers can enforce
+those decisions. Non-managed hooks, including plugin hooks, are skipped until
+the user reviews and trusts their current hash through `/hooks`.
 
 ## Inputs
 
@@ -179,8 +183,10 @@ To deny a `PreToolUse` call, return:
 ```
 
 Codex also accepts `{"decision":"block","reason":"..."}`, or exit code 2 with the
-reason on stderr. To permit a call and add model-visible context, use
-`permissionDecision: "allow"` with `additionalContext`.
+reason on stderr. To add model-visible context without blocking, return
+`hookSpecificOutput.additionalContext`; repository advisory hooks commonly also
+include `permissionDecision: "allow"`. Codex requires that explicit allow when
+`updatedInput` rewrites the call.
 
 `PermissionRequest` uses an event-specific decision object:
 
@@ -195,14 +201,16 @@ For a denial, add `decision.message`.
 through `hookSpecificOutput.additionalContext`. `Stop` and `SubagentStop` use
 `{"decision":"block","reason":"..."}` to continue work.
 
-`PostToolUse` cannot replace a tool result under Codex. Claude accepts
-`hookSpecificOutput.updatedToolOutput` (and `updatedMCPToolOutput`) to rewrite
-what the model sees. Codex's `PostToolUseHookSpecificOutputWire` carries three
-fields (`hookEventName`, `additionalContext`, `updatedMCPToolOutput`) and the
-binary rejects the last with `PostToolUse hook returned unsupported
-updatedMCPToolOutput`. So a Codex `PostToolUse` hook may only ADD context, and a
-`target: all` package cannot compress or archive tool output in a hook. Neither
-tool can undo a side effect.
+`PostToolUse` cannot undo a side effect under either tool. Codex can still replace
+the model-visible result with hook feedback: return `{"decision":"block","reason":"..."}`
+or exit 2 with the reason on stderr, and it also accepts `continue: false`,
+`systemMessage`, and `hookSpecificOutput.additionalContext`. Codex rejects
+`updatedMCPToolOutput` and `suppressOutput`, and does not implement Claude's
+`hookSpecificOutput.updatedToolOutput`; do not emit those fields from a shared
+hook. Claude accepts `hookSpecificOutput.updatedToolOutput` (and
+`updatedMCPToolOutput`) to rewrite what the model sees. A `target: all` package
+cannot rely on those Claude-only rewrite fields to compress or archive tool
+output under Codex.
 
 `PreToolUse` rewriting IS cross-tool: both accept
 `hookSpecificOutput.updatedInput`, and Codex requires it be paired with

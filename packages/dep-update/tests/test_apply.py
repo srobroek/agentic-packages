@@ -152,6 +152,16 @@ def test_node_check_on_malformed_json_is_unconfirmed(tmp_path):
     assert not apply_mod.check_node_version(tmp_path, "express", "4.18.3")
 
 
+def test_node_apply_rejects_a_package_manager_failure(tmp_path, monkeypatch):
+    (tmp_path / "package.json").write_text(
+        json.dumps({"dependencies": {"express": "^4.18.3"}})
+    )
+    monkeypatch.setenv("DEP_UPDATE_PKG_MANAGER", "npm")
+    monkeypatch.setattr(apply_mod.shutil, "which", lambda _: "/usr/bin/npm")
+    monkeypatch.setattr(apply_mod, "run_pm", lambda *_args: 7)
+    assert apply_mod.apply_node(tmp_path, "express", "4.18.3") == 1
+
+
 # --- node package manager detection -----------------------------------------
 
 

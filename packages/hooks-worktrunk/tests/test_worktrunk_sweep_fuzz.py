@@ -129,7 +129,9 @@ def _independently_stale(record: dict, now: float, threshold: int) -> bool:
     """
     if not isinstance(record, dict):
         return False
-    if record.get("is_main") or record.get("is_current"):
+    if type(record.get("is_main")) is not bool or type(record.get("is_current")) is not bool:
+        return False
+    if record["is_main"] or record["is_current"]:
         return False
     path = record.get("path")
     if not isinstance(path, str) or not path or not os.path.isdir(path):
@@ -143,7 +145,7 @@ def _independently_stale(record: dict, now: float, threshold: int) -> bool:
     if not isinstance(working, dict):
         return False
     for key in WORKING_KEYS:
-        if key not in working or working[key]:
+        if key not in working or type(working[key]) is not bool or working[key]:
             return False
     remote = record.get("remote")
     if not isinstance(remote, dict):

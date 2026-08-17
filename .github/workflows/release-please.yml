@@ -77,6 +77,12 @@ jobs:
           # flagged as cache-poisoning (zizmor: cache-poisoning) by the
           # workflow-lint gate. The install is a one-off on every release push.
 
+      - name: Set up uv
+        if: ${{ steps.release.outputs.pr }}
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          enable-cache: false
+
       - name: Sync generated artifacts on the release PR
         if: ${{ steps.release.outputs.pr }}
         # NOTE: step-level `env` is evaluated even when the `if` guard is false, so

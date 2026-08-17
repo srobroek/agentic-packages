@@ -23,6 +23,25 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+def hook_manifest_root() -> Path:
+    """Locate package hook manifests in source and installed skill layouts."""
+    candidates = [SCRIPT.parents[3] / "hooks"]
+    for root in (Path.cwd(), *Path.cwd().parents):
+        modules = root / "apm_modules"
+        if not modules.is_dir():
+            continue
+        candidates.extend(modules.glob("*/hooks"))
+        candidates.extend(modules.glob("*/*/hooks"))
+        candidates.extend(modules.glob("**/hooks"))
+    for candidate in candidates:
+        if all((candidate / name).is_file() for name in (
+            "worktrunk-writer-claude-hooks.json",
+            "worktrunk-writer-codex-hooks.json",
+        )):
+            return candidate
+    raise FileNotFoundError("worktrunk-writer hook manifests are not installed")
+
+
 class InventoryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -1440,7 +1459,7 @@ class BindingTests(unittest.TestCase):
 
 class HookManifestTests(unittest.TestCase):
     def test_runtime_manifests_route_native_tool_names(self) -> None:
-        hooks = SCRIPT.parents[3] / "hooks"
+        hooks = hook_manifest_root()
         claude = json.loads((hooks / "worktrunk-writer-claude-hooks.json").read_text())
         codex = json.loads((hooks / "worktrunk-writer-codex-hooks.json").read_text())
         claude_matchers = [entry["matcher"] for entry in claude["hooks"]["PreToolUse"]]
@@ -1458,7 +1477,7 @@ class HookManifestTests(unittest.TestCase):
         self.assertIn("apply_patch", codex_tools)
 
     def test_runtime_manifests_anchor_scripts_at_project_root(self) -> None:
-        hooks = SCRIPT.parents[3] / "hooks"
+        hooks = hook_manifest_root()
         for name in (
             "worktrunk-writer-claude-hooks.json",
             "worktrunk-writer-codex-hooks.json",
@@ -1470,7 +1489,7 @@ class HookManifestTests(unittest.TestCase):
                 self.assertIn("${PLUGIN_ROOT}/.apm/skills/worktrunk-writer/", command)
 
     def test_runtime_manifests_expose_the_subagent_context_handshake(self) -> None:
-        hooks = SCRIPT.parents[3] / "hooks"
+        hooks = hook_manifest_root()
         for name in (
             "worktrunk-writer-claude-hooks.json",
             "worktrunk-writer-codex-hooks.json",

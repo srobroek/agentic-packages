@@ -129,7 +129,10 @@ def worktrees() -> list[dict]:
 
 def is_stale(record: dict, now: float) -> tuple[bool, str]:
     """Whether a worktree is abandoned, and the reason it is not when it is not."""
-    if record.get("is_main") or record.get("is_current"):
+    for flag in ("is_main", "is_current"):
+        if type(record.get(flag)) is not bool:
+            return False, f"unknown {flag} flag"
+    if record["is_main"] or record["is_current"]:
         return False, "active checkout"
 
     path = record.get("path")
@@ -159,6 +162,8 @@ def is_stale(record: dict, now: float) -> tuple[bool, str]:
         # on every signal and its build output deleted.
         if key not in working:
             return False, f"no working-tree status ({key})"
+        if type(working[key]) is not bool:
+            return False, f"unknown working-tree status ({key})"
         if working[key]:
             return False, f"uncommitted work ({key})"
 

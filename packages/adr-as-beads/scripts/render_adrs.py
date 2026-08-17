@@ -30,6 +30,7 @@ import tempfile
 from pathlib import Path
 
 ADR_DIR = Path("docs/adr")
+GENERATED_MARKER = "<!-- Generated from a beads decision bead."
 
 # Bare `bd` inherits the caller's pager and interactive prompts. A git hook has
 # no tty, so an unset pager can hang the commit rather than fail it.
@@ -90,7 +91,9 @@ def export_decisions(repo: Path) -> list[dict] | None:
             if not line:
                 continue
             try:
-                rows.append(json.loads(line))
+                row = json.loads(line)
+                if isinstance(row, dict):
+                    rows.append(row)
             except json.JSONDecodeError:
                 # One malformed line must not discard every other decision.
                 continue
@@ -136,19 +139,21 @@ def supersession(bead: dict) -> tuple[list[str], list[str]]:
 
 def render_one(bead: dict, number: int) -> str:
     """Render one bead as a MADR document."""
-    title = (bead.get("title") or "Untitled decision").strip()
+    title = str(bead.get("title") or "Untitled decision").strip()
     sections = sections_from(bead)
     _, superseded_by = supersession(bead)
 
     status = "superseded" if superseded_by else "accepted"
-    date = (bead.get("closed_at") or bead.get("updated_at") or "")[:10]
+    date = str(bead.get("closed_at") or bead.get("updated_at") or "")[:10]
 
     lines = [
         "<!-- Generated from a beads decision bead. Edit the bead, not this file:",
         f"     bd show {bead.get('id')} -->",
         "---",
         f"number: {number}",
-        f"title: {title}",
+        # JSON string quoting is also valid YAML and keeps colons, hashes,
+        # booleans, and newlines in a title from corrupting frontmatter.
+        f"title: {json.dumps(title, ensure_ascii=False)}",
         f"status: {status}",
         f"date: {date}",
         f"bead: {bead.get('id')}",
@@ -203,6 +208,21 @@ def render_one(bead: dict, number: int) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def generated_paths(target: Path) -> set[Path]:
+    """Find generated projections without claiming hand-authored ADRs."""
+    if not target.is_dir():
+        return set()
+    paths = set()
+    for path in target.glob("*.md"):
+        try:
+            head = path.read_text(encoding="utf-8", errors="replace")[:4096]
+        except OSError:
+            continue
+        if GENERATED_MARKER in head:
+            paths.add(path)
+    return paths
+
+
 def render_all(repo: Path, *, write: bool = True) -> tuple[list[Path], str | None]:
     """Render every closed decision. Returns (stale-or-written paths, skip reason).
 
@@ -216,27 +236,39 @@ def render_all(repo: Path, *, write: bool = True) -> tuple[list[Path], str | Non
         return [], "no beads database reachable"
 
     closed = [b for b in beads if b.get("status") == "closed"]
+    target = repo / ADR_DIR
+    existing = generated_paths(target)
     if not closed:
-        return [], "no closed decision beads"
+        if not existing:
+            return [], "no closed decision beads"
+        if write:
+            for path in existing:
+                path.unlink()
+        return sorted(existing), None
 
     # Number by creation order, not bead id: `adr-11` must not become 0011 with
     # ten gaps. Ties break on id so the numbering is stable across runs.
     closed.sort(key=lambda b: ((b.get("created_at") or ""), b.get("id") or ""))
 
-    target = repo / ADR_DIR
     if write:
         target.mkdir(parents=True, exist_ok=True)
 
     changed = []
+    desired = set()
     for index, bead in enumerate(closed, start=1):
         body = render_one(bead, index)
         path = target / f"{index:04d}-{slugify(bead.get('title') or '')}.md"
+        desired.add(path)
         # Compare before writing, so an unrelated commit does not restage every ADR.
         if path.is_file() and path.read_text(encoding="utf-8") == body:
             continue
         changed.append(path)
         if write:
             path.write_text(body, encoding="utf-8")
+    for path in sorted(existing - desired):
+        changed.append(path)
+        if write:
+            path.unlink()
     return changed, None
 
 

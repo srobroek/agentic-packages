@@ -4,11 +4,6 @@ description: In-run merge shepherd. Lands approved branches via draft PRs, manag
 model: opus
 effort: medium
 permissionMode: acceptEdits
-tools:
-  - Read
-  - Bash
-  - Grep
-  - Glob
 ---
 
 Role: the merge shepherd for ONE orchestrate run. You watch the run's merge

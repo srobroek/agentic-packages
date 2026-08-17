@@ -9,14 +9,14 @@ targets:
   - codex
 includes: auto
 scripts:
-  build-readme-tables: python3 .apm/scripts/build-readme-tables.py
-  check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
-  build-release-please: python3 .apm/scripts/build-release-please.py
-  check-release-please: python3 .apm/scripts/build-release-please.py --check
+  build-readme-tables: uv run --script .apm/scripts/build-readme-tables.py
+  check-readme-tables: uv run --script .apm/scripts/build-readme-tables.py --check
+  build-release-please: uv run --script .apm/scripts/build-release-please.py
+  check-release-please: uv run --script .apm/scripts/build-release-please.py --check
   check-release-baselines: python3 .apm/scripts/check-release-baselines.py
-  build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
-  check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
-  build-marketplace: apm pack && python3 .apm/scripts/build-marketplace-block.py
+  build-marketplace-block: uv run --script .apm/scripts/build-marketplace-block.py
+  check-marketplace-block: uv run --script .apm/scripts/build-marketplace-block.py --check
+  build-marketplace: apm pack && uv run --script .apm/scripts/build-marketplace-block.py
   inject-agent-models: uv run --script .apm/scripts/inject-agent-models.py
   check-agent-models: uv run --script .apm/scripts/inject-agent-models.py --check
   build-native-plugins: uv run --script .apm/scripts/build-native-plugins.py
@@ -270,12 +270,6 @@ marketplace:
         - bundle
         - dependencies
         - supply-chain
-    - name: diagrams
-      source: ./packages/diagrams
-      category: diagrams
-      tags:
-        - bundle
-        - diagrams
     - name: eli5
       source: ./packages/eli5
       category: planning-product
@@ -476,42 +470,6 @@ marketplace:
         - open-source
         - interactive
         - setup
-    - name: lsp-go
-      source: ./packages/lsp-go
-      category: languages
-      tags:
-        - lsp
-        - go
-    - name: lsp-python
-      source: ./packages/lsp-python
-      category: languages
-      tags:
-        - lsp
-        - python
-    - name: lsp-rust
-      source: ./packages/lsp-rust
-      category: languages
-      tags:
-        - lsp
-        - rust
-    - name: lsp-shell
-      source: ./packages/lsp-shell
-      category: languages
-      tags:
-        - lsp
-        - shell
-    - name: lsp-terraform
-      source: ./packages/lsp-terraform
-      category: languages
-      tags:
-        - lsp
-        - terraform
-    - name: lsp-typescript
-      source: ./packages/lsp-typescript
-      category: languages
-      tags:
-        - lsp
-        - typescript
     - name: matt-skills
       source: ./packages/matt-skills
       category: planning-product

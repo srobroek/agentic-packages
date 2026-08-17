@@ -39,6 +39,11 @@ jobs:
           cache: pip
           cache-dependency-path: .github/requirements-ci.txt
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          enable-cache: true
+
       - name: Set up APM
         # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
         # PyYAML comes transitively from apm-cli. pytest is installed here so the

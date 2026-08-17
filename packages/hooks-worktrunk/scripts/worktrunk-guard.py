@@ -248,6 +248,12 @@ def unwrap_command(words: list[Token], index: int) -> int:
 
         head = basename(words[index].value)
         if head == "env":
+            # `env -S`/`--split-string` turns one argument into a shell
+            # command. Leave the wrapper in place so analyze_segment can
+            # re-lex that command instead of treating its first word as the
+            # utility name.
+            if wrapper_shell_command(words, index) is not None:
+                return index
             index = skip_options(
                 words, index + 1, {"-u", "--unset", "-c", "--chdir"}, assignments=True
             )
@@ -285,6 +291,10 @@ def unwrap_command(words: list[Token], index: int) -> int:
         elif head == "setsid":
             index = skip_options(words, index + 1, set())
         elif head == "flock":
+            # util-linux flock -c/--command receives a shell command string,
+            # not a utility plus argv. Leave it for recursive scanning.
+            if wrapper_shell_command(words, index) is not None:
+                return index
             # First positional is the lock file or directory.
             index = (
                 skip_options(
@@ -302,7 +312,18 @@ def unwrap_command(words: list[Token], index: int) -> int:
             index = skip_options(
                 words,
                 index + 1,
-                {"-a", "-e", "-i", "-l", "-n", "-p", "-s", "-e", "-p"},
+                {
+                    "-a",
+                    "-e",
+                    "-i",
+                    "-l",
+                    "-n",
+                    "-p",
+                    "-s",
+                    "-e",
+                    "-p",
+                    "--replace",
+                },
             )
         else:
             return index
@@ -326,6 +347,7 @@ def git_subcommand(words: list[Token], index: int) -> tuple[str, list[str]] | No
         "--namespace",
         "--super-prefix",
         "--exec-path",
+        "--config-env",
     }
     while index < len(words):
         value = words[index].value
@@ -449,11 +471,72 @@ def claude_worktree_requested(words: list[Token], index: int) -> bool:
     )
 
 
+def wrapper_shell_command(words: list[Token], index: int) -> str | None:
+    """Return a shell string carried by env/flock, if present."""
+    head = basename(words[index].value)
+    if head == "env":
+        special = {"-S", "--split-string"}
+        value_options = {"-u", "--unset", "-c", "-C", "--chdir", "-P"}
+        attached_short = "-S"
+    elif head == "flock":
+        special = {"-c", "--command"}
+        value_options = {
+            "-w",
+            "--wait",
+            "--timeout",
+            "-E",
+            "--conflict-exit-code",
+        }
+        attached_short = ""
+    else:
+        return None
+
+    offset = index + 1
+    while offset < len(words):
+        value = words[offset].value
+        if head == "env" and ASSIGNMENT.match(value):
+            offset += 1
+            continue
+        if value == "--":
+            return None
+        if value in special:
+            if head == "env":
+                return " ".join(token.value for token in words[offset + 1 :])
+            return words[offset + 1].value if offset + 1 < len(words) else None
+        for option in special:
+            prefix = f"{option}="
+            if value.startswith(prefix):
+                if head == "env":
+                    return " ".join(
+                        [value[len(prefix) :]]
+                        + [token.value for token in words[offset + 1 :]]
+                    )
+                return value[len(prefix) :]
+        if attached_short and value.startswith(attached_short) and value != attached_short:
+            if head == "env":
+                return " ".join(
+                    [value[len(attached_short) :]]
+                    + [token.value for token in words[offset + 1 :]]
+                )
+            return value[len(attached_short) :]
+        if not value.startswith("-"):
+            return None
+        offset += 1
+        if value in value_options:
+            offset += 1
+    return None
+
+
 def analyze_segment(words: list[Token]) -> Violation | None:
     index = unwrap_command(words, 0)
     if index >= len(words):
         return None
     head = basename(words[index].value)
+
+    if head in {"env", "flock"}:
+        command = wrapper_shell_command(words, index)
+        if command is not None:
+            return scan_command(command)
 
     if head in {"sh", "bash", "zsh", "fish"}:
         for offset in range(index + 1, len(words) - 1):

@@ -4,12 +4,6 @@ description: Read-only run reporter that drains one claimed ledger query.
 model: opus
 effort: low
 permissionMode: acceptEdits
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
-  - Write
 ---
 
 You are the ledger scribe for an orchestrate run. Drain one query wisp into a

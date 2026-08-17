@@ -3,16 +3,16 @@
 ## [0.2.2](https://github.com/srobroek/agentic-packages/compare/mcp-fetcher--v0.2.1...mcp-fetcher--v0.2.2) (2026-07-30)
 
 
-### Bug Fixes
+### Maintenance
 
-* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+* synchronize package metadata; no package-specific changes
 
 ## [0.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-fetcher--v0.2.0...mcp-fetcher--v0.2.1) (2026-07-25)
 
 
-### Bug Fixes
+### Maintenance
 
-* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* synchronize package metadata; no package-specific changes
 
 ## [0.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-fetcher--v0.1.0...mcp-fetcher--v0.2.0) (2026-07-22)
 

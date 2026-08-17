@@ -111,6 +111,14 @@ def test_git_tag_vxyz_on_rp_repo_warns(rp_dir: Path) -> None:
     assert context(output)
 
 
+def test_git_tag_from_a_nested_directory_still_warns(rp_dir: Path) -> None:
+    nested = rp_dir / "packages" / "component"
+    nested.mkdir(parents=True)
+    code, output = run_guard("git tag v1.2.3", nested)
+    assert code == 0
+    assert context(output)
+
+
 def test_git_push_tags_on_rp_repo_warns(rp_dir: Path) -> None:
     code, output = run_guard("git push origin --tags", rp_dir)
     assert code == 0

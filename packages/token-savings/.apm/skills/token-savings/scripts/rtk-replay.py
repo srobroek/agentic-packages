@@ -26,12 +26,24 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
 
-GUARD = Path(__file__).resolve().parents[3] / "scripts" / "rtk-rewrite-guard.py"
+
+def guard_path(script: Path | None = None) -> Path:
+    """Find the guard in a checkout or in a target-specific deployment."""
+    anchor = (script or Path(__file__)).resolve()
+    package_root = anchor.parents[4]
+    candidates = (
+        package_root / "scripts" / "rtk-rewrite-guard.py",
+        package_root / ".codex" / "hooks" / "token-savings" / "scripts" / "rtk-rewrite-guard.py",
+        package_root / ".claude" / "hooks" / "token-savings" / "scripts" / "rtk-rewrite-guard.py",
+    )
+    return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+
+
+GUARD = guard_path()
 
 # A replayed command that hangs would stall the whole sweep.
 COMMAND_TIMEOUT_SECONDS = 60

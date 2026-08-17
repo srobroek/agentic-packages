@@ -41,8 +41,9 @@ Honor whatever the user supplies; only discover the rest.
 ## Workflow
 
 1. **Resolve the target and its kind.** If named, use it. Otherwise run
-   `scripts/detect.py [dir]` to list declared dependencies. If `detect.py`
-   returns more than one equally plausible candidate, list them and ask.
+   `scripts/detect.py [dir]` with Python 3.11 or newer (it uses the standard
+   library's `tomllib`) to list declared dependencies. If `detect.py` returns
+   more than one equally plausible candidate, list them and ask.
    Decide: versioned software or service/stream.
 
 2. **Resolve sources programmatically.**

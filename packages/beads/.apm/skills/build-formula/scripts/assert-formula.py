@@ -54,7 +54,10 @@ def parse_dry_run(out: str) -> tuple[list[str], list[str]]:
         if not m:
             continue
         title, origin = m.group(1), m.group(2)
-        if ".gate-" in origin:
+        # Gate step ids are prefixed with `gate-`, so checking the origin for
+        # `.gate-` misclassifies an ordinary step such as `gate-runner`.
+        # Beads gives gate beads the stable `Gate: <type>` title instead.
+        if title.startswith("Gate:") and ".gate-" in origin:
             gates.append(title)
         else:
             steps.append(f"{title} <- {origin}")

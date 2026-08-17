@@ -20,7 +20,7 @@ that are outside the caller project's current repo root.
 
 - If the parent supplied an explicit checkout path, use exactly that.
 - Otherwise create a **unique per-invocation** checkout directory:
-  `mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`.
+  `mkdir -p /tmp/agentic/external-repos && mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`.
   Never default to the bare shared path: other agents may be working in the
   same external repo in the same run, and a shared checkout means interleaved
   edits, index races, and corrupted state. Isolation-by-different-repo does not

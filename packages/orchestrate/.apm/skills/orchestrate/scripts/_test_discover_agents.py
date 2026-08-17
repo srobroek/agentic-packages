@@ -186,6 +186,24 @@ class DiscoverAgentsTest(unittest.TestCase):
                 return line.split(":", 1)[1].strip()
         raise AssertionError(f"{name}.agent.md has no model: pin")
 
+    @staticmethod
+    def frontmatter_tools(agents_dir, name: str) -> str:
+        """The declared tools, or the runtime default when omitted."""
+        text = (agents_dir / f"{name}.agent.md").read_text(encoding="utf-8")
+        frontmatter = text.split("---")[1].splitlines()
+        for index, line in enumerate(frontmatter):
+            if line.startswith("tools:"):
+                value = line.split(":", 1)[1].strip()
+                if value:
+                    return value
+                tools = []
+                for item in frontmatter[index + 1 :]:
+                    if not item.startswith("  - "):
+                        break
+                    tools.append(item[4:].strip())
+                return ", ".join(tools) or "(all)"
+        return "(all)"
+
     def test_real_package_agents_preserve_model_and_tools(self) -> None:
         package_agents = SCRIPT.parents[3] / "agents"
 
@@ -196,8 +214,10 @@ class DiscoverAgentsTest(unittest.TestCase):
         # and a hardcoded tier makes every such change look like a discovery bug.
         for name in ("domain-specialist", "researcher", "shepherd"):
             self.assertEqual(agents[name]["model"], self.frontmatter_model(package_agents, name))
-        self.assertIn("Agent", str(agents["domain-specialist"]["tools"]))
-        self.assertIn("WebSearch", str(agents["researcher"]["tools"]))
+            self.assertEqual(
+                agents[name]["tools"],
+                self.frontmatter_tools(package_agents, name),
+            )
 
     def test_quality_guard_package_agents_preserve_model_and_tools(self) -> None:
         package_agents = (
@@ -216,7 +236,10 @@ class DiscoverAgentsTest(unittest.TestCase):
             "reviewer-mechanics",
         ):
             self.assertEqual(agents[name]["model"], self.frontmatter_model(package_agents, name))
-            self.assertEqual(agents[name]["tools"], "Read, Grep, Glob, Bash")
+            self.assertEqual(
+                agents[name]["tools"],
+                self.frontmatter_tools(package_agents, name),
+            )
 
     def test_json_is_byte_deterministic(self) -> None:
         self.write(self.first, "beta.md", definition("beta"))

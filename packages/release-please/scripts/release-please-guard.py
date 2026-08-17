@@ -256,6 +256,27 @@ def _current_branch(cwd: str) -> str:
     return completed.stdout.strip()
 
 
+def _git_toplevel(cwd: str) -> str:
+    """Return the worktree root for `cwd`, or an empty string outside Git."""
+    import os
+    import subprocess
+
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=10,
+            text=True,
+        )
+    except (subprocess.SubprocessError, OSError):
+        return ""
+    root = completed.stdout.strip()
+    return root if root and os.path.isdir(root) else ""
+
+
 FIELD_ORDER = (
     "present",
     "mode",
@@ -351,6 +372,10 @@ def main() -> int:
 
     if not cwd or not os.path.isdir(cwd):
         cwd = os.getcwd()
+
+    # Bash may run from a nested directory. Detection is repository-scoped, so
+    # inspect the Git worktree root before deciding whether to warn.
+    cwd = _git_toplevel(cwd) or cwd
 
     if not is_release_please_repo(cwd):
         return 0

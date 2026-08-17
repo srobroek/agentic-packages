@@ -63,7 +63,9 @@ Run in order. Full procedure is in `references/workflow.md` -- LOAD it before st
 4. **Detection reading.** For smells tools cannot see, read the code guided by
    `references/languages/<lang>.md`. Small target → read inline. Otherwise propose a
    `bloodhound` fan-out plan -- one hound per language as the floor, splitting oversized
-   languages by subtree/crate. Build each Brief from `references/scout-brief.md`.
+   languages by subtree/crate. Build each Brief from `references/scout-brief.md`;
+   include the absolute `$SNIFF_SKILL_DIR/references/languages/<lang>.md` path
+   in the Brief so the hound does not resolve it from the target repository.
 5. **Map to refactoring.guru.** Attach smell name, pattern(s), technique(s), and URL
    from `references/refactoring-catalog.md`. Fetch the full technique page only when
    step-by-step detail is needed.

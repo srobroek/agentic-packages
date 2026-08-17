@@ -4,9 +4,12 @@ Shared, bounded download and compiler caches across worktrees and clones.
 Repository outputs remain repository-scoped or worktree-local.
 
 ENFORCEMENT
-MUST The SessionStart hook writes shared-cache env to `CLAUDE_ENV_FILE`:
+MUST Claude SessionStart writes shared-cache env to `CLAUDE_ENV_FILE`:
   sccache, uv/pip, Go build/modules, npm/pnpm/Bun/Deno, pre-commit/Ruff,
   golangci-lint, Gradle, NuGet, Trivy, and Restic.
+MUST Codex SessionStart cannot persist process environment changes. It runs
+  the same disk-pressure eviction and injects context telling the user to
+  configure the cache variables in the Codex launcher or direnv.
 MUST Maven keeps its native user-level `~/.m2/repository`; no portable
   directory-only environment variable exists across supported Maven versions.
 MUST Cargo final/link output is absent from this policy. Worktrunk creates one

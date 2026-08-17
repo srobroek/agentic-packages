@@ -890,10 +890,14 @@ def check_bead_anchors(merge_bead: str, repo: str, pr: str) -> int:
     if not isinstance(record, dict):
         print(f"ANCHOR_UNKNOWN merge={merge_bead} reason=no-record", file=sys.stderr)
         return EXIT_UNKNOWN
-    metadata = record.get("metadata") or {}
-    if not isinstance(metadata, dict):
+    raw_metadata = record.get("metadata")
+    if raw_metadata is None:
+        metadata = {}
+    elif not isinstance(raw_metadata, dict):
         print(f"ANCHOR_UNKNOWN merge={merge_bead} reason=no-metadata", file=sys.stderr)
         return EXIT_UNKNOWN
+    else:
+        metadata = raw_metadata
 
     anchored_pr = metadata.get("pr")
     if anchored_pr is not None and str(anchored_pr) != str(pr):

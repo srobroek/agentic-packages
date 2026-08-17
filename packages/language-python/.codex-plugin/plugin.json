@@ -1,9 +1,10 @@
 {
   "name": "language-python",
   "version": "5.0.3",
-  "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
+  "description": "Python toolkit: quality, steering, and Serena semantic code tools.",
   "author": {
     "name": "Sjors Robroek"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "mcpServers": "./.codex.mcp.json"
 }

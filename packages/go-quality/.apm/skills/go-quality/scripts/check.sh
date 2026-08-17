@@ -24,11 +24,14 @@ EOF
     ;;
 esac
 
-gofmt -l . | (! grep .)
+gofmt_output=$(gofmt -l .)
+if [[ -n "$gofmt_output" ]]; then
+  printf '%s\n' "$gofmt_output"
+  exit 1
+fi
 
 if command -v golangci-lint >/dev/null 2>&1; then
   golangci-lint run
 fi
 
 go test ./...
-

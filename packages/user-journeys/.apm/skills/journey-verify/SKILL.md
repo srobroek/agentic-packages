@@ -15,10 +15,11 @@ Formula templates and their copy helper live in this skill's directory:
 ## Beads formula provisioning
 
 When the repository contains `.beads/`, run
-`python3 scripts/install_formulas.py <repo-root>` before validation. The helper
-copies the package-owned formulas into `.beads/formulas/` and leaves identical
-copies unchanged. If a destination differs, stop and ask before rerunning with
-`--force`.
+`python3 <journey-verify-skill-dir>/scripts/install_formulas.py <repo-root>`
+before validation, resolving `<journey-verify-skill-dir>` to this installed
+skill's directory. The helper copies the package-owned formulas into
+`.beads/formulas/` and leaves identical copies unchanged. If a destination
+differs, stop and ask before rerunning with `--force`.
 
 Use `journey-step-agentic-verification` when the result needs no human gate.
 Use `journey-step-human-verification` when a human must approve the triaged

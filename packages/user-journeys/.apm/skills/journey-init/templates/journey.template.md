@@ -17,7 +17,7 @@ trace: []
 - P1: <state the product/environment must be in before S1>
 
 ## Steps
-### S1 -- <Imperative step title> {#S1}
+### S1 — <Imperative step title> {#S1}
 - **Do:** <what the user does, interface-agnostic>
 - **Expect:** <observable outcome -- every Expect is an assertion>
 

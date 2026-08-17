@@ -104,7 +104,7 @@ run.
 - `worktrunk-writer`: both runtimes consume parent-created Worktrunk leases; Codex unified shell paths remain outside complete hook interception.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
 - `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
-- `lsp-*`: Claude-only native LSP registration; Codex uses language CLIs and code MCP tools.
+- `language-*`: Serena over MCP is the standard semantic and LSP-backed code interface for both Claude and Codex.
 - `mcp-context7`: credential forwarding is runtime-managed with `env_vars` so no secret is persisted.
 
 ## Global APM and MCP state
@@ -130,7 +130,7 @@ run.
 
 Packages omitted from this table have equivalent functionality through APM.
 `Partial` means the package is usable but has the stated Codex gap.
-`Claude-only` means no Codex lifecycle or LSP equivalent exists.
+`Claude-only` means no Codex lifecycle equivalent exists.
 Native-plugin-only installation can expose fewer components because Codex
 plugin manifests do not support every APM component type.
 
@@ -146,18 +146,12 @@ plugin manifests do not support every APM component type.
 | `hooks-package-investigate` | Partial | Simple package-manager commands are covered; invoke the investigation skill for unsupported shell routes. |
 | `hooks-quality` | Partial | apply_patch and simple Bash are covered; use pre-commit/CI for other write and shell paths. |
 | `hooks-worktrunk` | Partial | Both PreToolUse guards work; the WorktreeCreate/WorktreeRemove provider is Claude-only because Codex has no worktree lifecycle events. Use `wt` commands directly. |
-| `language-go` | Partial | All APM members except native gopls integration work; use go test/vet and code MCP tools. |
-| `language-python` | Partial | All APM members except native pyright LSP integration work; run pyright directly and use code MCP tools. |
-| `language-rust` | Partial | All APM members except native rust-analyzer integration work; use cargo check/clippy and code MCP tools. |
-| `language-shell` | Partial | All APM members except native bash-language-server integration work; use shellcheck and parser checks. |
-| `language-terraform` | Partial | All APM members except native terraform-ls integration work; use terraform validate and related CLI checks. |
-| `language-typescript` | Partial | All APM members except native typescript-language-server integration work; use tsc/eslint and code MCP tools. |
-| `lsp-go` | Claude-only | Codex has no native plugin LSP surface; use Go CLI diagnostics and code MCP tools. |
-| `lsp-python` | Claude-only | Codex has no native plugin LSP surface; run pyright directly and use code MCP tools. |
-| `lsp-rust` | Claude-only | Codex has no native plugin LSP surface; use cargo diagnostics and code MCP tools. |
-| `lsp-shell` | Claude-only | Codex has no native plugin LSP surface; use shellcheck/parser checks. |
-| `lsp-terraform` | Claude-only | Codex has no native plugin LSP surface; use terraform validate and related CLI checks. |
-| `lsp-typescript` | Claude-only | Codex has no native plugin LSP surface; use tsc/eslint and code MCP tools. |
+| `language-go` | Full | Installs Go quality and steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
+| `language-python` | Full | Installs Python quality and steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
+| `language-rust` | Full | Installs Rust quality and steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
+| `language-shell` | Full | Installs portable shell steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
+| `language-terraform` | Full | Installs Terraform and HCL steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
+| `language-typescript` | Full | Installs TypeScript quality and steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
 | `orchestrate` | Partial | Skill works; native Codex role profiles receive task-specific spawn briefs because APM agents are Claude-only and Codex ignores skill-frontmatter hooks. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
 | `worktrunk-writer` | Partial | Preparation, explicit lease validation, inventory, and apply_patch/simple Bash hooks work; unified shell paths still require sandbox policy and explicit validation. |

@@ -26,7 +26,7 @@ protolint is a lint-only alternative.
 | protolint | **Run recipe (opt-in -- redundant; prefer `buf lint`).** `protolint lint <files>` from repo root (pass explicit `.proto` paths); reads `.protolint.yaml` if present. **Exit:** 0 = clean · 1 = lint findings · other = INVALID. Skip entirely when buf is available -- `buf lint` already covers the same lint half; running both double-counts findings. | lint-only alternative (naming, ordering, style); no breaking-change detection | opt-in (redundant -- `buf lint` covers it) | `install-tools.sh --install api` |
 
 Notes: buf is the meta-tool here -- `buf lint` covers naming/structure and
-`buf breaking --against <ref>` is the authoritative wire-compat gate (it
+`buf breaking --against "<buf-input>"` is the authoritative wire-compat gate (it
 classifies removed fields, renumbered fields, type changes, etc.). protolint
 only overlaps the lint half; if buf is present, protolint is redundant.
 

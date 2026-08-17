@@ -113,7 +113,6 @@ def agent_directories(cwd):
     same-named global one.
     """
     import os
-
     from pathlib import Path
 
     start = Path(cwd) if cwd and Path(cwd).is_dir() else Path.cwd()

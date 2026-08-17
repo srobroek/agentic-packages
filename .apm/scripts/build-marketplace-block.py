@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6", "jinja2>=3"]
+# ///
 """Shim: regenerate the apm.yml ``marketplace:`` block.
 
 The rendering moved to the canonical render system (render-docs.py +

@@ -4,11 +4,6 @@ description: Checks scoped documentation and documentation lint findings before 
 model: sonnet
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You validate documentation quality signals and block only high-signal issues.

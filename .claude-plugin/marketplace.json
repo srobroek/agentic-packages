@@ -344,17 +344,6 @@
       "source": "./packages/dependency-quality"
     },
     {
-      "name": "diagrams",
-      "description": "Diagram generation bundle for editable draw.io diagrams, visual Excalidraw diagrams, and D2 architecture or flow diagrams.",
-      "version": "2.1.3",
-      "tags": [
-        "bundle",
-        "diagrams"
-      ],
-      "category": "diagrams",
-      "source": "./packages/diagrams"
-    },
-    {
       "name": "eli5",
       "description": "Explain a topic at five depth levels, from metaphor to frontier, for layered understanding of unfamiliar concepts.",
       "version": "2.1.2",
@@ -594,7 +583,7 @@
     },
     {
       "name": "language-go",
-      "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
+      "description": "Go toolkit: quality, steering, and Serena semantic code tools.",
       "version": "5.0.3",
       "tags": [
         "bundle",
@@ -605,7 +594,7 @@
     },
     {
       "name": "language-python",
-      "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
+      "description": "Python toolkit: quality, steering, and Serena semantic code tools.",
       "version": "5.0.3",
       "tags": [
         "bundle",
@@ -616,7 +605,7 @@
     },
     {
       "name": "language-rust",
-      "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
+      "description": "Rust toolkit: quality, steering, and Serena semantic code tools.",
       "version": "6.0.2",
       "tags": [
         "bundle",
@@ -627,7 +616,7 @@
     },
     {
       "name": "language-shell",
-      "description": "Shell scripting toolkit with Shell LSP.",
+      "description": "Shell toolkit with portable steering and Serena semantic code tools.",
       "version": "3.0.4",
       "tags": [
         "bundle",
@@ -660,7 +649,7 @@
     },
     {
       "name": "language-terraform",
-      "description": "Terraform and HCL toolkit: opinionated Terraform steering. No dedicated quality skill yet.",
+      "description": "Terraform and HCL toolkit: opinionated steering and Serena semantic code tools. No dedicated quality skill yet.",
       "version": "3.0.4",
       "tags": [
         "bundle",
@@ -671,7 +660,7 @@
     },
     {
       "name": "language-typescript",
-      "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and TypeScript LSP.",
+      "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, architecture guidance, and Serena semantic code tools.",
       "version": "5.0.3",
       "tags": [
         "bundle",
@@ -693,72 +682,6 @@
       ],
       "category": "project-lifecycle",
       "source": "./packages/license-picker"
-    },
-    {
-      "name": "lsp-go",
-      "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "go"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-go"
-    },
-    {
-      "name": "lsp-python",
-      "description": "Python LSP server: registers pyright (pyright-langserver) so agents get hover, diagnostics, go-to-definition, and references on Python sources. Installed transitively by the language-python bundle; also installable on its own.",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "python"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-python"
-    },
-    {
-      "name": "lsp-rust",
-      "description": "Rust LSP server: registers rust-analyzer so agents get hover, diagnostics, go-to-definition, and references on Rust sources. Installed transitively by the language-rust bundle; also installable on its own. Requires rust-analyzer on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "rust"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-rust"
-    },
-    {
-      "name": "lsp-shell",
-      "description": "Shell LSP server: registers bash-language-server so agents get hover, diagnostics, go-to-definition, and references on Bash/POSIX shell sources. Installed transitively by the language-shell bundle; also installable on its own. Requires bash-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "shell"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-shell"
-    },
-    {
-      "name": "lsp-terraform",
-      "description": "Terraform LSP server: registers terraform-ls so agents get hover, diagnostics, go-to-definition, and references on Terraform sources. Installed transitively by the language-terraform bundle; also installable on its own. Requires terraform-ls on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "terraform"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-terraform"
-    },
-    {
-      "name": "lsp-typescript",
-      "description": "TypeScript/JavaScript LSP server: registers typescript-language-server so agents get hover, diagnostics, go-to-definition, and references on TS/JS sources. Installed transitively by the language-typescript bundle; also installable on its own. Requires typescript-language-server on PATH (APM writes the config; it does not install the binary).",
-      "version": "0.4.2",
-      "tags": [
-        "lsp",
-        "typescript"
-      ],
-      "category": "languages",
-      "source": "./packages/lsp-typescript"
     },
     {
       "name": "matt-skills",
@@ -1224,7 +1147,7 @@
     },
     {
       "name": "toolchain-cache-policy",
-      "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
+      "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. Claude SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Codex SessionStart performs the same eviction and reports that cache environment variables must be configured in the launcher or direnv. Cargo targets remain repository-scoped through Worktrunk. Fails open.",
       "version": "2.0.2",
       "tags": [
         "hooks",
@@ -1239,7 +1162,7 @@
     },
     {
       "name": "typescript-quality",
-      "description": "Run TypeScript or JavaScript format, lint, type-check, and test commands with the project toolchain.",
+      "description": "Run TypeScript or JavaScript format, lint, and type-check commands with the project toolchain.",
       "version": "2.1.3",
       "tags": [
         "skill",

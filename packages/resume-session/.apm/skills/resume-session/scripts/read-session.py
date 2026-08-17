@@ -119,7 +119,7 @@ def clip(text: str, limit: int) -> str:
 
 
 def iter_json_lines(path: str):
-    with open(path, "r", errors="replace") as fh:
+    with open(path, errors="replace") as fh:
         for line in fh:
             line = line.strip()
             if not line:

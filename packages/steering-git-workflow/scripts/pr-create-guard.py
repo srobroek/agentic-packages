@@ -5,13 +5,10 @@ One rule, because one rule earns a denial: a non-draft PR has already notified
 reviewers and started CI by the time anyone notices, and `gh pr ready` cannot
 un-send that.
 
-This guard also demanded Beads trailers in the body -- Tracks-Bead, Merge-Bead,
-Closes-Bead -- plus a matching merge bead and a predeclared dependency edge. No
-code anywhere read those trailers except this file, so the guard required a
-trailer in order to check the trailer. The merge queue discovers work through
-`bd list --label pr:merge` and probes it through bead metadata; the shepherd now
-verifies its own anchors against the live PR, which is the check the trailer only
-appeared to provide.
+Beads linkage is intentionally not checked here. The merge queue discovers work
+through `bd list --label pr:merge` and probes it through bead metadata; the
+shepherd verifies its own anchors against the live PR. PR-body trailers would
+duplicate that source of truth and are not required by this guard.
 """
 
 from __future__ import annotations

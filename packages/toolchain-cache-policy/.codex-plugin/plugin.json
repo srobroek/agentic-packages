@@ -1,7 +1,7 @@
 {
   "name": "toolchain-cache-policy",
   "version": "2.0.2",
-  "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Cargo targets remain repository-scoped through Worktrunk. Fails open; Claude and Codex SessionStart parity.",
+  "description": "Shares bounded package-manager and compiler caches across worktrees without redirecting mutable dependencies or branch output into machine-global directories. Claude SessionStart uses DEVELOPMENT_CACHE_HOME for sccache, Python, Go, Node, Deno, Gradle, NuGet, Trivy, Restic, and lint cache paths, then evicts only regenerable compiler caches under disk pressure. Codex SessionStart performs the same eviction and reports that cache environment variables must be configured in the launcher or direnv. Cargo targets remain repository-scoped through Worktrunk. Fails open.",
   "author": {
     "name": "Sjors Robroek"
   },

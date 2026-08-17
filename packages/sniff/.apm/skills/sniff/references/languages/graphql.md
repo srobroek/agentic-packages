@@ -76,8 +76,8 @@ for vocabulary, but the fix is a schema edit.
   type, an optional input arg, or an enum value (mostly) is backwards-compatible.
   Removing a field, removing an enum value, or changing a field's type is
   breaking -- **always flag in the back-compat column**.
-- **Nullability direction matters.** On an **output** field, nullable→non-null is
-  safe (clients already handle null); non-null→nullable is **breaking**. On an
+- **Nullability direction matters.** On an **output** field, non-null→nullable is
+  safe (clients already handle null); nullable→non-null is **breaking**. On an
   **input** arg the reverse holds: non-null→nullable is safe; nullable→non-null
   (or adding a required input) is **breaking**. State the direction explicitly.
 - **Deprecate before removing.** A field marked `@deprecated` for a release cycle

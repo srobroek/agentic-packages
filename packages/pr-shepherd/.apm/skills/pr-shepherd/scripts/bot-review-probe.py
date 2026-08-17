@@ -324,8 +324,10 @@ def classify(
     # A re-review at the same head supersedes the earlier one, so read the
     # LATEST round with a recognised count. Taking the maximum would let a
     # resolved round block the PR forever.
-    counted = [r for r in rounds if r.actionable is not None]
-    latest = counted[-1] if counted else rounds[-1]
+    # The latest review round supersedes every earlier round.  If its adapter
+    # cannot read a count, report pending rather than reusing an older clean
+    # count and treating an unrecognized review as approval.
+    latest = rounds[-1]
     changes = 1 if rounds[-1].changes_requested else 0
     result["changes_requested"] = changes
     result["summary"] = latest.url or "none"
@@ -370,6 +372,19 @@ def gh_json(*args: str) -> Any:
     return json.loads(completed.stdout or "null")
 
 
+def gh_paginated_json(*args: str) -> list[dict[str, Any]]:
+    """Read and flatten REST pages emitted by ``gh api --paginate --slurp``."""
+    payload = gh_json("api", "--paginate", "--slurp", *args)
+    if not isinstance(payload, list):
+        raise RuntimeError("paginated gh response must be an array of pages")
+    rows: list[dict[str, Any]] = []
+    for page in payload:
+        if not isinstance(page, list) or not all(isinstance(row, dict) for row in page):
+            raise RuntimeError("paginated gh response contains a malformed page")
+        rows.extend(page)
+    return rows
+
+
 def fetch(repo: str, pr: str) -> dict[str, Any]:
     """Three reads, no classification.
 
@@ -379,9 +394,9 @@ def fetch(repo: str, pr: str) -> dict[str, Any]:
     a review.
     """
     view = gh_json("pr", "view", pr, "--repo", repo, "--json", "headRefOid,statusCheckRollup")
-    reviews = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/reviews")
-    comments = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/comments")
-    notices = gh_json("api", "--paginate", f"repos/{repo}/issues/{pr}/comments")
+    reviews = gh_paginated_json(f"repos/{repo}/pulls/{pr}/reviews")
+    comments = gh_paginated_json(f"repos/{repo}/pulls/{pr}/comments")
+    notices = gh_paginated_json(f"repos/{repo}/issues/{pr}/comments")
     return {
         "notices": [
             {

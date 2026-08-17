@@ -85,3 +85,41 @@ def test_chezmoi_sync_recognises_config_names():
     assert module.looks_like_config("foo.toml")
     assert module.looks_like_config(".zshrc")
     assert not module.looks_like_config("photo.png")
+
+
+def test_chezmoi_sync_extracts_codex_patch_targets(tmp_path, monkeypatch, capsys):
+    module = load("chezmoi-sync")
+    home = tmp_path / "home"
+    target = home / ".config" / "settings.json"
+    target.parent.mkdir(parents=True)
+    target.write_text("{}")
+    source = tmp_path / "source"
+    source.mkdir()
+    source_target = source / "dot_config" / "settings.json"
+    source_target.parent.mkdir()
+    source_target.write_text("{}")
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    monkeypatch.setattr(
+        module,
+        "chezmoi",
+        lambda *args: (
+            str(source)
+            if args == ("source-path",)
+            else str(source_target)
+        ),
+    )
+    payload = json.dumps(
+        {
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "patch": (
+                    f"*** Update File: {target}\n"
+                    f"*** Move to: {home / '.config' / 'renamed.json'}\n"
+                    "@@\n-{}\n+{}\n"
+                )
+            },
+        }
+    )
+
+    assert drive(module, payload, monkeypatch) == 0
+    assert "chezmoi re-add" in capsys.readouterr().out

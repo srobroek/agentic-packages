@@ -115,6 +115,36 @@ def extract_command(payload: str) -> str:
     return ""
 
 
+_SHELL_OPERATORS = frozenset({";", "&&", "||", "&", "|", "\n"})
+
+
+def _shell_segments(command: str) -> list[list[str]]:
+    """Tokenize a command and split it at shell command separators.
+
+    The guard may receive a compound Bash command.  Keeping each simple
+    command separate prevents an unrelated ``--body`` belonging to ``echo`` or
+    a later command from being mistaken for the body passed to ``gh``.
+    """
+    import shlex
+
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|\n")
+    # Keep an unquoted newline visible as a command separator. Newlines inside
+    # a quoted body remain part of that token.
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+
+    segments: list[list[str]] = [[]]
+    for token in lexer:
+        if token in _SHELL_OPERATORS or (
+            token and set(token) <= {";", "&", "|", "\n"}
+        ):
+            segments.append([])
+        else:
+            segments[-1].append(token)
+    return segments
+
+
 def extract_body(command: str) -> str:
     """Return the inline `--body` value gh would receive, or an empty string.
 
@@ -132,36 +162,59 @@ def extract_body(command: str) -> str:
     - A bare `--` ends flag parsing, and gh rejects flags after it outright.
     - Attached shorthand (`-b"text"`) is accepted by pflag, so it is read here.
     """
-    import shlex
-
     try:
-        tokens = shlex.split(command)
+        segments = _shell_segments(command)
     except ValueError:
         # Unbalanced quotes: the shell would reject this command too.
         return ""
 
     body = ""
-    for index, token in enumerate(tokens):
-        if token == "--":
-            break
-        if token in ("--body", "-b"):
-            body = tokens[index + 1] if index + 1 < len(tokens) else ""
-        elif token.startswith("--body="):
-            body = token[len("--body=") :]
-        elif token.startswith("-b="):
-            body = token[len("-b=") :]
-        elif token.startswith("-b") and not token.startswith("--"):
-            # Attached shorthand, as in `-b"text"`. Only when `b` leads the cluster:
-            # in `-db text` the value is a separate token, already handled above.
-            body = token[2:]
+    for segment in segments:
+        # GH_PR_PATTERN only accepts gh at the start of a simple command (with
+        # optional leading whitespace), so require the same shape here. Shell
+        # assignments are the one valid prefix, as in `MODE=test gh pr create`.
+        command_start = 0
+        while command_start < len(segment) and "=" in segment[command_start]:
+            name = segment[command_start].split("=", 1)[0]
+            if not name or not (name[0].isalpha() or name[0] == "_"):
+                break
+            if not all(character.isalnum() or character == "_" for character in name):
+                break
+            command_start += 1
+        if segment[command_start : command_start + 2] != ["gh", "pr"]:
+            continue
+        if (
+            command_start + 2 >= len(segment)
+            or segment[command_start + 2] not in ("create", "edit")
+        ):
+            continue
+
+        tokens = segment[command_start + 3 :]
+        candidate = ""
+        for index, token in enumerate(tokens):
+            if token == "--":
+                break
+            if token in ("--body", "-b"):
+                candidate = tokens[index + 1] if index + 1 < len(tokens) else ""
+            elif token.startswith("--body="):
+                candidate = token[len("--body=") :]
+            elif token.startswith("-b="):
+                candidate = token[len("-b=") :]
+            elif token.startswith("-b") and not token.startswith("--"):
+                # Attached shorthand, as in `-b"text"`. Only when `b` leads the cluster:
+                # in `-db text` the value is a separate token, already handled above.
+                candidate = token[2:]
+        body = candidate
     return body
 
 
 def main() -> int:
     payload = _read_stdin_text()
-    # Cheap bail on the raw bytes: this guard only acts on `gh pr`. A strict
-    # superset of the real trigger, so it cannot mask a real one.
-    if "gh pr" not in payload:
+    # Cheap bail on the raw bytes: this guard only acts on payloads that contain
+    # both command words. The two independent checks are a strict superset of
+    # the real trigger, so tabs or repeated spaces remain eligible for the
+    # whitespace-aware command-position regex below.
+    if "gh" not in payload or "pr" not in payload:
         return 0
 
     try:
