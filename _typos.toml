@@ -20,3 +20,9 @@ generat = "generat"
 # hyphenated "mis-formatted" used intentionally in quality.bats test comments
 mis = "mis"
 Mis = "Mis"
+# `rm --rec --fo` is a GNU long-flag ABBREVIATION, exercised deliberately by the
+# bash-safety tests: GNU rm really deletes with it, so the guard has to judge it.
+fo = "fo"
+rec = "rec"
+recu = "recu"
+forc = "forc"
