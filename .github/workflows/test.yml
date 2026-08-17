@@ -152,9 +152,22 @@ jobs:
         with:
           persist-credentials: false
 
+      # bats-version is PINNED, and the token is passed. Left unset, the action
+      # resolves "latest" through an UNAUTHENTICATED GitHub API call and pipes the
+      # response straight into tar -- so when the API answers with an error page
+      # instead of a release (a 503, or a rate-limit on the shared runner IP) the
+      # step dies with "gzip: stdin: not in gzip format" and exit 127, before a
+      # single test runs. Seen on 2026-08-17 while GitHub's API was degraded, and
+      # reproduced on a re-run, so it is not a one-off flake. A pinned version needs
+      # no lookup at all, and the token lifts the anonymous rate limit for the
+      # download itself. 1.14.0 is what the suites are verified against locally, so CI
+      # and a developer machine agree rather than drifting by whatever "latest" is.
       - name: Set up bats
         uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43  # 4.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          bats-version: 1.14.0
           support-install: false
           assert-install: false
           detik-install: false

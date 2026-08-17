@@ -195,8 +195,26 @@ def login_slug(login: str, slugs: list[str]) -> str | None:
     return None
 
 
+# The Checks API reports `status: completed`; the older commit-status API reports
+# `state: SUCCESS|FAILURE|PENDING|ERROR` and has no `status` at all. Only "completed"
+# counted as finished, so a status-API bot reporting SUCCESS read as "still running"
+# and the probe returned EXIT_WAITING forever -- a bot that had already answered kept
+# the merge waiting indefinitely.
+STATUS_API_TERMINAL = frozenset({"success", "failure", "error"})
+
+
 def check_state(check: dict[str, Any]) -> str:
-    return str(check.get("status") or check.get("state") or "").lower()
+    """The check's state, normalized to the Checks API vocabulary.
+
+    A commit-status `state` is mapped onto `completed` when it is terminal, so the one
+    caller comparing against "completed" treats both APIs alike. `pending` stays
+    itself, because it means the same thing in both.
+    """
+    status = str(check.get("status") or "").lower()
+    if status:
+        return status
+    state = str(check.get("state") or "").lower()
+    return "completed" if state in STATUS_API_TERMINAL else state
 
 
 def declines(

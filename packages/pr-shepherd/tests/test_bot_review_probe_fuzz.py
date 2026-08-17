@@ -241,12 +241,6 @@ def test_incomplete_bot_check_is_pending(status):
     assert (result["state"], result["code"]) == ("pending", brp.EXIT_WAITING)
 
 
-@pytest.mark.xfail(
-    reason="DEFECT: a legacy commit-status bot reports state=SUCCESS with no "
-    "`status` field, and check_state falls back to it, so a FINISHED check "
-    "reads as 'still running' -- exit 10 forever on any status-API bot",
-    strict=True,
-)
 def test_legacy_status_check_success_is_not_pending():
     result = classify(
         checks=[{"name": "CodeRabbit", "state": "SUCCESS"}],
