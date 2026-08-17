@@ -1,5 +1,5 @@
 name: typescript-quality
-version: 2.1.3
+version: 2.2.0
 description: >-
   Run TypeScript or JavaScript format, lint, and type-check commands with the
   project toolchain.

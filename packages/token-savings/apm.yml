@@ -1,5 +1,5 @@
 name: token-savings
-version: 1.0.1
+version: 1.1.0
 description: >-
   Context-cost reduction for Claude and Codex, with the measurement instrument
   that decides whether the reduction is real. A PreToolUse guard routes selected

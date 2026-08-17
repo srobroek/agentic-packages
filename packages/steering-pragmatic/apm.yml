@@ -1,5 +1,5 @@
 name: steering-pragmatic
-version: 6.0.2
+version: 6.1.0
 description: >-
   Rules for what an agent PRODUCES: code economy (prefer deletion, stdlib, and
   minimal solutions over new abstractions), comment discipline, written-artifact

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/mcp-tauri--v2.0.3...mcp-tauri--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [2.0.3](https://github.com/srobroek/agentic-packages/compare/mcp-tauri--v2.0.2...mcp-tauri--v2.0.3) (2026-07-30)
 
 
