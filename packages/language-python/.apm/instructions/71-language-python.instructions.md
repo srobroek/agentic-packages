@@ -1,5 +1,5 @@
 ---
-description: Python steering.
+description: Python engineering language steering.
 applyTo: "**/*.py"
 ---
 

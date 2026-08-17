@@ -1,5 +1,5 @@
 ---
-description: Go steering.
+description: Go engineering language steering.
 applyTo: "**/*.go"
 ---
 
