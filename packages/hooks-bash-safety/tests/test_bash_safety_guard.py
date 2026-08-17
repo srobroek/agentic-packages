@@ -127,6 +127,87 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+WRAPPER_AND_FLAG_ESCAPES = [
+    # `--` ends a wrapper's options. The option-value lookahead swallowed it and the
+    # verb, so these were silent while the same lines without `--` denied.
+    pytest.param("sudo -u root -- rm -rf /etc", id="sudo-option-value-then-dashdash"),
+    pytest.param("nice -n 5 -- rm -rf /", id="nice-option-value-then-dashdash"),
+    pytest.param("sudo -- rm -rf /", id="sudo-bare-dashdash"),
+    pytest.param("flock /tmp/l -- rm -rf /", id="flock-operand-then-dashdash"),
+    # WRAPPERS was matched against the raw word, so an absolute path defeated it and
+    # left the wrapper itself in command position.
+    pytest.param("/usr/bin/sudo rm -rf /", id="absolute-path-wrapper"),
+    pytest.param("/bin/nohup rm -rf /etc", id="absolute-path-nohup"),
+    pytest.param("/usr/bin/sudo -u root -- rm -rf /", id="absolute-path-plus-dashdash"),
+    # The shell rejoins a quote-split flag into one word; the raw-substring test for
+    # BS-3 ran before lexing and never saw it.
+    pytest.param("'--dangerously-bypass-approvals'-and-sandbox", id="quote-split-bypass-flag"),
+    # A relative `cd` hop was dropped, leaving the carried cwd stale, and the target
+    # was never normalized -- `cd /usr/../etc` and `cd //etc` both land in /etc.
+    pytest.param("cd /tmp && cd ../etc && rm -rf *", id="relative-cd-hop"),
+    pytest.param("cd /usr/../etc && rm -rf *", id="cd-target-not-normalized"),
+    pytest.param("cd //etc && rm -rf *", id="cd-double-slash"),
+]
+
+
+@pytest.mark.parametrize("command", WRAPPER_AND_FLAG_ESCAPES)
+def test_wrapper_and_flag_escapes_are_closed(command: str) -> None:
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
+
+
+def test_bs3_no_longer_denies_merely_naming_the_flag() -> None:
+    """The substring test was wrong in BOTH directions at once.
+
+    It missed the quote-split spelling the shell rejoins, and it denied any command
+    that merely NAMED the flag: a grep for it, an echo warning against it, a commit
+    message documenting it. It blocked this repository's own test harness for
+    quoting the flag in a heredoc. A lexed word is the flag or it is data.
+    """
+    flag = "--dangerously-" + "bypass-approvals-and-sandbox"
+    assert verdict(f"claude {flag}") == "deny", "real use must still be denied"
+    for benign in (
+        f'grep -rn -- "{flag}" .',
+        f'echo "never pass {flag}"',
+        f'git commit -m "document {flag}"',
+    ):
+        assert verdict(benign) != "deny", f"{benign!r} only names the flag"
+
+
+SUDO_ADVISORY_SPELLINGS = [
+    pytest.param("sudo rm -f /var/log/x", id="plain"),
+    pytest.param("FOO=1 sudo rm -f /var/log/x", id="env-assignment-ahead"),
+    pytest.param("nohup sudo rm -f /var/log/x", id="wrapper-ahead"),
+    pytest.param("/usr/bin/sudo rm -f /var/log/x", id="absolute-path"),
+    pytest.param("FOO=1 nohup /usr/bin/sudo rm -f /var/log/x", id="all-three-combined"),
+    # An rm TARGET named like a subcommand silenced the advisory, because
+    # READ_ONLY_SUBCOMMANDS was tested against every bare word including paths.
+    pytest.param("sudo rm -rf install", id="target-named-like-a-subcommand"),
+]
+
+
+@pytest.mark.parametrize("command", SUDO_ADVISORY_SPELLINGS)
+def test_the_sudo_advisory_survives_every_spelling(command: str) -> None:
+    _, decision = run(command)
+    assert decision is not None, f"{command!r} lost the BS-7 advisory entirely"
+    assert "BS-7" in (decision.get("additionalContext") or ""), f"{command!r} lost BS-7"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("sudo apt-get install -y jq", id="install-under-sudo"),
+        pytest.param("sudo systemctl status nginx", id="leading-subcommand"),
+        pytest.param("sudo service nginx status", id="trailing-subcommand"),
+        pytest.param("sudo brew upgrade", id="upgrade"),
+    ],
+)
+def test_routine_sudo_work_stays_quiet(command: str) -> None:
+    """Warning on routine elevated work teaches the agent to ignore the warning."""
+    _, decision = run(command)
+    context = (decision or {}).get("additionalContext") or ""
+    assert "BS-7" not in context, f"{command!r} is routine and must not warn"
+
+
 ROUND_THREE_ESCAPES = [
     # CRITICAL membership was exact-string, so the platform's own spelling of the
     # same directory was allowed: /etc denied, /private/etc warned.

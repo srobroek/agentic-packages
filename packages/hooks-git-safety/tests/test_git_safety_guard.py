@@ -170,6 +170,46 @@ def test_a_wrapper_prefix_does_not_defeat_the_denial(prefix: str, repo: Path) ->
     assert decision["permissionDecision"] == "deny"
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param('sudo -u root -- git -C "$D" reset --hard', id="option-value-then-dashdash"),
+        pytest.param('nice -n 5 -- git -C "$D" clean -fd', id="nice-then-dashdash"),
+        pytest.param('sudo -- git -C "$D" reset --hard', id="bare-dashdash"),
+        pytest.param('/usr/bin/sudo git -C "$D" reset --hard', id="absolute-path-wrapper"),
+    ],
+)
+def test_a_dashdash_or_absolute_wrapper_does_not_hide_the_git_call(command: str, repo: Path) -> None:
+    """Two shared defects with the bash guard, fixed in both.
+
+    `--` ends the wrapper's options, but the option-value lookahead consumed it and
+    then the `git` behind it, so the invocation was discarded before any rule ran.
+    And WRAPPERS was matched against the raw word, so an absolute path defeated the
+    set entirely.
+    """
+    assert verdict(command, repo) == "deny", f"{command!r} hid the git call"
+
+
+def test_a_line_continuation_keeps_one_command_together(repo: Path) -> None:
+    """A backslash-newline is a continuation, not a separator.
+
+    Without the rewrite the two halves became separate commands, so
+    `git reset \\<newline>--hard` lost its own flag and every rule with it. The bash
+    guard already did this; the git guard did not.
+    """
+    assert verdict('git -C "$D" reset \\\n--hard', repo) == "deny"
+
+
+def test_a_comment_does_not_swallow_the_following_line(repo: Path) -> None:
+    """shlex read `#` as a comment and discarded the rest of the STRING.
+
+    The newline went with it, so a git call on the next line vanished -- verified
+    against bash that the second line really does execute.
+    """
+    assert verdict('ls -la # list\ngit -C "$D" reset --hard', repo) == "deny"
+    assert verdict('git commit -m "fix #123"', repo) != "deny", "a # inside quotes is data"
+
+
 def test_a_non_string_cwd_fails_open() -> None:
     """The contract requires fail-open; this raised TypeError and exited 1."""
     payload = json.dumps({"cwd": ["/tmp"], "tool_input": {"command": "git status"}})

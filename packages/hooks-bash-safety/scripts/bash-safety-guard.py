@@ -322,20 +322,57 @@ def strip_prefix(words: list[str]) -> list[str]:
         if word in OPENERS or ASSIGNMENT.match(word):
             index += 1
             continue
-        if word in WRAPPERS:
-            takes_operand = word in WRAPPER_OPERAND
+        # Wrappers by BASENAME. The set was matched against the raw word, so an
+        # absolute path defeated it: `/usr/bin/sudo rm -rf /` left `/usr/bin/sudo`
+        # in command position and the rm behind it unjudged. Every other verb read
+        # in this module already uses Path(word).name.
+        name = Path(word).name
+        if name in WRAPPERS:
+            takes_operand = name in WRAPPER_OPERAND
             index += 1
             # Consume the wrapper's own options, plus one value for an option
             # that takes one. A bare word here is the wrapped command.
+            #
+            # `--` STOPS THE SCAN. It ends the wrapper's options, so the next word is
+            # the command. Treating it as just another option let the lookahead below
+            # swallow it AND the verb: `sudo -u root -- rm -rf /etc` was silent while
+            # the same line without `--` denied.
             while index < len(words) and words[index].startswith("-"):
+                if words[index] == "--":
+                    index += 1
+                    break
                 index += 1
                 if index < len(words) and not words[index].startswith("-"):
                     following = words[index + 1] if index + 1 < len(words) else None
                     if following is not None and not following.startswith("-"):
                         index += 1
+            # A `--` reached after an option VALUE still ends the options. Without
+            # this, `sudo -u root -- rm -rf /etc` left `root` in command position:
+            # `-u` consumed `root`, the loop saw `--` was not a bare word, and
+            # stopped one word short of the verb. Handled by looking at the CURRENT
+            # word only -- an earlier version also skipped a `--` one position ahead,
+            # which overshot `timeout 5 -- rm -rf /` and consumed the verb itself.
+            if index < len(words) and words[index] == "--":
+                index += 1
+            elif (
+                index + 1 < len(words)
+                and words[index + 1] == "--"
+                and not words[index].startswith("-")
+                and words[index] not in WRAPPERS
+            ):
+                # `sudo -u root -- rm`: the option value sits where a bare word would,
+                # so the `--` behind it is still the wrapper's end-of-options marker.
+                # Not for an operand-taking wrapper: `timeout 5 --` has its operand in
+                # that slot, and consuming both here left the operand rule below to eat
+                # the verb.
+                if not takes_operand:
+                    index += 2
             # `timeout 5 rm ...`: the duration belongs to the wrapper.
             if takes_operand and index < len(words) and not words[index].startswith("-"):
                 index += 1
+                # `timeout 5 -- rm ...`: the marker follows the operand.
+                if index < len(words) and words[index] == "--":
+                    index += 1
             continue
         # `--` ends the wrapper's own options; the verb is whatever follows. It was
         # left in place, so `timeout 5 -- rm -rf /` presented `--` as the verb and
@@ -740,7 +777,24 @@ def check_other_destructive(verb: str, words: list[str], cwd: Path) -> tuple[str
 
 def check_sudo(words: list[str]) -> tuple[str, str] | None:
     """Warn when sudo runs a destructive verb, ignoring read-only subcommands."""
-    if not words or words[0] not in ("sudo", "doas"):
+    # Path(...).name, because every other verb read in this module does the same:
+    # `/usr/bin/sudo rm -f ...` lost the advisory on a bare string comparison.
+    #
+    # The caller passes words that strip_prefix has ALREADY walked, which removes
+    # wrappers -- and sudo is a wrapper. So sudo is detected on the raw words here
+    # and the verb is read from the stripped remainder, which is what the caller
+    # supplies. Passing the pre-stripped list to strip_prefix again dropped the
+    # advisory for the plain `sudo rm -f` case entirely.
+    if not words:
+        return None
+    # Scan the leading run of env assignments and wrappers rather than a fixed
+    # window: `FOO=1 nohup /usr/bin/sudo rm ...` puts sudo third, and any fixed
+    # index either misses it or hard-codes an ordering the shell does not require.
+    if not any(
+        Path(word).name in ("sudo", "doas")
+        for word in words
+        if not ASSIGNMENT.match(word) or Path(word).name in ("sudo", "doas")
+    ):
         return None
     inner = strip_prefix(words)
     if not inner:
@@ -748,12 +802,16 @@ def check_sudo(words: list[str]) -> tuple[str, str] | None:
     verb = Path(inner[0]).name
     if verb not in DESTRUCTIVE_VERBS:
         return None
-    following = [word for word in inner[1:] if not word.startswith("-")]
-    # The subcommand is not always the first argument: `systemctl status nginx`
-    # leads with it while `service nginx status` trails it. Checking every bare
-    # word covers both without needing a per-tool argument grammar.
-    if any(word in READ_ONLY_SUBCOMMANDS for word in following):
-        return None
+    # Verbs that take no subcommand at all: for these, every bare word is an
+    # operand, so consulting READ_ONLY_SUBCOMMANDS silenced the advisory whenever a
+    # PATH happened to be named like one -- `sudo rm -rf install` went quiet.
+    if verb not in ("rm", "rmdir", "dd", "shred", "truncate"):
+        following = [word for word in inner[1:] if not word.startswith("-")]
+        # The subcommand is not always the first argument: `systemctl status nginx`
+        # leads with it while `service nginx status` trails it. Checking every bare
+        # word covers both without needing a per-tool argument grammar.
+        if any(word in READ_ONLY_SUBCOMMANDS for word in following):
+            return None
     return (
         "warn",
         "BS-7 (warn on sudo with a destructive command): this runs a destructive "
@@ -828,13 +886,18 @@ def base_cwd(raw: str) -> Path:
         return base
 
 
-def cd_target(words: list[str]) -> str | None:
-    """Return the absolute literal directory a `cd` moves to, if it is one.
+def cd_target(words: list[str], cwd: Path) -> str | None:
+    """Return the literal directory a `cd` moves to, resolved against `cwd`.
 
-    Only an absolute literal target is followed. A relative or variable-bearing
-    `cd` would have to be guessed at, and guessing wrong is how a guard denies
-    correct work; a variable-bearing `rm` target is denied on its own account
-    anyway.
+    A variable-bearing `cd` is still not followed: it would have to be guessed at,
+    and guessing wrong is how a guard denies correct work; a variable-bearing `rm`
+    target is denied on its own account anyway.
+
+    A RELATIVE hop is followed, because dropping it left the carried cwd stale and
+    the deny was lost: `cd /tmp && cd ../etc && rm -rf *` reported nothing, while
+    the shell really does land in /etc and wipe it. The result is normalized for the
+    same reason -- `cd /usr/../etc` and `cd //etc` both land in /etc, and comparing
+    the unnormalized text against CRITICAL matched neither.
     """
     if not words or Path(words[0]).name != "cd":
         return None
@@ -842,9 +905,9 @@ def cd_target(words: list[str]) -> str | None:
     if len(operands) != 1:
         return None
     target = operands[0]
-    if not target.startswith("/") or "$" in target:
+    if "$" in target or "`" in target or target.startswith("~"):
         return None
-    return target.rstrip("/") or "/"
+    return normalize(target, cwd)
 
 
 def main() -> int:
@@ -859,15 +922,6 @@ def main() -> int:
     if not command:
         return 0
 
-    if "--dangerously-bypass-approvals-and-sandbox" in command.lower():
-        emit(
-            "deny",
-            "blocked by BS-3 (no sandbox-bypass flag): "
-            "--dangerously-bypass-approvals-and-sandbox disables the safety "
-            "envelope for the whole session.",
-        )
-        return 0
-
     try:
         # The pipe check needs commands in their original adjacency, because
         # expansion splices a nested command in between two pipe stages and the
@@ -878,6 +932,30 @@ def main() -> int:
         # Not parseable as shell. Nothing reliable to judge, so allow rather than
         # block on a quoting quirk.
         return 0
+
+    # BS-3 IS JUDGED ON LEXED WORDS, not on the raw string. The substring test that
+    # ran before tokenization was wrong in both directions at once:
+    #   * it MISSED `'--dangerously-bypass-approvals'-and-sandbox`, which the shell
+    #     rejoins into the single flag word, because the raw text contains a quote.
+    #   * it DENIED any command that merely NAMED the flag -- `grep -rn -- <flag> .`,
+    #     `echo "never pass <flag>"`, a commit message documenting it. It blocked
+    #     this repository's own test harness for quoting the flag in a heredoc.
+    # A lexed word is the flag or it is data, and the shell has already decided which.
+    # After `--` the shell stops treating words as options, so the same text there is
+    # an operand -- `grep -rn -- <flag> .` searches FOR the flag rather than passing
+    # it. Everything before `--` is judged.
+    for words in commands:
+        for word in words:
+            if word == "--":
+                break
+            if word.lower() == "--dangerously-bypass-approvals-and-sandbox":
+                emit(
+                    "deny",
+                    "blocked by BS-3 (no sandbox-bypass flag): "
+                    "--dangerously-bypass-approvals-and-sandbox disables the safety "
+                    "envelope for the whole session.",
+                )
+                return 0
 
     cwd = base_cwd(raw_cwd)
     roots: dict[Path, Path | None] = {cwd: find_repo_root(cwd)}
@@ -893,13 +971,16 @@ def main() -> int:
     for words in commands:
         stripped = strip_prefix(words)
 
-        moved = cd_target(stripped)
+        moved = cd_target(stripped, cwd)
         if moved is not None:
             cwd = Path(moved)
             if cwd not in roots:
                 roots[cwd] = find_repo_root(cwd)
             continue
 
+        # The stripped words, so an env assignment or wrapper ahead of sudo cannot
+        # hide the advisory: `FOO=1 sudo rm -f ...` and `nohup sudo rm -f ...` were
+        # both silent because the raw list was passed and sudo was not words[0].
         sudo_finding = check_sudo(words)
         if sudo_finding:
             findings.append(sudo_finding)
