@@ -662,6 +662,12 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
                 candidate = words[index + 1]
                 if candidate.startswith("/dev/"):
                     device = candidate
+            # Normalize before the compare: `/dev/./null` and `/dev/../dev/null` are
+            # /dev/null, and comparing the literal denied a harmless redirect.
+            if device:
+                import posixpath
+
+                device = posixpath.normpath(device)
             if device and device not in PSEUDO_DEVICES:
                 return (
                     "deny",
