@@ -1,5 +1,5 @@
 name: language-shell
-version: 3.0.3
+version: 3.0.4
 description: Shell scripting toolkit with Shell LSP.
 author: Sjors Robroek
 license: Apache-2.0

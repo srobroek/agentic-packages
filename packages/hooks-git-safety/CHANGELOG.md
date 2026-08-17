@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.0.1...hooks-git-safety--v4.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* close eight guard escapes found by a second fuzz pass ([#845](https://github.com/srobroek/agentic-packages/issues/845)) ([dd224ff](https://github.com/srobroek/agentic-packages/commit/dd224fff1aa5b31d97068cd224ebe065f14ea57b))
+* close three guard escapes found by fuzzing ([#841](https://github.com/srobroek/agentic-packages/issues/841)) ([a057d72](https://github.com/srobroek/agentic-packages/commit/a057d7211bbabfe1f40a50aa30f0da9ddf01dc39))
+
 ## [4.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.0.0...hooks-git-safety--v4.0.1) (2026-07-30)
 
 

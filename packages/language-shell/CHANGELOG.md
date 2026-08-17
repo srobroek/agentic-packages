@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.4](https://github.com/srobroek/agentic-packages/compare/language-shell--v3.0.3...language-shell--v3.0.4) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
 ## [3.0.3](https://github.com/srobroek/agentic-packages/compare/language-shell--v3.0.2...language-shell--v3.0.3) (2026-07-30)
 
 

@@ -191,7 +191,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "12.0.1",
+      "version": "12.0.2",
       "tags": [
         "bundle",
         "steering"
@@ -275,7 +275,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering. The SubagentStart context injector requires python3 on PATH.",
-      "version": "9.0.1",
+      "version": "9.0.2",
       "tags": [
         "bundle",
         "semantic"
@@ -286,7 +286,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "19.0.0",
+      "version": "20.0.0",
       "tags": [
         "bundle",
         "baseline"
@@ -297,7 +297,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases.",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "tags": [
         "bundle",
         "data"
@@ -381,7 +381,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch).",
-      "version": "5.1.1",
+      "version": "5.1.2",
       "tags": [
         "bundle",
         "frontend"
@@ -440,7 +440,7 @@
     {
       "name": "hooks-bash-safety",
       "description": "Bash safety guard tuned for autonomous agents, in one Python module with a real shell tokenizer. Denies only the unrecoverable: rm -rf on the filesystem root, a home root, or a system-critical tree (BS-4/BS-8), rm -rf whose target hides behind an unexpanded variable so the guard cannot verify it (BS-9), mkfs (BS-5), dd onto a real block device while allowing the pseudo-devices (BS-6), and the sandbox-bypass flag (BS-3). Warns without blocking on a curl-to-shell pipe, sudo with a destructive verb, and rm -rf outside the git working tree (BS-7, BS-10). Anything inside the working tree is assumed git-recoverable and passes silently, so wiping node_modules or a build directory says nothing. Because the command is tokenized rather than pattern-matched, wrapper prefixes, env assignments, leading tabs, quoted targets, flags after the target, path traversal, subshells, loop bodies, and a rebasing cd are all covered by construction. Never emits \"ask\". Cross-tool (Claude + Codex).",
-      "version": "5.0.1",
+      "version": "5.0.2",
       "tags": [
         "hooks",
         "bash",
@@ -478,7 +478,7 @@
     {
       "name": "hooks-git-safety",
       "description": "Git safety guard for autonomous agents, in one Python module with a real shell tokenizer. Denies exactly one thing: a destructive op aimed at another working tree through an unexpanded variable or ~, where the guard cannot resolve which tree is affected (GS-2). Everything else is non-blocking. reset --hard, checkout --, restore, and clean -f warn only when repository state shows work would really be lost (GS-3, GS-5, GS-6), so a clean tree stays silent and an untracked-only tree does not trip the reset rules. push --force always warns, because the loss is on the remote where local state cannot answer for it (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass silently, all being reflog-recoverable. State reads happen once, and only after a destructive verb matches. An unreadable tree warns rather than staying quiet. Never emits \"ask\". Cross-tool (Claude + Codex).",
-      "version": "4.0.1",
+      "version": "4.0.2",
       "tags": [
         "hooks",
         "git",
@@ -584,7 +584,7 @@
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering.",
-      "version": "4.0.3",
+      "version": "4.0.4",
       "tags": [
         "bundle",
         "infrastructure"
@@ -595,7 +595,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Go LSP.",
-      "version": "5.0.2",
+      "version": "5.0.3",
       "tags": [
         "bundle",
         "go"
@@ -606,7 +606,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: the python-quality skill, opinionated Python steering, and Python LSP.",
-      "version": "5.0.2",
+      "version": "5.0.3",
       "tags": [
         "bundle",
         "python"
@@ -617,7 +617,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "tags": [
         "bundle",
         "rust"
@@ -628,7 +628,7 @@
     {
       "name": "language-shell",
       "description": "Shell scripting toolkit with Shell LSP.",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "tags": [
         "bundle",
         "shell"
@@ -661,7 +661,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated Terraform steering. No dedicated quality skill yet.",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "tags": [
         "bundle",
         "terraform"
@@ -672,7 +672,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and TypeScript LSP.",
-      "version": "5.0.2",
+      "version": "5.0.3",
       "tags": [
         "bundle",
         "typescript"
@@ -853,7 +853,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "16.1.0",
+      "version": "16.1.1",
       "tags": [
         "skill",
         "agent",
@@ -865,7 +865,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "3.2.4",
+      "version": "3.2.5",
       "tags": [
         "bundle",
         "planning"
@@ -888,7 +888,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "tags": [
         "beads",
         "merge-queue",
@@ -913,7 +913,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "7.0.0",
+      "version": "7.0.1",
       "tags": [
         "bundle",
         "lifecycle"
@@ -986,7 +986,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "tags": [
         "bundle",
         "review"

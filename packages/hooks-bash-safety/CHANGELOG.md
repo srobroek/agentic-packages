@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v5.0.1...hooks-bash-safety--v5.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* close eight guard escapes found by a second fuzz pass ([#845](https://github.com/srobroek/agentic-packages/issues/845)) ([dd224ff](https://github.com/srobroek/agentic-packages/commit/dd224fff1aa5b31d97068cd224ebe065f14ea57b))
+* close four more guard escapes found by fuzzing ([#843](https://github.com/srobroek/agentic-packages/issues/843)) ([abb2e15](https://github.com/srobroek/agentic-packages/commit/abb2e15268bf1ff3b7fce71eaa63d399d7a5ef31))
+* close three guard escapes found by fuzzing ([#841](https://github.com/srobroek/agentic-packages/issues/841)) ([a057d72](https://github.com/srobroek/agentic-packages/commit/a057d7211bbabfe1f40a50aa30f0da9ddf01dc39))
+* dd to a non-canonical pseudo-device path is no longer denied ([#846](https://github.com/srobroek/agentic-packages/issues/846)) ([6dffe05](https://github.com/srobroek/agentic-packages/commit/6dffe0521e7034b6dbba8c6037bd35bf1c25e685))
+
 ## [5.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-bash-safety--v5.0.0...hooks-bash-safety--v5.0.1) (2026-07-30)
 
 
