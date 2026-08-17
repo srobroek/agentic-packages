@@ -508,6 +508,52 @@ run(
     rules_file=SHEPHERD,
 )
 
+# A rules file that DOES deny an orchestrator anchor must still not block the
+# role: presence proves nothing about who wrote it (astro-plan-78v0). The cases
+# above only prove today's rules files happen to omit those keys.
+_ANCHOR_RULES = os.path.join(HERE, "_anchor_deny.rules.json")
+with open(_ANCHOR_RULES, "w") as fh:
+    json.dump(
+        {
+            "agent": "scribe",
+            "authority": {"deny_metadata": ["worktree", "branch", "lease_token", "output_ref"]},
+        },
+        fh,
+    )
+try:
+    run(
+        "denying an orchestrator anchor does not block",
+        "allow",
+        bead(
+            status="closed",
+            labels=["agent:scribe"],
+            metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+        ),
+        agent_type="scribe",
+        rules_file=_ANCHOR_RULES,
+    )
+    run(
+        "a denied non-anchor key still blocks",
+        "block",
+        bead(
+            status="closed",
+            labels=["agent:scribe"],
+            metadata={"worktree": "/tmp/wt", "output_ref": "/tmp/somewhere"},
+        ),
+        agent_type="scribe",
+        rules_file=_ANCHOR_RULES,
+    )
+finally:
+    os.unlink(_ANCHOR_RULES)
+
+for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "runtime_handle"):
+    if _key in MODULE.ORCHESTRATOR_ANCHORS:
+        passed += 1
+        print(f"  ok   spawn-brief anchor {_key} is exempt")
+    else:
+        failed += 1
+        print(f"  FAIL spawn-brief anchor {_key} is not exempt")
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
