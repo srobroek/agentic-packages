@@ -20,6 +20,7 @@ file does not itself trip a guard that scans command text.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -228,10 +229,6 @@ def test_routine_sudo_work_stays_quiet(command: str) -> None:
 
 
 ROUND_THREE_ESCAPES = [
-    # CRITICAL membership was exact-string, so the platform's own spelling of the
-    # same directory was allowed: /etc denied, /private/etc warned.
-    pytest.param("rm -rf /private/etc", id="resolved-spelling-of-critical"),
-    pytest.param("rm -rf /private/var", id="resolved-spelling-of-var"),
     # Brace expansion is one token to the lexer and many paths to the shell.
     pytest.param("rm -rf /{etc,usr}", id="brace-expansion-critical"),
     # `--` ends the wrapper's options; it was left in place and read as the verb.
@@ -244,6 +241,27 @@ ROUND_THREE_ESCAPES = [
     pytest.param("dd if=/dev/zero > /dev/disk0", id="dd-via-redirect"),
     pytest.param("dd if=x >> /dev/rdisk1", id="dd-via-append-redirect"),
 ]
+
+
+@pytest.mark.skipif(
+    os.path.realpath("/etc") == "/etc",
+    reason="/private/etc is the resolved spelling of /etc only where the platform "
+    "symlinks it (macOS); on Linux it is an ordinary path and must NOT be denied",
+)
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("rm -rf /private/etc", id="resolved-spelling-of-critical"),
+        pytest.param("rm -rf /private/var", id="resolved-spelling-of-var"),
+    ],
+)
+def test_the_platforms_own_spelling_of_a_critical_path_is_denied(command: str) -> None:
+    """CRITICAL membership was exact-string, so /etc denied and /private/etc warned.
+
+    Gated on the platform actually symlinking the path: this failed in Linux CI,
+    where /private/etc resolves to itself and denying it would be a false positive.
+    """
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
 
 
 @pytest.mark.parametrize("command", ROUND_THREE_ESCAPES)
