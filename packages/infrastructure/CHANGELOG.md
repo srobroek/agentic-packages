@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/srobroek/agentic-packages/compare/infrastructure--v4.1.0...infrastructure--v4.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
 ## [4.1.0](https://github.com/srobroek/agentic-packages/compare/infrastructure--v4.0.4...infrastructure--v4.1.0) (2026-08-17)
 
 
