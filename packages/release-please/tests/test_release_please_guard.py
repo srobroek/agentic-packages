@@ -32,6 +32,12 @@ def _init_repo(path: Path) -> None:
     subprocess.run(["git", "init", "-q"], cwd=path, check=True)
     subprocess.run(["git", "config", "user.email", "t@t"], cwd=path, check=True)
     subprocess.run(["git", "config", "user.name", "t"], cwd=path, check=True)
+    # Repo-local, so every later commit in the fixture picks it up. A global
+    # commit.gpgsign otherwise fails all of these with "1Password: Could not
+    # connect to socket" whenever that agent is not running, and a throwaway
+    # fixture commit has nothing to sign for.
+    subprocess.run(["git", "config", "commit.gpgsign", "false"], cwd=path, check=True)
+    subprocess.run(["git", "config", "tag.gpgsign", "false"], cwd=path, check=True)
 
 
 @pytest.fixture
