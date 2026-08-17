@@ -184,3 +184,30 @@ def test_unreadable_payload_fails_open(payload: str) -> None:
     )
     assert result.returncode == 0
     assert not result.stdout.strip()
+
+def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
+    """`sys.stdin.read()` raised UnicodeDecodeError and the fail-open swallowed it.
+
+    So a single stray byte ANYWHERE in the payload turned a deny into silence -- even
+    a byte in a field this guard never reads. Reproduced here before the fix: the
+    valid payload denied, the same payload plus one bad byte decided nothing.
+
+    Eleven guards across this repository shared the idiom; all now read bytes and
+    decode with "replace".
+    """
+    attributed = (
+        "git commit -m 'x\n\nCo-Authored-By: Claude <noreply@anthropic.com>'"
+    )
+    payload = json.dumps({"cwd": ".", "tool_name": "Bash", "tool_input": {"command": attributed}})
+    poisoned = payload.encode()[:-1] + b', "unread_field":"scratch\xe9"}'
+
+    clean = subprocess.run(  # noqa: S603
+        [sys.executable, str(GUARD)], input=payload.encode(), capture_output=True, timeout=30
+    )
+    assert clean.stdout.strip(), "the valid payload must produce a decision"
+
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, str(GUARD)], input=poisoned, capture_output=True, timeout=30
+    )
+    assert result.returncode == 0, "the guard must still fail open"
+    assert result.stdout.strip(), "an undecodable byte erased the decision"
