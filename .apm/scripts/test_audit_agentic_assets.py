@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-
 SCRIPT = Path(__file__).with_name("audit-agentic-assets.py")
 SPEC = importlib.util.spec_from_file_location("audit_agentic_assets", SCRIPT)
 assert SPEC and SPEC.loader

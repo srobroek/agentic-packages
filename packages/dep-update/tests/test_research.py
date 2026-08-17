@@ -236,7 +236,7 @@ def test_stdin_mode_emits_one_record_per_dependency(
         type("S", (), {"read": staticmethod(lambda: "pypi\trequests\t2.32.0\n\n")})(),
     )
     assert research.main(["research.py", str(tmp_path)]) == 0
-    lines = [l for l in capsys.readouterr().out.splitlines() if l.strip()]
+    lines = [line for line in capsys.readouterr().out.splitlines() if line.strip()]
     assert len(lines) == 1
     assert json.loads(lines[0])["name"] == "requests"
 

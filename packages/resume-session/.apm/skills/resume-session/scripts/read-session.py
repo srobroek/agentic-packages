@@ -24,7 +24,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 CLAUDE_ROOT = os.path.expanduser("~/.claude/projects")
 CODEX_ROOT = os.path.expanduser("~/.codex/sessions")
@@ -99,7 +99,7 @@ def parse_ts(value):
 def fmt_ts(epoch):
     if not epoch:
         return "?"
-    return datetime.fromtimestamp(epoch, timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
+    return datetime.fromtimestamp(epoch, UTC).astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 def est_tokens(text: str) -> int:
