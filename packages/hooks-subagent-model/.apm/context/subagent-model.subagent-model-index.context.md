@@ -2,7 +2,7 @@
 
 LEGEND: Rules carry stable IDs (SM-n) cited by the enforcing hook.
 
-subagent-model-guard.sh enforces SM-1..SM-2.
+subagent-model-guard.py enforces SM-1..SM-2.
 
 MUST SM-1: Claude Agent/Task spawns whose `subagent_type` has no pinned model must pass an explicit `model`. Codex Agent spawns must select a named semantic `agent_type` whose nearest project or global custom profile pins both `model` and `model_reasoning_effort`; a project profile shadows a same-named global profile and must never fall through when incomplete.
 

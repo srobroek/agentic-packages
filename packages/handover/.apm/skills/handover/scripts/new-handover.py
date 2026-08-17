@@ -17,9 +17,8 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 DEFAULT_HANDOVER_DIR = Path.home() / ".local" / "state" / "agentic-tools" / "handovers"
 
@@ -90,7 +89,7 @@ def build_content(
     task: str,
     beads: list[str] | None = None,
 ) -> str:
-    updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    updated = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     # json.dumps of a list of strings is a valid YAML flow sequence, with the
     # same injection-safety argument as _yaml_scalar.
     beads_line = f"beads: {json.dumps([str(b) for b in beads])}\n" if beads else ""

@@ -44,11 +44,67 @@ WRAPPERS = frozenset(
 # command: `timeout 5 git ...` and `flock /tmp/lock git ...`. Adding these to
 # WRAPPERS alone would leave `5` standing where the verb belongs.
 WRAPPER_OPERAND = frozenset({"timeout", "flock"})
+
+# Options with a separate value. Without this table, the old generic lookahead
+# treated every non-option after a wrapper flag as that flag's value:
+# `timeout --preserve-status 5 git ...` consumed `git` as the wrapper operand,
+# and `sudo -H git reset --hard` consumed `git` as the value for `-H`.
+WRAPPER_OPTIONS_WITH_VALUE = {
+    "sudo": frozenset({"-u", "--user", "-g", "--group", "-r", "--role", "-p", "--prompt"}),
+    "doas": frozenset({"-u", "--user"}),
+    "env": frozenset(
+        {
+            "-u",
+            "--unset",
+            "-C",
+            "--chdir",
+            "--argv0",
+            "--block-signal",
+            "--default-signal",
+            "--ignore-signal",
+            "-S",
+            "--split-string",
+        }
+    ),
+    "time": frozenset({"-o", "--output", "-f", "--format"}),
+    "nice": frozenset({"-n", "--adjustment"}),
+    "exec": frozenset({"-a"}),
+    "xargs": frozenset(
+        {
+            "-E",
+            "--eof",
+            "-I",
+            "--replace",
+            "-L",
+            "--max-lines",
+            "-n",
+            "--max-args",
+            "-P",
+            "--max-procs",
+            "-s",
+            "--max-chars",
+            "-d",
+            "--delimiter",
+            "--process-slot-var",
+        }
+    ),
+    "stdbuf": frozenset({"-i", "-o", "-e"}),
+    "setsid": frozenset({"-C", "--ctty"}),
+    "ionice": frozenset({"-c", "--class", "-n", "--classdata"}),
+    "timeout": frozenset({"-k", "--kill-after", "-s", "--signal"}),
+    "flock": frozenset({"-w", "--timeout", "-E", "--conflict-exit-code"}),
+    "unbuffer": frozenset({"-c", "--command"}),
+}
+WRAPPER_COMMAND_OPTIONS = {
+    "env": frozenset({"-S", "--split-string"}),
+    "flock": frozenset({"-c", "--command"}),
+}
 COMMAND_BOUNDARIES = frozenset(
     {"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if", "for"}
 )
 CLOSERS = frozenset({"}", ")", "done", "fi", "esac"})
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+GIT_ENVIRONMENT = frozenset({"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"})
 
 # Invocations that carry a command as an ARGUMENT, so its git call never reaches
 # the tokenizer unless the argument is lexed again.
@@ -84,7 +140,8 @@ GIT_OPTIONS_WITH_VALUE = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--n
 # thing for an agent to write when a path is already in a variable, which is
 # precisely the case GS-2 exists to stop.
 UNVERIFIABLE_REDIRECT = re.compile(
-    r"""(?:^|\s)(?:-C\s+|--git-dir[\s=]|--work-tree[\s=]|GIT_DIR=|GIT_WORK_TREE=)"""
+    r"""(?:^|\s)(?:-C(?:\s+|=|(?=[^-\s]))|--git-dir(?:[\s=]|(?=[^-\s]))|"""
+    r"""--work-tree(?:[\s=]|(?=[^-\s]))|GIT_DIR=|GIT_WORK_TREE=)"""
     # A `~` is a home reference only at the START of the value (or right after the
     # opening quote). Mid-path it is an ordinary character -- `/tmp/has~tilde/x` is a
     # real directory name, and denying it was a false positive on a path the guard
@@ -220,6 +277,42 @@ def nested_command(words: list[str]) -> str | None:
     return None
 
 
+def wrapper_command_strings(words: list[str]) -> list[str]:
+    """Return shell command strings carried by wrappers such as ``flock -c``."""
+    strings: list[str] = []
+    index = 0
+    while index < len(words):
+        if words[index] in COMMAND_BOUNDARIES or ASSIGNMENT.match(words[index]):
+            index += 1
+            continue
+        wrapper = Path(words[index]).name
+        if wrapper not in WRAPPERS:
+            break
+        options = WRAPPER_COMMAND_OPTIONS.get(wrapper, ())
+        next_index = index + 1
+        while next_index < len(words) and words[next_index].startswith("-"):
+            option = words[next_index]
+            if option == "--":
+                break
+            option_name = option.split("=", 1)[0]
+            next_index += 1
+            if option_name in options or (
+                option.startswith("-") and len(option) > 2 and option[:2] in options
+            ):
+                if "=" in option:
+                    strings.append(option.split("=", 1)[1])
+                elif next_index < len(words):
+                    strings.append(words[next_index])
+                    next_index += 1
+            elif _wrapper_option_takes_value(wrapper, option):
+                next_index += 1
+        next_after_wrapper = _skip_wrapper(words, index)
+        if next_after_wrapper <= index:
+            break
+        index = next_after_wrapper
+    return strings
+
+
 def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
     """Tokenize, then re-lex any nested shell string so its git call is judged too.
 
@@ -233,17 +326,18 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
     expanded: list[list[str]] = []
     for words in commands:
         expanded.append(words)
-        # Reach past openers, env assignments, and wrappers to the real verb, the
-        # same prefixes git_invocation skips.
-        index = 0
-        while index < len(words) and (
-            words[index] in COMMAND_BOUNDARIES
-            or words[index] in WRAPPERS
-            or ASSIGNMENT.match(words[index])
-        ):
-            index += 1
+        # Reach past openers, env assignments, wrappers, and their options to the
+        # real verb, the same prefixes git_invocation skips. Otherwise
+        # `sudo -H sh -c 'git ...'` would leave `-H` in command position and the
+        # nested call would never be re-lexed.
+        index = _command_index(words)
+        inners = wrapper_command_strings(words)
+        if not inners:
+            inners = wrapper_command_strings(words[index:])
         inner = nested_command(words[index:])
         if inner:
+            inners.insert(0, inner)
+        for inner in dict.fromkeys(inners):
             try:
                 expanded.extend(expand_commands(inner, depth + 1))
             except ValueError:
@@ -252,13 +346,52 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
     return expanded
 
 
-def git_invocation(words: list[str]) -> list[str] | None:
-    """Return the git subcommand and its arguments, or None if not a git call.
+def _wrapper_option_takes_value(wrapper: str, option: str) -> bool:
+    """Return whether *option* consumes the following word.
 
-    Skips wrappers, env assignments, and git's own global options so the
-    subcommand is found rather than assumed to be the second word. Without this,
-    `git -C /path reset --hard` looks like the subcommand is `-C`.
+    Bundled short options such as ``-n5`` and long ``--signal=KILL`` already
+    carry their values, so only the exact separate-value spellings need a
+    lookahead.
     """
+    return option in WRAPPER_OPTIONS_WITH_VALUE.get(wrapper, ())
+
+
+def _skip_wrapper(words: list[str], index: int) -> int:
+    """Advance past one wrapper, its options, and any own operand."""
+    wrapper = Path(words[index]).name
+    index += 1
+    command_option_seen = False
+    command_options = WRAPPER_COMMAND_OPTIONS.get(wrapper, ())
+    while index < len(words) and words[index].startswith("-"):
+        option = words[index]
+        if option == "--":
+            index += 1
+            break
+        option_name = option.split("=", 1)[0]
+        index += 1
+        if option_name in command_options or (
+            option.startswith("-") and len(option) > 2 and option[:2] in command_options
+        ):
+            command_option_seen = True
+            if "=" not in option and index < len(words):
+                index += 1
+        elif _wrapper_option_takes_value(wrapper, option):
+            if index < len(words) and words[index] != "--":
+                index += 1
+    if (
+        wrapper in WRAPPER_OPERAND
+        and not command_option_seen
+        and index < len(words)
+        and not words[index].startswith("-")
+    ):
+        index += 1
+        if index < len(words) and words[index] == "--":
+            index += 1
+    return index
+
+
+def _command_index(words: list[str]) -> int:
+    """Return the index where a wrapper-prefixed command starts."""
     index = 0
     while index < len(words):
         word = words[index]
@@ -269,48 +402,27 @@ def git_invocation(words: list[str]) -> list[str] | None:
         # defeated the set and left `/usr/bin/sudo` in command position.
         name = Path(word).name
         if name in WRAPPERS:
-            takes_operand = name in WRAPPER_OPERAND
-            index += 1
-            # Consume the wrapper's own options, plus one value for an option that
-            # takes one. Skipping only the wrapper WORD left `-n` standing where the
-            # verb belonged, so `nice -n 5 git ... reset --hard` was silent while the
-            # bare command denied -- six wrapper forms defeated the deny this way.
-            # `--` STOPS THE SCAN. It ends the wrapper's options, so the next word
-            # is the command. Treated as just another option, the lookahead below
-            # swallowed it AND the verb: `sudo -u root -- git -C "$D" reset --hard`
-            # was silent while the same line without `--` denied under GS-2.
-            while index < len(words) and words[index].startswith("-"):
-                if words[index] == "--":
-                    index += 1
-                    break
-                index += 1
-                if index < len(words) and not words[index].startswith("-"):
-                    following = words[index + 1] if index + 1 < len(words) else None
-                    if following is not None and not following.startswith("-"):
-                        index += 1
-            # A `--` reached after an option VALUE still ends the options. Without
-            # this, `sudo -u root -- git -C "$D" reset --hard` left `root` in command
-            # position: `-u` consumed `root`, the loop saw `--` was not a bare word,
-            # and stopped one word short of the verb.
-            if index < len(words) and words[index] == "--":
-                index += 1
-            elif (
-                index + 1 < len(words)
-                and words[index + 1] == "--"
-                and not words[index].startswith("-")
-                and Path(words[index]).name not in WRAPPERS
-                and not takes_operand
-            ):
-                index += 2
-            # `timeout 5 git ...`: the duration belongs to the wrapper.
-            if takes_operand and index < len(words) and not words[index].startswith("-"):
-                index += 1
-                # `timeout 5 -- git ...`: the marker follows the operand.
-                if index < len(words) and words[index] == "--":
-                    index += 1
+            index = _skip_wrapper(words, index)
             continue
         break
-    if index >= len(words) or Path(words[index]).name != "git":
+    return index
+
+
+def _git_index(words: list[str]) -> int | None:
+    """Return the index of the git executable in one tokenized command."""
+    index = _command_index(words)
+    return index if index < len(words) and Path(words[index]).name == "git" else None
+
+
+def git_invocation(words: list[str]) -> list[str] | None:
+    """Return the git subcommand and its arguments, or None if not a git call.
+
+    Skips wrappers, env assignments, and git's own global options so the
+    subcommand is found rather than assumed to be the second word. Without this,
+    `git -C /path reset --hard` looks like the subcommand is `-C`.
+    """
+    index = _git_index(words)
+    if index is None:
         return None
 
     index += 1
@@ -327,23 +439,7 @@ def git_invocation(words: list[str]) -> list[str] | None:
 
 
 def redirect_target(words: list[str], cwd: Path) -> Path:
-    """Return the working tree a git invocation actually acts on.
-
-    `git -C <other> reset --hard` performs the reset in <other>, but the state the
-    warnings are gated on was read from the payload cwd -- so a destructive op in a
-    dirty repo went unwarned whenever it was aimed there from a clean one. The
-    redirect value was parsed and thrown away.
-
-    All five spellings redirect: `-C`, `--work-tree`, `--git-dir` (both `=` and
-    space forms), and the GIT_WORK_TREE / GIT_DIR env assignments. A `--git-dir`
-    pointing at `<tree>/.git` names the tree one level up, which is the form
-    `git -C` would have produced anyway.
-
-    An unresolvable value is NOT guessed at: a target carrying `$`, a backtick or
-    `~` returns the cwd unchanged, because GS-2 already denies a destructive op
-    behind an unexpanded variable and guessing here could only move a warning onto
-    the wrong repository.
-    """
+    """Return the literal working tree named by git redirect options."""
     target = ""
     index = 0
     while index < len(words):
@@ -360,7 +456,7 @@ def redirect_target(words: list[str], cwd: Path) -> Path:
         if target:
             break
 
-    if not target or any(ch in target for ch in "$`~"):
+    if not target or any(character in target for character in "$`~"):
         return cwd
     target = target.strip("\"'")
     if target.endswith("/.git"):
@@ -390,24 +486,84 @@ def _git_binary() -> str:
     return shutil.which("git") or "git"
 
 
+def git_global_options(words: list[str]) -> list[str]:
+    """Return git global options in the spelling accepted by a state probe."""
+    index = _git_index(words)
+    if index is None:
+        return []
+
+    options: list[str] = []
+    index += 1
+    while index < len(words):
+        word = words[index]
+        if word in GIT_OPTIONS_WITH_VALUE:
+            options.append(word)
+            if index + 1 < len(words):
+                options.append(words[index + 1])
+                index += 2
+            else:
+                index += 1
+            continue
+        if word == "-C" or (word.startswith("-C") and not word.startswith("--")):
+            options.extend(["-C", word[2:].lstrip("=")] if word != "-C" else [word])
+            if word == "-C" and index + 1 < len(words):
+                options.append(words[index + 1])
+                index += 2
+            else:
+                index += 1
+            continue
+        if word.startswith("-"):
+            options.append(word)
+            index += 1
+            continue
+        break
+    return options
+
+
+def git_environment(words: list[str]) -> dict[str, str]:
+    """Return literal git-targeting assignments carried by a command prefix."""
+    index = _git_index(words)
+    if index is None:
+        return {}
+
+    environment: dict[str, str] = {}
+    for word in words[:index]:
+        key, separator, value = word.partition("=")
+        if separator and key in GIT_ENVIRONMENT:
+            environment[key] = value
+    return environment
+
+
 class RepoState:
     """Repository facts, fetched once and only when a warning depends on them."""
 
-    def __init__(self, cwd: Path) -> None:
+    def __init__(
+        self,
+        cwd: Path,
+        *,
+        git_options: list[str] | None = None,
+        environment: dict[str, str] | None = None,
+    ) -> None:
         self._cwd = cwd
+        self._git_options = git_options or []
+        self._environment = environment or {}
         self._dirty: bool | None = None
-        self._untracked: bool | None = None
-        self._in_tree: bool | None = None
+        self._untracked: dict[bool, bool] = {}
 
     def _run(self, args: list[str]) -> str | None:
+        import os
         import subprocess
 
+        environment = None
+        if self._environment:
+            environment = {**os.environ, **self._environment}
         try:
             result = subprocess.run(
                 [
                     _git_binary(),
                     "-C",
                     str(self._cwd),
+                    *self._git_options,
                     # A repo-local core.fsmonitor is a COMMAND git runs, so reading
                     # the state of an untrusted checkout would execute whatever that
                     # repository configured. The guard exists to gate destructive
@@ -424,6 +580,7 @@ class RepoState:
                 capture_output=True,
                 text=True,
                 timeout=GIT_SUBPROCESS_TIMEOUT,
+                env=environment,
             )
         except (OSError, subprocess.SubprocessError):
             return None
@@ -449,32 +606,36 @@ class RepoState:
         one advisory rather than a block.
         """
         if self._dirty is None:
-            if not self._inside_work_tree():
-                self._dirty = True
-            else:
-                output = self._run(["status", "--porcelain", "-uno"])
-                self._dirty = True if output is None else bool(output.strip())
+            output = self._run(["status", "--porcelain", "-uno"])
+            self._dirty = True if output is None else bool(output.strip())
         return self._dirty
 
-    def has_untracked_files(self) -> bool:
+    def has_untracked_files(self, *, include_ignored: bool = False) -> bool:
         """True when `clean -f` would delete something, or when that is unknown."""
-        if self._untracked is None:
-            if not self._inside_work_tree():
-                self._untracked = True
-            else:
-                output = self._run(["clean", "-nd"])
-                self._untracked = True if output is None else bool(output.strip())
-        return self._untracked
-
-    def _inside_work_tree(self) -> bool:
-        if self._in_tree is None:
-            output = self._run(["rev-parse", "--is-inside-work-tree"])
-            self._in_tree = bool(output and output.strip() == "true")
-        return self._in_tree
+        if include_ignored not in self._untracked:
+            args = ["clean", "-nd"]
+            if include_ignored:
+                args.append("-x")
+            output = self._run(args)
+            self._untracked[include_ignored] = True if output is None else bool(output.strip())
+        return self._untracked[include_ignored]
 
 
 def has_flag(args: list[str], *names: str) -> bool:
     return any(arg in names or arg.split("=", 1)[0] in names for arg in args)
+
+
+def has_short_flag(args: list[str], name: str) -> bool:
+    """Match a short option in a bundled spelling such as ``-fdx``."""
+    return any(
+        arg.startswith("-") and not arg.startswith("--") and name in arg[1:]
+        for arg in args
+    )
+
+
+def clean_includes_ignored(args: list[str]) -> bool:
+    """Return whether ``git clean`` includes ignored files in its deletion set."""
+    return has_flag(args, "--ignored") or has_short_flag(args, "x") or has_short_flag(args, "X")
 
 
 def restore_is_staged_only(args: list[str]) -> bool:
@@ -526,7 +687,10 @@ def judge(args: list[str], state: RepoState) -> tuple[str, str] | None:
             )
         return None
 
-    if subcommand == "push" and has_flag(rest, "--force", "-f", "--force-with-lease"):
+    if subcommand == "push" and (
+        has_flag(rest, "--force", "-f", "--force-with-lease")
+        or has_short_flag(rest, "f")
+    ):
         # Always warn: the loss would be on the remote, and local state says
         # nothing about what another author pushed there.
         return (
@@ -560,9 +724,9 @@ def judge(args: list[str], state: RepoState) -> tuple[str, str] | None:
 
     if subcommand == "clean" and (
         has_flag(rest, "--force")
-        or any(a.startswith("-") and not a.startswith("--") and "f" in a for a in rest)
+        or has_short_flag(rest, "f")
     ):
-        if state.has_untracked_files():
+        if state.has_untracked_files(include_ignored=clean_includes_ignored(rest)):
             return (
                 "warn",
                 "GS-6 (warn: clean -f deletes untracked files): this permanently "
@@ -651,21 +815,18 @@ def main() -> int:
     except OSError:
         pass
 
-    # One RepoState PER TARGET TREE, not one for the payload cwd. Every warning here
-    # is gated on repository state -- reset --hard only warns when the tree is dirty,
-    # clean -f only when something untracked would go -- so reading the state of the
-    # wrong repository silently drops the warning. `git -C <dirty> reset --hard` run
-    # from a clean tree reported nothing at all.
-    #
-    # Cached by resolved path, because two invocations in one command line usually
-    # name the same tree and each RepoState costs git subprocesses.
-    states: dict[Path, RepoState] = {}
+    states: dict[tuple[str, tuple[str, ...], tuple[tuple[str, str], ...]], RepoState] = {}
 
     for words, invocation in destructive:
+        git_options = git_global_options(words)
+        environment = git_environment(words)
         target = redirect_target(words, cwd)
-        if target not in states:
-            states[target] = RepoState(target)
-        finding = judge(invocation, states[target])
+        state_key = (str(target), tuple(git_options), tuple(sorted(environment.items())))
+        state = states.get(state_key)
+        if state is None:
+            state = RepoState(target, git_options=git_options, environment=environment)
+            states[state_key] = state
+        finding = judge(invocation, state)
         if finding:
             emit(finding[0], finding[1])
             return 0

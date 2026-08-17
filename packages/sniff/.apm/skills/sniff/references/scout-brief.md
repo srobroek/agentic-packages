@@ -39,8 +39,10 @@ Tools neither handed above nor listed here are NOT available — record them as
 coverage gaps, do not attempt to run them.
 
 ## Your reference
-Read `references/languages/<LANGUAGE>.md` FIRST. It is your smell checklist,
-idiom guide, and tool-invocation source. Do not improvise the catalog.
+Read the **absolute path** to `references/languages/<LANGUAGE>.md` supplied in
+this Brief, under the installed sniff skill directory, FIRST. It is your smell
+checklist, idiom guide, and tool-invocation source. Do not resolve that path from
+the target repository's working directory or improvise the catalog.
 
 ## Project conventions
 - Config files governing this language: <e.g. .golangci.yml, pyproject.toml>

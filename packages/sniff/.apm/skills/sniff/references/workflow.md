@@ -253,8 +253,10 @@ none).
 
 When you fan out: build each Brief from `references/scout-brief.md` -- pass the
 **resolved target file list** (and the worktree path, for ref targets) as the
-Scope so each agent reads only the target. Collect each agent's structured
-findings.
+Scope so each agent reads only the target. The language-reference field MUST be
+the absolute `$SNIFF_SKILL_DIR/references/languages/<lang>.md` path, because the
+agent's cwd is the target repository, not the installed skill directory. Collect
+each agent's structured findings.
 
 **Don't re-run tools the hound was handed (no double-run).** Step 3 already ran
 the static-analysis tools -- config-correct, per the Step 2.5 inventory. So in

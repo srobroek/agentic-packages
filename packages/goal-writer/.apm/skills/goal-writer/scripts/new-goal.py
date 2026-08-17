@@ -23,9 +23,8 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 DEFAULT_GOAL_DIR = Path.home() / ".local" / "state" / "agentic-tools" / "goals"
 
@@ -122,7 +121,7 @@ def build_content(
     *, project: str, goal: str, repo_root: str, source_prompt: str, body: str
 ) -> str:
     created = (
-        datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     )
     body = body.strip() or SCAFFOLD_BODY.strip()
     return f"""---

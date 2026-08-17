@@ -40,6 +40,7 @@ WRAPPERS = frozenset(
     {
         "sudo", "doas", "env", "time", "nice", "command", "exec", "xargs",
         "stdbuf", "nohup", "setsid", "ionice", "timeout", "unbuffer", "flock",
+        "coproc",
     }
 )
 
@@ -47,6 +48,27 @@ WRAPPERS = frozenset(
 # wrapped command: `timeout 5 rm -rf /` and `nice -n 19` both put a value there.
 # Without this, `5` was read as the verb and the `rm` behind it went unjudged.
 WRAPPER_OPERAND = frozenset({"timeout", "flock"})
+
+# Options with a separate value. Keeping this small table explicit avoids the
+# old "look one word ahead" heuristic, which could consume a wrapper's command
+# after an option that does not take a value (`flock -n lock rm ...`).
+WRAPPER_OPTION_VALUES = {
+    "sudo": frozenset({"-u", "--user", "-g", "--group", "-h", "--host", "-C", "--chdir"}),
+    "doas": frozenset({"-u", "--user", "-C", "--chdir"}),
+    "env": frozenset({"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}),
+    "nice": frozenset({"-n", "--adjustment"}),
+    "ionice": frozenset({"-c", "--class", "-n", "--classdata", "-p", "--pid"}),
+    "timeout": frozenset({"-k", "--kill-after", "-s", "--signal"}),
+    "flock": frozenset({"-w", "--timeout", "-E", "--conflict-exit-code"}),
+    "xargs": frozenset(
+        {
+            "-a", "--arg-file", "-E", "--eof", "-I", "--replace", "-L", "--max-lines",
+            "-n", "--max-args", "-P", "--max-procs", "-s", "--max-chars",
+            "--process-slot-var",
+        }
+    ),
+    "stdbuf": frozenset({"-i", "-o", "-e"}),
+}
 
 # Shells whose `-c` argument is itself a command, and builtins that run a string
 # as one. The tokenizer sees that argument as a single word, so the verb inside
@@ -72,6 +94,10 @@ INTERPRETERS = SHELLS | frozenset(
 SUBSTITUTED_DOWNLOAD = re.compile(
     r"[$<]\(\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*"
     r"(?:/\S*/)?(?:" + "|".join(sorted(DOWNLOADERS)) + r")\s",
+)
+BACKTICK_DOWNLOAD = re.compile(
+    r"`\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*(?:/\S*/)?"
+    r"(?:" + "|".join(sorted(DOWNLOADERS)) + r")\s",
 )
 
 # How deep to follow a nested shell string. A real command nests once or twice;
@@ -184,6 +210,85 @@ def emit(decision: str, message: str) -> None:
         pass
 
 
+def _lex_tokens(command: str) -> list[str]:
+    """Lex shell text once, preserving punctuation for the command splitter."""
+    import shlex
+
+    # shlex is quadratic in token length, and this hook runs on every Bash call, so
+    # an outsized command is a stall rather than a parse. Measured on one unbroken
+    # token: 50KB 31ms, 200KB 477ms, 400KB 1.4s, 800KB 4.7s, 1MB 14.5s end to end.
+    if len(command) > MAX_COMMAND_CHARS:
+        command = command[:MAX_COMMAND_CHARS]
+
+    # A newline separates commands exactly like a semicolon, but shlex treats
+    # it as ordinary whitespace, which merged a second line into the first and
+    # hid its verb from every check. A BACKSLASH-newline is the opposite case: it
+    # is a line continuation, so the two halves are one command.
+    command = re.sub(r"\\\r?\n", " ", command)
+
+    # shlex treats `#` as a comment opener even mid-line and discards everything
+    # after it, so `echo hi # rm -rf /` lexed to just `echo hi` and the rm vanished.
+    # A real shell only starts a comment where a word could start, so a `#` glued to
+    # the end of a word (`file#1`) is data. Disabling shlex's comment handling and
+    # cutting at a `#` that begins a word matches the shell for a trailing comment.
+    command = re.sub(r"(?:(?<=\s)|^)#.*$", "", command)
+
+    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.commenters = ""
+    lexer.whitespace_split = True
+    return list(lexer)  # raises ValueError on an unterminated quote
+
+
+def _token_parts(token: str) -> list[str]:
+    """Split punctuation runs that combine a group closer and a separator."""
+    # shlex keeps `);` and `};` together. Those are two shell operators, not one
+    # argument: leaving them fused lets `(cd /tmp); rm ...` carry the cd into the
+    # following command and hide the rm.
+    if (
+        len(token) > 1
+        and ";" in token
+        and set(token) <= {";", "&", "|", "(", ")", "{", "}"}
+    ):
+        return list(token)
+    return [token]
+
+
+def _split_command_records(command: str) -> list[tuple[list[str], int]]:
+    """Split commands and retain parenthesized-subshell depth for cwd tracking."""
+    commands: list[tuple[list[str], int]] = []
+    current: list[str] = []
+    subshell_depth = 0
+
+    def flush() -> None:
+        nonlocal current
+        if current:
+            commands.append((current, subshell_depth))
+            current = []
+
+    for raw_token in _lex_tokens(command):
+        for token in _token_parts(raw_token):
+            if token == "(":
+                flush()
+                subshell_depth += 1
+                continue
+            if token == ")":
+                flush()
+                subshell_depth = max(0, subshell_depth - 1)
+                continue
+            if token and set(token) <= {";", "&", "|"}:
+                flush()
+                continue
+            # A keyword or group opener also begins a command, and a terminator ends
+            # one. Treating either as a plain word left it standing where the verb
+            # belonged, so a guarded verb inside a loop or block went unseen.
+            if token in COMMAND_BOUNDARIES or token in CLOSERS:
+                flush()
+                continue
+            current.append(token)
+    flush()
+    return commands
+
+
 def split_commands(command: str) -> list[list[str]]:
     """Tokenize into a list of commands, each a list of words.
 
@@ -192,61 +297,41 @@ def split_commands(command: str) -> list[list[str]]:
     parseable as shell, and the caller treats that as nothing to judge rather
     than guessing.
     """
-    import shlex
+    return [words for words, _ in _split_command_records(command)]
 
-    # shlex is quadratic in token length, and this hook runs on every Bash call, so
-    # an outsized command is a stall rather than a parse. Measured on one unbroken
-    # token: 50KB 31ms, 200KB 477ms, 400KB 1.4s, 800KB 4.7s, 1MB 14.5s end to end.
-    # A 14-second PreToolUse hook is indistinguishable from a hang.
-    #
-    # Truncating is safe in the direction that matters. Every rule matches on the
-    # VERB and its flags, which sit at the front; what the cap discards is the tail
-    # of an argument, and a decision made on the first 64KB of `rm -rf <huge>` is
-    # the same decision. The alternative -- bailing out entirely on a long command
-    # -- would hand any payload a way to buy silence just by padding itself.
-    if len(command) > MAX_COMMAND_CHARS:
-        command = command[:MAX_COMMAND_CHARS]
 
-    # A newline separates commands exactly like a semicolon, but shlex treats
-    # it as ordinary whitespace, which merged a second line into the first and
-    # hid its verb from every check. A BACKSLASH-newline is the opposite case: it
-    # is a line continuation, so the two halves are one command and splitting
-    # there orphaned the target of an `rm` from its flags.
-    command = re.sub(r"\\\r?\n", " ", command)
-
-    # shlex treats `#` as a comment opener even mid-line and discards everything
-    # after it, so `echo hi # rm -rf /` lexed to just `echo hi` and the rm vanished.
-    # A real shell only starts a comment where a word could start, so a `#` glued to
-    # the end of a word (`file#1`) is data. Disabling shlex's comment handling and
-    # cutting at a `#` that begins a word matches the shell and stops the payload
-    # from hiding behind one.
-    command = re.sub(r"(?:(?<=\s)|^)#.*$", "", command)
-
-    lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
-    lexer.commenters = ""
-    lexer.whitespace_split = True
-    tokens = list(lexer)  # raises ValueError on an unterminated quote
-
-    commands: list[list[str]] = []
+def split_pipeline_groups(command: str) -> list[list[list[str]]]:
+    """Split literal commands into pipelines without joining `;` or `&&` chains."""
+    groups: list[list[list[str]]] = []
+    pipeline: list[list[str]] = []
     current: list[str] = []
-    for token in tokens:
-        if token and set(token) <= {";", "&", "|"}:
-            if current:
-                commands.append(current)
+
+    def flush_command() -> None:
+        nonlocal current
+        if current:
+            pipeline.append(current)
             current = []
-            continue
-        # A keyword or group opener also begins a command, and a terminator ends
-        # one. Treating either as a plain word left it standing where the verb
-        # belonged, so a guarded verb inside a loop or subshell went unseen.
-        if token in COMMAND_BOUNDARIES or token in CLOSERS:
-            if current:
-                commands.append(current)
-            current = []
-            continue
-        current.append(token)
-    if current:
-        commands.append(current)
-    return commands
+
+    def flush_pipeline() -> None:
+        flush_command()
+        if pipeline:
+            groups.append(pipeline.copy())
+            pipeline.clear()
+
+    for raw_token in _lex_tokens(command):
+        for token in _token_parts(raw_token):
+            if token in ("|", "|&"):
+                flush_command()
+                continue
+            if token and set(token) <= {";", "&", "|"}:
+                flush_pipeline()
+                continue
+            if token in COMMAND_BOUNDARIES or token in CLOSERS:
+                flush_pipeline()
+                continue
+            current.append(token)
+    flush_pipeline()
+    return groups
 
 
 def nested_command(words: list[str]) -> str | None:
@@ -261,11 +346,25 @@ def nested_command(words: list[str]) -> str | None:
         return None
     verb = Path(words[0]).name
 
+    def inline_command(value: str) -> str:
+        # shlex leaves the `$` marker from Bash ANSI-C quoting (`$'rm ...'`).
+        # It is a literal command string, not a variable named `rm`.
+        return (
+            value[1:]
+            if value.startswith("$")
+            and not value.startswith("$(")
+            and any(c.isspace() for c in value)
+            else value
+        )
+
     if verb in SHELLS:
         for index, word in enumerate(words[1:], start=1):
             # `-c` may be bundled with other short flags, as in `sh -ec`.
             if word.startswith("-") and not word.startswith("--") and "c" in word:
-                return words[index + 1] if index + 1 < len(words) else None
+                suffix = word.split("c", 1)[1]
+                return inline_command(
+                    suffix or (words[index + 1] if index + 1 < len(words) else "")
+                ) or None
             if not word.startswith("-"):
                 # A bare word is a script path, not an inline command.
                 return None
@@ -284,6 +383,18 @@ def nested_command(words: list[str]) -> str | None:
         # `eval a b` concatenates its arguments into one command line.
         arguments = rest[index:]
         return " ".join(arguments) if arguments else None
+
+    if verb == "env":
+        for index, word in enumerate(words[1:], start=1):
+            option = word.split("=", 1)[0]
+            if option in ("-S", "--split-string"):
+                if "=" in word:
+                    return inline_command(word.split("=", 1)[1])
+                return (
+                    inline_command(words[index + 1])
+                    if index + 1 < len(words)
+                    else None
+                )
 
     return None
 
@@ -314,7 +425,7 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
             deepest.append(words)
             current = words
             for _ in range(UNWRAP_CEILING):
-                inner = nested_command(strip_prefix(current))
+                inner = nested_payload(current)
                 if not inner:
                     break
                 try:
@@ -330,7 +441,7 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
     expanded: list[list[str]] = []
     for words in commands:
         expanded.append(words)
-        inner = nested_command(strip_prefix(words))
+        inner = nested_payload(words)
         if inner:
             try:
                 expanded.extend(expand_commands(inner, depth + 1))
@@ -356,49 +467,44 @@ def strip_prefix(words: list[str]) -> list[str]:
         if name in WRAPPERS:
             takes_operand = name in WRAPPER_OPERAND
             index += 1
-            # Consume the wrapper's own options, plus one value for an option
-            # that takes one. A bare word here is the wrapped command.
-            #
-            # `--` STOPS THE SCAN. It ends the wrapper's options, so the next word is
-            # the command. Treating it as just another option let the lookahead below
-            # swallow it AND the verb: `sudo -u root -- rm -rf /etc` was silent while
-            # the same line without `--` denied.
+            if name == "coproc" and index + 1 < len(words):
+                # Bash permits `coproc NAME command`; distinguish the optional
+                # name from a command we know how to inspect.
+                starters = (
+                    WRAPPERS
+                    | SHELLS
+                    | STRING_EVALUATORS
+                    | DESTRUCTIVE_VERBS
+                    | INTERPRETERS
+                    | {"cd", "find", "curl", "wget"}
+                )
+                if Path(words[index]).name not in starters and Path(words[index + 1]).name in starters:
+                    index += 1
+            # Consume options and only the values declared by that wrapper. The
+            # previous lookahead assumed every option might take a value; for an
+            # operand-taking wrapper that skipped its real command:
+            # `flock -n /tmp/l rm -rf /` and `timeout --preserve-status 5 rm -rf /`.
             while index < len(words) and words[index].startswith("-"):
                 if words[index] == "--":
                     index += 1
                     break
+                option = words[index]
                 index += 1
-                if index < len(words) and not words[index].startswith("-"):
-                    following = words[index + 1] if index + 1 < len(words) else None
-                    if following is not None and not following.startswith("-"):
-                        index += 1
-            # A `--` reached after an option VALUE still ends the options. Without
-            # this, `sudo -u root -- rm -rf /etc` left `root` in command position:
-            # `-u` consumed `root`, the loop saw `--` was not a bare word, and
-            # stopped one word short of the verb. Handled by looking at the CURRENT
-            # word only -- an earlier version also skipped a `--` one position ahead,
-            # which overshot `timeout 5 -- rm -rf /` and consumed the verb itself.
-            if index < len(words) and words[index] == "--":
-                index += 1
-            elif (
-                index + 1 < len(words)
-                and words[index + 1] == "--"
-                and not words[index].startswith("-")
-                and words[index] not in WRAPPERS
-            ):
-                # `sudo -u root -- rm`: the option value sits where a bare word would,
-                # so the `--` behind it is still the wrapper's end-of-options marker.
-                # Not for an operand-taking wrapper: `timeout 5 --` has its operand in
-                # that slot, and consuming both here left the operand rule below to eat
-                # the verb.
-                if not takes_operand:
-                    index += 2
-            # `timeout 5 rm ...`: the duration belongs to the wrapper.
+                option_name = option.split("=", 1)[0]
+                if (
+                    "=" not in option
+                    and option_name in WRAPPER_OPTION_VALUES.get(name, ())
+                    and index < len(words)
+                    and not words[index].startswith("-")
+                ):
+                    index += 1
+            # `timeout 5 rm ...` and `flock /tmp/l rm ...`: the first bare word is
+            # the wrapper's operand, not the command.
             if takes_operand and index < len(words) and not words[index].startswith("-"):
                 index += 1
-                # `timeout 5 -- rm ...`: the marker follows the operand.
-                if index < len(words) and words[index] == "--":
-                    index += 1
+            # `--` ends wrapper options either before or after the operand.
+            if index < len(words) and words[index] == "--":
+                index += 1
             continue
         # `--` ends the wrapper's own options; the verb is whatever follows. It was
         # left in place, so `timeout 5 -- rm -rf /` presented `--` as the verb and
@@ -409,6 +515,20 @@ def strip_prefix(words: list[str]) -> list[str]:
             continue
         break
     return words[index:]
+
+
+def nested_payload(words: list[str]) -> str | None:
+    """Find an inline command after wrappers, including `sudo env -S ...`."""
+    for candidate in (strip_prefix(words), words):
+        inner = nested_command(candidate)
+        if inner:
+            return inner
+    for index, word in enumerate(words):
+        if Path(word).name == "env":
+            inner = nested_command(words[index:])
+            if inner:
+                return inner
+    return None
 
 
 def has_recursive_force(flags: list[str]) -> bool:
@@ -517,6 +637,52 @@ def expand_braces(target: str) -> list[str]:
     return [f"{prefix}{piece}{suffix}" for piece in body.split(",")[:16] if piece]
 
 
+def traverses_critical_symlink(target: str, cwd: Path) -> bool:
+    """Return whether a non-final path component links directly to a critical root."""
+    import os.path
+
+    if target.startswith(("~", "$", "`")):
+        return False
+    path = Path(target if target.startswith("/") else os.path.join(str(cwd), target))
+    try:
+        resolved_target = os.path.realpath(path)
+    except OSError:
+        resolved_target = ""
+    # /var is a platform symlink to /private/var on macOS; scratch paths beneath it
+    # are explicitly safe and must not inherit the critical-root classification.
+    if resolved_target and any(
+        resolved_target == temp or resolved_target.startswith(f"{temp}/")
+        for temp in TEMP_ROOTS
+    ):
+        return False
+    # `rm -rf link` unlinks the link; only inspect components before the final one.
+    for parent in path.parents:
+        # On macOS `/var` itself resolves to `/private/var`; it is an ancestor
+        # alias, not the user-created link that the target may traverse.
+        if str(path).startswith(("/var/folders/", "/private/var/folders/")) and str(
+            parent
+        ) in {"/var", "/private/var"}:
+            continue
+        try:
+            if parent.is_symlink() and os.path.realpath(parent) in resolved_critical():
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def is_critical_descendant(path: str) -> bool:
+    """Match system-critical descendants without classifying user homes wholesale."""
+    for critical in resolved_critical():
+        if critical in {"/Users", "/root", "/private"}:
+            continue
+        if path == critical or path.startswith(f"{critical}/"):
+            if any(path == temp or path.startswith(f"{temp}/") for temp in TEMP_ROOTS):
+                continue
+            return True
+    return False
+
+
 
 def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     """Rank one `rm -rf` target: deny-critical, deny-var, warn, or allow."""
@@ -600,10 +766,23 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     if "$" in target or "`" in target:
         return "deny-var"
 
+    # `~other` is expanded by the shell to another user's home root, which the
+    # guard cannot safely infer from the spelling. Treat it like an unresolved
+    # variable; `~/child` remains a recoverable path in the current home.
+    if target.startswith("~") and not target.startswith("~/"):
+        return "deny-var"
+
     if target.startswith("~/"):
         return "warn"
 
     absolute = normalize(target, cwd)
+
+    # A path below a symlink to /etc (for example `/tmp/etclink/passwd`) follows
+    # into the critical tree even though its literal spelling does not name it.
+    if traverses_critical_symlink(target, cwd):
+        return "deny-critical"
+    if is_critical_descendant(absolute):
+        return "deny-critical"
 
     if root is not None:
         # The repo root or its .git destroys the very git state that makes
@@ -867,6 +1046,14 @@ def check_sudo(words: list[str]) -> tuple[str, str] | None:
     if not inner:
         return None
     verb = Path(inner[0]).name
+    if verb in SHELLS | STRING_EVALUATORS:
+        nested = nested_command(inner)
+        if nested:
+            for nested_words in expand_commands(nested):
+                nested_inner = strip_prefix(nested_words)
+                if nested_inner and Path(nested_inner[0]).name in DESTRUCTIVE_VERBS:
+                    verb = Path(nested_inner[0]).name
+                    break
     if verb not in DESTRUCTIVE_VERBS:
         return None
     # Verbs that take no subcommand at all: for these, every bare word is an
@@ -895,6 +1082,30 @@ REMOTE_CODE_ADVICE = (
 )
 
 
+def substitution_reaches_interpreter(commands: list[list[str]], command: str) -> bool:
+    """Check substitutions only when an interpreter consumes their output."""
+    if not (SUBSTITUTED_DOWNLOAD.search(command) or BACKTICK_DOWNLOAD.search(command)):
+        return False
+
+    for words in commands:
+        stripped = strip_prefix(words)
+        if not stripped:
+            continue
+        verb = Path(stripped[0]).name
+        text = " ".join(stripped[1:])
+        if verb in STRING_EVALUATORS:
+            if SUBSTITUTED_DOWNLOAD.search(text) or BACKTICK_DOWNLOAD.search(text):
+                return True
+        if verb in INTERPRETERS:
+            if "<(" in text:
+                return True
+            if verb in SHELLS and nested_command(stripped):
+                inner = nested_command(stripped) or ""
+                if SUBSTITUTED_DOWNLOAD.search(inner) or BACKTICK_DOWNLOAD.search(inner):
+                    return True
+    return False
+
+
 def check_remote_code(commands: list[list[str]], command: str) -> tuple[str, str] | None:
     """Warn when downloaded code reaches an interpreter without being read.
 
@@ -912,16 +1123,21 @@ def check_remote_code(commands: list[list[str]], command: str) -> tuple[str, str
 
     Process substitution, as in `bash <(curl -s ...)`, for the same reason.
     """
-    verbs = [Path(strip_prefix(words)[0]).name for words in commands if strip_prefix(words)]
-    downloaders = [index for index, verb in enumerate(verbs) if verb in DOWNLOADERS]
+    # Only stages in the SAME pipeline are connected. The old flat command list
+    # joined `curl URL; python3 local.py` and warned on unrelated sequential work.
+    for pipeline in split_pipeline_groups(command):
+        verbs = [
+            Path(strip_prefix(words)[0]).name
+            for words in pipeline
+            if strip_prefix(words)
+        ]
+        downloaders = [index for index, verb in enumerate(verbs) if verb in DOWNLOADERS]
+        for start in downloaders:
+            if any(verb in INTERPRETERS for verb in verbs[start + 1 :]):
+                return ("warn", REMOTE_CODE_ADVICE)
 
-    # Any interpreter downstream of a download in the same pipeline, adjacent or not.
-    for start in downloaders:
-        if any(verb in INTERPRETERS for verb in verbs[start + 1 :]):
-            return ("warn", REMOTE_CODE_ADVICE)
-
-    # A download inside a substitution that a shell or `eval` consumes.
-    if SUBSTITUTED_DOWNLOAD.search(command):
+    # A download inside a substitution that a shell/evaluator consumes.
+    if substitution_reaches_interpreter(commands, command):
         return ("warn", REMOTE_CODE_ADVICE)
 
     return None
@@ -974,7 +1190,188 @@ def cd_target(words: list[str], cwd: Path) -> str | None:
     target = operands[0]
     if "$" in target or "`" in target or target.startswith("~"):
         return None
-    return normalize(target, cwd)
+    candidate = Path(normalize(target, cwd))
+    # A failed `cd` leaves the shell in its previous directory. Following a
+    # nonexistent target changed the guard's cwd anyway and let `cd /missing;
+    # rm -rf *` evade a critical cwd. Existing directories are resolved through
+    # symlinks so `cd etclink && rm -rf *` is judged as a removal under /etc.
+    if not candidate.is_dir():
+        return None
+    try:
+        return str(candidate.resolve())
+    except OSError:
+        return str(candidate)
+
+
+def extract_substitution_commands(command: str, depth: int = 0) -> list[str]:
+    """Extract executable `$()` and backtick bodies while respecting shell quotes."""
+    if depth >= UNWRAP_CEILING:
+        return []
+    substitutions: list[str] = []
+
+    def backtick_body(start: int) -> tuple[str | None, int]:
+        index = start + 1
+        while index < len(command):
+            if command[index] == "\\":
+                index += 2
+                continue
+            if command[index] == "`":
+                return command[start + 1 : index], index + 1
+            index += 1
+        return None, len(command)
+
+    def dollar_body(start: int) -> tuple[str | None, int]:
+        depth = 1
+        index = start + 2
+        quote = ""
+        while index < len(command):
+            char = command[index]
+            if quote == "'":
+                if char == "'":
+                    quote = ""
+                index += 1
+                continue
+            if quote == '"':
+                if char == "\\":
+                    index += 2
+                    continue
+                if char == '"':
+                    quote = ""
+                    index += 1
+                    continue
+                if command.startswith("$(", index):
+                    depth += 1
+                    index += 2
+                    continue
+                if char == "`":
+                    _, index = backtick_body(index)
+                    continue
+            elif char in ("'", '"'):
+                quote = char
+                index += 1
+                continue
+            elif char == "\\":
+                index += 2
+                continue
+            elif command.startswith("$(", index):
+                depth += 1
+                index += 2
+                continue
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    return command[start + 2 : index], index + 1
+            index += 1
+        return None, len(command)
+
+    index = 0
+    quote = ""
+    while index < len(command):
+        char = command[index]
+        if quote == "'":
+            if char == "'":
+                quote = ""
+            index += 1
+            continue
+        if quote == '"':
+            if char == "\\":
+                index += 2
+                continue
+            if char == '"':
+                quote = ""
+                index += 1
+                continue
+            if command.startswith("$(", index):
+                body, index = dollar_body(index)
+                if body is None:
+                    break
+                substitutions.append(body)
+                substitutions.extend(extract_substitution_commands(body, depth + 1))
+                continue
+            if char == "`":
+                body, index = backtick_body(index)
+                if body is None:
+                    break
+                substitutions.append(body)
+                substitutions.extend(extract_substitution_commands(body, depth + 1))
+                continue
+        elif char in ("'", '"'):
+            quote = char
+            index += 1
+            continue
+        elif char == "\\":
+            index += 2
+            continue
+        elif command.startswith("$(", index):
+            body, index = dollar_body(index)
+            if body is None:
+                break
+            substitutions.append(body)
+            substitutions.extend(extract_substitution_commands(body, depth + 1))
+            continue
+        elif char == "`":
+            body, index = backtick_body(index)
+            if body is None:
+                break
+            substitutions.append(body)
+            substitutions.extend(extract_substitution_commands(body, depth + 1))
+            continue
+        index += 1
+    return substitutions
+
+
+def inspect_sequence(
+    command: str,
+    cwd: Path,
+    roots: dict[Path, Path | None],
+    findings: list[tuple[str, str]],
+    depth: int = 0,
+) -> None:
+    """Judge a command sequence while keeping subshell and nested-shell cwd local."""
+    if depth >= UNWRAP_CEILING:
+        return
+
+    # Command substitutions execute even when embedded in an otherwise harmless
+    # argument (`echo "$(rm -rf /)"`). Parse them separately so quoting the whole
+    # argument cannot hide a destructive nested command; single-quoted prose is
+    # ignored by the extractor.
+    for substitution in extract_substitution_commands(command):
+        inspect_sequence(substitution, cwd, roots, findings, depth + 1)
+
+    scope_cwds: dict[int, Path] = {0: cwd}
+    active_scope = 0
+    for words, scope in _split_command_records(command):
+        if scope > active_scope:
+            for level in range(active_scope + 1, scope + 1):
+                scope_cwds[level] = scope_cwds[level - 1]
+        elif scope < active_scope:
+            for level in range(active_scope, scope, -1):
+                scope_cwds.pop(level, None)
+        active_scope = scope
+        current_cwd = scope_cwds[scope]
+        stripped = strip_prefix(words)
+
+        moved = cd_target(stripped, current_cwd)
+        if moved is not None:
+            current_cwd = Path(moved)
+            scope_cwds[scope] = current_cwd
+            if current_cwd not in roots:
+                roots[current_cwd] = find_repo_root(current_cwd)
+            continue
+
+        sudo_finding = check_sudo(words)
+        if sudo_finding:
+            findings.append(sudo_finding)
+        finding = check_command(stripped, current_cwd, roots[current_cwd])
+        if finding:
+            findings.append(finding)
+
+        # A nested shell/evaluator has its own working-directory scope. Its cd
+        # must not leak into the parent sequence, while its destructive commands
+        # still need to be judged in the child scope.
+        inner = nested_payload(words)
+        if inner:
+            inspect_sequence(inner, current_cwd, roots, findings, depth + 1)
 
 
 def main() -> int:
@@ -1034,30 +1431,7 @@ def main() -> int:
     pipe = check_remote_code(literal, command)
     findings: list[tuple[str, str]] = []
 
-    # Walk the chain in order, carrying the working directory forward. A `cd`
-    # governs only the commands that FOLLOW it, which is the whole point of doing
-    # this in sequence: matching the first `cd` anywhere in the string blamed
-    # `rm -rf build; cd /etc` on a benign relative target, and let
-    # `cd /tmp && cd /etc && rm -rf *` past because the first match won.
-    for words in commands:
-        stripped = strip_prefix(words)
-
-        moved = cd_target(stripped, cwd)
-        if moved is not None:
-            cwd = Path(moved)
-            if cwd not in roots:
-                roots[cwd] = find_repo_root(cwd)
-            continue
-
-        # The stripped words, so an env assignment or wrapper ahead of sudo cannot
-        # hide the advisory: `FOO=1 sudo rm -f ...` and `nohup sudo rm -f ...` were
-        # both silent because the raw list was passed and sudo was not words[0].
-        sudo_finding = check_sudo(words)
-        if sudo_finding:
-            findings.append(sudo_finding)
-        finding = check_command(stripped, cwd, roots[cwd])
-        if finding:
-            findings.append(finding)
+    inspect_sequence(command, cwd, roots, findings)
 
     if pipe:
         findings.append(pipe)

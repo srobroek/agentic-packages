@@ -157,6 +157,18 @@ def test_npm_without_a_latest_dist_tag_is_unresolvable(fixtures):
     assert record["reason"] == "no dist-tags.latest"
 
 
+def test_npm_with_a_non_string_latest_dist_tag_is_unresolvable(fixtures):
+    write_fixture(
+        fixtures,
+        "npm",
+        "express",
+        {"dist-tags": {"latest": 5}, "versions": {}},
+    )
+    record = research.query_registry("npm", "express", "4.18.3")
+    assert record["status"] == "UNRESOLVABLE"
+    assert record["reason"] == "no dist-tags.latest"
+
+
 def test_scoped_npm_name_maps_to_its_fixture(fixtures):
     write_fixture(
         fixtures,

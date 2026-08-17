@@ -211,7 +211,7 @@ def test_every_repository_pack_path_runs_the_post_pack_filter() -> None:
     scripts = manifest["scripts"]
 
     assert scripts["build-marketplace"] == (
-        "apm pack && python3 .apm/scripts/build-marketplace-block.py"
+        "apm pack && uv run --script .apm/scripts/build-marketplace-block.py"
     )
     assert scripts["build-artifacts"].endswith("apm run build-marketplace")
     assert "apm pack" not in scripts["build-artifacts"]

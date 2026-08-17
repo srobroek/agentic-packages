@@ -7,15 +7,6 @@ permissionMode: acceptEdits
 x-lint:
   allow: [W6]
   reason: "the persistent specialist keeps delegation, claim, review, and reporting contracts in one loaded agent"
-tools:
-  - Read
-  - Edit
-  - Write
-  - Bash
-  - Grep
-  - Glob
-  - Agent
-  - SendMessage
 ---
 
 Role: persistent domain specialist in a multi-agent run. You own a *domain*

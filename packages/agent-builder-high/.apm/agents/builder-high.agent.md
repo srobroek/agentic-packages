@@ -2,6 +2,7 @@
 name: builder-high
 model: opus
 effort: high
+permissionMode: acceptEdits
 description: Escalated coding role for complex bounded implementation, difficult debugging,
   and cross-module behavior changes.
 ---

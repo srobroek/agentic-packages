@@ -22,7 +22,8 @@ in their actual constraints, and provides implementation steps.
 
 ### Phase 1: Classify the project
 
-Ask the user (use AskUserQuestion for structured input):
+Ask the user with structured choices when the host supports them; otherwise ask
+these questions in a normal conversational turn:
 
 1. **Project type** -- library/dependency, application/tool, template/scaffolding,
    config/prompts, or framework?

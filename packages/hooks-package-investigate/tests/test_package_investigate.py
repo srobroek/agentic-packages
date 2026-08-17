@@ -53,6 +53,7 @@ def mk_str(command: str) -> str:
         "cargo add serde",
         "go get example.com/pkg",
         "cd app && pnpm add foo",
+        "cd app\npnpm add foo",
     ],
 )
 def test_add_install_emits_investigate_nudge(command: str) -> None:
@@ -84,6 +85,12 @@ def test_unrelated_command_is_silent() -> None:
 
 def test_quoted_pnpm_add_inside_echo_is_not_command_position() -> None:
     status, ctx = run_hook(mk_obj("echo 'run pnpm add later'"))
+    assert status == 0
+    assert ctx == ""
+
+
+def test_quoted_multiline_pnpm_add_inside_echo_is_not_command_position() -> None:
+    status, ctx = run_hook(mk_obj("echo 'run\npnpm add later'"))
     assert status == 0
     assert ctx == ""
 

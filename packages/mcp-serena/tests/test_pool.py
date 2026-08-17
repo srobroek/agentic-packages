@@ -5,15 +5,14 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import sys
 import time
+from pathlib import Path
 from typing import Any
 
 import pytest
-
 
 PACKAGE = Path(__file__).resolve().parents[1]
 LAUNCHER = PACKAGE / "scripts" / "serena-pool.py"
@@ -232,6 +231,7 @@ def test_generated_clients_delegate_to_the_apm_launcher() -> None:
 
     assert claude_command == codex_command
     assert "packages/mcp-serena/scripts/serena-pool.py" in claude_command
+    assert "apm_modules/_local/mcp-serena/scripts/serena-pool.py" in claude_command
     assert "serena start-mcp-server" not in claude_command
     assert len(claude_command) < 1_000
 

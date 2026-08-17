@@ -36,12 +36,6 @@ MANAGER_TOKENS = (
     "cargo", "go", "gem", "bundle", "composer",
 )
 
-# Command-position boundary: start of string, or after a real shell separator
-# (; & | newline, incl. && / ||) plus optional spaces. Deliberately NOT plain
-# whitespace -- that misfires on `echo 'run pnpm add later'`, where the package
-# command sits inside a quoted argument rather than at a command position.
-_BOUNDARY = r"(^|[;&|]&?&?\s*|\s*[;&|]+\s*)"
-
 ADD_SUFFIX = (
     r"(pnpm\s+(add|install)|npm\s+(install|i|add)|yarn\s+add|bun\s+add|"
     r"uv\s+(add|pip\s+install)|pip3?\s+install|poetry\s+add|cargo\s+add|"
@@ -90,6 +84,35 @@ def _read_stdin_text() -> str:
     if buffer is None:
         return sys.stdin.read()
     return buffer.read().decode("utf-8", "replace")
+
+
+def command_segments(command: str):
+    """Yield shell command segments split on unquoted separators."""
+    start = 0
+    quote = ""
+    escaped = False
+    for index, char in enumerate(command):
+        if escaped:
+            escaped = False
+            continue
+        if quote == "'":
+            if char == "'":
+                quote = ""
+            continue
+        if quote == '"':
+            if char == "\\":
+                escaped = True
+            elif char == '"':
+                quote = ""
+            continue
+        if char == "\\":
+            escaped = True
+        elif char in ("'", '"'):
+            quote = char
+        elif char in ";&|\n":
+            yield command[start:index]
+            start = index + 1
+    yield command[start:]
 
 
 def extract_command(payload: str) -> str:
@@ -142,11 +165,13 @@ def main() -> int:
 
     lc = command.lower()
 
-    if re.search(_BOUNDARY + ADD_SUFFIX, lc):
+    segments = tuple(segment.lstrip() for segment in command_segments(lc))
+
+    if any(re.match(ADD_SUFFIX, segment) for segment in segments):
         emit(ADD_ADVICE)
         return 0
 
-    if re.search(_BOUNDARY + CHANGE_SUFFIX, lc):
+    if any(re.match(CHANGE_SUFFIX, segment) for segment in segments):
         emit(CHANGE_ADVICE)
         return 0
 

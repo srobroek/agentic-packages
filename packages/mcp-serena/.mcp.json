@@ -4,7 +4,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "launcher_rel=\"apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py\"; for apm_root in \"${APM_HOME:-}\" \"${HOME}/.apm\" \"$PWD/.apm\"; do [ -n \"$apm_root\" ] || continue; launcher=\"$apm_root/$launcher_rel\"; [ -r \"$launcher\" ] && exec python3 \"$launcher\"; done; echo serena-apm-launcher-not-found-run-apm-install >&2; exit 1"
+        "launcher_rel=\"apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py\"; for launcher in \"$PWD/apm_modules/_local/mcp-serena/scripts/serena-pool.py\" \"$PWD/$launcher_rel\" \"${APM_HOME:-}/$launcher_rel\" \"${HOME}/.apm/$launcher_rel\" \"$PWD/.apm/$launcher_rel\"; do [ -r \"$launcher\" ] && exec python3 \"$launcher\"; done; echo serena-apm-launcher-not-found-run-apm-install >&2; exit 1"
       ]
     }
   }

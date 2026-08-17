@@ -9,7 +9,6 @@ import fcntl
 import hashlib
 import json
 import os
-from pathlib import Path
 import resource
 import shlex
 import shutil
@@ -19,8 +18,9 @@ import subprocess
 import sys
 import time
 import uuid
-from typing import Any, Iterator, TextIO
-
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any, TextIO
 
 PROXY_VERSION = "0.12.0"
 

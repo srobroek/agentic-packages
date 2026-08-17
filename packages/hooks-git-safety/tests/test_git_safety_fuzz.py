@@ -121,6 +121,11 @@ def _decide(command: str) -> str:
         "sudo eval git -C $OTHER reset --hard",
         "FOO=1 eval git -C $OTHER reset --hard",
         "\teval git -C ~/x reset --hard",
+        "sudo -H sh -c 'git -C $OTHER reset --hard'",
+        "timeout --preserve-status 5 sh -c 'git -C $OTHER clean -fdx'",
+        "env -i sh -c 'git -C ~/x reset --hard'",
+        "env -S 'git -C $OTHER reset --hard'",
+        "flock -c 'git -C $OTHER reset --hard'",
     ],
 )
 def test_the_gs2_deny_survives_nesting(command: str):
@@ -136,6 +141,7 @@ def test_the_gs2_deny_survives_nesting(command: str):
         "eval git status",
         "echo 'git -C $OTHER reset --hard'",
         'echo "git -C $OTHER clean -fdx"',
+        "echo flock -c 'git -C $OTHER reset --hard'",
         "git commit -m 'do not git -C $OTHER reset --hard'",
     ],
 )

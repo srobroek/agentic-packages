@@ -7,6 +7,7 @@
 caches touched — uses a temp CACHE_POLICY_ROOT + temp CLAUDE_ENV_FILE."""
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -28,7 +29,7 @@ def check(name, cond, detail=""):
         print(f"  FAIL {name}  {detail}")
 
 
-def run(root, envfile, floor, extra=None):
+def run(root, envfile, floor, extra=None, args=None):
     env = {**os.environ, "CACHE_POLICY_FLOOR_GIB": str(floor)}
     env.pop("CACHE_POLICY_ROOT", None)
     if root:
@@ -36,7 +37,7 @@ def run(root, envfile, floor, extra=None):
     if envfile:
         env["CLAUDE_ENV_FILE"] = envfile
     env.update(extra or {})
-    p = subprocess.run([sys.executable, SCRIPT],
+    p = subprocess.run([sys.executable, SCRIPT, *(args or [])],
                        input='{"hook_event_name":"SessionStart"}',
                        capture_output=True, text=True, env=env, timeout=120)
     try:
@@ -62,7 +63,16 @@ with tempfile.TemporaryDirectory() as td:
         check(f"env has {key}", f"export {key}=" in content)
     check("env never sets a global cargo target", "CARGO_TARGET_DIR" not in content)
     check("Go modules use the managed directory name",
-          f'export GOMODCACHE="{root}/go-modules"' in content)
+          f"export GOMODCACHE={shlex.quote(root + '/go-modules')}" in content)
+
+    quoted_root = os.path.join(td, "shared cache")
+    quoted_envfile = os.path.join(td, "quoted-env.sh")
+    Path(quoted_envfile).write_text("")
+    run(quoted_root, quoted_envfile, floor=0)
+    quoted_content = Path(quoted_envfile).read_text()
+    check("env shell-quotes cache paths",
+          f"export GOMODCACHE={shlex.quote(quoted_root + '/go-modules')}"
+          in quoted_content)
 
     # Rust incremental output is disabled only when sccache will replace it.
     fake_bin = Path(td) / "bin"
@@ -75,9 +85,10 @@ with tempfile.TemporaryDirectory() as td:
     run(root, sccache_envfile, floor=0, extra={"PATH": str(fake_bin)})
     sccache_content = Path(sccache_envfile).read_text()
     check("sccache configures the Rust compiler wrapper",
-          f'export RUSTC_WRAPPER="{fake_sccache}"' in sccache_content)
+          f"export RUSTC_WRAPPER={shlex.quote(str(fake_sccache))}"
+          in sccache_content)
     check("sccache disables incompatible Cargo incremental output",
-          'export CARGO_INCREMENTAL="0"' in sccache_content)
+          "export CARGO_INCREMENTAL=0" in sccache_content)
 
     no_sccache_envfile = os.path.join(td, "no-sccache-env.sh")
     Path(no_sccache_envfile).write_text("")
@@ -136,6 +147,28 @@ with tempfile.TemporaryDirectory() as td:
     # 5. fail-open: no CLAUDE_ENV_FILE still returns applied (env layer skipped)
     out, _ = run(root, None, floor=0)
     check("no CLAUDE_ENV_FILE -> still applied (fail-open)", out.get("cache_policy") == "applied")
+
+    # 6. invalid knobs fail open with a valid summary
+    invalid_envfile = os.path.join(td, "invalid-env.sh")
+    Path(invalid_envfile).write_text("")
+    out, p = run(root, invalid_envfile, floor="not-a-number",
+                 extra={"CACHE_POLICY_SCCACHE_GIB": "not-a-number"})
+    check("invalid knobs fail open", p.returncode == 0
+          and out.get("cache_policy") == "applied", str(out))
+
+    # 7. Codex receives valid context instead of an unusable Claude env file
+    codex_envfile = os.path.join(td, "codex-env.sh")
+    Path(codex_envfile).write_text("")
+    out, p = run(root, codex_envfile, floor=0, args=["--codex"])
+    hook_output = out.get("hookSpecificOutput", {})
+    check("Codex hook exits successfully", p.returncode == 0, str(out))
+    check("Codex hook uses SessionStart output contract",
+          hook_output.get("hookEventName") == "SessionStart", str(out))
+    check("Codex hook reports environment limitation",
+          "does not persist environment changes" in
+          hook_output.get("additionalContext", ""), str(out))
+    check("Codex hook does not write Claude env file",
+          Path(codex_envfile).read_text() == "")
 
 print()
 print(f"cache-policy self-test: {passed} passed, {failed} failed")

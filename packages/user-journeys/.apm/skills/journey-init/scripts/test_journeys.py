@@ -88,6 +88,14 @@ def test_frontmatter_missing_returns_empty():
     assert journeys.parse_frontmatter("---\nid: J01\n") == {}  # unterminated
 
 
+def test_journey_template_uses_lintable_step_heading():
+    template = (HERE.parent / "templates" / "journey.template.md").read_text(
+        encoding="utf-8"
+    )
+    heading = next(line for line in template.splitlines() if line.startswith("### S1"))
+    assert journeys.STEP_HEADING.match(heading)
+
+
 def test_lint_clean_journey_passes(tmp_path):
     make_journey(tmp_path, runs=[GOOD_RUN])
     assert journeys.cmd_lint(tmp_path) == 0

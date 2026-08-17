@@ -193,6 +193,14 @@ def test_commit_msg_never_blocks_the_commit(args: tuple[str, ...]) -> None:
             id="after-a-command-separator",
         ),
         pytest.param(
+            'gh\tpr\tcreate --body "Closes #1, #2"',
+            id="horizontal-whitespace-between-command-words",
+        ),
+        pytest.param(
+            'gh  pr  create --body "Closes #1, #2"',
+            id="repeated-horizontal-whitespace-between-command-words",
+        ),
+        pytest.param(
             'gh pr create --body "## Summary\n\nCloses #1, #2"',
             id="body-with-newlines",
         ),
@@ -235,6 +243,28 @@ BAD_BODY = "Closes #1, #2"
             f'gh pr create --body "{BAD_BODY}" --body "clean"',
             "clean",
             id="repeated-flag-clean-last",
+        ),
+        # Only options on the gh command itself count; an adjacent shell
+        # command may use the same flag name for an unrelated purpose.
+        pytest.param(
+            f'echo --body "{BAD_BODY}" && gh pr create --title t',
+            "",
+            id="body-from-earlier-command-ignored",
+        ),
+        pytest.param(
+            f'gh pr create --title t && echo --body "{BAD_BODY}"',
+            "",
+            id="body-from-later-command-ignored",
+        ),
+        pytest.param(
+            f'echo --body "{BAD_BODY}"\ngh pr create --title t',
+            "",
+            id="body-from-previous-line-ignored",
+        ),
+        pytest.param(
+            f'gh pr create --title t\necho --body "{BAD_BODY}"',
+            "",
+            id="body-from-following-line-ignored",
         ),
         # pflag accepts a value attached to the shorthand.
         pytest.param(f'gh pr create -b"{BAD_BODY}"', BAD_BODY, id="attached-shorthand"),

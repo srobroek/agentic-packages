@@ -18,4 +18,5 @@ remote control of the app to anything that can reach it:
 - `withGlobalTauri` exposes the full Tauri API on `window.__TAURI__` (needed by
   the bridge to drive the webview). Enable it only through a dev config overlay,
   never in the base `tauri.conf.json`. See
-  [usage → dev-only config](tauri.tauri-mcp-usage.context.md#dev-only-config-withglobaltauri).
+  [the usage context](tauri.tauri-mcp-usage.context.md), specifically its
+  dev-only `withGlobalTauri` configuration section.

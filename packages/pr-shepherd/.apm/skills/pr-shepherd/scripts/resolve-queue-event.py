@@ -93,9 +93,9 @@ def _validate_pull_request(value: Any, *, dispatch: bool) -> dict[str, Any]:
         raise ContractError("draft must be a boolean")
     if value["mergeable"] is not None and type(value["mergeable"]) is not bool:
         raise ContractError("mergeable must be a boolean or null")
-    if value["checks"] not in CHECK_STATES:
+    if not isinstance(value["checks"], str) or value["checks"] not in CHECK_STATES:
         raise ContractError(f"checks must be one of {sorted(CHECK_STATES)}")
-    if value["state"] not in QUEUE_STATES:
+    if not isinstance(value["state"], str) or value["state"] not in QUEUE_STATES:
         raise ContractError(f"state must be one of {sorted(QUEUE_STATES)}")
     if value["activeSince"] is not None and (
         not isinstance(value["activeSince"], str) or not value["activeSince"]
@@ -135,11 +135,11 @@ def validate_record(record: Any) -> dict[str, Any] | None:
         transition = record.get("transition")
         source = record.get("source")
         lifecycle_key = record.get("lifecycleKey")
-        if transition not in LIFECYCLE_TRANSITIONS:
+        if not isinstance(transition, str) or transition not in LIFECYCLE_TRANSITIONS:
             raise ContractError(
                 f"transition must be one of {sorted(LIFECYCLE_TRANSITIONS)}"
             )
-        if source not in LIFECYCLE_SOURCES:
+        if not isinstance(source, str) or source not in LIFECYCLE_SOURCES:
             raise ContractError(f"source must be one of {sorted(LIFECYCLE_SOURCES)}")
         if not isinstance(lifecycle_key, str) or not lifecycle_key:
             raise ContractError("lifecycleKey must be a non-empty string")
@@ -254,7 +254,8 @@ def _result(
 
 
 def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
-    if isinstance(record, dict) and record.get("type") in {
+    record_type = record.get("type") if isinstance(record, dict) else None
+    if isinstance(record_type, str) and record_type in {
         "webhook-error",
         "reconcile-error",
     }:
@@ -268,7 +269,7 @@ def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
             raise ContractError("watcher error repository must be OWNER/REPO")
         return {
             "status": "fallback",
-            "recordType": record["type"],
+            "recordType": record_type,
             "action": "gate-check-and-pass",
             "message": message,
             "repository": repository,
@@ -277,7 +278,7 @@ def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
     if event is None:
         return {
             "status": "ignored",
-            "recordType": record.get("type") if isinstance(record, dict) else None,
+            "recordType": record_type,
         }
     beads = _unwrap(beads_value)
     if not isinstance(beads, list):
@@ -373,10 +374,13 @@ def replay_unacknowledged(beads_value: Any) -> list[dict[str, Any]]:
             raise ResolutionError(
                 "queued merge bead has invalid metadata.pr"
             ) from error
-        if event_type not in {"dispatch", "pr-lifecycle"}:
+        if not isinstance(event_type, str) or event_type not in {"dispatch", "pr-lifecycle"}:
             raise ResolutionError("queued merge bead has invalid shepherd_event_type")
         expected_transition = "ready" if event_type == "dispatch" else transition
-        if expected_transition not in LIFECYCLE_TRANSITIONS | {"ready"}:
+        if (
+            not isinstance(expected_transition, str)
+            or expected_transition not in LIFECYCLE_TRANSITIONS | {"ready"}
+        ):
             raise ResolutionError("queued merge bead has invalid event transition")
         if not isinstance(repository, str) or not REPOSITORY_RE.fullmatch(repository):
             raise ResolutionError("queued merge bead has invalid metadata.repo")

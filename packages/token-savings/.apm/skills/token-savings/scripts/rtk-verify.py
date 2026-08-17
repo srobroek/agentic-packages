@@ -45,6 +45,18 @@ TIMEOUT = 300
 CASES: dict[str, dict] = {}
 
 
+def guard_path(script: Path | None = None) -> Path:
+    """Find the guard in a checkout or in a target-specific deployment."""
+    anchor = (script or Path(__file__)).resolve()
+    package_root = anchor.parents[4]
+    candidates = (
+        package_root / "scripts" / "rtk-rewrite-guard.py",
+        package_root / ".codex" / "hooks" / "token-savings" / "scripts" / "rtk-rewrite-guard.py",
+        package_root / ".claude" / "hooks" / "token-savings" / "scripts" / "rtk-rewrite-guard.py",
+    )
+    return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+
+
 def case(name: str, *, requires: list[str], facts: list[str], command: str, setup=None, cwd_is_fixture=True):
     CASES[name] = {
         "requires": requires,
@@ -484,7 +496,7 @@ def coverage() -> int:
     """
     import re
 
-    guard = Path(__file__).resolve().parents[4] / "scripts" / "rtk-rewrite-guard.py"
+    guard = guard_path()
     try:
         body = guard.read_text(encoding="utf-8")
     except OSError:

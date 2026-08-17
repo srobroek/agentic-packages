@@ -21,6 +21,7 @@ import pytest
 GUARD = Path(__file__).resolve().parent.parent / "scripts" / "chezmoi-guard.py"
 
 MANAGED = "/home/tester/.claude/settings.json"
+PLAIN_MANAGED = "/home/tester/preferences"
 UNMANAGED = "/home/tester/projects/notes.md"
 
 
@@ -30,7 +31,10 @@ def fake_chezmoi(tmp_path: Path) -> dict[str, str]:
     binary = tmp_path / "bin"
     binary.mkdir()
     stub = binary / "chezmoi"
-    stub.write_text(f'#!/bin/sh\nprintf "%s\\n" "{MANAGED}"\n')
+    stub.write_text(
+        "#!/bin/sh\n"
+        f'printf "%s\\n" "${{CHEZMOI_MANAGED:-{MANAGED}}}"\n'
+    )
     stub.chmod(0o755)
 
     environment = dict(os.environ)
@@ -41,6 +45,7 @@ def fake_chezmoi(tmp_path: Path) -> dict[str, str]:
     cache.mkdir()
     environment["TMPDIR"] = str(cache)
     environment["HOME"] = "/home/tester"
+    environment["CHEZMOI_MANAGED"] = MANAGED
     return environment
 
 
@@ -95,9 +100,35 @@ def advisory(output: str) -> str:
             },
             id="apply-patch",
         ),
+        pytest.param(
+            {
+                "tool_name": "apply_patch",
+                "tool_input": {"patch": f"*** Update File: {MANAGED}\n@@\n-a\n+b\n"},
+            },
+            id="apply-patch-key",
+        ),
+        pytest.param(
+            {
+                "tool_name": "apply_patch",
+                "tool_input": {
+                    "patch": (
+                        "*** Update File: /tmp/source\n"
+                        f"*** Move to: {MANAGED}\n"
+                        "@@\n-a\n+b\n"
+                    )
+                },
+            },
+            id="apply-patch-move",
+        ),
+        pytest.param(
+            {"tool_name": "Edit", "tool_input": {"file_path": PLAIN_MANAGED}},
+            id="managed-non-dot-path",
+        ),
     ],
 )
 def test_a_managed_target_is_advised(payload: dict, fake_chezmoi: dict[str, str]) -> None:
+    if PLAIN_MANAGED in json.dumps(payload):
+        fake_chezmoi["CHEZMOI_MANAGED"] = PLAIN_MANAGED
     code, output = run_guard(payload, fake_chezmoi)
 
     assert code == 0

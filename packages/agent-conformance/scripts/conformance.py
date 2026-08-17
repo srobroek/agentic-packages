@@ -486,16 +486,20 @@ def cmd_check(args: argparse.Namespace, repo_root: Path) -> int:
 
 
 def resolve_agent_registry(name: str, repo_root: Path) -> bool:
-    """Return True if agent is in the installed registry."""
-    # Check repo-local .claude/agents/
-    repo_agents = repo_root / ".claude" / "agents"
-    if (repo_agents / f"{name}.md").exists():
-        return True
-    # Check user global ~/.claude/agents/
-    home_agents = Path.home() / ".claude" / "agents"
-    if (home_agents / f"{name}.md").exists():
-        return True
-    return False
+    """Return True if an agent is in a Claude or Codex installed registry."""
+    # Claude discovers markdown profiles; APM's Codex transformer emits TOML
+    # profiles, while native Codex plugins may retain markdown profiles.
+    registries = (
+        repo_root / ".claude" / "agents",
+        repo_root / ".codex" / "agents",
+        Path.home() / ".claude" / "agents",
+        Path.home() / ".codex" / "agents",
+    )
+    return any(
+        (registry / f"{name}.{suffix}").is_file()
+        for registry in registries
+        for suffix in ("md", "toml")
+    )
 
 
 def _sha256_hex16(data: bytes) -> str:

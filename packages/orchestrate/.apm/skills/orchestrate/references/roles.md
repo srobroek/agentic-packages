@@ -45,7 +45,7 @@ SKILL.md Core rules.
 | Domain-specialist | its `scope` only | bound throwaway children | parent-prepared Worktrunk checkout | children share its bound path but never claim, commit, push, or manage worktrees; on block → `BLOCKED kind:design\|debug` |
 | Reviewer | nothing (read-only) | nothing | separate Worktrunk checkout created from writer branch | logs `review` verdict as audit record + bead comment |
 | Advisor | nothing (read-only) | nothing | separate Worktrunk checkout when using tools | one `ADVICE`, then exits |
-| Shepherd | integration branch / merges (remote) | nothing | remote-side (`gh`, merge-tree probes) -- no worktree | merge + push authority only; never mutates local trees |
+| Shepherd | integration branch / merges | nothing | dedicated integration Worktrunk checkout | merge + push authority only; never mutates content trees |
 | Scribe | nothing (read-only) | nothing | reads beads db + artifacts | never in the write path |
 | Researcher | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | returns a terse findings digest |
 | Tiebreaker | nothing (read-only) | nothing | separate Worktrunk checkout when using repository tools | binding `ADVICE`, logged |

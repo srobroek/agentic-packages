@@ -13,8 +13,14 @@ function integer(
 	name,
 	{ minimum = 0, maximum = Number.MAX_SAFE_INTEGER } = {},
 ) {
-	const parsed = Number.parseInt(value, 10);
-	if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+	const parsed = Number(value);
+	if (
+		typeof value !== "string" ||
+		!/^\d+$/.test(value) ||
+		!Number.isSafeInteger(parsed) ||
+		parsed < minimum ||
+		parsed > maximum
+	) {
 		throw new Error(
 			`${name} must be an integer from ${minimum} through ${maximum}`,
 		);

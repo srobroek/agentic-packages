@@ -12,7 +12,8 @@ runs_keep: 20
 End-to-end user journeys for this product: what a user does, what they must
 observe, validated against the running product. `FORMAT.md` is the spec for
 every file in this directory; `INDEX.md` is the generated routing table
-(regenerate with `journeys.py index`, never hand-edit). This file is the
+(from this directory, regenerate with `python3 journeys.py index .`; never
+hand-edit). This file is the
 per-project configuration -- frontmatter holds the settings, the sections
 below hold the guidance agents need to run journeys here.
 

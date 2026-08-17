@@ -345,6 +345,18 @@ class TestCheckCoverage:
         assert rc == 1
 
 
+class TestAgentRegistry:
+    def test_codex_toml_registry_is_recognized(self, tmp_path):
+        agents_dir = tmp_path / ".codex" / "agents"
+        agents_dir.mkdir(parents=True)
+        (agents_dir / "my-agent.toml").write_text('name = "my-agent"\n')
+
+        assert conformance.resolve_agent_registry("my-agent", tmp_path)
+
+    def test_unknown_agent_is_not_recognized(self, tmp_path):
+        assert not conformance.resolve_agent_registry("missing-agent", tmp_path)
+
+
 # ---------------------------------------------------------------------------
 # Assertion engine tests
 # ---------------------------------------------------------------------------

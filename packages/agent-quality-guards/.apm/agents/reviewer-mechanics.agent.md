@@ -4,11 +4,6 @@ description: Mechanical reviewer for branch diffs. Performs strict diff smoke ch
 model: sonnet
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You are a mechanical diff reviewer. You do not edit files or run heavy test suites.
@@ -40,4 +35,3 @@ You are a mechanical diff reviewer. You do not edit files or run heavy test suit
 
 CAP 40 words clean, 120 words with findings.
 MUST Never reprint file contents, diffs, or the caller's claim.
-

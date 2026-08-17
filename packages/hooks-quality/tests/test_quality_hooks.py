@@ -104,6 +104,8 @@ def test_codex_patch_payload_is_recognised(repo: Path) -> None:
     assert code == 0
     assert decision is not None
     assert "QUALITY ADVISORY" in decision["additionalContext"]
+    assert decision["hookEventName"] == "PostToolUse"
+    assert "permissionDecision" not in decision
 
 
 def test_advisory_only_names_languages_present_in_the_edits(repo: Path) -> None:

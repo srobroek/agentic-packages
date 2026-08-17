@@ -183,6 +183,16 @@ class VerdictTest(unittest.TestCase):
         self.assertEqual(result["state"], "actionable")
         self.assertEqual(result["summary"], "late")
 
+    def test_latest_unrecognized_round_does_not_reuse_an_older_count(self):
+        data = payload(
+            checks=[{"name": "CodeRabbit", "status": "COMPLETED"}],
+            reviews=[
+                review(body="Actionable comments posted: 0", url="r1", at="2026-01-01T00:00:00Z"),
+                review(body="review still processing", url="r2", at="2026-01-02T00:00:00Z"),
+            ],
+        )
+        self.assertEqual(classify(data)["state"], "pending")
+
 
 class SlugMatchingTest(unittest.TestCase):
     def test_short_slug_does_not_match_unrelated_checks(self):
@@ -408,6 +418,29 @@ class CliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("Actionable comments posted", result.stdout)
         self.assertIn("no adapter", result.stdout)
+
+
+class FetchTest(unittest.TestCase):
+    def test_fetch_slurps_and_flattens_all_rest_pages(self):
+        original = MODULE.gh_json
+        calls = []
+
+        def fake_gh_json(*args):
+            calls.append(args)
+            if args[0] == "pr":
+                return {"headRefOid": HEAD, "statusCheckRollup": []}
+            return [[{"user": {"login": "coderabbitai[bot]"}}], []]
+
+        MODULE.gh_json = fake_gh_json
+        try:
+            result = MODULE.fetch("owner/repo", "7")
+        finally:
+            MODULE.gh_json = original
+
+        paginated = [call for call in calls if call[0] == "api"]
+        self.assertEqual(len(paginated), 3)
+        self.assertTrue(all("--paginate" in call and "--slurp" in call for call in paginated))
+        self.assertEqual(len(result["reviews"]), 1)
 
 
 if __name__ == "__main__":

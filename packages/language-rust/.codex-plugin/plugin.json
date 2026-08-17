@@ -1,9 +1,10 @@
 {
   "name": "language-rust",
   "version": "6.0.2",
-  "description": "Rust toolkit: the rust-quality skill, opinionated Rust steering, and Rust LSP.",
+  "description": "Rust toolkit: quality, steering, and Serena semantic code tools.",
   "author": {
     "name": "Sjors Robroek"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "mcpServers": "./.codex.mcp.json"
 }

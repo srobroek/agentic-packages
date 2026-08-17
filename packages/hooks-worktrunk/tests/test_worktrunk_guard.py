@@ -61,6 +61,11 @@ SPEC.loader.exec_module(guard)
         ("setsid git worktree list", "wt list"),
         ("flock /tmp/lock git worktree add /tmp/x", "wt switch --create <branch>"),
         ("flock -w 5 /tmp/lock git worktree prune", "wt step prune"),
+        ("env -S 'git worktree list'", "wt list"),
+        ("env -S git worktree list", "wt list"),
+        ("env -Sgit worktree list", "wt list"),
+        ("git --config-env foo.bar=BAR worktree list", "wt list"),
+        ("flock -c 'git worktree list'", "wt list"),
     ],
 )
 def test_direct_worktree_management_is_denied(command: str, expected: str) -> None:
@@ -87,6 +92,7 @@ def test_direct_worktree_management_is_denied(command: str, expected: str) -> No
         "timeout 5 wt switch --create feat/auth",
         "flock /tmp/lock echo git worktree add",
         "setsid echo git worktree list",
+        "env FOO=bar echo git worktree list",
     ],
 )
 def test_non_management_commands_are_silent(command: str) -> None:

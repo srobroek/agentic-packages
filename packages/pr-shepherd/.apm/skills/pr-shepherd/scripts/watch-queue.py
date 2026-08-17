@@ -25,7 +25,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 # Bucket precedence. This ordering is the tool's contract: it decides both the
@@ -364,7 +364,7 @@ def run() -> int:
 
     classified = classify(prs, required, release_pattern)
 
-    stamp = datetime.now(timezone.utc).strftime("%H:%M:%SZ")
+    stamp = datetime.now(UTC).strftime("%H:%M:%SZ")
     print(f"== {stamp}  {repo}/{branch} ==")
     render_dashboard(classified, len(required))
     print("   note: STUCK = a required context is absent or ambiguous.")

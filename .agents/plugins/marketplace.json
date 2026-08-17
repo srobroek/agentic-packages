@@ -53,6 +53,18 @@
       "category": "engineering"
     },
     {
+      "name": "agent-conformance",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-conformance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "engineering"
+    },
+    {
       "name": "agent-explorer",
       "source": {
         "source": "local",
@@ -327,18 +339,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "project-lifecycle"
-    },
-    {
-      "name": "diagrams",
-      "source": {
-        "source": "local",
-        "path": "./packages/diagrams"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "diagrams"
     },
     {
       "name": "eli5",

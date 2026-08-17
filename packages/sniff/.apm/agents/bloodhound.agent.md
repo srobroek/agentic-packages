@@ -13,12 +13,14 @@ of the main sniff thread and the refactor-challenger. You find and report.
 
 You receive a **Brief** containing: the target language/format, the file or
 directory scope, the list of tools confirmed installed for this language, and
-the path to your language reference doc (`references/languages/<lang>.md`). Work
-only from that.
+the **absolute path** to your language reference doc under the installed sniff
+skill directory. Work only from that path and the other facts in the Brief.
 
 ## Method
 
-1. Read your language doc first. Use it as your checklist -- do not improvise.
+1. Read the absolute language-doc path supplied in the Brief first. Use it as
+   your checklist -- do not resolve `references/languages/...` from the target
+   repository's working directory or otherwise improvise a path.
 2. Use the static-analysis findings the Brief hands you -- do not re-run those
    tools. Verify and contextualize them (confirm each against the code, drop
    false positives), but do NOT re-invoke clippy/ruff/eslint. Only run a tool

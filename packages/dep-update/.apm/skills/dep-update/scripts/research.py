@@ -148,7 +148,7 @@ def query_registry(ecosystem: str, name: str, installed: str) -> dict:
         elif ecosystem in ("npm", "node"):
             data = fetch_json(ecosystem, name, f"https://registry.npmjs.org/{name}")
             latest = (data.get("dist-tags") or {}).get("latest", "")
-            if not latest:
+            if not isinstance(latest, str) or not latest:
                 result.update(status="UNRESOLVABLE", reason="no dist-tags.latest")
                 return result
             candidates = list(data.get("versions") or {})

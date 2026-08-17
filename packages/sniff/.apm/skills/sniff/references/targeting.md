@@ -167,7 +167,7 @@ When the target is a **diff / PR / commit-range / branch** AND it touches an API
 contract (`.proto`, `.graphql`/`.gql`, OpenAPI specs), run the baseline tools
 against the base ref:
 
-- Protobuf: `buf breaking --against <base-ref>`
+- Protobuf: `buf breaking --against ".git#ref=<base-ref>,subdir=<proto-dir>"`
 - GraphQL: `graphql-inspector diff <base-schema> <head-schema>`
 - OpenAPI: an openapi diff (`oasdiff`/`openapi-diff`) base vs. head
 
@@ -229,7 +229,7 @@ scope -- proceed?") rather than silently editing beyond what the user asked for.
 
 - *"sniff PR #128"* → worktree the PR head → `gh pr diff 128 --name-only` = 6
   files (4 TS, 2 `.proto`) → detect TS + Protobuf → eslint on the 4 TS files;
-  `buf breaking --against <base>` on the protos → **breaking-change section
+  `buf breaking --against ".git#ref=<base>,subdir=<proto-dir>"` on the protos → **breaking-change section
   headlined**, then TS smells → global dead-code skipped + noted → plan covers
   only those 6 files.
 - *"sniff the parser module"* → in place, `src/parser/**` → Rust → clippy on the

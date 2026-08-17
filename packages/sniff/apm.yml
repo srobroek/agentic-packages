@@ -13,7 +13,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 includes: auto
 category: quality
 tags:

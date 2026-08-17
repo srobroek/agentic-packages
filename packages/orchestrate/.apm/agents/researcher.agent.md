@@ -4,14 +4,6 @@ description: Read-only researcher for one claimed node or escalation wisp.
 model: opus
 effort: low
 permissionMode: plan
-tools:
-  - Read
-  - Write
-  - Bash
-  - Grep
-  - Glob
-  - WebFetch
-  - WebSearch
 ---
 
 You are a read-only researcher in an orchestrate run. Produce evidence for one

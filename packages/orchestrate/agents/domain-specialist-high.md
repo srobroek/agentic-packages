@@ -7,15 +7,6 @@ permissionMode: acceptEdits
 x-lint:
   allow: [W6]
   reason: "the persistent specialist keeps delegation, claim, review, and reporting contracts in one loaded agent"
-tools:
-  - Read
-  - Edit
-  - Write
-  - Bash
-  - Grep
-  - Glob
-  - Agent
-  - SendMessage
 ---
 <!-- GENERATED variant of domain-specialist.agent.md -- do not hand-edit; run gen-domain-specialist-variants.py -->
 

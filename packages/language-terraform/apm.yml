@@ -1,12 +1,11 @@
 name: language-terraform
 version: 3.0.4
 description: >-
-  Terraform and HCL toolkit: opinionated Terraform steering. No dedicated
-  quality skill yet.
+  Terraform and HCL toolkit: opinionated steering and Serena semantic code
+  tools. No dedicated quality skill yet.
 author: Sjors Robroek
 license: Apache-2.0
-type: bundle
-target: all
+type: hybrid
 includes: auto
 category: languages
 tags:
@@ -14,7 +13,17 @@ tags:
   - terraform
 dependencies:
   apm:
-    - >-
-      srobroek/agentic-packages/packages/language-steering-terraform#>=1.0.0
-      <2.0.0
-    - srobroek/agentic-packages/packages/lsp-terraform#>=0.4.2 <1.0.0
+    - srobroek/agentic-packages/packages/mcp-serena#>=1.4.1 <2.0.0
+  mcp:
+    - name: serena
+      registry: false
+      transport: stdio
+      command: bash
+      args:
+        - '-lc'
+        - >-
+          launcher_rel="apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py";
+          for launcher in "$PWD/$launcher_rel" "${APM_HOME:-}/$launcher_rel"
+          "${HOME}/.apm/$launcher_rel" "$PWD/.apm/$launcher_rel"; do [ -r
+          "$launcher" ] && exec python3 "$launcher"; done; echo
+          serena-apm-launcher-not-found-run-apm-install >&2; exit 1

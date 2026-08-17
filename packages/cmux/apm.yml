@@ -12,7 +12,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
-target: all
 includes: auto
 category: developer-tools
 tags:
@@ -24,6 +23,10 @@ dependencies:
     - manaflow-ai/cmux/skills/cmux#f0c38b89579f6629caedbc430f8802ca8c64c76b
     - >-
       manaflow-ai/cmux/skills/cmux-workspace#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-browser#f0c38b89579f6629caedbc430f8802ca8c64c76b
+    - >-
+      manaflow-ai/cmux/skills/cmux-markdown#f0c38b89579f6629caedbc430f8802ca8c64c76b
     - >-
       manaflow-ai/cmux/skills/cmux-customization#f0c38b89579f6629caedbc430f8802ca8c64c76b
     - >-

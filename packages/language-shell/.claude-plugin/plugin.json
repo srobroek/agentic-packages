@@ -1,7 +1,7 @@
 {
   "name": "language-shell",
   "version": "3.0.4",
-  "description": "Shell scripting toolkit with Shell LSP.",
+  "description": "Shell toolkit with portable steering and Serena semantic code tools.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -9,7 +9,7 @@
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/lsp-shell"
+      "path": "packages/mcp-serena"
     }
   ]
 }

@@ -211,9 +211,9 @@ def check_node_version(root: Path, name: str, version: str) -> bool:
 # --- apply ------------------------------------------------------------------
 
 
-def run_pm(command: list[str], root: Path) -> None:
+def run_pm(command: list[str], root: Path) -> int:
     note("==> " + " ".join(command))
-    subprocess.run(command, cwd=root)
+    return subprocess.run(command, cwd=root).returncode
 
 
 def apply_python(root: Path, name: str, version: str) -> int:
@@ -225,7 +225,10 @@ def apply_python(root: Path, name: str, version: str) -> int:
             "requirements file)"
         )
         return 0
-    run_pm(["uv", "add", f"{name}=={version}"], root)
+    result = run_pm(["uv", "add", f"{name}=={version}"], root)
+    if result != 0:
+        warn(f"uv exited with status {result}; bump was not confirmed")
+        return 1
     return _confirm(check_python_version(root, name, version), name, version)
 
 
@@ -246,7 +249,10 @@ def apply_node(root: Path, name: str, version: str) -> int:
         note(f"SKIP: {pm} not found. To apply manually:")
         note("  " + " ".join(command))
         return 0
-    run_pm(command, root)
+    result = run_pm(command, root)
+    if result != 0:
+        warn(f"{pm} exited with status {result}; bump was not confirmed")
+        return 1
     return _confirm(check_node_version(root, name, version), name, version)
 
 

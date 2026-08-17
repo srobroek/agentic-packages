@@ -19,7 +19,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+* the hook script is now subagent-fork-guard.py and requires python3 on PATH.
 
 ### Refactors
 

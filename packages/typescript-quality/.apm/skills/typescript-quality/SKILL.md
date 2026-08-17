@@ -1,6 +1,6 @@
 ---
 name: typescript-quality
-description: Use to run TypeScript or JavaScript format, lint, type-check, and test commands.
+description: Use to run TypeScript or JavaScript format, lint, and type-check commands.
 ---
 
 # TypeScript Quality
@@ -9,5 +9,5 @@ description: Use to run TypeScript or JavaScript format, lint, type-check, and t
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/check.sh` | Run all checks. `--help` for the exact runner-selection order. |
+| `scripts/check.sh` | Run Biome format/lint and TypeScript type checks. `--help` for the exact runner-selection order. |
 | `scripts/fix.sh` | Apply mechanical fixes only (biome check --write). |

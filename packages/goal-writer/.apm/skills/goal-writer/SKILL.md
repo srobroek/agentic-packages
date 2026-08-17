@@ -60,10 +60,11 @@ Run `scripts/new-goal.py` to write the context doc to
 `~/.local/state/agentic-tools/goals/<project-slug>__<goal-slug>.md` with
 user-private permissions. Goals are kept (not overwritten) -- a project has many
 goals over time; the goal-slug distinguishes them. The doc is ephemeral local
-state, never committed. Pass `--title` and the composed body on stdin; see the
-script's `--help`. If the script is unavailable, create the same file contract
-manually: that directory, `<project-slug>__<goal-slug>.md`, the frontmatter and
-body from `references/template.md`, mode `0600`.
+state, never committed. Pass `--title`, the user's original prompt verbatim via
+`--source-prompt`, and the composed body on stdin; see the script's `--help`. If
+the script is unavailable, create the same file contract manually: that
+directory, `<project-slug>__<goal-slug>.md`, the frontmatter and body from
+`references/template.md`, mode `0600`.
 
 ## Rules
 

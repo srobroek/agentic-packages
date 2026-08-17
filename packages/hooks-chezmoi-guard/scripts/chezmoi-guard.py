@@ -32,9 +32,10 @@ import sys
 
 CACHE_TTL_SECONDS = 60
 
-# `*** Update File: <path>` headers in a Codex patch. Feeding a whole patch to a
-# path check silently misses every target, so the headers are parsed directly.
-PATCH_HEADER = r"^\*\*\* (?:Update|Add|Delete) File: (.*)$"
+# File headers in a Codex patch. Feeding a whole patch to a path check silently
+# misses every target, so the headers are parsed directly. A move can have both
+# an `Update File` source and a `Move to` destination; inspect both.
+PATCH_HEADER = r"^\*\*\* (?:(?:Update|Add|Delete) File|Move to):[ \t]*(.*?)[ \t]*$"
 
 ADVICE = (
     "heads-up: '{path}' is chezmoi-managed, so this edit will be overwritten by "
@@ -170,17 +171,20 @@ def candidate_paths(payload: dict) -> list[str]:
     if isinstance(tool_input, str):
         text, path = tool_input, tool_input
     elif isinstance(tool_input, dict):
-        text = tool_input.get("command") or ""
+        text = ""
+        for key in ("command", "patch"):
+            value = tool_input.get(key)
+            if isinstance(value, str) and value:
+                text = value
+                break
         path = tool_input.get("file_path") or tool_input.get("path") or ""
-        if not isinstance(text, str):
-            text = ""
         if not isinstance(path, str):
             path = ""
     else:
         return []
 
     if tool_name in ("apply_patch", "functions.apply_patch") and text:
-        return re.findall(PATCH_HEADER, text, re.MULTILINE)
+        return [path.strip() for path in re.findall(PATCH_HEADER, text, re.MULTILINE) if path.strip()]
     return [path] if path else []
 
 
@@ -188,12 +192,6 @@ def main() -> int:
     raw = _read_stdin_text()
     if not raw.strip():
         return 0
-    # Bail before parsing on the raw bytes. Every advisory this guard emits names a
-    # path under a dot-directory chezmoi manages, and a payload mentioning none
-    # cannot produce one. A strict superset of the real trigger.
-    if "." not in raw:
-        return 0
-
     import json
 
     try:

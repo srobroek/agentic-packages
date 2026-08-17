@@ -67,6 +67,19 @@ test("rejects missing repositories and unsafe numeric options", () => {
 		() => parseArgs(["--repo", "owner/repo", "--port", "65536"], {}),
 		/port/,
 	);
+	assert.throws(
+		() => parseArgs(["--repo", "owner/repo", "--slots", "2abc"], {}),
+		/slots/,
+	);
+	assert.throws(
+		() => parseArgs(["--repo", "owner/repo", "--port", "0x10"], {}),
+		/port/,
+	);
+	assert.throws(
+		() =>
+			parseArgs(["--repo", "owner/repo", "--poll-interval-ms", "1000ms"], {}),
+		/poll-interval-ms/,
+	);
 });
 
 test("starts the signed receiver before forwarding and shuts down cleanly", async (t) => {

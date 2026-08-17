@@ -246,8 +246,7 @@ def emit_advisory(context: str) -> None:
     json.dump(
         {
             "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
+                "hookEventName": "PostToolUse",
                 "additionalContext": context,
             }
         },

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "serena": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        "launcher_rel=\"apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py\"; for launcher in \"$PWD/$launcher_rel\" \"${APM_HOME:-}/$launcher_rel\" \"${HOME}/.apm/$launcher_rel\" \"$PWD/.apm/$launcher_rel\"; do [ -r \"$launcher\" ] && exec python3 \"$launcher\"; done; echo serena-apm-launcher-not-found-run-apm-install >&2; exit 1"
+      ]
+    }
+  }
+}

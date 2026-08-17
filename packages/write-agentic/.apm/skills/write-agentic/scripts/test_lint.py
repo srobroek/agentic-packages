@@ -5,11 +5,7 @@ Run: pytest packages/write-agentic/.apm/skills/write-agentic/scripts/test_lint.p
 """
 import importlib.util
 import os
-import sys
-import tempfile
 from pathlib import Path
-
-import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -132,10 +128,10 @@ class TestOverrideMechanism:
 
     def test_missing_reason_is_e9(self, tmp_path):
         desc = "word " * 30
-        content = """\
+        content = f"""\
 ---
 name: test-skill
-description: {desc}
+description: {desc.strip()}
 x-lint:
   allow: [E1]
 ---
@@ -143,7 +139,7 @@ x-lint:
 # Test Skill
 
 MUST do something.
-""".format(desc=desc.strip())
+"""
         p = _write(tmp_path, "SKILL.md", content)
         findings = lint_mod.lint(p)
         error_codes = [code for sev, code, _ in findings if sev == "ERROR"]
@@ -152,10 +148,10 @@ MUST do something.
     def test_non_overridden_error_still_errors(self, tmp_path):
         # Override E1 but not E3 — model name in prose should still error
         desc = "word " * 30
-        content = """\
+        content = f"""\
 ---
 name: test-skill
-description: {desc}
+description: {desc.strip()}
 x-lint:
   allow: [E1]
   reason: "routing needs it"
@@ -165,7 +161,7 @@ x-lint:
 
 MUST do something.
 MUST prefer haiku for cheap tasks.
-""".format(desc=desc.strip())
+"""
         p = _write(tmp_path, "SKILL.md", content)
         findings = lint_mod.lint(p)
         error_codes = [code for sev, code, _ in findings if sev == "ERROR"]
@@ -294,10 +290,10 @@ class TestMainExitCode:
 
     def test_e9_exits_1(self, tmp_path):
         desc = "word " * 30
-        content = """\
+        content = f"""\
 ---
 name: test-skill
-description: {desc}
+description: {desc.strip()}
 x-lint:
   allow: [E1]
 ---
@@ -305,7 +301,7 @@ x-lint:
 # Test Skill
 
 MUST do something.
-""".format(desc=desc.strip())
+"""
         p = _write(tmp_path, "SKILL.md", content)
         rc = lint_mod.main([str(p)])
         assert rc == 1, "missing reason should be E9 → exit 1"

@@ -54,7 +54,8 @@ normative for everything you write.
    `suspected-regression`/`product-question` findings via the configured
    reporter, each embedding the `journey-finding` block plus Summary /
    Repro / Expected vs Observed / Evidence / Triage rationale, severity
-   P1--P3. Reindex via the journey-init skill's `journeys.py index`.
+   P1--P3. Reindex with
+   `python3 <journeys-dir>/journeys.py index <journeys-dir>`.
 7. **Commit** journeys-dir changes only:
    `journey(J<id>): validate v<version> — <result>`.
 

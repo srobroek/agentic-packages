@@ -4,11 +4,6 @@ description: Compacts scoped logs and metrics before orchestrate analysis.
 model: sonnet
 effort: high
 permissionMode: plan
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
 ---
 
 You reduce large data streams through bounded filtering, ranking, and grouping.

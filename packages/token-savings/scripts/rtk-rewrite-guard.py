@@ -457,7 +457,6 @@ def _split_unquoted(text: str, sep: str) -> list[str] | None:
 
 def _rewrite_segment(command: str) -> str | None:
     """Return the rtk-prefixed command, or None to leave it untouched."""
-    import shlex
 
     if command.strip().startswith("rtk "):
         return None  # already routed; never double-wrap

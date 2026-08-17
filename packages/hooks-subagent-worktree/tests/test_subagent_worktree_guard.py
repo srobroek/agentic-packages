@@ -20,6 +20,12 @@ import sys
 from pathlib import Path
 
 GUARD = Path(__file__).resolve().parent.parent / "scripts" / "subagent-worktree-guard.py"
+CODEX_HOOK = (
+    Path(__file__).resolve().parent.parent
+    / ".apm"
+    / "hooks"
+    / "hooks-subagent-worktree-codex-hooks.json"
+)
 
 
 def run_guard(payload: str) -> tuple[int, str]:
@@ -38,6 +44,10 @@ def ctx_of(payload: str) -> str:
     if not output.strip():
         return ""
     return json.loads(output)["hookSpecificOutput"].get("additionalContext", "")
+
+
+def test_codex_hook_primitive_is_an_explicit_noop():
+    assert json.loads(CODEX_HOOK.read_text()) == {"hooks": {}}
 
 
 # --- pass-through (no output) --------------------------------------------------

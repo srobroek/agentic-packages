@@ -89,6 +89,8 @@ def verdict(command: str, cwd: Path) -> str:
     "command",
     [
         pytest.param('git -C "$DIR" reset --hard', id="dash-C-variable"),
+        pytest.param("git -C$DIR reset --hard", id="attached-dash-C-variable"),
+        pytest.param("git -C${DIR} reset --hard", id="attached-braced-dash-C-variable"),
         pytest.param("git --git-dir=$D/.git reset --hard", id="git-dir-variable"),
         pytest.param("git --work-tree=~/wt checkout -- .", id="work-tree-tilde"),
         pytest.param("git -C 'sp $D' clean -fd", id="quoted-path-with-variable"),
@@ -168,6 +170,24 @@ def test_a_wrapper_prefix_does_not_defeat_the_denial(prefix: str, repo: Path) ->
     _, decision = run(f'{prefix}git -C "$DIR" reset --hard', repo)
     assert decision is not None, f"no decision for wrapper prefix {prefix!r}"
     assert decision["permissionDecision"] == "deny"
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        pytest.param("sudo -H ", id="sudo-flag"),
+        pytest.param("env -i ", id="env-flag"),
+        pytest.param("timeout --preserve-status 5 ", id="timeout-flag"),
+        pytest.param("flock --nonblock /tmp/lock ", id="flock-flag"),
+        pytest.param("nice -v ", id="nice-flag"),
+        pytest.param("xargs -r ", id="xargs-flag"),
+    ],
+)
+def test_wrapper_flags_do_not_hide_a_plain_destructive_call(prefix: str, dirty_repo: Path) -> None:
+    """Wrapper flags are not option values, so the following git remains in command position."""
+    _, decision = run(f"{prefix}git reset --hard", dirty_repo)
+    assert decision is not None, f"no decision for wrapper prefix {prefix!r}"
+    assert "GS-3" in decision["additionalContext"]
 
 
 @pytest.mark.parametrize(
@@ -438,6 +458,24 @@ def test_clean_force_warns_when_untracked_files_exist(untracked_repo: Path) -> N
     assert "GS-6" in decision["additionalContext"]
 
 
+@pytest.fixture
+def ignored_repo(repo: Path) -> Path:
+    """Tracked ignore rule plus an ignored file, which `clean -x` deletes."""
+    (repo / ".gitignore").write_text("build/\n")
+    git(repo, "add", ".gitignore")
+    git(repo, "commit", "-qm", "ignore build output")
+    (repo / "build").mkdir()
+    (repo / "build" / "out.txt").write_text("generated\n")
+    return repo
+
+
+@pytest.mark.parametrize("flag", ["-fdx", "-fdX"])
+def test_clean_force_warns_when_ignored_files_exist(ignored_repo: Path, flag: str) -> None:
+    _, decision = run(f"git clean {flag}", ignored_repo)
+    assert decision is not None
+    assert "GS-6" in decision["additionalContext"]
+
+
 def test_clean_force_is_silent_with_nothing_to_delete(repo: Path) -> None:
     assert verdict("git clean -fd", repo) == "silent"
 
@@ -463,6 +501,12 @@ def test_force_push_always_warns(command: str, repo: Path) -> None:
     _, decision = run(command, repo)
     assert decision is not None
     assert decision["permissionDecision"] == "allow"
+    assert "GS-4" in decision["additionalContext"]
+
+
+def test_force_push_in_a_short_option_bundle_always_warns(repo: Path) -> None:
+    _, decision = run("git push -fu origin main", repo)
+    assert decision is not None
     assert "GS-4" in decision["additionalContext"]
 
 
@@ -498,6 +542,47 @@ def test_recoverable_and_read_only_commands_are_silent(command: str, dirty_repo:
 def test_global_options_do_not_hide_the_subcommand(dirty_repo: Path) -> None:
     """`git -c key=v reset --hard` still resolves `reset`, not `-c`."""
     _, decision = run("git -c core.pager=cat reset --hard", dirty_repo)
+    assert decision is not None
+    assert "GS-3" in decision["additionalContext"]
+
+
+def test_literal_c_redirect_uses_the_target_repository_state(repo: Path, tmp_path: Path) -> None:
+    """A literal redirect is verifiable, so state must come from that tree, not outer cwd."""
+    target = tmp_path / "target"
+    target.mkdir()
+    git(target, "init", "-q")
+    git(target, "config", "user.email", "test@example.test")
+    git(target, "config", "user.name", "test")
+    git(target, "config", "commit.gpgsign", "false")
+    (target / "tracked.txt").write_text("original\n")
+    git(target, "add", "tracked.txt")
+    git(target, "commit", "-qm", "initial")
+
+    (repo / "tracked.txt").write_text("outer dirty\n")
+    assert verdict(f"git -C {target} reset --hard", repo) == "silent"
+
+    (target / "tracked.txt").write_text("target dirty\n")
+    _, decision = run(f"git -C {target} reset --hard", repo)
+    assert decision is not None
+    assert "GS-3" in decision["additionalContext"]
+
+
+def test_literal_git_environment_redirect_uses_the_target_repository_state(
+    repo: Path, tmp_path: Path
+) -> None:
+    target = tmp_path / "target"
+    target.mkdir()
+    git(target, "init", "-q")
+    git(target, "config", "user.email", "test@example.test")
+    git(target, "config", "user.name", "test")
+    git(target, "config", "commit.gpgsign", "false")
+    (target / "tracked.txt").write_text("original\n")
+    git(target, "add", "tracked.txt")
+    git(target, "commit", "-qm", "initial")
+    (target / "tracked.txt").write_text("target dirty\n")
+
+    command = f"GIT_DIR={target}/.git GIT_WORK_TREE={target} git reset --hard"
+    _, decision = run(command, repo)
     assert decision is not None
     assert "GS-3" in decision["additionalContext"]
 

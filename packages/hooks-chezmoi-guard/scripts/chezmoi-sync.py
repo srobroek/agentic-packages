@@ -62,6 +62,15 @@ CONFIG_SUFFIXES = (".conf", ".config", ".cfg", ".ini", ".toml", ".yaml", ".yml",
 CONFIG_NAMES = ("config",)
 CONFIG_LITERALS = (".gitconfig", ".gitignore")
 
+# File headers in a Codex apply_patch payload. A move may have both an update
+# source and a destination, and both are candidates for a post-edit advisory.
+PATCH_HEADERS = (
+    "*** Update File: ",
+    "*** Add File: ",
+    "*** Delete File: ",
+    "*** Move to: ",
+)
+
 
 def _read_stdin_text() -> str:
     """Read the payload as bytes and decode leniently.
@@ -204,6 +213,37 @@ def looks_like_config(name: str) -> bool:
     )
 
 
+def candidate_paths(tool_name: object, tool_input: object) -> list[str]:
+    """Extract every path written by an Edit-like tool call."""
+    if isinstance(tool_input, str):
+        text = tool_input
+        path = tool_input
+    elif isinstance(tool_input, dict):
+        text = ""
+        for key in ("command", "patch"):
+            value = tool_input.get(key)
+            if isinstance(value, str) and value:
+                text = value
+                break
+        path = ""
+        for key in ("file_path", "path", "notebook_path"):
+            value = tool_input.get(key)
+            if isinstance(value, str) and value:
+                path = value
+                break
+    else:
+        return []
+
+    if tool_name in ("apply_patch", "functions.apply_patch"):
+        return [
+            line.removeprefix(prefix).strip()
+            for line in text.splitlines()
+            for prefix in PATCH_HEADERS
+            if line.startswith(prefix) and line.removeprefix(prefix).strip()
+        ]
+    return [path] if path else []
+
+
 def main() -> int:
     payload = _read_stdin_text()
     if not payload:
@@ -218,56 +258,60 @@ def main() -> int:
     if not isinstance(data, dict):
         return 0
 
-    tool_input = data.get("tool_input")
-    raw = tool_input.get("file_path") if isinstance(tool_input, dict) else None
-    if not isinstance(raw, str) or not raw:
+    tool_name = data.get("tool_name") or data.get("tool") or ""
+    paths = candidate_paths(tool_name, data.get("tool_input"))
+    if not paths:
         return 0
 
     from pathlib import Path
 
-    path = Path(raw)
-    # is_file() needs the same OSError guard as resolve(): a path longer than the
-    # filesystem allows raises ENAMETOOLONG on Linux (it merely returns False on
-    # macOS), which crashed this hook closed instead of failing open. Found by
-    # fuzzing with a 3000-character path, and only on the Linux runner.
-    try:
-        if not path.is_file():
-            return 0
-        path = path.resolve()
-    except (OSError, ValueError):
-        return 0
-
     home = Path.home()
-    try:
-        relative = path.relative_to(home)
-    except ValueError:
-        # Outside $HOME entirely.
-        return 0
+    for raw in dict.fromkeys(paths):
+        path = Path(raw).expanduser()
+        # is_file() needs the same OSError guard as resolve(): a path longer than
+        # the filesystem allows raises ENAMETOOLONG on Linux (it merely returns
+        # False on macOS), which crashed this hook closed instead of failing open.
+        try:
+            if not path.is_file():
+                continue
+            path = path.resolve()
+        except (OSError, ValueError):
+            continue
 
-    # Project checkouts under $HOME are not dotfile state.
-    if relative.parts and relative.parts[0] in PROJECT_PREFIXES:
-        return 0
+        try:
+            relative = path.relative_to(home)
+        except ValueError:
+            # Outside $HOME entirely.
+            continue
 
-    source = chezmoi("source-path")
-    if not source:
-        return 0
+        # Project checkouts under $HOME are not dotfile state.
+        if relative.parts and relative.parts[0] in PROJECT_PREFIXES:
+            continue
 
-    text = str(path)
-    # A direct edit to the source: advise on committing, nothing else.
-    if under(text, source) or under(text, str(home / ".local/share/chezmoi")):
-        advisory = pending_advisory(source)
-        if advisory:
-            print(advisory)
-        return 0
+        source = chezmoi("source-path")
+        if not source:
+            continue
 
-    if not is_config_path(relative) or is_ignored(path, relative, source):
-        return 0
+        text = str(path)
+        # A direct edit to the source: advise on committing, nothing else.
+        if under(text, source) or under(text, str(home / ".local/share/chezmoi")):
+            advisory = pending_advisory(source)
+            if advisory:
+                print(advisory)
+            return 0
 
-    source_path = chezmoi("source-path", text)
-    if source_path and Path(source_path).is_file():
-        if source_path.endswith(".tmpl"):
-            print(
-                f"""<chezmoi-template-warning>
+        if not is_config_path(relative) or is_ignored(path, relative, source):
+            continue
+
+        source_path = chezmoi("source-path", text)
+        try:
+            source_is_file = bool(source_path) and Path(source_path).expanduser().is_file()
+        except (OSError, ValueError):
+            source_is_file = False
+        if source_is_file:
+            if source_path.endswith(".tmpl"):
+                print(
+                    f"""<chezmoi-template-warning>
 STOP: This file is managed by chezmoi as a template.
 
 TARGET_FILE: {text}
@@ -281,11 +325,11 @@ ACTION REQUIRED:
 
 Do NOT continue editing the target file. Edit the template file instead.
 </chezmoi-template-warning>"""
-            )
-            return 0
+                )
+                return 0
 
-        print(
-            f"""<chezmoi-readd-advisory>
+            print(
+                f"""<chezmoi-readd-advisory>
 This file is tracked by chezmoi; you edited the APPLIED target, not the source.
 
 TARGET_FILE: {text}
@@ -294,15 +338,15 @@ SOURCE_FILE: {source_path}
 To fold your change back into the source of truth (nothing is done for you):
   chezmoi re-add "{text}"      # or edit {source_path} directly
 Then review/commit/push the chezmoi source repo deliberately (see below if pending)."""
-        )
-        advisory = pending_advisory(source)
-        if advisory:
-            print(advisory)
-        return 0
+            )
+            advisory = pending_advisory(source)
+            if advisory:
+                print(advisory)
+            return 0
 
-    if looks_like_config(path.name):
-        print(f"Config file not tracked by chezmoi: {text}")
-        print(f'   To add: chezmoi add "{text}"')
+        if looks_like_config(path.name):
+            print(f"Config file not tracked by chezmoi: {text}")
+            print(f'   To add: chezmoi add "{text}"')
     return 0
 
 

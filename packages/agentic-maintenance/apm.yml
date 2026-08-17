@@ -6,7 +6,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 category: agentic-maintenance
 tags:
   - bundle

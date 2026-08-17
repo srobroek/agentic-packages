@@ -116,9 +116,9 @@ PATTERNS: list[tuple[str, str]] = [
     # commit messages and docs, where the phrase is the subject rather than a
     # signature.
     (
-        rf"(?:^|\n|\\n|-m\s+|--message[=\s]+)[\x20\t\"'*\#>\-\U0001F916]*"
-        rf"(?:ai|llm|agent|bot|machine)-"
-        rf"(?:assisted|generated|authored|written|committed)\b",
+        r"(?:^|\n|\\n|-m\s+|--message[=\s]+)[\x20\t\"'*\#>\-\U0001F916]*"
+        r"(?:ai|llm|agent|bot|machine)-"
+        r"(?:assisted|generated|authored|written|committed)\b",
         "an AI authorship qualifier",
     ),
     # The robot-emoji signature line, which several agents emit. Requires a

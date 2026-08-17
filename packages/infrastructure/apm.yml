@@ -4,7 +4,6 @@ description: 'Infrastructure and operations toolkit: infrastructure steering.'
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 category: infrastructure
 tags:
   - bundle
