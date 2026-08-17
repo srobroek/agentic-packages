@@ -13,6 +13,6 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/audit-steering#>=2.2.0 <3.0.0
-    - srobroek/agentic-packages/packages/write-agentic#>=5.1.0 <6.0.0
+    - srobroek/agentic-packages/packages/write-agentic#>=5.1.1 <6.0.0
     - srobroek/agentic-packages/packages/agent-builder#>=9.1.0 <10.0.0
     - srobroek/agentic-packages/packages/agent-pr-reviewer#>=3.2.0 <4.0.0
