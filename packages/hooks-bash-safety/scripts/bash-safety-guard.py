@@ -415,7 +415,11 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
 
     # An unexpanded variable hides the target. An empty variable even collapses
     # `$DIR/x` toward `/`, so the guard cannot verify what would be removed.
-    if "$" in target:
+    #
+    # A BACKTICK hides it just as well. Testing only `$` meant `rm -rf $(echo /)`
+    # denied while `rm -rf ` + backtick + `echo /` + backtick was silent -- the same
+    # substitution in the older spelling, which shlex leaves intact as one token.
+    if "$" in target or "`" in target:
         return "deny-var"
 
     if target.startswith("~/"):

@@ -127,6 +127,20 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+def test_backtick_substitution_hides_a_target_just_as_dollar_paren_does() -> None:
+    """BS-9 tested only for `$`, so the older substitution spelling walked past it.
+
+    `rm -rf $(echo /)` denied while the backtick form was silent -- the same
+    command substitution, the same unverifiable target, opposite verdicts. A literal
+    or relative path must still pass, or the rule stops being usable.
+    """
+    assert verdict("rm -rf `echo /`") == "deny"
+    assert verdict("rm -rf `pwd`/sub") == "deny"
+    assert verdict("rm -rf $(echo /)") == "deny", "the dollar form must not regress"
+    assert verdict("rm -rf /tmp/build") != "deny"
+    assert verdict("rm -rf ./node_modules") != "deny"
+
+
 def test_an_outsized_command_does_not_stall_the_hook() -> None:
     """shlex is quadratic in token length, and this hook gates every Bash call.
 
