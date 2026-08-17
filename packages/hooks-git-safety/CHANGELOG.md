@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.0.3](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.0.2...hooks-git-safety--v4.0.3) (2026-08-17)
+
+
+### Bug Fixes
+
+* close the guard hardening findings ([#851](https://github.com/srobroek/agentic-packages/issues/851)) ([1cb2128](https://github.com/srobroek/agentic-packages/commit/1cb2128042b203b78d3ade28c109b59e49d5b962))
+* judge the tree a redirected git command actually acts on ([#849](https://github.com/srobroek/agentic-packages/issues/849)) ([7ccaa8d](https://github.com/srobroek/agentic-packages/commit/7ccaa8dfd1ee3c72e5402a712730eb82a13f80b1))
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
 ## [4.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.0.1...hooks-git-safety--v4.0.2) (2026-08-17)
 
 

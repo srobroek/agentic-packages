@@ -1,5 +1,5 @@
 name: hooks-git-safety
-version: 4.0.2
+version: 4.0.3
 description: >-
   Git safety guard for autonomous agents, in one Python module with a real shell
   tokenizer. Denies exactly one thing: a destructive op aimed at another working

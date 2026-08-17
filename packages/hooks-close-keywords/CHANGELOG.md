@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v1.0.1...hooks-close-keywords--v1.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
 ## [1.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v1.0.0...hooks-close-keywords--v1.0.1) (2026-07-30)
 
 
