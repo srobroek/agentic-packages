@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.1...srobroek-agentic--v29.1.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **codex:** skip unmapped deployed agents during model injection ([#864](https://github.com/srobroek/agentic-packages/issues/864)) ([9bfdc78](https://github.com/srobroek/agentic-packages/commit/9bfdc7829d9996743d6381245ab95406446e6200))
+
 ## [29.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.0...srobroek-agentic--v29.1.1) (2026-08-17)
 
 

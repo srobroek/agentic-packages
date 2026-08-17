@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.3.0...agent-management--v1.3.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **codex:** skip unmapped deployed agents during model injection ([#864](https://github.com/srobroek/agentic-packages/issues/864)) ([9bfdc78](https://github.com/srobroek/agentic-packages/commit/9bfdc7829d9996743d6381245ab95406446e6200))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.5...agent-management--v1.3.0) (2026-08-17)
 
 
