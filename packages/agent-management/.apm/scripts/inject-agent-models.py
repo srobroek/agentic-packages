@@ -168,9 +168,16 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
             continue
         deployed[name] = path
 
-    for name, path in sorted(deployed.items()):
-        if name not in mappings:
-            errors.append(f"deployed Codex agent lacks {MAPPING_NAME} entry: {path} ({name})")
+    # Only APM-managed agents (those a currently-installed package maps) are
+    # injected. A deployed toml with no mapping is not APM's to own -- a
+    # hand-authored agent, or an orphan left by a retired/removed package -- so
+    # skip it instead of failing the lifecycle at deploy. Package-level coverage
+    # (every APM agent source has a mapping) is enforced in CI by
+    # validate_source_coverage, so re-checking it here would only duplicate CI
+    # and false-positive on non-APM files.
+    unmanaged = sorted(name for name in deployed if name not in mappings)
+    if unmanaged:
+        print(f"Codex agent models: skipping {len(unmanaged)} unmanaged deployed agent(s): {', '.join(unmanaged)}")
 
     for name, mapping in sorted(mappings.items()):
         path = deployed.get(name)

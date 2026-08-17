@@ -107,13 +107,33 @@ def test_inserts_root_fields_before_toml_tables() -> None:
 def test_does_not_partially_write_when_validation_fails(tmp_path: Path) -> None:
     write_mapping(tmp_path)
     path = write_deployed_agent(tmp_path, 'name = "demo"\ndescription = "Demo"\n')
-    unknown = tmp_path / ".codex" / "agents" / "unknown.toml"
-    unknown.write_text('name = "unknown"\ndescription = "Unknown"\n', encoding="utf-8")
 
-    with pytest.raises(injector.MappingError, match="lacks agent-models.yml"):
+    # "ghost" is mapped but not deployed -> a missing-deployment error; the write
+    # for the valid "demo" agent must not happen partially before that raises.
+    with pytest.raises(injector.MappingError, match="missing deployed Codex agent"):
         injector.patch_codex(
             tmp_path,
-            {"demo": {"model": "gpt-5", "reasoning_effort": "high"}},
+            {
+                "demo": {"model": "gpt-5", "reasoning_effort": "high"},
+                "ghost": {"model": "gpt-5", "reasoning_effort": "high"},
+            },
             check=False,
         )
     assert path.read_text(encoding="utf-8") == 'name = "demo"\ndescription = "Demo"\n'
+
+
+def test_skips_unmapped_deployed_agents(tmp_path: Path) -> None:
+    # An orphan / hand-authored deployed agent with no mapping is not APM's to
+    # own: it is skipped, not an error, and does not block injecting mapped ones.
+    write_mapping(tmp_path)
+    path = write_deployed_agent(
+        tmp_path,
+        'name = "demo"\ndescription = "Demo"\ndeveloper_instructions = "Do it"\n',
+    )
+    orphan = tmp_path / ".codex" / "agents" / "orphan.toml"
+    orphan.write_text('name = "orphan"\ndescription = "Orphan"\n', encoding="utf-8")
+
+    assert injector.main(["--root", str(tmp_path)]) == 0
+    parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+    assert parsed["model"] == "gpt-5"
+    assert orphan.read_text(encoding="utf-8") == 'name = "orphan"\ndescription = "Orphan"\n'
