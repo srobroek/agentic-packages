@@ -62,8 +62,16 @@ GIT_OPTIONS_WITH_VALUE = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--n
 
 # A redirect flag whose value carries a `$` or `~` points at a working tree the
 # guard cannot resolve.
+#
+# THE ENV-ASSIGNMENT SPELLINGS COUNT TOO. `GIT_DIR` and `GIT_WORK_TREE` retarget
+# git exactly as `--git-dir` and `--work-tree` do, so matching only the flag form
+# left `GIT_DIR=$D/.git git clean -fdx` allowed while the flag form denied --
+# verified against this guard before the fix. The env form is the more natural
+# thing for an agent to write when a path is already in a variable, which is
+# precisely the case GS-2 exists to stop.
 UNVERIFIABLE_REDIRECT = re.compile(
-    r"""(?:^|\s)(?:-C\s+|--git-dir[\s=]|--work-tree[\s=])["']?[^"';&|]*[$~]"""
+    r"""(?:^|\s)(?:-C\s+|--git-dir[\s=]|--work-tree[\s=]|GIT_DIR=|GIT_WORK_TREE=)"""
+    r"""["']?[^"';&|]*[$~]"""
 )
 
 

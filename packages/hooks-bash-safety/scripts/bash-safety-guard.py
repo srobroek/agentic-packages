@@ -78,6 +78,19 @@ SUBSTITUTED_DOWNLOAD = re.compile(
 # the bound only stops a pathological payload from recursing without end.
 MAX_NESTING = 4
 
+# How many further wrappers to peel once MAX_NESTING is reached. Recursion stops
+# there to bound stack depth, but stopping the UNWRAPPING there made the bound an
+# escape: enough `sh -c` layers and the payload was never judged at all. This
+# ceiling is deliberately high -- no honest command nests 60 deep, and the cost is
+# one lex per layer -- so the only payloads it fails to reach are ones already
+# absurd enough that the shell itself would struggle.
+UNWRAP_CEILING = 64
+
+# Cap on the command text handed to the lexer. See split_commands for the measured
+# curve; 64KB lexes in well under 50ms and is far past any hand-written command,
+# while the front of the string -- where every verb and flag lives -- is preserved.
+MAX_COMMAND_CHARS = 65536
+
 # Shell keywords and openers after which a command starts.
 OPENERS = frozenset({"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if"})
 
@@ -155,6 +168,19 @@ def split_commands(command: str) -> list[list[str]]:
     """
     import shlex
 
+    # shlex is quadratic in token length, and this hook runs on every Bash call, so
+    # an outsized command is a stall rather than a parse. Measured on one unbroken
+    # token: 50KB 31ms, 200KB 477ms, 400KB 1.4s, 800KB 4.7s, 1MB 14.5s end to end.
+    # A 14-second PreToolUse hook is indistinguishable from a hang.
+    #
+    # Truncating is safe in the direction that matters. Every rule matches on the
+    # VERB and its flags, which sit at the front; what the cap discards is the tail
+    # of an argument, and a decision made on the first 64KB of `rm -rf <huge>` is
+    # the same decision. The alternative -- bailing out entirely on a long command
+    # -- would hand any payload a way to buy silence just by padding itself.
+    if len(command) > MAX_COMMAND_CHARS:
+        command = command[:MAX_COMMAND_CHARS]
+
     # A newline separates commands exactly like a semicolon, but shlex treats
     # it as ordinary whitespace, which merged a second line into the first and
     # hid its verb from every check. A BACKSLASH-newline is the opposite case: it
@@ -231,10 +257,39 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
 
     The outer invocation is kept as well as its expansion: `sudo sh -c '...'`
     still deserves the elevated-privilege warning on the outer form.
+
+    AT THE DEPTH BOUND THE PAYLOAD IS STILL SPLIT, not dropped. Returning only the
+    outer words there made the bound an escape hatch: five `sh -c` wrappers around
+    `rm -rf /` reached depth 5, the recursion stopped, and the only words ever
+    judged were `sh -c <string>` -- a verb no rule matches -- so the guard fell
+    silent on the one command it exists to deny. Verified by walking depths 0..6:
+    0-4 denied, 5 and 6 silent. The bound exists to stop unbounded recursion on a
+    pathological payload, so it now keeps splitting the innermost string it has
+    reached and judges those words instead of discarding them.
     """
     commands = split_commands(command)
     if depth >= MAX_NESTING:
-        return commands
+        # Unwrap iteratively rather than recursively: a bound that merely shifts by
+        # one still lets a deeper payload through, so drain every remaining wrapper
+        # here. The loop is bounded by UNWRAP_CEILING, so a hostile payload cannot
+        # spin, and it costs one lex per wrapper rather than one stack frame.
+        deepest: list[list[str]] = []
+        for words in commands:
+            deepest.append(words)
+            current = words
+            for _ in range(UNWRAP_CEILING):
+                inner = nested_command(strip_prefix(current))
+                if not inner:
+                    break
+                try:
+                    peeled = split_commands(inner)
+                except ValueError:
+                    break
+                deepest.extend(peeled)
+                if len(peeled) != 1:
+                    break
+                current = peeled[0]
+        return deepest
 
     expanded: list[list[str]] = []
     for words in commands:

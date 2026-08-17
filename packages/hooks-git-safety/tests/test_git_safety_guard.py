@@ -92,6 +92,12 @@ def verdict(command: str, cwd: Path) -> str:
         pytest.param("git --git-dir=$D/.git reset --hard", id="git-dir-variable"),
         pytest.param("git --work-tree=~/wt checkout -- .", id="work-tree-tilde"),
         pytest.param("git -C 'sp $D' clean -fd", id="quoted-path-with-variable"),
+        # The env-assignment spellings retarget git exactly as the flags do, and
+        # were allowed while the flag form denied. This is the spelling an agent
+        # reaches for when the path is already in a variable -- the case GS-2 is for.
+        pytest.param("GIT_DIR=$D/.git git clean -fdx", id="env-git-dir-variable"),
+        pytest.param("GIT_WORK_TREE=$D git clean -fdx", id="env-work-tree-variable"),
+        pytest.param("GIT_DIR=~/other/.git git clean -fdx", id="env-git-dir-tilde"),
     ],
 )
 def test_unresolvable_target_is_denied(command: str, repo: Path) -> None:
@@ -101,6 +107,23 @@ def test_unresolvable_target_is_denied(command: str, repo: Path) -> None:
     assert decision is not None
     assert decision["permissionDecision"] == "deny"
     assert "GS-2" in decision["permissionDecisionReason"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("GIT_DIR=/tmp/x/.git git clean -fdx", id="env-literal-path"),
+        pytest.param("GIT_DIR=$D/.git git status", id="env-variable-read-only"),
+    ],
+)
+def test_the_env_spelling_does_not_over_deny(command: str, repo: Path) -> None:
+    """Widening GS-2 to GIT_DIR= must not swallow the resolvable or the harmless.
+
+    A literal path is verifiable, so it is not GS-2's business; and GS-2 gates
+    DESTRUCTIVE ops, so a read-only `status` stays out of scope no matter how its
+    target is spelled.
+    """
+    assert verdict(command, repo) != "deny"
 
 
 def test_literal_redirect_is_allowed(repo: Path) -> None:
