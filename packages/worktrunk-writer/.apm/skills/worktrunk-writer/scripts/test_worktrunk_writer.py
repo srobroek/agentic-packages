@@ -1799,6 +1799,11 @@ class RealWorktrunkVarTests(unittest.TestCase):
             ["git", "-C", str(self.repo), "init", "-q"],
             ["git", "-C", str(self.repo), "config", "user.email", "test@example.com"],
             ["git", "-C", str(self.repo), "config", "user.name", "Test"],
+            # A global commit.gpgsign otherwise fails the fixture commit with
+            # "1Password: Could not connect to socket" whenever that agent is
+            # not running. Nothing here is worth signing.
+            ["git", "-C", str(self.repo), "config", "commit.gpgsign", "false"],
+            ["git", "-C", str(self.repo), "config", "tag.gpgsign", "false"],
             ["git", "-C", str(self.repo), "commit", "-q", "--allow-empty", "-m", "init"],
         ):
             subprocess.run(argv, check=True, capture_output=True, text=True)

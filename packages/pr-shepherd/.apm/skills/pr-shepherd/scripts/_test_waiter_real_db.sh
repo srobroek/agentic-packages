@@ -62,6 +62,11 @@ assert_record() {
 command -v bd >/dev/null 2>&1 || fail "bd not found"
 command -v jq >/dev/null 2>&1 || fail "jq not found"
 git -C "$TMP_ROOT" init -q
+# bd init commits, and a global commit.gpgsign made it BLOCK on the 1Password
+# agent -- the whole harness looked like a network hang and timed out at 60s+
+# without emitting a line. Repo-local, so bd's own commits inherit it.
+git -C "$TMP_ROOT" config commit.gpgsign false
+git -C "$TMP_ROOT" config tag.gpgsign false
 cd "$TMP_ROOT"
 export BEADS_DIR="$TMP_ROOT/.beads"
 bd init --quiet --prefix tst --non-interactive --skip-agents --skip-hooks

@@ -88,6 +88,10 @@ def repo(tmp_path):
         ["git", "config", "core.hooksPath", str(root / ".no-hooks")],
         ["git", "config", "user.email", "t@t"],
         ["git", "config", "user.name", "t"],
+        # A global commit.gpgsign fails (and `bd init` outright BLOCKS on) the
+        # 1Password agent when it is not running. Nothing here is worth signing.
+        ["git", "config", "commit.gpgsign", "false"],
+        ["git", "config", "tag.gpgsign", "false"],
     ):
         subprocess.run(command, cwd=root, check=True, capture_output=True)
     return root

@@ -16,7 +16,16 @@ spec.loader.exec_module(module)
 
 
 def git(root: Path, *args: str) -> None:
-    subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+    # -c overrides, not `git config`, because the fixture must not inherit the
+    # developer's ambient git config. A global commit.gpgsign made every commit
+    # here fail with "1Password: Could not connect to socket" whenever the agent
+    # was not running, and the fixture commit has nothing to sign for.
+    subprocess.run(
+        ["git", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false", *args],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    )
 
 
 def make_repo(tmp_path: Path) -> Path:
