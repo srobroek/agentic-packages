@@ -1,6 +1,6 @@
 {
   "name": "code-intelligence",
-  "version": "9.0.2",
+  "version": "9.1.0",
   "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering. The SubagentStart context injector requires python3 on PATH.",
   "author": {
     "name": "Sjors Robroek"
