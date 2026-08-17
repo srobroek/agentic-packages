@@ -55,6 +55,24 @@ CLAUDE_REASON = (
 )
 
 
+def _read_stdin_text() -> str:
+    """Read the payload as bytes and decode leniently.
+
+    `sys.stdin.read()` raises UnicodeDecodeError on one undecodable byte anywhere in
+    the payload -- including in a field the guard never looks at -- and the fail-open
+    wrapper then swallowed the error, so a stray byte turned a decision into silence.
+    Reproduced on the attribution guard: it denied a valid payload and went silent
+    with the same payload plus one bad byte.
+
+    Falls back to a plain read when stdin has no buffer, which is how the tests inject
+    a StringIO.
+    """
+    buffer = getattr(sys.stdin, "buffer", None)
+    if buffer is None:
+        return sys.stdin.read()
+    return buffer.read().decode("utf-8", "replace")
+
+
 def deny(reason: str) -> None:
     import json
 
@@ -240,7 +258,7 @@ def judge_claude(spawn: dict) -> str | None:
 
 
 def main() -> int:
-    payload = sys.stdin.read()
+    payload = _read_stdin_text()
     if not payload.strip():
         return 0
 

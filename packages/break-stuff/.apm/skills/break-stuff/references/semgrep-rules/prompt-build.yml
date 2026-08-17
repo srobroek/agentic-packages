@@ -1,0 +1,114 @@
+# Agent-surface rules for break-stuff. Offline, with no registry fetch.
+#
+# Invoke with an ABSOLUTE path, because scanners run with cwd set to the target
+# repo, and a skill-relative path silently matches nothing. Example:
+#   semgrep --config "$BREAK_SKILL_DIR/references/semgrep-rules/prompt-build.yml" --json <files>
+#
+# Scope: the CODE side of the agent surface, where a program assembles a prompt or
+# wires a tool. The DEFINITION side (SKILL.md, *.agent.md, .mcp.json) has no
+# scanner and is judged by reading, per references/corpora/prompt-injection.md.
+rules:
+  - id: break-stuff-prompt-built-by-concatenation
+    languages: [python, javascript, typescript]
+    severity: WARNING
+    message: >-
+      A prompt assembled by interpolation lets the interpolated value close the
+      template's structure and issue its own instructions. Pass untrusted text
+      through a quarantined field the model is told to treat as data.
+    patterns:
+      - pattern-either:
+          - pattern-regex: '(?i)(prompt|system_?prompt|instructions|messages)\s*=\s*f["\x27]'
+          - pattern-regex: '(?i)(prompt|system_?prompt|instructions)\s*=\s*["\x27][^"\x27]*["\x27]\s*\+\s*\w'
+          - pattern-regex: '(?i)(prompt|system_?prompt|instructions)\s*=\s*`[^`]*\$\{'
+          - pattern-regex: '(?i)(prompt|instructions)\s*=\s*["\x27][^"\x27]*["\x27]\.format\('
+
+  - id: break-stuff-fetched-content-into-prompt
+    languages: [python, javascript, typescript]
+    severity: ERROR
+    message: >-
+      Fetched content placed directly into a prompt gives whoever controls that
+      page a channel to the model. Summarize or quarantine it at the boundary.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $R = requests.$M(...)
+              ...
+              $P = f"...{$R.text}..."
+          - pattern: |
+              $R = await fetch(...)
+              ...
+              $P = `...${await $R.text()}...`
+
+  - id: break-stuff-tool-result-into-prompt-unquarantined
+    languages: [python, javascript, typescript]
+    severity: WARNING
+    message: >-
+      Subprocess output interpolated into a prompt carries whatever the command
+      printed, including content the command read from elsewhere.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $R = subprocess.$M(...)
+              ...
+              $P = f"...{$R.stdout}..."
+          - pattern: |
+              $R = subprocess.$M(...)
+              ...
+              $P = "..." + $R.stdout
+
+  - id: break-stuff-agent-tool-grant-wildcard
+    languages: [python, javascript, typescript, json, yaml]
+    severity: WARNING
+    message: >-
+      A wildcard tool grant gives an agent every tool the harness offers, so any
+      injection that reaches it reaches all of them. Name the tools the task needs.
+    patterns:
+      - pattern-either:
+          - pattern-regex: '(?i)"?(tools|allowed_?tools|permissions)"?\s*[:=]\s*\[\s*["\x27]\*["\x27]\s*\]'
+          - pattern-regex: '(?i)"?(tools|allowed_?tools)"?\s*[:=]\s*["\x27]\*["\x27]'
+          - pattern-regex: '(?i)"?permissionMode"?\s*[:=]\s*["\x27]bypassPermissions["\x27]'
+
+  - id: break-stuff-mcp-server-unpinned
+    languages: [json, yaml]
+    severity: ERROR
+    message: >-
+      An MCP server launched from a floating version runs whatever that tag
+      resolves to at next start, which is remote code execution on upgrade. Pin a
+      version or a digest.
+    patterns:
+      - pattern-either:
+          - pattern-regex: '"args"\s*:\s*\[[^\]]*"-y"[^\]]*"[^"@\]]+@latest"'
+          - pattern-regex: '"command"\s*:\s*"npx"[^}]*"[^"@]+@latest"'
+          - pattern-regex: '"args"\s*:\s*\[[^\]]*"uvx"[^\]]*"[^"=@\]]+"\s*\]'
+
+  - id: break-stuff-secret-in-agent-config
+    languages: [json, yaml]
+    severity: ERROR
+    message: >-
+      A credential in an agent or MCP config is committed alongside the code.
+      Read it from the environment at start instead.
+    patterns:
+      - pattern-regex: '(?i)"(api_?key|token|secret|password|access_?key|private_?key)"\s*:\s*"(?!\$\{|\$[A-Z_]|<|\{\{|xxx|placeholder|example|redacted|changeme)[^"]{12,}"'
+
+  - id: break-stuff-eval-of-model-output
+    languages: [python, javascript, typescript]
+    severity: ERROR
+    message: >-
+      Executing model output runs whatever the model was persuaded to emit. Parse
+      it into a validated structure and dispatch on that.
+    patterns:
+      - pattern-either:
+          - pattern-regex: '(?i)(eval|exec)\(\s*\w*(completion|response|message|output|reply|content|result)\w*'
+          - pattern-regex: '(?i)subprocess\.\w+\(\s*\w*(completion|response|message|output|reply)\w*'
+          - pattern-regex: '(?i)os\.system\(\s*\w*(completion|response|message|output|reply)\w*'
+
+  - id: break-stuff-memory-write-unvalidated
+    languages: [python, javascript, typescript]
+    severity: WARNING
+    message: >-
+      Writing model or fetched content into durable memory lets one session plant
+      a fact every later session trusts. Validate the content before persisting it.
+    patterns:
+      - pattern-either:
+          - pattern-regex: '(?i)(memory|remember|store|persist)\w*\(\s*\w*(completion|response|message|output|fetched)\w*'
+          - pattern-regex: '(?i)open\([^)]*(memory|MEMORY)[^)]*,\s*["\x27][aw]["\x27]\)'

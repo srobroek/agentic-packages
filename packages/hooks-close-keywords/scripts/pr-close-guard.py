@@ -59,6 +59,24 @@ ADVICE = (
 ADVICE_END = "\n----- END SUGGESTED BODY -----"
 
 
+def _read_stdin_text() -> str:
+    """Read the payload as bytes and decode leniently.
+
+    `sys.stdin.read()` raises UnicodeDecodeError on one undecodable byte anywhere in
+    the payload -- including in a field the guard never looks at -- and the fail-open
+    wrapper then swallowed the error, so a stray byte turned a decision into silence.
+    Reproduced on the attribution guard: it denied a valid payload and went silent
+    with the same payload plus one bad byte.
+
+    Falls back to a plain read when stdin has no buffer, which is how the tests inject
+    a StringIO.
+    """
+    buffer = getattr(sys.stdin, "buffer", None)
+    if buffer is None:
+        return sys.stdin.read()
+    return buffer.read().decode("utf-8", "replace")
+
+
 def load_engine():
     """Import the shared rewrite engine, or return None when it is absent.
 
@@ -140,7 +158,7 @@ def extract_body(command: str) -> str:
 
 
 def main() -> int:
-    payload = sys.stdin.read()
+    payload = _read_stdin_text()
     # Cheap bail on the raw bytes: this guard only acts on `gh pr`. A strict
     # superset of the real trigger, so it cannot mask a real one.
     if "gh pr" not in payload:
