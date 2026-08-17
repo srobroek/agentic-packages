@@ -1,5 +1,12 @@
 # Changelog
 
+## [20.3.2](https://github.com/srobroek/agentic-packages/compare/core--v20.3.1...core--v20.3.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([36104be](https://github.com/srobroek/agentic-packages/commit/36104bedc8c2b52ebf033f30a4df10426d31a988))
+
 ## [20.3.1](https://github.com/srobroek/agentic-packages/compare/core--v20.3.0...core--v20.3.1) (2026-08-17)
 
 
