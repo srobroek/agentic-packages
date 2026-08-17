@@ -210,6 +210,79 @@ def test_a_comment_does_not_swallow_the_following_line(repo: Path) -> None:
     assert verdict('git commit -m "fix #123"', repo) != "deny", "a # inside quotes is data"
 
 
+# --- the redirect target decides which repository is judged -------------------
+
+
+@pytest.fixture
+def other_dirty_repo(tmp_path: Path) -> Path:
+    """A SECOND repository, dirty, distinct from the fixture the payload cwd names."""
+    work = tmp_path / "other"
+    work.mkdir()
+    git(work, "init", "-q")
+    git(work, "config", "user.email", "test@example.test")
+    git(work, "config", "user.name", "test")
+    git(work, "config", "commit.gpgsign", "false")
+    (work / "tracked.txt").write_text("original\n")
+    git(work, "add", "tracked.txt")
+    git(work, "commit", "-qm", "initial")
+    (work / "tracked.txt").write_text("modified\n")
+    return work
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("git -C {t} reset --hard", id="dash-C"),
+        pytest.param("git --work-tree={t} reset --hard", id="work-tree-equals"),
+        pytest.param("git --git-dir={t}/.git reset --hard", id="git-dir-equals"),
+        pytest.param("GIT_WORK_TREE={t} git reset --hard", id="env-work-tree"),
+        pytest.param("GIT_DIR={t}/.git git reset --hard", id="env-git-dir"),
+    ],
+)
+def test_state_is_read_from_the_tree_git_actually_acts_on(
+    template: str, repo: Path, other_dirty_repo: Path
+) -> None:
+    """Every warning here is gated on repository state, so reading the WRONG repo's
+    state silently drops the warning.
+
+    The redirect value was parsed and thrown away, and RepoState was built from the
+    payload cwd alone. So a `reset --hard` aimed at a dirty tree from a CLEAN one
+    reported nothing -- the destructive case the rule exists for.
+    """
+    command = template.format(t=other_dirty_repo)
+    _, decision = run(command, repo)
+    assert decision is not None, f"{command!r} lost the warning entirely"
+    assert "GS-3" in (decision.get("additionalContext") or ""), f"{command!r} missed GS-3"
+
+
+def test_a_redirect_to_a_clean_tree_stays_quiet(repo: Path, tmp_path: Path) -> None:
+    """The converse: resolving the target must not invent a warning.
+
+    A clean target has nothing to lose, so pointing at it is not worth a word --
+    otherwise the rule fires on correct work and gets ignored.
+    """
+    other = tmp_path / "clean-other"
+    other.mkdir()
+    git(other, "init", "-q")
+    git(other, "config", "user.email", "test@example.test")
+    git(other, "config", "user.name", "test")
+    git(other, "config", "commit.gpgsign", "false")
+    (other / "t.txt").write_text("a\n")
+    git(other, "add", "t.txt")
+    git(other, "commit", "-qm", "i")
+    assert verdict(f"git -C {other} reset --hard", repo) == "silent"
+
+
+def test_an_unresolvable_redirect_still_denies_rather_than_resolving(repo: Path) -> None:
+    """GS-2 outranks target resolution.
+
+    A target behind a variable cannot be resolved, and guessing could only move the
+    warning onto the wrong repository, so the deny has to win.
+    """
+    assert verdict('git -C "$DIR" reset --hard', repo) == "deny"
+    assert verdict("GIT_DIR=$D/.git git clean -fdx", repo) == "deny"
+
+
 def test_a_non_string_cwd_fails_open() -> None:
     """The contract requires fail-open; this raised TypeError and exited 1."""
     payload = json.dumps({"cwd": ["/tmp"], "tool_input": {"command": "git status"}})

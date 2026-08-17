@@ -272,6 +272,54 @@ def git_invocation(words: list[str]) -> list[str] | None:
     return words[index:] if index < len(words) else None
 
 
+def redirect_target(words: list[str], cwd: Path) -> Path:
+    """Return the working tree a git invocation actually acts on.
+
+    `git -C <other> reset --hard` performs the reset in <other>, but the state the
+    warnings are gated on was read from the payload cwd -- so a destructive op in a
+    dirty repo went unwarned whenever it was aimed there from a clean one. The
+    redirect value was parsed and thrown away.
+
+    All five spellings redirect: `-C`, `--work-tree`, `--git-dir` (both `=` and
+    space forms), and the GIT_WORK_TREE / GIT_DIR env assignments. A `--git-dir`
+    pointing at `<tree>/.git` names the tree one level up, which is the form
+    `git -C` would have produced anyway.
+
+    An unresolvable value is NOT guessed at: a target carrying `$`, a backtick or
+    `~` returns the cwd unchanged, because GS-2 already denies a destructive op
+    behind an unexpanded variable and guessing here could only move a warning onto
+    the wrong repository.
+    """
+    target = ""
+    index = 0
+    while index < len(words):
+        word = words[index]
+        for prefix in ("--work-tree=", "--git-dir=", "GIT_WORK_TREE=", "GIT_DIR="):
+            if word.startswith(prefix):
+                target = word[len(prefix) :]
+                break
+        else:
+            if word in ("-C", "--work-tree", "--git-dir") and index + 1 < len(words):
+                target = words[index + 1]
+                index += 1
+        index += 1
+        if target:
+            break
+
+    if not target or any(ch in target for ch in "$`~"):
+        return cwd
+    target = target.strip("\"'")
+    if target.endswith("/.git"):
+        target = target[: -len("/.git")]
+    elif target.endswith(".git") and "/" not in target:
+        return cwd
+    try:
+        resolved = Path(target) if target.startswith("/") else cwd / target
+        return resolved.resolve()
+    except (OSError, ValueError):
+        return cwd
+
+
 class RepoState:
     """Repository facts, fetched once and only when a warning depends on them."""
 
@@ -474,10 +522,22 @@ def main() -> int:
             return 0
 
     cwd = Path(raw_cwd) if raw_cwd and Path(raw_cwd).is_dir() else Path.cwd()
-    state = RepoState(cwd)
 
-    for _, invocation in destructive:
-        finding = judge(invocation, state)
+    # One RepoState PER TARGET TREE, not one for the payload cwd. Every warning here
+    # is gated on repository state -- reset --hard only warns when the tree is dirty,
+    # clean -f only when something untracked would go -- so reading the state of the
+    # wrong repository silently drops the warning. `git -C <dirty> reset --hard` run
+    # from a clean tree reported nothing at all.
+    #
+    # Cached by resolved path, because two invocations in one command line usually
+    # name the same tree and each RepoState costs git subprocesses.
+    states: dict[Path, RepoState] = {}
+
+    for words, invocation in destructive:
+        target = redirect_target(words, cwd)
+        if target not in states:
+            states[target] = RepoState(target)
+        finding = judge(invocation, states[target])
         if finding:
             emit(finding[0], finding[1])
             return 0
