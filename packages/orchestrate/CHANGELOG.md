@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.1.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.1.1...orchestrate--v16.1.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([ca3e56e](https://github.com/srobroek/agentic-packages/commit/ca3e56e112d68f5505ded018cceddf9298b68e6d))
+
 ## [16.1.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.1.0...orchestrate--v16.1.1) (2026-08-17)
 
 
