@@ -156,6 +156,18 @@ def test_wrapper_and_flag_escapes_are_closed(command: str) -> None:
     assert verdict(command) == "deny", f"{command!r} escaped the guard"
 
 
+def test_dd_to_a_non_canonical_pseudo_device_is_allowed() -> None:
+    """`/dev/./null` IS /dev/null, but the compare was against the literal string.
+
+    So a harmless redirect was denied as a write to a raw disk. Normalizing first
+    fixes the false positive without weakening the rule: a non-canonical spelling of
+    a REAL device still denies.
+    """
+    assert verdict("dd if=/dev/zero of=/dev/./null") != "deny"
+    assert verdict("dd if=/dev/zero of=/dev/../dev/null") != "deny"
+    assert verdict("dd if=x of=/dev/./disk0") == "deny", "a real device must still deny"
+
+
 def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
     """`sys.stdin.read()` raised UnicodeDecodeError and the fail-open swallowed it.
 
