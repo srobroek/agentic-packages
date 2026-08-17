@@ -127,6 +127,97 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+DESTRUCTIVE_WITHOUT_RM = [
+    pytest.param("find / -delete", id="find-delete-root"),
+    pytest.param("find /usr -exec rm -rf {} +", id="find-exec-rm"),
+    pytest.param("truncate -s0 /etc/passwd", id="truncate-critical-file"),
+    pytest.param("shred -u /etc/hosts", id="shred-critical-file"),
+    pytest.param("mv /etc /tmp/gone", id="mv-critical-tree"),
+    pytest.param("chmod -R 000 /", id="chmod-recursive-root"),
+    pytest.param("chown -R me /usr", id="chown-recursive-critical"),
+]
+
+
+@pytest.mark.parametrize("command", DESTRUCTIVE_WITHOUT_RM)
+def test_unrecoverable_without_rm_is_denied(command: str) -> None:
+    """The guard judged rm/mkfs/dd/curl only, so these were all silent.
+
+    Each is as unrecoverable as the `rm -rf` spelling that denies: -delete and -exec
+    wipe a tree, truncate and shred destroy contents in place, mv makes a system tree
+    unreachable, and a recursive mode or owner change on /usr breaks the machine.
+    """
+    assert verdict(command) == "deny", f"{command!r} destroys unrecoverably and was allowed"
+
+
+ORDINARY_USE_OF_THE_SAME_VERBS = [
+    pytest.param("find . -name '*.pyc' -delete", id="find-delete-project"),
+    pytest.param("find /tmp/build -delete", id="find-delete-scratch"),
+    pytest.param("truncate -s0 /tmp/log.txt", id="truncate-scratch"),
+    pytest.param("truncate -s0 build/out.log", id="truncate-relative"),
+    pytest.param("shred -u /tmp/secret", id="shred-scratch"),
+    pytest.param("mv src/a.py src/b.py", id="mv-project-files"),
+    pytest.param("mv build dist", id="mv-relative-dirs"),
+    pytest.param("chmod +x scripts/run.sh", id="chmod-single-file"),
+    pytest.param("chmod -R 755 ./dist", id="chmod-recursive-project"),
+]
+
+
+@pytest.mark.parametrize("command", ORDINARY_USE_OF_THE_SAME_VERBS)
+def test_the_same_verbs_stay_silent_on_ordinary_work(command: str) -> None:
+    """A guard that fires on routine work trains the agent to ignore it.
+
+    The scratch cases are the ones that nearly broke: /private is critical and macOS
+    resolves /tmp to /private/tmp, so a naive containment test denied every temp file.
+    """
+    assert verdict(command) != "deny", f"{command!r} is ordinary work and must not block"
+
+
+def test_a_symlink_into_a_critical_tree_is_denied_when_the_spelling_traverses() -> None:
+    """Two things had to be true at once for this to be a real hole.
+
+    `rm -rf link` unlinks the link and leaves the target alone, so the bare form is
+    correctly silent. But `link/`, `link/.` and `link/*` DO follow into the target,
+    and the guard compared the literal path -- an unremarkable one under /tmp --
+    against CRITICAL, so a link aimed at /etc was ranked allow.
+
+    The second half is platform-specific: realpath("/etc") is "/private/etc" on
+    macOS, so resolving the target without also resolving CRITICAL still matched
+    nothing. Both sides now resolve.
+    """
+    import os
+    import tempfile
+
+    scratch = tempfile.mkdtemp()
+    link = os.path.join(scratch, "etclink")
+    os.symlink("/etc", link)
+
+    assert verdict(f"rm -rf {link}") != "deny", "unlinking a symlink is not destructive"
+    for suffix in ("/", "/.", "/*"):
+        assert verdict(f"rm -rf {link}{suffix}") == "deny", (
+            f"{suffix!r} traverses the link into /etc and must be denied"
+        )
+
+    plain = os.path.join(scratch, "plain")
+    os.mkdir(plain)
+    harmless = os.path.join(scratch, "oklink")
+    os.symlink(plain, harmless)
+    assert verdict(f"rm -rf {harmless}/") != "deny", "a link to a scratch dir is fine"
+
+
+def test_backtick_substitution_hides_a_target_just_as_dollar_paren_does() -> None:
+    """BS-9 tested only for `$`, so the older substitution spelling walked past it.
+
+    `rm -rf $(echo /)` denied while the backtick form was silent -- the same
+    command substitution, the same unverifiable target, opposite verdicts. A literal
+    or relative path must still pass, or the rule stops being usable.
+    """
+    assert verdict("rm -rf `echo /`") == "deny"
+    assert verdict("rm -rf `pwd`/sub") == "deny"
+    assert verdict("rm -rf $(echo /)") == "deny", "the dollar form must not regress"
+    assert verdict("rm -rf /tmp/build") != "deny"
+    assert verdict("rm -rf ./node_modules") != "deny"
+
+
 def test_an_outsized_command_does_not_stall_the_hook() -> None:
     """shlex is quadratic in token length, and this hook gates every Bash call.
 

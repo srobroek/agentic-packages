@@ -384,6 +384,32 @@ def normalize(target: str, cwd: Path) -> str:
     return "/" + "/".join(parts) if parts else "/"
 
 
+def resolved_critical() -> frozenset[str]:
+    """CRITICAL with each entry passed through realpath, computed once.
+
+    The platform's own symlinks are the problem: on macOS realpath("/etc") is
+    "/private/etc", so a resolved path could never match the literal set and a
+    symlink aimed at /etc was ranked `allow`. Both spellings are kept, because a
+    target may arrive already resolved.
+    """
+    import os.path
+
+    global _RESOLVED_CRITICAL
+    if _RESOLVED_CRITICAL is None:
+        entries = set(CRITICAL)
+        for path in CRITICAL:
+            try:
+                entries.add(os.path.realpath(path))
+            except OSError:
+                continue
+        _RESOLVED_CRITICAL = frozenset(entries)
+    return _RESOLVED_CRITICAL
+
+
+_RESOLVED_CRITICAL: frozenset[str] | None = None
+
+
+
 def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     """Rank one `rm -rf` target: deny-critical, deny-var, warn, or allow."""
     if not target:
@@ -405,6 +431,29 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
         if target in (critical, f"{critical}/", f"{critical}/*"):
             return "deny-critical"
 
+    # A SYMLINK INTO A CRITICAL PATH, but only in the spellings that traverse it.
+    # `rm -rf link` unlinks the link and leaves the target alone -- that is why the
+    # bare form is deliberately not caught here. `rm -rf link/`, `link/.` and
+    # `link/*` do follow into the target, so a link to /etc deleted /etc while the
+    # literal comparison above saw only an unremarkable path under /tmp.
+    #
+    # Resolution is best-effort and read-only: a link that does not exist yet cannot
+    # be judged, and os.path.realpath does not touch the filesystem contents.
+    if target.endswith(("/", "/.", "/*")) and not target.startswith("~") and "$" not in target:
+        import os.path
+
+        base = target.rstrip("*").rstrip("/").removesuffix("/.")
+        try:
+            resolved = os.path.realpath(os.path.join(str(cwd), base))
+        except OSError:
+            resolved = ""
+        # Compare the RESOLVED form against resolved CRITICAL entries. On macOS
+        # realpath("/etc") is "/private/etc", so matching the literal set let a link
+        # to /etc through: the resolution and the comparison have to agree on which
+        # side of the platform's own symlinks they live.
+        if resolved and (resolved == "/" or resolved in resolved_critical()):
+            return "deny-critical"
+
     # Traversal and redundant syntax that normalizes onto a critical path.
     if "$" not in target and (
         ".." in target or target.endswith("/.") or "/./" in target or "//" in target
@@ -415,7 +464,11 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
 
     # An unexpanded variable hides the target. An empty variable even collapses
     # `$DIR/x` toward `/`, so the guard cannot verify what would be removed.
-    if "$" in target:
+    #
+    # A BACKTICK hides it just as well. Testing only `$` meant `rm -rf $(echo /)`
+    # denied while `rm -rf ` + backtick + `echo /` + backtick was silent -- the same
+    # substitution in the older spelling, which shlex leaves intact as one token.
+    if "$" in target or "`" in target:
         return "deny-var"
 
     if target.startswith("~/"):
@@ -520,7 +573,104 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
     if verb in ("curl", "wget"):
         return None  # the pipe form is judged across the whole command below
 
+    if verb == "find":
+        return check_find(words, cwd)
+
+    if verb in DESTRUCTIVE_BY_OTHER_MEANS:
+        return check_other_destructive(verb, words, cwd)
+
     return None
+
+
+# Verbs that destroy without being `rm`. The guard judged only rm/mkfs/dd/curl, so
+# `find / -delete`, `truncate -s0 /etc/passwd` and `shred -u /etc/hosts` were all
+# silent -- each as unrecoverable as the `rm -rf` spelling that denies. Only the
+# CRITICAL-target case is judged here; the same verb aimed at a project path is
+# ordinary work and stays silent.
+DESTRUCTIVE_BY_OTHER_MEANS = frozenset({"truncate", "shred", "mv", "chmod", "chown"})
+
+
+def targets_a_critical_path(words: list[str], cwd: Path, *, inside: bool = False) -> str:
+    """Return the first argument resolving onto a critical path, or "".
+
+    `inside=True` also matches a path UNDER a critical tree, which is the right
+    question for a verb that destroys one file: truncating /etc/passwd is
+    unrecoverable even though /etc/passwd is not itself in CRITICAL. For a verb that
+    acts on a whole tree, the stricter tree-identity test is what is wanted, so that
+    `mv build /tmp` is not judged by where build happens to live.
+    """
+    import os.path
+
+    critical = resolved_critical()
+    for word in words[1:]:
+        if word.startswith("-") or "=" in word or "$" in word or "`" in word:
+            continue
+        candidate = word.rstrip("*").rstrip("/") or "/"
+        try:
+            absolute = os.path.realpath(os.path.join(str(cwd), candidate))
+        except OSError:
+            continue
+        if absolute == "/" or absolute in critical:
+            return word
+        if inside and any(absolute.startswith(f"{entry}/") for entry in critical):
+            # A scratch root wins over the critical tree containing it. /private is
+            # critical and macOS resolves /tmp to /private/tmp, so without this every
+            # temp file looked like a system file: `truncate -s0 /tmp/log.txt` denied.
+            if any(absolute == temp or absolute.startswith(f"{temp}/") for temp in TEMP_ROOTS):
+                continue
+            return word
+    return ""
+
+
+def check_find(words: list[str], cwd: Path) -> tuple[str, str] | None:
+    """Deny a `find` that deletes, when it is rooted at a critical path.
+
+    `find / -delete` and `find / -exec rm -rf {} +` wipe the filesystem exactly as
+    `rm -rf /` does, and neither reached a check before: the verb is `find`, and the
+    `rm` inside `-exec` is an argument rather than a command position.
+    """
+    deletes = "-delete" in words or "-exec" in words or "-execdir" in words or "-ok" in words
+    if not deletes:
+        return None
+    target = targets_a_critical_path(words, cwd)
+    if not target:
+        return None
+    return (
+        "deny",
+        f"blocked by BS-10 (no find that deletes under a critical path): this find "
+        f"is rooted at '{target}', which resolves onto the filesystem root or a "
+        f"system-critical tree, and it carries -delete or -exec. That is as "
+        f"unrecoverable as rm -rf on the same path. Narrow the search root to the "
+        f"specific directory you meant.",
+    )
+
+
+def check_other_destructive(verb: str, words: list[str], cwd: Path) -> tuple[str, str] | None:
+    """Deny truncate/shred/mv/chmod/chown aimed at a critical path.
+
+    Each is unrecoverable in its own way -- truncate and shred destroy contents in
+    place, mv makes the tree unreachable at its expected path, and a recursive mode
+    or owner change on /usr breaks the system as thoroughly as deleting it. All were
+    silent because the guard only ever looked for rm.
+    """
+    if verb in ("chmod", "chown") and not any(
+        word.startswith("-") and ("R" in word or word == "--recursive") for word in words[1:]
+    ):
+        # A single-file mode change is ordinary work, even on a system path.
+        return None
+    # truncate and shred destroy one file's contents, so a path INSIDE a critical
+    # tree is the case that matters -- /etc/passwd is not itself in CRITICAL. The
+    # tree-acting verbs keep the stricter identity test.
+    target = targets_a_critical_path(words, cwd, inside=verb in ("truncate", "shred"))
+    if not target:
+        return None
+    return (
+        "deny",
+        f"blocked by BS-11 (no destructive {verb} on a critical path): '{target}' "
+        f"resolves onto the filesystem root or a system-critical tree, and {verb} "
+        f"there is unrecoverable or breaks the system. Name the specific path inside "
+        f"your project that you meant instead.",
+    )
 
 
 def check_sudo(words: list[str]) -> tuple[str, str] | None:
