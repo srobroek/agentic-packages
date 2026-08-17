@@ -127,6 +127,51 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+DESTRUCTIVE_WITHOUT_RM = [
+    pytest.param("find / -delete", id="find-delete-root"),
+    pytest.param("find /usr -exec rm -rf {} +", id="find-exec-rm"),
+    pytest.param("truncate -s0 /etc/passwd", id="truncate-critical-file"),
+    pytest.param("shred -u /etc/hosts", id="shred-critical-file"),
+    pytest.param("mv /etc /tmp/gone", id="mv-critical-tree"),
+    pytest.param("chmod -R 000 /", id="chmod-recursive-root"),
+    pytest.param("chown -R me /usr", id="chown-recursive-critical"),
+]
+
+
+@pytest.mark.parametrize("command", DESTRUCTIVE_WITHOUT_RM)
+def test_unrecoverable_without_rm_is_denied(command: str) -> None:
+    """The guard judged rm/mkfs/dd/curl only, so these were all silent.
+
+    Each is as unrecoverable as the `rm -rf` spelling that denies: -delete and -exec
+    wipe a tree, truncate and shred destroy contents in place, mv makes a system tree
+    unreachable, and a recursive mode or owner change on /usr breaks the machine.
+    """
+    assert verdict(command) == "deny", f"{command!r} destroys unrecoverably and was allowed"
+
+
+ORDINARY_USE_OF_THE_SAME_VERBS = [
+    pytest.param("find . -name '*.pyc' -delete", id="find-delete-project"),
+    pytest.param("find /tmp/build -delete", id="find-delete-scratch"),
+    pytest.param("truncate -s0 /tmp/log.txt", id="truncate-scratch"),
+    pytest.param("truncate -s0 build/out.log", id="truncate-relative"),
+    pytest.param("shred -u /tmp/secret", id="shred-scratch"),
+    pytest.param("mv src/a.py src/b.py", id="mv-project-files"),
+    pytest.param("mv build dist", id="mv-relative-dirs"),
+    pytest.param("chmod +x scripts/run.sh", id="chmod-single-file"),
+    pytest.param("chmod -R 755 ./dist", id="chmod-recursive-project"),
+]
+
+
+@pytest.mark.parametrize("command", ORDINARY_USE_OF_THE_SAME_VERBS)
+def test_the_same_verbs_stay_silent_on_ordinary_work(command: str) -> None:
+    """A guard that fires on routine work trains the agent to ignore it.
+
+    The scratch cases are the ones that nearly broke: /private is critical and macOS
+    resolves /tmp to /private/tmp, so a naive containment test denied every temp file.
+    """
+    assert verdict(command) != "deny", f"{command!r} is ordinary work and must not block"
+
+
 def test_a_symlink_into_a_critical_tree_is_denied_when_the_spelling_traverses() -> None:
     """Two things had to be true at once for this to be a real hole.
 
