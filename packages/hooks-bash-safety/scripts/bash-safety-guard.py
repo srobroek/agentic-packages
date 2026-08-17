@@ -384,6 +384,32 @@ def normalize(target: str, cwd: Path) -> str:
     return "/" + "/".join(parts) if parts else "/"
 
 
+def resolved_critical() -> frozenset[str]:
+    """CRITICAL with each entry passed through realpath, computed once.
+
+    The platform's own symlinks are the problem: on macOS realpath("/etc") is
+    "/private/etc", so a resolved path could never match the literal set and a
+    symlink aimed at /etc was ranked `allow`. Both spellings are kept, because a
+    target may arrive already resolved.
+    """
+    import os.path
+
+    global _RESOLVED_CRITICAL
+    if _RESOLVED_CRITICAL is None:
+        entries = set(CRITICAL)
+        for path in CRITICAL:
+            try:
+                entries.add(os.path.realpath(path))
+            except OSError:
+                continue
+        _RESOLVED_CRITICAL = frozenset(entries)
+    return _RESOLVED_CRITICAL
+
+
+_RESOLVED_CRITICAL: frozenset[str] | None = None
+
+
+
 def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     """Rank one `rm -rf` target: deny-critical, deny-var, warn, or allow."""
     if not target:
@@ -403,6 +429,29 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
 
     for critical in CRITICAL:
         if target in (critical, f"{critical}/", f"{critical}/*"):
+            return "deny-critical"
+
+    # A SYMLINK INTO A CRITICAL PATH, but only in the spellings that traverse it.
+    # `rm -rf link` unlinks the link and leaves the target alone -- that is why the
+    # bare form is deliberately not caught here. `rm -rf link/`, `link/.` and
+    # `link/*` do follow into the target, so a link to /etc deleted /etc while the
+    # literal comparison above saw only an unremarkable path under /tmp.
+    #
+    # Resolution is best-effort and read-only: a link that does not exist yet cannot
+    # be judged, and os.path.realpath does not touch the filesystem contents.
+    if target.endswith(("/", "/.", "/*")) and not target.startswith("~") and "$" not in target:
+        import os.path
+
+        base = target.rstrip("*").rstrip("/").removesuffix("/.")
+        try:
+            resolved = os.path.realpath(os.path.join(str(cwd), base))
+        except OSError:
+            resolved = ""
+        # Compare the RESOLVED form against resolved CRITICAL entries. On macOS
+        # realpath("/etc") is "/private/etc", so matching the literal set let a link
+        # to /etc through: the resolution and the comparison have to agree on which
+        # side of the platform's own symlinks they live.
+        if resolved and (resolved == "/" or resolved in resolved_critical()):
             return "deny-critical"
 
     # Traversal and redundant syntax that normalizes onto a critical path.
