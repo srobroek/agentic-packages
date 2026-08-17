@@ -1,5 +1,5 @@
 name: steering-global-bootstrap
-version: 1.1.4
+version: 1.2.0
 description: >-
   User-scope bootstrap steering that keeps reusable agentic assets in APM
   packages and limits chezmoi to session profiles and dotfile management.

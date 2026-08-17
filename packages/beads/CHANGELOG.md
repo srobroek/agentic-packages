@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.0.1...beads--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [2.0.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.0.0...beads--v2.0.1) (2026-07-30)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [16.2.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.1.2...orchestrate--v16.2.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [16.1.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.1.1...orchestrate--v16.1.2) (2026-08-17)
 
 

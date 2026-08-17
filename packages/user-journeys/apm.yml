@@ -1,5 +1,5 @@
 name: user-journeys
-version: 1.0.2
+version: 1.1.0
 description: >-
   Service-agnostic user-journey lifecycle: author end-to-end journeys as living
   documents (current-truth body plus a windowed delta log), validate them

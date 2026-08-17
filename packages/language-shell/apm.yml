@@ -1,5 +1,5 @@
 name: language-shell
-version: 3.0.4
+version: 3.1.0
 description: Shell toolkit with portable steering and Serena semantic code tools.
 author: Sjors Robroek
 license: Apache-2.0

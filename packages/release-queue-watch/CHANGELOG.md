@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.6.3...release-queue-watch--v0.7.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [0.6.3](https://github.com/srobroek/agentic-packages/compare/release-queue-watch--v0.6.2...release-queue-watch--v0.6.3) (2026-07-30)
 
 

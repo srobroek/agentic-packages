@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.0.2...code-intelligence--v9.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [9.0.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.0.1...code-intelligence--v9.0.2) (2026-08-17)
 
 

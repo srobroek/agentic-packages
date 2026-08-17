@@ -1,5 +1,5 @@
 name: hooks-attribution-guard
-version: 3.0.2
+version: 3.1.0
 description: >-
   Advises against AI authorship attribution in git commits so the human stays
   the sole author of record. Covers agent trailers from any vendor

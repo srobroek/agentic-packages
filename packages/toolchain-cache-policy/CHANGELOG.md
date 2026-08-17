@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/toolchain-cache-policy--v2.0.2...toolchain-cache-policy--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [2.0.2](https://github.com/srobroek/agentic-packages/compare/toolchain-cache-policy--v2.0.1...toolchain-cache-policy--v2.0.2) (2026-07-30)
 
 

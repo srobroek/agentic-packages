@@ -1,6 +1,6 @@
 {
   "name": "steering-infrastructure",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "description": "Opinionated infrastructure conventions: platform code, IaC, deployment config, CI/CD, environments, and observability. Opt-in steering.",
   "author": {
     "name": "Sjors Robroek"

@@ -1,6 +1,6 @@
 {
   "name": "session-review",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Audit the ending session for corrections, lessons, unresolved TODOs, and follow-up work, then recommend handoffs to `handover`, `audit-steering`, or `write-agentic`. Use when the user says wrap up, review this session, what did we learn, or before a handover.",
   "author": {
     "name": "Sjors Robroek"

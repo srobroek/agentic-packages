@@ -1,5 +1,5 @@
 name: adr-as-beads
-version: 1.0.1
+version: 1.1.0
 description: >-
   Architecture decision records held as beads `decision` beads, registered as
   decisions land rather than reconstructed at closeout. The bead is the record;

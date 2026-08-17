@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.3.1...mcp-playwright--v1.4.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [1.3.1](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.3.0...mcp-playwright--v1.3.1) (2026-07-30)
 
 

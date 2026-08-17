@@ -1,5 +1,5 @@
 name: dependency-quality
-version: 5.0.1
+version: 5.1.0
 description: >-
   Dependency hygiene bundle: nudges to investigate a dependency before adding
   it. Manifest-edit and latest-version guidance lives in

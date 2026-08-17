@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v4.0.2...hooks-chezmoi-guard--v4.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [4.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v4.0.1...hooks-chezmoi-guard--v4.0.2) (2026-08-17)
 
 
