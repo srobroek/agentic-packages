@@ -84,8 +84,8 @@ conflict_repo() {
   conflict_repo simple.txt
   run bash "$PROBE" conflicts main feat
   [ "$status" -eq 1 ]
-  [[ "$output" == *"simple.txt"* ]]
-  [[ "$output" == *"plain.txt"* ]]
+  [[ "$output" == *"simple.txt"* ]] || return 1
+  [[ "$output" == *"plain.txt"* ]] || return 1
 }
 
 @test "conflicts emits a tab-containing path RAW, not C-quoted" {
@@ -94,17 +94,17 @@ conflict_repo() {
   [ "$status" -eq 1 ]
   # The defect emitted the 11 characters "wei\trd.txt" -- surrounding quotes plus a
   # literal backslash-t. The real path holds one tab character.
-  [[ "$output" == *"$(printf 'wei\trd.txt')"* ]]
-  [[ "$output" != *'\t'* ]]
-  [[ "$output" != *'"wei'* ]]
+  [[ "$output" == *"$(printf 'wei\trd.txt')"* ]] || return 1
+  [[ "$output" != *'\t'* ]] || return 1
+  [[ "$output" != *'"wei'* ]] || return 1
 }
 
 @test "conflicts emits a non-ASCII path RAW, not C-quoted" {
   conflict_repo "café.txt"
   run bash "$PROBE" conflicts main feat
   [ "$status" -eq 1 ]
-  [[ "$output" == *"café.txt"* ]]
-  [[ "$output" != *'\3'* ]]
+  [[ "$output" == *"café.txt"* ]] || return 1
+  [[ "$output" != *'\3'* ]] || return 1
 }
 
 @test "conflicts reports clean and exits 0 when the merge succeeds" {
@@ -137,6 +137,6 @@ conflict_repo() {
   run bash "$PROBE" conflicts main feat
   [ "$status" -eq 1 ]
   # plain.txt sorts before simple.txt in C collation.
-  [[ "${lines[0]}" == "plain.txt" ]]
-  [[ "${lines[1]}" == "simple.txt" ]]
+  [[ "${lines[0]}" == "plain.txt" ]] || return 1
+  [[ "${lines[1]}" == "simple.txt" ]] || return 1
 }
