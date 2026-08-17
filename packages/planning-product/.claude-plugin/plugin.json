@@ -1,6 +1,6 @@
 {
   "name": "planning-product",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
   "author": {
     "name": "Sjors Robroek"

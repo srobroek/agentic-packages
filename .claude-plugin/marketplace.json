@@ -191,7 +191,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "12.1.0",
+      "version": "12.2.0",
       "tags": [
         "bundle",
         "steering"
@@ -275,7 +275,7 @@
     {
       "name": "code-intelligence",
       "description": "Codebase understanding toolkit: semantic Serena routing, web-fetch, the PR reviewer agent, and project-structure steering. The SubagentStart context injector requires python3 on PATH.",
-      "version": "9.1.0",
+      "version": "9.2.0",
       "tags": [
         "bundle",
         "semantic"
@@ -286,7 +286,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "20.1.0",
+      "version": "20.2.0",
       "tags": [
         "bundle",
         "baseline"
@@ -297,7 +297,7 @@
     {
       "name": "data-ai",
       "description": "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "data"
@@ -370,7 +370,7 @@
     {
       "name": "frontend",
       "description": "Frontend development and design toolkit: the Playwright browser skill, frontend steering, and external design/build skills (Impeccable, Interface Design, Stitch).",
-      "version": "5.2.0",
+      "version": "5.3.0",
       "tags": [
         "bundle",
         "frontend"
@@ -573,7 +573,7 @@
     {
       "name": "infrastructure",
       "description": "Infrastructure and operations toolkit: infrastructure steering.",
-      "version": "4.1.0",
+      "version": "4.2.0",
       "tags": [
         "bundle",
         "infrastructure"
@@ -584,7 +584,7 @@
     {
       "name": "language-go",
       "description": "Go toolkit: quality, steering, and Serena semantic code tools.",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "tags": [
         "bundle",
         "go"
@@ -595,7 +595,7 @@
     {
       "name": "language-python",
       "description": "Python toolkit: quality, steering, and Serena semantic code tools.",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "tags": [
         "bundle",
         "python"
@@ -606,7 +606,7 @@
     {
       "name": "language-rust",
       "description": "Rust toolkit: quality, steering, and Serena semantic code tools.",
-      "version": "6.1.0",
+      "version": "6.2.0",
       "tags": [
         "bundle",
         "rust"
@@ -617,7 +617,7 @@
     {
       "name": "language-shell",
       "description": "Shell toolkit with portable steering and Serena semantic code tools.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "shell"
@@ -650,7 +650,7 @@
     {
       "name": "language-terraform",
       "description": "Terraform and HCL toolkit: opinionated steering and Serena semantic code tools. No dedicated quality skill yet.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "tags": [
         "bundle",
         "terraform"
@@ -661,7 +661,7 @@
     {
       "name": "language-typescript",
       "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, architecture guidance, and Serena semantic code tools.",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "tags": [
         "bundle",
         "typescript"
@@ -776,7 +776,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "16.2.0",
+      "version": "16.3.0",
       "tags": [
         "skill",
         "agent",
@@ -788,7 +788,7 @@
     {
       "name": "planning-product",
       "description": "Planning and product toolkit: the debate, eli5, and web-fetch skills plus Matt's PRD, issue-writing, TDD, triage, and architecture-improvement workflows.",
-      "version": "3.3.0",
+      "version": "3.4.0",
       "tags": [
         "bundle",
         "planning"
@@ -811,7 +811,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "6.1.0",
+      "version": "6.2.0",
       "tags": [
         "beads",
         "merge-queue",
@@ -836,7 +836,7 @@
     {
       "name": "project-lifecycle",
       "description": "Day-to-day project lifecycle workflows: resume work after interruption (catchup), write handovers, and run verification. Bundles the matching skills, git-workflow steering, and the PR reviewer agent.",
-      "version": "7.1.0",
+      "version": "7.2.0",
       "tags": [
         "bundle",
         "lifecycle"
@@ -909,7 +909,7 @@
     {
       "name": "review",
       "description": "Code review and verification toolkit: the verify skill and the PR reviewer agent. Language-specific quality checks live in the language-<lang> bundles.",
-      "version": "6.1.0",
+      "version": "6.2.0",
       "tags": [
         "bundle",
         "review"
