@@ -283,6 +283,98 @@ def test_an_unresolvable_redirect_still_denies_rather_than_resolving(repo: Path)
     assert verdict("GIT_DIR=$D/.git git clean -fdx", repo) == "deny"
 
 
+def test_checkout_without_dashdash_still_warns_when_it_discards(dirty_repo: Path) -> None:
+    """GS-5 keyed on a literal `--`, so `git checkout HEAD t.txt` was silent.
+
+    Verified against a real repository: that form really does overwrite the file, so
+    the silence lost the warning on a spelling as destructive as the one that warned.
+    """
+    for spelling in (
+        "git checkout -- tracked.txt",
+        "git checkout HEAD tracked.txt",
+        "git checkout HEAD -- tracked.txt",
+    ):
+        _, decision = run(spelling, dirty_repo)
+        assert decision is not None, f"{spelling!r} lost the warning"
+        assert "GS-5" in (decision.get("additionalContext") or ""), f"{spelling!r} missed GS-5"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("git checkout -b feat main", id="new-branch-from-start-point"),
+        pytest.param("git checkout -B feat origin/main", id="force-branch-from-start-point"),
+        pytest.param("git checkout main", id="switch-branch"),
+        pytest.param("git checkout --detach HEAD", id="detach"),
+    ],
+)
+def test_branch_operations_are_not_mistaken_for_discarding_a_path(
+    command: str, dirty_repo: Path
+) -> None:
+    """This is the whole difficulty of the fix above.
+
+    `git checkout -b feat main` carries two bare words exactly as the destructive
+    form does, and it CARRIES changes across rather than discarding them. A branch
+    flag disqualifies the call, and the trailing word must be an existing tracked
+    path -- a start-point that merely looks like a filename cannot trip it.
+    """
+    assert verdict(command, dirty_repo) == "silent", f"{command!r} is harmless"
+
+
+def test_a_literal_tilde_mid_path_is_not_treated_as_a_home_reference(repo: Path) -> None:
+    """`~` means home only at the START of a value; mid-path it is an ordinary
+    character.
+
+    `/tmp/has~tilde/x` is a real directory name, and denying it was a false positive
+    on a path the guard could resolve perfectly well. A guard that fires on correct
+    work gets ignored, so the over-deny matters as much as a miss.
+    """
+    for literal in ("git -C /tmp/has~tilde/x reset --hard", "git -C /tmp/a~b clean -fd"):
+        assert verdict(literal, repo) != "deny", f"{literal!r} names a literal path"
+    for home in ('git -C ~/other reset --hard', 'git -C "~/other" clean -fd'):
+        assert verdict(home, repo) == "deny", f"{home!r} is an unresolvable home reference"
+    assert verdict("git -C /tmp/$X reset --hard", repo) == "deny", "a variable anywhere still denies"
+
+
+def test_an_outsized_command_does_not_stall_the_hook(repo: Path) -> None:
+    """UNVERIFIABLE_REDIRECT degrades badly on one long token, and this hook has a
+    10s budget in hooks.json.
+
+    Measured before the cap: 200KB 614ms, 500KB 2.7s, 2MB past 25s -- a padded
+    argument was a stall rather than a parse. Padding must not buy silence either,
+    since the verb and its flags sit at the front of the string.
+    """
+    import time
+
+    start = time.monotonic()
+    verdict('git -C "' + "a" * 2_000_000 + '" reset --hard', repo)
+    assert time.monotonic() - start < 5.0, "a padded command still stalls the hook"
+
+    padded = 'git -C "$D" reset --hard # ' + "a" * 200_000
+    assert verdict(padded, repo) == "deny", "padding hid a GS-2 target"
+
+
+def test_the_subprocess_timeout_fits_inside_the_hook_budget() -> None:
+    """A 10s subprocess timeout inside a 10s hook budget meant one stalled git call
+    consumed the whole allowance, the runtime killed the hook, and the warning was
+    lost rather than late. Up to three calls may run for one decision.
+    """
+    import json as _json
+
+    sys.path.insert(0, str(GUARD.parent))
+    source = GUARD.read_text(encoding="utf-8")
+    assert "GIT_SUBPROCESS_TIMEOUT" in source, "the timeout is not named"
+
+    budget = _json.loads((GUARD.parent.parent / "hooks" / "hooks.json").read_text())
+    declared = _json.dumps(budget)
+    assert '"timeout": 10' in declared, "hook budget changed; revisit the subprocess bound"
+
+    import re as _re
+
+    value = int(_re.search(r"GIT_SUBPROCESS_TIMEOUT = (\d+)", source).group(1))
+    assert value * 3 <= 10, f"three calls at {value}s each can exceed the 10s budget"
+
+
 def test_a_non_string_cwd_fails_open() -> None:
     """The contract requires fail-open; this raised TypeError and exited 1."""
     payload = json.dumps({"cwd": ["/tmp"], "tool_input": {"command": "git status"}})

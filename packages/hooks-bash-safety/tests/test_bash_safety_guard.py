@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -166,6 +167,55 @@ def test_dd_to_a_non_canonical_pseudo_device_is_allowed() -> None:
     assert verdict("dd if=/dev/zero of=/dev/./null") != "deny"
     assert verdict("dd if=/dev/zero of=/dev/../dev/null") != "deny"
     assert verdict("dd if=x of=/dev/./disk0") == "deny", "a real device must still deny"
+
+
+def test_abbreviated_long_flags_still_count_as_recursive_force() -> None:
+    """GNU accepts any unambiguous abbreviation of a long option.
+
+    `rm --rec --fo /` really deletes -- verified with GNU rm, which removed the tree
+    while the exact-match test read it as two unknown flags and allowed it. BSD rm
+    rejects them, so the honest-mistake path is Linux, but the guard judges the
+    command it is handed, not the platform it happens to run on.
+    """
+    for spelling in ("rm --rec --fo /", "rm --recu --forc /etc", "rm --r --f /"):
+        assert verdict(spelling) == "deny", f"{spelling!r} is recursive+force on a critical path"
+    # Recursion alone is not force, and a project path is not critical.
+    for fine in ("rm --rec /tmp/x", "rm --force ./f.txt", "rm --interactive -rf ./build"):
+        assert verdict(fine) != "deny", f"{fine!r} must not block"
+
+
+def test_dd_to_an_unresolvable_operand_is_denied() -> None:
+    """The repo already denies `rm -rf $VAR`, and dd is the LESS recoverable of the
+    two: writing over the wrong block device destroys a partition table.
+
+    So the two rules disagreeing was the defect -- `rm -rf $VAR` denied while
+    `dd of=$DEV` was silent. A literal file target is still ordinary work.
+    """
+    for hidden in ("dd if=/dev/zero of=$DEV", "dd if=/dev/zero of=`echo /dev/disk0`", "dd if=x > $OUT"):
+        assert verdict(hidden) == "deny", f"{hidden!r} hides its target"
+    for fine in ("dd if=a of=out.img", "dd if=a of=./backup.img", "dd if=/dev/urandom > /dev/null"):
+        assert verdict(fine) != "deny", f"{fine!r} is ordinary work"
+
+
+def test_a_closed_stdout_does_not_turn_a_verdict_into_an_error() -> None:
+    """Python flushes stdout again at interpreter shutdown, after the fail-open
+    wrapper has already returned.
+
+    On a closed pipe that flush exited 120 with nothing written, so a delivered deny
+    became an error the runtime could not read. The decision is written and the
+    stream detached before shutdown can raise.
+    """
+    payload = json.dumps({"cwd": "/tmp", "tool_name": "Bash", "tool_input": {"command": "rm -rf /"}})
+    result = subprocess.run(  # noqa: S602
+        f"printf %s {shlex.quote(payload)} | {shlex.quote(sys.executable)} "
+        f"{shlex.quote(str(GUARD))} | true; exit ${{PIPESTATUS[1]}}",
+        shell=True,
+        capture_output=True,
+        text=True,
+        executable="/bin/bash",
+        timeout=30,
+    )
+    assert result.returncode == 0, f"closed pipe produced exit {result.returncode}"
 
 
 def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
