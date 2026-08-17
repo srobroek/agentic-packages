@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.2](https://github.com/srobroek/agentic-packages/compare/review--v6.0.1...review--v6.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
 ## [6.0.1](https://github.com/srobroek/agentic-packages/compare/review--v6.0.0...review--v6.0.1) (2026-07-30)
 
 
