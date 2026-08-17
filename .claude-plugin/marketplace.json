@@ -191,7 +191,7 @@
     {
       "name": "agentic-maintenance",
       "description": "Maintain your agentic assets: audit and optimize steering, write new skills, with the coder and PR reviewer agents.",
-      "version": "12.2.0",
+      "version": "12.2.1",
       "tags": [
         "bundle",
         "steering"
@@ -286,7 +286,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "20.3.0",
+      "version": "20.3.1",
       "tags": [
         "bundle",
         "baseline"
@@ -776,7 +776,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "16.3.0",
+      "version": "16.3.1",
       "tags": [
         "skill",
         "agent",
@@ -811,7 +811,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "6.2.1",
+      "version": "6.2.2",
       "tags": [
         "beads",
         "merge-queue",
