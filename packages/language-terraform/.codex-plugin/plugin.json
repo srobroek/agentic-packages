@@ -1,6 +1,6 @@
 {
   "name": "language-terraform",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Terraform and HCL toolkit: opinionated steering and Serena semantic code tools. No dedicated quality skill yet.",
   "author": {
     "name": "Sjors Robroek"

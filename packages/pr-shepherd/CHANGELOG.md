@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.2.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.1.0...pr-shepherd--v6.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+
+### Bug Fixes
+
+* **pr-shepherd:** close seven defects a fuzz campaign proved, and cover 2,248 untested lines ([466bda9](https://github.com/srobroek/agentic-packages/commit/466bda9e618f4ec314f1619932d0be3d1af355eb))
+
 ## [6.1.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.0.2...pr-shepherd--v6.1.0) (2026-08-17)
 
 

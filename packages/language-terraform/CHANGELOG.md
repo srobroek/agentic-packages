@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/srobroek/agentic-packages/compare/language-terraform--v3.1.0...language-terraform--v3.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/language-terraform--v3.0.4...language-terraform--v3.1.0) (2026-08-17)
 
 
