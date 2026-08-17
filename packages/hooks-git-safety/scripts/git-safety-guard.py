@@ -90,10 +90,26 @@ def emit(decision: str, message: str) -> None:
 
 
 def split_commands(command: str) -> list[list[str]]:
-    """Tokenize into commands. A newline separates exactly like a semicolon."""
+    """Tokenize into commands. A newline separates exactly like a semicolon.
+
+    Both rewrites below exist in the bash guard for reasons that apply identically
+    here, and their absence was two live holes: `git reset \\<newline>--hard` was
+    silent because the continuation split one command into two, and `ls # note<newline>
+    git -C "$D" reset --hard` was silent because shlex read `#` as a comment and
+    discarded the rest of the STRING, newline included, so the git call vanished.
+    """
     import shlex
 
+    # A backslash-newline is a line continuation: the two halves are ONE command.
+    command = re.sub(r"\\\r?\n", " ", command)
+
+    # A real shell starts a comment only where a word could start, so a `#` glued to
+    # a word (`file#1`) is data. Cut at a word-initial `#` and disable shlex's own
+    # comment handling, which would otherwise eat the following lines.
+    command = re.sub(r"(?:(?<=\s)|^)#[^\n]*", "", command)
+
     lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.commenters = ""
     lexer.whitespace_split = True
     tokens = list(lexer)
 
@@ -195,22 +211,49 @@ def git_invocation(words: list[str]) -> list[str] | None:
         if word in COMMAND_BOUNDARIES or ASSIGNMENT.match(word):
             index += 1
             continue
-        if word in WRAPPERS:
-            takes_operand = word in WRAPPER_OPERAND
+        # Wrappers by BASENAME: matched against the raw word, an absolute path
+        # defeated the set and left `/usr/bin/sudo` in command position.
+        name = Path(word).name
+        if name in WRAPPERS:
+            takes_operand = name in WRAPPER_OPERAND
             index += 1
             # Consume the wrapper's own options, plus one value for an option that
             # takes one. Skipping only the wrapper WORD left `-n` standing where the
             # verb belonged, so `nice -n 5 git ... reset --hard` was silent while the
             # bare command denied -- six wrapper forms defeated the deny this way.
+            # `--` STOPS THE SCAN. It ends the wrapper's options, so the next word
+            # is the command. Treated as just another option, the lookahead below
+            # swallowed it AND the verb: `sudo -u root -- git -C "$D" reset --hard`
+            # was silent while the same line without `--` denied under GS-2.
             while index < len(words) and words[index].startswith("-"):
+                if words[index] == "--":
+                    index += 1
+                    break
                 index += 1
                 if index < len(words) and not words[index].startswith("-"):
                     following = words[index + 1] if index + 1 < len(words) else None
                     if following is not None and not following.startswith("-"):
                         index += 1
+            # A `--` reached after an option VALUE still ends the options. Without
+            # this, `sudo -u root -- git -C "$D" reset --hard` left `root` in command
+            # position: `-u` consumed `root`, the loop saw `--` was not a bare word,
+            # and stopped one word short of the verb.
+            if index < len(words) and words[index] == "--":
+                index += 1
+            elif (
+                index + 1 < len(words)
+                and words[index + 1] == "--"
+                and not words[index].startswith("-")
+                and Path(words[index]).name not in WRAPPERS
+                and not takes_operand
+            ):
+                index += 2
             # `timeout 5 git ...`: the duration belongs to the wrapper.
             if takes_operand and index < len(words) and not words[index].startswith("-"):
                 index += 1
+                # `timeout 5 -- git ...`: the marker follows the operand.
+                if index < len(words) and words[index] == "--":
+                    index += 1
             continue
         break
     if index >= len(words) or Path(words[index]).name != "git":
@@ -382,7 +425,11 @@ def extract(payload: str) -> tuple[str, str]:
 
 
 def main() -> int:
-    payload = sys.stdin.read()
+    # Read BYTES and decode leniently. `sys.stdin.read()` raises UnicodeDecodeError
+    # on one undecodable byte anywhere in the payload -- including in a field this
+    # guard never looks at -- and the fail-open wrapper then swallowed the error, so
+    # a single stray byte silenced the guard on a command it would otherwise deny.
+    payload = sys.stdin.buffer.read().decode("utf-8", "replace")
     # Cheap bail on the raw bytes before any parse: every rule needs a git call.
     # A strict superset of the real trigger, so it cannot hide a match.
     if "git" not in payload:
