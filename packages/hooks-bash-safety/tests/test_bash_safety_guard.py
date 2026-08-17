@@ -163,7 +163,7 @@ def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
     "replace" keeps the decision.
     """
     for raw in (
-        b'{"cwd":"/tmp","tool_name":"Bash","tool_input":{"command":"rm -rf /caf\xe9"}}',
+        b'{"cwd":"/tmp","tool_name":"Bash","tool_input":{"command":"rm -rf /scratch\xe9dir"}}',
         b'{"cwd":"/tmp","tool_name":"Bash","tool_use_id":"a\xe9b",'
         b'"tool_input":{"command":"rm -rf /"}}',
     ):
