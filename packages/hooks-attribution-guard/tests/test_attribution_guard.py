@@ -199,7 +199,7 @@ def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
         "git commit -m 'x\n\nCo-Authored-By: Claude <noreply@anthropic.com>'"
     )
     payload = json.dumps({"cwd": ".", "tool_name": "Bash", "tool_input": {"command": attributed}})
-    poisoned = payload.encode()[:-1] + b', "unread_field":"caf\xe9"}'
+    poisoned = payload.encode()[:-1] + b', "unread_field":"scratch\xe9"}'
 
     clean = subprocess.run(  # noqa: S603
         [sys.executable, str(GUARD)], input=payload.encode(), capture_output=True, timeout=30
