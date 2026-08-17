@@ -1905,7 +1905,7 @@ def recover_claim(merge_bead: str, dead_actor: str, evidence: str,
             record = None
         if record is None:
             fail("cannot find current open waiter attempt for takeover")
-        require_waiter_link_for_recovery(record, slot, "waiter has invalid parent linkage")
+        require_waiter_link(record, slot, "waiter has invalid parent linkage")
         lease = (record.get("metadata") or {}).get("lease_actor") or ""
         try:
             native_holder = native_holder_token(waiter_holder, record)
@@ -1933,33 +1933,46 @@ def recover_claim(merge_bead: str, dead_actor: str, evidence: str,
         if acquire_slot(recovery_holder, "1", "0", "handoff", "resume") != 0:
             fail("cannot acquire dead-claim recovery slot")
 
-    # EVERYTHING FROM HERE RELEASES THE INTERNAL SLOT ON THE WAY OUT. The recovery
-    # slot is acquired with protection="handoff", so no signal-armed release covers
-    # it, and it used to be released only on the success path below. Any Fail in
-    # between -- the "another recovery receipt is incomplete" check inside
-    # prepare_recovery, or a bd hiccup in claim_state or finish_recovery -- left the
-    # slot held by pr-shepherd:claim-recovery:<bead>:<actor> forever. Retries resumed
-    # the same lease and aborted identically, and release_sheepdog then returned 75
-    # for good, so NO shepherd could take the repo patrol. A leaked lock is worse
-    # than the failure that caused it.
+    # RELEASED ON EVERY EXIT PATH, not only on success. The recovery slot is acquired
+    # with protection="handoff", so no signal-armed release covers it, and it used to
+    # be released only after finish_recovery. Any Fail in between -- the "another
+    # recovery receipt is incomplete" check inside prepare_recovery, or a bd hiccup in
+    # claim_state -- left the slot held by pr-shepherd:claim-recovery:<bead>:<actor>
+    # forever; retries resumed the same lease and aborted identically, and
+    # release_sheepdog then returned 75 for good, so NO shepherd could take the repo
+    # patrol.
+    #
+    # Two details are load-bearing, and each one cost me a full harness run:
+    #
+    # `if not waiter_holder` -- in the waiter-takeover path the slot belongs to the
+    # caller's waiter, not to us, so releasing it here would tear down a lease this
+    # function never acquired. Only the internal lease above is ours to free.
+    #
+    # The DISPOSITION must follow the outcome. Releasing "terminal" on the failure path
+    # marks the waiter terminal, and the retry then dies on "terminal waiter ...
+    # requires explicit requeue" -- swapping one stuck lease for an unresumable one.
+    # A crashed recovery is by definition retryable.
+    disposition = "retryable"
     try:
-        return _recover_claim_locked(
+        rc = _recover_claim_body(
             merge_bead, dead_actor, evidence, waiter_holder, successor, subject, key
         )
+        disposition = "terminal"
+        return rc
     finally:
-        if recovery_holder:
-            # quiet: an internal lease keeps its SLOT_RELEASED off stdout. A failure
-            # to release here must not mask the original Fail, so it is not raised.
-            release_slot(recovery_holder, "terminal", quiet=True)
+        if not waiter_holder and recovery_holder:
+            if release_slot(recovery_holder, disposition, quiet=True) != 0 and (
+                disposition == "terminal"
+            ):
+                fail("cannot release dead-claim recovery slot")
 
 
-def _recover_claim_locked(merge_bead: str, dead_actor: str, evidence: str,
-                          waiter_holder: str, successor: str, subject: str,
-                          key: str) -> int:
-    """The body of recover_claim, with the internal slot already held.
+def _recover_claim_body(merge_bead: str, dead_actor: str, evidence: str,
+                        waiter_holder: str, successor: str, subject: str,
+                        key: str) -> int:
+    """recover_claim's body, with the internal slot already held by the caller.
 
-    Split out so the caller's `finally` owns the release for every exit path rather
-    than only the success path.
+    Split out so the caller's `finally` owns the release for every exit path.
     """
     phase, _ = prepare_recovery(merge_bead, key, "claim", subject, evidence)
     if recovery_phase_rank(phase) < 2:
