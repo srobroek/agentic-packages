@@ -386,7 +386,23 @@ class RepoState:
 
         try:
             result = subprocess.run(
-                [_git_binary(), "-C", str(self._cwd), *args],
+                [
+                    _git_binary(),
+                    "-C",
+                    str(self._cwd),
+                    # A repo-local core.fsmonitor is a COMMAND git runs, so reading
+                    # the state of an untrusted checkout would execute whatever that
+                    # repository configured. The guard exists to gate destructive
+                    # commands, so it must not become an execution path itself.
+                    "-c",
+                    "core.fsmonitor=",
+                    # Same reasoning for the pager and any alias expansion: neither is
+                    # needed to read porcelain output, and both can run a command.
+                    "-c",
+                    "core.pager=cat",
+                    "--no-optional-locks",
+                    *args,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=GIT_SUBPROCESS_TIMEOUT,
@@ -394,6 +410,15 @@ class RepoState:
         except (OSError, subprocess.SubprocessError):
             return None
         return result.stdout if result.returncode == 0 else None
+
+    def tracks_path(self, candidate: str) -> bool:
+        """True when git tracks this path, so it is a pathspec and not a start-point.
+
+        The distinction is what keeps `git checkout -b feat main` quiet: `main` is a
+        branch, not a tracked file, so it is not a path being discarded.
+        """
+        output = self._run(["ls-files", "--error-unmatch", "--", candidate])
+        return bool(output is not None and output.strip())
 
     def has_uncommitted_tracked_changes(self) -> bool:
         """True when tracked files carry staged or unstaged changes.
@@ -444,6 +469,30 @@ def restore_is_staged_only(args: list[str]) -> bool:
     return has_flag(args, "--staged") and not has_flag(args, "--worktree")
 
 
+def checkout_discards_a_path(rest: list[str], state: RepoState) -> bool:
+    """True for `git checkout <commit> <path>`, which discards work without a `--`.
+
+    GS-5 keyed on a literal `--`, so `git checkout HEAD t.txt` was silent while
+    `git checkout -- t.txt` warned. Verified against a real repository: the first form
+    really does overwrite the file, so the silence lost the warning on a spelling that
+    is just as destructive.
+
+    THE FALSE-POSITIVE RISK IS THE WHOLE DIFFICULTY. `git checkout -b feat main` and
+    `git checkout -B feat origin/main` also carry two bare words and are entirely
+    harmless -- they carry changes across rather than discarding them. So a branch
+    flag disqualifies the call outright, and the trailing word has to be an existing
+    TRACKED path before this returns True: a start-point that merely looks like a
+    filename cannot trip it.
+    """
+    if any(flag in rest for flag in ("-b", "-B", "--orphan", "--detach", "--track", "-t")):
+        return False
+    operands = [word for word in rest if not word.startswith("-")]
+    if len(operands) < 2:
+        return False
+    return state.tracks_path(operands[-1])
+
+
+
 def judge(args: list[str], state: RepoState) -> tuple[str, str] | None:
     """Judge one git subcommand."""
     subcommand, rest = args[0], args[1:]
@@ -469,7 +518,9 @@ def judge(args: list[str], state: RepoState) -> tuple[str, str] | None:
             "the remote ref is what you expect before proceeding. Proceeding.",
         )
 
-    if subcommand == "checkout" and "--" in rest:
+    if subcommand == "checkout" and (
+        "--" in rest or checkout_discards_a_path(rest, state)
+    ):
         if state.has_uncommitted_tracked_changes():
             return (
                 "warn",
