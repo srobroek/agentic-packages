@@ -95,25 +95,30 @@ def test_missing_deployed_agent_fails(tmp_path: Path) -> None:
         injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=False)
 
 
-def test_deployed_agent_without_mapping_fails(tmp_path: Path) -> None:
+def test_deployed_agent_without_mapping_is_skipped(tmp_path: Path) -> None:
+    """An unmapped deployed toml is left alone, and the mapped ones still inject.
+
+    A deployed agent with no mapping is not APM's to own -- hand-authored, or an
+    orphan a retired package left behind -- so it must not fail the lifecycle.
+    Source-side coverage is still enforced, by validate_source_coverage.
+    """
     write_mapping(tmp_path / ".apm" / "agent-models.yml")
     agents = tmp_path / ".codex" / "agents"
     agents.mkdir(parents=True)
-    (agents / "coder.toml").write_text(
+    coder = agents / "coder.toml"
+    coder.write_text(
         'name = "coder"\ndescription = "Codes"\ndeveloper_instructions = "Work"\n',
         encoding="utf-8",
     )
+    stale_body = 'name = "stale-agent"\ndescription = "Stale"\ndeveloper_instructions = "Work"\n'
     stale = agents / "stale-agent.toml"
-    stale.write_text(
-        'name = "stale-agent"\ndescription = "Stale"\ndeveloper_instructions = "Work"\n',
-        encoding="utf-8",
-    )
+    stale.write_text(stale_body, encoding="utf-8")
 
-    with pytest.raises(
-        injector.MappingError,
-        match=r"lacks agent-models\.yml entry: .*stale-agent\.toml \(stale-agent\)",
-    ):
-        injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=True)
+    # patch_codex returns the number of files it injected -- one (coder), not the
+    # unmapped stale-agent.
+    assert injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=False) == 1
+    assert 'model = "gpt-5.6-luna"' in coder.read_text(encoding="utf-8")
+    assert stale.read_text(encoding="utf-8") == stale_body
 
 
 def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
