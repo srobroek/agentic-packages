@@ -78,6 +78,19 @@ SUBSTITUTED_DOWNLOAD = re.compile(
 # the bound only stops a pathological payload from recursing without end.
 MAX_NESTING = 4
 
+# How many further wrappers to peel once MAX_NESTING is reached. Recursion stops
+# there to bound stack depth, but stopping the UNWRAPPING there made the bound an
+# escape: enough `sh -c` layers and the payload was never judged at all. This
+# ceiling is deliberately high -- no honest command nests 60 deep, and the cost is
+# one lex per layer -- so the only payloads it fails to reach are ones already
+# absurd enough that the shell itself would struggle.
+UNWRAP_CEILING = 64
+
+# Cap on the command text handed to the lexer. See split_commands for the measured
+# curve; 64KB lexes in well under 50ms and is far past any hand-written command,
+# while the front of the string -- where every verb and flag lives -- is preserved.
+MAX_COMMAND_CHARS = 65536
+
 # Shell keywords and openers after which a command starts.
 OPENERS = frozenset({"do", "then", "else", "elif", "{", "(", "!", "while", "until", "if"})
 
@@ -155,13 +168,36 @@ def split_commands(command: str) -> list[list[str]]:
     """
     import shlex
 
+    # shlex is quadratic in token length, and this hook runs on every Bash call, so
+    # an outsized command is a stall rather than a parse. Measured on one unbroken
+    # token: 50KB 31ms, 200KB 477ms, 400KB 1.4s, 800KB 4.7s, 1MB 14.5s end to end.
+    # A 14-second PreToolUse hook is indistinguishable from a hang.
+    #
+    # Truncating is safe in the direction that matters. Every rule matches on the
+    # VERB and its flags, which sit at the front; what the cap discards is the tail
+    # of an argument, and a decision made on the first 64KB of `rm -rf <huge>` is
+    # the same decision. The alternative -- bailing out entirely on a long command
+    # -- would hand any payload a way to buy silence just by padding itself.
+    if len(command) > MAX_COMMAND_CHARS:
+        command = command[:MAX_COMMAND_CHARS]
+
     # A newline separates commands exactly like a semicolon, but shlex treats
     # it as ordinary whitespace, which merged a second line into the first and
     # hid its verb from every check. A BACKSLASH-newline is the opposite case: it
     # is a line continuation, so the two halves are one command and splitting
     # there orphaned the target of an `rm` from its flags.
     command = re.sub(r"\\\r?\n", " ", command)
+
+    # shlex treats `#` as a comment opener even mid-line and discards everything
+    # after it, so `echo hi # rm -rf /` lexed to just `echo hi` and the rm vanished.
+    # A real shell only starts a comment where a word could start, so a `#` glued to
+    # the end of a word (`file#1`) is data. Disabling shlex's comment handling and
+    # cutting at a `#` that begins a word matches the shell and stops the payload
+    # from hiding behind one.
+    command = re.sub(r"(?:(?<=\s)|^)#.*$", "", command)
+
     lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.commenters = ""
     lexer.whitespace_split = True
     tokens = list(lexer)  # raises ValueError on an unterminated quote
 
@@ -231,10 +267,39 @@ def expand_commands(command: str, depth: int = 0) -> list[list[str]]:
 
     The outer invocation is kept as well as its expansion: `sudo sh -c '...'`
     still deserves the elevated-privilege warning on the outer form.
+
+    AT THE DEPTH BOUND THE PAYLOAD IS STILL SPLIT, not dropped. Returning only the
+    outer words there made the bound an escape hatch: five `sh -c` wrappers around
+    `rm -rf /` reached depth 5, the recursion stopped, and the only words ever
+    judged were `sh -c <string>` -- a verb no rule matches -- so the guard fell
+    silent on the one command it exists to deny. Verified by walking depths 0..6:
+    0-4 denied, 5 and 6 silent. The bound exists to stop unbounded recursion on a
+    pathological payload, so it now keeps splitting the innermost string it has
+    reached and judges those words instead of discarding them.
     """
     commands = split_commands(command)
     if depth >= MAX_NESTING:
-        return commands
+        # Unwrap iteratively rather than recursively: a bound that merely shifts by
+        # one still lets a deeper payload through, so drain every remaining wrapper
+        # here. The loop is bounded by UNWRAP_CEILING, so a hostile payload cannot
+        # spin, and it costs one lex per wrapper rather than one stack frame.
+        deepest: list[list[str]] = []
+        for words in commands:
+            deepest.append(words)
+            current = words
+            for _ in range(UNWRAP_CEILING):
+                inner = nested_command(strip_prefix(current))
+                if not inner:
+                    break
+                try:
+                    peeled = split_commands(inner)
+                except ValueError:
+                    break
+                deepest.extend(peeled)
+                if len(peeled) != 1:
+                    break
+                current = peeled[0]
+        return deepest
 
     expanded: list[list[str]] = []
     for words in commands:
@@ -257,20 +322,64 @@ def strip_prefix(words: list[str]) -> list[str]:
         if word in OPENERS or ASSIGNMENT.match(word):
             index += 1
             continue
-        if word in WRAPPERS:
-            takes_operand = word in WRAPPER_OPERAND
+        # Wrappers by BASENAME. The set was matched against the raw word, so an
+        # absolute path defeated it: `/usr/bin/sudo rm -rf /` left `/usr/bin/sudo`
+        # in command position and the rm behind it unjudged. Every other verb read
+        # in this module already uses Path(word).name.
+        name = Path(word).name
+        if name in WRAPPERS:
+            takes_operand = name in WRAPPER_OPERAND
             index += 1
             # Consume the wrapper's own options, plus one value for an option
             # that takes one. A bare word here is the wrapped command.
+            #
+            # `--` STOPS THE SCAN. It ends the wrapper's options, so the next word is
+            # the command. Treating it as just another option let the lookahead below
+            # swallow it AND the verb: `sudo -u root -- rm -rf /etc` was silent while
+            # the same line without `--` denied.
             while index < len(words) and words[index].startswith("-"):
+                if words[index] == "--":
+                    index += 1
+                    break
                 index += 1
                 if index < len(words) and not words[index].startswith("-"):
                     following = words[index + 1] if index + 1 < len(words) else None
                     if following is not None and not following.startswith("-"):
                         index += 1
+            # A `--` reached after an option VALUE still ends the options. Without
+            # this, `sudo -u root -- rm -rf /etc` left `root` in command position:
+            # `-u` consumed `root`, the loop saw `--` was not a bare word, and
+            # stopped one word short of the verb. Handled by looking at the CURRENT
+            # word only -- an earlier version also skipped a `--` one position ahead,
+            # which overshot `timeout 5 -- rm -rf /` and consumed the verb itself.
+            if index < len(words) and words[index] == "--":
+                index += 1
+            elif (
+                index + 1 < len(words)
+                and words[index + 1] == "--"
+                and not words[index].startswith("-")
+                and words[index] not in WRAPPERS
+            ):
+                # `sudo -u root -- rm`: the option value sits where a bare word would,
+                # so the `--` behind it is still the wrapper's end-of-options marker.
+                # Not for an operand-taking wrapper: `timeout 5 --` has its operand in
+                # that slot, and consuming both here left the operand rule below to eat
+                # the verb.
+                if not takes_operand:
+                    index += 2
             # `timeout 5 rm ...`: the duration belongs to the wrapper.
             if takes_operand and index < len(words) and not words[index].startswith("-"):
                 index += 1
+                # `timeout 5 -- rm ...`: the marker follows the operand.
+                if index < len(words) and words[index] == "--":
+                    index += 1
+            continue
+        # `--` ends the wrapper's own options; the verb is whatever follows. It was
+        # left in place, so `timeout 5 -- rm -rf /` presented `--` as the verb and
+        # every rule missed the rm behind it. An end-of-options marker is never
+        # itself a command.
+        if word == "--":
+            index += 1
             continue
         break
     return words[index:]
@@ -329,6 +438,49 @@ def normalize(target: str, cwd: Path) -> str:
     return "/" + "/".join(parts) if parts else "/"
 
 
+def resolved_critical() -> frozenset[str]:
+    """CRITICAL with each entry passed through realpath, computed once.
+
+    The platform's own symlinks are the problem: on macOS realpath("/etc") is
+    "/private/etc", so a resolved path could never match the literal set and a
+    symlink aimed at /etc was ranked `allow`. Both spellings are kept, because a
+    target may arrive already resolved.
+    """
+    import os.path
+
+    global _RESOLVED_CRITICAL
+    if _RESOLVED_CRITICAL is None:
+        entries = set(CRITICAL)
+        for path in CRITICAL:
+            try:
+                entries.add(os.path.realpath(path))
+            except OSError:
+                continue
+        _RESOLVED_CRITICAL = frozenset(entries)
+    return _RESOLVED_CRITICAL
+
+
+_RESOLVED_CRITICAL: frozenset[str] | None = None
+
+
+
+def expand_braces(target: str) -> list[str]:
+    """Expand one level of `a{b,c}d` into the paths a shell would produce.
+
+    One level is enough for the judgement: `/{etc,usr}` and `/etc/{a,b}` both put a
+    critical path in at least one branch, and a nested case still yields a branch
+    containing the outer prefix. Bounded output, because a hostile
+    `{a,b}{a,b}{a,b}...` should not become a combinatorial expansion inside a hook.
+    """
+    start = target.find("{")
+    end = target.find("}", start + 1)
+    if start < 0 or end < 0:
+        return [target]
+    prefix, body, suffix = target[:start], target[start + 1 : end], target[end + 1 :]
+    return [f"{prefix}{piece}{suffix}" for piece in body.split(",")[:16] if piece]
+
+
+
 def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     """Rank one `rm -rf` target: deny-critical, deny-var, warn, or allow."""
     if not target:
@@ -337,17 +489,61 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     if target in CATASTROPHIC_TARGETS:
         return "deny-root"
 
+    # BRACE EXPANSION is one token to the lexer but many paths to the shell, so
+    # `rm -rf /{etc,usr}` carried no unresolvable marker and ranked warn. Expanding
+    # it and judging the worst branch is what the shell would actually do.
+    if "{" in target and "," in target and "}" in target:
+        worst = "allow"
+        order = {"deny-root": 4, "deny-critical": 3, "deny-var": 2, "warn": 1, "allow": 0}
+        for branch in expand_braces(target):
+            if branch == target:
+                continue
+            ranked = classify_rm_target(branch, cwd, root)
+            if order[ranked] > order[worst]:
+                worst = ranked
+        if worst != "allow":
+            return worst
+
     # A relative target is as bad as an absolute one when the directory it
     # resolves against is itself critical: `cd / && rm -rf *` deletes exactly
     # what `rm -rf /*` deletes.
     if not target.startswith(("/", "~")) and "$" not in target:
         if str(cwd) == "/":
             return "deny-root"
-        if str(cwd) in CRITICAL:
+        # Resolved form too: on macOS a shell sitting in /etc reports /private/etc,
+        # so the literal-only test lost the relative-target deny for exactly the
+        # directories it most needed to cover.
+        if str(cwd) in CRITICAL or str(cwd) in resolved_critical():
             return "deny-critical"
 
-    for critical in CRITICAL:
+    # Both spellings of every critical entry, because the platform's own symlinks
+    # mean a user may legitimately write either: /etc and /private/etc name one
+    # directory, and only the first was denied.
+    for critical in resolved_critical():
         if target in (critical, f"{critical}/", f"{critical}/*"):
+            return "deny-critical"
+
+    # A SYMLINK INTO A CRITICAL PATH, but only in the spellings that traverse it.
+    # `rm -rf link` unlinks the link and leaves the target alone -- that is why the
+    # bare form is deliberately not caught here. `rm -rf link/`, `link/.` and
+    # `link/*` do follow into the target, so a link to /etc deleted /etc while the
+    # literal comparison above saw only an unremarkable path under /tmp.
+    #
+    # Resolution is best-effort and read-only: a link that does not exist yet cannot
+    # be judged, and os.path.realpath does not touch the filesystem contents.
+    if target.endswith(("/", "/.", "/*")) and not target.startswith("~") and "$" not in target:
+        import os.path
+
+        base = target.rstrip("*").rstrip("/").removesuffix("/.")
+        try:
+            resolved = os.path.realpath(os.path.join(str(cwd), base))
+        except OSError:
+            resolved = ""
+        # Compare the RESOLVED form against resolved CRITICAL entries. On macOS
+        # realpath("/etc") is "/private/etc", so matching the literal set let a link
+        # to /etc through: the resolution and the comparison have to agree on which
+        # side of the platform's own symlinks they live.
+        if resolved and (resolved == "/" or resolved in resolved_critical()):
             return "deny-critical"
 
     # Traversal and redundant syntax that normalizes onto a critical path.
@@ -360,7 +556,11 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
 
     # An unexpanded variable hides the target. An empty variable even collapses
     # `$DIR/x` toward `/`, so the guard cannot verify what would be removed.
-    if "$" in target:
+    #
+    # A BACKTICK hides it just as well. Testing only `$` meant `rm -rf $(echo /)`
+    # denied while `rm -rf ` + backtick + `echo /` + backtick was silent -- the same
+    # substitution in the older spelling, which shlex leaves intact as one token.
+    if "$" in target or "`" in target:
         return "deny-var"
 
     if target.startswith("~/"):
@@ -451,8 +651,24 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
         )
 
     if verb == "dd":
-        for word in words[1:]:
-            if word.startswith("of=/dev/") and word[3:] not in PSEUDO_DEVICES:
+        # `of=` is the familiar spelling, but a REDIRECT reaches the same device:
+        # `dd if=/dev/zero > /dev/disk0` overwrites the disk with no `of=` operand
+        # anywhere, and the scan for one missed it entirely.
+        for index, word in enumerate(words[1:], start=1):
+            device = ""
+            if word.startswith("of=/dev/"):
+                device = word[3:]
+            elif word in (">", ">>") and index + 1 < len(words):
+                candidate = words[index + 1]
+                if candidate.startswith("/dev/"):
+                    device = candidate
+            # Normalize before the compare: `/dev/./null` and `/dev/../dev/null` are
+            # /dev/null, and comparing the literal denied a harmless redirect.
+            if device:
+                import posixpath
+
+                device = posixpath.normpath(device)
+            if device and device not in PSEUDO_DEVICES:
                 return (
                     "deny",
                     "blocked by BS-6 (no dd to a block device): this writes over a "
@@ -465,12 +681,126 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
     if verb in ("curl", "wget"):
         return None  # the pipe form is judged across the whole command below
 
+    if verb == "find":
+        return check_find(words, cwd)
+
+    if verb in DESTRUCTIVE_BY_OTHER_MEANS:
+        return check_other_destructive(verb, words, cwd)
+
     return None
+
+
+# Verbs that destroy without being `rm`. The guard judged only rm/mkfs/dd/curl, so
+# `find / -delete`, `truncate -s0 /etc/passwd` and `shred -u /etc/hosts` were all
+# silent -- each as unrecoverable as the `rm -rf` spelling that denies. Only the
+# CRITICAL-target case is judged here; the same verb aimed at a project path is
+# ordinary work and stays silent.
+DESTRUCTIVE_BY_OTHER_MEANS = frozenset({"truncate", "shred", "mv", "chmod", "chown"})
+
+
+def targets_a_critical_path(words: list[str], cwd: Path, *, inside: bool = False) -> str:
+    """Return the first argument resolving onto a critical path, or "".
+
+    `inside=True` also matches a path UNDER a critical tree, which is the right
+    question for a verb that destroys one file: truncating /etc/passwd is
+    unrecoverable even though /etc/passwd is not itself in CRITICAL. For a verb that
+    acts on a whole tree, the stricter tree-identity test is what is wanted, so that
+    `mv build /tmp` is not judged by where build happens to live.
+    """
+    import os.path
+
+    critical = resolved_critical()
+    for word in words[1:]:
+        if word.startswith("-") or "=" in word or "$" in word or "`" in word:
+            continue
+        candidate = word.rstrip("*").rstrip("/") or "/"
+        try:
+            absolute = os.path.realpath(os.path.join(str(cwd), candidate))
+        except OSError:
+            continue
+        if absolute == "/" or absolute in critical:
+            return word
+        if inside and any(absolute.startswith(f"{entry}/") for entry in critical):
+            # A scratch root wins over the critical tree containing it. /private is
+            # critical and macOS resolves /tmp to /private/tmp, so without this every
+            # temp file looked like a system file: `truncate -s0 /tmp/log.txt` denied.
+            if any(absolute == temp or absolute.startswith(f"{temp}/") for temp in TEMP_ROOTS):
+                continue
+            return word
+    return ""
+
+
+def check_find(words: list[str], cwd: Path) -> tuple[str, str] | None:
+    """Deny a `find` that deletes, when it is rooted at a critical path.
+
+    `find / -delete` and `find / -exec rm -rf {} +` wipe the filesystem exactly as
+    `rm -rf /` does, and neither reached a check before: the verb is `find`, and the
+    `rm` inside `-exec` is an argument rather than a command position.
+    """
+    deletes = "-delete" in words or "-exec" in words or "-execdir" in words or "-ok" in words
+    if not deletes:
+        return None
+    target = targets_a_critical_path(words, cwd)
+    if not target:
+        return None
+    return (
+        "deny",
+        f"blocked by BS-10 (no find that deletes under a critical path): this find "
+        f"is rooted at '{target}', which resolves onto the filesystem root or a "
+        f"system-critical tree, and it carries -delete or -exec. That is as "
+        f"unrecoverable as rm -rf on the same path. Narrow the search root to the "
+        f"specific directory you meant.",
+    )
+
+
+def check_other_destructive(verb: str, words: list[str], cwd: Path) -> tuple[str, str] | None:
+    """Deny truncate/shred/mv/chmod/chown aimed at a critical path.
+
+    Each is unrecoverable in its own way -- truncate and shred destroy contents in
+    place, mv makes the tree unreachable at its expected path, and a recursive mode
+    or owner change on /usr breaks the system as thoroughly as deleting it. All were
+    silent because the guard only ever looked for rm.
+    """
+    if verb in ("chmod", "chown") and not any(
+        word.startswith("-") and ("R" in word or word == "--recursive") for word in words[1:]
+    ):
+        # A single-file mode change is ordinary work, even on a system path.
+        return None
+    # truncate and shred destroy one file's contents, so a path INSIDE a critical
+    # tree is the case that matters -- /etc/passwd is not itself in CRITICAL. The
+    # tree-acting verbs keep the stricter identity test.
+    target = targets_a_critical_path(words, cwd, inside=verb in ("truncate", "shred"))
+    if not target:
+        return None
+    return (
+        "deny",
+        f"blocked by BS-11 (no destructive {verb} on a critical path): '{target}' "
+        f"resolves onto the filesystem root or a system-critical tree, and {verb} "
+        f"there is unrecoverable or breaks the system. Name the specific path inside "
+        f"your project that you meant instead.",
+    )
 
 
 def check_sudo(words: list[str]) -> tuple[str, str] | None:
     """Warn when sudo runs a destructive verb, ignoring read-only subcommands."""
-    if not words or words[0] not in ("sudo", "doas"):
+    # Path(...).name, because every other verb read in this module does the same:
+    # `/usr/bin/sudo rm -f ...` lost the advisory on a bare string comparison.
+    #
+    # The caller passes words that strip_prefix has ALREADY walked, which removes
+    # wrappers -- and sudo is a wrapper. So sudo is detected on the raw words here
+    # and the verb is read from the stripped remainder, which is what the caller
+    # supplies. Passing the pre-stripped list to strip_prefix again dropped the
+    # advisory for the plain `sudo rm -f` case entirely.
+    if not words:
+        return None
+    # Scan the leading run of env assignments and wrappers rather than a fixed
+    # window: `FOO=1 nohup /usr/bin/sudo rm ...` puts sudo third, and any fixed
+    # index either misses it or hard-codes an ordering the shell does not require.
+    if not any(
+        Path(word).name in ("sudo", "doas")
+        for word in words
+        if not ASSIGNMENT.match(word) or Path(word).name in ("sudo", "doas")
+    ):
         return None
     inner = strip_prefix(words)
     if not inner:
@@ -478,12 +808,16 @@ def check_sudo(words: list[str]) -> tuple[str, str] | None:
     verb = Path(inner[0]).name
     if verb not in DESTRUCTIVE_VERBS:
         return None
-    following = [word for word in inner[1:] if not word.startswith("-")]
-    # The subcommand is not always the first argument: `systemctl status nginx`
-    # leads with it while `service nginx status` trails it. Checking every bare
-    # word covers both without needing a per-tool argument grammar.
-    if any(word in READ_ONLY_SUBCOMMANDS for word in following):
-        return None
+    # Verbs that take no subcommand at all: for these, every bare word is an
+    # operand, so consulting READ_ONLY_SUBCOMMANDS silenced the advisory whenever a
+    # PATH happened to be named like one -- `sudo rm -rf install` went quiet.
+    if verb not in ("rm", "rmdir", "dd", "shred", "truncate"):
+        following = [word for word in inner[1:] if not word.startswith("-")]
+        # The subcommand is not always the first argument: `systemctl status nginx`
+        # leads with it while `service nginx status` trails it. Checking every bare
+        # word covers both without needing a per-tool argument grammar.
+        if any(word in READ_ONLY_SUBCOMMANDS for word in following):
+            return None
     return (
         "warn",
         "BS-7 (warn on sudo with a destructive command): this runs a destructive "
@@ -558,13 +892,18 @@ def base_cwd(raw: str) -> Path:
         return base
 
 
-def cd_target(words: list[str]) -> str | None:
-    """Return the absolute literal directory a `cd` moves to, if it is one.
+def cd_target(words: list[str], cwd: Path) -> str | None:
+    """Return the literal directory a `cd` moves to, resolved against `cwd`.
 
-    Only an absolute literal target is followed. A relative or variable-bearing
-    `cd` would have to be guessed at, and guessing wrong is how a guard denies
-    correct work; a variable-bearing `rm` target is denied on its own account
-    anyway.
+    A variable-bearing `cd` is still not followed: it would have to be guessed at,
+    and guessing wrong is how a guard denies correct work; a variable-bearing `rm`
+    target is denied on its own account anyway.
+
+    A RELATIVE hop is followed, because dropping it left the carried cwd stale and
+    the deny was lost: `cd /tmp && cd ../etc && rm -rf *` reported nothing, while
+    the shell really does land in /etc and wipe it. The result is normalized for the
+    same reason -- `cd /usr/../etc` and `cd //etc` both land in /etc, and comparing
+    the unnormalized text against CRITICAL matched neither.
     """
     if not words or Path(words[0]).name != "cd":
         return None
@@ -572,13 +911,17 @@ def cd_target(words: list[str]) -> str | None:
     if len(operands) != 1:
         return None
     target = operands[0]
-    if not target.startswith("/") or "$" in target:
+    if "$" in target or "`" in target or target.startswith("~"):
         return None
-    return target.rstrip("/") or "/"
+    return normalize(target, cwd)
 
 
 def main() -> int:
-    payload = sys.stdin.read()
+    # Read BYTES and decode leniently. `sys.stdin.read()` raises UnicodeDecodeError
+    # on one undecodable byte anywhere in the payload -- including in a field this
+    # guard never looks at -- and the fail-open wrapper then swallowed the error, so
+    # a single stray byte silenced the guard on a command it would otherwise deny.
+    payload = sys.stdin.buffer.read().decode("utf-8", "replace")
     if not payload.strip():
         return 0
 
@@ -587,15 +930,6 @@ def main() -> int:
     except (ValueError, TypeError):
         return 0
     if not command:
-        return 0
-
-    if "--dangerously-bypass-approvals-and-sandbox" in command.lower():
-        emit(
-            "deny",
-            "blocked by BS-3 (no sandbox-bypass flag): "
-            "--dangerously-bypass-approvals-and-sandbox disables the safety "
-            "envelope for the whole session.",
-        )
         return 0
 
     try:
@@ -608,6 +942,30 @@ def main() -> int:
         # Not parseable as shell. Nothing reliable to judge, so allow rather than
         # block on a quoting quirk.
         return 0
+
+    # BS-3 IS JUDGED ON LEXED WORDS, not on the raw string. The substring test that
+    # ran before tokenization was wrong in both directions at once:
+    #   * it MISSED `'--dangerously-bypass-approvals'-and-sandbox`, which the shell
+    #     rejoins into the single flag word, because the raw text contains a quote.
+    #   * it DENIED any command that merely NAMED the flag -- `grep -rn -- <flag> .`,
+    #     `echo "never pass <flag>"`, a commit message documenting it. It blocked
+    #     this repository's own test harness for quoting the flag in a heredoc.
+    # A lexed word is the flag or it is data, and the shell has already decided which.
+    # After `--` the shell stops treating words as options, so the same text there is
+    # an operand -- `grep -rn -- <flag> .` searches FOR the flag rather than passing
+    # it. Everything before `--` is judged.
+    for words in commands:
+        for word in words:
+            if word == "--":
+                break
+            if word.lower() == "--dangerously-bypass-approvals-and-sandbox":
+                emit(
+                    "deny",
+                    "blocked by BS-3 (no sandbox-bypass flag): "
+                    "--dangerously-bypass-approvals-and-sandbox disables the safety "
+                    "envelope for the whole session.",
+                )
+                return 0
 
     cwd = base_cwd(raw_cwd)
     roots: dict[Path, Path | None] = {cwd: find_repo_root(cwd)}
@@ -623,13 +981,16 @@ def main() -> int:
     for words in commands:
         stripped = strip_prefix(words)
 
-        moved = cd_target(stripped)
+        moved = cd_target(stripped, cwd)
         if moved is not None:
             cwd = Path(moved)
             if cwd not in roots:
                 roots[cwd] = find_repo_root(cwd)
             continue
 
+        # The stripped words, so an env assignment or wrapper ahead of sudo cannot
+        # hide the advisory: `FOO=1 sudo rm -f ...` and `nohup sudo rm -f ...` were
+        # both silent because the raw list was passed and sudo was not words[0].
         sudo_finding = check_sudo(words)
         if sudo_finding:
             findings.append(sudo_finding)

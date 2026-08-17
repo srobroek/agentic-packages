@@ -177,8 +177,8 @@ source = { registry = "https://pypi.org/simple" }
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pypi	fastapi	0.111.0"* ]]
-  [[ "$output" == *"pypi	pydantic	2.7.1"* ]]
+  [[ "$output" == *"pypi	fastapi	0.111.0"* ]] || return 1
+  [[ "$output" == *"pypi	pydantic	2.7.1"* ]] || return 1
 }
 
 # --- Python: pyproject.toml ------------------------------------------------
@@ -192,10 +192,10 @@ click = "^8.1.0"
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pypi	requests"* ]]
-  [[ "$output" == *"pypi	click"* ]]
+  [[ "$output" == *"pypi	requests"* ]] || return 1
+  [[ "$output" == *"pypi	click"* ]] || return 1
   # python pseudo-dep must not appear
-  [[ "$output" != *"pypi	python"* ]]
+  [[ "$output" != *"pypi	python"* ]] || return 1
 }
 
 # --- Node: package.json ----------------------------------------------------
@@ -214,9 +214,9 @@ EOF
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"npm	express"* ]]
-  [[ "$output" == *"npm	lodash"* ]]
-  [[ "$output" == *"npm	jest"* ]]
+  [[ "$output" == *"npm	express"* ]] || return 1
+  [[ "$output" == *"npm	lodash"* ]] || return 1
+  [[ "$output" == *"npm	jest"* ]] || return 1
 }
 
 # --- empty project ---------------------------------------------------------
@@ -255,7 +255,7 @@ EOF
   local df; df=$(write_deps $'pypi\trequests\t2.32.3\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"CURRENT"'* ]] || [[ "$output" == *'"status": "CURRENT"'* ]]
+  [[ "$output" == *'"status":"CURRENT"'* ]] || [[ "$output" == *'"status": "CURRENT"'* ]] || return 1
 }
 
 # --- SC-001: correct semver classification ---------------------------------
@@ -265,7 +265,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]]
+  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]] || return 1
 }
 
 @test "research: minor bump classified MINOR-CHECK" {
@@ -273,7 +273,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"MINOR-CHECK"'* ]] || [[ "$output" == *'"class": "MINOR-CHECK"'* ]]
+  [[ "$output" == *'"class":"MINOR-CHECK"'* ]] || [[ "$output" == *'"class": "MINOR-CHECK"'* ]] || return 1
 }
 
 @test "research: major bump classified MAJOR-ADVISORY (SC-003 prereq)" {
@@ -281,7 +281,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"MAJOR-ADVISORY"'* ]] || [[ "$output" == *'"class": "MAJOR-ADVISORY"'* ]]
+  [[ "$output" == *'"class":"MAJOR-ADVISORY"'* ]] || [[ "$output" == *'"class": "MAJOR-ADVISORY"'* ]] || return 1
 }
 
 # --- 404 -> UNRESOLVABLE ---------------------------------------------------
@@ -291,7 +291,7 @@ EOF
   local df; df=$(write_deps $'pypi\tunknown-private-pkg\t1.0.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"UNRESOLVABLE"'* ]] || [[ "$output" == *'"status": "UNRESOLVABLE"'* ]]
+  [[ "$output" == *'"status":"UNRESOLVABLE"'* ]] || [[ "$output" == *'"status": "UNRESOLVABLE"'* ]] || return 1
 }
 
 # --- all-offline -> graceful, zero writes (SC-008) -------------------------
@@ -302,7 +302,7 @@ EOF
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
   # Should warn about no registry access (note: bats captures stdout+stderr together without --separate-stderr).
-  [[ "$output" == *"UNRESOLVABLE"* ]] || [[ "$output" == *"no registry access"* ]]
+  [[ "$output" == *"UNRESOLVABLE"* ]] || [[ "$output" == *"no registry access"* ]] || return 1
   # No writes to .project-setup/ (checked again in SC-009 test).
   [ ! -d "${PROJ}/.project-setup" ]
 }
@@ -314,7 +314,7 @@ EOF
   local df; df=$(write_deps $'pypi\tbadpkg\t1.0.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"DISCONFIRMED"'* ]] || [[ "$output" == *'"status": "DISCONFIRMED"'* ]]
+  [[ "$output" == *'"status":"DISCONFIRMED"'* ]] || [[ "$output" == *'"status": "DISCONFIRMED"'* ]] || return 1
 }
 
 # --- npm registry -----------------------------------------------------------
@@ -324,7 +324,7 @@ EOF
   local df; df=$(write_deps $'npm\texpress\t4.18.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]]
+  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]] || return 1
 }
 
 # ============================================================================
@@ -342,8 +342,8 @@ EOF
   [ "$status" -eq 0 ]
   # Must not print any error about answers.toml.
   [[ "$output" != *"answers.toml"* ]] || true  # allowed to mention it, but not error
-  [[ "$output" != *"Error"* ]]
-  [[ "$output" != *"Traceback"* ]]
+  [[ "$output" != *"Error"* ]] || return 1
+  [[ "$output" != *"Traceback"* ]] || return 1
 }
 
 @test "answers.toml pinned_deps differ from lockfile: research still classifies (SC-007)" {
@@ -367,7 +367,7 @@ EOF
   run_research "$PROJ"
   [ "$status" -eq 0 ]
   # The research result must have fastapi classified (not error out).
-  [[ "$output" == *"fastapi"* ]]
+  [[ "$output" == *"fastapi"* ]] || return 1
 }
 
 # ============================================================================
@@ -400,7 +400,7 @@ EOF
   run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"uv add"* ]]
+  [[ "$output" == *"uv add"* ]] || return 1
 }
 
 # --- PM absent -> print manual command, exit 0 ----------------------------
@@ -411,8 +411,8 @@ EOF
   run env PATH="${STUB}:${ABSENT_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"SKIP"* ]]
-  [[ "$output" == *"uv add"* ]]
+  [[ "$output" == *"SKIP"* ]] || return 1
+  [[ "$output" == *"uv add"* ]] || return 1
 }
 
 # --- SC-003: major never enters apply path ---------------------------------
@@ -421,15 +421,15 @@ EOF
   run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "cargo" "serde" "2.0.0" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"ADVISORY-ONLY"* ]]
-  [[ "$output" != *"cargo update"* ]] || [[ "$output" == *"To update manually"* ]]
+  [[ "$output" == *"ADVISORY-ONLY"* ]] || return 1
+  [[ "$output" != *"cargo update"* ]] || [[ "$output" == *"To update manually"* ]] || return 1
 }
 
 @test "apply: go ecosystem is advisory-only, exits 0, no apply" {
   run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "go" "github.com/gin-gonic/gin" "1.10.0" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"ADVISORY-ONLY"* ]]
+  [[ "$output" == *"ADVISORY-ONLY"* ]] || return 1
 }
 
 # --- Node: pnpm stub -------------------------------------------------------
@@ -442,7 +442,7 @@ EOF
   run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_PKG_MANAGER="pnpm" \
     python3 "${SCRIPTS}/apply.py" "npm" "express" "4.18.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pnpm update"* ]]
+  [[ "$output" == *"pnpm update"* ]] || return 1
 }
 
 # --- Node: npm absent -> print manual command ------------------------------
@@ -454,8 +454,8 @@ EOF
   run env PATH="${STUB}:${ABSENT_PATH}" DEP_UPDATE_PKG_MANAGER="npm" \
     python3 "${SCRIPTS}/apply.py" "npm" "lodash" "4.17.21" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"SKIP"* ]]
-  [[ "$output" == *"npm install"* ]]
+  [[ "$output" == *"SKIP"* ]] || return 1
+  [[ "$output" == *"npm install"* ]] || return 1
 }
 
 # --- bad arguments ---------------------------------------------------------
@@ -602,7 +602,7 @@ except ImportError:
     print('OK (no pyyaml, line-checked)')
 "
   [ "$status" -eq 0 ]
-  [[ "$output" == *"OK"* ]]
+  [[ "$output" == *"OK"* ]] || return 1
 }
 
 @test "apm.yml: category is code-intelligence" {

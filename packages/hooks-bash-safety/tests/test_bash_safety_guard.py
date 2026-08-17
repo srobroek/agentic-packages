@@ -20,6 +20,7 @@ file does not itself trip a guard that scans command text.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -125,6 +126,306 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert decision is not None
     assert decision["permissionDecision"] == "deny"
     assert "BS-9" in decision["permissionDecisionReason"]
+
+
+WRAPPER_AND_FLAG_ESCAPES = [
+    # `--` ends a wrapper's options. The option-value lookahead swallowed it and the
+    # verb, so these were silent while the same lines without `--` denied.
+    pytest.param("sudo -u root -- rm -rf /etc", id="sudo-option-value-then-dashdash"),
+    pytest.param("nice -n 5 -- rm -rf /", id="nice-option-value-then-dashdash"),
+    pytest.param("sudo -- rm -rf /", id="sudo-bare-dashdash"),
+    pytest.param("flock /tmp/l -- rm -rf /", id="flock-operand-then-dashdash"),
+    # WRAPPERS was matched against the raw word, so an absolute path defeated it and
+    # left the wrapper itself in command position.
+    pytest.param("/usr/bin/sudo rm -rf /", id="absolute-path-wrapper"),
+    pytest.param("/bin/nohup rm -rf /etc", id="absolute-path-nohup"),
+    pytest.param("/usr/bin/sudo -u root -- rm -rf /", id="absolute-path-plus-dashdash"),
+    # The shell rejoins a quote-split flag into one word; the raw-substring test for
+    # BS-3 ran before lexing and never saw it.
+    pytest.param("'--dangerously-bypass-approvals'-and-sandbox", id="quote-split-bypass-flag"),
+    # A relative `cd` hop was dropped, leaving the carried cwd stale, and the target
+    # was never normalized -- `cd /usr/../etc` and `cd //etc` both land in /etc.
+    pytest.param("cd /tmp && cd ../etc && rm -rf *", id="relative-cd-hop"),
+    pytest.param("cd /usr/../etc && rm -rf *", id="cd-target-not-normalized"),
+    pytest.param("cd //etc && rm -rf *", id="cd-double-slash"),
+]
+
+
+@pytest.mark.parametrize("command", WRAPPER_AND_FLAG_ESCAPES)
+def test_wrapper_and_flag_escapes_are_closed(command: str) -> None:
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
+
+
+def test_dd_to_a_non_canonical_pseudo_device_is_allowed() -> None:
+    """`/dev/./null` IS /dev/null, but the compare was against the literal string.
+
+    So a harmless redirect was denied as a write to a raw disk. Normalizing first
+    fixes the false positive without weakening the rule: a non-canonical spelling of
+    a REAL device still denies.
+    """
+    assert verdict("dd if=/dev/zero of=/dev/./null") != "deny"
+    assert verdict("dd if=/dev/zero of=/dev/../dev/null") != "deny"
+    assert verdict("dd if=x of=/dev/./disk0") == "deny", "a real device must still deny"
+
+
+def test_one_undecodable_byte_does_not_silence_the_guard() -> None:
+    """`sys.stdin.read()` raised UnicodeDecodeError and the fail-open swallowed it.
+
+    So a single stray byte ANYWHERE in the payload -- including in a field this guard
+    never looks at -- turned a deny into silence. Reading bytes and decoding with
+    "replace" keeps the decision.
+    """
+    for raw in (
+        b'{"cwd":"/tmp","tool_name":"Bash","tool_input":{"command":"rm -rf /scratch\xe9dir"}}',
+        b'{"cwd":"/tmp","tool_name":"Bash","tool_use_id":"a\xe9b",'
+        b'"tool_input":{"command":"rm -rf /"}}',
+    ):
+        result = subprocess.run(  # noqa: S603
+            [sys.executable, str(GUARD)], input=raw, capture_output=True, timeout=30
+        )
+        assert result.returncode == 0
+        assert result.stdout.strip(), "an undecodable byte erased the decision"
+
+
+def test_bs3_no_longer_denies_merely_naming_the_flag() -> None:
+    """The substring test was wrong in BOTH directions at once.
+
+    It missed the quote-split spelling the shell rejoins, and it denied any command
+    that merely NAMED the flag: a grep for it, an echo warning against it, a commit
+    message documenting it. It blocked this repository's own test harness for
+    quoting the flag in a heredoc. A lexed word is the flag or it is data.
+    """
+    flag = "--dangerously-" + "bypass-approvals-and-sandbox"
+    assert verdict(f"claude {flag}") == "deny", "real use must still be denied"
+    for benign in (
+        f'grep -rn -- "{flag}" .',
+        f'echo "never pass {flag}"',
+        f'git commit -m "document {flag}"',
+    ):
+        assert verdict(benign) != "deny", f"{benign!r} only names the flag"
+
+
+SUDO_ADVISORY_SPELLINGS = [
+    pytest.param("sudo rm -f /var/log/x", id="plain"),
+    pytest.param("FOO=1 sudo rm -f /var/log/x", id="env-assignment-ahead"),
+    pytest.param("nohup sudo rm -f /var/log/x", id="wrapper-ahead"),
+    pytest.param("/usr/bin/sudo rm -f /var/log/x", id="absolute-path"),
+    pytest.param("FOO=1 nohup /usr/bin/sudo rm -f /var/log/x", id="all-three-combined"),
+    # An rm TARGET named like a subcommand silenced the advisory, because
+    # READ_ONLY_SUBCOMMANDS was tested against every bare word including paths.
+    pytest.param("sudo rm -rf install", id="target-named-like-a-subcommand"),
+]
+
+
+@pytest.mark.parametrize("command", SUDO_ADVISORY_SPELLINGS)
+def test_the_sudo_advisory_survives_every_spelling(command: str) -> None:
+    _, decision = run(command)
+    assert decision is not None, f"{command!r} lost the BS-7 advisory entirely"
+    assert "BS-7" in (decision.get("additionalContext") or ""), f"{command!r} lost BS-7"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("sudo apt-get install -y jq", id="install-under-sudo"),
+        pytest.param("sudo systemctl status nginx", id="leading-subcommand"),
+        pytest.param("sudo service nginx status", id="trailing-subcommand"),
+        pytest.param("sudo brew upgrade", id="upgrade"),
+    ],
+)
+def test_routine_sudo_work_stays_quiet(command: str) -> None:
+    """Warning on routine elevated work teaches the agent to ignore the warning."""
+    _, decision = run(command)
+    context = (decision or {}).get("additionalContext") or ""
+    assert "BS-7" not in context, f"{command!r} is routine and must not warn"
+
+
+ROUND_THREE_ESCAPES = [
+    # Brace expansion is one token to the lexer and many paths to the shell.
+    pytest.param("rm -rf /{etc,usr}", id="brace-expansion-critical"),
+    # `--` ends the wrapper's options; it was left in place and read as the verb.
+    pytest.param("timeout 5 -- rm -rf /", id="wrapper-end-of-options"),
+    # shlex treats `#` as a comment and discarded the REST OF THE STRING, newline
+    # included -- so a real command on the next line vanished. A single-line `#` is
+    # genuinely a comment (verified against bash), but this shape executes.
+    pytest.param("echo hi # setup\nrm -rf /", id="comment-then-newline-command"),
+    # A redirect reaches the device with no `of=` operand to scan for.
+    pytest.param("dd if=/dev/zero > /dev/disk0", id="dd-via-redirect"),
+    pytest.param("dd if=x >> /dev/rdisk1", id="dd-via-append-redirect"),
+]
+
+
+@pytest.mark.skipif(
+    os.path.realpath("/etc") == "/etc",
+    reason="/private/etc is the resolved spelling of /etc only where the platform "
+    "symlinks it (macOS); on Linux it is an ordinary path and must NOT be denied",
+)
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("rm -rf /private/etc", id="resolved-spelling-of-critical"),
+        pytest.param("rm -rf /private/var", id="resolved-spelling-of-var"),
+    ],
+)
+def test_the_platforms_own_spelling_of_a_critical_path_is_denied(command: str) -> None:
+    """CRITICAL membership was exact-string, so /etc denied and /private/etc warned.
+
+    Gated on the platform actually symlinking the path: this failed in Linux CI,
+    where /private/etc resolves to itself and denying it would be a false positive.
+    """
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
+
+
+@pytest.mark.parametrize("command", ROUND_THREE_ESCAPES)
+def test_escapes_found_by_the_second_fuzz_campaign(command: str) -> None:
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
+
+
+ROUND_THREE_MUST_STAY_SILENT = [
+    pytest.param("rm -rf /private/tmp/scratch", id="scratch-under-private"),
+    pytest.param("rm -rf build/{a,b}", id="brace-expansion-project"),
+    pytest.param("timeout 5 -- ls", id="wrapper-end-of-options-harmless"),
+    pytest.param("echo hi # just a comment", id="single-line-comment-is-a-comment"),
+    pytest.param('echo "a # b"', id="hash-inside-a-quoted-string"),
+    pytest.param("echo file#1", id="hash-glued-to-a-word-is-data"),
+    pytest.param("dd if=/dev/urandom > /dev/null", id="dd-redirect-to-pseudo-device"),
+    pytest.param("dd if=a of=out.img", id="dd-to-a-file"),
+]
+
+
+@pytest.mark.parametrize("command", ROUND_THREE_MUST_STAY_SILENT)
+def test_the_round_three_fixes_do_not_over_deny(command: str) -> None:
+    assert verdict(command) != "deny", f"{command!r} is ordinary work and must not block"
+
+
+DESTRUCTIVE_WITHOUT_RM = [
+    pytest.param("find / -delete", id="find-delete-root"),
+    pytest.param("find /usr -exec rm -rf {} +", id="find-exec-rm"),
+    pytest.param("truncate -s0 /etc/passwd", id="truncate-critical-file"),
+    pytest.param("shred -u /etc/hosts", id="shred-critical-file"),
+    pytest.param("mv /etc /tmp/gone", id="mv-critical-tree"),
+    pytest.param("chmod -R 000 /", id="chmod-recursive-root"),
+    pytest.param("chown -R me /usr", id="chown-recursive-critical"),
+]
+
+
+@pytest.mark.parametrize("command", DESTRUCTIVE_WITHOUT_RM)
+def test_unrecoverable_without_rm_is_denied(command: str) -> None:
+    """The guard judged rm/mkfs/dd/curl only, so these were all silent.
+
+    Each is as unrecoverable as the `rm -rf` spelling that denies: -delete and -exec
+    wipe a tree, truncate and shred destroy contents in place, mv makes a system tree
+    unreachable, and a recursive mode or owner change on /usr breaks the machine.
+    """
+    assert verdict(command) == "deny", f"{command!r} destroys unrecoverably and was allowed"
+
+
+ORDINARY_USE_OF_THE_SAME_VERBS = [
+    pytest.param("find . -name '*.pyc' -delete", id="find-delete-project"),
+    pytest.param("find /tmp/build -delete", id="find-delete-scratch"),
+    pytest.param("truncate -s0 /tmp/log.txt", id="truncate-scratch"),
+    pytest.param("truncate -s0 build/out.log", id="truncate-relative"),
+    pytest.param("shred -u /tmp/secret", id="shred-scratch"),
+    pytest.param("mv src/a.py src/b.py", id="mv-project-files"),
+    pytest.param("mv build dist", id="mv-relative-dirs"),
+    pytest.param("chmod +x scripts/run.sh", id="chmod-single-file"),
+    pytest.param("chmod -R 755 ./dist", id="chmod-recursive-project"),
+]
+
+
+@pytest.mark.parametrize("command", ORDINARY_USE_OF_THE_SAME_VERBS)
+def test_the_same_verbs_stay_silent_on_ordinary_work(command: str) -> None:
+    """A guard that fires on routine work trains the agent to ignore it.
+
+    The scratch cases are the ones that nearly broke: /private is critical and macOS
+    resolves /tmp to /private/tmp, so a naive containment test denied every temp file.
+    """
+    assert verdict(command) != "deny", f"{command!r} is ordinary work and must not block"
+
+
+def test_a_symlink_into_a_critical_tree_is_denied_when_the_spelling_traverses() -> None:
+    """Two things had to be true at once for this to be a real hole.
+
+    `rm -rf link` unlinks the link and leaves the target alone, so the bare form is
+    correctly silent. But `link/`, `link/.` and `link/*` DO follow into the target,
+    and the guard compared the literal path -- an unremarkable one under /tmp --
+    against CRITICAL, so a link aimed at /etc was ranked allow.
+
+    The second half is platform-specific: realpath("/etc") is "/private/etc" on
+    macOS, so resolving the target without also resolving CRITICAL still matched
+    nothing. Both sides now resolve.
+    """
+    import os
+    import tempfile
+
+    scratch = tempfile.mkdtemp()
+    link = os.path.join(scratch, "etclink")
+    os.symlink("/etc", link)
+
+    assert verdict(f"rm -rf {link}") != "deny", "unlinking a symlink is not destructive"
+    for suffix in ("/", "/.", "/*"):
+        assert verdict(f"rm -rf {link}{suffix}") == "deny", (
+            f"{suffix!r} traverses the link into /etc and must be denied"
+        )
+
+    plain = os.path.join(scratch, "plain")
+    os.mkdir(plain)
+    harmless = os.path.join(scratch, "oklink")
+    os.symlink(plain, harmless)
+    assert verdict(f"rm -rf {harmless}/") != "deny", "a link to a scratch dir is fine"
+
+
+def test_backtick_substitution_hides_a_target_just_as_dollar_paren_does() -> None:
+    """BS-9 tested only for `$`, so the older substitution spelling walked past it.
+
+    `rm -rf $(echo /)` denied while the backtick form was silent -- the same
+    command substitution, the same unverifiable target, opposite verdicts. A literal
+    or relative path must still pass, or the rule stops being usable.
+    """
+    assert verdict("rm -rf `echo /`") == "deny"
+    assert verdict("rm -rf `pwd`/sub") == "deny"
+    assert verdict("rm -rf $(echo /)") == "deny", "the dollar form must not regress"
+    assert verdict("rm -rf /tmp/build") != "deny"
+    assert verdict("rm -rf ./node_modules") != "deny"
+
+
+def test_an_outsized_command_does_not_stall_the_hook() -> None:
+    """shlex is quadratic in token length, and this hook gates every Bash call.
+
+    Measured before the cap, on one unbroken token: 200KB 477ms, 800KB 4.7s, 1MB
+    14.5s end to end. A 14-second PreToolUse hook is indistinguishable from a hang,
+    so a padded argument was a denial-of-service against the agent itself.
+
+    Padding must not buy silence either: the verb sits at the front of the string,
+    so truncating the tail cannot change the verdict on a catastrophic command.
+    """
+    import time
+
+    start = time.monotonic()
+    assert verdict("rm -rf " + "a" * 1_000_000) is not None
+    assert time.monotonic() - start < 3.0, "a padded command still stalls the hook"
+
+    assert verdict("rm -rf / " + "#" + "a" * 200_000) == "deny", (
+        "padding the tail must not hide the verb at the front"
+    )
+
+
+def test_the_nesting_bound_is_not_an_escape_hatch() -> None:
+    """Depth must bound recursion without letting the payload through unjudged.
+
+    The recursion stops at MAX_NESTING to keep a self-referential string from
+    looping, but it used to `return commands` there -- the OUTER words only. So
+    five `sh -c` wrappers around `rm -rf /` left the guard judging `sh -c
+    <string>`, a verb no rule matches, and it fell silent on the command it exists
+    to deny. Walking the depths showed 0-4 denied and 5+ silent: the bound was the
+    bypass. Depth 12 is the practical ceiling only because shell escaping doubles
+    the string each layer (8KB by then), not because the guard stops looking.
+    """
+    for depth in range(0, 13):
+        command = "rm -rf /"
+        for _ in range(depth):
+            command = f"sh -c {json.dumps(command)}"
+        assert verdict(command) == "deny", f"nesting depth {depth} escaped the guard"
 
 
 @pytest.mark.parametrize(
