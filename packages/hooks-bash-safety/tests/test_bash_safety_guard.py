@@ -127,6 +127,45 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+def test_an_outsized_command_does_not_stall_the_hook() -> None:
+    """shlex is quadratic in token length, and this hook gates every Bash call.
+
+    Measured before the cap, on one unbroken token: 200KB 477ms, 800KB 4.7s, 1MB
+    14.5s end to end. A 14-second PreToolUse hook is indistinguishable from a hang,
+    so a padded argument was a denial-of-service against the agent itself.
+
+    Padding must not buy silence either: the verb sits at the front of the string,
+    so truncating the tail cannot change the verdict on a catastrophic command.
+    """
+    import time
+
+    start = time.monotonic()
+    assert verdict("rm -rf " + "a" * 1_000_000) is not None
+    assert time.monotonic() - start < 3.0, "a padded command still stalls the hook"
+
+    assert verdict("rm -rf / " + "#" + "a" * 200_000) == "deny", (
+        "padding the tail must not hide the verb at the front"
+    )
+
+
+def test_the_nesting_bound_is_not_an_escape_hatch() -> None:
+    """Depth must bound recursion without letting the payload through unjudged.
+
+    The recursion stops at MAX_NESTING to keep a self-referential string from
+    looping, but it used to `return commands` there -- the OUTER words only. So
+    five `sh -c` wrappers around `rm -rf /` left the guard judging `sh -c
+    <string>`, a verb no rule matches, and it fell silent on the command it exists
+    to deny. Walking the depths showed 0-4 denied and 5+ silent: the bound was the
+    bypass. Depth 12 is the practical ceiling only because shell escaping doubles
+    the string each layer (8KB by then), not because the guard stops looking.
+    """
+    for depth in range(0, 13):
+        command = "rm -rf /"
+        for _ in range(depth):
+            command = f"sh -c {json.dumps(command)}"
+        assert verdict(command) == "deny", f"nesting depth {depth} escaped the guard"
+
+
 @pytest.mark.parametrize(
     "command",
     [
