@@ -1,5 +1,5 @@
 name: dep-update
-version: 4.0.1
+version: 4.1.0
 description: >-
   Research each dependency's current latest version against installed lockfile
   pins, classify patch/minor/major bumps by safety, surface CVEs via native

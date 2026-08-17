@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v3.0.1...language-steering-rust--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
 ## [3.0.1](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v3.0.0...language-steering-rust--v3.0.1) (2026-07-30)
 
 
