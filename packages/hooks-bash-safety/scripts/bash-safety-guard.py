@@ -187,7 +187,17 @@ def split_commands(command: str) -> list[list[str]]:
     # is a line continuation, so the two halves are one command and splitting
     # there orphaned the target of an `rm` from its flags.
     command = re.sub(r"\\\r?\n", " ", command)
+
+    # shlex treats `#` as a comment opener even mid-line and discards everything
+    # after it, so `echo hi # rm -rf /` lexed to just `echo hi` and the rm vanished.
+    # A real shell only starts a comment where a word could start, so a `#` glued to
+    # the end of a word (`file#1`) is data. Disabling shlex's comment handling and
+    # cutting at a `#` that begins a word matches the shell and stops the payload
+    # from hiding behind one.
+    command = re.sub(r"(?:(?<=\s)|^)#.*$", "", command)
+
     lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+    lexer.commenters = ""
     lexer.whitespace_split = True
     tokens = list(lexer)  # raises ValueError on an unterminated quote
 
@@ -327,6 +337,13 @@ def strip_prefix(words: list[str]) -> list[str]:
             if takes_operand and index < len(words) and not words[index].startswith("-"):
                 index += 1
             continue
+        # `--` ends the wrapper's own options; the verb is whatever follows. It was
+        # left in place, so `timeout 5 -- rm -rf /` presented `--` as the verb and
+        # every rule missed the rm behind it. An end-of-options marker is never
+        # itself a command.
+        if word == "--":
+            index += 1
+            continue
         break
     return words[index:]
 
@@ -410,6 +427,23 @@ _RESOLVED_CRITICAL: frozenset[str] | None = None
 
 
 
+def expand_braces(target: str) -> list[str]:
+    """Expand one level of `a{b,c}d` into the paths a shell would produce.
+
+    One level is enough for the judgement: `/{etc,usr}` and `/etc/{a,b}` both put a
+    critical path in at least one branch, and a nested case still yields a branch
+    containing the outer prefix. Bounded output, because a hostile
+    `{a,b}{a,b}{a,b}...` should not become a combinatorial expansion inside a hook.
+    """
+    start = target.find("{")
+    end = target.find("}", start + 1)
+    if start < 0 or end < 0:
+        return [target]
+    prefix, body, suffix = target[:start], target[start + 1 : end], target[end + 1 :]
+    return [f"{prefix}{piece}{suffix}" for piece in body.split(",")[:16] if piece]
+
+
+
 def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     """Rank one `rm -rf` target: deny-critical, deny-var, warn, or allow."""
     if not target:
@@ -418,16 +452,37 @@ def classify_rm_target(target: str, cwd: Path, root: Path | None) -> str:
     if target in CATASTROPHIC_TARGETS:
         return "deny-root"
 
+    # BRACE EXPANSION is one token to the lexer but many paths to the shell, so
+    # `rm -rf /{etc,usr}` carried no unresolvable marker and ranked warn. Expanding
+    # it and judging the worst branch is what the shell would actually do.
+    if "{" in target and "," in target and "}" in target:
+        worst = "allow"
+        order = {"deny-root": 4, "deny-critical": 3, "deny-var": 2, "warn": 1, "allow": 0}
+        for branch in expand_braces(target):
+            if branch == target:
+                continue
+            ranked = classify_rm_target(branch, cwd, root)
+            if order[ranked] > order[worst]:
+                worst = ranked
+        if worst != "allow":
+            return worst
+
     # A relative target is as bad as an absolute one when the directory it
     # resolves against is itself critical: `cd / && rm -rf *` deletes exactly
     # what `rm -rf /*` deletes.
     if not target.startswith(("/", "~")) and "$" not in target:
         if str(cwd) == "/":
             return "deny-root"
-        if str(cwd) in CRITICAL:
+        # Resolved form too: on macOS a shell sitting in /etc reports /private/etc,
+        # so the literal-only test lost the relative-target deny for exactly the
+        # directories it most needed to cover.
+        if str(cwd) in CRITICAL or str(cwd) in resolved_critical():
             return "deny-critical"
 
-    for critical in CRITICAL:
+    # Both spellings of every critical entry, because the platform's own symlinks
+    # mean a user may legitimately write either: /etc and /private/etc name one
+    # directory, and only the first was denied.
+    for critical in resolved_critical():
         if target in (critical, f"{critical}/", f"{critical}/*"):
             return "deny-critical"
 
@@ -559,8 +614,18 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
         )
 
     if verb == "dd":
-        for word in words[1:]:
-            if word.startswith("of=/dev/") and word[3:] not in PSEUDO_DEVICES:
+        # `of=` is the familiar spelling, but a REDIRECT reaches the same device:
+        # `dd if=/dev/zero > /dev/disk0` overwrites the disk with no `of=` operand
+        # anywhere, and the scan for one missed it entirely.
+        for index, word in enumerate(words[1:], start=1):
+            device = ""
+            if word.startswith("of=/dev/"):
+                device = word[3:]
+            elif word in (">", ">>") and index + 1 < len(words):
+                candidate = words[index + 1]
+                if candidate.startswith("/dev/"):
+                    device = candidate
+            if device and device not in PSEUDO_DEVICES:
                 return (
                     "deny",
                     "blocked by BS-6 (no dd to a block device): this writes over a "

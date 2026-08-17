@@ -127,6 +127,47 @@ def test_unexpanded_variable_target_is_denied() -> None:
     assert "BS-9" in decision["permissionDecisionReason"]
 
 
+ROUND_THREE_ESCAPES = [
+    # CRITICAL membership was exact-string, so the platform's own spelling of the
+    # same directory was allowed: /etc denied, /private/etc warned.
+    pytest.param("rm -rf /private/etc", id="resolved-spelling-of-critical"),
+    pytest.param("rm -rf /private/var", id="resolved-spelling-of-var"),
+    # Brace expansion is one token to the lexer and many paths to the shell.
+    pytest.param("rm -rf /{etc,usr}", id="brace-expansion-critical"),
+    # `--` ends the wrapper's options; it was left in place and read as the verb.
+    pytest.param("timeout 5 -- rm -rf /", id="wrapper-end-of-options"),
+    # shlex treats `#` as a comment and discarded the REST OF THE STRING, newline
+    # included -- so a real command on the next line vanished. A single-line `#` is
+    # genuinely a comment (verified against bash), but this shape executes.
+    pytest.param("echo hi # setup\nrm -rf /", id="comment-then-newline-command"),
+    # A redirect reaches the device with no `of=` operand to scan for.
+    pytest.param("dd if=/dev/zero > /dev/disk0", id="dd-via-redirect"),
+    pytest.param("dd if=x >> /dev/rdisk1", id="dd-via-append-redirect"),
+]
+
+
+@pytest.mark.parametrize("command", ROUND_THREE_ESCAPES)
+def test_escapes_found_by_the_second_fuzz_campaign(command: str) -> None:
+    assert verdict(command) == "deny", f"{command!r} escaped the guard"
+
+
+ROUND_THREE_MUST_STAY_SILENT = [
+    pytest.param("rm -rf /private/tmp/scratch", id="scratch-under-private"),
+    pytest.param("rm -rf build/{a,b}", id="brace-expansion-project"),
+    pytest.param("timeout 5 -- ls", id="wrapper-end-of-options-harmless"),
+    pytest.param("echo hi # just a comment", id="single-line-comment-is-a-comment"),
+    pytest.param('echo "a # b"', id="hash-inside-a-quoted-string"),
+    pytest.param("echo file#1", id="hash-glued-to-a-word-is-data"),
+    pytest.param("dd if=/dev/urandom > /dev/null", id="dd-redirect-to-pseudo-device"),
+    pytest.param("dd if=a of=out.img", id="dd-to-a-file"),
+]
+
+
+@pytest.mark.parametrize("command", ROUND_THREE_MUST_STAY_SILENT)
+def test_the_round_three_fixes_do_not_over_deny(command: str) -> None:
+    assert verdict(command) != "deny", f"{command!r} is ordinary work and must not block"
+
+
 DESTRUCTIVE_WITHOUT_RM = [
     pytest.param("find / -delete", id="find-delete-root"),
     pytest.param("find /usr -exec rm -rf {} +", id="find-exec-rm"),
