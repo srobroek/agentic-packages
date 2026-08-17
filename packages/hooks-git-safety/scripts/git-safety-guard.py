@@ -15,8 +15,11 @@ exactly one thing and otherwise only speaks when work would actually be lost.
          `stash drop`, and `worktree remove --force`, all reflog-recoverable.
 
 The state checks are the expensive part, so they run only after a destructive
-verb has already matched, and they run as one batched git call rather than one
-per question. A warning that fires on a clean tree is noise the agent learns to
+verb has already matched, and each answer is cached so a repeated question costs
+nothing. There are up to three distinct calls per decision -- porcelain status,
+a clean dry-run, and a work-tree check -- not one batched call as this said
+previously; they are separate because git has no single command that answers all
+three, and each is only reached by the rule that needs it. A warning that fires on a clean tree is noise the agent learns to
 skip, which is why each one is gated on evidence.
 """
 
@@ -56,6 +59,17 @@ STRING_EVALUATORS = frozenset({"eval", "source", "."})
 # self-referential string from looping.
 MAX_NESTING = 4
 
+# Per-subprocess timeout. It has to fit INSIDE the hook's own budget, which
+# hooks.json sets to 10s: a 10s subprocess timeout meant one stalled git call
+# consumed the entire allowance, the runtime killed the hook, and the warning was
+# lost rather than merely late. Up to three calls may run for one decision, so the
+# ceiling is the budget divided by that, less a margin for interpreter start.
+GIT_SUBPROCESS_TIMEOUT = 3
+
+# Cap on the command text handed to the lexer, matching the bash guard. 64KB lexes
+# in well under 50ms and is far past any hand-written command.
+MAX_COMMAND_CHARS = 65536
+
 # Global git options that take a separate value, so the value is not mistaken for
 # the subcommand.
 GIT_OPTIONS_WITH_VALUE = frozenset({"-C", "-c", "--git-dir", "--work-tree", "--namespace"})
@@ -87,6 +101,14 @@ def emit(decision: str, message: str) -> None:
         },
         sys.stdout,
     )
+    # Flush HERE, inside the guard, so a broken pipe surfaces as a caught error
+    # rather than as an interpreter-shutdown failure. Deferred to shutdown, the write
+    # exited 120 with nothing written and the fail-open wrapper never saw it, so the
+    # decision was lost instead of merely undelivered.
+    try:
+        sys.stdout.flush()
+    except (BrokenPipeError, OSError):
+        pass
 
 
 def split_commands(command: str) -> list[list[str]]:
@@ -99,6 +121,15 @@ def split_commands(command: str) -> list[list[str]]:
     discarded the rest of the STRING, newline included, so the git call vanished.
     """
     import shlex
+
+    # Cap the lexer input, as the sibling bash guard does. Measured on one unbroken
+    # token: 200KB 614ms, 500KB 2.7s, 2MB past 25s -- and this hook has a 10s budget,
+    # so a padded argument was a stall rather than a parse. Truncating is safe in the
+    # direction that matters: every rule matches the git verb and its flags, which sit
+    # at the FRONT, and bailing out entirely would let any payload buy silence by
+    # padding itself.
+    if len(command) > MAX_COMMAND_CHARS:
+        command = command[:MAX_COMMAND_CHARS]
 
     # A backslash-newline is a line continuation: the two halves are ONE command.
     command = re.sub(r"\\\r?\n", " ", command)
@@ -320,6 +351,22 @@ def redirect_target(words: list[str], cwd: Path) -> Path:
         return cwd
 
 
+def _git_binary() -> str:
+    """Absolute path to git, so the state read cannot follow a planted PATH entry.
+
+    The guard's verdict depends on what this subprocess reports, so a `git` earlier
+    on PATH could lie about whether a tree is dirty and turn a warning off. Falls
+    back to the bare name when git is somewhere unusual: a guard that cannot find
+    git at all should still try rather than fail closed.
+    """
+    import shutil
+
+    for candidate in ("/usr/bin/git", "/opt/homebrew/bin/git", "/usr/local/bin/git"):
+        if Path(candidate).is_file():
+            return candidate
+    return shutil.which("git") or "git"
+
+
 class RepoState:
     """Repository facts, fetched once and only when a warning depends on them."""
 
@@ -334,10 +381,10 @@ class RepoState:
 
         try:
             result = subprocess.run(
-                ["git", "-C", str(self._cwd), *args],
+                [_git_binary(), "-C", str(self._cwd), *args],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=GIT_SUBPROCESS_TIMEOUT,
             )
         except (OSError, subprocess.SubprocessError):
             return None
@@ -521,7 +568,14 @@ def main() -> int:
             )
             return 0
 
+    # Resolved, matching the sibling bash guard's base_cwd. The two hooks judge the
+    # same payload, so an unresolved cwd here meant a relative redirect target and a
+    # symlinked path could be compared against a differently-spelled tree.
     cwd = Path(raw_cwd) if raw_cwd and Path(raw_cwd).is_dir() else Path.cwd()
+    try:
+        cwd = cwd.resolve()
+    except OSError:
+        pass
 
     # One RepoState PER TARGET TREE, not one for the payload cwd. Every warning here
     # is gated on repository state -- reset --hard only warns when the tree is dirty,
@@ -545,6 +599,10 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Python flushes stdout again at interpreter shutdown, AFTER this block, and on a
+    # closed pipe that flush exits 120 with the fail-open wrapper long since past. So
+    # the stream is detached here once the decision is written: the caller has already
+    # gone away, and a guard must not turn a delivered verdict into a 120.
     try:
         raise SystemExit(main())
     except SystemExit:
@@ -552,3 +610,10 @@ if __name__ == "__main__":
     except BaseException:
         # Fail open: a guard that crashes closed wedges the agent.
         raise SystemExit(0)
+    finally:
+        try:
+            sys.stdout.flush()
+        except (BrokenPipeError, OSError):
+            import os
+
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())

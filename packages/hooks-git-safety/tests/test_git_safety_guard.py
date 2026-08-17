@@ -283,6 +283,45 @@ def test_an_unresolvable_redirect_still_denies_rather_than_resolving(repo: Path)
     assert verdict("GIT_DIR=$D/.git git clean -fdx", repo) == "deny"
 
 
+def test_an_outsized_command_does_not_stall_the_hook(repo: Path) -> None:
+    """UNVERIFIABLE_REDIRECT degrades badly on one long token, and this hook has a
+    10s budget in hooks.json.
+
+    Measured before the cap: 200KB 614ms, 500KB 2.7s, 2MB past 25s -- a padded
+    argument was a stall rather than a parse. Padding must not buy silence either,
+    since the verb and its flags sit at the front of the string.
+    """
+    import time
+
+    start = time.monotonic()
+    verdict('git -C "' + "a" * 2_000_000 + '" reset --hard', repo)
+    assert time.monotonic() - start < 5.0, "a padded command still stalls the hook"
+
+    padded = 'git -C "$D" reset --hard # ' + "a" * 200_000
+    assert verdict(padded, repo) == "deny", "padding hid a GS-2 target"
+
+
+def test_the_subprocess_timeout_fits_inside_the_hook_budget() -> None:
+    """A 10s subprocess timeout inside a 10s hook budget meant one stalled git call
+    consumed the whole allowance, the runtime killed the hook, and the warning was
+    lost rather than late. Up to three calls may run for one decision.
+    """
+    import json as _json
+
+    sys.path.insert(0, str(GUARD.parent))
+    source = GUARD.read_text(encoding="utf-8")
+    assert "GIT_SUBPROCESS_TIMEOUT" in source, "the timeout is not named"
+
+    budget = _json.loads((GUARD.parent.parent / "hooks" / "hooks.json").read_text())
+    declared = _json.dumps(budget)
+    assert '"timeout": 10' in declared, "hook budget changed; revisit the subprocess bound"
+
+    import re as _re
+
+    value = int(_re.search(r"GIT_SUBPROCESS_TIMEOUT = (\d+)", source).group(1))
+    assert value * 3 <= 10, f"three calls at {value}s each can exceed the 10s budget"
+
+
 def test_a_non_string_cwd_fails_open() -> None:
     """The contract requires fail-open; this raised TypeError and exited 1."""
     payload = json.dumps({"cwd": ["/tmp"], "tool_input": {"command": "git status"}})

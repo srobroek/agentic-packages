@@ -156,6 +156,14 @@ def emit(decision: str, message: str) -> None:
         },
         sys.stdout,
     )
+    # Flush HERE, inside the guard, so a broken pipe surfaces as a caught error
+    # rather than as an interpreter-shutdown failure. Deferred to shutdown, the write
+    # exited 120 with nothing written and the fail-open wrapper never saw it, so the
+    # decision was lost instead of merely undelivered.
+    try:
+        sys.stdout.flush()
+    except (BrokenPipeError, OSError):
+        pass
 
 
 def split_commands(command: str) -> list[list[str]]:
@@ -655,6 +663,30 @@ def check_command(words: list[str], cwd: Path, root: Path | None) -> tuple[str, 
         # `dd if=/dev/zero > /dev/disk0` overwrites the disk with no `of=` operand
         # anywhere, and the scan for one missed it entirely.
         for index, word in enumerate(words[1:], start=1):
+            # An operand behind a variable cannot be checked, and dd is LESS
+            # recoverable than the `rm -rf $VAR` that BS-9 already denies: writing
+            # over the wrong block device destroys a partition table. Same reasoning,
+            # same verdict, so the two rules stop disagreeing.
+            if (word.startswith("of=") or word in (">", ">>")) and any(
+                ch in word for ch in "$`"
+            ):
+                return (
+                    "deny",
+                    "blocked by BS-6 (no dd to an unresolvable target): the output "
+                    "operand hides behind a shell variable or command substitution, so "
+                    "the guard cannot tell a file from a raw block device. Resolve it "
+                    "to a literal path first, then re-run.",
+                )
+            if word in (">", ">>") and index + 1 < len(words):
+                nxt = words[index + 1]
+                if any(ch in nxt for ch in "$`"):
+                    return (
+                        "deny",
+                        "blocked by BS-6 (no dd to an unresolvable target): the redirect "
+                        "target hides behind a shell variable or command substitution, so "
+                        "the guard cannot tell a file from a raw block device. Resolve it "
+                        "to a literal path first, then re-run.",
+                    )
             device = ""
             if word.startswith("of=/dev/"):
                 device = word[3:]
@@ -1012,6 +1044,10 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Python flushes stdout again at interpreter shutdown, AFTER this block, and on a
+    # closed pipe that flush exits 120 with the fail-open wrapper long since past. So
+    # the stream is detached here once the decision is written: the caller has already
+    # gone away, and a guard must not turn a delivered verdict into a 120.
     try:
         raise SystemExit(main())
     except SystemExit:
@@ -1019,3 +1055,10 @@ if __name__ == "__main__":
     except BaseException:
         # Fail open: a guard that crashes closed wedges the agent.
         raise SystemExit(0)
+    finally:
+        try:
+            sys.stdout.flush()
+        except (BrokenPipeError, OSError):
+            import os
+
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
