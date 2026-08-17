@@ -73,8 +73,15 @@ def blob_digest(data: bytes) -> str:
 
 
 def nul_payload(*parts: str) -> bytes:
-    """The NUL-terminated field encoding every identity digest hashes."""
-    return "".join(f"{part}\0" for part in parts).encode()
+    """The NUL-terminated field encoding every identity digest hashes.
+
+    surrogateescape, because JSON admits a lone surrogate and `json.loads` returns it
+    verbatim -- so any bd metadata field that reaches a digest (holder, generation,
+    lease_actor, a failure-key detail derived from a filename with invalid UTF-8) took
+    the tool down with an UnencodableError traceback. canonical_repo() already guards
+    exactly this the same way; this function was the asymmetry.
+    """
+    return "".join(f"{part}\0" for part in parts).encode(errors="surrogateescape")
 
 
 # --------------------------------------------------------------------------
@@ -118,7 +125,7 @@ def bd_json(*args: str, env_extra: dict[str, str] | None = None, quiet: bool = F
         raise QueryError(f"bd {' '.join(args)} did not emit JSON") from error
 
 
-def gh_tsv(argv: list[str], message: str) -> list[str]:
+def gh_tsv(argv: list[str], message: str, *, fields: int | None = None) -> list[str]:
     """Run gh with a caller-supplied @tsv --jq filter and split the row.
 
     The filter stays in gh rather than moving into this process: gh evaluates it
@@ -128,7 +135,17 @@ def gh_tsv(argv: list[str], message: str) -> list[str]:
     result = _run(["gh", *argv])
     if result.returncode != 0:
         fail(message)
-    return result.stdout.rstrip("\n").split("\t")
+    row = result.stdout.rstrip("\n").split("\t")
+    # ARITY IS ENFORCED HERE rather than left to the caller's unpack. Every caller
+    # unpacks a fixed number of fields, so any other count raised ValueError out of
+    # main() and exited 1 -- a code outside the documented vocabulary
+    # (2/10/11/12/75) that a shell caller reads. Reproduced with a fake gh printing
+    # an HTML 502 body while exiting 0, which a proxy or GHES front end really does;
+    # empty output and a JSON error body behave the same. fail() turns each into the
+    # documented unknown exit instead of a traceback.
+    if fields is not None and len(row) != fields:
+        fail(f"{message} (expected {fields} tab-separated fields, got {len(row)})")
+    return row
 
 
 def gh_value(argv: list[str], message: str) -> str:
@@ -840,6 +857,7 @@ def check_run(repo: str, run_id: str, expected_head: str) -> int:
         ["run", "view", run_id, "--repo", repo,
          "--json", "headSha,status,conclusion,url", "--jq", RUN_JQ],
         f"cannot read run {run_id}",
+        fields=4,
     )
     require_sha(actual_head, "run head")
     if actual_head != expected_head:
@@ -922,6 +940,7 @@ def check_bead_anchors(merge_bead: str, repo: str, pr: str) -> int:
         ["pr", "view", pr, "--repo", repo, "--json", "headRefName,baseRefName,url",
          "--jq", PR_ANCHOR_JQ],
         f"cannot read PR {pr} anchors",
+        fields=3,
     )
     if head_branch != anchored_branch:
         print(
@@ -945,6 +964,7 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
          "state,isDraft,mergeable,reviewDecision,baseRefName,headRefOid,statusCheckRollup",
          "--jq", PR_READY_JQ],
         f"cannot read PR {pr}",
+        fields=7,
     )
     if head != expected_head or base != expected_base:
         print(
@@ -985,6 +1005,7 @@ def verify_landed(repo: str, pr: str, landing_base: str, recorded_base: str,
          "--json", "state,mergedAt,mergeCommit,baseRefName,headRefOid,url",
          "--jq", PR_LANDED_JQ],
         f"cannot read merged PR {pr}",
+        fields=6,
     )
     if state != "MERGED" or merged_at == "NONE":
         print(f"NOT_LANDED pr={pr} state={state or 'unknown'} merged_at={merged_at or 'empty'}")
@@ -1256,6 +1277,7 @@ def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: 
         ["pr", "view", pr, "--repo", repo, "--json", "state,headRefOid,mergeCommit",
          "--jq", PR_MERGE_JQ],
         f"cannot read PR {pr} before landing",
+        fields=3,
     )
     if actual_head != expected_head:
         print(
@@ -1304,6 +1326,7 @@ def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: 
         ["pr", "view", pr, "--repo", repo, "--json", "state,headRefOid,mergeCommit",
          "--jq", PR_MERGE_JQ],
         f"cannot read PR {pr} after merge",
+        fields=3,
     )
     if state == "MERGED" and actual_head == expected_head:
         return prove_remote_merge(
@@ -1343,6 +1366,7 @@ def resume_queued_landing(merge_bead: str, repo: str, pr: str, pr_base: str, lan
         ["pr", "view", pr, "--repo", repo, "--json", "state,headRefOid,mergeCommit",
          "--jq", PR_MERGE_JQ],
         f"cannot read queued PR {pr}",
+        fields=3,
     )
     if actual_head != expected_head:
         print(
