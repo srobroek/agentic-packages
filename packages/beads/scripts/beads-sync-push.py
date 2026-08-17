@@ -39,6 +39,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from datetime import UTC
+
 import beads_sync  # noqa: E402
 
 # Bound on the DETACHED push, not on this hook: the hook returns as soon as the
@@ -163,9 +165,9 @@ def main() -> int:
         # next session try. State is committed locally, so nothing is lost.
         return 0
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    stamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     _write(log, f"started: {stamp}\n")
     detach(runner, cwd, log)
     return 0

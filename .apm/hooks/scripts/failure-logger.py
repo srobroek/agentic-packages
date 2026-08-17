@@ -12,6 +12,7 @@ surface as a second failure.
 from __future__ import annotations
 
 import sys
+from datetime import UTC
 
 # Truncate the error text: a stack trace or a wall of compiler output would make
 # the log unreadable and is not what this record is for.
@@ -35,7 +36,7 @@ def main() -> int:
     if not isinstance(data, dict):
         return 0
 
-    from datetime import datetime, timezone
+    from datetime import datetime
     from pathlib import Path
 
     error = data.get("error") or data.get("tool_error") or "unknown error"
@@ -46,7 +47,7 @@ def main() -> int:
     error = " ".join(error.split())[:ERROR_LIMIT]
 
     fields = [
-        datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         str(data.get("tool_name") or "unknown"),
         str(data.get("cwd") or "unknown"),
         error,

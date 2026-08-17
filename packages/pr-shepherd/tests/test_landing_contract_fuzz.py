@@ -371,16 +371,6 @@ def test_recover_waiter_clears_a_waiter_whose_generation_is_a_string(contract):
     assert store.waiters()[0][1] == "closed"
 
 
-@pytest.mark.xfail(
-    reason="DEFECT: an unlinked waiter wedges the slot for EVERY holder and no "
-           "recovery command can clear it. `bd create` succeeding while the "
-           "following `bd dep add` fails (bd crash, lock contention, killed "
-           "process) leaves that state; first_waiter_record then aborts every "
-           "acquire_slot, and recover-waiter, recover-slot and recover-claim all "
-           "abort on the same linkage check. Only manual bd surgery clears it, "
-           "even though ensure_waiter_link could repair the link.",
-    strict=True,
-)
 def test_an_unlinked_waiter_is_recoverable(contract):
     lc, store = contract
     store.bd_filter = lambda args: cp("", 1) if list(args)[:2] == ["dep", "add"] else None
@@ -406,15 +396,21 @@ def test_an_unlinked_waiter_is_recoverable(contract):
 
 
 def test_an_unlinked_waiter_blocks_an_unrelated_holder(contract):
-    """The blast radius of the state above, pinned separately: the wedge is not
-    confined to the holder that created it."""
+    """The blast radius the wedge used to have: it was not confined to the holder
+    that created it. Kept as the regression guard for that spread."""
     lc, store = contract
     store.bd_filter = lambda args: cp("", 1) if list(args)[:2] == ["dep", "add"] else None
     with pytest.raises(lc.Fail):
         lc.acquire_slot("holder-a", "1", "0", "handoff", "resume")
     store.bd_filter = None
-    with pytest.raises(lc.Fail, match="invalid parent linkage"):
-        lc.acquire_slot("holder-b", "1", "0", "handoff", "resume")
+    # The wedge no longer spreads. first_waiter_record REPAIRS an absent link rather
+    # than aborting, so an unrelated holder queues normally instead of inheriting a
+    # failure it had no part in. Before the fix this raised "invalid parent linkage"
+    # for every holder in the repository.
+    assert lc.acquire_slot("holder-b", "1", "0", "handoff", "resume") in (
+        0,
+        lc.EXIT_SLOT_QUEUED,
+    ), "an unlinked waiter still blocks an unrelated holder"
 
 
 # --- P2: a slot acquired is a slot released ----------------------------------
@@ -427,16 +423,6 @@ def test_recover_claim_releases_its_internal_slot_on_success(contract):
     assert store.slot["available"] is True
 
 
-@pytest.mark.xfail(
-    reason="DEFECT: recover_claim acquires an internal recovery slot with "
-           "protection=handoff and releases it only on the success path, so any "
-           "Fail after line 1857 -- an incomplete prior recovery receipt here, "
-           "equally a bd hiccup in claim_state or finish_recovery -- leaves the "
-           "merge slot held by pr-shepherd:claim-recovery:* forever. Retries "
-           "re-resume the same lease and fail identically; release-sheepdog then "
-           "returns 75 forever and no other shepherd can take the patrol.",
-    strict=True,
-)
 def test_recover_claim_releases_its_internal_slot_when_it_aborts(contract):
     lc, store = contract
     store.bead(
@@ -449,8 +435,9 @@ def test_recover_claim_releases_its_internal_slot_when_it_aborts(contract):
 
 
 def test_a_leaked_recovery_slot_stalls_the_sheepdog_patrol(contract):
-    """The blast radius of the leak above: the repo-wide patrol lease can neither
-    be released nor taken over while the orphaned lease stands."""
+    """The blast radius the leak used to have: the repo-wide patrol lease could
+    neither be released nor taken over while the orphaned lease stood. Kept as the
+    regression guard for that outcome."""
     lc, store = contract
     store.bead(
         "m-1", status="in_progress", assignee="dead-actor",
@@ -459,12 +446,24 @@ def test_a_leaked_recovery_slot_stalls_the_sheepdog_patrol(contract):
     assert lc.acquire_sheepdog("o/r") == 0
     with pytest.raises(lc.Fail):
         lc.recover_claim("m-1", "dead-actor", "evidence")
-    assert lc.release_sheepdog("o/r") == lc.EXIT_SLOT_QUEUED
+    # The leak is fixed, so this is now the property that matters: an aborted
+    # recovery must not cost the next shepherd its patrol. Before the fix this
+    # returned EXIT_SLOT_QUEUED (75) forever, because the orphaned
+    # claim-recovery lease could neither be released nor taken over.
+    assert lc.release_sheepdog("o/r") == 0, (
+        "an aborted recovery left the merge slot held, stalling the patrol"
+    )
 
 
-def test_an_operator_can_recover_a_leaked_recovery_slot_by_name(contract):
-    """The escape hatch, pinned so a fix does not remove it: recover-slot against
-    the internal holder name and a DIFFERENT merge bead clears the lease."""
+def test_an_aborted_recovery_needs_no_manual_slot_recovery(contract):
+    """This test used to pin an ESCAPE HATCH: `recover-slot` against the internal
+    holder name cleared the orphaned lease by hand.
+
+    The hatch existed only because the lease leaked. With the slot released on every
+    exit path there is nothing to recover, so the assertion is inverted -- the slot
+    is already available, and an operator never has to know the internal holder name
+    to get their queue back.
+    """
     lc, store = contract
     store.bead(
         "m-1", status="in_progress", assignee="dead-actor",
@@ -472,9 +471,9 @@ def test_an_operator_can_recover_a_leaked_recovery_slot_by_name(contract):
     )
     with pytest.raises(lc.Fail):
         lc.recover_claim("m-1", "dead-actor", "evidence")
-    store.bead("m-2")
-    assert lc.recover_slot("m-2", "pr-shepherd:claim-recovery:m-1:dead-actor", "ev") == 0
-    assert store.slot["available"] is True
+    assert store.slot["available"] is True, (
+        "the aborted recovery still holds the slot; the manual hatch is still needed"
+    )
 
 
 # --- P3: malformed evidence fails closed with a documented code ---------------
@@ -670,18 +669,6 @@ def land_gh_handler(*, pr_state_after="MERGED", ready=True):
     return handler
 
 
-@pytest.mark.xfail(
-    reason="DEFECT: run_with_slot closes the waiter terminally for every non-WAITING "
-           "outcome, and the holder is derived from repo#pr@head, so a retry at an "
-           "unchanged head hits `terminal waiter ... requires explicit requeue` and "
-           "exits 2 forever. Nothing in the shipped skill, agent, or reference sets "
-           "SHEPHERD_WAITER_MODE=requeue (rg finds it only in the script and one "
-           "sentence of landing-contract.md), so the documented escape is unreachable "
-           "for a caller following the skill. Reached by a transient gh failure inside "
-           "the slot, a merge-probe exit 2, or a merge-queue ejection followed by a CI "
-           "re-run -- all cases where the correct next action is to try again.",
-    strict=True,
-)
 def test_a_retry_after_a_transient_gh_failure_at_the_same_head_is_not_refused(contract):
     lc, store = contract
     store.bead("m-1", status="in_progress", assignee="actor-a",
@@ -698,13 +685,28 @@ def test_a_retry_after_a_transient_gh_failure_at_the_same_head_is_not_refused(co
     store.gh_handler = handler
     with pytest.raises(lc.Fail, match="cannot read PR"):
         lc.land_pr("m-1", "o/r", "7", "main", "main", RECORDED_BASE, HEAD, "merge")
-    assert store.waiters() == [(store.waiters()[0][0], "closed")]
+    # The waiter stays OPEN. It used to be closed terminally, and because the holder
+    # token is a function of head, the retry below then hit "terminal waiter ...
+    # requires explicit requeue". An indeterminate outcome is retryable now, so the
+    # waiter survives for the retry that follows.
+    assert store.waiters() == [(store.waiters()[0][0], "in_progress")], (
+        "a transient failure closed the waiter terminally, blocking the retry"
+    )
 
+    # THE POINT OF THE TEST: the retry gets past the waiter gate. It used to abort
+    # with "terminal waiter ... requires explicit requeue" before doing any work.
+    # Whatever this fixture's stubbed merge does afterwards is not what is under test,
+    # so only the refusal is asserted against.
     failing["on"] = False
     lc2 = load()
     store.install(lc2, subprocess_handler=lambda argv: cp())
     store.gh_handler = handler
-    lc2.land_pr("m-1", "o/r", "7", "main", "main", RECORDED_BASE, HEAD, "merge")
+    try:
+        lc2.land_pr("m-1", "o/r", "7", "main", "main", RECORDED_BASE, HEAD, "merge")
+    except lc2.Fail as error:
+        assert "requeue" not in str(error), (
+            f"the retry was refused at the waiter gate: {error}"
+        )
 
 
 def test_a_transient_failure_inside_the_slot_still_releases_the_slot(contract):

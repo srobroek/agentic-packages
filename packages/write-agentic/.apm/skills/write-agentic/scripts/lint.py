@@ -209,8 +209,11 @@ def _has_rules_contract(path: Path, fm: dict) -> bool:
 def lint(path: Path) -> list[tuple[str, str, str]]:
     """Return [(severity, code, message)]."""
     raw: list[tuple[str, str, str]] = []
-    err = lambda c, m: raw.append(("ERROR", c, m))
-    warn = lambda c, m: raw.append(("WARN", c, m))
+    def err(c: str, m: str) -> None:
+        raw.append(("ERROR", c, m))
+
+    def warn(c: str, m: str) -> None:
+        raw.append(("WARN", c, m))
 
     text = path.read_text(encoding="utf-8")
     kind = detect_kind(path)
@@ -277,7 +280,7 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
                 warn("W5", "no no-reprint rule in output contract")
 
     # E6 size caps
-    n_lines = len([l for l in lines if l.strip()])
+    n_lines = len([line for line in lines if line.strip()])
     caps = {"skill": 70, "context": 60, "pointer": 10, "agent": 90}
     if kind in caps and n_lines > caps[kind]:
         warn("W6", f"{n_lines} non-empty lines > {caps[kind]} target for {kind}")
@@ -336,7 +339,7 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
     # W12 BLOATED_SKILL (plugin-eval): skills over 800 lines without a references/
     # subdirectory should offload supporting material to progressive disclosure.
     if kind == "skill":
-        n_total = len([l for l in text.splitlines() if l.strip()])
+        n_total = len([line for line in text.splitlines() if line.strip()])
         has_refs = (path.parent / "references").exists()
         if n_total > _BLOATED_LINE_THRESHOLD and not has_refs:
             warn(

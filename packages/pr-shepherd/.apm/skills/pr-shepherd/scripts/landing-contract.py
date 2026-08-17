@@ -282,6 +282,25 @@ def require_waiter_link(record: dict, slot: str, message: str) -> None:
         fail(message)
 
 
+def require_waiter_link_for_recovery(record: dict, slot: str, message: str) -> None:
+    """Like require_waiter_link, but an ABSENT link is not fatal.
+
+    A recovery command exists to clear a waiter that is already in a bad state, so
+    aborting on the very damage it was invoked to repair made the state unrecoverable:
+    `bd create` succeeding while the following `bd dep add` failed left a waiter with
+    no parent, and recover-waiter, recover-slot and recover-claim all refused it. Only
+    manual bd surgery cleared it.
+
+    A MALFORMED link -- two parents, or a link to another slot -- is still fatal,
+    because that is a state this code cannot reason about. Only the absent case is
+    tolerated, which is the same distinction ensure_waiter_link draws.
+    """
+    try:
+        waiter_link_state(record, slot)
+    except QueryError:
+        fail(message)
+
+
 def waiter_record_state(waiter: str, slot: str, holder: str, generation) -> dict | None:
     """The projected waiter record, or None when it does not exist."""
     records = bd_json("list", "--id", waiter, "--all", "--json")
@@ -483,7 +502,23 @@ def first_waiter_record(slot: str) -> tuple[str, str]:
             fail(f"merge-slot waiter {waiter} has invalid identity")
         if (metadata.get("waiter_id") or "") != waiter:
             fail(f"merge-slot waiter {waiter} has invalid identity metadata")
-        require_waiter_link(row, slot, f"merge-slot waiter {waiter} has invalid parent linkage")
+        # AN ABSENT LINK IS REPAIRED HERE, not treated as fatal. ensure_waiter_record
+        # does `bd create` then `bd dep add`; if the second call loses (bd crash, lock
+        # contention, a killed process between the two) the waiter exists with no
+        # parent link. This scan runs over EVERY row, so one such waiter aborted
+        # acquire_slot for unrelated holders -- and all three recovery commands abort
+        # on this same check, so nothing but manual bd surgery cleared it. The bound
+        # was itself the bypass.
+        #
+        # A MALFORMED link is still fatal: two parents, or a link to the wrong slot,
+        # is a state this code cannot reason about. Only the absent case is repairable,
+        # which is exactly the distinction ensure_waiter_link already draws.
+        try:
+            linked = waiter_link_state(row, slot)
+        except QueryError:
+            fail(f"merge-slot waiter {waiter} has invalid parent linkage")
+        if not linked:
+            ensure_waiter_link(waiter, slot, holder, generation)
 
     eligible = [
         row
@@ -611,7 +646,7 @@ def force_close_waiter_record(slot: str, holder: str, require_existing: bool = T
             record = waiter_record_by_id_or_fail(
                 waiter, slot, holder, f"cannot validate terminal waiter {waiter}"
             )
-            require_waiter_link(
+            require_waiter_link_for_recovery(
                 record, slot, f"terminal waiter {waiter} has invalid parent linkage"
             )
             if record.get("status") != "closed":
@@ -644,7 +679,7 @@ def close_observed_waiter_generation(slot: str, holder: str, observed: dict,
     record = waiter_record_state_or_fail(
         waiter, slot, holder, generation, f"cannot validate observed waiter {waiter}"
     )
-    require_waiter_link(record, slot, f"observed waiter {waiter} has invalid parent linkage")
+    require_waiter_link_for_recovery(record, slot, f"observed waiter {waiter} has invalid parent linkage")
     if (record["metadata"].get("lease_actor") or "") != expected_lease:
         fail(f"observed waiter {waiter} lease changed")
     status = record.get("status")
@@ -801,7 +836,20 @@ def run_with_slot(holder: str, command) -> int:
     else:
         command_rc, override = outcome, None
 
-    disposition = override or ("retryable" if command_rc == EXIT_WAITING else "terminal")
+    # EXIT_UNKNOWN IS RETRYABLE TOO. Only EXIT_WAITING was, so any indeterminate
+    # outcome closed the waiter terminally -- and the holder token is a function of
+    # head (pr-shepherd:{repo}#{pr}@{head}), so the next `land` at that same head hit
+    # "terminal waiter ... requires explicit requeue" and exited 2. A transient gh
+    # failure inside the slot, merge-probe exiting 2, or a queue ejection followed by
+    # a CI re-run at the same head are all cases where the correct next action is to
+    # try again, and the documented escape is unreachable in practice: SHEPHERD_WAITER_MODE
+    # / requeue appears only in this script and one line of
+    # references/landing-contract.md, never in SKILL.md or any caller. An operator who
+    # cannot retry learns to pass requeue blindly, which defeats the guard entirely.
+    #
+    # A FAILED landing stays terminal. Only "we could not tell" is retryable.
+    retryable = command_rc in (EXIT_WAITING, EXIT_UNKNOWN)
+    disposition = override or ("retryable" if retryable else "terminal")
     release_rc = release_slot(holder, disposition)
     if release_rc == 0:
         disarm_slot_release()
@@ -1885,6 +1933,47 @@ def recover_claim(merge_bead: str, dead_actor: str, evidence: str,
         if acquire_slot(recovery_holder, "1", "0", "handoff", "resume") != 0:
             fail("cannot acquire dead-claim recovery slot")
 
+    # RELEASED ON EVERY EXIT PATH, not only on success. The recovery slot is acquired
+    # with protection="handoff", so no signal-armed release covers it, and it used to
+    # be released only after finish_recovery. Any Fail in between -- the "another
+    # recovery receipt is incomplete" check inside prepare_recovery, or a bd hiccup in
+    # claim_state -- left the slot held by pr-shepherd:claim-recovery:<bead>:<actor>
+    # forever; retries resumed the same lease and aborted identically, and
+    # release_sheepdog then returned 75 for good, so NO shepherd could take the repo
+    # patrol.
+    #
+    # Two details are load-bearing, and each one cost me a full harness run:
+    #
+    # `if not waiter_holder` -- in the waiter-takeover path the slot belongs to the
+    # caller's waiter, not to us, so releasing it here would tear down a lease this
+    # function never acquired. Only the internal lease above is ours to free.
+    #
+    # The DISPOSITION must follow the outcome. Releasing "terminal" on the failure path
+    # marks the waiter terminal, and the retry then dies on "terminal waiter ...
+    # requires explicit requeue" -- swapping one stuck lease for an unresumable one.
+    # A crashed recovery is by definition retryable.
+    disposition = "retryable"
+    try:
+        rc = _recover_claim_body(
+            merge_bead, dead_actor, evidence, waiter_holder, successor, subject, key
+        )
+        disposition = "terminal"
+        return rc
+    finally:
+        if not waiter_holder and recovery_holder:
+            if release_slot(recovery_holder, disposition, quiet=True) != 0 and (
+                disposition == "terminal"
+            ):
+                fail("cannot release dead-claim recovery slot")
+
+
+def _recover_claim_body(merge_bead: str, dead_actor: str, evidence: str,
+                        waiter_holder: str, successor: str, subject: str,
+                        key: str) -> int:
+    """recover_claim's body, with the internal slot already held by the caller.
+
+    Split out so the caller's `finally` owns the release for every exit path.
+    """
     phase, _ = prepare_recovery(merge_bead, key, "claim", subject, evidence)
     if recovery_phase_rank(phase) < 2:
         claim = claim_state(merge_bead, "cannot inspect merge claim")
@@ -1915,11 +2004,6 @@ def recover_claim(merge_bead: str, dead_actor: str, evidence: str,
         if claim["status"] != "in_progress" or claim["assignee"] != successor:
             fail("merge-bead reclaim did not persist")
     finish_recovery(merge_bead, key, "claim", subject, evidence, phase)
-    if not waiter_holder:
-        # The recovery slot is an internal lease, so its SLOT_RELEASED line stays
-        # off stdout; CLAIM_RECOVERED below is the caller's receipt.
-        if release_slot(recovery_holder, "terminal", quiet=True) != 0:
-            fail("cannot release dead-claim recovery slot")
     print(
         f"CLAIM_RECOVERED merge={merge_bead} holder={dead_actor} "
         f"waiter={waiter_holder or 'none'} evidence={evidence} receipt={key}"
