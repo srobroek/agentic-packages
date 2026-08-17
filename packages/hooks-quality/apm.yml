@@ -1,5 +1,5 @@
 name: hooks-quality
-version: 2.0.1
+version: 2.0.2
 description: >-
   Non-blocking quality advisory on edits. Accumulates edited files and changed
   lines across a session and suggests targeted checks (ruff, gofmt, cargo fmt,

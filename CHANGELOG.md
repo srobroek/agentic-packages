@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.0.0...srobroek-agentic--v29.0.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* close the guard hardening findings ([#851](https://github.com/srobroek/agentic-packages/issues/851)) ([1cb2128](https://github.com/srobroek/agentic-packages/commit/1cb2128042b203b78d3ade28c109b59e49d5b962))
+
 ## [29.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v28.0.0...srobroek-agentic--v29.0.0) (2026-07-30)
 
 

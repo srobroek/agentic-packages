@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 29.0.0
+version: 29.0.1
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
