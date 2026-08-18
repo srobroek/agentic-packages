@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.1.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.2...srobroek-agentic--v29.1.3) (2026-08-18)
+
+
+### Bug Fixes
+
+* **orchestrate:** stop deny_metadata flagging orchestrator-stamped anchors ([#872](https://github.com/srobroek/agentic-packages/issues/872)) ([4532c0a](https://github.com/srobroek/agentic-packages/commit/4532c0a5367c2e001518d3ce01d29d12ce102f13))
+
 ## [29.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.1...srobroek-agentic--v29.1.2) (2026-08-17)
 
 
