@@ -20,6 +20,10 @@ exclude = [
     "__pycache__/",
     ".venv/",
     "node_modules/",
+    # Preserved validation-run artifacts: verbatim output from real spawned
+    # subagents, kept as evidence for the bead-as-brief eval. Reformatting them
+    # to satisfy a linter would edit the record being reported on.
+    "specs/*/validation-run/",
 ]
 
 [tool.ruff.lint]
