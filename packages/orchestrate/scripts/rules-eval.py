@@ -41,6 +41,33 @@ from pathlib import Path
 BD = os.environ.get("BD_BIN", "bd")
 RULES_DIR = os.environ.get("RULES_DIR", "")
 
+# Metadata keys the orchestrator stamps before the claim exists, per
+# spawn-brief.md "Required node metadata". `deny_metadata` is presence-based:
+# beads records no per-key writer (`bd show --json` carries no metadata field
+# authorship, `bd history` is squashed, and the audit trail's `field_change`
+# entries cover status/assignee/priority only), so a denied anchor blocks the
+# role for a write the orchestrator made. Exempt them centrally instead of
+# relying on every rules author to omit them (astro-plan-78v0).
+ORCHESTRATOR_ANCHORS = frozenset(
+    {
+        "actor",
+        "artifacts_dir",
+        "base_ref",
+        "base_sha",
+        "branch",
+        "complexity_tier",
+        "execution_agent",
+        "execution_dispatch",
+        "execution_kind",
+        "execution_task_kind",
+        "lease_token",
+        "runtime_context",
+        "runtime_handle",
+        "scope",
+        "worktree",
+    }
+)
+
 
 def emit_allow() -> None:
     sys.stdout.write("{}\n")
@@ -428,9 +455,16 @@ def main() -> None:
                 }
             )
     for dm in authority.get("deny_metadata") or []:
+        if dm in ORCHESTRATOR_ANCHORS:
+            continue
         if _has_metadata(bead, dm):
             violations.append(
-                {"check": "metadata_authority", "detail": f"wrote forbidden metadata.{dm}"}
+                {
+                    "check": "metadata_authority",
+                    "detail": (
+                        f"metadata.{dm} is set and this role may not own it; unset it or escalate"
+                    ),
+                }
             )
 
     if not failed and not violations:
