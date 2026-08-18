@@ -10,7 +10,7 @@ One unit of run work. Durable, synced.
 
 | Field group | Keys | Writer |
 |---|---|---|
-| Planning | `scope`, `base_ref`, `base_sha`, `execution_task_kind`, `execution_kind`, `artifacts_dir`, `model?`, `complexity_tier`, `tool_hints?`, `skill_hints?` | planner node / orchestrator at creation |
+| Planning | `scope`, `base_ref`, `base_sha`, `execution_task_kind`, `execution_kind`, `artifacts_dir` (artifact kind), `model?`, `complexity_tier`, `tool_hints?`, `skill_hints?` | planner node / orchestrator at creation |
 | Activation | `actor`, `branch`, `worktree`, `lease_token`, `runtime_handle`, `runtime_context`, `execution_dispatch`, `execution_agent` | orchestrator before release |
 | Delivery | `push` (git kind) · `output_ref` (artifact/comment kinds) | claiming agent |
 | Landing | `merge_sha`, `pr` | bundled run shepherd or standalone pr-shepherd |

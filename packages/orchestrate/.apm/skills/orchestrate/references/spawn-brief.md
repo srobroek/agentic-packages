@@ -18,15 +18,20 @@ and the narrative task to one `BRIEF` comment. Read both back before spawning.
 
 Required node metadata:
 
-- `scope`, `base_ref`, `base_sha`, `execution_task_kind`, `execution_kind`,
-  and `artifacts_dir`
+- `scope`, `base_ref`, `base_sha`, `execution_task_kind`, and `execution_kind`
 - `execution_dispatch`, `execution_agent`, and `complexity_tier`
 - `actor`, the stable claim identity used by `BEADS_ACTOR`
 - `branch`, `worktree`, and `lease_token` for a Worktrunk-backed actor
+- `artifacts_dir`, on `execution_kind=artifact` nodes only
 
 `artifacts_dir` is an absolute path under the primary checkout and outside
 every Worktrunk checkout. Create it and read the stamped value back before
 spawning. Relative or checkout-contained paths are invalid.
+
+Stamp it ONLY when `execution_kind=artifact`. The writer admits a mutation
+outside a leased checkout for those nodes alone, so `artifacts_dir` on a
+`git`-kind node names a path that actor cannot write. Nodes that produce commits
+report through their branch and their bead.
 
 `base_ref` is the ref where the target work ACTUALLY lives, which is often not
 `main`. Stamping `main` for a defect that exists only on an unmerged branch
@@ -46,9 +51,9 @@ Read each back rather than assuming the write landed.
    filesystem path fails as `Branch <path> has no worktree`.
 2. `base_ref` and `base_sha` name the ref that carries the target work.
 3. Node metadata has all of `scope`, `base_ref`, `base_sha`,
-   `execution_task_kind`, `execution_kind`, `artifacts_dir`,
-   `execution_dispatch`, `execution_agent`, `complexity_tier`, `actor`, `branch`,
-   `worktree`, and `lease_token`.
+   `execution_task_kind`, `execution_kind`, `execution_dispatch`,
+   `execution_agent`, `complexity_tier`, `actor`, `branch`, `worktree`, and
+   `lease_token`, plus `artifacts_dir` when `execution_kind=artifact`.
 4. One `BRIEF` comment exists on the resource. `bd show --json` omits comments,
    so verify with plain `bd show`.
 5. `scope-check.py` reports the candidate disjoint from every in-flight node.

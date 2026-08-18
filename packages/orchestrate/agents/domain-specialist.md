@@ -168,7 +168,10 @@ yourself.
 3. For Git evidence, create the open unassigned merge bead and dependency
    before opening a draft PR. The PR body records the work and merge bead ids.
    Stamp PR identity on the merge bead, never on review wisps.
-4. Write the full report under `artifacts_dir`, stamp `metadata.push`, add the
+4. Write the full report under `artifacts_dir` ONLY on an artifact node. On a git
+   node the report goes in the `REPORTED` comment and the evidence it links;
+   `artifacts_dir` is outside your leased checkout and the writer denies it.
+   Stamp `metadata.push`, add the
    next `agent:reviewer` label, and write `REPORTED` on the node with branch,
    verification, PR, merge-bead, and report references. Clear the assignee
    while retaining `status=in_progress`; this unclaimed reported state is the
