@@ -64,8 +64,13 @@ The receipt uses schema `pr-shepherd/local-gate-v1` and contains these fields:
 Before admitting the PR, the contract requires:
 
 - The referenced GitHub run has the exact reviewed head.
-- The run is a completed billing or startup failure with zero jobs and zero steps.
-- Every red PR check links to that same Actions run.
+- The run is a completed billing or startup failure with zero executed steps.
+- A billing failure has at least one failed job whose `.github` check annotation
+  says GitHub did not start the job because of failed payments or the spending limit.
+- Other jobs in a billing failure are failed with that annotation or skipped.
+- A startup failure uses GitHub's `STARTUP_FAILURE` conclusion.
+- Every red PR check links to the receipt run or another run at the exact head
+  that independently satisfies the same billing or startup classification.
 - Cancelled, timed-out, action-required, successful, or executed-step runs reject.
 - Stale identity, missing authorization, malformed receipt, review failure, or
   merge conflict rejects.

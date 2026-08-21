@@ -227,6 +227,12 @@ assert_eq 0 "$last_rc" "operator-approved zero-step billing gate is admitted"
 assert_contains "approval=local" "$last_output" "local gate mode is explicit"
 assert_contains "LOCAL_GATE_READY" "$last_output" "local gate receipt is verified"
 
+new_state local-gate-repeated-billing
+scenario=local-gate-repeated-billing
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 0 "$last_rc" "repeated zero-step billing runs at the exact head are admitted"
+
 new_state local-gate-startup
 scenario=local-gate-startup
 write_local_receipt github_startup_zero_steps
@@ -273,6 +279,20 @@ run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$stat
 assert_eq 12 "$last_rc" "local gate rejects a job with zero steps"
 assert_contains "jobs=1 steps=0" "$last_output" "nonzero job evidence is classified"
 
+new_state local-gate-billing-no-annotation
+scenario=local-gate-billing-no-annotation
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a zero-step failure without GitHub billing evidence"
+assert_contains "billing_signal=absent" "$last_output" "missing billing evidence is classified"
+
+new_state local-gate-billing-wrong-annotation
+scenario=local-gate-billing-wrong-annotation
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a zero-step workflow failure annotation"
+assert_contains "billing_signal=absent" "$last_output" "non-billing annotation is classified"
+
 new_state local-gate-action-required
 scenario=local-gate-action-required
 write_local_receipt
@@ -296,6 +316,8 @@ for local_pr_failure in conflict review stale-pr; do
   stale-pr)
     assert_eq 11 "$last_rc" "local gate rejects stale live PR identity"
     assert_contains "actual_head=$STALE_HEAD" "$last_output" "local stale PR identity is reported"
+    assert_not_contains_file "run view 32484277869" "$state/gh.log" \
+      "stale PR identity rejects before red-run binding"
     ;;
   esac
 done
