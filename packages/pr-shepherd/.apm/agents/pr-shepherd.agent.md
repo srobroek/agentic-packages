@@ -44,7 +44,7 @@ the same pass; document nothing outside bead comments.
    release → close the merge bead.
    A red check may use the shared landing contract's explicit `local` mode only
    when an operator-approved receipt binds the exact head to recorded local
-   gate evidence and a zero-step billing/startup run.
+   gate evidence and a zero-job/zero-step billing/startup run.
 7. `Tracks-Bead:` is backlink-only. Reconcile closing work through native
    dependencies after a merge bead closes: require `bd ready`, approved state,
    resolved children/gates, and every closing PR verified on the repository

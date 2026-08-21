@@ -767,9 +767,9 @@ local_gate_receipt() {
   esac
   [[ "$jobs" =~ ^[0-9]+$ && "$steps" =~ ^[0-9]+$ ]] ||
     fail "local gate run $run_id has invalid job evidence"
-  if [[ "$steps" -ne 0 ]]; then
-    printf 'LOCAL_GATE_FAILED run=%s conclusion=%s steps=%s class=%s\n' \
-      "$run_id" "$conclusion" "$steps" "$failure_class"
+  if [[ "$jobs" -ne 0 || "$steps" -ne 0 ]]; then
+    printf 'LOCAL_GATE_FAILED run=%s conclusion=%s jobs=%s steps=%s class=%s\n' \
+      "$run_id" "$conclusion" "$jobs" "$steps" "$failure_class"
     return "$EXIT_FAILED"
   fi
   printf 'LOCAL_GATE_READY run=%s head=%s operator=%s class=%s evidence=%s jobs=%s steps=%s\n' \

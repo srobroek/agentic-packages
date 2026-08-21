@@ -52,7 +52,7 @@ TRIGGER
 | already merged | verify terminal-branch landing, close merge bead, then reconcile ready closing work |
 | closed without merge | set merge bead `state:failed`, status blocked, comment; dependent work remains blocked |
 | clean + checks green + approved | `bd merge-slot acquire --holder <stable-id>` without `--wait` → `gh pr merge <N>` per repo convention → verify landing → holder-verified release → close merge bead |
-| checks red only because a zero-step billing/startup run has an operator-approved local receipt for the exact head | invoke the shared landing contract with `local <operator-id> <receipt-file>`; the receipt must prove the local gate, exact head, recorded evidence, and zero executed steps |
+| checks red only because a zero-job/zero-step billing/startup run has an operator-approved local receipt for the exact head | invoke the shared landing contract with `local <operator-id> <receipt-file>`; the receipt must prove the local gate, exact head, recorded evidence, and zero jobs plus zero executed steps |
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |

@@ -51,13 +51,14 @@ The receipt uses schema `pr-shepherd/local-gate-v1` and contains these fields:
 | `run_id` | Positive integer | GitHub Actions run to classify |
 | `failure_class` | `github_billing_zero_steps` or `github_startup_zero_steps` | Permitted remote failure class |
 
-The contract reads the referenced GitHub run before admitting the PR. The run
-must have the exact reviewed head, a completed billing or startup failure, and
-zero recorded steps. Every red check on the PR must link to that same Actions
-run; an unrelated red check remains a genuine failure. Cancelled, timed-out,
-action-required, successful, or executed-step runs remain failures. A stale
-receipt, stale run head, missing authorization, malformed receipt, review
-failure, or merge conflict cannot use local admission.
+Before admitting the PR, the contract requires:
+
+- The referenced GitHub run has the exact reviewed head.
+- The run is a completed billing or startup failure with zero jobs and zero steps.
+- Every red PR check links to that same Actions run.
+- Cancelled, timed-out, action-required, successful, or executed-step runs reject.
+- Stale identity, missing authorization, malformed receipt, review failure, or
+  merge conflict rejects.
 
 `land` accepts the same `local <operator-id> <receipt-file>` suffix. Before
 merging, it records the local mode, operator, run, failure class, evidence

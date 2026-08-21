@@ -244,6 +244,46 @@ run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$stat
 assert_eq 12 "$last_rc" "local gate rejects a real failure with executed steps"
 assert_contains LOCAL_GATE_FAILED "$last_output" "executed-step failure is classified"
 
+new_state local-gate-job-no-steps
+scenario=local-gate-job-no-steps
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a job with zero steps"
+assert_contains "jobs=1 steps=0" "$last_output" "nonzero job evidence is classified"
+
+new_state local-gate-action-required
+scenario=local-gate-action-required
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects action-required runs"
+
+for local_pr_failure in conflict review stale-pr; do
+  new_state "local-gate-$local_pr_failure"
+  scenario="local-gate-$local_pr_failure"
+  write_local_receipt
+  run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+  case "$local_pr_failure" in
+  conflict)
+    assert_eq 12 "$last_rc" "local gate rejects merge conflicts"
+    assert_contains "mergeable=CONFLICTING" "$last_output" "local conflict is classified"
+    ;;
+  review)
+    assert_eq 12 "$last_rc" "local gate rejects requested changes"
+    assert_contains "review=CHANGES_REQUESTED" "$last_output" "local review failure is classified"
+    ;;
+  stale-pr)
+    assert_eq 11 "$last_rc" "local gate rejects stale live PR identity"
+    assert_contains "actual_head=$STALE_HEAD" "$last_output" "local stale PR identity is reported"
+    ;;
+  esac
+done
+
+new_state local-gate-missing-receipt
+scenario=local-gate
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/missing.json"
+assert_eq 2 "$last_rc" "local gate requires a receipt file"
+assert_not_contains "PR_READY" "$last_output" "missing local receipt cannot admit"
+
 new_state local-gate-unrelated-red
 scenario=local-gate-unrelated-red
 write_local_receipt

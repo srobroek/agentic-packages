@@ -42,6 +42,14 @@ local-gate-steps:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[{"name":"test"}]}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
+local-gate-job-no-steps:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[]}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-action-required:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"ACTION_REQUIRED","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
 local-gate-cancelled:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"CANCELLED","jobs":[]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
@@ -69,6 +77,30 @@ land-local-gate:run:view)
 local-gate-unrelated-red:pr:view)
   printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"},{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/99999999999"}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-job-no-steps:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-action-required:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"ACTION_REQUIRED","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-conflict:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"CONFLICTING","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-review:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"CHANGES_REQUESTED","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-stale-pr:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$STALE_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-cancelled-rollup:pr:view)
   printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"CANCELLED","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
