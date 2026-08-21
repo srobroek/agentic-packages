@@ -10,6 +10,11 @@ any `bd ... --claim` issued while an orchestrate run is active. The run marker
 (env ORCHESTRATE_RUN or ./.orchestration/.active-run) scopes it so ordinary
 interactive sessions are untouched.
 
+On an allowed worker claim it also snapshots the bead's metadata as of the
+claim into metadata.claim_metadata_baseline, which is what lets the
+SubagentStop evaluator tell a value the role wrote from one another actor
+stamped before the claim (astro-plan-indxl).
+
 Decision: a PreToolUse deny with a diagnosis-only message. Fails open on
 malformed input. Invoked directly via `uv run`.
 Contract: specs/002-bead-as-brief/contracts/hook-io.md
@@ -19,7 +24,14 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import sys
+
+BD = os.environ.get("BD_BIN", "bd")
+CLAIM_BASELINE_KEY = "claim_metadata_baseline"
+# Global flags that consume the next token, which would otherwise read as the
+# subcommand or the bead id.
+VALUE_FLAGS = frozenset({"-C", "--db", "--dir"})
 
 DENY_MSG = (
     "orchestrators route work, they never claim beads; only a worker command "
@@ -149,6 +161,93 @@ def has_worker_actor_envelope(command: str) -> bool:
     return claim_count > 0
 
 
+def claim_bead_id(segment: list[str]) -> str:
+    """Bead id in `bd [flags] <subcommand> <id> ... --claim`, or '' if unclear."""
+    start = next((i for i, t in enumerate(segment) if os.path.basename(t) == "bd"), -1)
+    if start < 0:
+        return ""
+    positionals: list[str] = []
+    skip = False
+    for token in segment[start + 1 :]:
+        if skip:
+            skip = False
+            continue
+        if token in VALUE_FLAGS:
+            skip = True
+            continue
+        if token.startswith("-"):
+            continue
+        positionals.append(token)
+        if len(positionals) == 2:
+            return positionals[1]
+    return ""
+
+
+def bead_metadata(bead_id: str) -> dict[str, str] | None:
+    try:
+        out = subprocess.run(
+            [BD, "show", bead_id, "--json"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            env={
+                **os.environ,
+                "BD_JSON_ENVELOPE": "1",
+                "BD_NO_PAGER": "1",
+                "BD_NON_INTERACTIVE": "1",
+            },
+        )
+    except Exception:
+        return None
+    if out.returncode != 0 or not out.stdout.strip():
+        return None
+    try:
+        payload = json.loads(out.stdout)
+    except Exception:
+        return None
+    if isinstance(payload, dict) and "schema_version" in payload:
+        payload = payload.get("data")
+    if isinstance(payload, list):
+        payload = payload[0] if len(payload) == 1 else None
+    if not isinstance(payload, dict):
+        return None
+    metadata = payload.get("metadata")
+    return dict(metadata) if isinstance(metadata, dict) else {}
+
+
+def snapshot_claim_baseline(command: str) -> None:
+    """Record each claimed bead's pre-claim metadata.
+
+    Best effort: an absent snapshot degrades the stop-time authority check to
+    presence, which is the behaviour that predates it. Re-claiming overwrites
+    the snapshot, so a claim that is later refused leaves a harmless one.
+    """
+    for segment in shell_segments(command):
+        if not segment_invokes_bd_claim(segment):
+            continue
+        bead_id = claim_bead_id(segment)
+        if not bead_id:
+            continue
+        metadata = bead_metadata(bead_id)
+        if metadata is None:
+            continue
+        metadata.pop(CLAIM_BASELINE_KEY, None)
+        try:
+            subprocess.run(
+                [
+                    BD,
+                    "update",
+                    bead_id,
+                    "--metadata",
+                    json.dumps({CLAIM_BASELINE_KEY: json.dumps(metadata, sort_keys=True)}),
+                ],
+                capture_output=True,
+                timeout=8,
+            )
+        except Exception:
+            continue
+
+
 def main():
     if not run_active():
         emit_allow()  # not in a run -> never interfere
@@ -164,7 +263,13 @@ def main():
     if not cmd:
         emit_allow()
 
-    if not invokes_bd_claim(cmd) or has_worker_actor_envelope(cmd):
+    if not invokes_bd_claim(cmd):
+        emit_allow()
+    if has_worker_actor_envelope(cmd):
+        try:
+            snapshot_claim_baseline(cmd)
+        except Exception:
+            pass
         emit_allow()
 
     sys.stdout.write(

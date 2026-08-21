@@ -554,6 +554,49 @@ for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "run
         failed += 1
         print(f"  FAIL spawn-brief anchor {_key} is not exempt")
 
+
+# deny_metadata compares against the claim-time snapshot: the shepherd stamps
+# metadata.pr on a node the specialist then re-claims for a review round, and
+# presence alone made every later exit unreachable (astro-plan-indxl).
+def _pr_node(baseline: dict | None, pr: str = "https://x/pull/1"):
+    metadata = {
+        "execution_kind": "git",
+        "branch": "node-pr",
+        "push": "abc123",
+        "pr": pr,
+    }
+    if baseline is not None:
+        metadata[MODULE.CLAIM_BASELINE_KEY] = json.dumps(baseline)
+    return bead(
+        id="tpr",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata=metadata,
+        comments=[{"text": "BRIEF do the thing"}, {"text": "REPORTED done, verified"}],
+    )
+
+
+run(
+    "denied key unchanged since the claim does not block",
+    "allow",
+    _pr_node({"pr": "https://x/pull/1", "branch": "node-pr"}),
+)
+run(
+    "the claiming role changing a denied key still blocks",
+    "block",
+    _pr_node({"pr": "https://x/pull/0", "branch": "node-pr"}),
+)
+run(
+    "the claiming role introducing a denied key still blocks",
+    "block",
+    _pr_node({"branch": "node-pr"}),
+)
+run(
+    "no snapshot falls back to presence",
+    "block",
+    _pr_node(None),
+)
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
