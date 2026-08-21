@@ -10,6 +10,9 @@ readonly QUERY_FOUND=0
 readonly QUERY_ABSENT=1
 readonly QUERY_ERROR=2
 readonly WAITER_LABEL=gt:slot-waiter
+readonly LOCAL_GATE_SCHEMA=pr-shepherd/local-gate-v1
+LOCAL_GATE_RUN_ID=""
+LOCAL_GATE_RECEIPT_SHA=""
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly SCRIPT_DIR
 
@@ -689,24 +692,150 @@ check_run() {
   esac
 }
 
+local_gate_receipt() {
+  local repo="$1"
+  local expected_head="$2"
+  local operator="$3"
+  local receipt_path="$4"
+  local receipt data run_id failure_class evidence_ref run_data
+  local actual_head status conclusion jobs steps
+
+  [[ -n "$operator" ]] || fail "local gate operator authorization is required"
+  [[ -n "$receipt_path" && -f "$receipt_path" ]] ||
+    fail "local gate receipt must be an existing file"
+  receipt="$(<"$receipt_path")" || fail "cannot read local gate receipt"
+  data="$(printf '%s' "$receipt" | jq -er --arg schema "$LOCAL_GATE_SCHEMA" \
+    --arg expected "$expected_head" --arg operator "$operator" '
+    if type != "object" or
+       .schema != $schema or
+       .head_sha != $expected or
+       .operator_authorized != true or
+       .authorization != "operator-approved" or
+       .authorized_by != $operator or
+       .local_gate != "passed" or
+       (.evidence_ref | (type != "string" or length == 0 or contains("\t") or contains("\n"))) or
+       (.run_id | (type != "number" or floor != . or . < 1)) or
+       (.failure_class | . != "github_billing_zero_steps" and . != "github_startup_zero_steps")
+    then error("invalid local gate receipt")
+    else [(.run_id | tostring), .failure_class, .evidence_ref] | @tsv
+    end')" || fail "local gate receipt is malformed or not authorized"
+  IFS=$'\t' read -r run_id failure_class evidence_ref <<<"$data"
+  [[ "$run_id" =~ ^[1-9][0-9]*$ ]] || fail "local gate receipt run id is invalid"
+  LOCAL_GATE_RUN_ID="$run_id"
+  LOCAL_GATE_RECEIPT_SHA="$(git hash-object "$receipt_path")" ||
+    fail "cannot hash local gate receipt"
+
+  run_data="$(gh run view "$run_id" --repo "$repo" \
+    --json status,conclusion,headSha,jobs \
+    --jq '[.headSha,(.status // "NONE" | ascii_upcase),(.conclusion // "NONE" | ascii_upcase),([.jobs[]?] | length),([.jobs[]?.steps[]?] | length)] | @tsv')" ||
+    fail "cannot read local gate run $run_id"
+  IFS=$'\t' read -r actual_head status conclusion jobs steps <<<"$run_data"
+  require_sha "${actual_head:-}" "local gate run head"
+  if [[ "$actual_head" != "$expected_head" ]]; then
+    printf 'LOCAL_GATE_STALE run=%s expected_head=%s actual_head=%s\n' \
+      "$run_id" "$expected_head" "$actual_head"
+    return "$EXIT_STALE"
+  fi
+  if [[ "$status" != "COMPLETED" ]]; then
+    printf 'LOCAL_GATE_WAITING run=%s status=%s head=%s\n' \
+      "$run_id" "$status" "$actual_head"
+    return "$EXIT_WAITING"
+  fi
+  case "$conclusion" in
+  FAILURE)
+    [[ "$failure_class" == github_billing_zero_steps ]] || {
+      printf 'LOCAL_GATE_FAILED run=%s conclusion=%s class=%s\n' \
+        "$run_id" "$conclusion" "$failure_class"
+      return "$EXIT_FAILED"
+    }
+    ;;
+  STARTUP_FAILURE)
+    [[ "$failure_class" == github_startup_zero_steps ]] || {
+      printf 'LOCAL_GATE_FAILED run=%s conclusion=%s class=%s\n' \
+        "$run_id" "$conclusion" "$failure_class"
+      return "$EXIT_FAILED"
+    }
+    ;;
+  CANCELLED | TIMED_OUT | ACTION_REQUIRED)
+    printf 'LOCAL_GATE_FAILED run=%s conclusion=%s class=%s\n' \
+      "$run_id" "$conclusion" "$failure_class"
+    return "$EXIT_FAILED"
+    ;;
+  *)
+    fail "local gate run $run_id has unsupported conclusion ${conclusion:-empty}"
+    ;;
+  esac
+  [[ "$jobs" =~ ^[0-9]+$ && "$steps" =~ ^[0-9]+$ ]] ||
+    fail "local gate run $run_id has invalid job evidence"
+  if [[ "$steps" -ne 0 ]]; then
+    printf 'LOCAL_GATE_FAILED run=%s conclusion=%s steps=%s class=%s\n' \
+      "$run_id" "$conclusion" "$steps" "$failure_class"
+    return "$EXIT_FAILED"
+  fi
+  printf 'LOCAL_GATE_READY run=%s head=%s operator=%s class=%s evidence=%s jobs=%s steps=%s\n' \
+    "$run_id" "$actual_head" "$operator" "$failure_class" "$evidence_ref" "$jobs" "$steps"
+}
+
+local_gate_failure_binding() {
+  local repo="$1"
+  local pr="$2"
+  local run_id="$3"
+  local counts red_count bound_count disallowed_count
+
+  [[ "$run_id" =~ ^[1-9][0-9]*$ ]] || fail "local gate run id is unavailable"
+  counts="$(gh pr view "$pr" --repo "$repo" --json statusCheckRollup \
+    --jq "[ .statusCheckRollup[]? |
+      { conclusion: ((.conclusion // .state // .status // \"\") | ascii_upcase),
+        url: (.detailsUrl // .targetUrl // .url // \"\") }
+      | select(.conclusion == \"FAILURE\" or .conclusion == \"ERROR\" or
+               .conclusion == \"CANCELLED\" or .conclusion == \"TIMED_OUT\" or
+               .conclusion == \"ACTION_REQUIRED\" or .conclusion == \"STARTUP_FAILURE\") ]
+    | [length,
+       (map(select(.url | test(\"/actions/runs/$run_id($|[^0-9])\"))) | length),
+       (map(select(.conclusion != \"FAILURE\")) | length)]
+    | @tsv")" || fail "cannot read PR $pr local gate checks"
+  IFS=$'\t' read -r red_count bound_count disallowed_count <<<"$counts"
+  [[ "$red_count" =~ ^[0-9]+$ && "$bound_count" =~ ^[0-9]+$ &&
+    "$disallowed_count" =~ ^[0-9]+$ ]] ||
+    fail "PR $pr local gate checks are malformed"
+  if [[ "$red_count" -eq 0 || "$red_count" -ne "$bound_count" ||
+    "$disallowed_count" -ne 0 ]]; then
+    printf 'LOCAL_GATE_FAILED pr=%s run=%s red_checks=%s bound_checks=%s disallowed_checks=%s\n' \
+      "$pr" "$run_id" "$red_count" "$bound_count" "$disallowed_count"
+    return "$EXIT_FAILED"
+  fi
+}
+
 check_pr() {
   local repo="$1"
   local pr="$2"
   local expected_head="$3"
   local expected_base="$4"
   local approval_mode="${5:-github}"
+  local local_operator="${6:-}"
+  local local_receipt="${7:-}"
   local data state draft mergeable review base head checks
 
   require_sha "$expected_head" "expected head"
   case "$approval_mode" in
-  github | external) ;;
-  *) fail "approval mode must be github or external" ;;
+  github | external)
+    [[ -z "$local_operator" && -z "$local_receipt" ]] ||
+      fail "$approval_mode approval does not accept local gate evidence"
+    ;;
+  local)
+    local_gate_receipt "$repo" "$expected_head" "$local_operator" "$local_receipt" || return $?
+    ;;
+  *) fail "approval mode must be github, external, or local" ;;
   esac
   data="$(gh pr view "$pr" --repo "$repo" \
     --json state,isDraft,mergeable,reviewDecision,baseRefName,headRefOid,statusCheckRollup \
-    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(if (.reviewDecision // "") == "" then "NONE" else .reviewDecision end),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv')" ||
+    --jq '[.state,(.isDraft|tostring),(.mergeable // "UNKNOWN"),(if (.reviewDecision // "") == "" then "NONE" else .reviewDecision end),(.baseRefName // "NONE"),(.headRefOid // "NONE"),([.statusCheckRollup[]? | ((.conclusion // .state // .status // "") | ascii_upcase)] | if length == 0 then "NONE" elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED" or . == "STARTUP_FAILURE") then "RED" else "PENDING" end)] | @tsv')" ||
     fail "cannot read PR $pr"
   IFS=$'\t' read -r state draft mergeable review base head checks <<<"$data"
+
+  if [[ "$approval_mode" == "local" ]]; then
+    local_gate_failure_binding "$repo" "$pr" "$LOCAL_GATE_RUN_ID" || return $?
+  fi
 
   if [[ "$head" != "$expected_head" || "$base" != "$expected_base" ]]; then
     printf 'PR_STALE pr=%s expected_head=%s actual_head=%s expected_base=%s actual_base=%s\n' \
@@ -717,7 +846,8 @@ check_pr() {
     printf 'PR_NOT_OPEN pr=%s state=%s\n' "$pr" "${state:-unknown}"
     return "$EXIT_FAILED"
   fi
-  if [[ "$mergeable" == "CONFLICTING" || "$review" == "CHANGES_REQUESTED" || "$checks" == "RED" ]]; then
+  if [[ "$mergeable" == "CONFLICTING" || "$review" == "CHANGES_REQUESTED" ||
+    ("$checks" == "RED" && "$approval_mode" != "local") ]]; then
     printf 'PR_FAILED pr=%s mergeable=%s review=%s checks=%s\n' "$pr" "$mergeable" "$review" "$checks"
     return "$EXIT_FAILED"
   fi
@@ -727,7 +857,9 @@ check_pr() {
       "$pr" "$draft" "${review:-empty}" "$approval_mode" "$checks"
     return "$EXIT_WAITING"
   fi
-  if [[ "$mergeable" != "MERGEABLE" || ("$checks" != "GREEN" && "$checks" != "NONE") ]]; then
+  if [[ "$mergeable" != "MERGEABLE" ||
+    ("$checks" != "GREEN" && "$checks" != "NONE" &&
+      ("$approval_mode" != "local" || "$checks" != "RED")) ]]; then
     fail "PR $pr readiness is unknown (mergeable=${mergeable:-empty}, checks=${checks:-empty})"
   fi
   printf 'PR_READY pr=%s head=%s base=%s approval=%s checks=%s\n' \
@@ -841,6 +973,44 @@ record_merge_receipt() {
     >/dev/null || fail "cannot record remote merge receipt"
 }
 
+record_local_gate_admission() {
+  local merge_bead="$1"
+  local pr="$2"
+  local expected_head="$3"
+  local operator="$4"
+  local receipt_path="$5"
+  local receipt data run_id failure_class evidence_ref receipt_sha
+
+  receipt="$(<"$receipt_path")" || fail "cannot read local gate receipt for landing record"
+  data="$(printf '%s' "$receipt" | jq -er --arg schema "$LOCAL_GATE_SCHEMA" \
+    --arg expected "$expected_head" --arg operator "$operator" '
+    if type != "object" or .schema != $schema or .head_sha != $expected or
+       .operator_authorized != true or .authorization != "operator-approved" or
+       .authorized_by != $operator or .local_gate != "passed" or
+       (.evidence_ref | (type != "string" or length == 0 or contains("\t") or contains("\n"))) or
+       (.run_id | (type != "number" or floor != . or . < 1)) or
+       (.failure_class | . != "github_billing_zero_steps" and . != "github_startup_zero_steps")
+    then error("invalid local gate receipt")
+    else [(.run_id | tostring), .failure_class, .evidence_ref] | @tsv
+    end')" || fail "local gate receipt changed before landing record"
+  IFS=$'\t' read -r run_id failure_class evidence_ref <<<"$data"
+  receipt_sha="$(git hash-object "$receipt_path")" ||
+    fail "cannot hash local gate receipt"
+  [[ -n "$LOCAL_GATE_RECEIPT_SHA" && "$receipt_sha" == "$LOCAL_GATE_RECEIPT_SHA" ]] ||
+    fail "local gate receipt changed before landing record"
+  bd update "$merge_bead" --set-metadata "local_gate_mode=local" \
+    --set-metadata "local_gate_operator=$operator" \
+    --set-metadata "local_gate_head_sha=$expected_head" \
+    --set-metadata "local_gate_run_id=$run_id" \
+    --set-metadata "local_gate_failure_class=$failure_class" \
+    --set-metadata "local_gate_evidence=$evidence_ref" \
+    --set-metadata "local_gate_receipt_sha=$receipt_sha" >/dev/null ||
+    fail "cannot persist local gate admission"
+  bd comment "$merge_bead" \
+    "LOCAL_GATE pr=$pr head_sha=$expected_head operator=$operator run=$run_id class=$failure_class evidence=$evidence_ref receipt_sha=$receipt_sha" \
+    >/dev/null || fail "cannot record local gate admission"
+}
+
 hold_for_landing_base() {
   local merge_bead="$1"
   local pr="$2"
@@ -867,6 +1037,8 @@ land_owned() {
   local expected_head="$7"
   local method="$8"
   local approval_mode="$9"
+  local local_operator="${10:-}"
+  local local_receipt="${11:-}"
   local data state actual_head merge_sha probe_output probe_rc verify_rc
 
   require_sha "$recorded_base" "recorded base"
@@ -903,7 +1075,12 @@ land_owned() {
     return 0
   fi
 
-  check_pr "$repo" "$pr" "$expected_head" "$pr_base" "$approval_mode" || return $?
+  check_pr "$repo" "$pr" "$expected_head" "$pr_base" "$approval_mode" \
+    "$local_operator" "$local_receipt" || return $?
+  if [[ "$approval_mode" == "local" ]]; then
+    record_local_gate_admission "$merge_bead" "$pr" "$expected_head" \
+      "$local_operator" "$local_receipt"
+  fi
   git fetch --quiet --no-tags origin \
     "refs/heads/$pr_base:refs/remotes/origin/$pr_base" \
     "refs/pull/$pr/head" || fail "cannot fetch landing transaction refs"
@@ -957,11 +1134,14 @@ land_pr() {
   local expected_head="$7"
   local method="$8"
   local approval_mode="${9:-github}"
+  local local_operator="${10:-}"
+  local local_receipt="${11:-}"
   local holder="pr-shepherd:$repo#$pr@$expected_head"
   local landing_rc
 
   if run_with_slot "$holder" land_owned "$merge_bead" "$repo" "$pr" \
-    "$pr_base" "$landing_base" "$recorded_base" "$expected_head" "$method" "$approval_mode"; then
+    "$pr_base" "$landing_base" "$recorded_base" "$expected_head" "$method" \
+    "$approval_mode" "$local_operator" "$local_receipt"; then
     landing_rc=0
   else
     landing_rc=$?
@@ -1490,9 +1670,9 @@ ready_ids() {
 usage() {
   printf '%s\n' \
     'usage: landing-contract.sh check-run <repo> <run-id> <head-sha>' \
-    '       landing-contract.sh check-pr <repo> <pr> <head-sha> <pr-base> [github|external]' \
+    '       landing-contract.sh check-pr <repo> <pr> <head-sha> <pr-base> [github|external|local [operator-id] [receipt-file]]' \
     '       landing-contract.sh verify-landed <repo> <pr> <base> <recorded-base-sha> <head-sha> <merge-sha>' \
-    '       landing-contract.sh land <merge-bead> <repo> <pr> <pr-base> <landing-base> <recorded-base-sha> <head-sha> <merge|rebase|squash> [github|external]' \
+    '       landing-contract.sh land <merge-bead> <repo> <pr> <pr-base> <landing-base> <recorded-base-sha> <head-sha> <merge|rebase|squash> [github|external|local [operator-id] [receipt-file]]' \
     '       landing-contract.sh acquire-slot <stable-holder> [attempts] [poll-seconds] [resume|requeue]' \
     '       landing-contract.sh release-slot <stable-holder> [terminal|retryable]' \
     '       landing-contract.sh with-slot <stable-holder> -- <command> [args...]' \
@@ -1517,7 +1697,7 @@ check-run)
   check_run "$@"
   ;;
 check-pr)
-  [[ $# -ge 4 && $# -le 5 ]] || fail "check-pr expects 4-5 arguments"
+  [[ $# -ge 4 && $# -le 7 ]] || fail "check-pr expects 4-7 arguments"
   check_pr "$@"
   ;;
 verify-landed)
@@ -1525,7 +1705,7 @@ verify-landed)
   verify_landed "$@"
   ;;
 land)
-  [[ $# -ge 8 && $# -le 9 ]] || fail "land expects 8-9 arguments"
+  [[ $# -ge 8 && $# -le 11 ]] || fail "land expects 8-11 arguments"
   land_pr "$@"
   ;;
 acquire-slot)
