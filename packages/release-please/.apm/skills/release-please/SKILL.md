@@ -11,14 +11,21 @@ into a long-lived **release PR**; **merging that PR** is what cuts the tag and
 GitHub Release. Manual tags/releases outside this flow are the top cause of a
 permanently stuck release loop.
 
-## Step 0 — Detect (mandatory gate)
+## Step 0 -- Detect (mandatory gate)
 
 Before any release, tag, changelog, or version-bump action, check whether the
-repo is release-please-managed:
+repo is release-please-managed. Run the installed guard for the active runtime:
 
 ```bash
-scripts/detect-release-please.sh          # exit 0 = managed, 1 = not; prints config facts
+# Codex
+.codex/hooks/release-please/scripts/release-please-guard.py detect
+
+# Claude Code
+.claude/hooks/release-please/scripts/release-please-guard.py detect
 ```
+
+The command exits `0` when the repo is managed and `1` when it is not; it also
+prints the detected config facts.
 
 - **Managed (exit 0)** → using release-please is **MANDATORY**. Do NOT hand-cut
   tags or run `gh release create`; do NOT hand-merge a `release-please--branches--*`
@@ -34,7 +41,7 @@ scripts/detect-release-please.sh          # exit 0 = managed, 1 = not; prints co
    becomes the released commit message). `chore`/`build`/`docs`/`style` alone cut
    no release.
 2. release-please opens/updates the release PR, labeled `autorelease: pending`.
-3. **Review and merge the release PR** — do not edit its title or labels by hand.
+3. **Review and merge the release PR** -- do not edit its title or labels by hand.
 4. release-please tags the merge commit, creates the GitHub Release, and flips the
    label to `autorelease: tagged`. Publishing runs from that (see `references/publishing.md`).
 
@@ -43,7 +50,7 @@ the SemVer mapping: `references/git-process.md`.
 
 ## NEVER do (on a managed repo)
 
-- `gh release create` / `git tag vX.Y.Z` to "finish" a release — it masks state
+- `gh release create` / `git tag vX.Y.Z` to "finish" a release -- it masks state
   and re-breaks the loop on the *next* merge.
 - Flip `autorelease: pending` → `autorelease: tagged` by hand.
 - Hand-edit release-PR titles or `.release-please-manifest.json` versions (except
@@ -52,7 +59,7 @@ the SemVer mapping: `references/git-process.md`.
 
 ## Setup / config
 
-- Single package: `references/setup-single.md` (workflow YAML, permissions —
+- Single package: `references/setup-single.md` (workflow YAML, permissions --
   note `contents`, `issues`, AND `pull-requests: write`).
 - Monorepo / manifest: `references/setup-monorepo.md` (`separate-pull-requests`,
   `group-pull-request-title-pattern`, `include-component-in-tag`, `tag-separator`,

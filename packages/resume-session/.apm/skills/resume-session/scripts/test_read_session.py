@@ -5,6 +5,7 @@ Run with:  uv run --with pytest pytest test_read_session.py
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import sys
 
@@ -75,17 +76,19 @@ def _build_claude_session(tmp_path, n_turns):
     lines = []
     for i in range(n_turns):
         role = "user" if i % 2 == 0 else "assistant"
+        stamp = f"2026-01-01T00:{i:02d}:00Z"
+        # json.dumps rather than a hand-built string: percent formatting tripped the
+        # linter, and an f-string would need every JSON brace doubled -- which is
+        # exactly the kind of quoting bug a fixture should not risk.
         if role == "user":
-            lines.append(
-                '{"type": "user", "message": {"content": "u%d"}, '
-                '"timestamp": "2026-01-01T00:%02d:00Z"}' % (i, i)
-            )
+            record = {"type": "user", "message": {"content": f"u{i}"}, "timestamp": stamp}
         else:
-            lines.append(
-                '{"type": "assistant", "message": {"content": '
-                '[{"type": "text", "text": "a%d"}]}, '
-                '"timestamp": "2026-01-01T00:%02d:00Z"}' % (i, i)
-            )
+            record = {
+                "type": "assistant",
+                "message": {"content": [{"type": "text", "text": f"a{i}"}]},
+                "timestamp": stamp,
+            }
+        lines.append(json.dumps(record))
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return p
 

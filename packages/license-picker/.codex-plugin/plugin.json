@@ -1,6 +1,6 @@
 {
   "name": "license-picker",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Interactive \"choose your own adventure\" license picker for open-source projects. Interviews the user about their repo type, threat model, ecosystem, and contribution goals, then recommends an OSI-approved license with full rationale. Validates against real license text and SPDX identifiers.",
   "author": {
     "name": "Sjors Robroek"

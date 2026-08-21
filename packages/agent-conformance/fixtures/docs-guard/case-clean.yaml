@@ -1,0 +1,24 @@
+agent: docs-guard
+regime: clean
+prompt: |
+  DOCS-GUARD node=n1 scope=docs/
+  files:
+    - docs/README.md
+sandbox:
+  files:
+    docs/README.md: |
+      # Project
+
+      A short description.
+
+      ## Usage
+
+      Run `make build` to compile.
+assert:
+  first_line: '^DOCS-GUARD \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 80
+  no_reprint: true
+  required_patterns:
+    - 'verdict=PASS'
+timeout_s: 120
+budget_usd: 0.50

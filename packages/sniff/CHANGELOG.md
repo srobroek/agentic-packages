@@ -1,5 +1,82 @@
 # Changelog
 
+## [5.1.0](https://github.com/srobroek/agentic-packages/compare/sniff--v5.0.1...sniff--v5.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [5.0.1](https://github.com/srobroek/agentic-packages/compare/sniff--v5.0.0...sniff--v5.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/sniff--v4.0.1...sniff--v5.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/sniff--v4.0.0...sniff--v4.0.1) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.4...sniff--v4.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **write-docs:** requires the vale binary on PATH (mise use -g vale, or brew install vale). Suppression syntax changes from <!-- write-docs:allow E2 --> to Vale's <!-- vale WriteDocs.SlopLexicon = NO --> off/on pairs, which are block-scoped rather than line-scoped.
+
+### Features
+
+* **write-docs:** check documentation prose with Vale instead of a bespoke linter ([#721](https://github.com/srobroek/agentic-packages/issues/721)) ([43fc7f7](https://github.com/srobroek/agentic-packages/commit/43fc7f766c6f4a9c6317a71f18ba33ff3fbf507c))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* close three guard bypasses and eight broken agent references ([#722](https://github.com/srobroek/agentic-packages/issues/722)) ([cbc6875](https://github.com/srobroek/agentic-packages/commit/cbc6875f53b3b048f4fe882bad69305a04e47bc3))
+
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.3...sniff--v3.2.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** scan agents draft in working turns and compose the report in one pass ([#701](https://github.com/srobroek/agentic-packages/issues/701)) ([bf85043](https://github.com/srobroek/agentic-packages/commit/bf850438e20baea869e654a65a985f5257b58e97))
+
+## [3.2.3](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.2...sniff--v3.2.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
+## [3.2.2](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.1...sniff--v3.2.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** verdict line is the literal first line — no preamble, no markdown emphasis ([#688](https://github.com/srobroek/agentic-packages/issues/688)) ([0cef5d6](https://github.com/srobroek/agentic-packages/commit/0cef5d6698a0ee7b5f3337ef993a4bf9fb653e9a))
+
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/sniff--v3.2.0...sniff--v3.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** converge Claude effort and Codex reasoning_effort pins ([#663](https://github.com/srobroek/agentic-packages/issues/663)) ([9f149f2](https://github.com/srobroek/agentic-packages/commit/9f149f2cda79e819ce25b37e5eba2ffdd52fd115))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/sniff--v3.1.0...sniff--v3.2.0) (2026-07-21)
 
 

@@ -1,12 +1,11 @@
 name: eli5
-version: 2.1.0
+version: 2.2.0
 description: >-
   Explain a topic at five depth levels, from metaphor to frontier, for layered
   understanding of unfamiliar concepts.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
-target: all
 includes: auto
 category: planning-product
 tags:

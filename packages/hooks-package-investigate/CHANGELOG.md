@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v2.0.2...hooks-package-investigate--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [2.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v2.0.1...hooks-package-investigate--v2.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v2.0.0...hooks-package-investigate--v2.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v1.2.1...hooks-package-investigate--v2.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now package-investigate.py and requires python3 on PATH.
+
+### Refactors
+
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
+## [1.2.1](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v1.2.0...hooks-package-investigate--v1.2.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/hooks-package-investigate--v1.1.1...hooks-package-investigate--v1.2.0) (2026-07-16)
 
 

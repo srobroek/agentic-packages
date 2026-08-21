@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Report target-aware agent and shared skill runtime parity."""
 
 from __future__ import annotations
@@ -99,14 +103,29 @@ def agent_model_mapping(path: Path, name: str) -> dict[str, str]:
     return {key: str(value) for key, value in codex.items()} if isinstance(codex, dict) else {}
 
 
+def source_priority(package: Path, path: Path) -> tuple[int, str]:
+    """Prefer monorepo and direct-local sources over cached remote duplicates."""
+    relative = path.relative_to(package)
+    parts = relative.parts
+    if "apm_modules" not in parts:
+        return (0, str(relative))
+    modules_index = parts.index("apm_modules")
+    if len(parts) > modules_index + 1 and parts[modules_index + 1] == "_local":
+        return (1, str(relative))
+    return (2, str(relative))
+
+
 def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
-    metadata: dict[str, dict[str, str]] = {}
+    candidates: dict[tuple[str, str], tuple[tuple[int, str], str, dict[str, str]]] = {}
     for path in source_agent_paths(package):
         frontmatter = split_frontmatter(path.read_text(encoding="utf-8"))
         parsed = parse_scalar_map(frontmatter)
         name = str(parsed.get("name") or path.name.removesuffix(".agent.md"))
         mapping = agent_model_mapping(path, name)
-        metadata[str(path.relative_to(package))] = {
+        package_manifest = yaml.safe_load((path.parents[2] / "apm.yml").read_text(encoding="utf-8")) or {}
+        package_name = str(package_manifest.get("name") or path.parents[2].name)
+        relative_path = str(path.relative_to(package))
+        actual = {
             "name": name,
             "target": agent_package_target(path),
             "model": str(parsed.get("model", "")),
@@ -118,7 +137,11 @@ def source_agent_metadata(package: Path) -> dict[str, dict[str, str]]:
             "mapped_model": mapping.get("model", ""),
             "mapped_reasoning_effort": mapping.get("reasoning_effort", ""),
         }
-    return metadata
+        identity = (package_name, name)
+        candidate = (source_priority(package, path), relative_path, actual)
+        if identity not in candidates or candidate[0] < candidates[identity][0]:
+            candidates[identity] = candidate
+    return {relative_path: actual for _, relative_path, actual in candidates.values()}
 
 
 def main() -> int:
@@ -135,16 +158,24 @@ def main() -> int:
     skills = source_skill_names(package)
     codex = names(root / ".codex" / "agents", ".toml")
     claude = names(root / ".claude" / "agents", ".md")
-    agent_skills = {
-        path.name
-        for path in (root / ".agents" / "skills").iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    } if (root / ".agents" / "skills").is_dir() else set()
-    claude_skills = {
-        path.name
-        for path in (root / ".claude" / "skills").iterdir()
-        if path.is_dir() and (path / "SKILL.md").is_file()
-    } if (root / ".claude" / "skills").is_dir() else set()
+    agent_skills = (
+        {
+            path.name
+            for path in (root / ".agents" / "skills").iterdir()
+            if path.is_dir() and (path / "SKILL.md").is_file()
+        }
+        if (root / ".agents" / "skills").is_dir()
+        else set()
+    )
+    claude_skills = (
+        {
+            path.name
+            for path in (root / ".claude" / "skills").iterdir()
+            if path.is_dir() and (path / "SKILL.md").is_file()
+        }
+        if (root / ".claude" / "skills").is_dir()
+        else set()
+    )
 
     print("Agent parity")
     print(f"- source definitions: {len(metadata)}")

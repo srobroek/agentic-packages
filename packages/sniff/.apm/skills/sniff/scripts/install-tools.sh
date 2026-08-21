@@ -83,6 +83,8 @@ tools_for() {
       echo "type-coverage|type-coverage|npm-local|npm i -D type-coverage  (project-local; any-leakage %)"
       echo "dependency-cruiser|depcruise|npm-local|npm i -D dependency-cruiser  (project-local; cycles + architecture boundaries)"
       echo "biome|biome|npm-local|npm i -D --save-exact @biomejs/biome  (project-local; fast lint+fmt, JSON too)"
+      echo "svelte-check|svelte-check|npm-local|npm i -D svelte-check  (project-local; Svelte compiler/type/a11y diagnostics)"
+      echo "vue-tsc|vue-tsc|npm-local|npm i -D vue-tsc  (project-local; Vue SFC-aware type checking)"
       ;;
     shell)
       echo "shellcheck|shellcheck|brew|brew install shellcheck"
@@ -90,6 +92,7 @@ tools_for() {
       ;;
     sql)
       echo "sqlfluff|sqlfluff|pipx|pipx install sqlfluff"
+      echo "squawk|squawk|cargo|cargo install squawk  (Postgres migration safety)"
       ;;
     css)
       echo "stylelint|stylelint|npm-local|npm i -D stylelint stylelint-config-standard stylelint-config-recommended-scss  (project-local; add -recommended-vue for Vue SFC styles)"
@@ -106,11 +109,15 @@ tools_for() {
       echo "oasdiff|oasdiff|brew|brew install oasdiff/homebrew-oasdiff/oasdiff  (OPT-IN: OpenAPI breaking-change vs base; needs CI baseline)|oasdiff/homebrew-oasdiff/oasdiff"
       echo "graphql-inspector|graphql-inspector|npm|npm i -g @graphql-inspector/cli  (OPT-IN: GraphQL breaking-change diff; needs baseline)"
       echo "buf|buf|brew|brew install bufbuild/buf/buf  (or: https://buf.build)|bufbuild/buf/buf"
+      echo "openapi-spec-validator|openapi-spec-validator|pipx|pipx install openapi-spec-validator  (OpenAPI structural validity gate)"
+      echo "protolint|protolint|go|go install github.com/yoheimuta/protolint/cmd/protolint@latest||go:github.com/yoheimuta/protolint/cmd/protolint"
       ;;
     infra)
       echo "hadolint|hadolint|brew|brew install hadolint"
       echo "tflint|tflint|brew|brew install tflint"
       echo "actionlint|actionlint|brew|brew install actionlint"
+      echo "zizmor|zizmor|pipx|pipx install zizmor  (OPT-IN: GitHub Actions security dataflow)"
+      echo "pinact|pinact|go|go install github.com/suzuki-shunsuke/pinact/cmd/pinact@latest  (OPT-IN: pin actions to commit SHAs)||go:github.com/suzuki-shunsuke/pinact/cmd/pinact"
       echo "kube-linter|kube-linter|brew|brew install kube-linter"
       echo "kubeconform|kubeconform|brew|brew install kubeconform  (k8s manifest schema validation)"
       ;;
@@ -337,7 +344,8 @@ A tool already on PATH is used as-is (never reinstalled). When a tool is missing
 and `mise` is on PATH, mise installs it REPO-LOCALLY (`mise use`, writing
 ./mise.toml in the current directory — not global config); pass --no-mise to use
 brew/cargo/npm/pipx directly instead. Run from the repo where you want the local
-mise.toml pin. Project-local tools (eslint, knip, biome, stylelint) are reported,
+  mise.toml pin. Project-local tools (eslint, knip, biome, stylelint, svelte-check,
+  vue-tsc) are reported,
 not installed globally — add them to the repo's own devDependencies.
 EOF
 }

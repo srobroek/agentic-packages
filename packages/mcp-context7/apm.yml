@@ -1,12 +1,11 @@
 name: mcp-context7
-version: 1.2.0
+version: 1.3.0
 description: >-
   MCP server package for Context7, providing current library and framework
   documentation lookups.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 category: mcp
 tags:
   - mcp

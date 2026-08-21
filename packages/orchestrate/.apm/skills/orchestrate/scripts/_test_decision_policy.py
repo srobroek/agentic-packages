@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Contract and Beads 1.1.0 tests for orchestration decision policy."""
+"""Contract and Beads tests for orchestration decision policy.
+
+The bd version is read from mise.toml, not pinned here.
+"""
 
 from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
+import re
+import shutil
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REFERENCES = HERE.parent / "references"
@@ -61,17 +66,6 @@ def validate_local_decision(body: str) -> None:
     if fields["status"] == "provisional":
         require_fields(fields, {"revisit"})
         objective_trigger(fields["revisit"])
-
-
-def validate_ambiguity(body: str) -> None:
-    kind, fields = parse_record(body)
-    if kind != "AMBIGUITY":
-        raise PolicyError("wrong ambiguity kind")
-    require_fields(
-        fields,
-        {"owner", "scope", "evidence", "unknown", "default", "bounds", "revisit"},
-    )
-    objective_trigger(fields["revisit"])
 
 
 def validate_waiting_human(body: str) -> None:
@@ -216,15 +210,6 @@ class DecisionPolicyContractTest(unittest.TestCase):
             ),
             {"owner", "scope", "question", "impact", "resume"},
         )
-        self.assertEqual(
-            schema_fields(
-                self.lifecycle,
-                "## Durable ambiguity and autonomous defaults",
-                "AMBIGUITY",
-            ),
-            {"owner", "scope", "evidence", "unknown", "default", "bounds", "revisit"},
-        )
-
     def test_decision_links_are_nonblocking_and_disposition_is_explicit(self):
         decision = section(
             self.store,
@@ -246,7 +231,7 @@ class DecisionPolicyContractTest(unittest.TestCase):
         waiting = section(
             self.lifecycle,
             "## Human-in-the-loop and safe autonomy",
-            "## Durable ambiguity and autonomous defaults",
+            "## Reversible local defaults",
         )
         for contract in (
             "state=waiting_human",
@@ -271,18 +256,23 @@ class DecisionPolicyContractTest(unittest.TestCase):
             validate_decision_edges(["blocks"])
         validate_decision_edges(["relates-to", "validates"])
 
-    def test_ambiguity_missing_field_and_empty_triggers_are_rejected(self):
+    def test_lifecycle_reuses_provisional_local_decision_contract(self):
         valid = (
-            "AMBIGUITY\nowner: coder\nscope: work/resource\n"
-            "evidence: test result\nunknown: platform behavior\n"
-            "default: preserve state\nbounds: local rollback before report\n"
+            "LOCAL_DECISION\nowner: coder\nscope: work/resource\n"
+            "decision: preserve state\nrationale: local rollback remains available\n"
+            "evidence: test result\nstatus: provisional\n"
             "revisit: dependency work.2 enters reported"
         )
-        validate_ambiguity(valid)
+        validate_local_decision(valid)
+        defaults = section(
+            self.lifecycle,
+            "## Reversible local defaults",
+            "## Revisit, conflict, and late evidence",
+        )
+        self.assertIn("`LOCAL_DECISION`", defaults)
+        self.assertNotIn("AMBIGUITY", defaults)
         with self.assertRaises(PolicyError):
-            validate_ambiguity(valid.replace("unknown: platform behavior\n", ""))
-        with self.assertRaises(PolicyError):
-            validate_ambiguity(valid.replace("dependency work.2 enters reported", ""))
+            validate_local_decision(valid.replace("dependency work.2 enters reported", ""))
 
     def test_empty_question_and_provisional_revisit_are_rejected(self):
         with self.assertRaises(PolicyError):
@@ -365,7 +355,23 @@ class DecisionPolicyContractTest(unittest.TestCase):
 
 
 class BeadsDecisionPolicyTest(unittest.TestCase):
+    @staticmethod
+    def pinned_bd_version() -> str:
+        """The bd version mise.toml pins, which is what CI installs."""
+        for parent in Path(__file__).resolve().parents:
+            mise = parent / "mise.toml"
+            if mise.is_file():
+                match = re.search(
+                    r'"aqua:gastownhall/beads"\s*=\s*"([^"]+)"',
+                    mise.read_text(encoding="utf-8"),
+                )
+                if match:
+                    return match.group(1)
+        raise AssertionError("could not find the beads pin in mise.toml")
+
     def setUp(self) -> None:
+        if shutil.which("bd") is None:
+            self.skipTest("bd CLI not installed")
         cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
         cache_root.mkdir(parents=True, exist_ok=True)
         self.directory = tempfile.TemporaryDirectory(
@@ -376,8 +382,11 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         version = subprocess.run(
             ["bd", "version"], capture_output=True, text=True, check=True, timeout=15
         ).stdout
-        self.assertIn("version 1.1.0", version)
-        subprocess.run(
+        # Read the expected version from mise.toml rather than hardcoding it: CI
+        # installs whatever mise pins, so a literal here turns every dependency
+        # bump into five unrelated test failures in setUp.
+        self.assertIn(f"version {self.pinned_bd_version()}", version)
+        init = subprocess.run(
             [
                 "bd",
                 "init",
@@ -391,11 +400,15 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
                 "--sandbox",
             ],
             cwd=self.repo,
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
             timeout=60,
         )
+        if init.returncode != 0:
+            raise RuntimeError(
+                f"bd init failed ({init.returncode}): {init.stderr or init.stdout}"
+            )
 
     def bd(
         self,
@@ -692,7 +705,7 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         self.assertEqual(stale["close_reason"], "accepted and verified")
         self.assert_repair_recovery(old, canonical, "superseded", epic)
 
-    def test_comment_decision_ambiguity_and_waiting_human_flow(self):
+    def test_comment_decision_provisional_default_and_waiting_human_flow(self):
         epic = self.bd("create", "--title", "Run", "--type", "epic")["id"]
         work = self.create_task("Affected work", epic)
         validator = self.create_task("Validation work", epic)
@@ -771,50 +784,46 @@ class BeadsDecisionPolicyTest(unittest.TestCase):
         self.assertEqual(shown_decision["status"], "closed")
         self.assertEqual(shown_decision["metadata"]["decision_disposition"], "accepted")
 
-        ambiguity = (
-            "AMBIGUITY\nowner: coder-local\nscope: two consumers\n"
-            "evidence: one consumer test passed\nunknown: second consumer behavior\n"
-            "default: preserve existing format\nbounds: no schema changes\n"
+        provisional = (
+            "LOCAL_DECISION\nowner: coder-local\nscope: work/output\n"
+            "decision: preserve existing format\n"
+            "rationale: local compatibility remains reversible\n"
+            "evidence: one consumer test passed\nstatus: provisional\n"
             f"revisit: {validator} enters reported"
         )
-        validate_ambiguity(ambiguity)
-        self.bd("comment", work, ambiguity, actor="coder-local")
-        ambiguity_metadata = json.dumps(
+        validate_local_decision(provisional)
+        self.bd("comment", work, provisional, actor="coder-local")
+        promoted_metadata = json.dumps(
             {
-                "decision_key": "format-ambiguity",
+                "decision_key": "shared-output-format-provisional",
                 "decision_owner": "test-orchestrator",
                 "decision_disposition": "proposed",
-                "ambiguity_owner": "coder-local",
-                "ambiguity_scope": f"{work},{validator}",
-                "ambiguity_evidence": "one consumer test passed",
-                "ambiguity_unknown": "second consumer behavior",
-                "ambiguity_default": "preserve existing format",
-                "ambiguity_bounds": "no schema changes",
-                "ambiguity_revisit": f"{validator} enters reported",
             },
             sort_keys=True,
         )
         promoted = self.bd(
             "create",
             "--title",
-            "Decision: format ambiguity",
+            "Decision: shared output format provisional",
             "--type",
             "decision",
             "--parent",
             epic,
             "--description",
-            "Promote the local ambiguity before it affects validation work.",
+            "Promote the local default before it affects validation work.",
             "--design",
             "Keep the reversible format while the second consumer is unknown.",
             "--acceptance",
             f"Revisit when {validator} enters reported.",
             "--metadata",
-            ambiguity_metadata,
+            promoted_metadata,
         )["id"]
         self.bd("dep", "add", work, promoted, "--type", "relates-to")
         self.bd("dep", "add", validator, promoted, "--type", "validates")
         shown_promoted = self.bd("show", promoted)[0]
-        self.assertEqual(shown_promoted["metadata"]["ambiguity_owner"], "coder-local")
+        self.assertEqual(
+            shown_promoted["metadata"]["decision_owner"], "test-orchestrator"
+        )
 
         waiting = self.create_task("Needs human intent", epic)
         waiting_record = (

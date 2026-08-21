@@ -1,7 +1,7 @@
 {
   "name": "catchup",
-  "version": "2.2.0",
-  "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state — after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
+  "version": "2.3.0",
+  "description": "Resume interrupted project work from the best handover and, in beads (bd) repos, live task state -- after context loss, /clear, or a continue/resume request, including repos with open beads but no handover file.",
   "author": {
     "name": "Sjors Robroek"
   },

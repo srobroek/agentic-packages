@@ -177,16 +177,6 @@
       "reason": "Optional Serena MCP package for semantic code tools. Pair with project-local .serena/project.yml and language-server prerequisites.",
       "selection_count": 0
     },
-    "mcp-repomix@srobroek-agentic": {
-      "priority": 95,
-      "profiles": [
-        "all",
-        "baseline",
-        "mcp"
-      ],
-      "reason": "Mandatory baseline MCP package for bulk repository snapshots.",
-      "selection_count": 0
-    },
     "quality@srobroek-agentic": {
       "last_selected_at": "2026-05-08T11:29:55Z",
       "last_selection_note": "Quality and verification tooling",

@@ -1,6 +1,6 @@
 {
   "name": "agent-reviewer-low",
-  "version": "1.1.0",
+  "version": "3.0.1",
   "description": "Mechanical read-only reviewer for tiny changes with explicit criteria.",
   "author": {
     "name": "Sjors Robroek"

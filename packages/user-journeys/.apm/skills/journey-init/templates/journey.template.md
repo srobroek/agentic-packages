@@ -19,7 +19,7 @@ trace: []
 ## Steps
 ### S1 — <Imperative step title> {#S1}
 - **Do:** <what the user does, interface-agnostic>
-- **Expect:** <observable outcome — every Expect is an assertion>
+- **Expect:** <observable outcome -- every Expect is an assertion>
 
 ## Success criteria
 - SC1: <journey-level outcome, referencing step ids>

@@ -4,7 +4,7 @@
 # LITERALS in code positions that signal a hardcoded value, while ignoring
 # constants, enums, and test files (where fixed values are expected). Run with:
 #
-#   semgrep --config references/semgrep-rules/hardcoded-values.yml --json .
+#   semgrep --config "$SNIFF_SKILL_DIR/references/semgrep-rules/hardcoded-values.yml" --json <files>
 #
 # Tune per repo: add paths to `paths.exclude` for generated/vendored trees.
 # These are heuristics surfaced for human judgment, not auto-fixes. Credential

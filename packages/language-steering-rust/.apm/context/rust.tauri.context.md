@@ -1,6 +1,6 @@
 # Tauri (v2) App Defaults
 
-Load only when the task involves a Tauri desktop app — bundles, releases,
+Load only when the task involves a Tauri desktop app -- bundles, releases,
 auto-update, or signing.
 
 ## Release pipeline
@@ -20,7 +20,7 @@ Use `tauri-plugin-updater`. Public key in `tauri.conf.json`; sign with
 - Windows: SignPath Foundation (free, OSS) or Azure Trusted Signing; EV cert last resort.
 - macOS: Developer ID Application + `notarytool`, App Store Connect API key.
 
-## E2E testing — decision table
+## E2E testing -- decision table
 
 | Concern | Choice | Not (reason) |
 |---------|--------|--------------|
@@ -30,8 +30,8 @@ Use `tauri-plugin-updater`. Public key in `tauri.conf.json`; sign with
 | IPC assertions | build-flag bridge + `execute_async` | `window.__TAURI__` (off by default) |
 
 Gotchas:
-- Capabilities MUST NOT include `browserName` — WebKitWebDriver rejects the session.
-- `Capabilities::new()` is an empty map — correct; do not add extra fields.
+- Capabilities MUST NOT include `browserName` -- WebKitWebDriver rejects the session.
+- `Capabilities::new()` is an empty map -- correct; do not add extra fields.
 
 Runner: **cargo-nextest** in a dedicated `crates/e2e-tests` crate, `[profile.e2e]`,
 serialized (`max-threads = 1`). Start driver+frontend OUTSIDE nextest (nextest

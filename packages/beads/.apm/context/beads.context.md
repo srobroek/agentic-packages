@@ -5,65 +5,57 @@ MUST Use bd for all task tracking when the repo has `.beads/` (`bd where`
   succeeds); do not use TaskCreate or markdown task lists.
 DEFAULT SpecKit artifacts (spec.md/plan.md) stay the source for WHAT to build;
   beads tracks execution state, not requirements.
-NOT `bd edit` — opens $EDITOR and blocks the agent; use `bd update` flags.
+NOT `bd edit` -- opens $EDITOR and blocks the agent; use `bd update` flags.
 
 MEMORY
 DEFAULT `bd remember "insight" --key <slug>` for repo-scoped durable facts any
   agent or tool must see (gotchas, conventions, decisions); every memory is
-  injected verbatim via bd prime each session — keep the set ≤30, prune stale
+  injected verbatim via bd prime each session -- keep the set ≤30, prune stale
   keys with `bd forget` during session review.
 DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
-  stays in Claude auto-memory (see mempalace steering).
+  stays in Claude auto-memory.
 
 IDENTITY
 MUST Set BEADS_ACTOR (`<harness>/<agent-name>/<session-id>`) on every mutating
-  command when acting as a subagent; audit trails and claim ownership depend
-  on it, and the session id distinguishes dead claims from live ones.
-DEFAULT Treat BD_ACTOR as a legacy compatibility variable only for Beads
-  1.1.0's `prepare-commit-msg` identity trailer; when that product hook is
-  enabled, export the same value in BEADS_ACTOR and BD_ACTOR until the hook
-  accepts BEADS_ACTOR. Never use BD_ACTOR as the policy authority.
+  command when acting as a subagent -- the session id distinguishes dead claims.
+DEFAULT BD_ACTOR is legacy (Beads 1.1.0 commit trailer only); export the same
+  value in both until the hook accepts BEADS_ACTOR.
 
 CLAIMING
-MUST Claim before working: `bd update <id> --claim` (atomic compare-and-swap;
-  first wins, idempotent for the holder). Never claim via labels — labels are
-  not atomic and bypass anti-steal protection.
-MUST Discover work with `bd ready --unassigned --json`; never pick up an issue
-  assigned to another actor unless the parent explicitly hands you its id.
-MUST On claim refusal ("already assigned"), coordinate with the holder;
-  `bd unclaim --force` only after confirming the holding session is dead
-  (stale heartbeat or gone) — it is the abandoned-claim escape hatch.
-DEFAULT Release with `bd unclaim <id>` (assignee cleared, status open).
+MUST Claim before working: `bd update <id> --claim` (atomic CAS; first wins,
+  idempotent). Never claim via labels -- not atomic.
+MUST Discover work with `bd ready --unassigned --json`; never pick up work
+  assigned to another actor unless the parent hands you its id.
+MUST On refusal, coordinate with holder; `bd unclaim --force` only after
+  confirming the holding session is dead.
+DEFAULT Release with `bd unclaim <id>`.
 
 FIELD TAXONOMY
-| purpose | mechanism | who writes |
+| purpose | mechanism | writer |
 |---|---|---|
-| lifecycle | status (open/in_progress/blocked/deferred/closed) — never phase/role | claiming worker |
-| live ownership | assignee (structured field, atomic via `--claim`) | claiming worker |
-| urgency | priority 0–4 | orchestrator/user only |
+| lifecycle | status (open/in_progress/blocked/deferred/closed) | worker |
+| ownership | assignee (atomic via `--claim`) | worker |
+| urgency | priority 0 to 4 | orchestrator/user |
 | work kind | type (bug/feature/task/epic/chore) | creator |
-| bounce-back (integrator → author) | fix bead `discovered-from` + `bd dep add <merge> <fix>` + comment; release claim | integrator |
-| routing queue (agent kind) | label `agent:<name>` | orchestrator/formula only |
+| bounce-back | fix bead `discovered-from` + `bd dep add` + comment; release | integrator |
+| routing queue | label `agent:<name>` | orchestrator/formula |
 | group dispatch | assignee = pool alias (`claim.pools`) | orchestrator |
-| category/component | labels, lowercase-hyphenated, ≤10 per repo | any agent |
-| operational state cache | `bd set-state <id> dim=value --reason` | owning agent, own bead |
-| execution hints (agent type, model tier, effort, parallel group) | metadata `execution_*` | orchestrator, BEFORE spawn |
-| git anchors (repo, branch, base_sha, worktree, pr, merge_sha) | metadata | worker at claim (branch/worktree); integrator (pr/merge_sha) |
-| scope globs for disjointness | metadata `scope` | orchestrator |
-| dedupe keys (CVE, PR#, file:line) | metadata | finder skills |
-| rationale/prose | description + notes, never labels/metadata | any agent |
-| requirements linkage | `--spec-id` + `discovered-from` deps | creator |
+| category | labels, lowercase-hyphenated, ≤10/repo | any |
+| state cache | `bd set-state <id> dim=value --reason` | owning agent |
+| execution hints | metadata `execution_*` (type, model, effort, group) | orchestrator, BEFORE spawn |
+| git anchors | metadata (repo, branch, base_sha, worktree, pr, merge_sha) | worker/integrator |
+| scope globs | metadata `scope` | orchestrator |
+| dedupe keys | metadata (CVE, PR#, file:line) | finder skills |
+| rationale | description + notes, never labels/metadata | any |
+| requirements | `--spec-id` + `discovered-from` deps | creator |
 
 ROUTING
-DEFAULT Pull-queue by kind: workers poll
-  `bd ready --label agent:<kind> --unassigned --json` and `--claim` what they
-  take; labels route by KIND, assignee pins an INSTANCE, pool alias dispatches
-  to a group.
-MUST Orchestrators set routing labels and `execution_*` metadata at creation
-  or pour time — model/effort are fixed at spawn, too late after delegation.
-NOT Labels as locks (assignee owns "taken") or as gate substitutes (no
-  `ci:green`/`pr:merged` labels — gate beads + `bd gate check` own blocking
-  waits; `bd set-state` is for non-blocking dimensions only).
+DEFAULT Workers poll `bd ready --label agent:<kind> --unassigned --json` and
+  `--claim` what they take; labels route by KIND, assignee pins INSTANCE.
+MUST Orchestrators set routing labels and `execution_*` metadata at creation --
+  model/effort are fixed at spawn, too late after delegation.
+NOT Labels as locks or gate substitutes -- gate beads + `bd gate check` own
+  blocking waits; `bd set-state` is non-blocking only.
 
 DEPENDENCIES
 DEFAULT `blocks` for ordering; `parent-child` for epics; `discovered-from` for
@@ -73,17 +65,17 @@ MUST Model fan-in with an aggregate issue depending on each part, not comments.
 
 WORKFLOWS
 DEFAULT Read only the relevant workflow contract:
+- [Carriers: comments, decision beads, wisps, artifacts](beads.carriers.context.md)
 - [Lifecycle and gates](beads.lifecycle.context.md)
 - [Semantic audit and reporting](beads.audit.context.md)
 - [Formulas, molecules, bonds, and wisps](beads.composition.context.md)
 - [Swarms and merge slots](beads.coordination.context.md)
+- [Orchestration doctrine: claim⟺contract, wisps, links, labels, gates](beads.orchestration-doctrine.context.md)
 
 FINDINGS
-DEFAULT Any skill or review that ends with findings the session will not act on
-  (audit reports, deferred review items, advisory bumps, failed checks at
-  handoff) files them as beads — `bd create` with `discovered-from` the active
-  bead, one per finding, machine keys (CVE id, PR number, file:line) in
-  metadata so re-runs dedupe instead of re-reporting.
+DEFAULT Unactioned findings (audits, deferred items, failed checks) become beads
+  via `bd create --discovered-from <active>`, one per finding, with machine keys
+  (CVE, PR#, file:line) in metadata for dedupe.
 
 JSON DETERMINISM
 MUST Scripts and hooks parsing bd output set `BD_JSON_ENVELOPE=1` and read
@@ -92,62 +84,127 @@ MUST Scripts and hooks parsing bd output set `BD_JSON_ENVELOPE=1` and read
 DEFAULT Non-interactive contexts export `BD_NO_PAGER=1 BD_NON_INTERACTIVE=1`.
 
 SYNC
-MUST Run `bd dolt pull` or `bd dolt push` only when the active user,
-  repository, or orchestrator instructions grant external-sync authority;
-  `git pull` and `git push` do not synchronize `refs/dolt/data`.
-DEFAULT Single-machine local orchestration performs no routine pull and uses
-  one authorized push at orchestrator handoff when durable bead state changed.
-DEFAULT Cross-machine or team orchestration uses one authorized pull before
-  claims or fan-out and one authorized push after durable updates; conservative
-  profiles report the exact pending command instead of running it.
-NOT Routine `bd import` of issues.jsonl — it is upsert-only passive export;
-  `bd dolt pull` is the sync path.
+MUST `bd dolt pull`/`push` only with explicit sync authority from user,
+  repo config, or orchestrator; `git push` does not sync `refs/dolt/data`.
+DEFAULT Local: no routine pull; one push at orchestrator handoff.
+DEFAULT Cross-machine: one pull before fan-out, one push after updates.
+NOT `bd import` of issues.jsonl by hand -- `bd dolt pull` is the sync path,
+  and in a JSONL-over-git repo (below) the hooks own both halves.
+NOT Treating Dolt sync and the GitHub mirror as one thing: `bd dolt` moves the
+  beads database between machines, `bd github` mirrors beads to GitHub issues.
+  The containerized `dbd` wrapper injects credentials for the Dolt verbs only, so
+  `bd github` runs on the host with `GITHUB_TOKEN` supplied per invocation.
 
-GITHUB MIRROR (only where beads mirror out to GitHub issues)
-MUST Mirror with `bd github push <ids>`, never by hand-creating the issue —
-  the push records the `External:` back-link on the bead, so a hand-made issue
-  leaves the two unlinked. `--dry-run` first.
-DEFAULT Supply credentials per invocation
-  (`GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=<owner/repo> bd github
-  push ...`) rather than `bd config set github.token`, which persists a PAT to
-  disk in the repo's beads config.
-MUST Expect mirrored issues to carry bd's OWN label scheme (`priority::medium`,
-  `type::task`, `status::in_progress`), derived from bd's structured fields. A
-  repo with its own vocabulary (`priority-p2`, `spec:NNN`, component labels)
-  will not match, so mirrored issues drop out of every existing triage query
-  while looking correctly filed.
-NOT Hand-correcting those labels on GitHub — `bd github push` REPLACES the whole
-  label set from bd on every sync, so any manual fix is silently undone the next
-  time that bead is pushed (verified 2026-07-20: labels applied via `gh api`
-  were wiped by the next push, twice). `bd update` has no `--label` flag, so the
-  scheme cannot be corrected from the bd side either.
-DEFAULT Treat the mismatch as an upstream gap rather than per-issue toil: it
-  needs configurable label mapping in bd itself. Until then, either accept the
-  `::` scheme as the mirror's vocabulary and build triage queries that tolerate
-  both, or keep mirrored issues out of label-driven workflows.
+SYNC HOOKS (Dolt first, JSONL only as fallback)
+MUST Prefer native sync. `bd dolt pull`/`push` moves Dolt commits; JSONL carries
+  issue rows only -- no Dolt branches, commit history, or non-issue tables. Reach
+  for JSONL only where the native path cannot run.
+DEFAULT Every hook off until the repo opts in, so installing the package changes
+  no existing repo: `beads-sync-session.py` (SessionStart, pull + JSONL import +
+  report the last push + size report), `beads-sync-stage.py` (PreToolUse:Bash,
+  stage the JSONL on commit), and `beads-sync-push.py` (SessionEnd on Claude /
+  Stop on Codex, publish). Hydration and the size report share one script because
+  both bound SessionStart with the same matcher.
+DEFAULT Auto-pull with `bd config set custom.dolt-auto-pull true` -- the "repo
+  config" authority the rule above allows. Pull is read-only and cannot lose
+  local work; hydrate bounds it (`BEADS_SYNC_PULL_TIMEOUT`, default 60s) because
+  an unreachable remote does not always fail fast.
+DEFAULT Auto-push with `bd config set custom.dolt-auto-push true`.
+  `beads-sync-push.py` runs at end of session -- SessionEnd on Claude, Stop on
+  Codex, which has no SessionEnd event -- and DETACHES. Acceptable to automate
+  because what moves is task records, not source: a Dolt push writes only
+  `refs/dolt/blobstore/`, touches no branch, and is additive.
+DEFAULT One push per session, not per commit. An incremental push costs ~12s of
+  which ~8s is process startup rather than transfer (measured: 12.2s incremental,
+  8.1s for a no-op, against a 311 MB / 4354-commit database), so per-commit
+  pushing made a ten-commit session pay two minutes for what one push covers.
+  Pushes are additive and idempotent, so pushing once at the end loses nothing.
+MUST Detach rather than block. A first push of a never-synced database uploads
+  its whole history -- over 550s on that same repo -- and no session should wait
+  on that.
+MUST Close the feedback loop when detaching. A detached process cannot report to
+  the session that spawned it, and a silently failed push is the worst outcome
+  here: state looks published while sitting on one machine. The push writes a
+  verdict to `.beads/last-push.log`; hydrate reports a failure it finds there at
+  the next session start and consumes the file so a stale verdict is not
+  re-reported.
+DEFAULT Check before pushing: the probe is `git push --dry-run`, which runs the
+  same pre-push path while transferring nothing. Three outcomes, and the
+  difference matters -- goes through, rejected at pre-push, or no answer
+  (unreachable/timeout: stay quiet and let the next session try, since advising a
+  strategy change over a dropped network is worse than silence).
+MUST Where a direct push does not go through, set `custom.bd-push-command` to a
+  wrapper that runs bd with network access (`bd config set
+  custom.bd-push-command dbd`). The push hook resolves its pusher from that key,
+  which is the only way to redirect it: APM merges each package's hooks and
+  records provenance per entry, so a machine-local package can ADD hooks but
+  never remove or replace this one.
+GOTCHA Git resolves the remote host BEFORE running pre-push hooks, so an
+  unreachable URL yields no answer either way.
+DEFAULT Prefer bd's own `export.auto` (throttled export after every write) over
+  hook-driven export. Two gaps keep `beads-sync-stage.py` necessary:
+  `export.git-add: true` does not actually stage the file, and throttling lets it
+  lag the database at the moment of commit.
+GOTCHA `bd config set export.auto true` writes a FLAT `export.auto:` key beside
+  the nested `export:` block, so nothing reads it and auto-export silently never
+  fires. Nest it by hand under `export:` in `.beads/config.yaml`.
+
+JSONL OVER GIT (fallback where `bd dolt push` cannot run)
+DEFAULT Off. Exists for repos where the native push cannot run -- it writes
+  `refs/dolt/blobstore/` and needs credentials Dolt cannot prompt for. Note pull
+  and push can differ: fetches may work where pushes do not.
+MUST Opt in per repo with `bd config set custom.jsonl-git-sync true`, commit
+  `.beads/issues.jsonl merge=union` to `.gitattributes`, and confirm the file is
+  not git-ignored (a stealth `bd init` excludes `.beads/` via
+  `.git/info/exclude`, which makes `git add` fail silently -- the hook detects
+  this and says so).
+MUST Leave both halves to the hooks; neither commits, so the agent's own commit
+  carries the file.
+DEFAULT Trust the importer's resolution: newer `updated_at` wins, ties keep
+  local, comments/labels/dependencies merge, local-only beads are never deleted,
+  and stale rows are skipped and reported. `union` deliberately leaves duplicate
+  ids in the file for the importer to resolve.
+NOT `--allow-stale` unless deliberately restoring an older snapshot -- it
+  overwrites newer local state.
+MUST On a stale-skip warning at session start, commit a fresh export before
+  pulling peer changes: the committed file is behind the local database, so the
+  next export would overwrite what a peer committed.
+
+MAINTENANCE (trimming a grown database)
+MUST Never run `bd prune`, `bd purge`, or `bd flatten` unprompted. All three are
+  irreversible, and flatten discards EVERY Dolt commit. Preview with `--dry-run`,
+  report the numbers, and let the user decide.
+GOTCHA Deleting rows does not shrink storage. Commit history is the bulk: measured
+  on a live repo, 207 beads occupied 311 MB of which the `bd export --all` payload
+  was 2.8 MB, `.dolt/noms/` (every historical row version) 199 MB, and
+  `.dolt/git-remote-cache/` 96 MB. 4354 Dolt commits produced that -- one per
+  create/update/comment/close, never collected.
+DEFAULT Judge size by COMMIT COUNT, not bead count. On that same repo `bd prune
+  --older-than 90d` matched nothing (every closed bead was recent) while 4354
+  commits sat underneath, so a prune-based threshold stays silent through the
+  whole problem.
+DEFAULT Order of escalation: `bd purge` (closed wisps, no value once closed) →
+  `bd prune --older-than <N>` (closed regular beads) → `bd flatten --force` only
+  when storage genuinely has to come back, accepting the loss of all history.
+DEFAULT `bd flatten --dry-run --json` is the size probe: it reports
+  `commit_count` and mutates nothing. `bd status --json` returns an empty summary
+  and `bd vc status` gives a hash with no counts, so this is the only
+  machine-readable signal.
+DEFAULT Enable the reporting hook per repo with `bd config set
+  custom.maintenance-check true` (threshold via
+  `BEADS_MAINTENANCE_COMMIT_THRESHOLD`, default 2000). It reports and never acts.
+NOT `bd prune --pattern '*' --force` as routine cleanup -- it sweeps every closed
+  bead regardless of age, which is the handover record for recent work.
+
+GITHUB MIRROR -- see [beads.github-mirror.context.md](beads.github-mirror.context.md)
+  for config keys, per-verb cost, and the label-overwrite constraint.
 
 SESSION CLOSE (when beads were touched)
-MUST File beads for remaining/discovered work before reporting done, close
-  finished issues with `--reason`, and update in-progress state.
-MUST Before closing a bead whose work continues elsewhere (PR awaiting CI,
-  follow-up expected), write residual context onto the bead itself
-  (`bd comments add`: approach, tricky spots, what to check first on failure) —
-  the bead is the cross-session handover; PR bodies and handover files are not.
-DEFAULT Git commit/push of code follows delivery steering, not bd's profiles.
-DEFAULT Synchronize bead state at the authority-aware boundary defined under
-  SYNC; otherwise report the pending `bd dolt pull` or `bd dolt push` command.
+MUST File beads for remaining/discovered work, close finished with `--reason`.
+MUST Before closing a bead whose work continues elsewhere, write residual
+  context onto it (`bd comments add`: approach, tricky spots, failure triage) --
+  the bead is the handover, not PR bodies.
+MUST Verify landed work by content per GW-3 (git-workflow steering).
+DEFAULT Git commit/push follows delivery steering; sync per SYNC rules above.
 
-SETUP
-MUST Let the bd CLI own initialization and generated integration: bootstrap
-  with `bd init --init-if-missing`, then verify with `bd where`, `bd setup
-  claude --check`, `bd setup codex --check`, and `bd hooks list`.
-MUST Repair an existing project's runtime integration with product commands:
-  `bd setup claude --project` and `bd setup codex`.
-MUST Use `bd hooks install --beads` only when the active project chose the
-  product Git-hook bundle.
-NOT Copies of product lifecycle hooks, managed instruction blocks, skill, or
-  Git-hook shims in APM.
-DEFAULT Project setup follows the repository's Beads version; global setup is
-  for repositories that do not install project integration, not redundancy.
-NOT `bd preflight` as an application quality gate — Beads 1.1.0 hard-codes
-  checks for the Beads Go repository; use repository-owned quality commands.
+SETUP -- see [beads.setup.context.md](beads.setup.context.md)

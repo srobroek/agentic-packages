@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 #
 # Tests for dep-update's helper scripts.
-# Portability floor: bash 3.2.57 + BSD sed/grep/awk (stock macOS).
+# detect/research/apply are Python; the suite drives them as shipped.
 # Run with: bats packages/dep-update/tests/dep-update.bats
 #
 # Strategy:
-#   - detect.sh:   fixture dirs in BATS_TEST_TMPDIR (no network).
-#   - research.sh: DEP_UPDATE_FIXTURE_DIR points to JSON fixture files.
-#   - apply.sh:    stub package manager binaries on PATH; DEP_UPDATE_PKG_MANAGER.
+#   - detect.py:   fixture dirs in BATS_TEST_TMPDIR (no network).
+#   - research.py: DEP_UPDATE_FIXTURE_DIR points to JSON fixture files.
+#   - apply.py:    stub package manager binaries on PATH; DEP_UPDATE_PKG_MANAGER.
 #   - apm.yml:     parsed with python3 + tomllib/pyyaml (or grep fallback).
 #
 # No real network calls in any test.
@@ -46,19 +46,19 @@ run_script() {
   run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/${script}" "$@"
 }
 
-# Run detect.sh against $PROJ.
+# Run detect.py against $PROJ.
 run_detect() {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/detect.sh" "$PROJ"
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/detect.py" "$PROJ"
 }
 
-# Run research.sh with fixture dir against $PROJ (detect.sh runs internally).
+# Run research.py with fixture dir against $PROJ (detect.py runs internally).
 run_research() {
   run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_FIXTURE_DIR="$FIXTURES" \
-    /bin/bash "${SCRIPTS}/research.sh" "$@"
+    python3 "${SCRIPTS}/research.py" "$@"
 }
 
-# Run research.sh with fixture dir, reading dep lines from a file via stdin.
-# Sets RESEARCH_USE_STDIN=1 so the script reads from stdin instead of detect.sh.
+# Run research.py with fixture dir, reading dep lines from a file via stdin.
+# Sets RESEARCH_USE_STDIN=1 so the script reads from stdin instead of detect.py.
 # Usage: run_research_stdin <dep_file> [project-dir]
 run_research_stdin() {
   local dep_file="$1"
@@ -66,7 +66,7 @@ run_research_stdin() {
   run env PATH="${STUB}:${BASE_PATH}" \
     DEP_UPDATE_FIXTURE_DIR="$FIXTURES" \
     RESEARCH_USE_STDIN=1 \
-    /bin/bash -c "/bin/bash '${SCRIPTS}/research.sh' '$proj' <'$dep_file'"
+    /bin/bash -c "python3 '${SCRIPTS}/research.py' '$proj' <'$dep_file'"
 }
 
 # Write dep lines to a temp file for research stdin tests.
@@ -76,10 +76,10 @@ write_deps() {
   printf '%s' "$dep_file"
 }
 
-# Run apply.sh with stub PM on PATH.
+# Run apply.py with stub PM on PATH.
 run_apply() {
   run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_PKG_MANAGER="${DEP_UPDATE_PKG_MANAGER:-}" \
-    /bin/bash "${SCRIPTS}/apply.sh" "$@"
+    python3 "${SCRIPTS}/apply.py" "$@"
 }
 
 # Install an executable stub named $1 whose body is the remaining args.
@@ -151,13 +151,13 @@ PY
 }
 
 # ============================================================================
-# detect.sh tests
+# detect.py tests
 # ============================================================================
 
 # --- portability -----------------------------------------------------------
 
-@test "detect.sh parses under /bin/bash (bash 3.2 compatibility)" {
-  run /bin/bash -n "${SCRIPTS}/detect.sh"
+@test "detect.py parses as valid Python" {
+  run python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "${SCRIPTS}/detect.py"
   [ "$status" -eq 0 ]
 }
 
@@ -177,8 +177,8 @@ source = { registry = "https://pypi.org/simple" }
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pypi	fastapi	0.111.0"* ]]
-  [[ "$output" == *"pypi	pydantic	2.7.1"* ]]
+  [[ "$output" == *"pypi	fastapi	0.111.0"* ]] || return 1
+  [[ "$output" == *"pypi	pydantic	2.7.1"* ]] || return 1
 }
 
 # --- Python: pyproject.toml ------------------------------------------------
@@ -192,10 +192,10 @@ click = "^8.1.0"
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pypi	requests"* ]]
-  [[ "$output" == *"pypi	click"* ]]
+  [[ "$output" == *"pypi	requests"* ]] || return 1
+  [[ "$output" == *"pypi	click"* ]] || return 1
   # python pseudo-dep must not appear
-  [[ "$output" != *"pypi	python"* ]]
+  [[ "$output" != *"pypi	python"* ]] || return 1
 }
 
 # --- Node: package.json ----------------------------------------------------
@@ -214,9 +214,9 @@ EOF
 EOF
   run_detect
   [ "$status" -eq 0 ]
-  [[ "$output" == *"npm	express"* ]]
-  [[ "$output" == *"npm	lodash"* ]]
-  [[ "$output" == *"npm	jest"* ]]
+  [[ "$output" == *"npm	express"* ]] || return 1
+  [[ "$output" == *"npm	lodash"* ]] || return 1
+  [[ "$output" == *"npm	jest"* ]] || return 1
 }
 
 # --- empty project ---------------------------------------------------------
@@ -233,18 +233,18 @@ EOF
 # --- non-existent dir ------------------------------------------------------
 
 @test "detect: non-existent directory exits 2" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/detect.sh" "${PROJ}/does-not-exist"
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/detect.py" "${PROJ}/does-not-exist"
   [ "$status" -eq 2 ]
 }
 
 # ============================================================================
-# research.sh tests
+# research.py tests
 # ============================================================================
 
 # --- portability -----------------------------------------------------------
 
-@test "research.sh parses under /bin/bash (bash 3.2 compatibility)" {
-  run /bin/bash -n "${SCRIPTS}/research.sh"
+@test "research.py parses as valid Python" {
+  run python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "${SCRIPTS}/research.py"
   [ "$status" -eq 0 ]
 }
 
@@ -255,7 +255,7 @@ EOF
   local df; df=$(write_deps $'pypi\trequests\t2.32.3\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"CURRENT"'* ]] || [[ "$output" == *'"status": "CURRENT"'* ]]
+  [[ "$output" == *'"status":"CURRENT"'* ]] || [[ "$output" == *'"status": "CURRENT"'* ]] || return 1
 }
 
 # --- SC-001: correct semver classification ---------------------------------
@@ -265,7 +265,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]]
+  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]] || return 1
 }
 
 @test "research: minor bump classified MINOR-CHECK" {
@@ -273,7 +273,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"MINOR-CHECK"'* ]] || [[ "$output" == *'"class": "MINOR-CHECK"'* ]]
+  [[ "$output" == *'"class":"MINOR-CHECK"'* ]] || [[ "$output" == *'"class": "MINOR-CHECK"'* ]] || return 1
 }
 
 @test "research: major bump classified MAJOR-ADVISORY (SC-003 prereq)" {
@@ -281,7 +281,7 @@ EOF
   local df; df=$(write_deps $'pypi\tfastapi\t0.111.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"MAJOR-ADVISORY"'* ]] || [[ "$output" == *'"class": "MAJOR-ADVISORY"'* ]]
+  [[ "$output" == *'"class":"MAJOR-ADVISORY"'* ]] || [[ "$output" == *'"class": "MAJOR-ADVISORY"'* ]] || return 1
 }
 
 # --- 404 -> UNRESOLVABLE ---------------------------------------------------
@@ -291,7 +291,7 @@ EOF
   local df; df=$(write_deps $'pypi\tunknown-private-pkg\t1.0.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"UNRESOLVABLE"'* ]] || [[ "$output" == *'"status": "UNRESOLVABLE"'* ]]
+  [[ "$output" == *'"status":"UNRESOLVABLE"'* ]] || [[ "$output" == *'"status": "UNRESOLVABLE"'* ]] || return 1
 }
 
 # --- all-offline -> graceful, zero writes (SC-008) -------------------------
@@ -302,7 +302,7 @@ EOF
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
   # Should warn about no registry access (note: bats captures stdout+stderr together without --separate-stderr).
-  [[ "$output" == *"UNRESOLVABLE"* ]] || [[ "$output" == *"no registry access"* ]]
+  [[ "$output" == *"UNRESOLVABLE"* ]] || [[ "$output" == *"no registry access"* ]] || return 1
   # No writes to .project-setup/ (checked again in SC-009 test).
   [ ! -d "${PROJ}/.project-setup" ]
 }
@@ -314,7 +314,7 @@ EOF
   local df; df=$(write_deps $'pypi\tbadpkg\t1.0.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"status":"DISCONFIRMED"'* ]] || [[ "$output" == *'"status": "DISCONFIRMED"'* ]]
+  [[ "$output" == *'"status":"DISCONFIRMED"'* ]] || [[ "$output" == *'"status": "DISCONFIRMED"'* ]] || return 1
 }
 
 # --- npm registry -----------------------------------------------------------
@@ -324,7 +324,7 @@ EOF
   local df; df=$(write_deps $'npm\texpress\t4.18.0\n')
   run_research_stdin "$df"
   [ "$status" -eq 0 ]
-  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]]
+  [[ "$output" == *'"class":"PATCH-SAFE"'* ]] || [[ "$output" == *'"class": "PATCH-SAFE"'* ]] || return 1
 }
 
 # ============================================================================
@@ -342,8 +342,8 @@ EOF
   [ "$status" -eq 0 ]
   # Must not print any error about answers.toml.
   [[ "$output" != *"answers.toml"* ]] || true  # allowed to mention it, but not error
-  [[ "$output" != *"Error"* ]]
-  [[ "$output" != *"Traceback"* ]]
+  [[ "$output" != *"Error"* ]] || return 1
+  [[ "$output" != *"Traceback"* ]] || return 1
 }
 
 @test "answers.toml pinned_deps differ from lockfile: research still classifies (SC-007)" {
@@ -367,17 +367,17 @@ EOF
   run_research "$PROJ"
   [ "$status" -eq 0 ]
   # The research result must have fastapi classified (not error out).
-  [[ "$output" == *"fastapi"* ]]
+  [[ "$output" == *"fastapi"* ]] || return 1
 }
 
 # ============================================================================
-# apply.sh tests
+# apply.py tests
 # ============================================================================
 
 # --- portability -----------------------------------------------------------
 
-@test "apply.sh parses under /bin/bash (bash 3.2 compatibility)" {
-  run /bin/bash -n "${SCRIPTS}/apply.sh"
+@test "apply.py parses as valid Python" {
+  run python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "${SCRIPTS}/apply.py"
   [ "$status" -eq 0 ]
 }
 
@@ -397,10 +397,10 @@ version = "2.32.3"
 source = { registry = "https://pypi.org/simple" }
 EOF
   mk_stub uv 'echo "Updated requests to $4"; exit 0'
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"uv add"* ]]
+  [[ "$output" == *"uv add"* ]] || return 1
 }
 
 # --- PM absent -> print manual command, exit 0 ----------------------------
@@ -408,28 +408,28 @@ EOF
 @test "apply: uv absent prints manual command and exits 0 (no abort)" {
   # No uv stub installed; ABSENT_PATH guarantees uv is unresolvable (BASE_PATH
   # would find a /usr/local/bin uv on some runners).
-  run env PATH="${STUB}:${ABSENT_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${ABSENT_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"SKIP"* ]]
-  [[ "$output" == *"uv add"* ]]
+  [[ "$output" == *"SKIP"* ]] || return 1
+  [[ "$output" == *"uv add"* ]] || return 1
 }
 
 # --- SC-003: major never enters apply path ---------------------------------
 
 @test "apply: cargo ecosystem is advisory-only, exits 0, no apply (SC-003 extension)" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "cargo" "serde" "2.0.0" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"ADVISORY-ONLY"* ]]
-  [[ "$output" != *"cargo update"* ]] || [[ "$output" == *"To update manually"* ]]
+  [[ "$output" == *"ADVISORY-ONLY"* ]] || return 1
+  [[ "$output" != *"cargo update"* ]] || [[ "$output" == *"To update manually"* ]] || return 1
 }
 
 @test "apply: go ecosystem is advisory-only, exits 0, no apply" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "go" "github.com/gin-gonic/gin" "1.10.0" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"ADVISORY-ONLY"* ]]
+  [[ "$output" == *"ADVISORY-ONLY"* ]] || return 1
 }
 
 # --- Node: pnpm stub -------------------------------------------------------
@@ -440,9 +440,9 @@ EOF
 EOF
   mk_stub pnpm 'echo "Packages updated"; exit 0'
   run env PATH="${STUB}:${BASE_PATH}" DEP_UPDATE_PKG_MANAGER="pnpm" \
-    /bin/bash "${SCRIPTS}/apply.sh" "npm" "express" "4.18.3" "$PROJ"
+    python3 "${SCRIPTS}/apply.py" "npm" "express" "4.18.3" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"pnpm update"* ]]
+  [[ "$output" == *"pnpm update"* ]] || return 1
 }
 
 # --- Node: npm absent -> print manual command ------------------------------
@@ -452,21 +452,21 @@ EOF
   # -- with BASE_PATH this test passes locally but npm IS found in CI, so the
   # script runs `npm install` instead of printing the manual SKIP message.
   run env PATH="${STUB}:${ABSENT_PATH}" DEP_UPDATE_PKG_MANAGER="npm" \
-    /bin/bash "${SCRIPTS}/apply.sh" "npm" "lodash" "4.17.21" "$PROJ"
+    python3 "${SCRIPTS}/apply.py" "npm" "lodash" "4.17.21" "$PROJ"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"SKIP"* ]]
-  [[ "$output" == *"npm install"* ]]
+  [[ "$output" == *"SKIP"* ]] || return 1
+  [[ "$output" == *"npm install"* ]] || return 1
 }
 
 # --- bad arguments ---------------------------------------------------------
 
 @test "apply: missing arguments exits 2" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh"
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py"
   [ "$status" -eq 2 ]
 }
 
 @test "apply: non-existent project dir exits 2" {
-  run env PATH="${STUB}:${BASE_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${BASE_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "${PROJ}/no-such-dir"
   [ "$status" -eq 2 ]
 }
@@ -475,7 +475,7 @@ EOF
 # SC-009: NO write to .project-setup/ under any path
 # ============================================================================
 
-@test "SC-009: detect.sh never writes to .project-setup/" {
+@test "SC-009: detect.py never writes to .project-setup/" {
   cat >"${PROJ}/uv.lock" <<'EOF'
 [[package]]
 name = "fastapi"
@@ -487,7 +487,7 @@ EOF
   [ ! -d "${PROJ}/.project-setup" ]
 }
 
-@test "SC-009: research.sh never writes to .project-setup/ (offline path)" {
+@test "SC-009: research.py never writes to .project-setup/ (offline path)" {
   # Pre-create answers.toml so we can check it is not modified.
   mkdir -p "${PROJ}/.project-setup"
   printf '[module.lang-python]\npinned_deps = []\n' >"${PROJ}/.project-setup/answers.toml"
@@ -505,14 +505,14 @@ EOF
   [ ! -f "${PROJ}/.project-setup/sources.toml" ]
 }
 
-@test "SC-009: apply.sh never writes to .project-setup/" {
+@test "SC-009: apply.py never writes to .project-setup/" {
   mkdir -p "${PROJ}/.project-setup"
   printf '[module.lang-python]\npinned_deps = []\n' >"${PROJ}/.project-setup/answers.toml"
   local before
   before=$(python3 -c "import hashlib; print(hashlib.md5(open('${PROJ}/.project-setup/answers.toml','rb').read()).hexdigest())")
 
   # Run apply (uv absent via ABSENT_PATH -> prints manual command, no write).
-  run env PATH="${STUB}:${ABSENT_PATH}" /bin/bash "${SCRIPTS}/apply.sh" \
+  run env PATH="${STUB}:${ABSENT_PATH}" python3 "${SCRIPTS}/apply.py" \
     "pypi" "requests" "2.32.3" "$PROJ"
   [ "$status" -eq 0 ]
 
@@ -590,16 +590,19 @@ try:
     assert 'dependencies' not in data, 'must not have dependencies'
     print('OK')
 except ImportError:
-    # pyyaml not available; use line-based checks instead
+    # pyyaml not available; use line-based checks instead. The no-dependencies
+    # check must anchor to the key at column 0: a bare 'project-setup' substring
+    # also matches the description's reference to .project-setup/answers.toml,
+    # which is prose, not a dependency.
     with open('${APM_YML}') as f:
         content = f.read()
     assert 'type: skill' in content
     assert 'category: code-intelligence' in content
-    assert 'project-setup' not in content
+    assert not any(ln.startswith('dependencies:') for ln in content.splitlines())
     print('OK (no pyyaml, line-checked)')
 "
   [ "$status" -eq 0 ]
-  [[ "$output" == *"OK"* ]]
+  [[ "$output" == *"OK"* ]] || return 1
 }
 
 @test "apm.yml: category is code-intelligence" {

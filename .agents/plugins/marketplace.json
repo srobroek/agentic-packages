@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "adr-as-beads",
+      "source": {
+        "source": "local",
+        "path": "./packages/adr-as-beads"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "agent-adversarial-challenger",
       "source": {
         "source": "local",
@@ -17,10 +29,10 @@
       "category": "quality"
     },
     {
-      "name": "agent-coder",
+      "name": "agent-builder",
       "source": {
         "source": "local",
-        "path": "./packages/agent-coder"
+        "path": "./packages/agent-builder"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -29,10 +41,22 @@
       "category": "engineering"
     },
     {
-      "name": "agent-coder-high",
+      "name": "agent-builder-high",
       "source": {
         "source": "local",
-        "path": "./packages/agent-coder-high"
+        "path": "./packages/agent-builder-high"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "engineering"
+    },
+    {
+      "name": "agent-conformance",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-conformance"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -65,52 +89,16 @@
       "category": "engineering"
     },
     {
-      "name": "agent-luna-high",
+      "name": "agent-hook-contract",
       "source": {
         "source": "local",
-        "path": "./packages/agent-luna-high"
+        "path": "./packages/agent-hook-contract"
       },
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-low",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-low"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-medium",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-medium"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-luna-xhigh",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-luna-xhigh"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
+      "category": "project-lifecycle"
     },
     {
       "name": "agent-management",
@@ -141,6 +129,18 @@
       "source": {
         "source": "local",
         "path": "./packages/agent-pr-reviewer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "quality"
+    },
+    {
+      "name": "agent-quality-guards",
+      "source": {
+        "source": "local",
+        "path": "./packages/agent-quality-guards"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -183,66 +183,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "quality"
-    },
-    {
-      "name": "agent-sol-high",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-high"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-sol-low",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-low"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "quality"
-    },
-    {
-      "name": "agent-sol-medium",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-medium"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-sol-xhigh",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-sol-xhigh"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "agent-worker",
-      "source": {
-        "source": "local",
-        "path": "./packages/agent-worker"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
     },
     {
       "name": "agentic-maintenance",
@@ -341,18 +281,6 @@
       "category": "code-intelligence"
     },
     {
-      "name": "codex-hook-contract",
-      "source": {
-        "source": "local",
-        "path": "./packages/codex-hook-contract"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "core",
       "source": {
         "source": "local",
@@ -389,18 +317,6 @@
       "category": "planning-product"
     },
     {
-      "name": "dep-audit",
-      "source": {
-        "source": "local",
-        "path": "./packages/dep-audit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
       "name": "dep-update",
       "source": {
         "source": "local",
@@ -423,42 +339,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "project-lifecycle"
-    },
-    {
-      "name": "developer-tools",
-      "source": {
-        "source": "local",
-        "path": "./packages/developer-tools"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "engineering"
-    },
-    {
-      "name": "diagrams",
-      "source": {
-        "source": "local",
-        "path": "./packages/diagrams"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "diagrams"
-    },
-    {
-      "name": "docs-architecture",
-      "source": {
-        "source": "local",
-        "path": "./packages/docs-architecture"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "docs"
     },
     {
       "name": "eli5",
@@ -521,18 +401,6 @@
       "category": "planning-product"
     },
     {
-      "name": "governance",
-      "source": {
-        "source": "local",
-        "path": "./packages/governance"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "governance"
-    },
-    {
       "name": "handover",
       "source": {
         "source": "local",
@@ -543,18 +411,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "project-lifecycle"
-    },
-    {
-      "name": "headroom",
-      "source": {
-        "source": "local",
-        "path": "./packages/headroom"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "agentic-maintenance"
     },
     {
       "name": "hooks-attribution-guard",
@@ -617,46 +473,10 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-git-workflow",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-git-workflow"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "hooks-package-investigate",
       "source": {
         "source": "local",
         "path": "./packages/hooks-package-investigate"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
-      "name": "hooks-portability-ci",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-portability-ci"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
-      "name": "hooks-precommit-gate",
-      "source": {
-        "source": "local",
-        "path": "./packages/hooks-precommit-gate"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -689,6 +509,18 @@
       "category": "project-lifecycle"
     },
     {
+      "name": "hooks-subagent-fork",
+      "source": {
+        "source": "local",
+        "path": "./packages/hooks-subagent-fork"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
+    },
+    {
       "name": "hooks-subagent-worktree",
       "source": {
         "source": "local",
@@ -701,28 +533,16 @@
       "category": "project-lifecycle"
     },
     {
-      "name": "hooks-worktree",
+      "name": "hooks-worktrunk",
       "source": {
         "source": "local",
-        "path": "./packages/hooks-worktree"
+        "path": "./packages/hooks-worktrunk"
       },
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       },
       "category": "project-lifecycle"
-    },
-    {
-      "name": "incident-response",
-      "source": {
-        "source": "local",
-        "path": "./packages/incident-response"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "debugging"
     },
     {
       "name": "infrastructure",
@@ -737,70 +557,10 @@
       "category": "infrastructure"
     },
     {
-      "name": "language-arm-cortex",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-arm-cortex"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-dotnet",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-dotnet"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-functional",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-functional"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
       "name": "language-go",
       "source": {
         "source": "local",
         "path": "./packages/language-go"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-julia",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-julia"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-jvm",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-jvm"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -845,46 +605,10 @@
       "category": "languages"
     },
     {
-      "name": "language-steering-go",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-steering-go"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-steering-python",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-steering-python"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
       "name": "language-steering-rust",
       "source": {
         "source": "local",
         "path": "./packages/language-steering-rust"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
-      "name": "language-steering-terraform",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-steering-terraform"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -929,18 +653,6 @@
       "category": "languages"
     },
     {
-      "name": "language-web-scripting",
-      "source": {
-        "source": "local",
-        "path": "./packages/language-web-scripting"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "languages"
-    },
-    {
       "name": "license-picker",
       "source": {
         "source": "local",
@@ -963,18 +675,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "planning-product"
-    },
-    {
-      "name": "mcp-1mcp",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-1mcp"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
     },
     {
       "name": "mcp-codebase-memory",
@@ -1013,18 +713,6 @@
       "category": "mcp"
     },
     {
-      "name": "mcp-mempalace",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-mempalace"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
       "name": "mcp-package-version",
       "source": {
         "source": "local",
@@ -1041,18 +729,6 @@
       "source": {
         "source": "local",
         "path": "./packages/mcp-playwright"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "mcp"
-    },
-    {
-      "name": "mcp-repomix",
-      "source": {
-        "source": "local",
-        "path": "./packages/mcp-repomix"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1241,30 +917,6 @@
       "category": "languages"
     },
     {
-      "name": "secrets-scan",
-      "source": {
-        "source": "local",
-        "path": "./packages/secrets-scan"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
-      "name": "security",
-      "source": {
-        "source": "local",
-        "path": "./packages/security"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "security"
-    },
-    {
       "name": "session-review",
       "source": {
         "source": "local",
@@ -1287,30 +939,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "quality"
-    },
-    {
-      "name": "speckit",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
-    },
-    {
-      "name": "speckit-beads",
-      "source": {
-        "source": "local",
-        "path": "./packages/speckit-beads"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "speckit"
     },
     {
       "name": "steering-architecture",
@@ -1421,6 +1049,18 @@
       "category": "steering"
     },
     {
+      "name": "steering-multi-agent",
+      "source": {
+        "source": "local",
+        "path": "./packages/steering-multi-agent"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "steering"
+    },
+    {
       "name": "steering-pragmatic",
       "source": {
         "source": "local",
@@ -1437,18 +1077,6 @@
       "source": {
         "source": "local",
         "path": "./packages/steering-project-structure"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "steering"
-    },
-    {
-      "name": "steering-speckit",
-      "source": {
-        "source": "local",
-        "path": "./packages/steering-speckit"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1491,6 +1119,30 @@
         "authentication": "ON_INSTALL"
       },
       "category": "steering"
+    },
+    {
+      "name": "token-savings",
+      "source": {
+        "source": "local",
+        "path": "./packages/token-savings"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "code-intelligence"
+    },
+    {
+      "name": "toolchain-cache-policy",
+      "source": {
+        "source": "local",
+        "path": "./packages/toolchain-cache-policy"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "project-lifecycle"
     },
     {
       "name": "typescript-quality",
@@ -1575,18 +1227,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "agentic-maintenance"
-    },
-    {
-      "name": "write-docs",
-      "source": {
-        "source": "local",
-        "path": "./packages/write-docs"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "docs"
     }
   ]
 }

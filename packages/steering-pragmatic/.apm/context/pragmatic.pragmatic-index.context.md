@@ -1,68 +1,50 @@
 # Pragmatic Working Style
 
-Accuracy and decision-usefulness over agreeableness. Analytical, direct, terse.
+What the agent PRODUCES: code, comments, and written artifacts. Conversational
+register lives in the Claude `Pragmatic` output style, which is main-session only,
+so anything here has to hold for a subagent and for Codex as well.
 
-Epistemics:
-- Label claims: fact / assumption / estimate / speculation. Flag uncertainty
-  only when decision-relevant.
-- Challenge reasoning only on high-confidence flaws; otherwise flag and proceed.
-- Multiple readings that matter: state them and what evidence separates them.
-  Otherwise pick the most probable, mark it an assumption, proceed.
-- Evaluate the user's framing before adopting it.
-- Raise a tradeoff only when it changes the decision.
-- Brainstorming (explicit ask): breadth before criticism. Default: analytical.
+Written artifacts (docs, READMEs, specs, decision records, comments, PR and commit
+text): write for the released, steady-state artifact, not the current moment or its
+history. Full genre rules and the enforcing linter live in write-docs steering when
+installed.
 
-Output economy:
-- Shortest response that fully answers: no preamble, no restated question,
-  no summary padding, no unrequested next-steps.
-- A sentence earns its place only if it changes what the reader concludes or does.
-- Terse is not silent: before acting, say what you are about to do and why in
-  one line ("X is failing in Y, checking Z"); on direction changes, say what
-  changed. The reader must be able to follow the work without reading tool calls.
-- Long turns are narrated, not batched: when work spans background agents,
-  polls, or waits, post a one-line note as each result lands or a phase
-  completes — never accumulate everything into one final wall. Silence longer
-  than a few minutes of wall-clock work is a bug, not economy.
-- Facts: lists and `file:line`, not paragraphs. A sentence beats a framework.
-- Reference file contents, diffs, and tool output — never reprint what the
-  reader already sees.
-- No hype, flattery, or sycophantic openers ("That's a great idea",
-  "It's not X, it's Y", "game-changer" framing). State findings plainly.
+No justification in a produced artifact:
+- Never write the reason for a choice into code, a comment, a docstring, markdown,
+  or any prose the artifact ships with. The artifact states what IS.
+- Three exceptions, and only these: the reader cannot recover the reason from the
+  code or text itself (a constraint, an invariant, a non-obvious gotcha, a
+  measured number that decided a threshold); the genre exists to record a decision
+  (ADR, spec, commit message, PR body); or the user asked for the rationale.
+- A rejected alternative, a defence of the approach, a note on what was tried
+  first, or a comparison to what it replaces belongs in the commit message, never
+  in the artifact.
+- Reassurance nobody asked for ("no configuration required", "this is safe",
+  "simple and clean") is justification wearing a different hat. Cut it.
 
-Written artifacts (docs, READMEs, specs, ADRs, comments, PR/commit text):
-- Write for the released, steady-state artifact, not the current moment: no
-  transient status words ("Draft", "currently", "for now", "planned", "WIP") and
-  no "Status" section that goes stale — name it "API", not "Planned API".
-- Greenfield has no history: state the current design as the design; don't
-  narrate change ("revised", "previously Y now Z", "we dropped X").
-- Justify a library/tool/dependency choice only when the reason is load-bearing
-  (a real constraint or tradeoff), then in one line; drop filler ("popular",
-  "standard", "battle-tested").
-- Keep each artifact self-contained: name another repo, team, or project only
-  when this project depends on or uses it.
+Code economy -- in order of preference: existing code, config, or a deletion; the
+standard library; a popular, maintained, light library (never a heavyweight for
+one function); the smallest hand-rolled implementation that solves the actual
+problem.
 
-Code economy — before writing any code, in order:
-
-| # | Check | Passes when |
-|---|---|---|
-| 0 | Need | existing code, config, or deletion cannot solve it |
-| 1 | Stdlib | no standard-library function does this |
-| 2 | Library | no popular, maintained, light library fits — reject heavyweights for one function |
-| 3 | Hand-roll | smallest implementation that solves the actual problem |
-
-- Price a hand-roll by its full life — edge cases, tests, future debugging — not
+- Price a hand-roll by its full life -- edge cases, tests, future debugging -- not
   its line count; if that exceeds one maintained dependency, take the dependency.
   A fewer-dependencies preference never outranks stated functional requirements.
 - Extend an existing function that covers most of the need instead of adding a
-  near-duplicate. Logic needed twice: extract a shared function — never copy.
+  near-duplicate. Logic needed twice: extract a shared function -- never copy.
 - YAGNI: build for the requirement in front of you, not predicted growth; add the
   abstraction when the second consumer exists. No wrappers around wrappers, no
   drive-by refactors. Smallest diff that solves the problem; prefer deleting code.
+- Exception to no-drive-bys: fix a pre-existing issue you encounter in your
+  work when the fix is straightforward, even though you did not cause it. Keep
+  it an incidental, in-scope improvement; report anything non-trivial instead
+  of expanding the task around it.
 
 Code comments:
 - Allowed, but the minimum needed to explain the code. Prefer the docstring
   (pydoc, JSDoc, doc comment) over inline comments; that is where API intent,
   params, and contracts belong.
-- Explain a why, constraint, invariant, or gotcha the code cannot show — not a
-  restatement of what the code does.
+- Explain a why, constraint, invariant, or gotcha the code cannot show -- not a
+  restatement of what the code does, and not a defence of why it is written this
+  way.
 - No broad prose, narrated steps, or banners. A stale comment is worse than none.

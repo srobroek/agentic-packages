@@ -1,24 +1,25 @@
 # Agent Routing
 
-Model routing is applied by the patch-agents finalizer; overrides live in `.apm/runtime-agent-overrides.yml`.
+Model routing is applied by per-package `agent-models.yml` files, injected at build time via `inject-agent-models.py`.
 
 ## Criteria-based routing
 
+Spawn an agent by name rather than choosing a tier by hand: every shipped agent
+already carries a measured model+effort pin. Route by tier only when none fits.
+
 | Task type | Claude tier | Claude effort | Codex fallback |
 |-----------|-------------|----------------|----------------|
-| review / verify / adversarial / design judgment | opus (fable when available) | high | gpt-5.5 high |
-| scoped implementation, refactors, tests | sonnet | medium | gpt-5.4 medium |
-| mechanical/bounded transforms, lookups | haiku | low | gpt-5.4-mini low |
+| review / verify / adversarial / design judgment | opus | high | gpt-5.6-sol high |
+| scoped implementation, refactors, tests | opus | low--medium | gpt-5.6-luna xhigh |
+| exploration, research, report writing | opus | low | gpt-5.6-luna high |
+| mechanical readers: log/metric summarising, lint and doc gathering, diff smoke checks | sonnet | high | gpt-5.3-codex-spark low--medium |
 | orchestration / planning | main session | inherit | parent session |
-| explicit coding-agent override | — | — | gpt-5.4 high |
+| explicit coding-agent override | -- | -- | gpt-5.6-luna high |
 
-Pick the cheapest tier the task tolerates; escalate on failed verification, not preemptively.
+NOTE: `fable` is the frontier Claude model but is reserved for explicit user
+opt-in only -- never auto-routed by steering or agents.
 
-NOT haiku for implementation tasks that are complex, ambiguous, or loosely
-scoped — measured (84-run matrix, 2026-07): haiku follows instruction-shaped
-bait 2/2 where opus/sonnet resist, violates output contracts 11-13/14, and
-wrote the runaway fake-clock tests. Well-scoped simple mechanical patches
-(single-file rename, bounded transform, lookup, format fix) stay haiku-eligible.
+Do not route to `haiku`. Escalate on failed verification, not preemptively.
 
 Do not encode MCP usage in model overrides. When delegating to coding or design
 agents, pass task-specific instructions to use the project's available tools,
@@ -26,15 +27,25 @@ such as Context7 for library docs, semantic symbol tools for code exploration,
 Playwright for browser verification, or Stitch for design work.
 
 In beads repos (`bd where` succeeds), pass the bead id in the spawn prompt so
-the worker claims it (`bd update <id> --claim`) — an unpassed id leaves the
+the worker claims it (`bd update <id> --claim`) -- an unpassed id leaves the
 bead unclaimed and a parallel worker may take the same work.
 
-## Repomix refresh
+## Repomix for bulk context
 
-Repomix is a snapshot packer, on-demand, stored as ignored `repomix.xml`.
+Repomix packs a whole tree into one document. Run it on demand, from the CLI;
+there is no snapshot to keep fresh. A pack of this repository takes 1.3s and
+repomix caches nothing, so a second pack costs the same as the first.
 
-| Refresh after | Do NOT refresh on |
-|---------------|-------------------|
-| `git switch -c` / `checkout -b` / `worktree add` | every commit |
-| `git merge` / `git pull` / `git rebase` | PR create/review |
-| | remote-only `gh pr merge` |
+| Need | Command |
+|------|---------|
+| pack the tree | `repomix .` |
+| scope to the files that matter | `repomix . --include "src/**/*.ts"` |
+| read it without writing a file | `repomix . --stdout` |
+| pack another repository | `repomix --remote <url> --remote-branch <ref>` |
+
+Reach for `--include` first: scoping to code cut output 81 percent against a
+whole-repo pack. Prefer semantic symbol tools and `rg` for a single lookup, and
+a pack only when a task needs many files at once.
+
+Decide `--compress` per language. It saved 21 percent on this repository and 0
+percent on markdown and JSON. It grew 197 files of 4,107.

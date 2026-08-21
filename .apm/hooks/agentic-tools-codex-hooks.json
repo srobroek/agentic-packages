@@ -5,32 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/apm-outdated-check.sh",
+            "command": "python3 $(git rev-parse --show-toplevel)/./scripts/apm-outdated-check.py",
             "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Edit|Write|apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/agentic-source-guard.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$(git rev-parse --show-toplevel)/./scripts/allow-chezmoi-apply.sh",
-            "timeout": 10
           }
         ]
       }

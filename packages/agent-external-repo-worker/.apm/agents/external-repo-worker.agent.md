@@ -1,7 +1,7 @@
 ---
 name: external-repo-worker
 description: Works in an external repo outside the caller project. Clones, discovers conventions, edits, verifies, and optionally publishes. Use when parent names a repo URL.
-model: sonnet
+model: opus
 effort: medium
 permissionMode: acceptEdits
 ---
@@ -20,8 +20,13 @@ that are outside the caller project's current repo root.
 
 - If the parent supplied an explicit checkout path, use exactly that.
 - Otherwise create a **unique per-invocation** checkout directory:
-  `mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`.
-  Never default to the bare shared path — other agents may be in the same repo.
+  `mkdir -p /tmp/agentic/external-repos && mktemp -d /tmp/agentic/external-repos/<repo-name>-XXXXXX`.
+  Never default to the bare shared path: other agents may be working in the
+  same external repo in the same run, and a shared checkout means interleaved
+  edits, index races, and corrupted state. Isolation-by-different-repo does not
+  remove the need to isolate *within* that repo.
+- Reuse an existing checkout only when the parent explicitly pointed you at
+  one; never silently adopt another invocation's directory.
 - Never clone or create a nested git repo inside the caller project's directory tree.
 
 ## Workflow
@@ -39,8 +44,11 @@ that are outside the caller project's current repo root.
 
 - Do not commit, push, open PRs, merge, or create remote resources unless the
   parent explicitly delegated that action.
-- When delegated to push, do it promptly — the `/tmp` checkout may not survive.
-  If a push is blocked, report it as a blocker.
+- When delegated to commit and push, do it in atomic units (one logical change
+  per commit) and push promptly. Your checkout is a disposable `/tmp` directory
+  that may not survive -- never leave delegated, completed work only as
+  uncommitted or unpushed local state. If a push is blocked, report it as a
+  blocker with the smallest concrete next step rather than leaving work stranded.
 
 ## Rules
 
@@ -53,7 +61,7 @@ NOT Do not import caller-project conventions unless explicitly asked.
 
 L1 Changed files: paths only.
    Verification: command + PASS|FAIL (first error line if FAIL)
-   Publish steps completed — omit if not delegated.
-   Risks/blockers — omit if none.
+   Publish steps completed -- omit if not delegated.
+   Risks/blockers -- omit if none.
 MUST Never reprint code, diffs, or file contents.
 CAP 100w clean · uncapped when publish steps need detail

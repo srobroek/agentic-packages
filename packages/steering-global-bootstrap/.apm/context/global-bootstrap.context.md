@@ -14,7 +14,3 @@ NOT Install project agents, skills, hooks, or MCP configuration through chezmoi.
 MUST Use the chezmoi-editor skill for dotfile source changes.
 MUST Use project-setup or brownfield-project to establish project-local APM
   configuration.
-
-ROUTING
-DEFAULT Select the least costly general-purpose agent model that can complete
-  the assigned task unless the user specifies another profile.

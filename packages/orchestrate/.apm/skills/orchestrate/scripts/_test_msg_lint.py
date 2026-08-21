@@ -142,7 +142,7 @@ class MsgLintTest(unittest.TestCase):
 
     def test_prose_blob_rejected(self):
         body = (
-            "ASSIGN t1\n"
+            "DISMISS t1\n"
             "this is a long prose line with no label at all\n"
             "and another prose line still with no label here\n"
             "and a third prose line to push the run past two\n"

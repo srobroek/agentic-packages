@@ -6,27 +6,27 @@ description: Audit code for smells, map to refactoring.guru, and produce a vette
 # Sniff
 
 Audit code for smells and non-idiomatic patterns, then produce a prioritized,
-adversarially-vetted refactoring plan. Advisory by default — code is edited
+adversarially-vetted refactoring plan. Advisory by default -- code is edited
 **only** on explicit user approval (see step 7).
 
-## ⛔ STOP — two questions before you touch the code
+## ⛔ STOP -- two questions before you touch the code
 
 Do NOT detect the stack, run a tool, or dispatch a `bloodhound` until BOTH are
 answered. These are blocking gates, not preferences.
 
 1. **Which target?** If the user did not explicitly name one, ask in **two steps**:
-   - **Step 1a — pick the target KIND.** Offer every time:
+   - **Step 1a -- pick the target KIND.** Offer every time:
      `whole repo` · `language/area filter` (e.g. just Rust, just the frontend) ·
      `directory/module` · `file(s)` · `uncommitted changes` · `commit` ·
      `commit range / branch compare` · `PR`.
      A `language/area filter` resolves by detected-language / area glob, not one path.
      Always offer ref kinds (commit/range/branch/PR) even on a clean tree.
-   - **Step 1b — pin the specifics.** Once they pick a kind that needs an argument,
-     ask for it. Kinds **compose** — "the Rust in this PR" = PR target filtered to `.rs`.
+   - **Step 1b -- pin the specifics.** Once they pick a kind that needs an argument,
+     ask for it. Kinds **compose** -- "the Rust in this PR" = PR target filtered to `.rs`.
    Do **not** assume whole repo.
 2. **Which tools?** After resolving the target, run
-   `<skill-dir>/scripts/install-tools.sh --probe`. Propose the full thorough tool set —
-   every viable tool for **each detected target** — as a tiered table (default-on
+   `<skill-dir>/scripts/install-tools.sh --probe`. Propose the full thorough tool set --
+   every viable tool for **each detected target** -- as a tiered table (default-on
    pre-selected ON, opt-in shown OFF with reason), and **wait**. "go" = install every
    missing default-on tool and run all. A missing default-on tool is an install, or a
    recorded coverage gap if the user declines.
@@ -39,12 +39,12 @@ This SKILL is a router. Load the referenced file for each step; do not inline it
 
 **Skill dir vs. target dir.** Tools run with cwd = the *target* repo, but this skill's
 shipped assets (`scripts/`, `references/semgrep-rules/`) live in the *skill* dir. Note
-the skill dir once — the directory containing this `SKILL.md` — call it `$SNIFF_SKILL_DIR`.
+the skill dir once -- the directory containing this `SKILL.md` -- call it `$SNIFF_SKILL_DIR`.
 Reference every shipped asset by an absolute path under it.
 
 ## Workflow
 
-Run in order. Full procedure is in `references/workflow.md` — LOAD it before starting.
+Run in order. Full procedure is in `references/workflow.md` -- LOAD it before starting.
 
 1. **Resolve target & detect stack.** If user did not name a target, STOP and ask.
    LOAD `references/targeting.md`: resolve to an explicit file list + base ref, decide
@@ -55,15 +55,17 @@ Run in order. Full procedure is in `references/workflow.md` — LOAD it before s
    language as a tiered table. **Stop and wait.** Non-interactive runs skip the prompt.
    See `references/tooling.md` + `references/installer.md`.
    - **2.5. Inventory project lint config FIRST.** Before running any tool, find and read
-     every config that governs it. **Honor it** — a rule the project disabled is advisory
+     every config that governs it. **Honor it** -- a rule the project disabled is advisory
      at most, never a regression. See `references/workflow.md` Step 2.5.
 3. **Tool-driven detection.** For each detected language, run installed tools per
    `references/tooling.md`, honoring the Step 2.5 config. Skip + warn + record an install
    hint for absent tools.
 4. **Detection reading.** For smells tools cannot see, read the code guided by
    `references/languages/<lang>.md`. Small target → read inline. Otherwise propose a
-   `bloodhound` fan-out plan — one hound per language as the floor, splitting oversized
-   languages by subtree/crate. Build each Brief from `references/scout-brief.md`.
+   `bloodhound` fan-out plan -- one hound per language as the floor, splitting oversized
+   languages by subtree/crate. Build each Brief from `references/scout-brief.md`;
+   include the absolute `$SNIFF_SKILL_DIR/references/languages/<lang>.md` path
+   in the Brief so the hound does not resolve it from the target repository.
 5. **Map to refactoring.guru.** Attach smell name, pattern(s), technique(s), and URL
    from `references/refactoring-catalog.md`. Fetch the full technique page only when
    step-by-step detail is needed.
@@ -75,23 +77,23 @@ Run in order. Full procedure is in `references/workflow.md` — LOAD it before s
 
 ## Hard rules
 
-MUST Detection uses real tools — no built-in low-precision grep fallback for smell detection. If no tool is installed for a dimension, skip it and tell the user what to install.
-MUST Exception: a deterministic exact-match pass (checksums or `diff -q`/`git diff --no-index`) is allowed for byte-identical duplicated files. This is a floor, not a ceiling — also read parallel/mirrored files for conceptual duplication checksums miss.
-MUST Never edit code in steps 1–6. Apply only in step 7, only on explicit approval, always followed by a verification re-run.
-MUST Scope each tool by its analysis class (local/relational/global/baseline — see `references/tooling.md`).
+MUST Detection uses real tools -- no built-in low-precision grep fallback for smell detection. If no tool is installed for a dimension, skip it and tell the user what to install.
+MUST Exception: a deterministic exact-match pass (checksums or `diff -q`/`git diff --no-index`) is allowed for byte-identical duplicated files. This is a floor, not a ceiling -- also read parallel/mirrored files for conceptual duplication checksums miss.
+MUST Never edit code in steps 1 to 6. Apply only in step 7, only on explicit approval, always followed by a verification re-run.
+MUST Scope each tool by its analysis class (local/relational/global/baseline -- see `references/tooling.md`).
 MUST For ref targets, headline breaking-change findings vs. the base. Global analyses (dead code, cycles, unused deps) are skipped + noted in scoped runs.
 DEFAULT Resolve language/area filters by detected-language glob, not by directory path.
 DEFAULT Always offer commit/range/branch/PR target kinds even on a clean tree.
-- Load language docs and the refactoring catalog lazily — only what the detected stack needs.
+- Load language docs and the refactoring catalog lazily -- only what the detected stack needs.
 - Rust: standard toolchain (clippy pedantic/nursery + rustc) covers most dimensions; do not over-tool. See `references/languages/rust.md`.
 
 ## Scope modes
 
-- **quick** — error handling, hardcoded values, naming, error-path smells; skip the full tool sweep and adversarial pass.
-- **full** (default) — all steps above.
-- **plan-only** — steps 1–6; never apply, even on approval.
+- **quick** -- error handling, hardcoded values, naming, error-path smells; skip the full tool sweep and adversarial pass.
+- **full** (default) -- all steps above.
+- **plan-only** -- steps 1 to 6; never apply, even on approval.
 
-**Debug mode** (orthogonal — combine with any scope mode): OFF by default. Turn ON only when the user explicitly asks to debug the sniff RUN itself. See `references/workflow.md` → "Debug mode".
+**Debug mode** (orthogonal -- combine with any scope mode): OFF by default. Turn ON only when the user explicitly asks to debug the sniff RUN itself. See `references/workflow.md` → "Debug mode".
 
 ## References
 
@@ -99,7 +101,7 @@ DEFAULT Always offer commit/range/branch/PR target kinds even on a clean tree.
 |------|--------------|
 | `references/workflow.md` | Always, before step 1 |
 | `references/targeting.md` | Step 1: any non-whole-repo target |
-| `references/tooling.md` | Steps 2–3: tool catalog, invocation, overlap/gaps, analysis class |
+| `references/tooling.md` | Steps 2 to 3: tool catalog, invocation, overlap/gaps, analysis class |
 | `references/installer.md` | Step 2: install-flow contract and bundles |
 | `references/languages/index.md` | Step 1: route stack → language docs |
 | `references/languages/<lang>.md` | Step 4: per-language smells/idioms/tools |

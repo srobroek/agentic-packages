@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/pr-create-guard.sh",
-            "statusMessage": "Checking draft PR and Beads linkage policy...",
+            "command": "python3 ${PLUGIN_ROOT}/scripts/pr-create-guard.py",
+            "statusMessage": "Checking draft PR policy...",
             "timeout": 10
           }
         ]

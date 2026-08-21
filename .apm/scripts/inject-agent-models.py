@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Inject package-owned model mappings into APM-generated Codex agents."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -11,7 +16,6 @@ import tomllib
 from pathlib import Path
 
 import yaml
-
 
 MAPPING_NAME = "agent-models.yml"
 ALLOWED_CODEX_FIELDS = {"model", "reasoning_effort"}
@@ -27,32 +31,50 @@ def mapping_files(root: Path) -> list[Path]:
     candidates.extend(root.glob(f"packages/*/.apm/{MAPPING_NAME}"))
     candidates.extend(root.glob(f"apm_modules/**/.apm/{MAPPING_NAME}"))
     candidates.extend(root.glob(f".apm/apm_modules/**/.apm/{MAPPING_NAME}"))
-    return sorted({path.resolve() for path in candidates if path.is_file()})
+    resolved = {path.resolve() for path in candidates if path.is_file()}
+    return sorted(path for path in resolved if ".apm-resolution-staging" not in path.parts)
 
 
 def load_mappings(root: Path) -> dict[str, dict[str, str]]:
     merged: dict[str, dict[str, str]] = {}
     origins: dict[str, Path] = {}
     for path in mapping_files(root):
-        document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        if document.get("version") != 1:
+        try:
+            document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as exc:
+            raise MappingError(f"{path}: invalid YAML: {exc}") from exc
+        if not isinstance(document, dict):
+            raise MappingError(f"{path}: document must be a mapping")
+        if type(document.get("version")) is not int or document["version"] != 1:
             raise MappingError(f"{path}: version must be 1")
         agents = document.get("agents") or {}
         if not isinstance(agents, dict):
             raise MappingError(f"{path}: agents must be a mapping")
         for name, runtime_data in agents.items():
+            if not isinstance(name, str) or not name.strip():
+                raise MappingError(f"{path}: agent names must be non-empty strings")
+            name = name.strip()
             codex = runtime_data.get("codex") if isinstance(runtime_data, dict) else None
             if not isinstance(codex, dict) or not codex:
                 raise MappingError(f"{path}: {name}.codex must be a non-empty mapping")
-            unknown = set(codex) - ALLOWED_CODEX_FIELDS
+            unknown = sorted(str(key) for key in codex if key not in ALLOWED_CODEX_FIELDS)
             if unknown:
-                raise MappingError(f"{path}: {name}.codex has unknown fields {sorted(unknown)}")
-            if not codex.get("model") or not codex.get("reasoning_effort"):
-                raise MappingError(f"{path}: {name}.codex requires model and reasoning_effort")
-            normalized = {key: str(value) for key, value in codex.items()}
-            if name in merged and merged[name] != normalized:
+                raise MappingError(f"{path}: {name}.codex has unknown fields {unknown}")
+            normalized: dict[str, str] = {}
+            for field in ALLOWED_CODEX_FIELDS:
+                value = codex.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    raise MappingError(
+                        f"{path}: {name}.codex requires non-empty string {field}"
+                    )
+                normalized[field] = value.strip()
+            if name in merged:
+                if merged[name] == normalized:
+                    continue  # identical re-declaration across bundles; first occurrence wins
                 raise MappingError(
-                    f"conflicting mapping for {name}: {origins[name]} and {path}"
+                    f"conflicting mapping for {name}:\n"
+                    f"  {origins[name]}: {merged[name]}\n"
+                    f"  {path}: {normalized}"
                 )
             merged[str(name)] = normalized
             origins[str(name)] = path
@@ -82,14 +104,36 @@ def validate_source_coverage(root: Path, mappings: dict[str, dict[str, str]]) ->
 
 
 def set_toml_string(text: str, key: str, value: str) -> str:
-    line = f'{key} = "{value}"'
-    pattern = re.compile(rf"^{re.escape(key)}\s*=.*$", re.MULTILINE)
-    if pattern.search(text):
-        return pattern.sub(line, text, count=1)
-    insert_at = text.find("\ndeveloper_instructions")
-    if insert_at >= 0:
-        return text[: insert_at + 1] + line + "\n" + text[insert_at + 1 :]
-    return text.rstrip() + "\n" + line + "\n"
+    line = f"{key} = {json.dumps(value, ensure_ascii=False)}"
+    newline = "\r\n" if "\r\n" in text else "\n"
+    lines = text.splitlines(keepends=True)
+    in_table = False
+    first_table = None
+    root_key = re.compile(rf"^\s*{re.escape(key)}\s*=")
+    for index, current in enumerate(lines):
+        stripped = current.lstrip()
+        if stripped.startswith("["):
+            in_table = True
+            if first_table is None:
+                first_table = index
+        if not in_table and root_key.match(current):
+            ending = "\r\n" if current.endswith("\r\n") else "\n" if current.endswith("\n") else ""
+            lines[index] = line + (ending or newline)
+            return "".join(lines)
+
+    # Codex agent fields are root-level TOML keys. Insert before the first
+    # table so a generated file without developer_instructions cannot
+    # accidentally place them inside a nested table.
+    if first_table is not None:
+        lines.insert(first_table, line + newline)
+        return "".join(lines)
+
+    for index, current in enumerate(lines):
+        if re.match(r"^\s*developer_instructions\s*=", current):
+            lines.insert(index, line + newline)
+            return "".join(lines)
+
+    return text.rstrip("\r\n") + newline + line + newline
 
 
 def expected_text(text: str, mapping: dict[str, str]) -> str:
@@ -105,6 +149,7 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
     agents_dir = root / ".codex" / "agents"
     errors: list[str] = []
     changed = 0
+    pending: list[tuple[Path, str]] = []
     deployed: dict[str, Path] = {}
     for path in sorted(agents_dir.glob("*.toml")):
         try:
@@ -117,15 +162,22 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
             errors.append(f"deployed Codex agent has no name: {path}")
             continue
         if name in deployed:
-            errors.append(f"duplicate deployed Codex agent name {name}: {deployed[name]} and {path}")
+            errors.append(
+                f"duplicate deployed Codex agent name {name}: {deployed[name]} and {path}"
+            )
             continue
         deployed[name] = path
 
-    for name, path in sorted(deployed.items()):
-        if name not in mappings:
-            errors.append(
-                f"deployed Codex agent lacks {MAPPING_NAME} entry: {path} ({name})"
-            )
+    # Only APM-managed agents (those a currently-installed package maps) are
+    # injected. A deployed toml with no mapping is not APM's to own -- a
+    # hand-authored agent, or an orphan left by a retired/removed package -- so
+    # skip it instead of failing the lifecycle at deploy. Package-level coverage
+    # (every APM agent source has a mapping) is enforced in CI by
+    # validate_source_coverage, so re-checking it here would only duplicate CI
+    # and false-positive on non-APM files.
+    unmanaged = sorted(name for name in deployed if name not in mappings)
+    if unmanaged:
+        print(f"Codex agent models: skipping {len(unmanaged)} unmanaged deployed agent(s): {', '.join(unmanaged)}")
 
     for name, mapping in sorted(mappings.items()):
         path = deployed.get(name)
@@ -148,13 +200,15 @@ def patch_codex(root: Path, mappings: dict[str, dict[str, str]], *, check: bool)
         if desired == current:
             continue
         changed += 1
-        if not check:
-            temporary = path.with_suffix(path.suffix + ".tmp")
-            temporary.write_text(desired, encoding="utf-8")
-            os.replace(temporary, path)
+        pending.append((path, desired))
 
     if errors:
         raise MappingError("\n".join(errors))
+    if not check:
+        for path, desired in pending:
+            temporary = path.with_suffix(path.suffix + ".tmp")
+            temporary.write_text(desired, encoding="utf-8")
+            os.replace(temporary, path)
     verb = "need injection" if check else "injected"
     print(f"Codex agent models: {changed} {verb}; {len(mappings) - changed} already current")
     return changed

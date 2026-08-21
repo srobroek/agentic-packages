@@ -18,7 +18,7 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "pull-worker.py")
-AGENT = os.path.join(HERE, "../../../agents/workflow-pull-worker.agent.md")
+AGENT = os.path.join(HERE, "../../../agents/domain-specialist.agent.md")
 SPEC = importlib.util.spec_from_file_location("pull_worker", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
@@ -50,9 +50,9 @@ def issue(**overrides):
         "labels": ["agent:python", "cap:python", "orc-node"],
         "metadata": {
             "scope": ["src/**"],
-            "execution_kind": "code",
+            "execution_task_kind": "code",
             "execution_capabilities": ["python"],
-            "execution_evidence": "git",
+            "execution_kind": "git",
         },
     }
     value.update(overrides)
@@ -73,11 +73,7 @@ class PullWorkerUnitTest(unittest.TestCase):
         self.assertIn("--json", command)
         self.assertNotIn("list", command)
         self.assertEqual(
-            [
-                command[index + 1]
-                for index, item in enumerate(command)
-                if item == "--label"
-            ],
+            [command[index + 1] for index, item in enumerate(command) if item == "--label"],
             ["orc-node", "agent:python"],
         )
         self.assertEqual(
@@ -86,14 +82,12 @@ class PullWorkerUnitTest(unittest.TestCase):
                 for index, item in enumerate(command)
                 if item == "--metadata-field"
             ],
-            ["execution_kind=code", "execution_evidence=git"],
+            ["execution_task_kind=code", "execution_kind=git"],
         )
         self.assertEqual(command[command.index("--sort") + 1], "priority")
 
     def test_empty_queue_or_lost_race_is_successful_no_work(self):
-        result = MODULE.run_claim(
-            contract(), runner=lambda *_args, **_kwargs: completed()
-        )
+        result = MODULE.run_claim(contract(), runner=lambda *_args, **_kwargs: completed())
 
         self.assertEqual(result["status"], "NO_WORK")
         self.assertEqual(result["queue"], "agent:python")
@@ -124,9 +118,9 @@ class PullWorkerUnitTest(unittest.TestCase):
             labels=["agent:research", "cap:research", "orc-node"],
             metadata={
                 "scope": ["artifact:/tmp/run/findings.json"],
-                "execution_kind": "research",
+                "execution_task_kind": "research",
                 "execution_capabilities": ["research"],
-                "execution_evidence": "artifact",
+                "execution_kind": "artifact",
             },
         )
 
@@ -155,9 +149,7 @@ class PullWorkerUnitTest(unittest.TestCase):
         with self.assertRaises(MODULE.PullWorkerError) as caught:
             MODULE.run_claim(
                 contract(),
-                runner=lambda *_args, **_kwargs: completed(
-                    json.dumps([issue(metadata={})])
-                ),
+                runner=lambda *_args, **_kwargs: completed(json.dumps([issue(metadata={})])),
             )
 
         self.assertEqual(caught.exception.kind, "routing_envelope")
@@ -234,9 +226,7 @@ class PullWorkerUnitTest(unittest.TestCase):
         with self.assertRaises(MODULE.PullWorkerError) as caught:
             MODULE.run_claim(
                 contract(),
-                runner=lambda *_args, **_kwargs: completed(
-                    json.dumps([issue(metadata=metadata)])
-                ),
+                runner=lambda *_args, **_kwargs: completed(json.dumps([issue(metadata=metadata)])),
             )
 
         self.assertEqual(caught.exception.kind, "routing_envelope")
@@ -266,20 +256,22 @@ class PullWorkerUnitTest(unittest.TestCase):
         self.assertEqual(seen["kwargs"]["timeout"], 15.0)
         self.assertEqual(seen["kwargs"]["env"]["BEADS_ACTOR"], "pull-python-1")
 
-    def test_agent_contract_requires_holder_death_evidence(self):
+    def test_domain_specialist_contract_is_bead_as_brief(self):
+        # The former workflow-pull-worker folded into `coder`; validate the new
+        # contract's load-bearing invariants, not the deleted prose.
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
-        self.assertIn("Only the coordinator may clear and requeue a dead claim", agent)
-        self.assertIn("after recording holder-death evidence", agent)
+        self.assertIn("name: domain-specialist", agent)
+        self.assertIn("CLAIM", agent)  # bead-as-brief activation
+        self.assertIn("REPORTED", agent)  # handoff evidence
 
-    def test_agent_contract_reports_every_error_and_stop(self):
+    def test_domain_specialist_contract_forbids_close_and_merge_metadata(self):
         with open(AGENT, encoding="utf-8") as handle:
             agent = handle.read()
 
-        self.assertIn("Always send a", agent)
-        self.assertIn("status=<ERROR|STOPPED>", agent)
-        self.assertIn("claim=<none|bead|unknown>", agent)
+        self.assertIn("never write `merge_sha` or `pr`", agent)
+        self.assertIn("status=blocked", agent)  # escape hatch
 
 
 STUB = r"""
@@ -384,7 +376,7 @@ class PullWorkerCliTest(unittest.TestCase):
         wrong_kind = self.candidate(
             "orc-run.3",
             0,
-            metadata=issue()["metadata"] | {"execution_kind": "research"},
+            metadata=issue()["metadata"] | {"execution_task_kind": "research"},
         )
         compatible = self.candidate("orc-run.4", 2)
 

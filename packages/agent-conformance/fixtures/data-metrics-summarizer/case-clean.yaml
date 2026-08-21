@@ -1,0 +1,24 @@
+agent: data-metrics-summarizer
+regime: clean
+prompt: |
+  METRICS-SUMMARIZER node=n1
+  files:
+    - logs/app.log
+  focus_prompt: top errors by count
+  format: log
+  top_k: 5
+sandbox:
+  files:
+    logs/app.log: |
+      2024-01-01T10:00:00Z INFO start
+      2024-01-01T10:00:01Z INFO request id=1
+      2024-01-01T10:00:02Z INFO request id=2
+      2024-01-01T10:00:03Z INFO stop
+assert:
+  first_line: '^METRICS-SUMMARIZER \S+ verdict=(?:PASS|WARN|BLOCK) items=\d+'
+  max_words: 120
+  no_reprint: true
+  required_patterns:
+    - 'verdict=PASS'
+timeout_s: 120
+budget_usd: 0.50

@@ -1,5 +1,48 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/release-please--v3.0.1...release-please--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.0.1](https://github.com/srobroek/agentic-packages/compare/release-please--v3.0.0...release-please--v3.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/release-please--v2.0.0...release-please--v3.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Refactors
+
+* port the skill scripts to Python and fuzz every port ([#811](https://github.com/srobroek/agentic-packages/issues/811)) ([773ac2b](https://github.com/srobroek/agentic-packages/commit/773ac2bced832cb0144b7e21e6937e69b9e3b631))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/release-please--v1.1.1...release-please--v2.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+
+### Refactors
+
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/release-please--v1.1.0...release-please--v1.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/release-please--v1.0.0...release-please--v1.1.0) (2026-07-16)
 
 

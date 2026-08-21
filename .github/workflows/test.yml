@@ -18,17 +18,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changed:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       packages: ${{ steps.detect.outputs.packages }}
       any: ${{ steps.detect.outputs.any }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Detect changed packages that have tests
         id: detect
@@ -40,12 +46,14 @@ jobs:
             | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
           # Keep only those that actually ship a test suite (bats or pytest).
           have_tests=""
+          # shellcheck disable=SC2086
           for p in $changed_pkgs; do
-            if find "$p" -name '*.bats' -o -name 'test_*.py' | grep -q .; then
+            if find "$p" \( -name '*.bats' -o -name 'test_*.py' -o -name '_test_*.py' \
+              -o -name '_test_*.sh' \) | grep -q .; then
               have_tests="$have_tests $p"
             fi
           done
-          have_tests=$(echo $have_tests | tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
+          have_tests=$(echo "$have_tests" | tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
           echo "packages=$have_tests" >> "$GITHUB_OUTPUT"
           if [ "$have_tests" = "[]" ]; then
             echo "any=false" >> "$GITHUB_OUTPUT"
@@ -59,11 +67,13 @@ jobs:
   # descriptions, missing output contracts) can't land silently.
   agentic-lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Lint changed agentic markdown
         run: |
@@ -85,57 +95,131 @@ jobs:
           done
           exit $rc
 
+  # Deterministic agent-contract conformance gate (no LLM): coverage of every
+  # shipped agent by a fixture or reasoned skip, fixture validity, and drift
+  # between fixture expectations and the agent's declared contract. Guards
+  # against editing an agent's contract in ANY package without updating its
+  # conformance fixture. The LLM sweep itself never runs per-PR (FR-009 of
+  # specs/001-agent-conformance); this check is pure Python.
+  conformance-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.14"
+
+      - name: Run conformance check on agent or fixture changes
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # base can be empty on orphan/first-commit PRs; diff from root then.
+          if [ -z "$base" ]; then
+            base=$(git rev-list --max-parents=0 "$head" | tail -1)
+          fi
+          changed=$(git diff --name-only "$base" "$head" -- \
+            'packages/*/.apm/agents/*.agent.md' 'packages/agent-conformance/**' || true)
+          if [ -z "$changed" ]; then
+            echo "no agent or conformance changes"
+            exit 0
+          fi
+          pip install --quiet pyyaml
+          python3 packages/agent-conformance/scripts/conformance.py check
+
   test:
     needs: changed
     if: needs.changed.outputs.any == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         package: ${{ fromJSON(needs.changed.outputs.packages) }}
+    # PKG avoids ${{ matrix.package }} in run: scripts, which zizmor flags as
+    # template-injection (the package path comes from the PR author).
+    env:
+      PKG: ${{ matrix.package }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up bats
-        uses: bats-core/bats-action@4.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
+          persist-credentials: false
+
+      # bats-version is PINNED, and the token is passed. Left unset, the action
+      # resolves "latest" through an UNAUTHENTICATED GitHub API call and pipes the
+      # response straight into tar -- so when the API answers with an error page
+      # instead of a release (a 503, or a rate-limit on the shared runner IP) the
+      # step dies with "gzip: stdin: not in gzip format" and exit 127, before a
+      # single test runs. Seen on 2026-08-17 while GitHub's API was degraded, and
+      # reproduced on a re-run, so it is not a one-off flake. A pinned version needs
+      # no lookup at all, and the token lifts the anonymous rate limit for the
+      # download itself. 1.14.0 is what the suites are verified against locally, so CI
+      # and a developer machine agree rather than drifting by whatever "latest" is.
+      - name: Set up bats
+        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43  # 4.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          bats-version: 1.14.0
           support-install: false
           assert-install: false
           detik-install: false
           file-install: false
 
       - name: Set up uv (for pytest)
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          enable-cache: true
+
+      - name: Install repo tools via mise (bd for orchestrate harnesses)
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518  # v4.2.5
+        with:
+          install: true
+          cache: true
+
+      - name: Expose mise tools outside the repo tree
+        run: |
+          # Tests run bd with cwd in a tempdir where mise.toml doesn't apply,
+          # so mise shims can't resolve a version there. Put the real binary
+          # directory on PATH instead of relying on shims.
+          dirname "$(mise which bd)" >> "$GITHUB_PATH"
+          "$(mise which bd)" version
 
       - name: shellcheck (changed package scripts, bash 3.2 / BSD floor)
         run: |
           # Lint the package's own scripts at the same severity the suite targets.
-          sh_files=$(find "${{ matrix.package }}" -name '*.sh' 2>/dev/null || true)
+          sh_files=$(find "$PKG" -name '*.sh' 2>/dev/null || true)
           if [ -n "$sh_files" ]; then
-            # shellcheck is preinstalled on ubuntu-latest runners
+            # preinstalled on ubuntu-latest runners
             echo "$sh_files" | xargs -r shellcheck -S warning
-            echo "shellcheck clean: ${{ matrix.package }}"
+            echo "shellcheck clean: $PKG"
           else
-            echo "no .sh in ${{ matrix.package }}"
+            echo "no .sh in $PKG"
           fi
 
       - name: Run bats suites
         run: |
-          bats_files=$(find "${{ matrix.package }}" -name '*.bats' 2>/dev/null || true)
+          bats_files=$(find "$PKG" -name '*.bats' 2>/dev/null || true)
           if [ -n "$bats_files" ]; then
             echo "$bats_files" | xargs -r bats
           else
-            echo "no .bats in ${{ matrix.package }}"
+            echo "no .bats in $PKG"
           fi
 
       - name: Run pytest suites
         run: |
-          py_files=$(find "${{ matrix.package }}" -name 'test_*.py' 2>/dev/null || true)
+          py_files=$(find "$PKG" -name 'test_*.py' 2>/dev/null || true)
           if [ -n "$py_files" ]; then
-            echo "$py_files" | xargs -r uv run --with pytest pytest -q
+            echo "$py_files" | xargs -r uv run --no-project --with pytest --with pyyaml pytest -q
           else
-            echo "no pytest files in ${{ matrix.package }}"
+            echo "no pytest files in $PKG"
           fi
 
       - name: Run standalone _test_*.py harnesses
@@ -144,14 +228,35 @@ jobs:
           # pytest modules -- pytest's default discovery (test_*.py) skips the
           # leading underscore, so run them directly. (e.g. speckit-dag-hooks'
           # _test_dispatcher.py, which validates the dispatcher against nodes.json.)
-          harnesses=$(find "${{ matrix.package }}" -name '_test_*.py' 2>/dev/null || true)
+          # `rules-eval-test.py` is the same genre under a different name and no
+          # glob here matched it, so the contract evaluator's conformance suite ran
+          # nowhere. It is named explicitly rather than by a `*-test.py` glob:
+          # `hooks-smoke-test.py` matches that shape and fails on a roles.md drift
+          # tracked separately (astro-plan-78v0 follow-up).
+          harnesses=$(find "$PKG" \( -name '_test_*.py' -o -name 'rules-eval-test.py' \) \
+            2>/dev/null || true)
           if [ -n "$harnesses" ]; then
             for h in $harnesses; do
               echo "harness: $h"
-              ( cd "$(dirname "$h")" && python3 "$(basename "$h")" )
+              ( cd "$(dirname "$h")" && uv run --no-project --with pyyaml "$(basename "$h")" )
             done
           else
-            echo "no _test_*.py harnesses in ${{ matrix.package }}"
+            echo "no _test_*.py harnesses in $PKG"
+          fi
+
+      - name: Run standalone _test_*.sh harnesses
+        run: |
+          # The .py step above has a .sh counterpart: bash assertion harnesses named
+          # _test_*.sh. Nothing ran them, so pr-shepherd shipped a 126-line sheepdog
+          # spec against five verbs that did not exist and CI stayed green.
+          harnesses=$(find "$PKG" -name '_test_*.sh' 2>/dev/null || true)
+          if [ -n "$harnesses" ]; then
+            for h in $harnesses; do
+              echo "harness: $h"
+              bash "$h"
+            done
+          else
+            echo "no _test_*.sh harnesses in $PKG"
           fi
 
       - name: Generated-artifact drift gate (build_nodes.py --check)
@@ -161,37 +266,46 @@ jobs:
           # regenerates to a buffer and exits 1 on drift, so a PR that edits the
           # builder (or hand-edits the committed JSON) without regenerating fails
           # here. No-op for packages without a builder.
-          builders=$(find "${{ matrix.package }}" -name 'build_nodes.py' 2>/dev/null || true)
+          builders=$(find "$PKG" -name 'build_nodes.py' 2>/dev/null || true)
           if [ -n "$builders" ]; then
             for b in $builders; do
               echo "drift check: $b"
               python3 "$b" --check
             done
           else
-            echo "no build_nodes.py in ${{ matrix.package }}"
+            echo "no build_nodes.py in $PKG"
           fi
 
   # Stable, always-running aggregator -- this is the REQUIRED check on main.
   # Passes when the matrix succeeded OR was legitimately skipped (no changed
   # package ships tests); fails only if a real test leg failed or was cancelled.
   tests-gate:
-    needs: [changed, test, agentic-lint]
+    needs: [changed, test, agentic-lint, conformance-check]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Evaluate test matrix result
+        # env: pulls needs context out of run: scripts so zizmor does not flag
+        # the result values as template-injection (they are GitHub-internal, but
+        # zizmor cannot verify that without an API token).
+        env:
+          CHANGED_RESULT: ${{ needs.changed.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          LINT_RESULT: ${{ needs.agentic-lint.result }}
+          CONFORMANCE_RESULT: ${{ needs.conformance-check.result }}
         run: |
-          changed_result="${{ needs.changed.result }}"
-          test_result="${{ needs.test.result }}"
-          lint_result="${{ needs.agentic-lint.result }}"
-          echo "changed=$changed_result test=$test_result agentic-lint=$lint_result"
-          if [ "$lint_result" != "success" ]; then
-            echo "::error::agentic-lint did not succeed ($lint_result)"; exit 1
+          echo "changed=$CHANGED_RESULT test=$TEST_RESULT agentic-lint=$LINT_RESULT conformance-check=$CONFORMANCE_RESULT"
+          if [ "$LINT_RESULT" != "success" ]; then
+            echo "::error::agentic-lint did not succeed ($LINT_RESULT)"; exit 1
           fi
-          if [ "$changed_result" != "success" ]; then
-            echo "::error::change-detection job did not succeed ($changed_result)"; exit 1
+          if [ "$CONFORMANCE_RESULT" != "success" ]; then
+            echo "::error::conformance-check did not succeed ($CONFORMANCE_RESULT)"; exit 1
           fi
-          case "$test_result" in
-            success|skipped) echo "Tests gate OK ($test_result)";;
-            *) echo "::error::test matrix result: $test_result"; exit 1;;
+          if [ "$CHANGED_RESULT" != "success" ]; then
+            echo "::error::change-detection job did not succeed ($CHANGED_RESULT)"; exit 1
+          fi
+          case "$TEST_RESULT" in
+            success|skipped) echo "Tests gate OK ($TEST_RESULT)";;
+            *) echo "::error::test matrix result: $TEST_RESULT"; exit 1;;
           esac

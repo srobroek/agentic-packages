@@ -1,0 +1,12 @@
+agent: pr-shepherd
+regime: clean
+prompt: |
+  Drain the merge queue.
+
+  No `bd` tool is available in this sandbox; report the gate check failure
+  as a BLOCKED disposition with the exact reason.
+assert:
+  first_line: '^VERDICT: (?:DRAINED|PARTIAL|BLOCKED)\b'
+  max_words: 150
+  no_reprint: true
+timeout_s: 120

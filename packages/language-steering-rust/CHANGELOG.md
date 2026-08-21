@@ -1,5 +1,37 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v3.0.1...language-steering-rust--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.0.1](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v3.0.0...language-steering-rust--v3.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v2.1.1...language-steering-rust--v3.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v2.1.0...language-steering-rust--v2.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/language-steering-rust--v2.0.0...language-steering-rust--v2.1.0) (2026-07-16)
 
 

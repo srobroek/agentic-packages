@@ -1,5 +1,5 @@
 name: srobroek-agentic
-version: 16.9.0
+version: 29.1.3
 description: Shared APM packages for Codex, Claude, and compatible agent runtimes.
 author: Sjors Robroek
 license: Apache-2.0
@@ -9,33 +9,43 @@ targets:
   - codex
 includes: auto
 scripts:
-  build-readme-tables: python3 .apm/scripts/build-readme-tables.py
-  check-readme-tables: python3 .apm/scripts/build-readme-tables.py --check
-  build-release-please: python3 .apm/scripts/build-release-please.py
-  check-release-please: python3 .apm/scripts/build-release-please.py --check
+  build-readme-tables: uv run --script .apm/scripts/build-readme-tables.py
+  check-readme-tables: uv run --script .apm/scripts/build-readme-tables.py --check
+  build-release-please: uv run --script .apm/scripts/build-release-please.py
+  check-release-please: uv run --script .apm/scripts/build-release-please.py --check
   check-release-baselines: python3 .apm/scripts/check-release-baselines.py
-  build-marketplace-block: python3 .apm/scripts/build-marketplace-block.py
-  check-marketplace-block: python3 .apm/scripts/build-marketplace-block.py --check
-  build-marketplace: apm pack && python3 .apm/scripts/build-marketplace-block.py
-  inject-agent-models: python3 .apm/scripts/inject-agent-models.py
-  check-agent-models: python3 .apm/scripts/inject-agent-models.py --check
-  build-native-plugins: python3 .apm/scripts/build-native-plugins.py
-  check-native-plugins: python3 .apm/scripts/build-native-plugins.py --check
-  render-docs: python3 .apm/scripts/render-docs.py all
-  check-docs: python3 .apm/scripts/render-docs.py all --check
+  build-marketplace-block: uv run --script .apm/scripts/build-marketplace-block.py
+  check-marketplace-block: uv run --script .apm/scripts/build-marketplace-block.py --check
+  build-marketplace: apm pack && uv run --script .apm/scripts/build-marketplace-block.py
+  inject-agent-models: uv run --script .apm/scripts/inject-agent-models.py
+  check-agent-models: uv run --script .apm/scripts/inject-agent-models.py --check
+  build-native-plugins: uv run --script .apm/scripts/build-native-plugins.py
+  check-native-plugins: uv run --script .apm/scripts/build-native-plugins.py --check
+  render-docs: uv run --script .apm/scripts/render-docs.py all
+  check-docs: uv run --script .apm/scripts/render-docs.py all --check
   build-artifacts: >-
-    python3 .apm/scripts/build-native-plugins.py && python3
+    uv run --script .apm/scripts/build-native-plugins.py && uv run --script
     .apm/scripts/render-docs.py all && apm run build-marketplace
   install: apm install --target claude,codex
-  audit-agentic-assets: python3 .apm/scripts/audit-agentic-assets.py
-  audit-codex-config: python3 .apm/scripts/audit-codex-config.py
+  audit-agentic-assets: uv run --script .apm/scripts/audit-agentic-assets.py
+  slop-lint: >-
+    bash -c 'genre="${SLOP_GENRE:-consumer}"; paths="${SLOP_LINT_PATHS:-$(git
+    ls-files "*.md" | grep -v "^.audit-" | grep -v "CHANGELOG.md$")}";
+    gate="$HOME/.claude/skills/review-docs/scripts/slop-lint.sh"; test -f
+    "$gate" || { echo "slop-lint: apm install --global (needs slopvac)" >&2;
+    exit 2; }; bash "$gate" --genre "$genre" $paths'
+  audit-codex-config: uv run --script .apm/scripts/audit-codex-config.py
   sanitize-codex-hooks: python3 .apm/scripts/sanitize-codex-hooks.py
   sanitize-claude-hooks: python3 .apm/scripts/sanitize-claude-hooks.py
-  test-codex-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_codex_hooks.py
-  test-claude-hooks: uv run --with pytest pytest -q .apm/scripts/test_sanitize_claude_hooks.py
+  test-codex-hooks: >-
+    uv run --no-project --with pytest pytest -q
+    .apm/scripts/test_sanitize_codex_hooks.py
+  test-claude-hooks: >-
+    uv run --no-project --with pytest pytest -q
+    .apm/scripts/test_sanitize_claude_hooks.py
   setup: >-
-    apm run install && apm compile --target codex,claude --no-constitution &&
-    apm run inject-agent-models && apm run audit-agentic-assets && apm run
+    apm run install && apm compile --target codex,claude && apm run
+    inject-agent-models && apm run audit-agentic-assets && apm run
     audit-codex-config
 compilation:
   strategy: distributed
@@ -62,6 +72,14 @@ marketplace:
   build:
     tagPattern: '{name}--v{version}'
   packages:
+    - name: adr-as-beads
+      source: ./packages/adr-as-beads
+      category: project-lifecycle
+      tags:
+        - adr
+        - decisions
+        - madr
+        - architecture
     - name: agent-adversarial-challenger
       source: ./packages/agent-adversarial-challenger
       category: quality
@@ -70,20 +88,27 @@ marketplace:
         - adversarial
         - critique
         - decision-review
-    - name: agent-coder
-      source: ./packages/agent-coder
+    - name: agent-builder
+      source: ./packages/agent-builder
       category: engineering
       tags:
         - agent
         - engineering
         - implementation
-    - name: agent-coder-high
-      source: ./packages/agent-coder-high
+    - name: agent-builder-high
+      source: ./packages/agent-builder-high
       category: engineering
       tags:
         - agent
-        - codex
-        - routing
+        - engineering
+        - implementation
+    - name: agent-conformance
+      source: ./packages/agent-conformance
+      category: engineering
+      tags:
+        - testing
+        - agents
+        - conformance
     - name: agent-explorer
       source: ./packages/agent-explorer
       category: code-intelligence
@@ -98,34 +123,14 @@ marketplace:
         - agent
         - engineering
         - repos
-    - name: agent-luna-high
-      source: ./packages/agent-luna-high
-      category: engineering
+    - name: agent-hook-contract
+      source: ./packages/agent-hook-contract
+      category: project-lifecycle
       tags:
-        - agent
+        - hooks
+        - claude
         - codex
-        - routing
-    - name: agent-luna-low
-      source: ./packages/agent-luna-low
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-medium
-      source: ./packages/agent-luna-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-luna-xhigh
-      source: ./packages/agent-luna-xhigh
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
+        - reference
     - name: agent-management
       source: ./packages/agent-management
       category: agentic-maintenance
@@ -147,6 +152,13 @@ marketplace:
         - agent
         - quality
         - review
+    - name: agent-quality-guards
+      source: ./packages/agent-quality-guards
+      category: quality
+      tags:
+        - agent
+        - quality
+        - triage
     - name: agent-reasoner
       source: ./packages/agent-reasoner
       category: planning-product
@@ -164,41 +176,6 @@ marketplace:
     - name: agent-reviewer-low
       source: ./packages/agent-reviewer-low
       category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-high
-      source: ./packages/agent-sol-high
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-low
-      source: ./packages/agent-sol-low
-      category: quality
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-medium
-      source: ./packages/agent-sol-medium
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-sol-xhigh
-      source: ./packages/agent-sol-xhigh
-      category: engineering
-      tags:
-        - agent
-        - codex
-        - routing
-    - name: agent-worker
-      source: ./packages/agent-worker
-      category: engineering
       tags:
         - agent
         - codex
@@ -258,13 +235,6 @@ marketplace:
       tags:
         - bundle
         - semantic
-    - name: codex-hook-contract
-      source: ./packages/codex-hook-contract
-      category: project-lifecycle
-      tags:
-        - codex
-        - hooks
-        - reference
     - name: core
       source: ./packages/core
       category: core
@@ -284,15 +254,6 @@ marketplace:
         - skill
         - planning
         - analysis
-    - name: dep-audit
-      source: ./packages/dep-audit
-      category: security
-      tags:
-        - skill
-        - security
-        - dependencies
-        - audit
-        - cve
     - name: dep-update
       source: ./packages/dep-update
       category: code-intelligence
@@ -309,24 +270,6 @@ marketplace:
         - bundle
         - dependencies
         - supply-chain
-    - name: developer-tools
-      source: ./packages/developer-tools
-      category: engineering
-      tags:
-        - bundle
-        - tooling
-    - name: diagrams
-      source: ./packages/diagrams
-      category: diagrams
-      tags:
-        - bundle
-        - diagrams
-    - name: docs-architecture
-      source: ./packages/docs-architecture
-      category: docs
-      tags:
-        - bundle
-        - documentation
     - name: eli5
       source: ./packages/eli5
       category: planning-product
@@ -361,12 +304,6 @@ marketplace:
         - skill
         - planning
         - goals
-    - name: governance
-      source: ./packages/governance
-      category: governance
-      tags:
-        - bundle
-        - governance
     - name: handover
       source: ./packages/handover
       category: project-lifecycle
@@ -374,14 +311,6 @@ marketplace:
         - skill
         - lifecycle
         - handover
-    - name: headroom
-      source: ./packages/headroom
-      category: agentic-maintenance
-      tags:
-        - skill
-        - maintenance
-        - tokens
-        - compression
     - name: hooks-attribution-guard
       source: ./packages/hooks-attribution-guard
       category: project-lifecycle
@@ -419,13 +348,6 @@ marketplace:
         - hooks
         - git
         - safety
-    - name: hooks-git-workflow
-      source: ./packages/hooks-git-workflow
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - commit
     - name: hooks-package-investigate
       source: ./packages/hooks-package-investigate
       category: project-lifecycle
@@ -433,21 +355,6 @@ marketplace:
         - hooks
         - dependencies
         - supply-chain
-    - name: hooks-portability-ci
-      source: ./packages/hooks-portability-ci
-      category: project-lifecycle
-      tags:
-        - ci
-        - hooks
-        - portability
-        - testing
-    - name: hooks-precommit-gate
-      source: ./packages/hooks-precommit-gate
-      category: project-lifecycle
-      tags:
-        - hooks
-        - git
-        - pre-commit
     - name: hooks-quality
       source: ./packages/hooks-quality
       category: quality
@@ -463,6 +370,15 @@ marketplace:
         - serena
         - semantic
         - lifecycle
+    - name: hooks-subagent-fork
+      source: ./packages/hooks-subagent-fork
+      category: project-lifecycle
+      tags:
+        - hooks
+        - subagent
+        - fork-turns
+        - cost
+        - codex
     - name: hooks-subagent-model
       source: ./packages/hooks-subagent-model
       category: project-lifecycle
@@ -481,62 +397,28 @@ marketplace:
         - subagent
         - isolation
         - policy
-    - name: hooks-worktree
-      source: ./packages/hooks-worktree
+    - name: hooks-worktrunk
+      source: ./packages/hooks-worktrunk
       category: project-lifecycle
       tags:
         - hooks
+        - worktrunk
         - worktree
-        - lifecycle
-    - name: incident-response
-      source: ./packages/incident-response
-      category: debugging
-      tags:
-        - bundle
-        - incident
+        - git
+        - claude
+        - codex
     - name: infrastructure
       source: ./packages/infrastructure
       category: infrastructure
       tags:
         - bundle
         - infrastructure
-    - name: language-arm-cortex
-      source: ./packages/language-arm-cortex
-      category: languages
-      tags:
-        - bundle
-        - embedded
-        - arm
-    - name: language-dotnet
-      source: ./packages/language-dotnet
-      category: languages
-      tags:
-        - bundle
-        - dotnet
-    - name: language-functional
-      source: ./packages/language-functional
-      category: languages
-      tags:
-        - bundle
-        - functional
     - name: language-go
       source: ./packages/language-go
       category: languages
       tags:
         - bundle
         - go
-    - name: language-julia
-      source: ./packages/language-julia
-      category: languages
-      tags:
-        - bundle
-        - julia
-    - name: language-jvm
-      source: ./packages/language-jvm
-      category: languages
-      tags:
-        - bundle
-        - jvm
     - name: language-python
       source: ./packages/language-python
       category: languages
@@ -555,30 +437,12 @@ marketplace:
       tags:
         - bundle
         - shell
-    - name: language-steering-go
-      source: ./packages/language-steering-go
-      category: languages
-      tags:
-        - steering
-        - go
-    - name: language-steering-python
-      source: ./packages/language-steering-python
-      category: languages
-      tags:
-        - steering
-        - python
     - name: language-steering-rust
       source: ./packages/language-steering-rust
       category: languages
       tags:
         - steering
         - rust
-    - name: language-steering-terraform
-      source: ./packages/language-steering-terraform
-      category: languages
-      tags:
-        - steering
-        - terraform
     - name: language-steering-typescript
       source: ./packages/language-steering-typescript
       category: languages
@@ -597,13 +461,6 @@ marketplace:
       tags:
         - bundle
         - typescript
-    - name: language-web-scripting
-      source: ./packages/language-web-scripting
-      category: languages
-      tags:
-        - bundle
-        - php
-        - ruby
     - name: license-picker
       source: ./packages/license-picker
       category: project-lifecycle
@@ -613,42 +470,6 @@ marketplace:
         - open-source
         - interactive
         - setup
-    - name: lsp-go
-      source: ./packages/lsp-go
-      category: languages
-      tags:
-        - lsp
-        - go
-    - name: lsp-python
-      source: ./packages/lsp-python
-      category: languages
-      tags:
-        - lsp
-        - python
-    - name: lsp-rust
-      source: ./packages/lsp-rust
-      category: languages
-      tags:
-        - lsp
-        - rust
-    - name: lsp-shell
-      source: ./packages/lsp-shell
-      category: languages
-      tags:
-        - lsp
-        - shell
-    - name: lsp-terraform
-      source: ./packages/lsp-terraform
-      category: languages
-      tags:
-        - lsp
-        - terraform
-    - name: lsp-typescript
-      source: ./packages/lsp-typescript
-      category: languages
-      tags:
-        - lsp
-        - typescript
     - name: matt-skills
       source: ./packages/matt-skills
       category: planning-product
@@ -656,12 +477,6 @@ marketplace:
         - bundle
         - matt-pocock
         - workflows
-    - name: mcp-1mcp
-      source: ./packages/mcp-1mcp
-      category: mcp
-      tags:
-        - mcp
-        - aggregation
     - name: mcp-codebase-memory
       source: ./packages/mcp-codebase-memory
       category: mcp
@@ -680,13 +495,6 @@ marketplace:
       tags:
         - mcp
         - web
-    - name: mcp-mempalace
-      source: ./packages/mcp-mempalace
-      category: mcp
-      tags:
-        - mcp
-        - memory
-        - cross-session
     - name: mcp-package-version
       source: ./packages/mcp-package-version
       category: mcp
@@ -699,12 +507,6 @@ marketplace:
       tags:
         - mcp
         - browser
-    - name: mcp-repomix
-      source: ./packages/mcp-repomix
-      category: mcp
-      tags:
-        - mcp
-        - repomix
     - name: mcp-serena
       source: ./packages/mcp-serena
       category: mcp
@@ -809,19 +611,6 @@ marketplace:
         - skill
         - languages
         - rust
-    - name: secrets-scan
-      source: ./packages/secrets-scan
-      category: security
-      tags:
-        - security
-        - secrets
-        - pre-commit
-    - name: security
-      source: ./packages/security
-      category: security
-      tags:
-        - bundle
-        - security
     - name: session-review
       source: ./packages/session-review
       category: project-lifecycle
@@ -839,20 +628,6 @@ marketplace:
         - refactoring
         - code-smells
         - tech-debt
-    - name: speckit
-      source: ./packages/speckit
-      category: speckit
-      tags:
-        - bundle
-        - speckit
-    - name: speckit-beads
-      source: ./packages/speckit-beads
-      category: speckit
-      tags:
-        - speckit
-        - beads
-        - workflow
-        - gates
     - name: steering-architecture
       source: ./packages/steering-architecture
       category: steering
@@ -912,6 +687,14 @@ marketplace:
       tags:
         - steering
         - infrastructure
+    - name: steering-multi-agent
+      source: ./packages/steering-multi-agent
+      category: steering
+      tags:
+        - steering
+        - multi-agent
+        - coordination
+        - worktree
     - name: steering-pragmatic
       source: ./packages/steering-pragmatic
       category: steering
@@ -927,12 +710,6 @@ marketplace:
       tags:
         - steering
         - structure
-    - name: steering-speckit
-      source: ./packages/steering-speckit
-      category: steering
-      tags:
-        - steering
-        - speckit
     - name: steering-subagent-routing
       source: ./packages/steering-subagent-routing
       category: steering
@@ -951,6 +728,25 @@ marketplace:
       tags:
         - steering
         - tooling
+    - name: token-savings
+      source: ./packages/token-savings
+      category: code-intelligence
+      tags:
+        - tokens
+        - context
+        - rtk
+        - repomix
+        - measurement
+    - name: toolchain-cache-policy
+      source: ./packages/toolchain-cache-policy
+      category: project-lifecycle
+      tags:
+        - hooks
+        - cache
+        - disk
+        - worktree
+        - toolchain
+        - scaling
     - name: typescript-quality
       source: ./packages/typescript-quality
       category: languages
@@ -1008,10 +804,3 @@ marketplace:
         - skill
         - maintenance
         - authoring
-    - name: write-docs
-      source: ./packages/write-docs
-      category: docs
-      tags:
-        - skill
-        - docs
-        - writing

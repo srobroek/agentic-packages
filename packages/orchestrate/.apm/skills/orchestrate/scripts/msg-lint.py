@@ -2,11 +2,10 @@
 """orchestrate: lint an inter-agent message body against the comms grammar
 (stdlib-only).
 
-Validates a SendMessage `message` body against the fixed 12-verb protocol
-(RULE was removed; APPROVE is the orch->gatekeeper integration handoff and may
-carry a validated watcher dispatch or lifecycle receipt):
+Validates a SendMessage `message` body against the fixed 11-verb protocol
+(APPROVE may carry a validated watcher dispatch or lifecycle receipt):
 
-    ASSIGN BLOCKED REPORTED REVIEW FIX CONFLICT APPROVE MERGED ASK ADVICE DISMISS
+    BLOCKED REPORTED REVIEW FIX CONFLICT APPROVE MERGED ASK ADVICE DISMISS
     NO_WORK
 
 Rules:
@@ -15,7 +14,6 @@ Rules:
       than 2 consecutive non-labeled lines is a prose smell and rejected.
     - each verb has a minimum required field set (checked case-insensitively
       on the label):
-        ASSIGN    title, scope, base, store
         BLOCKED   kind(design|debug), need
         REPORTED  verify plus branch+commit(s)/pr or output_ref
         REVIEW    verdict(approve|changes)
@@ -41,7 +39,6 @@ import re
 import sys
 
 VERBS = {
-    "ASSIGN",
     "BLOCKED",
     "REPORTED",
     "REVIEW",
@@ -56,7 +53,6 @@ VERBS = {
 }
 
 REQUIRED_FIELDS: dict[str, set[str]] = {
-    "ASSIGN": {"title", "scope", "base", "store"},
     "BLOCKED": {"kind", "need"},
     "REPORTED": {"verify"},
     "REVIEW": {"verdict"},

@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.3.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.3.0...agent-management--v1.3.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **codex:** skip unmapped deployed agents during model injection ([#864](https://github.com/srobroek/agentic-packages/issues/864)) ([9bfdc78](https://github.com/srobroek/agentic-packages/commit/9bfdc7829d9996743d6381245ab95406446e6200))
+
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.5...agent-management--v1.3.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [1.2.5](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.4...agent-management--v1.2.5) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [1.2.4](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.3...agent-management--v1.2.4) (2026-07-27)
+
+
+### Bug Fixes
+
+* **agent-management:** run the global scripts through uv, not a shadowed python3 ([#786](https://github.com/srobroek/agentic-packages/issues/786)) ([a264e1f](https://github.com/srobroek/agentic-packages/commit/a264e1f2341f2cdb0e092f6b430782b1c1ceece5))
+
+## [1.2.3](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.2...agent-management--v1.2.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
+## [1.2.2](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.1...agent-management--v1.2.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **inject-agent-models:** tolerate identical duplicate mappings across packages ([#669](https://github.com/srobroek/agentic-packages/issues/669)) ([c2eda86](https://github.com/srobroek/agentic-packages/commit/c2eda860c2caf85c5645b323779f5c669a8adaf2))
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+
 ## [1.2.1](https://github.com/srobroek/agentic-packages/compare/agent-management--v1.2.0...agent-management--v1.2.1) (2026-07-22)
 
 

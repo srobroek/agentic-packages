@@ -1,5 +1,54 @@
 # Changelog
 
+## [3.4.0](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.3.0...planning-product--v3.4.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.5...planning-product--v3.3.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.2.5](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.4...planning-product--v3.2.5) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.3...planning-product--v3.2.4) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.2.3](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.2...planning-product--v3.2.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([6c55c29](https://github.com/srobroek/agentic-packages/commit/6c55c291106d03bdb7f5a2912a6a1aba76025c18))
+
+## [3.2.2](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.1...planning-product--v3.2.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.2.0...planning-product--v3.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#677](https://github.com/srobroek/agentic-packages/issues/677)) ([546411c](https://github.com/srobroek/agentic-packages/commit/546411c55b213309f210db1810ac35f48e6e41fe))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/planning-product--v3.1.0...planning-product--v3.2.0) (2026-07-20)
 
 

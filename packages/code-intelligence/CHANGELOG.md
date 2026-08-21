@@ -1,5 +1,72 @@
 # Changelog
 
+## [9.2.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.1.0...code-intelligence--v9.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [9.1.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.0.2...code-intelligence--v9.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [9.0.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.0.1...code-intelligence--v9.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
+## [9.0.1](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v9.0.0...code-intelligence--v9.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [9.0.0](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.5...code-intelligence--v9.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+
+### Refactors
+
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
+## [8.1.5](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.4...code-intelligence--v8.1.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([6c55c29](https://github.com/srobroek/agentic-packages/commit/6c55c291106d03bdb7f5a2912a6a1aba76025c18))
+
+## [8.1.4](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.3...code-intelligence--v8.1.4) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [8.1.3](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.2...code-intelligence--v8.1.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9efa212](https://github.com/srobroek/agentic-packages/commit/9efa2125f49d5091193e6712fdc050e9cf57be79))
+
+## [8.1.2](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.1...code-intelligence--v8.1.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2cd577e](https://github.com/srobroek/agentic-packages/commit/2cd577e73098023b623149cfc9cb554af2234246))
+
 ## [8.1.1](https://github.com/srobroek/agentic-packages/compare/code-intelligence--v8.1.0...code-intelligence--v8.1.1) (2026-07-22)
 
 

@@ -1,5 +1,74 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v1.0.2...user-journeys--v1.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [1.0.2](https://github.com/srobroek/agentic-packages/compare/user-journeys--v1.0.1...user-journeys--v1.0.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/user-journeys--v1.0.0...user-journeys--v1.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* quote frontmatter values holding a colon, so six primitives deploy at all ([#826](https://github.com/srobroek/agentic-packages/issues/826)) ([b3b6325](https://github.com/srobroek/agentic-packages/commit/b3b6325f0bf881160f6977c5257bc76d3c8ccae1))
+
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.7.2...user-journeys--v1.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766))
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766)) ([f8fb26a](https://github.com/srobroek/agentic-packages/commit/f8fb26aacaa45cbf7ab9ceaa42855089d34b6673))
+
+## [0.7.2](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.7.1...user-journeys--v0.7.2) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [0.7.1](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.7.0...user-journeys--v0.7.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [0.7.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.6.0...user-journeys--v0.7.0) (2026-07-25)
+
+
+### Features
+
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
+## [0.6.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.5.0...user-journeys--v0.6.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
+## [0.5.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.4.0...user-journeys--v0.5.0) (2026-07-23)
+
+
+### Features
+
+* **user-journeys:** add Beads verification formulas ([#606](https://github.com/srobroek/agentic-packages/issues/606)) ([1ae5c5c](https://github.com/srobroek/agentic-packages/commit/1ae5c5c29fe185c62d2445bdea8bb6e04ef3006d))
+
 ## [0.4.0](https://github.com/srobroek/agentic-packages/compare/user-journeys--v0.3.1...user-journeys--v0.4.0) (2026-07-21)
 
 

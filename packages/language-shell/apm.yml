@@ -1,10 +1,9 @@
 name: language-shell
-version: 2.2.1
-description: 'Shell scripting toolkit: Hobson''s Bash and POSIX shell-scripting specialists.'
+version: 3.2.0
+description: Shell toolkit with portable steering and Serena semantic code tools.
 author: Sjors Robroek
 license: Apache-2.0
-type: bundle
-target: all
+type: hybrid
 includes: auto
 category: languages
 tags:
@@ -12,6 +11,17 @@ tags:
   - shell
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/lsp-shell#>=0.4.0 <1.0.0
-    - >-
-      wshobson/agents/plugins/shell-scripting#5cc2549a50fc672230efd0a0307e2fd27ffba792
+    - srobroek/agentic-packages/packages/mcp-serena#>=1.5.0 <2.0.0
+  mcp:
+    - name: serena
+      registry: false
+      transport: stdio
+      command: bash
+      args:
+        - '-lc'
+        - >-
+          launcher_rel="apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py";
+          for launcher in "$PWD/$launcher_rel" "${APM_HOME:-}/$launcher_rel"
+          "${HOME}/.apm/$launcher_rel" "$PWD/.apm/$launcher_rel"; do [ -r
+          "$launcher" ] && exec python3 "$launcher"; done; echo
+          serena-apm-launcher-not-found-run-apm-install >&2; exit 1

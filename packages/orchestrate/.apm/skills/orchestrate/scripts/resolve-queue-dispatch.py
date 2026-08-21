@@ -3,7 +3,7 @@
 
 The script is read-only. Dispatches require an approved repository/PR/head
 match. Lifecycle records match the repository/PR owner and indicate whether
-the gatekeeper must revalidate. Both emit crash-replay receipts.
+the run shepherd must revalidate. Both emit crash-replay receipts.
 
 Exit codes: 0 resolved/replay/duplicate/control record, 1 invalid input, 2 no
 orchestrate owner (safe to route once to pr-shepherd), 3 ambiguous or invalid
@@ -347,8 +347,8 @@ def _lifecycle_result(
     lifecycle_key = lifecycle["lifecycleKey"]
     transition = lifecycle["transition"]
     approved = "state:approved" in _labels(node)
-    wake_gatekeeper = approved or transition in {"failed", "merged", "closed"}
-    if wake_gatekeeper:
+    wake_shepherd = approved or transition in {"failed", "merged", "closed"}
+    if wake_shepherd:
         for field in ("branch", "base_sha"):
             if not isinstance(metadata.get(field), str) or not metadata[field]:
                 raise ResolutionError(f"orchestrate node is missing metadata.{field}")
@@ -362,13 +362,13 @@ def _lifecycle_result(
             "queue_lifecycle_head": pull_request["headSha"],
             "queue_lifecycle_transition": transition,
         }
-        if wake_gatekeeper:
+        if wake_shepherd:
             required_metadata["queue_lifecycle_pending"] = lifecycle_key
         else:
             required_metadata["queue_lifecycle_ack"] = lifecycle_key
     elif status == "replay" and delivery_state == "untracked":
         receipt = (
-            "queue_lifecycle_pending" if wake_gatekeeper else "queue_lifecycle_ack"
+            "queue_lifecycle_pending" if wake_shepherd else "queue_lifecycle_ack"
         )
         required_metadata = {receipt: lifecycle_key}
 
@@ -382,14 +382,14 @@ def _lifecycle_result(
         "lifecycleKey": lifecycle_key,
         "transition": transition,
         "source": lifecycle["source"],
-        "wakeGatekeeper": wake_gatekeeper,
+        "wakeShepherd": wake_shepherd,
         "repository": pull_request["repository"],
         "number": pull_request["number"],
         "headSha": pull_request["headSha"],
         "headChanged": isinstance(anchored_head, str)
         and anchored_head != pull_request["headSha"],
     }
-    if wake_gatekeeper:
+    if wake_shepherd:
         result["branch"] = metadata["branch"]
         result["baseSha"] = metadata["base_sha"]
     return result

@@ -1,7 +1,6 @@
 ---
 name: journey-consolidate
-description: >-
-  Human-blessed journey checkpoint: advance last_reviewed, flush old delta-log entries, prune runs, regenerate the index. Never runs without explicit per-journey approval.
+description: "Use when advancing a journey checkpoint with human approval: flush delta-log entries, prune old runs, and regenerate the index."
 ---
 
 # journey-consolidate
@@ -24,7 +23,7 @@ Propose consolidation only for journeys where:
    journeys), the Δ entries that would be flushed, latest run result +
    date, open findings referencing this journey (grep the tracker for the
    `journey-finding` block / `journey: J<id>`). Open findings against a
-   journey are a reason to DEFER consolidation — surface them.
+   journey are a reason to DEFER consolidation -- surface them.
 2. Ask the human to bless, per journey (AskUserQuestion for batches). No
    blanket approvals across journeys they haven't seen the packet for.
 3. On approval:

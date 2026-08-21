@@ -1,5 +1,59 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v4.0.1...agent-adversarial-challenger--v4.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v4.0.0...agent-adversarial-challenger--v4.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.4...agent-adversarial-challenger--v4.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723))
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+* drop xhigh effort pins to high and remove a duplicate agent variant ([#723](https://github.com/srobroek/agentic-packages/issues/723)) ([7ce15d2](https://github.com/srobroek/agentic-packages/commit/7ce15d2f601c232b1e8f2aff6e09706547d48849))
+
+## [3.2.4](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.3...agent-adversarial-challenger--v3.2.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** scan agents draft in working turns and compose the report in one pass ([#701](https://github.com/srobroek/agentic-packages/issues/701)) ([bf85043](https://github.com/srobroek/agentic-packages/commit/bf850438e20baea869e654a65a985f5257b58e97))
+
+## [3.2.3](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.2...agent-adversarial-challenger--v3.2.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
+## [3.2.2](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.1...agent-adversarial-challenger--v3.2.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** verdict line is the literal first line — no preamble, no markdown emphasis ([#688](https://github.com/srobroek/agentic-packages/issues/688)) ([0cef5d6](https://github.com/srobroek/agentic-packages/commit/0cef5d6698a0ee7b5f3337ef993a4bf9fb653e9a))
+
+## [3.2.1](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.2.0...agent-adversarial-challenger--v3.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** converge Claude effort and Codex reasoning_effort pins ([#663](https://github.com/srobroek/agentic-packages/issues/663)) ([9f149f2](https://github.com/srobroek/agentic-packages/commit/9f149f2cda79e819ce25b37e5eba2ffdd52fd115))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/agent-adversarial-challenger--v3.1.0...agent-adversarial-challenger--v3.2.0) (2026-07-21)
 
 

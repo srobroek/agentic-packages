@@ -1,5 +1,244 @@
 # Changelog
 
+## [20.3.2](https://github.com/srobroek/agentic-packages/compare/core--v20.3.1...core--v20.3.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([36104be](https://github.com/srobroek/agentic-packages/commit/36104bedc8c2b52ebf033f30a4df10426d31a988))
+
+## [20.3.1](https://github.com/srobroek/agentic-packages/compare/core--v20.3.0...core--v20.3.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([005da51](https://github.com/srobroek/agentic-packages/commit/005da5183f0754fc24f5490cc99bc347f5d5b344))
+
+## [20.3.0](https://github.com/srobroek/agentic-packages/compare/core--v20.2.0...core--v20.3.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([6db2343](https://github.com/srobroek/agentic-packages/commit/6db2343354e9a0e4ef2bd3282459ccf68a014493))
+
+## [20.2.0](https://github.com/srobroek/agentic-packages/compare/core--v20.1.0...core--v20.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [20.1.0](https://github.com/srobroek/agentic-packages/compare/core--v20.0.1...core--v20.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [20.0.1](https://github.com/srobroek/agentic-packages/compare/core--v20.0.0...core--v20.0.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9a9154a](https://github.com/srobroek/agentic-packages/commit/9a9154a3dd6213173e389c6830c2871f6a68707d))
+
+## [20.0.0](https://github.com/srobroek/agentic-packages/compare/core--v19.0.0...core--v20.0.0) (2026-08-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([9cb3a04](https://github.com/srobroek/agentic-packages/commit/9cb3a04313ccd0199eb96704a77d6e5b41dfc289))
+
+## [19.0.0](https://github.com/srobroek/agentic-packages/compare/core--v18.0.0...core--v19.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([2426e23](https://github.com/srobroek/agentic-packages/commit/2426e235338957156b64710fd8d306ece82d3e94))
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [18.0.0](https://github.com/srobroek/agentic-packages/compare/core--v17.0.0...core--v18.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7b63b60](https://github.com/srobroek/agentic-packages/commit/7b63b60828a8f675244f6cb99554723d07ca6a8f))
+
+## [17.0.0](https://github.com/srobroek/agentic-packages/compare/core--v16.0.0...core--v17.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([85f3356](https://github.com/srobroek/agentic-packages/commit/85f335612138b28bbd27b24ca2388e5a36dccdd0))
+
+## [16.0.0](https://github.com/srobroek/agentic-packages/compare/core--v15.0.0...core--v16.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1ea2d17](https://github.com/srobroek/agentic-packages/commit/1ea2d17165aab551582be9a3c1f9c3d7c28f6dc4))
+
+## [15.0.0](https://github.com/srobroek/agentic-packages/compare/core--v14.0.0...core--v15.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([045700f](https://github.com/srobroek/agentic-packages/commit/045700f3821a77e9e2012c00a0ba311fca9002fb))
+
+## [14.0.0](https://github.com/srobroek/agentic-packages/compare/core--v13.0.1...core--v14.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([f215865](https://github.com/srobroek/agentic-packages/commit/f21586533af761142538ca7082bd37cc5bd021ef))
+
+## [13.0.1](https://github.com/srobroek/agentic-packages/compare/core--v13.0.0...core--v13.0.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([e5b3594](https://github.com/srobroek/agentic-packages/commit/e5b359471ebc8f8d2d3b9732533ec194255f1671))
+
+## [13.0.0](https://github.com/srobroek/agentic-packages/compare/core--v12.0.0...core--v13.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7ef7823](https://github.com/srobroek/agentic-packages/commit/7ef78234b1763edf082bb71567526bf2af671f10))
+
+## [12.0.0](https://github.com/srobroek/agentic-packages/compare/core--v11.1.0...core--v12.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1830127](https://github.com/srobroek/agentic-packages/commit/18301271a5088c8afc7ad4688974b1b1bc503241))
+
+## [11.1.0](https://github.com/srobroek/agentic-packages/compare/core--v11.0.5...core--v11.1.0) (2026-07-25)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([5781282](https://github.com/srobroek/agentic-packages/commit/57812825a102bbfbc1738860e2f3210e97975889))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [11.0.5](https://github.com/srobroek/agentic-packages/compare/core--v11.0.4...core--v11.0.5) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([bfed431](https://github.com/srobroek/agentic-packages/commit/bfed4316c585e044acc06d44691ebb111326cece))
+
+## [11.0.4](https://github.com/srobroek/agentic-packages/compare/core--v11.0.3...core--v11.0.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([e069df5](https://github.com/srobroek/agentic-packages/commit/e069df5648e0e553a1b727730b378c6b5cce9ea1))
+
+## [11.0.3](https://github.com/srobroek/agentic-packages/compare/core--v11.0.2...core--v11.0.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([66f1888](https://github.com/srobroek/agentic-packages/commit/66f188862452f3f2ed7a07ff3db6518d7b400201))
+
+## [11.0.2](https://github.com/srobroek/agentic-packages/compare/core--v11.0.1...core--v11.0.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([a67c683](https://github.com/srobroek/agentic-packages/commit/a67c68380f87633e1e8a6e44071e77d6ec385bc1))
+
+## [11.0.1](https://github.com/srobroek/agentic-packages/compare/core--v11.0.0...core--v11.0.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#677](https://github.com/srobroek/agentic-packages/issues/677)) ([546411c](https://github.com/srobroek/agentic-packages/commit/546411c55b213309f210db1810ac35f48e6e41fe))
+
+## [11.0.0](https://github.com/srobroek/agentic-packages/compare/core--v10.4.2...core--v11.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+
+### Features
+
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+
+## [10.4.2](https://github.com/srobroek/agentic-packages/compare/core--v10.4.1...core--v10.4.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([b4ad53d](https://github.com/srobroek/agentic-packages/commit/b4ad53dd195fc95fa868ad13f68e31215583053d))
+
+## [10.4.1](https://github.com/srobroek/agentic-packages/compare/core--v10.4.0...core--v10.4.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([5297f20](https://github.com/srobroek/agentic-packages/commit/5297f20f05426e0875c33d8b1a7aaff89cf7e0fb))
+
+## [10.4.0](https://github.com/srobroek/agentic-packages/compare/core--v10.3.0...core--v10.4.0) (2026-07-23)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([b80f8eb](https://github.com/srobroek/agentic-packages/commit/b80f8eb418fd873449dd26235b45ba7745b095c9))
+
+## [10.3.0](https://github.com/srobroek/agentic-packages/compare/core--v10.2.2...core--v10.3.0) (2026-07-23)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([#646](https://github.com/srobroek/agentic-packages/issues/646)) ([29f3dd0](https://github.com/srobroek/agentic-packages/commit/29f3dd0e10f84f9c740db515743cc057d83bbb4f))
+
 ## [10.2.2](https://github.com/srobroek/agentic-packages/compare/core--v10.2.1...core--v10.2.2) (2026-07-22)
 
 

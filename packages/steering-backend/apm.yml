@@ -1,5 +1,5 @@
 name: steering-backend
-version: 1.1.0
+version: 1.2.0
 description: >-
   Opinionated backend conventions: service/function/worker runtime shape, API
   and cross-boundary contract rules, and background-job (queue, event,
@@ -7,7 +7,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
-target: all
 includes: auto
 category: steering
 tags:

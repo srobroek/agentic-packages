@@ -1,8 +1,15 @@
 # External repositories
 
-Most of this marketplace's catalog lives under [`packages/`](../packages/), but some entries are whole plugins maintained in their **own git repositories** and referenced here so they stay discoverable from this catalog.
+The catalog carries no external entries right now: every plugin lives under
+[`packages/`](../packages/) and is vendored into this repo.
 
-Unlike local packages, these are **fetched from their source repo on install** rather than vendored into `packages/`. Their `ref` is therefore pinned to a tag or commit SHA for reproducible resolution (`apm pack` rejects mutable branch refs). See each source repo for full documentation, issues, and releases.
+The mechanism remains supported. A marketplace entry may name a whole plugin kept
+in its **own git repository**, which `apm` then **fetches from that repo on
+install** rather than reading from `packages/`. Such an entry pins its `ref` to a
+tag or commit SHA for reproducible resolution, because `apm pack` rejects mutable
+branch refs. Add one by giving the `marketplace:` entry in `apm.yml` a `source:`
+and `ref:` instead of a local path; the table below is generated from those
+entries, so it fills in on its own.
 
 <!-- BEGIN:external-repos -->
 | Plugin | Category | Pinned ref | Tags |

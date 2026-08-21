@@ -17,24 +17,39 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-artifacts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
+          cache: pip
+          cache-dependency-path: .github/requirements-ci.txt
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          enable-cache: true
 
       - name: Set up APM
         # jinja2 is required by the doc render system (.apm/scripts/render-docs.py);
-        # PyYAML comes transitively from apm-cli.
-        run: pip install "apm-cli==0.26.0" jinja2
+        # PyYAML comes transitively from apm-cli. pytest is installed here so the
+        # cache key (requirements-ci.txt) is the single source of truth for all
+        # pinned versions used by this job and by the generator tests step below.
+        run: pip install -r .github/requirements-ci.txt
 
       - name: Validate hook JSON
         run: |
@@ -43,16 +58,21 @@ jobs:
           echo "All hook JSON files are valid."
 
       - name: Repo-local hook guards (.apm/hooks)
-        # The repo-local PreToolUse guards under .apm/hooks are not packages, so
-        # neither test.yml (scans packages/*) nor the generators above cover
-        # them. Run their bats suites here so a guard regression (e.g. blocking a
-        # read-only command) can't land silently, and shellcheck the specific
-        # guards those suites cover. (Whole-dir shellcheck is intentionally NOT
-        # run: the other repo-local scripts carry pre-existing warnings and are
-        # out of scope for this gate; broaden coverage as suites are added.)
+        # The repo-local hooks under .apm/hooks are not packages, so neither
+        # test.yml (scans packages/*) nor the generators below cover them. Run
+        # their suites here so a hook regression (e.g. blocking a read-only
+        # command) can't land silently. (Whole-dir shellcheck is intentionally
+        # NOT run: the other repo-local scripts carry pre-existing warnings and
+        # are out of scope for this gate; add a targeted shellcheck line
+        # alongside each suite as suites are added.)
+        #
+        # Both globs run, and the step fails when NEITHER matches. The hooks are
+        # all Python now, so the bats glob is empty and the pytest glob carries
+        # the coverage; while only the bats branch existed, an all-Python suite
+        # tree printed "no bats suites" and passed green. A check that cannot
+        # fail reads as coverage -- the same failure mode that got
+        # check-hook-wiring.py deleted.
         run: |
-          shellcheck -S warning .apm/hooks/scripts/agentic-source-guard.sh
-          echo "shellcheck clean: agentic-source-guard.sh"
           bats_files=$(find .apm/hooks/tests -name '*.bats' 2>/dev/null || true)
           if [ -n "$bats_files" ]; then
             if ! command -v bats >/dev/null 2>&1; then
@@ -63,6 +83,18 @@ jobs:
             echo "no bats suites in .apm/hooks/tests"
           fi
 
+          py_files=$(find .apm/hooks/tests -name 'test_*.py' 2>/dev/null || true)
+          if [ -n "$py_files" ]; then
+            echo "$py_files" | xargs -r python3 -m pytest -q
+          else
+            echo "no pytest suites in .apm/hooks/tests"
+          fi
+
+          if [ -z "$bats_files" ] && [ -z "$py_files" ]; then
+            echo "::error::.apm/hooks/tests holds no suites, but .apm/hooks/scripts ships hooks; every hook script must ship tests (contract authoring rule 3)"
+            exit 1
+          fi
+
       - name: Generator unit tests (.apm/scripts)
         # The doc generators are not covered by the per-package test.yml matrix
         # (it scans packages/* only). Run their unit tests here, where Python +
@@ -71,14 +103,53 @@ jobs:
         run: |
           gen_tests=$(find .apm/scripts -name 'test_*.py' 2>/dev/null || true)
           if [ -n "$gen_tests" ]; then
-            pip install pytest
             echo "$gen_tests" | xargs -r python3 -m pytest -q
           else
             echo "no generator tests in .apm/scripts"
           fi
 
+      - name: Validate bare-path script invocations
+        # APM deploys the source mode on first write but skips content-identical
+        # files on later installs, so a mode-only source fix never reaches an
+        # install that already has the wrong bit. The executable bit is part of
+        # the shipped contract: any hook command or skill instruction that runs a
+        # script by bare path must target a committed-executable file.
+        run: python3 .apm/scripts/check-script-invocation.py
+
       - name: Validate released version baselines
         run: python3 .apm/scripts/check-release-baselines.py
+
+      - name: Validate deliberately duplicated scripts
+        # whats-new and dep-update both need offline dependency enumeration, and
+        # constitution I forbids either reaching into the other at runtime, so
+        # the detector and its suite are duplicated on purpose. A "keep both
+        # byte-identical" source comment enforced nothing; this step does.
+        run: python3 .apm/scripts/check-twin-scripts.py
+
+      - name: Validate instruction applyTo coverage
+        # apm-cli deploys any instruction lacking `applyTo` to BOTH the
+        # user-scope root context file (CLAUDE.md) and .claude/rules/ --
+        # doubling always-loaded guidance. Every instruction must declare
+        # applyTo (use "**/*" for genuinely global guidance) so it renders to
+        # exactly one target.
+        run: python3 .apm/scripts/check-instructions-apply-to.py
+
+      - name: Validate primitive frontmatter parses
+        # APM reads each primitive's frontmatter to decide where it deploys. A block
+        # that does not parse is skipped with a stderr warning and the install still
+        # reports success, so the failure shows up as an absent rule or skill rather
+        # than an error. Six files were in that state, all from an unquoted
+        # colon-space inside a scalar value.
+        run: python3 .apm/scripts/check-frontmatter-parses.py
+
+      - name: Validate hook scripts against their manifests
+        # The checks above validate invocation modes, release baselines, applyTo
+        # coverage, and Codex manifest shape; none reads what a hook script DOES
+        # against what its manifest and target claim. Every defect a recent audit
+        # found was that shape and passed a green pipeline: an apply_patch branch no
+        # matcher routed, a Claude-only systemMessage under target: all, and the
+        # `ask` ban going unenforced despite constitution III.
+        run: python3 .apm/scripts/check-hook-contract.py
 
       - name: Regenerate non-destructive artifacts
         run: |

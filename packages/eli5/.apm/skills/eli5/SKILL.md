@@ -13,8 +13,8 @@ Before explaining, ask these questions:
 
 1. **Depth**: How deep? All 5 levels (default), or specific levels?
 2. **Research**: Pair with research?
-   - `web-fetch` -- topic changed materially in the last 12 months
-   - `hyperresearch` -- very in-depth research (expensive)
+   - `web-fetch` -- topic changed materially in the last 12 months or needs current, source-backed facts
+   - `whats-new` -- topic is a tool, library, service, or model and you need changes since a baseline
    - none -- explain from existing knowledge (default)
 
 If the user doesn't specify, default to all 5 levels with no research skill.

@@ -1,0 +1,31 @@
+{
+  "agent": "scribe",
+  "tier": "T2",
+  "_comment": "Claims one query wisp, writes the report, promotes its REPORTED reference to the linked epic, closes the query, and exits with no claim.",
+  "completion": [
+    {
+      "check": "reported",
+      "require": "linked.comment.verb in [REPORTED, BLOCKED]"
+    }
+  ],
+  "authority": {
+    "deny_states": [
+      "merged",
+      "approved",
+      "changes_requested"
+    ],
+    "deny_metadata": [
+      "push",
+      "merge_sha",
+      "pr",
+      "output_ref"
+    ]
+  },
+  "escape": {
+    "state": "blocked",
+    "require": "comment.verb in [FAILED, BLOCKED]"
+  },
+  "bounce": {
+    "max_attempts": 3
+  }
+}

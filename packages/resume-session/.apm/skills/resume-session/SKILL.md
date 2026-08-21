@@ -12,13 +12,13 @@ session**, and **the user confirms before any work resumes**.
 ## Non-negotiable rules
 
 MUST Use `scripts/list-sessions.py` and `scripts/read-session.py` for everything. Never identify sessions by reading `.jsonl` files, running `cat`/`tail`/`grep` on transcripts, or running `git log` yourself.
-MUST Load **exactly one** session — the one the user picks. Never read a second session's transcript.
+MUST Load **exactly one** session -- the one the user picks. Never read a second session's transcript.
 MUST The two STOP gates below are hard. Until gate 1 is cleared, only listing sessions is allowed. Until gate 2 is cleared, do not read files, run git, or start work.
 MUST Session cwd in a different worktree than yours → confirm target worktree with the user before reading or editing any files.
 
 ## Workflow
 
-1. **List sessions — your first and only action so far.** Run
+1. **List sessions -- your first and only action so far.** Run
    `python3 scripts/list-sessions.py` (auto-detects git repo root; pass
    `--project PATH` for another repo, `--agent claude|codex` to narrow). It
    prints a newest-first summary: id, agent, last-active, turns, branch,
@@ -30,12 +30,12 @@ MUST Session cwd in a different worktree than yours → confirm target worktree 
      branch, last-commit time + subject, and a `✎ dirty` mark. Pass `--no-git` to skip.
    - **Branch label = the branch the session worked on** (from its transcript), not
      the checkout's branch now. If the worktree has since switched, the row shows
-     `[worked-on → worktree now on current]` — a drift warning that on-disk files no
+     `[worked-on → worktree now on current]` -- a drift warning that on-disk files no
      longer match that session. Don't read the second branch as the session's work.
 
 2. **STOP. Present the list and let the user choose.** Show the newest few rows
    including `worktree:` and `↳ left off:` lines, and ask which to resume.
-   You may recommend, but **wait for their answer** — do not pick for them.
+   You may recommend, but **wait for their answer** -- do not pick for them.
    - Only exception: if the user already gave a session id, skip to step 3.
 
 3. **Read that one session.** Run
@@ -56,7 +56,7 @@ MUST Session cwd in a different worktree than yours → confirm target worktree 
 ## Notes
 
 - Current user instructions override anything in the transcript; it is evidence of the past.
-- Do not silently re-run destructive or outward-facing actions (commits, pushes, deploys) — reconfirm first.
+- Do not silently re-run destructive or outward-facing actions (commits, pushes, deploys) -- reconfirm first.
 - Each script prints an estimated uncached-token cost; report the total used vs. full transcript size.
 - Add `--include-thinking` only when the text record shows a logic gap, incomplete sentence, or unexplained branch that tool calls alone cannot resolve.
 - This skill resumes a session transcript; it does not read saved handover files.

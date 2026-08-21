@@ -1,0 +1,7 @@
+# Gitignored artifacts `wt step copy-ignored --require-include` copies into a new
+# worktree. Both are regenerable, and both cost more to rebuild than to copy:
+# repomix-full.xml is 1.3-3.2s against 82 KB-26 MB, graphify-out/ is 6.9s against
+# 9.9 MB. Near-free on a reflink filesystem. Verified safe to copy: neither holds
+# an absolute path, so a copy is valid in any checkout.
+repomix-full.xml
+graphify-out/

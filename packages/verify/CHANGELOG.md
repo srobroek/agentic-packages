@@ -1,5 +1,37 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/verify--v3.0.1...verify--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.0.1](https://github.com/srobroek/agentic-packages/compare/verify--v3.0.0...verify--v3.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/verify--v2.1.1...verify--v3.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Bug Fixes
+
+* close two guard bypasses found by fuzzing the Python hooks ([#806](https://github.com/srobroek/agentic-packages/issues/806)) ([7505cc7](https://github.com/srobroek/agentic-packages/commit/7505cc76fccad74c1ba0c5d2d017320b721475ff))
+
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/verify--v2.1.0...verify--v2.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/verify--v2.0.0...verify--v2.1.0) (2026-07-16)
 
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6", "jinja2>=3"]
+# ///
 """Shim: regenerate the apm.yml ``marketplace:`` block.
 
 The rendering moved to the canonical render system (render-docs.py +
@@ -68,9 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         return render_result
     inventory = _load_inventory().build_context()
     allowed = {
-        package["name"]
-        for package in inventory["packages"]
-        if "codex" in package["targets"]
+        package["name"] for package in inventory["packages"] if "codex" in package["targets"]
     }
     filtered = filter_codex_marketplace(CODEX_MARKETPLACE, allowed, check=check)
     if filtered:

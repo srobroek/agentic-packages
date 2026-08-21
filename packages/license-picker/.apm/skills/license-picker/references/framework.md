@@ -44,7 +44,7 @@ Is this a library consumed as a dependency?
 
 2. **Friction only matters where substitutes exist.** MPL on a commodity crate
    loses to MIT alternatives. MPL on a niche crate with no substitutes costs
-   nothing — users accept it because rewriting is harder than the allowlist edit.
+   nothing -- users accept it because rewriting is harder than the allowlist edit.
 
 3. **Copyleft on applications is nearly free.** Nobody links against a CLI tool;
    the license doesn't affect users who just run it. Fork protection costs zero
@@ -56,7 +56,7 @@ Is this a library consumed as a dependency?
 
 5. **LGPL is a trap in non-C ecosystems.** Static linking (Rust), monomorphization,
    and absence of dynamic linkers (embedded) make compliance unclear or impossible.
-   Use MPL instead — same reciprocity, language-agnostic file boundary.
+   Use MPL instead -- same reciprocity, language-agnostic file boundary.
 
 6. **Apache-2.0 ≠ MIT.** Apache adds a patent grant and retaliation clause. For
    libraries where patent risk exists, prefer Apache over MIT. MPL-2.0 also has
@@ -76,7 +76,7 @@ Is this a library consumed as a dependency?
 
 ## Per-file headers
 
-- **MPL-2.0**: requires per-file headers (the copyleft attaches per file — the header IS the mechanism)
+- **MPL-2.0**: requires per-file headers (the copyleft attaches per file -- the header IS the mechanism)
 - **GPL/AGPL**: convention, not requirement, but recommended (SPDX one-liner: `SPDX-License-Identifier: AGPL-3.0-only`)
 - **Apache-2.0**: not required (LICENSE + NOTICE at repo root suffices)
 - **MIT**: not required

@@ -20,9 +20,10 @@ description: rust workspace lints feature gate dev surface dev-dependencies laye
 
 - Dev/testing/debug surface: default-off Cargo feature (`#[cfg(feature = "…")]`), not a runtime flag.
 - Gate propagates: edge binary declares it, app crate enables it, leaf crates compile only when enabled.
-- Release binaries build with the feature off — code is absent at compile time.
+- Release binaries build with the feature off -- code is absent at compile time.
 
 ## See Also
 
-- `rust.ci.context.md` — CI caching, matrix gates
-- `rust.tooling.context.md` — rustfmt, clippy, nextest, coverage
+- `rust.ci.context.md` -- CI caching, matrix gates
+- `toolchain-defaults.languages.context.md` (`steering-toolchain-defaults`) --
+  rustfmt, clippy, nextest, coverage

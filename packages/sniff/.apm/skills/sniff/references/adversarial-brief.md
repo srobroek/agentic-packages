@@ -46,14 +46,14 @@ hazards, confirmed strong findings, and any gaps you noticed.
 
 ## Filling guidance
 
-- **Withhold your priors.** Do not write "I think #3 is the big one" — that is
+- **Withhold your priors.** Do not write "I think #3 is the big one" -- that is
   exactly the framing the challenger exists to test independently.
 - **Pass evidence, not conclusions.** "140 lines, ccn 22" is evidence; "this is
-  clearly too complex" is a conclusion — give the former.
+  clearly too complex" is a conclusion -- give the former.
 - **Name the public surfaces** you know about so the challenger can judge
   back-compat accurately; it cannot always infer what is published.
 - **Apply the verdicts** when it returns: DROP → remove, DOWNGRADE → lower
   priority/severity, KEEP → carry into the plan. Record drops/downgrades in the
   report's transparency section.
 - For a very large finding set, you may batch by language across multiple
-  challenger spawns — but keep each batch's evidence complete.
+  challenger spawns -- but keep each batch's evidence complete.

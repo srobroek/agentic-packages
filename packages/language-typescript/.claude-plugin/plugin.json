@@ -1,7 +1,7 @@
 {
   "name": "language-typescript",
-  "version": "3.2.1",
-  "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, and Hobson's javascript-typescript specialists.",
+  "version": "5.2.0",
+  "description": "TypeScript and JavaScript toolkit: the typescript-quality skill, opinionated TS/JS steering, architecture guidance, and Serena semantic code tools.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -17,7 +17,7 @@
     },
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/lsp-typescript"
+      "path": "packages/mcp-serena"
     }
   ]
 }

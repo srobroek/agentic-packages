@@ -257,6 +257,16 @@ class ResolveQueueEventTest(unittest.TestCase):
                 with self.assertRaisesRegex(MODULE.ContractError, expected):
                     MODULE.resolve(event, [merge_bead()])
 
+    def test_rejects_unhashable_record_fields_as_contract_errors(self):
+        malformed_pull_request = dispatch(checks=[])
+        with self.assertRaisesRegex(MODULE.ContractError, "checks"):
+            MODULE.resolve(malformed_pull_request, [merge_bead()])
+
+        malformed_lifecycle = lifecycle()
+        malformed_lifecycle["transition"] = []
+        with self.assertRaisesRegex(MODULE.ContractError, "transition"):
+            MODULE.resolve(malformed_lifecycle, [merge_bead()])
+
     def test_ignores_control_record(self):
         result = MODULE.resolve({"type": "watcher-active"}, [merge_bead()])
         self.assertEqual(result, {"status": "ignored", "recordType": "watcher-active"})

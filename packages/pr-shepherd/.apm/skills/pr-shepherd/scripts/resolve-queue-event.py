@@ -60,7 +60,7 @@ def _unwrap(value: Any) -> Any:
 def _read_json(path: str) -> Any:
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ContractError(f"cannot read JSON from {path}: {error}") from error
 
 
@@ -93,9 +93,9 @@ def _validate_pull_request(value: Any, *, dispatch: bool) -> dict[str, Any]:
         raise ContractError("draft must be a boolean")
     if value["mergeable"] is not None and type(value["mergeable"]) is not bool:
         raise ContractError("mergeable must be a boolean or null")
-    if value["checks"] not in CHECK_STATES:
+    if not _in_enum(value["checks"], CHECK_STATES):
         raise ContractError(f"checks must be one of {sorted(CHECK_STATES)}")
-    if value["state"] not in QUEUE_STATES:
+    if not _in_enum(value["state"], QUEUE_STATES):
         raise ContractError(f"state must be one of {sorted(QUEUE_STATES)}")
     if value["activeSince"] is not None and (
         not isinstance(value["activeSince"], str) or not value["activeSince"]
@@ -135,18 +135,18 @@ def validate_record(record: Any) -> dict[str, Any] | None:
         transition = record.get("transition")
         source = record.get("source")
         lifecycle_key = record.get("lifecycleKey")
-        if transition not in LIFECYCLE_TRANSITIONS:
+        if not _in_enum(transition, LIFECYCLE_TRANSITIONS):
             raise ContractError(
                 f"transition must be one of {sorted(LIFECYCLE_TRANSITIONS)}"
             )
-        if source not in LIFECYCLE_SOURCES:
+        if not isinstance(source, str) or source not in LIFECYCLE_SOURCES:
             raise ContractError(f"source must be one of {sorted(LIFECYCLE_SOURCES)}")
         if not isinstance(lifecycle_key, str) or not lifecycle_key:
             raise ContractError("lifecycleKey must be a non-empty string")
         pull_request = _validate_pull_request(record.get("pullRequest"), dispatch=False)
         if transition == "failed" and pull_request["checks"] != "fail":
             raise ContractError("failed lifecycle checks must be fail")
-        if transition in {"merged", "closed"} and pull_request["state"] != "closed":
+        if _in_enum(transition, {"merged", "closed"}) and pull_request["state"] != "closed":
             raise ContractError("terminal lifecycle pullRequest.state must be closed")
         if transition == "merged" and source != "webhook":
             raise ContractError("merged lifecycle must come from webhook")
@@ -165,8 +165,28 @@ def validate_record(record: Any) -> dict[str, Any] | None:
     return None
 
 
+def _in_enum(value: object, allowed: frozenset[str] | set[str]) -> bool:
+    """Membership test that survives an unhashable value.
+
+    `value not in {...}` raises TypeError when value is a list or dict, so a payload
+    carrying `"checks": []` or `"transition": []` crashed with a traceback instead of
+    the ContractError this validator exists to produce -- the malformed input escaped
+    the very check written to reject it. A non-string can never be a member of a set
+    of strings, so it is simply not in the enum.
+    """
+    return isinstance(value, str) and value in allowed
+
+
 def _labels(bead: dict[str, Any]) -> set[str]:
-    labels = bead.get("labels", [])
+    # `bd list --json` emits `"labels": null` for a bead with no labels, not `[]`,
+    # and 5 of 8 beads in this repository's own store do exactly that. Iterating it
+    # raised an unhandled TypeError, so ONE unlabelled bead anywhere in the snapshot
+    # killed resolve and replay before main() could convert the failure into an exit
+    # code -- traceback, exit 1, no receipt. `metadata: null` was already guarded two
+    # functions below; labels was the one that got missed.
+    labels = bead.get("labels") or []
+    if not isinstance(labels, (list, tuple, set)):
+        return set()
     return {label for label in labels if isinstance(label, str)}
 
 
@@ -254,7 +274,8 @@ def _result(
 
 
 def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
-    if isinstance(record, dict) and record.get("type") in {
+    record_type = record.get("type") if isinstance(record, dict) else None
+    if isinstance(record_type, str) and record_type in {
         "webhook-error",
         "reconcile-error",
     }:
@@ -268,7 +289,7 @@ def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
             raise ContractError("watcher error repository must be OWNER/REPO")
         return {
             "status": "fallback",
-            "recordType": record["type"],
+            "recordType": record_type,
             "action": "gate-check-and-pass",
             "message": message,
             "repository": repository,
@@ -277,7 +298,7 @@ def resolve(record: Any, beads_value: Any) -> dict[str, Any]:
     if event is None:
         return {
             "status": "ignored",
-            "recordType": record.get("type") if isinstance(record, dict) else None,
+            "recordType": record_type,
         }
     beads = _unwrap(beads_value)
     if not isinstance(beads, list):
@@ -373,10 +394,19 @@ def replay_unacknowledged(beads_value: Any) -> list[dict[str, Any]]:
             raise ResolutionError(
                 "queued merge bead has invalid metadata.pr"
             ) from error
-        if event_type not in {"dispatch", "pr-lifecycle"}:
+        if not _in_enum(event_type, {"dispatch", "pr-lifecycle"}):
             raise ResolutionError("queued merge bead has invalid shepherd_event_type")
+        # The PERSISTED transition is validated on its own terms first. Substituting
+        # "ready" for a dispatch event meant a dispatch bead could carry any junk in
+        # shepherd_event_transition -- a list, a dict -- and never be checked, because
+        # the value actually validated was the literal this line supplies. A field
+        # written to the bead is a field that has to be readable next time.
+        if transition is not None and not _in_enum(
+            transition, LIFECYCLE_TRANSITIONS | {"ready"}
+        ):
+            raise ResolutionError("queued merge bead has invalid event transition")
         expected_transition = "ready" if event_type == "dispatch" else transition
-        if expected_transition not in LIFECYCLE_TRANSITIONS | {"ready"}:
+        if not _in_enum(expected_transition, LIFECYCLE_TRANSITIONS | {"ready"}):
             raise ResolutionError("queued merge bead has invalid event transition")
         if not isinstance(repository, str) or not REPOSITORY_RE.fullmatch(repository):
             raise ResolutionError("queued merge bead has invalid metadata.repo")

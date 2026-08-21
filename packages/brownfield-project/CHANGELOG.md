@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v2.0.1...brownfield-project--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v2.0.0...brownfield-project--v2.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v1.1.2...brownfield-project--v2.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+
+### Refactors
+
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+
+## [1.1.2](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v1.1.1...brownfield-project--v1.1.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.1.1](https://github.com/srobroek/agentic-packages/compare/brownfield-project--v1.1.0...brownfield-project--v1.1.1) (2026-07-22)
 
 

@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v2.0.2...hooks-quality--v2.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [2.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v2.0.1...hooks-quality--v2.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
+## [2.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v2.0.0...hooks-quality--v2.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [2.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v1.3.1...hooks-quality--v2.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-git-workflow:** the hook script is now attribution-guard.py and requires python3 on PATH.
+
+### Bug Fixes
+
+* **steering-git-workflow:** stop blocking pull requests when the policy check cannot verify them ([#794](https://github.com/srobroek/agentic-packages/issues/794)) ([023c0f0](https://github.com/srobroek/agentic-packages/commit/023c0f087717a57386d18d06f2575fca0435b7b1))
+
+## [1.3.1](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v1.3.0...hooks-quality--v1.3.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.3.0](https://github.com/srobroek/agentic-packages/compare/hooks-quality--v1.2.1...hooks-quality--v1.3.0) (2026-07-16)
 
 

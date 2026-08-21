@@ -1,5 +1,5 @@
 name: steering-project-structure
-version: 1.1.0
+version: 1.2.0
 description: >-
   Opt-in steering: capability-first repository structure and ownership
   conventions -- repo layout, ownership boundaries, shared libraries, contracts,
@@ -7,7 +7,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
-target: all
 includes: auto
 category: steering
 tags:

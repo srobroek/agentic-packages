@@ -1,22 +1,14 @@
 # Chezmoi Conventions
 
-## Source Of Truth
+## Source-file name prefixes
 
-- Edit files in the chezmoi source tree, not live targets in `$HOME`.
-- Resolve the source tree with `chezmoi source-path` (or `chezmoi source-path <target>`
-  for a specific target); do not assume a fixed location.
+| Prefix / suffix | Meaning |
+|---|---|
+| `dot_` | dotfile |
+| `private_` | `0600` file |
+| `executable_` | executable script |
+| `readonly_` | read-only file |
+| `.tmpl` | Go-template-managed file |
 
-## Naming
-
-- `dot_` for dotfiles
-- `private_` for `0600` files
-- `executable_` for executable scripts
-- `readonly_` for read-only files
-- `.tmpl` for Go-template-managed files
-
-## Workflow
-
-- Read the existing source file first.
-- Make the source edit.
-- Preview with `chezmoi diff`.
-- Apply only when the source diff is correct.
+Resolve the source tree with `chezmoi source-path` (or `chezmoi source-path
+<target>` for one target); it is not at a fixed location.

@@ -1,14 +1,15 @@
 name: orchestrate
-version: 3.10.0
+version: 16.3.2
 description: >-
   Coordinates parallel subagents through Beads-backed DAGs, claims, threaded
   replies, decisions, review, and merge state. Supports exact, specialist,
   generic-pull, writable-fallback, and read-only research dispatch. Bundles
-  workflow-coder, workflow-pull-worker, workflow-worker, workflow-researcher,
-  workflow-reviewer, workflow-advisor, integration-gatekeeper, and
-  ledger-scribe. Includes deterministic scope, discovery, claim, message,
-  decision, queue, and conflict scripts plus shared PR shepherd landing
-  safeguards. Requires the bd CLI.
+  coder (with effort-tier variants), researcher, reviewer, advisor, shepherd,
+  and scribe. Quality triage roles (docs-guard, lint-guard,
+  data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come
+  from the agent-quality-guards dependency. Includes deterministic scope,
+  discovery, claim, message, decision, queue, and conflict scripts plus shared
+  PR shepherd landing safeguards. Requires the bd CLI.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
@@ -17,8 +18,11 @@ targets:
   - codex
 includes:
   - .apm/agents
+  - .apm/hooks
+  - .apm/rules
   - .apm/skills/orchestrate/SKILL.md
   - .apm/skills/orchestrate/references
+  - .apm/skills/orchestrate/scripts/_test_bot_review_probe.py
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py
   - .apm/skills/orchestrate/scripts/_test_decision_policy.py
   - .apm/skills/orchestrate/scripts/_test_discover_agents.py
@@ -27,6 +31,8 @@ includes:
   - .apm/skills/orchestrate/scripts/_test_resolve_queue_dispatch.py
   - .apm/skills/orchestrate/scripts/_test_scope_check.py
   - .apm/skills/orchestrate/scripts/_test_thread_message.py
+  - .apm/skills/orchestrate/scripts/_test_worktree_sweep.py
+  - .apm/skills/orchestrate/scripts/bot-review-probe.py
   - .apm/skills/orchestrate/scripts/conflict-probe.sh
   - .apm/skills/orchestrate/scripts/discover-agents.py
   - .apm/skills/orchestrate/scripts/inject-comms.sh
@@ -38,5 +44,8 @@ includes:
   - .apm/skills/orchestrate/scripts/worktree-sweep.sh
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/release-queue-watch#>=0.6.1 <1.0.0
-    - srobroek/agentic-packages/packages/pr-shepherd#>=0.12.0 <1.0.0
+    - srobroek/agentic-packages/packages/beads#>=2.1.1 <3.0.0
+    - srobroek/agentic-packages/packages/release-queue-watch#>=0.7.0 <1.0.0
+    - srobroek/agentic-packages/packages/agent-quality-guards#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/hooks-worktrunk#>=4.1.0 <5.0.0
+    - srobroek/agentic-packages/packages/worktrunk-writer#>=2.3.0 <3.0.0

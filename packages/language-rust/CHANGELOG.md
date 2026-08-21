@@ -1,5 +1,80 @@
 # Changelog
 
+## [6.2.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v6.1.0...language-rust--v6.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [6.1.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v6.0.2...language-rust--v6.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [6.0.2](https://github.com/srobroek/agentic-packages/compare/language-rust--v6.0.1...language-rust--v6.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
+## [6.0.1](https://github.com/srobroek/agentic-packages/compare/language-rust--v6.0.0...language-rust--v6.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v5.0.0...language-rust--v6.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1830127](https://github.com/srobroek/agentic-packages/commit/18301271a5088c8afc7ad4688974b1b1bc503241))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v4.0.1...language-rust--v5.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/language-rust--v4.0.0...language-rust--v4.0.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v3.3.0...language-rust--v4.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+
+### Features
+
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/language-rust--v3.2.1...language-rust--v3.3.0) (2026-07-23)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([#646](https://github.com/srobroek/agentic-packages/issues/646)) ([29f3dd0](https://github.com/srobroek/agentic-packages/commit/29f3dd0e10f84f9c740db515743cc057d83bbb4f))
+
 ## [3.2.1](https://github.com/srobroek/agentic-packages/compare/language-rust--v3.2.0...language-rust--v3.2.1) (2026-07-22)
 
 

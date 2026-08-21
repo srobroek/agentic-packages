@@ -1,5 +1,6 @@
 ---
 description: Beads (bd) task tracking, claiming, and coordination conventions.
+applyTo: "**/*"
 ---
 
 For task tracking, work claiming, bd labels/metadata conventions, JSON

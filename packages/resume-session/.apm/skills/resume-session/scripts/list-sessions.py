@@ -20,7 +20,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 CLAUDE_ROOT = os.path.expanduser("~/.claude/projects")
 CODEX_ROOT = os.path.expanduser("~/.codex/sessions")
@@ -77,7 +77,7 @@ def rel_time(epoch: float | None) -> str:
 def abs_time(epoch: float | None) -> str:
     if not epoch:
         return "unknown"
-    return datetime.fromtimestamp(epoch, timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
+    return datetime.fromtimestamp(epoch, UTC).astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +184,7 @@ def is_dirty(path: str) -> bool:
 
 
 def iter_json_lines(path: str):
-    with open(path, "r", errors="replace") as fh:
+    with open(path, errors="replace") as fh:
         for line in fh:
             line = line.strip()
             if not line:

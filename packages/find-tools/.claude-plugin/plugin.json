@@ -1,6 +1,6 @@
 {
   "name": "find-tools",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Discover and vet reusable skills, agents, MCP servers, connectors, and APM packages. Use when the user asks to find a capability, compare tools, fill a marketplace gap, evaluate an external package, or decide whether to adopt, wrap, fork, reject, or build.",
   "author": {
     "name": "Sjors Robroek"

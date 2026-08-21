@@ -5,15 +5,15 @@ Shared agentic tooling for AI coding assistants -- installable through [APM](htt
 This repository is an **APM marketplace**: a curated catalog of agents, skills, hooks, steering instructions, MCP server definitions, and a SpecKit-driven orchestration system. Everything is authored once under `.apm/` and compiled to whatever runtime you use -- Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, or Windsurf.
 
 <!-- BEGIN:intro-counts -->
-- **41 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **35 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
-- **19 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
-- **20 steering packages** -- opt-in opinionated conventions (per domain and per language)
-- **10 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, repomix, ...)
-- **14 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
+- **22 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
+- **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
+- **17 steering packages** -- opt-in opinionated conventions (per domain and per language)
+- **7 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, serena, ...)
+- **12 hook packages** -- opt-in lifecycle hooks and guards (bash/git safety, branch check, git workflow, quality, merge policies, tool prefs, worktrees), cross-tool for Claude and Codex
 <!-- END:intro-counts -->
 
-Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-coder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
+Many packages also ship **hooks** directly: code-intelligence (indexing/discovery), agent-builder (delegation reminder), the MCP packages (version/snapshot refresh), and speckit (workflow guards). Hooks deploy per package and target whichever runtime supports the event.
 
 ---
 
@@ -157,9 +157,9 @@ direct server map rather than Claude's `mcpServers` wrapper.
 
 ### ⚠️ Steering packages do NOT work via native `/plugin` install
 
-This is the one gotcha. Claude/Codex plugin components are **skills, agents, hooks, MCP servers** — there is **no native component for rules / instructions / always-on steering**. A plugin's `CLAUDE.md` is not loaded, and skills are model-invoked (loaded only on demand), so they can't carry always-on guidance.
+This is the one gotcha. Claude/Codex plugin components are **skills, agents, hooks, MCP servers** -- there is **no native component for rules / instructions / always-on steering**. A plugin's `CLAUDE.md` is not loaded, and skills are model-invoked (loaded only on demand), so they can't carry always-on guidance.
 
-Consequence: installing a **steering** package (`steering-*`, `language-steering-*`) — or the steering *content* inside a few mixed packages — via native `/plugin install` / `codex plugin add` installs only metadata and any other supported components; it contributes no rules. Steering is delivered only by the APM CLI, which maps `.apm/instructions` to Claude rules and compiled Codex `AGENTS.md`:
+Consequence: installing a **steering** package (`steering-*`, `language-steering-*`) -- or the steering *content* inside a few mixed packages -- via native `/plugin install` / `codex plugin add` installs only metadata and any other supported components; it contributes no rules. Steering is delivered only by the APM CLI, which maps `.apm/instructions` to Claude rules and compiled Codex `AGENTS.md`:
 
 ```bash
 apm install steering-pragmatic@srobroek-agentic --target claude,codex
@@ -168,7 +168,7 @@ apm install steering-pragmatic@srobroek-agentic --target claude,codex
 Specifically, native install does not deliver:
 
 - all `steering-*` and `language-steering-*` packages (steering only);
-- `codex-hook-contract` (reference instructions only);
+- `agent-hook-contract` (reference instructions only);
 - the architecture **context** carried by `language-rust` / `language-typescript`;
 - the always-on **instruction** inside `hooks-subagent-worktree` (the hook itself works; the "declare isolation" guidance is APM-only);
 - the Tauri instruction/context inside `mcp-tauri` (the MCP runtime is configured separately; the steering is APM-only).
@@ -193,8 +193,8 @@ apm install code-review@srobroek-agentic
 # A single agent
 apm install agent-pr-reviewer@srobroek-agentic
 
-# A shared MCP aggregation package
-apm install mcp-1mcp@srobroek-agentic
+# An MCP server package
+apm install mcp-serena@srobroek-agentic
 ```
 
 `--target` is **optional** -- plain `apm install` and `apm compile` auto-detect which runtimes to deploy for from what's already in your project (`.claude/`, `.codex/`, etc.). Only pass `--target` when you want to force a specific set, e.g. on a fresh project that doesn't have those dirs yet:
@@ -244,9 +244,9 @@ apm install hooks-bash-safety@srobroek-agentic --global --target claude,codex
 
 User-scope support varies by runtime: **fully supported for `claude`, `codex`, and `agent-skills`** (the cross-client `~/.agents/skills/` dir, which Codex also reads); MCP servers at global scope only target Copilot/Codex CLI. Skills, agents, hooks, and instructions all deploy globally for Claude and Codex.
 
-**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
+**Recommended global set:** granular safety hooks, `steering-pragmatic`, bootstrap skills, and `chezmoi-editor`. Pin one package list in user-scope `~/.apm/apm.yml`, target both `claude,codex`, then run install/update and `apm compile --global`. Target-specific packages such as `hooks-subagent-worktree` remain in the shared declaration but emit only their supported runtime component. See [the Codex compatibility audit](docs/codex-compatibility.md) for the current 51-package global set and deployment gaps.
 
-> **Caveat — symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
+> **Caveat -- symlinked targets.** If `~/.claude/settings.json` or `~/.codex/hooks.json` is a symlink (e.g. into a dotfiles manager), `apm install --global` writes *through* the symlink or replaces it with a real file. If you manage those files with a dotfiles tool, have the tool seed a **real base file** (non-apm config only) and let apm merge its hook blocks on top, rather than symlinking them.
 
 ---
 
@@ -257,12 +257,12 @@ When a release retires or renames packages (see each release's CHANGELOG), refre
 **Global (per machine):**
 
 ```bash
-apm update --global --yes    # bare form ONLY — the single-package form
+apm update --global --yes    # bare form ONLY -- the single-package form
                              # ("apm update --global <pkg>") plans "1 updated,
                              # N removed" and prunes every other global package
 ```
 
-Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` — never hand-edit installed copies; APM skips locally-modified files on every future install.
+Retired packages disappear from `~/.claude/skills` / `~/.claude/agents` automatically. If a hook or agent misbehaves after the update, check for locally-edited installed files (`apm run audit-agentic-assets`) and re-deploy with `apm install --force` -- never hand-edit installed copies; APM skips locally-modified files on every future install.
 
 **Per project:**
 
@@ -274,9 +274,9 @@ apm compile                       # refresh AGENTS.md / CLAUDE.md
 
 Then check for stragglers:
 
-1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` — stale references in project-local steering or docs; edit them out.
-2. `ls .claude/skills/` — orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
-3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed — `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
+1. `rg '<retired-skill-name>' .claude/ .apm/ AGENTS.md CLAUDE.md` -- stale references in project-local steering or docs; edit them out.
+2. `ls .claude/skills/` -- orphaned directories from pre-lockfile installs are not pruned automatically; delete them manually.
+3. SpecKit projects: retired extensions keep their rendered `/speckit.<ext>.*` command files until removed -- `specify extension remove <name>` per extension, or re-run `scripts/setup-speckit.sh --force` to converge on the current set.
 
 ---
 
@@ -284,7 +284,7 @@ Then check for stragglers:
 
 A **bundle** is a hand-authored APM package that installs a coherent set of primitives. Each is a directory under [`packages/`](packages/) whose `apm.yml` is a dependency aggregator -- a `dependencies.apm:` list referencing member packages (and external third-party packages) rather than copying their content. So a change to a member propagates to every bundle that pins it.
 
-Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (wshobson, mattpocock) stay pinned to `#main`. Each package is versioned independently via release-please.
+Members are referenced as a **virtual subdirectory of the marketplace repo**, using a caret semver range (`srobroek/agentic-packages/packages/<name>#^<version>`) so `apm update` automatically picks up compatible patch releases tracked by the lockfile. Externals (mattpocock and others) stay pinned to `#main`. Each package is versioned independently via release-please.
 
 `core` now layers the three sub-bundles (`project-lifecycle`, `code-intelligence`, `agentic-maintenance`) plus `resume-session` and the Matt Pocock and Hobson plugins explicitly -- so a single `apm install core@srobroek-agentic` brings in all baseline skills transitively.
 
@@ -307,23 +307,19 @@ This project declares `targets: [claude, codex]` and generates `claude`/`codex` 
 
 `compilation.strategy: distributed` (set in `apm.yml`) places scoped instructions next to the code they apply to via `applyTo:` globs; `single-file` collapses everything into one root file.
 
+<!-- vale WriteDocs.InternalRefs = NO -->
 `--no-constitution` excludes any SpecKit `memory/constitution.md` block -- both the `<!-- SPEC-KIT CONSTITUTION -->` markers and the constitution body -- from a clean compile. (An existing block already on disk is preserved, not regenerated.)
+<!-- vale WriteDocs.InternalRefs = YES -->
 
 ---
 
 ## SpecKit orchestration
 
-SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline, delivered as three opt-in packages: `speckit` (bugfix/setup skills, workflow guard hooks, and its task agents), `steering-speckit` (the mandatory-gated Phase 1/2/3 workflow steering), and `speckit-beads` (a beads formula whose poured molecule is the phase DAG, plus guards keeping task state in beads). APM transforms the bundled agents for both Claude and Codex.
+SpecKit turns ad-hoc "vibe coding" into a gated, spec-driven pipeline: the bugfix and setup skills, four task agents, workflow steering, a guard that keeps task state in beads, and the `speckit-feature` beads formula whose poured molecule is the phase DAG with human gates at clarify approval, analyze approval, and verify sign-off.
 
-```
-specify -> clarify -> checklist -> plan -> tasks -> critique + security-review
-        -> analyze -> issues -> checkpoint
-        -> assign -> validate -> execute (checkpoint per task)
-        -> verify-tasks -> verify -> review -> qa -> code-review + security-review
-        -> cleanup -> sync + conflicts -> retro -> docs -> final checkpoint
-```
+It lives in its own repository now, [srobroek/speckit-conductor](https://github.com/srobroek/speckit-conductor), and pulls `beads` and `adr-as-beads` back from here as cross-repo dependencies. See [docs/speckit.md](docs/speckit.md) for why it moved and why APM install is the supported path.
 
-Quick start: `apm install speckit@srobroek-agentic`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
+Quick start: `apm install srobroek/speckit-conductor --target claude,codex`, then invoke the `speckit-setup` skill ("set up SpecKit") to bootstrap `.specify/` and the extensions.
 
 Full setup, the agent roster, the DAG node store, and the hook-dispatcher architecture (how/why) live in **[docs/speckit.md](docs/speckit.md)**.
 
@@ -338,8 +334,9 @@ The full inventory lives in `docs/`:
 - **[docs/agents.md](docs/agents.md)** -- the sub-agents (+ the SpecKit agents)
 - **[docs/steering.md](docs/steering.md)** -- the opt-in steering packages
 - **[docs/hooks-and-mcp.md](docs/hooks-and-mcp.md)** -- the hook packages and MCP server packages
-- **[docs/external-repos.md](docs/external-repos.md)** -- catalog entries hosted in their own git repos (fetched on install, not vendored)
+- **[docs/external-repos.md](docs/external-repos.md)** -- how a catalog entry can live in its own git repo and be fetched on install rather than vendored
 - **[docs/speckit.md](docs/speckit.md)** -- the SpecKit orchestration system: setup, the DAG, the hook dispatcher, and the how/why
+- **[docs/orchestrate.md](docs/orchestrate.md)** -- the multi-agent orchestration system: roles, the bead/wisp object model, two-phase activation, the merge path, and the enforcement hooks
 
 ---
 
@@ -367,15 +364,15 @@ fill in the content; [`templates/README.md`](templates/README.md) documents the
 canonical layout and the per-type gotchas. Then:
 
 1. Create `packages/<name>/apm.yml` (`type:` one of `skill | instructions | hooks | hybrid`; explicit `target`; `includes: auto`) plus its primitives under `packages/<name>/.apm/` (`skills/<name>/SKILL.md`, `agents/<name>.agent.md`, `instructions/*.instructions.md` + `context/*.context.md`, or `hooks/<name>-{claude,codex}-hooks.json` + `scripts/`). Agent packages use `type: hybrid`; use `target: all` for portable task agents and `target: codex` for Codex-only raw/semantic profiles. Add `.apm/agent-models.yml` beside every agent source so post-deploy injection can restore the Codex model and reasoning effort. Use `type: hooks` for a package whose only primitive is hooks.
-2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** — `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does **not** — an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
+2. Register it in the root `apm.yml` `marketplace.packages:` block (entries are alphabetical: `name`, `source: ./packages/<name>`, `category`, `tags`). This block is the marketplace **source of truth** -- `apm pack` compiles it into the committed `.claude-plugin/marketplace.json` + `.agents/plugins/marketplace.json`. release-please and the README tables auto-discover from `packages/`, but the marketplace JSON does *never* -- an unregistered package installs from a subdir ref but won't resolve as `<name>@srobroek-agentic`.
 3. Run `apm run build-artifacts` and commit the regenerated artifacts alongside the package.
 
 Gotchas worth knowing:
 
 - **`build-artifacts` needs `pyyaml`.** The generator scripts import `yaml`; if your toolchain Python lacks it, run them via `uv run --with pyyaml python3 .apm/scripts/<script>.py`. CI gets it transitively from `pip install apm-cli`.
 - **Root `apm.yml` uses `targets:` (a list), not `target: all`.** `apm pack` (0.17.x) rejects the `all` scalar; the list form (`targets: [claude, codex]`) matches the marketplace `outputs:` block and is what pack/compile both accept.
-- **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge — so a bundle that depends on a new package must land **after** that package is released.
+- **Intra-repo bundle deps pin exact release tags** (`srobroek/agentic-packages/packages/<name>#<name>-v<version>`), not `#main` or semver ranges. A brand-new member package has no tag until release-please cuts one on merge -- so a bundle that depends on a new package must land **after** that package is released.
 
-**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and fail loudly when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
+**Consuming this repo's own tooling.** A project that depends on this marketplace wires the install flow as `apm run setup-agentic-tools` (see [`templates/project-apm.yml`](templates/project-apm.yml)): trust preflight -> `apm install` -> `apm compile` -> model injection -> `audit-agentic-tools`. Run `apm lifecycle trust` once after reviewing the template's lifecycle block. Both `install-agentic-tools` and `update-agentic-tools` run the preflight and exit non-zero with the failing check named when that exact block is not trusted. APM only discovers lifecycle configuration from the consuming project, not dependency manifests, and lifecycle failures do not abort raw APM operations; the supported wrapper scripts therefore remain the strict path.
 
 License: Apache-2.0 (see [`LICENSE`](LICENSE)). Bundles that only aggregate third-party MIT-licensed packages retain their upstream MIT license, declared per package in `apm.yml`.

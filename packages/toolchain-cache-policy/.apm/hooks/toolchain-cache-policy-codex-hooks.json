@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet ${PLUGIN_ROOT}/.apm/hooks/scripts/cache-policy.py --codex",
+            "statusMessage": "Enforcing shared bounded toolchain caches...",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

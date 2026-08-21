@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-
 SCRIPT = Path(__file__).with_name("compile-global-contexts.py")
 SPEC = importlib.util.spec_from_file_location("compile_global_contexts", SCRIPT)
 assert SPEC and SPEC.loader
@@ -54,3 +53,34 @@ def test_broken_instruction_link_fails_loudly(tmp_path: Path) -> None:
         compiler.expected_content(
             tmp_path / ".apm" / "apm_modules", tmp_path / ".codex" / "AGENTS.md"
         )
+
+
+def test_rejects_non_mapping_frontmatter(tmp_path: Path) -> None:
+    package = tmp_path / ".apm" / "apm_modules" / "owner" / "package" / ".apm"
+    instruction = package / "instructions" / "00-rules.instructions.md"
+    instruction.parent.mkdir(parents=True)
+    instruction.write_text("---\n- not a mapping\n---\nRules.\n", encoding="utf-8")
+
+    with pytest.raises(compiler.CompileError, match="frontmatter must be a mapping"):
+        compiler.expected_content(
+            tmp_path / ".apm" / "apm_modules", tmp_path / ".codex" / "AGENTS.md"
+        )
+
+
+def test_preserves_markdown_link_title(tmp_path: Path) -> None:
+    context = write_instruction(tmp_path, link='../context/rules.md "Rules"')
+    assert compiler.main(["--root", str(tmp_path)]) == 0
+    output = (tmp_path / ".codex" / "AGENTS.md").read_text(encoding="utf-8")
+    expected = Path("..") / context.relative_to(tmp_path)
+    assert f"]({expected} \"Rules\")" in output
+
+
+def test_skips_leaked_resolution_staging_copies(tmp_path: Path) -> None:
+    write_instruction(tmp_path)
+    # A crashed install can leave a full duplicate package tree under
+    # .apm-resolution-staging/<hash>/...; it must not be compiled as a real module.
+    staging_root = tmp_path / ".apm" / "apm_modules" / ".apm-resolution-staging" / "deadbeef"
+    write_instruction(staging_root)
+    assert compiler.main(["--root", str(tmp_path)]) == 0
+    text = (tmp_path / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
+    assert text.count("Read [rules]") == 1

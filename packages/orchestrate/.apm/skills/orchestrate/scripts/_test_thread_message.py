@@ -7,12 +7,12 @@ import importlib.util
 import itertools
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from concurrent.futures import ThreadPoolExecutor
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 THREAD_MESSAGE = HERE / "thread-message.py"
@@ -29,9 +29,15 @@ def load_module():
 class ThreadMessageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.tempdir = tempfile.TemporaryDirectory(prefix="thread-message-")
+        # bd's dolt backend misbehaves in bare /tmp sandboxes; anchor the
+        # workspace under the cache root like _test_decision_policy does.
+        cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+        cache_root.mkdir(parents=True, exist_ok=True)
+        cls.tempdir = tempfile.TemporaryDirectory(
+            prefix="thread-message-", dir=cache_root
+        )
         cls.repo = Path(cls.tempdir.name)
-        subprocess.run(
+        init = subprocess.run(
             [
                 "bd",
                 "init",
@@ -44,11 +50,15 @@ class ThreadMessageTest(unittest.TestCase):
                 "maintainer",
             ],
             cwd=cls.repo,
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
             timeout=60,
         )
+        if init.returncode != 0:
+            raise RuntimeError(
+                f"bd init failed ({init.returncode}): {init.stderr or init.stdout}"
+            )
         cls.ids = itertools.count(1)
 
     @classmethod

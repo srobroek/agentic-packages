@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 SCRIPT = Path(__file__).with_name("sanitize-codex-hooks.py")
 SPEC = importlib.util.spec_from_file_location("sanitize_codex_hooks", SCRIPT)
@@ -22,7 +21,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
     keep_script = Path(keep_command)
     keep_script.parent.mkdir(parents=True)
     keep_script.write_text("#!/bin/sh\n", encoding="utf-8")
-    future_command = f"{hooks_dir}/agent-coder/scripts/future-legitimate-hook.sh"
+    future_command = f"{hooks_dir}/agent-builder/scripts/future-legitimate-hook.sh"
     future_script = Path(future_command)
     future_script.parent.mkdir(parents=True, exist_ok=True)
     future_script.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -46,8 +45,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                         {
                             "type": "command",
                             "command": (
-                                f"{hooks_dir}/agent-coder/scripts/"
-                                "coder-delegation-reminder.sh"
+                                f"{hooks_dir}/agent-builder/scripts/coder-delegation-reminder.sh"
                             ),
                         },
                         {
@@ -62,9 +60,7 @@ def test_sanitize_normalizes_released_codex_contract(tmp_path: Path) -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": (
-                                f"{hooks_dir}/hooks-worktree/scripts/create.sh"
-                            ),
+                            "command": (f"{hooks_dir}/hooks-retired-example/scripts/create.sh"),
                         }
                     ]
                 }
@@ -111,7 +107,7 @@ def test_sanitize_preserves_valid_timeout() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "timeout": 10,
                         }
                     ]
@@ -129,7 +125,7 @@ def test_sanitize_preserves_valid_timeout() -> None:
 def test_sanitize_preserves_current_codex_tool_matchers() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     config = {
@@ -182,8 +178,7 @@ def test_sanitize_removes_legacy_claude_only_subagent_model_guard() -> None:
                         {
                             "type": "command",
                             "command": (
-                                "/tmp/hooks/hooks-subagent-model/scripts/"
-                                "subagent-model-guard.sh"
+                                "/tmp/hooks/hooks-subagent-model/scripts/subagent-model-guard.sh"
                             ),
                         }
                     ],
@@ -230,16 +225,14 @@ def test_sanitize_resolves_relative_script_from_config_workspace(
     clean, counts = sanitize_codex_hooks.sanitize(config, tmp_path)
 
     assert len(clean["hooks"]["PreToolUse"]) == 1
-    assert clean["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == (
-        ".codex/hooks/live.sh"
-    )
+    assert clean["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == (".codex/hooks/live.sh")
     assert counts["handlers_removed"] == 1
 
 
 def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     config = {
@@ -259,7 +252,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "async": True,
                         }
                     ]
@@ -268,7 +261,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": "/bin/true",
+                            "command": sys.executable,
                             "timeout": 30,
                         }
                     ]
@@ -290,7 +283,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
             "hooks": [
                 {
                     "type": "command",
-                    "command": "/bin/true",
+                    "command": sys.executable,
                     "timeout": 30,
                 }
             ]
@@ -302,7 +295,7 @@ def test_sanitize_deduplicates_identical_groups_after_normalization() -> None:
 def test_sanitize_deduplicates_legacy_group_and_keeps_apm_owner() -> None:
     handler = {
         "type": "command",
-        "command": "/bin/true",
+        "command": sys.executable,
         "timeout": 10,
     }
     legacy_group = {
@@ -342,7 +335,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
     keep_dir.mkdir(parents=True)
     (keep_dir / "guard.sh").write_text("#!/bin/sh\n", encoding="utf-8")
     (keep_dir / "helper.sh").write_text("#!/bin/sh\n", encoding="utf-8")
-    stale_dir = hooks_dir / "hooks-worktree" / "scripts"
+    stale_dir = hooks_dir / "hooks-retired-example" / "scripts"
     stale_dir.mkdir(parents=True)
     (stale_dir / "create.sh").write_text("#!/bin/sh\n", encoding="utf-8")
     stale_file = hooks_dir / "legacy-guard.sh"
@@ -374,7 +367,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
         check=True,
     )
     assert [path.name for path in pending] == [
-        "hooks-worktree",
+        "hooks-retired-example",
         "legacy-guard.sh",
     ]
     assert stale_dir.is_dir()
@@ -383,7 +376,7 @@ def test_prune_removes_only_unreferenced_top_level_entries(
     removed = sanitize_codex_hooks.prune_stale_entries(config, hooks_dir)
 
     assert [path.name for path in removed] == [
-        "hooks-worktree",
+        "hooks-retired-example",
         "legacy-guard.sh",
     ]
     assert (keep_dir / "helper.sh").is_file()

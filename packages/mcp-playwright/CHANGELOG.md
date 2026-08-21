@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.4.0](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.3.1...mcp-playwright--v1.4.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [1.3.1](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.3.0...mcp-playwright--v1.3.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [1.3.0](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.2.1...mcp-playwright--v1.3.0) (2026-07-30)
+
+
+### Features
+
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
+## [1.2.1](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.2.0...mcp-playwright--v1.2.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [1.2.0](https://github.com/srobroek/agentic-packages/compare/mcp-playwright--v1.1.0...mcp-playwright--v1.2.0) (2026-07-16)
 
 

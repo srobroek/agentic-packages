@@ -30,9 +30,14 @@ import shutil
 import tempfile
 from pathlib import Path
 
-
 OBSOLETE_COMMAND_SUFFIXES = {
-    "/agent-coder/scripts/coder-delegation-reminder.sh",
+    "/agent-builder/scripts/coder-delegation-reminder.sh",
+    # Retired srobroek-agentic scripts superseded by APM packages:
+    # worktree-create/cleanup are retired: hooks-worktrunk owns the worktree
+    # lifecycle. branch-check dropped.
+    "/srobroek-agentic/scripts/worktree-create.sh",
+    "/srobroek-agentic/scripts/worktree-cleanup.sh",
+    "/srobroek-agentic/scripts/branch-check.sh",
 }
 
 
@@ -49,15 +54,27 @@ def runtime_semantics(value: object) -> object:
     return value
 
 
-def command_script_path(command: str) -> Path | None:
+def command_script_path(command: str, repo_root: Path | None = None) -> Path | None:
     """Return the script path of a command handler, or None if not path-like.
 
     Hook commands are single script invocations in practice; we take the
     first whitespace-delimited token and only treat it as checkable when it
     is an absolute or ~-prefixed path. Inline commands (echo, env-prefixed
     invocations) are never flagged.
+
+    ``${CLAUDE_PROJECT_DIR}`` (and ``$CLAUDE_PROJECT_DIR``) are expanded to
+    *repo_root* (defaulting to the runtime ``CLAUDE_PROJECT_DIR`` env var, then
+    ``cwd``) so project-relative hook entries are not silently ignored.
     """
     token = command.strip().split()[0] if command.strip() else ""
+    # Expand ${CLAUDE_PROJECT_DIR} / $CLAUDE_PROJECT_DIR before path checks so
+    # project-relative entries are resolved instead of skipped.
+    if "${CLAUDE_PROJECT_DIR}" in token or "$CLAUDE_PROJECT_DIR" in token:
+        if repo_root is None:
+            env_val = os.environ.get("CLAUDE_PROJECT_DIR")
+            repo_root = Path(env_val) if env_val else Path.cwd()
+        token = token.replace("${CLAUDE_PROJECT_DIR}", str(repo_root))
+        token = token.replace("$CLAUDE_PROJECT_DIR", str(repo_root))
     if token.startswith("~"):
         return Path(token).expanduser()
     if token.startswith("/"):
@@ -65,7 +82,7 @@ def command_script_path(command: str) -> Path | None:
     return None
 
 
-def handler_is_stale(handler: dict) -> bool:
+def handler_is_stale(handler: dict, repo_root: Path | None = None) -> bool:
     if handler.get("type") != "command":
         return False
     command = handler.get("command")
@@ -74,11 +91,11 @@ def handler_is_stale(handler: dict) -> bool:
     token = command.strip().split()[0] if command.strip() else ""
     if any(token.endswith(suffix) for suffix in OBSOLETE_COMMAND_SUFFIXES):
         return True
-    script = command_script_path(command)
+    script = command_script_path(command, repo_root)
     return script is not None and not script.is_file()
 
 
-def clean_events(events: dict) -> int:
+def clean_events(events: dict, repo_root: Path | None = None) -> int:
     """Drop stale handlers from an events dict in place; return removals."""
     removed = 0
     for event in list(events.keys()):
@@ -88,7 +105,7 @@ def clean_events(events: dict) -> int:
         clean_groups = []
         for group in groups:
             handlers = group.get("hooks", [])
-            kept = [h for h in handlers if not handler_is_stale(h)]
+            kept = [h for h in handlers if not handler_is_stale(h, repo_root)]
             removed += len(handlers) - len(kept)
             if kept:
                 clean_group = dict(group)
@@ -119,9 +136,7 @@ def deduplicate_groups(events: dict) -> int:
                 removed += 1
                 existing_index = seen_groups[group_key]
                 existing_group = clean_groups[existing_index]
-                if not existing_group.get("_apm_source") and group.get(
-                    "_apm_source"
-                ):
+                if not existing_group.get("_apm_source") and group.get("_apm_source"):
                     clean_groups[existing_index] = group
                 continue
             seen_groups[group_key] = len(clean_groups)
@@ -236,9 +251,7 @@ def main() -> int:
         settings = json.loads(args.settings.read_text(encoding="utf-8"))
         settings_events = settings.get("hooks", {})
         counts["settings_handlers_removed"] = clean_events(settings_events)
-        counts["settings_duplicate_groups_removed"] = deduplicate_groups(
-            settings_events
-        )
+        counts["settings_duplicate_groups_removed"] = deduplicate_groups(settings_events)
         events_dicts.append(settings_events)
     else:
         print(f"Claude hooks sanitizer: {args.settings} does not exist")
@@ -254,21 +267,17 @@ def main() -> int:
         return 0
 
     stale = (
-        prune_stale_entries(events_dicts, args.hooks_dir, check=True)
-        if args.prune_stale
-        else []
+        prune_stale_entries(events_dicts, args.hooks_dir, check=True) if args.prune_stale else []
     )
     changed = any(counts.values()) or bool(stale)
 
     if not args.check:
         if settings is not None and (
-            counts["settings_handlers_removed"]
-            or counts["settings_duplicate_groups_removed"]
+            counts["settings_handlers_removed"] or counts["settings_duplicate_groups_removed"]
         ):
             atomic_write_json(args.settings, settings)
         if sidecar is not None and (
-            counts["sidecar_handlers_removed"]
-            or counts["sidecar_duplicate_groups_removed"]
+            counts["sidecar_handlers_removed"] or counts["sidecar_duplicate_groups_removed"]
         ):
             atomic_write_json(args.sidecar, sidecar)
         if args.prune_stale:

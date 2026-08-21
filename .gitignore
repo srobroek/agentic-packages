@@ -12,6 +12,9 @@ GEMINI.md
 !/.github/workflows/
 !/.github/ISSUE_TEMPLATE/
 !/.github/PULL_REQUEST_TEMPLATE.md
+!/.github/actionlint.yaml
+!/.github/requirements-ci.txt
+!/.github/zizmor.yml
 /.cursor/
 /.opencode/
 /.gemini/
@@ -26,6 +29,10 @@ build/
 dist/
 __pycache__/
 *.pyc
+# No project venv is needed: scripts are PEP 723 and run via `uv run --script`.
+# A bare `uv run --with ...` still materializes one from pyproject.toml, so ignore
+# it rather than let it be committed.
+.venv/
 
 # SpecKit: ignore fetched/built extension artifacts (refetched/rebuilt locally),
 # keep the lean .specify/ config (manifests, templates, workflows, integration).
@@ -55,3 +62,26 @@ reviews/
 .headroom/
 /.mcp.json
 /.worktrees/
+
+# repomix's DEFAULT output names. Any bare `repomix` run in the repository root
+# writes these, and they are ~40 MB: two were committed by a tuning sweep that
+# omitted --output, and CI caught them only via a typos scan of the packed
+# content.
+/repomix-output.xml
+/repomix-output.md
+/repomix-output.txt
+/repomix.xml
+repomix-full.xml
+
+# graphify's index. `graphify update` has no output flag, so it writes into the
+# tree unavoidably: 9.9 MB here, 60 MB on a 4,107-file repository. It is also in
+# the repomix ignore list, because an unignored index gets packed into the next
+# one -- it measured 38% of one repository's entire pack. Listed in
+# .worktreeinclude so a new worktree copies it instead of rebuilding.
+graphify-out/
+
+# Agent conformance run outputs (gitignored; see packages/agent-conformance)
+.conformance-runs/
+
+# Audit raw evidence: per-agent transcripts (large, disposable).
+.audit-2026-07/raw/

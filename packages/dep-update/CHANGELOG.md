@@ -1,5 +1,71 @@
 # Changelog
 
+## [4.1.1](https://github.com/srobroek/agentic-packages/compare/dep-update--v4.1.0...dep-update--v4.1.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **pr-shepherd:** close the four remaining fuzz defects, unblock bats CI, and clear the ruff backlog ([#863](https://github.com/srobroek/agentic-packages/issues/863)) ([80ef3db](https://github.com/srobroek/agentic-packages/commit/80ef3db32dc2d604e7d9d65a904d712acb15e85f))
+
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/dep-update--v4.0.1...dep-update--v4.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/dep-update--v4.0.0...dep-update--v4.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/dep-update--v3.0.0...dep-update--v4.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+* port the skill scripts to Python and fuzz every port ([#811](https://github.com/srobroek/agentic-packages/issues/811)) ([773ac2b](https://github.com/srobroek/agentic-packages/commit/773ac2bced832cb0144b7e21e6937e69b9e3b631))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/dep-update--v2.1.3...dep-update--v3.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+
+## [2.1.3](https://github.com/srobroek/agentic-packages/compare/dep-update--v2.1.2...dep-update--v2.1.3) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [2.1.2](https://github.com/srobroek/agentic-packages/compare/dep-update--v2.1.1...dep-update--v2.1.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/dep-update--v2.1.0...dep-update--v2.1.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/dep-update--v2.0.0...dep-update--v2.1.0) (2026-07-16)
 
 

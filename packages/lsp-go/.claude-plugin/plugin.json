@@ -1,9 +1,0 @@
-{
-  "name": "lsp-go",
-  "version": "0.4.0",
-  "description": "Go LSP server: registers gopls so agents get hover, diagnostics, go-to-definition, and references on Go sources. Installed transitively by the language-go bundle; also installable on its own. Requires gopls on PATH (APM writes the config; it does not install the binary).",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

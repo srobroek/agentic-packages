@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Validate Codex-specific package manifests, hooks, and MCP files."""
 
 from __future__ import annotations
@@ -56,37 +60,29 @@ CLAUDE_EVENTS = {
     "ElicitationResult",
 }
 CODEX_DIFFERENCE_PACKAGES = {
-    "agent-coder",
+    "adr-as-beads",
+    "agent-builder",
     "hooks-attribution-guard",
     "hooks-bash-safety",
     "hooks-chezmoi-guard",
     "hooks-close-keywords",
     "hooks-git-safety",
     "hooks-package-investigate",
-    "hooks-precommit-gate",
     "hooks-quality",
+    "hooks-worktrunk",
     "language-go",
     "language-python",
     "language-rust",
     "language-shell",
     "language-terraform",
     "language-typescript",
-    "lsp-go",
-    "lsp-python",
-    "lsp-rust",
-    "lsp-shell",
-    "lsp-terraform",
-    "lsp-typescript",
-    "mcp-mempalace",
-    "mcp-repomix",
     "orchestrate",
     "release-please",
-    "secrets-scan",
-    "speckit",
     "worktrunk-writer",
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
 HOOK_MANIFEST_CLASSIFICATION = {
+    "packages/adr-as-beads/.apm/hooks/hooks.json": "native-required",
     "packages/beads/.apm/hooks/beads-claude-hooks.json": "target-specific compatibility",
     "packages/beads/.apm/hooks/beads-codex-hooks.json": "target-specific compatibility",
     "packages/code-intelligence/.apm/hooks/hooks.json": "native-required",
@@ -95,33 +91,31 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/hooks-chezmoi-guard/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-close-keywords/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-git-safety/.apm/hooks/hooks.json": "native-required",
-    "packages/hooks-git-workflow/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-package-investigate/.apm/hooks/hooks.json": "native-required",
-    "packages/hooks-precommit-gate/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-quality/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-serena/.apm/hooks/hooks-serena-claude-hooks.json": "target-specific compatibility",
     "packages/hooks-serena/.apm/hooks/hooks-serena-codex-hooks.json": "target-specific compatibility",
+    "packages/hooks-subagent-fork/.apm/hooks/hooks.json": "native-required",
     "packages/hooks-subagent-model/.apm/hooks/hooks.json": "excluded-policy",
     "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-claude-hooks.json": "excluded-policy",
-    "packages/hooks-worktree/.apm/hooks/hooks-worktree-claude-hooks.json": "excluded-policy",
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-claude-hooks.json": "target-specific compatibility",
-    "packages/mcp-mempalace/.apm/hooks/mcp-mempalace-codex-hooks.json": "target-specific compatibility",
-    "packages/mcp-repomix/.apm/hooks/hooks.json": "native-required",
+    "packages/hooks-subagent-worktree/.apm/hooks/hooks-subagent-worktree-codex-hooks.json": "target-specific compatibility",
+    "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-claude-hooks.json": "target-specific compatibility",
+    "packages/hooks-worktrunk/.apm/hooks/hooks-worktrunk-codex-hooks.json": "target-specific compatibility",
+    "packages/orchestrate/.apm/hooks/orchestrate-claude-hooks.json": "target-specific compatibility",
+    "packages/orchestrate/.apm/hooks/orchestrate-codex-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-claude-hooks.json": "target-specific compatibility",
+    "packages/token-savings/.apm/hooks/token-savings-codex-hooks.json": "target-specific compatibility",
+    "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-claude-hooks.json": "target-specific compatibility",
+    "packages/toolchain-cache-policy/.apm/hooks/toolchain-cache-policy-codex-hooks.json": "target-specific compatibility",
     "packages/release-please/.apm/hooks/hooks.json": "native-required",
-    "packages/secrets-scan/.apm/hooks/hooks.json": "native-required",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit-beads/.apm/hooks/speckit-beads-codex-hooks.json": "target-specific compatibility",
-    "packages/speckit/.apm/hooks/speckit-workflow-claude-hooks.json": "target-specific compatibility",
-    "packages/speckit/.apm/hooks/speckit-workflow-codex-hooks.json": "target-specific compatibility",
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-codex-hooks.json": "target-specific compatibility",
-    "packages/write-docs/.apm/hooks/hooks.json": "native-required",
     "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-claude-hooks.json": "target-specific compatibility",
     "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-codex-hooks.json": "target-specific compatibility",
 }
 OBSOLETE_HOOK_MANIFESTS = {
-    "packages/agent-coder/.apm/hooks/agent-coder-claude-hooks.json",
+    "packages/agent-builder/.apm/hooks/agent-builder-claude-hooks.json",
 }
 COLLAPSED_DUPLICATE_HOOK_MANIFESTS = {
     "packages/pr-shepherd/.apm/hooks/pr-shepherd-claude-hooks.json",
@@ -135,9 +129,7 @@ APPROVAL_POLICIES = {
     "never",
 }
 PLUGIN_SCRIPT_RE = re.compile(r"\$\{PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
-PROJECT_SCRIPT_RE = re.compile(
-    r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)"
-)
+PROJECT_SCRIPT_RE = re.compile(r"\$\(git rev-parse --show-toplevel\)/\./([A-Za-z0-9_./-]+)")
 
 
 def load_json(path: Path) -> dict:
@@ -176,8 +168,7 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
     if is_project_source:
         if "${PLUGIN_ROOT}" in command:
             errors.append(
-                f"{path}: project hooks must use APM's /./ source marker, "
-                "not PLUGIN_ROOT"
+                f"{path}: project hooks must use APM's /./ source marker, not PLUGIN_ROOT"
             )
         for rel in PROJECT_SCRIPT_RE.findall(command):
             target = ROOT / ".apm" / "hooks" / rel
@@ -191,18 +182,18 @@ def validate_hook_command(path: Path, command: object) -> list[str]:
         return errors
 
     if "git rev-parse" in command:
-        errors.append(
-            f"{path}: plugin hook startup must not discover the Git root"
-        )
+        errors.append(f"{path}: plugin hook startup must not discover the Git root")
     plugin_root = path.parents[2]
     script_refs = PLUGIN_SCRIPT_RE.findall(command)
     if "/scripts/" in command and not script_refs:
-        errors.append(
-            f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT"
-        )
+        errors.append(f"{path}: plugin hook scripts must resolve through PLUGIN_ROOT")
     for rel in script_refs:
         target = plugin_root / rel
-        if not target.is_file():
+        # A ${PLUGIN_ROOT}/... reference is usually a script file, but may also
+        # be a resource directory passed to the hook (e.g. RULES_DIR=.apm/rules
+        # for the bead-contract evaluator). Accept either; only a reference that
+        # resolves to nothing is a real missing-target error.
+        if not target.is_file() and not target.is_dir():
             errors.append(f"{path}: missing plugin hook target {rel}")
     return errors
 
@@ -227,14 +218,17 @@ def main() -> int:
         target = "all"
         if isinstance(source, str) and source.startswith("./packages/"):
             package_manifest_path = ROOT / source.removeprefix("./") / "apm.yml"
-            package_manifest = yaml.safe_load(
-                package_manifest_path.read_text(encoding="utf-8")
-            ) or {}
+            package_manifest = (
+                yaml.safe_load(package_manifest_path.read_text(encoding="utf-8")) or {}
+            )
             target = package_manifest.get("target", "all")
             if target not in SUPPORTED_PACKAGE_TARGETS:
-                errors.append(
-                    f"{entry['name']}: unsupported package target {target!r}"
-                )
+                errors.append(f"{entry['name']}: unsupported package target {target!r}")
+        else:
+            # External entries (git-source, not ./packages/) are packed by their
+            # own upstream repo and are never present in this repo's marketplace.json.
+            # Skip them from the Codex catalog cross-check.
+            continue
         if target != "claude":
             codex_catalog_entries.append(entry)
 
@@ -254,9 +248,7 @@ def main() -> int:
         if isinstance(entry, dict) and entry.get("name")
     }
     if len(catalog_by_name) != len(codex_catalog_entries):
-        errors.append(
-            "apm.yml marketplace contains missing or duplicate Codex package names"
-        )
+        errors.append("apm.yml marketplace contains missing or duplicate Codex package names")
     if len(marketplace_by_name) != len(marketplace_entries):
         errors.append("Codex marketplace contains missing or duplicate plugin names")
     for name in sorted(catalog_by_name.keys() - marketplace_by_name.keys()):
@@ -266,19 +258,11 @@ def main() -> int:
     for name in sorted(catalog_by_name.keys() & marketplace_by_name.keys()):
         expected = catalog_by_name[name].get("source")
         actual_source = marketplace_by_name[name].get("source")
-        actual = (
-            actual_source.get("path")
-            if isinstance(actual_source, dict)
-            else actual_source
-        )
+        actual = actual_source.get("path") if isinstance(actual_source, dict) else actual_source
         if expected != actual:
-            errors.append(
-                f"{name}: Codex marketplace source {actual!r} != catalog {expected!r}"
-            )
+            errors.append(f"{name}: Codex marketplace source {actual!r} != catalog {expected!r}")
 
-    compatibility = (ROOT / "docs" / "codex-compatibility.md").read_text(
-        encoding="utf-8"
-    )
+    compatibility = (ROOT / "docs" / "codex-compatibility.md").read_text(encoding="utf-8")
     documented_events = markdown_table_ids(
         compatibility,
         "## Event parity",
@@ -294,24 +278,19 @@ def main() -> int:
     if set(documented_events) != CLAUDE_EVENTS:
         missing = sorted(CLAUDE_EVENTS - set(documented_events))
         extra = sorted(set(documented_events) - CLAUDE_EVENTS)
-        errors.append(
-            "Codex compatibility event table drift: "
-            f"missing={missing}, extra={extra}"
-        )
+        errors.append(f"Codex compatibility event table drift: missing={missing}, extra={extra}")
     if len(documented_packages) != len(set(documented_packages)):
         errors.append("Codex compatibility package table contains duplicate rows")
     unknown_differences = CODEX_DIFFERENCE_PACKAGES - all_catalog_names
     if unknown_differences:
         errors.append(
-            "Codex difference package set contains unknown packages: "
-            f"{sorted(unknown_differences)}"
+            f"Codex difference package set contains unknown packages: {sorted(unknown_differences)}"
         )
     if set(documented_packages) != CODEX_DIFFERENCE_PACKAGES:
         missing = sorted(CODEX_DIFFERENCE_PACKAGES - set(documented_packages))
         extra = sorted(set(documented_packages) - CODEX_DIFFERENCE_PACKAGES)
         errors.append(
-            "Codex compatibility difference table drift: "
-            f"missing={missing}, extra={extra}"
+            f"Codex compatibility difference table drift: missing={missing}, extra={extra}"
         )
 
     for entry in marketplace_entries:
@@ -373,9 +352,7 @@ def main() -> int:
                         errors.append(
                             f"{path}: Codex hook timeout must be explicitly bounded to 1-60s"
                         )
-                    errors.extend(
-                        validate_hook_command(path, handler.get("command"))
-                    )
+                    errors.extend(validate_hook_command(path, handler.get("command")))
 
     actual_hook_manifests = {
         path.relative_to(ROOT).as_posix()

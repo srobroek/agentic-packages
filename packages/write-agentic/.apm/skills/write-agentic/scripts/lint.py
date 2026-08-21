@@ -42,9 +42,52 @@ SIGIL_LINE = re.compile(r"^\s*[!~?−-]\s+\S")
 CAPS_ENUM = re.compile(r"\b[A-Z][A-Z-]{2,}(\|[A-Z][A-Z-]{2,})+\b")
 FRONTMATTER_KEY = re.compile(r"^(\w[\w-]*):", re.M)
 
+# Anti-pattern rules ported from plugin-eval (wshobson/agents static.py).
+# W10 OVER_CONSTRAINED: skills with more than this many MUST/NEVER/ALWAYS directives
+# become brittle and reduce model flexibility. Threshold matches plugin-eval.
+_OVER_CONSTRAINED_THRESHOLD = 15
+# W11 MISSING_TRIGGER: recognised trigger phrasings a model uses to decide when to
+# invoke a skill. Extended beyond plugin-eval's set to include "Use for/to" and
+# "invoke" which are common in this corpus alongside "Use when/after/before".
+_TRIGGER_PATTERN = re.compile(
+    r"\b(?:should\s+be\s+)?used?\s+(?:this\s+skill\s+)?(?:immediately\s+)?"
+    r"(?:when|after|before|whenever|for|to)\b"
+    r"|\buse\s+proactively\b"
+    r"|\btrigger(?:s)?\s+(?:when|on)\b"
+    r"|\bauto[-\s]?loads?\s+(?:when|on)\b"
+    r"|\binvoke\b",
+    re.IGNORECASE,
+)
+# W12 BLOATED_SKILL: line threshold above which a skill without a references/ dir
+# is considered to need progressive disclosure. Threshold matches plugin-eval.
+_BLOATED_LINE_THRESHOLD = 800
+# YAML folded/literal scalar markers that prefix multi-line frontmatter values.
+# Strip before checking character length so ">-" doesn't look like a short desc.
+_YAML_SCALAR_PREFIX = re.compile(r"^[>|][>|-]?\s*")
+
 
 def words(s: str) -> int:
     return len(s.split())
+
+
+def _blank_code_spans(text: str) -> str:
+    """Replace fenced blocks and inline code with spaces, preserving offsets.
+
+    Content inside code is being shown, not asserted, so checks that judge intent
+    must not read it. Offsets are preserved so reported positions stay accurate.
+    """
+    out = list(text)
+
+    def blank(start: int, end: int) -> None:
+        for i in range(start, min(end, len(out))):
+            if out[i] != "\n":
+                out[i] = " "
+
+    for m in re.finditer(r"^[ \t]*(```+|~~~+)[^\n]*\n.*?^[ \t]*\1[^\n]*$", text, re.S | re.M):
+        blank(*m.span())
+    for m in re.finditer(r"(`+)(?:(?!\1).)*?\1", "".join(out), re.S):
+        blank(*m.span())
+    return "".join(out)
 
 
 def detect_kind(path: Path) -> str:
@@ -131,11 +174,46 @@ def parse_xlint(text: str) -> tuple[set[str], str]:
     return codes, reason
 
 
+def _has_rules_contract(path: Path, fm: dict) -> bool:
+    """True if this agent has a companion rules file that declares a
+    completion contract, i.e. .apm/rules/<name>.rules.json with a non-empty
+    `completion` list. The agent file lives at .apm/agents/<name>.agent.md, so
+    the rules dir is a sibling: ../rules/. Name comes from frontmatter, falling
+    back to the filename stem. Any read/parse error → False (no contract)."""
+    name = (fm.get("name") or "").strip() or path.name.split(".")[0]
+    rules_dir = path.parent.parent / "rules"
+    # Effort-tier variants (coder-low/-medium/-high/-xhigh) share the base's
+    # rules file (same contract, different effort). Try the exact name, then
+    # the name with a trailing -<tier> suffix stripped.
+    candidates = [name]
+    m = re.match(r"^(.*)-(low|medium|high|xhigh)$", name)
+    if m:
+        candidates.append(m.group(1))
+    data = None
+    for cand in candidates:
+        try:
+            import json as _json
+            data = _json.loads((rules_dir / f"{cand}.rules.json").read_text(encoding="utf-8"))
+            break
+        except Exception:
+            continue
+    if data is None:
+        return False
+    completion = data.get("completion")
+    # A completion checklist OR an authority matrix both constitute a
+    # machine-enforced output/behaviour contract (T2 actors like the shepherd
+    # carry authority-only contracts with no per-node completion checklist).
+    return bool(completion) or bool(data.get("authority"))
+
+
 def lint(path: Path) -> list[tuple[str, str, str]]:
     """Return [(severity, code, message)]."""
     raw: list[tuple[str, str, str]] = []
-    err = lambda c, m: raw.append(("ERROR", c, m))
-    warn = lambda c, m: raw.append(("WARN", c, m))
+    def err(c: str, m: str) -> None:
+        raw.append(("ERROR", c, m))
+
+    def warn(c: str, m: str) -> None:
+        raw.append(("WARN", c, m))
 
     text = path.read_text(encoding="utf-8")
     kind = detect_kind(path)
@@ -159,6 +237,11 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             cap = 15 if kind == "pointer" else 25
             if words(desc) > cap:
                 err("E1", f"description {words(desc)}w > {cap}w cap for {kind}")
+            # EMPTY_DESCRIPTION (plugin-eval): description present but < 20 chars
+            # after stripping YAML folded/literal markers (">-", ">", "|").
+            desc_content = _YAML_SCALAR_PREFIX.sub("", desc).strip()
+            if desc_content and len(desc_content) < 20:
+                err("E1", f"description too short ({len(desc_content)} chars < 20 minimum)")
 
     # E2 hedges on normative lines (keyword-style: MUST/DEFAULT/ASK/NOT)
     for i, ln in enumerate(lines, 1):
@@ -176,20 +259,28 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
             if m:
                 err("E3", f"line {i}: model name '{m.group(0)}' in prose — route via steering-subagent-routing")
 
-    # E5 agent output contract
+    # E5 agent output contract.
+    # A bead-as-brief agent's output contract is its companion rules file
+    # (.apm/rules/<name>.rules.json with a `completion` checklist) — the
+    # machine-enforced spec of what it must produce (REPORTED comment, push,
+    # handoff label, ...). That is strictly stronger than a prose section and
+    # avoids duplicating the contract in two places, so a rules-backed agent
+    # satisfies E5 without a prose "Output contract" heading.
     if kind == "agent":
-        if not re.search(r"^#+\s*Output|^OUTPUT", body, re.M):
-            err("E5", "agent has no Output contract section")
+        if _has_rules_contract(path, fm):
+            pass  # rules file IS the output contract
+        elif not re.search(r"^#+\s*Output|^OUTPUT", body, re.M):
+            err("E5", "agent has no Output contract section (and no .apm/rules/<name>.rules.json)")
         else:
             if not CAPS_ENUM.search(body):
                 warn("W5", "no CAPS verdict enum (PASS|FAIL style) found in output contract")
             if not re.search(r"\bCAP\b|\b\d+\s*w(ords)?\b|≤\s*\d+", body):
                 err("E5", "output contract has no word cap")
-        if not re.search(r"never reprint|paths? only|path:line", body, re.I):
-            warn("W5", "no no-reprint rule in output contract")
+            if not re.search(r"never reprint|paths? only|path:line", body, re.I):
+                warn("W5", "no no-reprint rule in output contract")
 
     # E6 size caps
-    n_lines = len([l for l in lines if l.strip()])
+    n_lines = len([line for line in lines if line.strip()])
     caps = {"skill": 70, "context": 60, "pointer": 10, "agent": 90}
     if kind in caps and n_lines > caps[kind]:
         warn("W6", f"{n_lines} non-empty lines > {caps[kind]} target for {kind}")
@@ -200,8 +291,11 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
         if not re.search(r"\]\(\.\./context/.*\.context\.md\)", body):
             err("E7", "pointer does not link a ../context/*.context.md file")
 
-    # E8 relative links resolve
-    for m in re.finditer(r"\]\((?!https?://)([^)#]+)\)", body):
+    # E8 relative links resolve. Scans with code spans blanked: a doc that
+    # DEMONSTRATES a link (`[x](../x.md)` as an example of good or bad practice)
+    # is not making that link, and flagging it makes any doc about linking
+    # unlintable.
+    for m in re.finditer(r"\]\((?!https?://)([^)#]+)\)", _blank_code_spans(body)):
         target = (path.parent / m.group(1)).resolve()
         if not target.exists():
             err("E8", f"broken link: {m.group(1)}")
@@ -215,6 +309,44 @@ def lint(path: Path) -> list[tuple[str, str, str]]:
                 warn("W9", f"line {i} duplicates line {seen[key]}")
             else:
                 seen[key] = i
+
+    # W10 OVER_CONSTRAINED (plugin-eval): skills with excessive MUST/NEVER/ALWAYS
+    # density become brittle. Threshold of 15 matches plugin-eval. Only applied to
+    # skills; context files legitimately carry dense normative rules for agents.
+    if kind == "skill":
+        mna_count = len(re.findall(r"\b(MUST|NEVER|ALWAYS)\b", text))
+        if mna_count > _OVER_CONSTRAINED_THRESHOLD:
+            warn(
+                "W10",
+                f"{mna_count} MUST/NEVER/ALWAYS directives > {_OVER_CONSTRAINED_THRESHOLD} threshold — "
+                "overly prescriptive instructions reduce model flexibility",
+            )
+
+    # W11 MISSING_TRIGGER (plugin-eval): skill description lacks a recognised
+    # trigger phrase, making it hard for the model to auto-invoke the skill.
+    # Only skills are checked (agents and pointers use different routing).
+    if kind == "skill":
+        desc = fm.get("description", "")
+        desc_content = _YAML_SCALAR_PREFIX.sub("", desc).strip()
+        # Only warn when a non-trivial description is present but has no trigger phrase.
+        if desc_content and len(desc_content) >= 20 and not _TRIGGER_PATTERN.search(desc_content):
+            warn(
+                "W11",
+                'skill description lacks a trigger phrase (e.g. "Use when …", "Use for …", '
+                '"Triggers on …") — without one the model cannot determine when to invoke it',
+            )
+
+    # W12 BLOATED_SKILL (plugin-eval): skills over 800 lines without a references/
+    # subdirectory should offload supporting material to progressive disclosure.
+    if kind == "skill":
+        n_total = len([line for line in text.splitlines() if line.strip()])
+        has_refs = (path.parent / "references").exists()
+        if n_total > _BLOATED_LINE_THRESHOLD and not has_refs:
+            warn(
+                "W12",
+                f"{n_total} non-empty lines without a references/ directory — "
+                "large skills should offload supporting material to references/",
+            )
 
     # Apply x-lint overrides: suppress allowed codes, emit OVERRIDDEN trace
     if not allowed_codes:

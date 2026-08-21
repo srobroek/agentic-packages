@@ -1,5 +1,37 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v4.0.1...steering-docs-specs--v4.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v4.0.0...steering-docs-specs--v4.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v3.1.1...steering-docs-specs--v4.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780))
+
+### Refactors
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780)) ([3a8fd27](https://github.com/srobroek/agentic-packages/commit/3a8fd27dab5a5692ee0e669ca7942584355ec939))
+
+## [3.1.1](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v3.1.0...steering-docs-specs--v3.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v3.0.0...steering-docs-specs--v3.1.0) (2026-07-16)
 
 

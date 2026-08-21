@@ -1,94 +1,104 @@
 # PR Shepherd
 
 MERGE BEADS
-MUST Before `gh pr create`, create exactly one open, unassigned merge task
-  labeled `pr:merge` and `agent:integrator`; store `branch`, `repo`, `origin_actor`,
-  `tracks_beads`, and `closes_beads` metadata, then stamp pr/base/head
-  immediately after creation.
-  The PR body carries the exact `Merge-Bead` id; dedupe on repo+PR.
-MUST For every `Closes-Bead: <work>` add `bd dep add <work> <merge-bead>`.
-  One work bead may depend on many PR merge beads; one merge bead may block
-  many work beads. `Tracks-Bead` adds no blocking edge.
-NOT A gh:pr gate blocking a merge bead — it resolves only after merge and
-  deadlocks the integrator queue. A gh:run gate may block merge work for CI.
-DEFAULT Use `bd graph` to inspect fan-in/fan-out, `bd ready` to decide when
-  all merge dependencies are satisfied, and `bd swarm validate <epic>` for
-  structural validation of an orchestrated graph.
-MUST `state:approved` freezes closing edges. A new `Closes-Bead` must already
-  have its dependency before approval; never add a late edge to approved or
-  closed work automatically — record the mismatch for human resolution.
+MUST Before `gh pr create`, create one open, unassigned merge bead labeled
+  `pr:merge` + `agent:integrator`; store `branch`, `repo`, `origin_actor`,
+  metadata; stamp pr/base/head after creation. Dedupe on repo+PR.
+MUST For every work bead the PR completes, add `bd dep add <work> <merge-bead>`.
+  One work bead may depend on many merge beads; one merge bead may block many.
+NOT A gh:pr gate blocking a merge bead -- deadlocks integrator queue.
+  A gh:run gate may block merge work for CI.
+DEFAULT `bd graph` for fan-in/fan-out; `bd ready` for dependency satisfaction;
+  `bd swarm validate <epic>` for structural validation.
+MUST `state:approved` freezes closing edges -- never add a late edge to approved
+  or closed work automatically; record the mismatch for human resolution.
 
 AUTHOR LIFECYCLE
-MUST Authors create PRs with `gh pr create --draft`; promote with `gh pr
-  ready` only after implementation, local validation, and required agent
-  review complete with no known blocker.
-MUST In a Beads repository, append a `## Beads` body section with repeatable
-  `Tracks-Bead: <id>` lines, one `Merge-Bead: <id>`, and `Closes-Bead: <id>`
-  only for dependency edges already present in the Beads DAG.
-MUST Authors push branch/PR, write residual context onto their own bead per
-  the beads steering (comments: approach, tricky spots, what to check first
-  if CI fails), set it to reported/approved, release their claim, and exit.
-  Do not close work that still depends on an unmerged PR and never stay alive
-  waiting for CI or merge — the merge bead plus shepherd own the wait.
+MUST PR authorship rules (draft creation, promotion criteria, Beads body
+  section format) follow git-workflow steering (GW section "Shipping" and
+  "Beads linkage").
+MUST Authors push branch/PR, write residual context onto their bead per beads
+  SESSION CLOSE, set to reported/approved, release claim, and exit. Never stay
+  alive waiting for CI or merge -- the merge bead plus shepherd own the wait.
 
-SHEPHERD PASS (stateless — any session, /loop, or cron)
-DEFAULT `bd gate check` → drain `bd ready --label agent:integrator
-  --unassigned --json` → per bead: probe PR eligibility before claiming;
-  ignore drafts and automated release PRs, otherwise claim with `bd update
-  <id> --claim`, probe merge-tree conflicts/checks/review, then merge, bounce,
-  or re-gate + release; comment every claimed probe outcome on the merge bead.
+SHEPHERD PASS (stateless -- any session, /loop, or cron)
+MUST Skip a bead whose `metadata.integration_owner` names another actor
+  (`orchestrate`) while that run is live; its own shepherd is mid-flight. Take it
+  only once the run is terminal -- that recovery is this actor's job, stealing an
+  active merge is not. The drain query filters by label alone, so this check is
+  what separates the two actors.
+DEFAULT `bd gate check` then drain `bd ready --label agent:integrator
+  --unassigned --json`; per bead: probe PR eligibility before claiming;
+  ignore drafts and automated release PRs, otherwise claim, probe
+  merge-tree/checks/review, then merge, bounce, or re-gate + release;
+  comment every probe outcome on the merge bead.
+
+REVIEW BOTS
+MUST Treat a configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
+  as part of merge readiness: probe `merge-probe.sh bot-review` at the exact head
+  before every merge. Only `absent` or `clean` clears; `pending`, `stale`, and
+  unknown are waits. Silence is not approval.
+MUST Treat `declined` (13) as a re-trigger rather than a wait: the bot refused
+  the round under its quota, so no further round arrives unprompted. Act on the
+  probe's `wait=` reopen instant. `wait=UNKNOWN` means re-check the PR before
+  re-triggering, because a wrong "window reopened" burns quota for no review.
+MUST Read actionability from the bot's own summary review body through its
+  adapter (CodeRabbit: `Actionable comments posted: N`) at the current head,
+  taking the LATEST round rather than the highest count -- every fix suggestion
+  hangs under that summary, and a max keeps a resolved round blocking forever.
+DEFAULT A new bot is a slug in `$PR_REVIEW_BOTS` plus an optional `ADAPTERS`
+  entry in `bot-review-probe.py`; without an adapter its count is unknown, so a
+  COMMENTED round reads `pending` instead of clearing.
+MUST Park an actionable round behind one unassigned `agent:coder` fix bead keyed
+  `review bot:<slug>@<head>`, exactly like CI-red. A durable bead, not a wisp:
+  the blocking dependency edge dies with a burned wisp.
+MUST Carry pointers -- summary URL, comment `path:line` + URL, `bot_review_head`
+  -- never a copy of the findings. The bot thread is live and its diff
+  suggestions render only on the PR.
+NOT Shepherd judgement on which findings are right; the claiming coder decides
+  what is correct and appropriate and replies on the PR to what it rejects.
+NOT Polling a bot round in-session; comment once per state@head, release, and
+  let the gate plus the next pass own the wait.
 
 ELIGIBILITY
-MUST Ignore a PR while `isDraft=true`: do not claim, gate, bounce, merge, or
-  close its merge/work beads.
-MUST Ignore automated release PRs when either the head branch starts
-  `release-please--branches--` or label `autorelease: pending` is present.
-  Do not infer release ownership from title text alone.
-MUST A merged release PR remains excluded; release classification precedes
-  open/merged lifecycle classification.
-MUST A closed-unmerged PR marks its merge bead blocked/failed and leaves every
-  dependent work bead blocked; never close it as successful landing.
-MUST Treat `Tracks-Bead` as a backlink only. Closing a verified PR closes its
-  merge bead; native dependency readiness performs the many-PR fan-in.
-MUST Close a `Closes-Bead` work item only when `bd ready` reports it after all
-  merge beads close, it has the exact `state:approved` label, its
-  children/gates are resolved, and every closing PR targets the repository
-  default branch with its merge commit proven there. A stacked merge is not
-  final delivery.
+MUST Ignore while `isDraft=true`: do not claim, gate, bounce, merge, or close.
+MUST Ignore automated release PRs (head branch `release-please--branches--` or
+  label `autorelease: pending`). Merged release PRs remain excluded.
+MUST Closed-unmerged PR marks its merge bead blocked/failed; dependent work
+  beads stay blocked; never close as successful.
+MUST Prove a merge bead's pr/repo/branch anchors against the live PR with
+  `landing-contract.py check-anchors` before merging; the PR body is not
+  evidence. Closing a verified PR closes its merge bead; native dependency
+  readiness performs fan-in.
+MUST Close a dependent work item only when: `bd ready` reports it, it has
+  `state:approved`, children/gates resolved, and every closing PR targets the
+  default branch with its merge commit proven there.
 
 BOUNCE-BACK (problem the shepherd cannot fix)
-MUST Dedupe first: an open fix bead with the same failure key (check+repo or
-  conflict file set) → `bd dep add <merge-bead> <existing-fix-bead>` +
-  correlation comments on both, no duplicate.
-MUST Otherwise file `bd create` with `discovered-from:<merge-bead>`, label
-  `agent:coder` (or `agent:reviewer`), ALWAYS unassigned; metadata carries
-  pr/branch/failure/check + origin_actor/origin_bead; description carries the
-  exact error, a reproduction command, "read <origin_bead>'s comments first",
-  and — when the same check is red on the base branch — "failure appears
-  pre-existing on <base>, not introduced by this branch".
-MUST Park and release: `bd dep add <merge-bead> <fix-bead>`, comment the merge
-  bead, `bd update <merge-bead> --assignee "" --status open`. The coder
-  closing the fix bead re-readies the merge bead — no messaging.
-DEFAULT Warm-context routing is the orchestrator's optimization: a live
-  orchestrator may claim the fix bead for its origin worker and route it via
-  its own channel; the shepherd's contract ends at filing unassigned.
-DEFAULT Non-blocking observations (flaky-but-passed test, warnings) become
-  `related`-linked beads or comments, never blocking deps.
+MUST Dedupe first: open fix bead with same failure key → `bd dep add` +
+  correlation comments, no duplicate.
+MUST Otherwise file `bd create --discovered-from:<merge-bead>`, label
+  `agent:coder`, ALWAYS unassigned; metadata carries pr/branch/failure/check +
+  origin_actor/origin_bead; description carries the exact error, reproduction
+  command, and "read <origin_bead>'s comments first". Note pre-existing base
+  failures when detected.
+MUST Park: `bd dep add <merge-bead> <fix-bead>`, comment merge bead, release
+  claim (`--assignee "" --status open`). Coder closing fix re-readies merge.
+DEFAULT Warm-context routing: a live orchestrator may claim the fix bead for
+  its origin worker; the shepherd's contract ends at filing unassigned.
+DEFAULT Non-blocking observations (flaky-but-passed, warnings) become
+  `related`-linked beads or comments, not blocking deps.
 
 PICKUP
-DEFAULT Workers poll `bd ready --assignee <me> --json` first (orchestrator may
-  have pinned work), then `bd ready --label agent:<kind> --unassigned --json`;
-  bd prime injection and catchup surface ready work — no messaging needed.
+DEFAULT Workers poll `bd ready --assignee <me> --json` first, then
+  `bd ready --label agent:<kind> --unassigned --json`.
 
 MERGE SLOT
-MUST One `bd merge-slot create` per repo (idempotent); `bd merge-slot acquire`
-  without `--wait` before `gh pr merge`, `release --holder <same-id>` on every
-  exit path — the slot serializes merging across concurrent shepherd sessions.
-  A held slot ends this pass for that PR; Beads 1.1 waiters are advisory, not
-  a FIFO queue.
+MUST One `bd merge-slot create` per repo (idempotent); `acquire` without
+  `--wait` before `gh pr merge`; `release --holder <same-id>` on every exit
+  path. A held slot ends this pass for that PR.
 
 DEAD CLAIMS
-MUST Claim refusal means a live holder — skip the bead. Force-release
-  (`bd update <id> --assignee "" --status open`) only after confirming the
-  holder session is dead: its session-id actor shows no bead activity since
-  before your session started and no live session matches it.
+MUST Treat a claim refusal as a live holder and skip that PR this pass.
+  Dead-claim recovery is the `beads` steering's rule; follow it there instead of
+  a local restatement.

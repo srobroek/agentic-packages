@@ -15,12 +15,20 @@ EXECUTION SHAPES
 DEFAULT Store repository workflows under `.beads/formulas/`; user formulas are
   personal only, and package-specific formulas stay versioned in the owning
   APM package rather than the Beads setup or policy package.
-MUST Validate formula source with `bd formula show` or `bd mol seed`, then cook
-  compile and runtime forms before pouring shared work.
+MUST Validate formula source with `bd cook`, never `bd formula show`: show prints
+  only a child formula's own steps, and pour reports every formula error as
+  "not found as formula or proto ID". Assert composed output with
+  `bd mol pour --dry-run`.
+DEFAULT Authoring, editing, or debugging a formula loads the `build-formula`
+  skill; it owns the step schema, conditional steps, gates, and the assertion
+  set. This file owns execution shape and disposition only.
 
 COMPOSITION
 DEFAULT Use a sequential bond for ordered graphs, parallel for independent
   graphs, and conditional for failure-triggered remediation.
+NOT Bond to select optional stages or rewire an inherited step: it joins
+  root-to-root and needs a `mol-` prefixed name. Step-level optionality is
+  `condition` on the step; see the `build-formula` skill.
 NOT Treat "submolecule" as a Beads data type; use fixed children or a bonded
   child graph according to ownership and reuse.
 DEFAULT Add expansions, aspects, or named bond points only after two consumers

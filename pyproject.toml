@@ -1,0 +1,42 @@
+[tool.pytest.ini_options]
+# Twelve test-file basenames are duplicated across packages -- `bot-review-probe`
+# and `worktrunk-writer` are deliberately copied per package so no package reaches
+# into another's scripts at runtime, and their suites are copied with them. Under
+# pytest's default `prepend` import mode those copies collide on module name
+# ("import file mismatch") the moment two of them are collected in one run, and
+# adding `__init__.py` is not an option: these directories ship as skill payloads,
+# not importable packages.
+#
+# `importlib` gives each file its own module identity, so duplicate basenames stop
+# colliding. CI never hit this because it runs one package per job; a whole-repo
+# `pytest` run did.
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "templates/",
+    "__pycache__/",
+    ".venv/",
+    "node_modules/",
+    # Preserved validation-run artifacts: verbatim output from real spawned
+    # subagents, kept as evidence for the bead-as-brief eval. Reformatting them
+    # to satisfy a linter would edit the record being reported on.
+    "specs/*/validation-run/",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = [
+    "E501",   # line-too-long: long lines are intentional in many scripts
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files: allow assert + magic comparisons
+".apm/scripts/test_*.py" = ["S101"]
+
+# ty configuration (ty is not currently installed; add when available)
+[tool.ty.rules]
+# non-strict: suppress noisy warnings until baseline is established
+strict = false

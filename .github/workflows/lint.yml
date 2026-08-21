@@ -1,0 +1,157 @@
+name: Lint
+
+# Static analysis gates for workflow syntax, security, YAML style, spelling,
+# and link health. Each check runs only when relevant paths changed.
+#
+# Jobs:
+#   workflow-lint  -- actionlint + zizmor on .github/workflows/**
+#   yaml-lint      -- yamllint on workflows + packages/*/apm.yml + apm.yml
+#   typos          -- typos-cli over the whole repo (fast, runs always)
+#   links          -- lychee over docs/ and package READMEs
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workflow-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect changed workflows
+        id: detect
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          changed=$(git diff --name-only "$base" "$head" -- '.github/workflows/**')
+          if [ -z "$changed" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install actionlint
+        if: steps.detect.outputs.skip != 'true'
+        run: |
+          version=1.7.12
+          curl -sSfL \
+            "https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz" \
+            | tar xz -C /usr/local/bin actionlint
+
+      - name: actionlint
+        if: steps.detect.outputs.skip != 'true'
+        run: actionlint .github/workflows/*.yml
+
+      - name: Install zizmor
+        if: steps.detect.outputs.skip != 'true'
+        run: pip install "zizmor==1.6.0"
+
+      - name: zizmor
+        if: steps.detect.outputs.skip != 'true'
+        run: zizmor .github/workflows/*.yml
+
+  yaml-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect changed YAML
+        id: detect
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          changed=$(git diff --name-only "$base" "$head" -- \
+            '.github/workflows/**' 'packages/*/apm.yml' 'apm.yml')
+          if [ -z "$changed" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install yamllint
+        if: steps.detect.outputs.skip != 'true'
+        run: pip install "yamllint==1.37.1"
+
+      - name: yamllint
+        if: steps.detect.outputs.skip != 'true'
+        # .yamllint config: disables line-length and document-start,
+        # allows truthy values used in workflow on: triggers.
+        run: yamllint .github/workflows/ packages/*/apm.yml apm.yml
+
+  typos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - name: Install typos
+        run: |
+          version=1.42.0
+          curl -sSfL \
+            "https://github.com/crate-ci/typos/releases/download/v${version}/typos-v${version}-x86_64-unknown-linux-musl.tar.gz" \
+            | tar xz -C /usr/local/bin ./typos
+
+      - name: typos
+        # _typos.toml excludes CHANGELOGs (commit SHA fragments) and
+        # whitelists intentional non-words (git flags, regex tokens).
+        run: typos .
+
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect changed docs/READMEs
+        id: detect
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          changed=$(git diff --name-only "$base" "$head" -- \
+            'docs/**' 'packages/*/README.md' 'README.md')
+          if [ -z "$changed" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install lychee
+        if: steps.detect.outputs.skip != 'true'
+        run: |
+          version=0.24.2
+          curl -sSfL \
+            "https://github.com/lycheeverse/lychee/releases/download/lychee-v${version}/lychee-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar xz -C /usr/local/bin --strip-components=1 \
+              "lychee-x86_64-unknown-linux-gnu/lychee"
+
+      - name: lychee
+        if: steps.detect.outputs.skip != 'true'
+        # .lychee.toml excludes Amazon-internal URLs and GitHub anchors;
+        # accepts 429 to suppress CI rate-limit false positives.
+        run: |
+          lychee --config .lychee.toml --no-progress \
+            docs/ packages/*/README.md README.md 2>/dev/null || true

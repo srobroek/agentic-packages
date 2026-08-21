@@ -1,5 +1,5 @@
 name: find-tools
-version: 1.1.0
+version: 1.2.0
 description: >-
   Discover and vet reusable skills, agents, MCP servers, connectors, and APM
   packages. Use when the user asks to find a capability, compare tools, fill a
@@ -8,7 +8,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
-target: all
 includes: auto
 category: agentic-maintenance
 tags:

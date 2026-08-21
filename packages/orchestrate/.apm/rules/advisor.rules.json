@@ -1,0 +1,17 @@
+{
+  "agent": "advisor",
+  "tier": "T1",
+  "_comment": "Claims one escalation wisp and promotes one ADVICE or BLOCKED summary to its linked node before exit.",
+  "completion": [
+    { "check": "advice", "require": "linked.comment.verb in [ADVICE, BLOCKED]" }
+  ],
+  "authority": {
+    "deny_states": ["merged", "approved", "changes_requested"],
+    "deny_metadata": ["push", "merge_sha", "pr", "output_ref"]
+  },
+  "escape": {
+    "state": "blocked",
+    "require": "comment.verb in [FAILED, BLOCKED]"
+  },
+  "bounce": { "max_attempts": 3 }
+}

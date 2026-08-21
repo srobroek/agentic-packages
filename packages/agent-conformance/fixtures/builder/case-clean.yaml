@@ -1,0 +1,20 @@
+agent: coder
+regime: clean
+prompt: |
+  In svc/utils.py, rename the function `compute_sum` to `add_values`.
+  Update all call sites in the same file. Do not change any logic.
+sandbox:
+  git: true
+  files:
+    svc/utils.py: |
+      def compute_sum(a, b):
+          return a + b
+
+      def main():
+          result = compute_sum(1, 2)
+          return result
+assert:
+  first_line: '^Changed files:'
+  max_words: 120
+  no_reprint: true
+timeout_s: 120

@@ -80,68 +80,24 @@ class ConflictProbeTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertEqual(result.stdout, "root.txt\n")
 
-    def test_land_delegates_exact_arguments_in_external_mode(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            contract = root / "landing-contract.sh"
-            contract.write_text(
-                "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\"\nexit 17\n",
-                encoding="utf-8",
-            )
-            contract.chmod(contract.stat().st_mode | stat.S_IXUSR)
-            env = os.environ.copy()
-            env["ORCHESTRATE_LANDING_CONTRACT"] = str(contract)
-            args = (
-                "orc-run.1",
-                "owner/repo",
-                "42",
-                "stack-base",
-                "main",
-                "a" * 40,
-                "b" * 40,
-                "squash",
-            )
+    def test_exposes_only_self_contained_verbs(self):
+        """orchestrate must not reach into another package's scripts at runtime.
 
-            result = run("land", *args, env=env)
+        The landing verbs used to `exec` pr-shepherd's landing-contract.sh through a
+        relative-path probe. The two are separate tools, so those verbs are gone and
+        must not come back: a reintroduced delegation is a constitution violation
+        (Principle I, no runtime reach-in), not a feature.
+        """
+        for verb in ("land", "verify-landed", "check-run"):
+            with self.subTest(verb=verb):
+                result = run(verb)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("usage: conflicts|pairwise|ci", result.stderr)
 
-        self.assertEqual(result.returncode, 17)
-        self.assertEqual(result.stdout.splitlines(), ["land", *args, "external"])
-
-    def test_verify_landed_delegates_without_merge_authority(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            contract = root / "landing-contract.sh"
-            contract.write_text(
-                "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\"\n",
-                encoding="utf-8",
-            )
-            contract.chmod(contract.stat().st_mode | stat.S_IXUSR)
-            env = os.environ.copy()
-            env["ORCHESTRATE_LANDING_CONTRACT"] = str(contract)
-            args = ("owner/repo", "42", "main", "a" * 40, "b" * 40, "c" * 40)
-
-            result = run("verify-landed", *args, env=env)
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines(), ["verify-landed", *args])
-
-    def test_check_run_delegates_exact_head(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            contract = root / "landing-contract.sh"
-            contract.write_text(
-                "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\"\n",
-                encoding="utf-8",
-            )
-            contract.chmod(contract.stat().st_mode | stat.S_IXUSR)
-            env = os.environ.copy()
-            env["ORCHESTRATE_LANDING_CONTRACT"] = str(contract)
-            args = ("owner/repo", "12345", "b" * 40)
-
-            result = run("check-run", *args, env=env)
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines(), ["check-run", *args])
+    def test_script_names_no_foreign_package_path(self):
+        source = PROBE.read_text(encoding="utf-8")
+        self.assertNotIn("landing-contract.sh", source)
+        self.assertNotIn("ORCHESTRATE_LANDING_CONTRACT", source)
 
 
 if __name__ == "__main__":

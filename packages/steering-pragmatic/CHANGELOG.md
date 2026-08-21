@@ -1,5 +1,76 @@
 # Changelog
 
+## [6.1.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v6.0.2...steering-pragmatic--v6.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [6.0.2](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v6.0.1...steering-pragmatic--v6.0.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [6.0.1](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v6.0.0...steering-pragmatic--v6.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* quote frontmatter values holding a colon, so six primitives deploy at all ([#826](https://github.com/srobroek/agentic-packages/issues/826)) ([b3b6325](https://github.com/srobroek/agentic-packages/commit/b3b6325f0bf881160f6977c5257bc76d3c8ccae1))
+
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v5.0.0...steering-pragmatic--v6.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814))
+
+### Refactors
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814)) ([aea023b](https://github.com/srobroek/agentic-packages/commit/aea023bba47a18a87ee1d366e9c1d7e54470b9b4))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.4.0...steering-pragmatic--v5.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+
+### Refactors
+
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+
+## [4.4.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.3.3...steering-pragmatic--v4.4.0) (2026-07-27)
+
+
+### Features
+
+* multi-agent coexistence steering package ([#782](https://github.com/srobroek/agentic-packages/issues/782)) ([f3278f3](https://github.com/srobroek/agentic-packages/commit/f3278f3ee81f8ae0ee874086df903ab9432f0b7b))
+
+## [4.3.3](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.3.2...steering-pragmatic--v4.3.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
+## [4.3.2](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.3.1...steering-pragmatic--v4.3.2) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [4.3.1](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.3.0...steering-pragmatic--v4.3.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [4.3.0](https://github.com/srobroek/agentic-packages/compare/steering-pragmatic--v4.2.0...steering-pragmatic--v4.3.0) (2026-07-16)
 
 

@@ -1,5 +1,61 @@
 # Changelog
 
+## [4.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v4.0.2...hooks-chezmoi-guard--v4.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [4.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v4.0.1...hooks-chezmoi-guard--v4.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v4.0.0...hooks-chezmoi-guard--v4.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v3.0.0...hooks-chezmoi-guard--v4.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+
+### Bug Fixes
+
+* close two guard bypasses found by fuzzing the Python hooks ([#806](https://github.com/srobroek/agentic-packages/issues/806)) ([7505cc7](https://github.com/srobroek/agentic-packages/commit/7505cc76fccad74c1ba0c5d2d017320b721475ff))
+
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.1.1...hooks-chezmoi-guard--v3.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+
+### Bug Fixes
+
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.1.0...hooks-chezmoi-guard--v2.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-chezmoi-guard--v2.0.1...hooks-chezmoi-guard--v2.1.0) (2026-07-16)
 
 

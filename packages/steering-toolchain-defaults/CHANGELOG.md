@@ -1,5 +1,56 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v3.0.2...steering-toolchain-defaults--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.0.2](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v3.0.1...steering-toolchain-defaults--v3.0.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.0.1](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v3.0.0...steering-toolchain-defaults--v3.0.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v2.1.2...steering-toolchain-defaults--v3.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
+## [2.1.2](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v2.1.1...steering-toolchain-defaults--v2.1.2) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [2.1.1](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v2.1.0...steering-toolchain-defaults--v2.1.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
 ## [2.1.0](https://github.com/srobroek/agentic-packages/compare/steering-toolchain-defaults--v2.0.0...steering-toolchain-defaults--v2.1.0) (2026-07-16)
 
 

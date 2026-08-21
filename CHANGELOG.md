@@ -1,5 +1,352 @@
 # Changelog
 
+## [29.1.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.2...srobroek-agentic--v29.1.3) (2026-08-18)
+
+
+### Bug Fixes
+
+* **orchestrate:** stop deny_metadata flagging orchestrator-stamped anchors ([#872](https://github.com/srobroek/agentic-packages/issues/872)) ([4532c0a](https://github.com/srobroek/agentic-packages/commit/4532c0a5367c2e001518d3ce01d29d12ce102f13))
+
+## [29.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.1...srobroek-agentic--v29.1.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **codex:** skip unmapped deployed agents during model injection ([#864](https://github.com/srobroek/agentic-packages/issues/864)) ([9bfdc78](https://github.com/srobroek/agentic-packages/commit/9bfdc7829d9996743d6381245ab95406446e6200))
+
+## [29.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.0...srobroek-agentic--v29.1.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **ci:** use GitHub App client ID input ([a754415](https://github.com/srobroek/agentic-packages/commit/a75441515f1f5e4a1f902230ffcb1b59ce8e1b00))
+* **pr-shepherd:** close the four remaining fuzz defects, unblock bats CI, and clear the ruff backlog ([#863](https://github.com/srobroek/agentic-packages/issues/863)) ([80ef3db](https://github.com/srobroek/agentic-packages/commit/80ef3db32dc2d604e7d9d65a904d712acb15e85f))
+
+## [29.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.0.1...srobroek-agentic--v29.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [29.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.0.0...srobroek-agentic--v29.0.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* close the guard hardening findings ([#851](https://github.com/srobroek/agentic-packages/issues/851)) ([1cb2128](https://github.com/srobroek/agentic-packages/commit/1cb2128042b203b78d3ade28c109b59e49d5b962))
+
+## [29.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v28.0.0...srobroek-agentic--v29.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* merge-bead trailers are no longer required outside an orchestrate run, and are advisory rather than blocking inside one. A repository that relied on this hook to enforce merge-queue linkage on every PR must set PR_MERGE_QUEUE_ENFORCE, and must treat the advisory rather than a denial as the signal.
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829))
+
+### Bug Fixes
+
+* drop the PR bead trailers, and have the shepherd verify its own anchors ([#824](https://github.com/srobroek/agentic-packages/issues/824)) ([4ea4081](https://github.com/srobroek/agentic-packages/commit/4ea4081e6f7acb95d49cb977c69e1e119471f983))
+* quote frontmatter values holding a colon, so six primitives deploy at all ([#826](https://github.com/srobroek/agentic-packages/issues/826)) ([b3b6325](https://github.com/srobroek/agentic-packages/commit/b3b6325f0bf881160f6977c5257bc76d3c8ccae1))
+
+
+### Refactors
+
+* drop the speckit package, now its own repository ([#829](https://github.com/srobroek/agentic-packages/issues/829)) ([583c6ab](https://github.com/srobroek/agentic-packages/commit/583c6ab411201cfda3bd3a2c0911652467b27989))
+
+## [28.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v27.0.0...srobroek-agentic--v28.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820))
+
+### Refactors
+
+* **speckit:** absorb speckit-beads and steering-speckit into one package ([#820](https://github.com/srobroek/agentic-packages/issues/820)) ([c1b2007](https://github.com/srobroek/agentic-packages/commit/c1b200754c9dd4a21c33035f28fd45052a827bd1))
+
+## [27.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v26.0.0...srobroek-agentic--v27.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **pr-shepherd:** scripts/landing-contract.sh is replaced by scripts/landing-contract.py. Callers invoking the path directly must update it.
+* **adr-as-beads:** hold ADRs as beads decision beads, generate the MADR files ([#813](https://github.com/srobroek/agentic-packages/issues/813))
+* mcp-repomix is removed. Eight external apm.yml files still pin it, including the global ~/.apm/apm.yml, and must drop the dependency before this lands or apm install will fail to resolve it.
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814))
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* **beads:** the beads sync hooks are now Python and require python3 on PATH. beads-sync-hydrate.sh and beads-maintenance-check.sh are replaced by the single beads-sync-session.py; a machine-local override naming either old script by path must be repointed.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* the hooks-worktree and mcp-1mcp packages are removed. Worktree lifecycle and cleanup are owned by hooks-worktrunk, which requires the wt binary; 1mcp has no replacement because nothing used it.
+* port the repo-local hooks to Python ([#802](https://github.com/srobroek/agentic-packages/issues/802))
+
+### Features
+
+* **adr-as-beads:** hold ADRs as beads decision beads, generate the MADR files ([#813](https://github.com/srobroek/agentic-packages/issues/813)) ([c155600](https://github.com/srobroek/agentic-packages/commit/c155600d6da405d50b2839a9a0e9111883391fd0))
+* **adr:** record decisions as they land, not at closeout ([#808](https://github.com/srobroek/agentic-packages/issues/808)) ([e9eea09](https://github.com/srobroek/agentic-packages/commit/e9eea09282b8c1654e0735caa1a7a277f53b7120))
+* **beads:** opt-in sync hooks — Dolt first, JSONL fallback ([#779](https://github.com/srobroek/agentic-packages/issues/779)) ([c7047fc](https://github.com/srobroek/agentic-packages/commit/c7047fc46a6b6b474b48e743516745921f9d22f5))
+* **pr-shepherd:** port the landing contract to Python and prove merge-queue landings ([#807](https://github.com/srobroek/agentic-packages/issues/807)) ([841df3f](https://github.com/srobroek/agentic-packages/commit/841df3fe224004acb42e707bcca7624738def973))
+* token-savings package with measured context-cost reduction ([#803](https://github.com/srobroek/agentic-packages/issues/803)) ([14b987e](https://github.com/srobroek/agentic-packages/commit/14b987edb9bcfb2bbcaf6c308af755fcea540f00))
+
+
+### Bug Fixes
+
+* close two guard bypasses found by fuzzing the Python hooks ([#806](https://github.com/srobroek/agentic-packages/issues/806)) ([7505cc7](https://github.com/srobroek/agentic-packages/commit/7505cc76fccad74c1ba0c5d2d017320b721475ff))
+
+
+### Refactors
+
+* consolidate the worktree and chezmoi hooks, drop four dead ones ([#804](https://github.com/srobroek/agentic-packages/issues/804)) ([cb49b0a](https://github.com/srobroek/agentic-packages/commit/cb49b0ab2119642c2902d030f956fd182c4181e2))
+* drop the mcp-repomix package for the repomix CLI ([#815](https://github.com/srobroek/agentic-packages/issues/815)) ([dc98847](https://github.com/srobroek/agentic-packages/commit/dc988471e6e41fc969bf78cd32ae479b3b2a185c))
+* port the repo-local hooks to Python ([#802](https://github.com/srobroek/agentic-packages/issues/802)) ([db7dd5a](https://github.com/srobroek/agentic-packages/commit/db7dd5a7aa7bacfbff3ca4a79587cea7e19c8cd0))
+* port the skill scripts to Python and fuzz every port ([#811](https://github.com/srobroek/agentic-packages/issues/811)) ([773ac2b](https://github.com/srobroek/agentic-packages/commit/773ac2bced832cb0144b7e21e6937e69b9e3b631))
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814)) ([aea023b](https://github.com/srobroek/agentic-packages/commit/aea023bba47a18a87ee1d366e9c1d7e54470b9b4))
+
+## [26.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v25.0.0...srobroek-agentic--v26.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the hook script is now subagent-model-guard.py and requires python3 on PATH.
+* commands that previously passed silently are now judged. A destructive verb inside an inline shell string, or behind timeout, flock, or nice with an option value, is denied where it was allowed, and a download piped to any interpreter now warns.
+* the PreToolUse hook is now pr-close-guard.py and the pre-commit entry is commit-msg-rewrite.py; both require python3 on PATH. A project that vendored normalize-closes.sh must re-vendor commit-msg-rewrite.py alongside close_keywords.py.
+* **steering-git-workflow:** the hook script is now attribution-guard.py and requires python3 on PATH.
+* the secrets-scan and hooks-precommit-gate packages are removed. Secret scanning moves to the gitleaks pre-commit hook; install real git hooks for tool-independent enforcement.
+
+### Bug Fixes
+
+* **steering-git-workflow:** stop blocking pull requests when the policy check cannot verify them ([#794](https://github.com/srobroek/agentic-packages/issues/794)) ([023c0f0](https://github.com/srobroek/agentic-packages/commit/023c0f087717a57386d18d06f2575fca0435b7b1))
+* stop the hook guards blocking correct work, and close the wrapper bypasses ([#796](https://github.com/srobroek/agentic-packages/issues/796)) ([217a455](https://github.com/srobroek/agentic-packages/commit/217a4559fe3d0be9fb2751ffbefd41dfe8903f0d))
+
+
+### Refactors
+
+* drop secrets-scan, hooks-precommit-gate, and the auto-approve hooks ([#792](https://github.com/srobroek/agentic-packages/issues/792)) ([195f194](https://github.com/srobroek/agentic-packages/commit/195f1946b7dd3212c672d827edcc7e2c292e39bc))
+* port every remaining shell hook to Python ([#797](https://github.com/srobroek/agentic-packages/issues/797)) ([d01fd9a](https://github.com/srobroek/agentic-packages/commit/d01fd9a79bdc07b01d4477196c5277939fa935a3))
+* port the close-keyword hooks to Python ([#795](https://github.com/srobroek/agentic-packages/issues/795)) ([472e125](https://github.com/srobroek/agentic-packages/commit/472e125a9e57efbc447a6b92a8d38a144916c8c9))
+
+## [25.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.1.1...srobroek-agentic--v25.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the codex-hook-contract package is renamed to agent-hook-contract. Update any dependency pin to the new package path.
+* **hooks-bash-safety:** agentic-source-guard no longer runs; edits to agentic source files are no longer hook-gated.
+
+### Features
+
+* require Python for agent hooks and generalize the hook contract to Claude and Codex ([#790](https://github.com/srobroek/agentic-packages/issues/790)) ([45d3606](https://github.com/srobroek/agentic-packages/commit/45d36065aa0f56c9e34010388226aef8eb206fd8))
+
+
+### Bug Fixes
+
+* **hooks-bash-safety:** block rm -rf that a leading cd redirects to a system path ([#788](https://github.com/srobroek/agentic-packages/issues/788)) ([34bfd74](https://github.com/srobroek/agentic-packages/commit/34bfd74cf22648d223e2c76f1d073ff7987787a8))
+
+## [24.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.1.0...srobroek-agentic--v24.1.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **agent-management:** run the global scripts through uv, not a shadowed python3 ([#786](https://github.com/srobroek/agentic-packages/issues/786)) ([a264e1f](https://github.com/srobroek/agentic-packages/commit/a264e1f2341f2cdb0e092f6b430782b1c1ceece5))
+
+## [24.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v24.0.0...srobroek-agentic--v24.1.0) (2026-07-27)
+
+
+### Features
+
+* multi-agent coexistence steering package ([#782](https://github.com/srobroek/agentic-packages/issues/782)) ([f3278f3](https://github.com/srobroek/agentic-packages/commit/f3278f3ee81f8ae0ee874086df903ab9432f0b7b))
+
+## [24.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v23.0.0...srobroek-agentic--v24.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780))
+
+### Refactors
+
+* move write-docs to its own repo, srobroek/slopvac ([#780](https://github.com/srobroek/agentic-packages/issues/780)) ([3a8fd27](https://github.com/srobroek/agentic-packages/commit/3a8fd27dab5a5692ee0e669ca7942584355ec939))
+
+## [23.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v22.0.0...srobroek-agentic--v23.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* `project-setup` is no longer part of this marketplace. Install it from `srobroek/project-setup` directly.
+
+### Features
+
+* drop the external project-setup catalog entry ([#776](https://github.com/srobroek/agentic-packages/issues/776)) ([39c8501](https://github.com/srobroek/agentic-packages/commit/39c85017328614c8244f4b2611fc2e76d45b8f07))
+
+## [22.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.2...srobroek-agentic--v22.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* give every APM instruction an explicit applyTo, add drift guard ([#769](https://github.com/srobroek/agentic-packages/issues/769)) ([d983034](https://github.com/srobroek/agentic-packages/commit/d98303486d87b5dfb348a4a04fa435afa5fce692))
+
+## [21.1.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.1...srobroek-agentic--v21.1.2) (2026-07-26)
+
+
+### Bug Fixes
+
+* **orchestrate:** stop the run-marker bind depending on a deployed exec bit ([#767](https://github.com/srobroek/agentic-packages/issues/767)) ([97b5ea7](https://github.com/srobroek/agentic-packages/commit/97b5ea7d190fc9181156b29c79a34952db23847a))
+
+## [21.1.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.1.0...srobroek-agentic--v21.1.1) (2026-07-26)
+
+
+### Documentation
+
+* add the orchestrate architecture reference ([#759](https://github.com/srobroek/agentic-packages/issues/759)) ([c608552](https://github.com/srobroek/agentic-packages/commit/c608552ca2a884947336ddd0042e7957a6b35263))
+
+## [21.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v21.0.0...srobroek-agentic--v21.1.0) (2026-07-26)
+
+
+### Features
+
+* one shepherd per repository via the sheepdog patrol lease ([#758](https://github.com/srobroek/agentic-packages/issues/758)) ([94f324b](https://github.com/srobroek/agentic-packages/commit/94f324b60058cbdb236bb431f33aaabaff3cd97d))
+
+## [21.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v20.0.0...srobroek-agentic--v21.0.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741))
+
+### Features
+
+* **orchestrate:** enforce the parent-managed activation contract and cut contradictory steering ([#741](https://github.com/srobroek/agentic-packages/issues/741)) ([c72959f](https://github.com/srobroek/agentic-packages/commit/c72959f0f0f5300f6b049c04ec878a164d39d5d5))
+
+## [20.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v19.0.0...srobroek-agentic--v20.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727))
+
+### Chores
+
+* remove mcp-gitnexus and three redundant language-steering packages ([#727](https://github.com/srobroek/agentic-packages/issues/727)) ([11fc470](https://github.com/srobroek/agentic-packages/commit/11fc470dcb3a3a6a840f19d19b1f31c54c77eeb1))
+
+## [19.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v18.0.0...srobroek-agentic--v19.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* deny unmanaged agent worktrees and route the native worktree lifecycle through Worktrunk ([#725](https://github.com/srobroek/agentic-packages/issues/725))
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724))
+* **write-docs:** requires the vale binary on PATH (mise use -g vale, or brew install vale). Suppression syntax changes from <!-- write-docs:allow E2 --> to Vale's <!-- vale WriteDocs.SlopLexicon = NO --> off/on pairs, which are block-scoped rather than line-scoped.
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729))
+
+### Features
+
+* deny unmanaged agent worktrees and route the native worktree lifecycle through Worktrunk ([#725](https://github.com/srobroek/agentic-packages/issues/725)) ([cc5e4d1](https://github.com/srobroek/agentic-packages/commit/cc5e4d145d50d5aa668cb6ce35d71443d3405966))
+* **write-docs:** check documentation prose with Vale instead of a bespoke linter ([#721](https://github.com/srobroek/agentic-packages/issues/721)) ([43fc7f7](https://github.com/srobroek/agentic-packages/commit/43fc7f766c6f4a9c6317a71f18ba33ff3fbf507c))
+
+
+### Bug Fixes
+
+* close three guard bypasses and eight broken agent references ([#722](https://github.com/srobroek/agentic-packages/issues/722)) ([cbc6875](https://github.com/srobroek/agentic-packages/commit/cbc6875f53b3b048f4fe882bad69305a04e47bc3))
+* **worktrunk-writer:** stop the hook blocking all delegation repo-wide ([#729](https://github.com/srobroek/agentic-packages/issues/729)) ([e2292c6](https://github.com/srobroek/agentic-packages/commit/e2292c6c568f801fb96d70df3afffc923e6cc767))
+
+
+### Refactors
+
+* move guidance into the scripts and contracts that enforce it ([#726](https://github.com/srobroek/agentic-packages/issues/726)) ([40bcfdf](https://github.com/srobroek/agentic-packages/commit/40bcfdf27cd6bbf72db02ce143482eac91d4a4cc))
+
+
+### Chores
+
+* remove the unused hooks-portability-ci package and three dead doc mirrors ([#724](https://github.com/srobroek/agentic-packages/issues/724)) ([6897316](https://github.com/srobroek/agentic-packages/commit/6897316695052c14b4055e3f8350d5ec1d7327cf))
+
+## [18.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.3.0...srobroek-agentic--v18.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** subagent_type 'coder' -> 'builder', 'parallel-coder' -> 'parallel-builder'. Update any spawn calls referencing the old names.
+
+### Features
+
+* enforce Worktrunk worktree lifecycle for agents ([46ec4cb](https://github.com/srobroek/agentic-packages/commit/46ec4cb5385c41020870b5492f1f83a7c8e59d14))
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
+
+### Bug Fixes
+
+* **orchestrate:** restore domain-specialist; rename coder-&gt;builder ([#715](https://github.com/srobroek/agentic-packages/issues/715)) ([223e0c9](https://github.com/srobroek/agentic-packages/commit/223e0c95cb8dee08d1f3cd00cd96cb598d78d24e))
+
+## [17.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.2.0...srobroek-agentic--v17.3.0) (2026-07-24)
+
+
+### Features
+
+* **mcp-gitnexus:** add skills and tools reference ([#689](https://github.com/srobroek/agentic-packages/issues/689)) ([3e2d3c4](https://github.com/srobroek/agentic-packages/commit/3e2d3c4694cad78235ff144a407106f49fad6efd))
+
+## [17.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.1.0...srobroek-agentic--v17.2.0) (2026-07-24)
+
+
+### Features
+
+* **mcp-gitnexus:** GitNexus MCP server config with sharp prebuilt-binary guard and graph-routing steering ([#684](https://github.com/srobroek/agentic-packages/issues/684)) ([b2a9f51](https://github.com/srobroek/agentic-packages/commit/b2a9f51696d746c303d996b136b37d9a02c21124))
+
+## [17.1.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v17.0.0...srobroek-agentic--v17.1.0) (2026-07-24)
+
+
+### Features
+
+* agent conformance harness — behavioral contract tests for all shipped agents ([#682](https://github.com/srobroek/agentic-packages/issues/682)) ([1d44052](https://github.com/srobroek/agentic-packages/commit/1d440522d5650c8a4c9ca78f2bcc337a6bd843dd))
+* **hooks-subagent-fork:** deny full-history and oversized fork_turns on Codex spawns ([#681](https://github.com/srobroek/agentic-packages/issues/681)) ([8330af5](https://github.com/srobroek/agentic-packages/commit/8330af57eb08291940f38a6be43af674af2d63d8))
+
+## [17.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.12.0...srobroek-agentic--v17.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668))
+
+### Features
+
+* CI runs every test suite, caches dependencies, and gates workflow quality ([#666](https://github.com/srobroek/agentic-packages/issues/666)) ([a4461cc](https://github.com/srobroek/agentic-packages/commit/a4461cc314f2c3baa54e511be44d6589ba769996))
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+* retire generic tier-wrapper agents in favor of semantic roles ([#668](https://github.com/srobroek/agentic-packages/issues/668)) ([5ba8f01](https://github.com/srobroek/agentic-packages/commit/5ba8f019572661f184468fd99bf3fbfc9d5240e6))
+
+
+### Bug Fixes
+
+* hook sanitizer detects dead project-level entries and PR guard fails open ([#665](https://github.com/srobroek/agentic-packages/issues/665)) ([0f1dbff](https://github.com/srobroek/agentic-packages/commit/0f1dbff9bf6d2021751f6f10f2903dcb45875092))
+* **inject-agent-models:** tolerate identical duplicate mappings across packages ([#669](https://github.com/srobroek/agentic-packages/issues/669)) ([c2eda86](https://github.com/srobroek/agentic-packages/commit/c2eda860c2caf85c5645b323779f5c669a8adaf2))
+* script dependencies self-declare and agent contracts match reality ([#667](https://github.com/srobroek/agentic-packages/issues/667)) ([6e0f967](https://github.com/srobroek/agentic-packages/commit/6e0f96709f0f88b76461a750e9b46aa5045cede6))
+* steering matches deployed models and sheds per-session token weight ([#664](https://github.com/srobroek/agentic-packages/issues/664)) ([05ac136](https://github.com/srobroek/agentic-packages/commit/05ac136fb5b81c8a3b2497078eb79d88a4aa9f2c))
+
+## [16.12.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.11.0...srobroek-agentic--v16.12.0) (2026-07-23)
+
+
+### Features
+
+* standalone quality-guard agents for docs, lint, metrics, maintenance, and diff triage ([#656](https://github.com/srobroek/agentic-packages/issues/656)) ([1263c67](https://github.com/srobroek/agentic-packages/commit/1263c670ce5f7ab7de5b6cc5b55803e1dadaf8c0))
+
+## [16.11.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.10.0...srobroek-agentic--v16.11.0) (2026-07-23)
+
+
+### Features
+
+* **mcp-serena:** pool backends by checkout ([#653](https://github.com/srobroek/agentic-packages/issues/653)) ([13f6c17](https://github.com/srobroek/agentic-packages/commit/13f6c1737d3a7985d16ec661dd6d141771c7745e))
+
+## [16.10.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.9.0...srobroek-agentic--v16.10.0) (2026-07-23)
+
+
+### Features
+
+* add documentation, lint, and metrics agents to orchestrate ([#650](https://github.com/srobroek/agentic-packages/issues/650)) ([10c1e30](https://github.com/srobroek/agentic-packages/commit/10c1e30ae271c1a5801301ae1948f7d2caea4ff8))
+* **user-journeys:** add Beads verification formulas ([#606](https://github.com/srobroek/agentic-packages/issues/606)) ([1ae5c5c](https://github.com/srobroek/agentic-packages/commit/1ae5c5c29fe185c62d2445bdea8bb6e04ef3006d))
+
 ## [16.9.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v16.8.0...srobroek-agentic--v16.9.0) (2026-07-22)
 
 

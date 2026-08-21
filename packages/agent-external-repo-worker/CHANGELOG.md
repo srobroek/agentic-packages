@@ -1,5 +1,46 @@
 # Changelog
 
+## [3.1.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v3.0.1...agent-external-repo-worker--v3.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [3.0.1](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v3.0.0...agent-external-repo-worker--v3.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [3.0.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.2.2...agent-external-repo-worker--v3.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766))
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+* route every Codex agent to a benchmarked model tier ([#766](https://github.com/srobroek/agentic-packages/issues/766)) ([f8fb26a](https://github.com/srobroek/agentic-packages/commit/f8fb26aacaa45cbf7ab9ceaa42855089d34b6673))
+
+## [2.2.2](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.2.1...agent-external-repo-worker--v2.2.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [2.2.1](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.2.0...agent-external-repo-worker--v2.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **agents:** harden isolation and delivery rules for delegated workers ([#657](https://github.com/srobroek/agentic-packages/issues/657)) ([956f6e1](https://github.com/srobroek/agentic-packages/commit/956f6e1615a484746023d8e63085d8f514b07bf7))
+
 ## [2.2.0](https://github.com/srobroek/agentic-packages/compare/agent-external-repo-worker--v2.1.0...agent-external-repo-worker--v2.2.0) (2026-07-21)
 
 

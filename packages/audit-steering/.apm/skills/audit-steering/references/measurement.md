@@ -2,7 +2,7 @@
 
 ## Token Estimation
 
-Estimate tokens as `word_count * 1.3`. For precise counts, pipe through the project's tokenizer if available.
+Count tokens with the project's tokenizer.
 
 ## Load Types
 

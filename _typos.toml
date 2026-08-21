@@ -1,0 +1,28 @@
+[files]
+# CHANGELOG.md files contain commit SHA fragments that trigger false positives
+# (e.g. commit id "abd5330" flagged as "abd" → "and").
+# Generated dirs have no source content to check.
+# .specify/ is upstream github/spec-kit code, regenerated wholesale by
+# `specify init --here --force`. Correcting a typo there is reverted on the next
+# upgrade, so it is excluded rather than patched.
+extend-exclude = [
+  "**/CHANGELOG.md",
+  "**/.apm/apm_modules/**",
+  "**/node_modules/**",
+  ".specify/**",
+]
+
+[default.extend-words]
+# git clean -nd is a valid git flag pair, not a word
+nd = "nd"
+# regex token in attribution-guard.sh — partial match of "generated/generating"
+generat = "generat"
+# hyphenated "mis-formatted" used intentionally in quality.bats test comments
+mis = "mis"
+Mis = "Mis"
+# `rm --rec --fo` is a GNU long-flag ABBREVIATION, exercised deliberately by the
+# bash-safety tests: GNU rm really deletes with it, so the guard has to judge it.
+fo = "fo"
+rec = "rec"
+recu = "recu"
+forc = "forc"

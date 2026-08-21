@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Orchestrate coordinated subagents for parallel or long-running implementation with isolated worktrees, independent review, safe merging, and durable run state in beads (bd).
+description: Use when decomposing work across multiple subagents with isolated worktrees, independent review, safe merging, and durable run state in beads (bd).
 x-lint:
   allow: [W6]
   reason: "the loaded skill must retain its core orchestration protocol while detailed mechanics remain in references"
@@ -18,63 +18,93 @@ Role: lead session / orchestrator.
   merges, keep a reproducible record.
 - Reasoning stays in agents; deterministic ops run via bundled scripts.
 - All inter-agent messages: terse verb-tag grammar (`references/message-grammar.md`).
-- Your context window is the run's scarcest, non-recoverable resource — spend
+- Your context window is the run's scarcest, non-recoverable resource -- spend
   it only on coordination, never on content.
 
 ## Core rules
 
-1. **Orchestrate, don't execute.** Push every token-heavy action — reading
+1. **Orchestrate, don't execute.** Push every token-heavy action -- reading
    source files, writing/editing code, research, diff review, running
-   tests/builds, deep planning — to the cheapest capable subagent; keep only
-   its terse result. You may directly peek a single file (≤~50 lines) to pick
-   up one fact needed to route a decision; never edit directly; anything
-   bigger is delegated. Your own direct actions (only these): high-level
-   decomposition, running `bd` and the bundled scripts (`scope-check.py`,
-   `discover-agents.py`, `conflict-probe.sh`), relaying terse messages. All
-   other work must be delegated.
+   tests/builds, deep planning -- to the cheapest capable subagent; keep only
+   its terse result. Read only the control evidence needed to route a
+   decision. Never open, hash, parse, or precompute target-scope
+   content or independently verify the requested deliverable in the lead;
+   those are node and reviewer work. Your own direct actions (only these):
+   high-level decomposition, running `bd` and the bundled scripts
+   (`scope-check.py`, `discover-agents.py`, `conflict-probe.sh`), and sending
+   content-free doorbell wakes. A worker or hook failure is diagnosed through
+   its durable evidence by a delegated node; never open hook, guard, or tool
+   implementation in the lead to debug an actor. All other work must be
+   delegated.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
-3. **Subagents only — never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: workflow-coder`,
-   `isolation:"worktree"`), addressed by name/`agentId` via SendMessage.
-   Decline the harness's suggestion to spawn teammates. Teams = rare gated
-   exception (`references/teams.md`); unsure whether the trigger is met → use
-   subagents.
-4. **Every tool user runs in Worktrunk.** Implementation, reviewers, auditors,
-   and advisors that invoke tools must use a separately prepared Worktrunk
-   worktree and record its branch/path on the bead. Conversational agents that
-   use no tools and the primary human are exempt. Writers self-commit, push,
-   and report branch + worktree path.
-5. **Flat spawn tree — no nested subagents.** Only you spawn agents. Coder
-   blocked on reasoning → sends `BLOCKED <node> kind:design|debug` to you,
-   idles; you broker a `workflow-advisor` (or debugger, per `roles.md`) and
-   relay `ADVICE` back.
-6. **You own review per code node; resume coders, never re-spawn.** Per
-   code-writing node: spawn a `workflow-reviewer` against the coder's branch.
-   Coder ends its turn after `REPORTED` → becomes a resumable background
-   subagent. Retain
-   its `agentId`/name; drive fix rounds via SendMessage to that handle
-   (auto-resumes with context + worktree). Never spawn a fresh coder for a
-   node under review. Dismiss only on approval + merge.
-7. **Comms protocol is mandatory.** Claude's skill-scoped `SubagentStart` hook
-   auto-injects `comms-block.md` into subagents. Codex does not run skill
-   frontmatter hooks, so include `comms-block.md` verbatim in every Codex spawn
-   brief. Teammates are not subagents either; include it in their briefs.
-8. **Durable state, on-demand reporters.** The integration gatekeeper is the
-   only persistent service. Invoke `audit-reporter` on demand for a bounded
-   status or close-out report; it reads Beads and exits. State lives in Beads,
-   never in a process or a second graph.
+3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
+   tool background subagents (`subagent_type: domain-specialist`), addressed
+   by their parent-visible runtime handles. Allocate every checkout through
+   the `worktrunk-writer` contract.
+   Decline the harness's suggestion to spawn teammates. Agent-teams are a
+   Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
+   unsure whether the trigger is met → use subagents.
+4. **Every claim-holder and tool user runs in Worktrunk.** Each independently
+   dispatched actor gets a prepared checkout; the bundled shepherd gets a
+   dedicated integration checkout per repository. Record each assigned
+   branch/path on its activation resource. Writers self-commit, push, and
+   report their Worktrunk branch. Allocation and activation are separate:
+   WAIT-only spawn, context acknowledgement, handle/context bind and stamp,
+   then an exact `CLAIM {resource-id}` to the routing handle.
+5. **Flat claim-holder tree.** Only you spawn claim-holding specialists,
+   reviewers, advisors, researchers, scribes, and shepherds. A
+   domain-specialist may spawn bounded throwaway implementation children in
+   its prepared checkout; they never claim, manage worktrees, commit, push, or
+   spawn another writer. Every other actor spawns nothing.
+6. **Route content peer to peer.** A blocked specialist writes an escalation
+   wisp; an advisor claims and answers that wisp. A reviewer writes FIX
+   material on its review wisp. You create shells, wake actors, and observe
+   state, but never relay questions, advice, review findings, or task briefs.
+   A wake or recovery activation is only `CLAIM {bead-or-wisp-id}`.
+7. **Comms protocol is mandatory.** Bundled role definitions carry the
+   bead-as-brief and wisp protocol. Claude's skill-scoped `SubagentStart` hook
+   reinforces the generic claim contract. Codex activations remain the same
+   single CLAIM verb; do not paste a protocol block into an activation.
+8. **Durable state, bounded processes.** Beads, wisps, and GitHub are the
+   record. The bundled in-run `shepherd` owns this run's landing patrol and
+   owns its own landing safeguards -- orchestrate depends on no other package at
+   runtime. The standalone `pr-shepherd` is a separate tool that drains the
+   repository-global queue across runs. Scribes drain
+   ledger wisps on demand or at their timer boundary. No process or second
+   graph is authoritative.
+9. **Never wait on an external gate; park it.** CI, release workflows, release
+   PR checks, and long-running reviewers are gates, not work. Do not poll one
+   and do not hold the session open for one: park the node with
+   `state=waiting_gate`, record what is awaited and how to resume, then take the
+   next `bd ready` node. When only external waits remain, write the run report
+   and exit -- the gate bead and the next pass own the wait. A run that ends
+   mid-stream because the lead sat on a release gate has failed its record even
+   when the release itself landed. See `references/lifecycle.md`.
 
 ## Workflow
 
-1. Check the prerequisite: `bd` (beads CLI) on PATH — it is the run's state
-   store (`references/beads-store.md`). Missing → stop, tell the user to
-   install beads; there is no fallback store. No database yet → `bd init
-   --stealth --prefix orc`. Create the run epic bead (metadata: run id,
-   primary branch, base sha, artifacts dir) and the artifacts dir outside
-   every worktree: `<primary>/.orchestration/run-<id>/artifacts/`; gitignore
-   it; broadcast the epic id + artifacts path to every agent.
+1. Check the prerequisites: `bd` (run state), `wt` (all local checkout
+   lifecycle), and the package dependency's `worktrunk-writer` skill. Missing
+   `bd` → stop; there is no fallback store. Missing `wt` or the writer contract
+   → stop. No database yet → `bd init --stealth --prefix orc`. Create the run epic bead (metadata:
+   run id, primary branch, base sha, artifacts dir) and the artifacts directory
+   outside every worktree:
+   `<primary>/.orchestration/run-<id>/artifacts/`; resolve it to an absolute
+   path, create it, and read the epic metadata back before dispatch. A relative
+   path or a path under any Worktrunk checkout is invalid. Gitignore it. The
+   prompt hook creates `<primary>/.orchestration/.active-run` with
+   `run_id=pending` before the first tool call. Preserve an existing run id
+   during restart recovery; otherwise bind `pending` to this epic id with the
+   active runtime's installed hook entry, always through an interpreter so the
+   deployed file mode is never load-bearing:
+   `uv run --quiet
+   .claude/hooks/orchestrate/scripts/orchestrator-run-activate.py bind
+   {epic-id}` or the same command against
+   `.codex/hooks/orchestrate/scripts/`. Read the marker back before dispatch;
+   a pending marker makes claim-holder allocation invalid. Put run identity and
+   artifact paths on Beads; never broadcast them in activation prompts.
 2. Plan & decompose yourself at high level; delegate deep planning (read-only
    `Plan`) or speccing (`speckit-*`) for work spanning >3 tasks with
    cross-cutting deps or an unfamiliar subsystem. Beads-managed external
@@ -83,48 +113,87 @@ Role: lead session / orchestrator.
    (label `orc-node`, disjoint `scope` globs in metadata), deps via
    `bd dep add`; `bd dep cycles` must stay clean. See
    `references/planning.md`.
-   When a run has more than one dependent node, create one durable Beads swarm
-   for the epic (`bd swarm create <epic>`), record its returned molecule handle
-   on the epic metadata, and use `bd swarm validate <epic>` plus
-   `bd swarm status <epic>` for health checks. The swarm is the DAG runtime;
-   never recreate it in `graph.py`, JSON, or an in-memory ledger.
+   The epic and its dependency edges ARE the run DAG; never recreate it in
+   `graph.py`, JSON, or an in-memory ledger.
+   Then gate on structure before dispatching anything: run
+   `bd swarm validate <epic> --json` and stop on `swarmable=false`. Read
+   `warnings` too, because a broken graph can still report `swarmable=true`, but
+   triage them rather than treating every one as a defect:
+   cycles, disconnected nodes, multiple endpoints, and an empty graph are real --
+   resolve them before dispatch. An `outside epic` warning naming an
+   `agent:integrator` merge bead is EXPECTED and correct: merge beads are
+   deliberately unparented so the repository-global shepherd can drain them across
+   runs, and `work -> merge-bead` is the required dependency direction. Note it and
+   proceed. An `outside epic` warning naming anything else is a real finding.
+   Validate needs no swarm marker, so it runs on a bare epic. `bd swarm status
+   <epic>` is a coarse progress view only; it omits external blockers, gates, and
+   deferral, so never treat it as proof a run is healthy.
+   Follow `beads` steering on `bd swarm create`: create a marker only when
+   durable coordinator discovery, coordinator replacement, or an external
+   scheduler needs a discoverable handle -- not for an ordinary run and not to
+   make the epic persistent, which it already is.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
-   Match task→agent via `references/roles.md`. Bundle roles: `workflow-coder`,
-   `workflow-reviewer`, `workflow-advisor`, `integration-gatekeeper`,
-   `audit-reporter`. Non-code roles → built-ins (`Explore`, `general-purpose`);
-   broad research → fan-out/fan-in in `roles.md`.
-4. Spawn `integration-gatekeeper` once; invoke `audit-reporter` on demand with
-   the epic id and artifacts path for status or close-out reporting.
+   Match task→agent via `references/roles.md`. Bundled claim-holder roles are
+   `domain-specialist`, `researcher`, `reviewer`, `advisor`, `shepherd`, and
+   `scribe`. Broad research uses the fan-out/fan-in route in `roles.md`.
+   Dispatch only those roles or a read-only ephemeral helper: during an active
+   run a task-bearing spawn of any other agent type is denied, because its
+   activation cannot be verified. A stale agent from an older release still
+   resolves in the harness, so `discover-agents.py` lists what the harness
+   offers, not what this contract recognises.
+4. Prepare one dedicated integration Worktrunk checkout and spawn one bundled
+   `shepherd` patrol per GitHub repository for this run. It
+   owns its run-scoped landing, lifecycle and cleanup entirely; never call another
+   package's scripts. The standalone `pr-shepherd` remains the
+   repository-global recovery/drain actor. Two mechanisms keep them apart, and
+   they are not the same one: the sheepdog wisp stops two run shepherds from
+   patrolling one repository, while `integration_owner=orchestrate` on each merge
+   bead is what stops the standalone drain from taking this run's PRs. Stamp it on
+   every merge bead this run creates. Create scribe query wisps
+   only when a bounded status or ledger drain is needed.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
-   `scope-check.py --candidate <bead> --epic <epic>` per candidate): spawn
-   background `workflow-coder` subagent (`subagent_type: workflow-coder`,
-   Worktrunk-prepared worktree) with brief per `references/spawn-brief.md` (bead
-   id, scope, base, epic id, artifacts path, protocol). The coder claims its
-   bead atomically (`bd update <bead> --claim`) and stamps branch/worktree
-   metadata — the resumable record. (teammates: see Rule 7). Agents record
-   their own audit events + comments.
-6. On `REPORTED`: set `state:in_review` and spawn `workflow-reviewer` against
-   branch/worktree. Relay `REVIEW` findings via SendMessage to coder's
-   `agentId` as `FIX` (resumes same coder; never a new one). On `BLOCKED`:
-   spawn `workflow-advisor`/debugger, relay `ADVICE` back, dismiss it. Same
-   reviewer re-reviews deltas. On `approve`: `bd set-state <bead>
-   state=approved`, send `APPROVE <node>` to the gatekeeper — the merge
-   handoff trigger.
-7. Gatekeeper merges approved branches opportunistically under the exclusive merge slot
-   (`bd merge-slot create` once, then `bd merge-slot acquire`/`release` without
-   `--wait`), conflict-guarded
-   (`conflict-probe.sh`); PR/CI waits via `bd gate create --type=gh:pr|gh:run`
-   + `bd gate check`; pushes conflicts back to coders. Dismiss coder only
-   after its node merges; sweep its worktree. At recycle points
-   (`references/lifecycle.md`), check run spend vs budget; over → finish
-   in-flight work, stop fanning out.
-8. Dispute the orchestrator can't settle from artifacts already in context →
-   spawn fresh read-only tiebreaker (roles.md: Tiebreaker); its verdict arrives as `ADVICE`. Question needs product intent →
-   bubble `ASK` to the user, hold the agent. See `references/lifecycle.md`.
-9. Close out: go/no-go gate — `bd dep cycles` clean and no `in_progress`/
+   `scope-check.py --candidate <bead> --epic <epic>` per candidate): create
+   the writer checkout through `worktrunk-writer prepare` without `--bead`.
+   Write the complete BRIEF and stamp the returned anchors, stable actor, and
+   lease on the unclaimed node, then read them back. Spawn with only the
+   canonical WAIT bootstrap; do not put CLAIM in the Agent prompt. Record the
+   parent-visible handle, require its exact `WAIT context={id}`
+   acknowledgement, and bind both values. Stamp and read back
+   `runtime_handle` and `runtime_context`, then send a separate exact
+   `CLAIM {node-id}` message to `runtime_handle`. The role definition owns
+   claim and validation.
+   A BOUNCE invalidates that attempt: repair the envelope and redispatch from
+   durable state; never continue or close the bounced actor by manual
+   messages. See `references/spawn-brief.md`.
+6. On `REPORTED`, create all review-wisp shells and merge-bead dependency
+   edges before any reviewer starts. Give each tool-using reviewer its own
+   Worktrunk checkout, stamp and bind the wisp, then activate it with exactly
+   `CLAIM {review-wisp-id}`. Changes stay on the review wisp; wake the
+   specialist with `CLAIM {same-node-id}` only after every dimension has a
+   verdict. A blocked specialist similarly exchanges content with an advisor
+   through an escalation wisp. The last approving reviewer closes the final
+   wisp, swaps the review label, and makes the draft PR ready.
+7. The run's shepherd claims ready merge beads, revalidates the exact PR head,
+   CI, and the configured review bot (`$PR_REVIEW_BOTS`, default `coderabbitai`)
+   through the shared landing safeguards, serializes landing with the
+   merge slot, and either merges or creates an unassigned fix bead with bounce
+   evidence. Content conflicts, failed CI, stale heads, and actionable review-bot
+   findings return to the
+   originating specialist through a node or fix-bead claim; the shepherd never
+   edits or pushes. A bot round still running is a wait it parks and re-probes,
+   never a poll and never a merge. Dismiss actors only after terminal evidence and sweep
+   every checkout through `worktree-sweep.sh`.
+8. A dispute not settled by durable evidence gets a fresh read-only
+   tiebreaker on an escalation wisp; its `ADVICE` is promoted before use. A
+   product-intent question becomes an ASK wisp plus human gate. See
+   `references/lifecycle.md`.
+9. Close out: go/no-go gate -- `bd dep cycles` clean and no `in_progress`/
    `blocked` node beads left under the epic (`bd list --label orc-node
-   --parent <epic> --status in_progress,blocked`); invoke `audit-reporter` for
-   the end-of-run report; confirm all worktrees removed, build artifacts cleaned.
+   --parent {epic} --status in_progress,blocked`); activate a scribe query wisp
+   for the end-of-run report; confirm all registered worktrees removed, then run
+   `worktree-sweep.sh --prune <primary-repo-path>` and resolve every refused
+   path before declaring cleanup complete. Clean run-local build artifacts and
+   remove the active-run marker only after verifying it contains this run id.
 
 ## References & scripts
 
@@ -139,5 +208,6 @@ Role: lead session / orchestrator.
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
 | Scripts | `scope-check.py` · `discover-agents.py` · `conflict-probe.sh` ·
+  `bot-review-probe.py` ·
   `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
   `_test_*.py` self-tests) |

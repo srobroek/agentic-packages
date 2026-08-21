@@ -1,7 +1,7 @@
 {
   "name": "language-go",
-  "version": "3.2.1",
-  "description": "Go toolkit: the go-quality skill, opinionated Go steering, and Hobson's systems-programming specialists.",
+  "version": "5.2.0",
+  "description": "Go toolkit: quality, steering, and Serena semantic code tools.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -13,11 +13,7 @@
     },
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/language-steering-go"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/lsp-go"
+      "path": "packages/mcp-serena"
     }
   ]
 }

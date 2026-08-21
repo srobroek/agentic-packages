@@ -1,5 +1,5 @@
 name: matt-skills
-version: 2.1.0
+version: 2.2.0
 description: >-
   Bundle of Matt Pocock's engineering and productivity skills: grilling,
   grill-with-docs, tdd, to-prd, to-issues, triage,
@@ -7,7 +7,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 includes: auto
 category: planning-product
 tags:
@@ -20,6 +19,10 @@ dependencies:
       mattpocock/skills/skills/productivity/grilling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
     - >-
       mattpocock/skills/skills/engineering/grill-with-docs#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - >-
+      mattpocock/skills/skills/engineering/codebase-design#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
+    - >-
+      mattpocock/skills/skills/engineering/domain-modeling#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
     - >-
       mattpocock/skills/skills/engineering/improve-codebase-architecture#16a2a5cd00b4416f673f4ff38c7971a04dd708e7
     - >-

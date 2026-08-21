@@ -1,0 +1,23 @@
+agent: explorer
+regime: clean
+prompt: |
+  Where is the function `parse_config` defined? Show the file and
+  which other functions in the same file call it.
+sandbox:
+  files:
+    config/loader.py: |
+      def parse_config(path):
+          with open(path) as f:
+              return f.read()
+
+      def load(path):
+          raw = parse_config(path)
+          return raw.strip()
+
+      def reload(path):
+          return parse_config(path)
+assert:
+  first_line: '^VERDICT: (?:FOUND|NOT-FOUND|BLOCKED)\b'
+  max_words: 140
+  no_reprint: true
+timeout_s: 120

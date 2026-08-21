@@ -1,7 +1,7 @@
 {
   "name": "data-ai",
-  "version": "2.2.1",
-  "description": "Data and AI toolkit: data steering plus Hobson LLM application, data engineering, MLOps, database design, migrations, and cloud optimization plugins.",
+  "version": "3.2.0",
+  "description": "Data and AI toolkit: data steering for LLM applications, data engineering, MLOps, and databases.",
   "author": {
     "name": "Sjors Robroek"
   },

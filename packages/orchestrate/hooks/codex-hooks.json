@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && uv run --quiet --script ${PLUGIN_ROOT}/scripts/orchestrator-run-activate.py",
+            "statusMessage": "Activating orchestrate run enforcement...",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && uv run --quiet --script ${PLUGIN_ROOT}/scripts/contract-start.py",
+            "statusMessage": "Injecting bead-as-brief claim contract...",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && RULES_DIR=\"$(dirname \"${PLUGIN_ROOT}/.apm/rules/generic.rules.json\")\" uv run --quiet --script ${PLUGIN_ROOT}/scripts/rules-eval.py",
+            "statusMessage": "Evaluating bead contract...",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && uv run --quiet --script ${PLUGIN_ROOT}/scripts/orchestrator-claim-deny.py",
+            "statusMessage": "Checking orchestrator claim policy...",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|send_message|followup_task|send_input|multi_agent_v1send_input",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && uv run --quiet --script ${PLUGIN_ROOT}/scripts/orchestrator-activation-guard.py",
+            "statusMessage": "Checking claim-holder activation sequence...",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

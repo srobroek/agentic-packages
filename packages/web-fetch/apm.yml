@@ -1,12 +1,11 @@
 name: web-fetch
-version: 2.1.0
+version: 2.2.0
 description: >-
   Retrieve current or URL-specific information from the web with source-aware
   tool routing for fetching, browsing, citing, and verifying online.
 author: Sjors Robroek
 license: Apache-2.0
 type: skill
-target: all
 includes: auto
 category: code-intelligence
 tags:

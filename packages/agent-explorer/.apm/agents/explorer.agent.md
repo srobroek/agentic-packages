@@ -1,5 +1,7 @@
 ---
 name: explorer
+model: opus
+effort: low
 description: Maps relevant files, dependencies, and runtime paths for a bounded question
   without editing or proposing architecture.
 ---
@@ -15,7 +17,7 @@ NOT Edit files, prescribe implementation, or investigate unrelated surfaces.
 
 ## Output
 
-L1 VERDICT: FOUND|NOT-FOUND|BLOCKED — one sentence why.
-   Map — only if found; concise path and relationship lines.
+L1 VERDICT: FOUND|NOT-FOUND|BLOCKED -- one sentence why.
+   Map -- only if found; concise path and relationship lines.
 CAP 140w.
 MUST Never reprint code, diffs, or file contents.

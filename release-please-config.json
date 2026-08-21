@@ -56,6 +56,18 @@
         }
       ]
     },
+    "packages/adr-as-beads": {
+      "release-type": "simple",
+      "component": "adr-as-beads",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-adversarial-challenger": {
       "release-type": "simple",
       "component": "agent-adversarial-challenger",
@@ -68,9 +80,9 @@
         }
       ]
     },
-    "packages/agent-coder": {
+    "packages/agent-builder": {
       "release-type": "simple",
-      "component": "agent-coder",
+      "component": "agent-builder",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -80,9 +92,21 @@
         }
       ]
     },
-    "packages/agent-coder-high": {
+    "packages/agent-builder-high": {
       "release-type": "simple",
-      "component": "agent-coder-high",
+      "component": "agent-builder-high",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/agent-conformance": {
+      "release-type": "simple",
+      "component": "agent-conformance",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -116,45 +140,9 @@
         }
       ]
     },
-    "packages/agent-luna-high": {
+    "packages/agent-hook-contract": {
       "release-type": "simple",
-      "component": "agent-luna-high",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-low": {
-      "release-type": "simple",
-      "component": "agent-luna-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-medium": {
-      "release-type": "simple",
-      "component": "agent-luna-medium",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-luna-xhigh": {
-      "release-type": "simple",
-      "component": "agent-luna-xhigh",
+      "component": "agent-hook-contract",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -200,6 +188,18 @@
         }
       ]
     },
+    "packages/agent-quality-guards": {
+      "release-type": "simple",
+      "component": "agent-quality-guards",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/agent-reasoner": {
       "release-type": "simple",
       "component": "agent-reasoner",
@@ -227,66 +227,6 @@
     "packages/agent-reviewer-low": {
       "release-type": "simple",
       "component": "agent-reviewer-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-high": {
-      "release-type": "simple",
-      "component": "agent-sol-high",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-low": {
-      "release-type": "simple",
-      "component": "agent-sol-low",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-medium": {
-      "release-type": "simple",
-      "component": "agent-sol-medium",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-sol-xhigh": {
-      "release-type": "simple",
-      "component": "agent-sol-xhigh",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/agent-worker": {
-      "release-type": "simple",
-      "component": "agent-worker",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -392,18 +332,6 @@
         }
       ]
     },
-    "packages/codex-hook-contract": {
-      "release-type": "simple",
-      "component": "codex-hook-contract",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/core": {
       "release-type": "simple",
       "component": "core",
@@ -440,18 +368,6 @@
         }
       ]
     },
-    "packages/dep-audit": {
-      "release-type": "simple",
-      "component": "dep-audit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/dep-update": {
       "release-type": "simple",
       "component": "dep-update",
@@ -467,42 +383,6 @@
     "packages/dependency-quality": {
       "release-type": "simple",
       "component": "dependency-quality",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/developer-tools": {
-      "release-type": "simple",
-      "component": "developer-tools",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/diagrams": {
-      "release-type": "simple",
-      "component": "diagrams",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/docs-architecture": {
-      "release-type": "simple",
-      "component": "docs-architecture",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -572,33 +452,9 @@
         }
       ]
     },
-    "packages/governance": {
-      "release-type": "simple",
-      "component": "governance",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/handover": {
       "release-type": "simple",
       "component": "handover",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/headroom": {
-      "release-type": "simple",
-      "component": "headroom",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -668,45 +524,9 @@
         }
       ]
     },
-    "packages/hooks-git-workflow": {
-      "release-type": "simple",
-      "component": "hooks-git-workflow",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/hooks-package-investigate": {
       "release-type": "simple",
       "component": "hooks-package-investigate",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/hooks-portability-ci": {
-      "release-type": "simple",
-      "component": "hooks-portability-ci",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/hooks-precommit-gate": {
-      "release-type": "simple",
-      "component": "hooks-precommit-gate",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -740,6 +560,18 @@
         }
       ]
     },
+    "packages/hooks-subagent-fork": {
+      "release-type": "simple",
+      "component": "hooks-subagent-fork",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/hooks-subagent-model": {
       "release-type": "simple",
       "component": "hooks-subagent-model",
@@ -764,21 +596,9 @@
         }
       ]
     },
-    "packages/hooks-worktree": {
+    "packages/hooks-worktrunk": {
       "release-type": "simple",
-      "component": "hooks-worktree",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/incident-response": {
-      "release-type": "simple",
-      "component": "incident-response",
+      "component": "hooks-worktrunk",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -800,69 +620,9 @@
         }
       ]
     },
-    "packages/language-arm-cortex": {
-      "release-type": "simple",
-      "component": "language-arm-cortex",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-dotnet": {
-      "release-type": "simple",
-      "component": "language-dotnet",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-functional": {
-      "release-type": "simple",
-      "component": "language-functional",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/language-go": {
       "release-type": "simple",
       "component": "language-go",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-julia": {
-      "release-type": "simple",
-      "component": "language-julia",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-jvm": {
-      "release-type": "simple",
-      "component": "language-jvm",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -908,45 +668,9 @@
         }
       ]
     },
-    "packages/language-steering-go": {
-      "release-type": "simple",
-      "component": "language-steering-go",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-steering-python": {
-      "release-type": "simple",
-      "component": "language-steering-python",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/language-steering-rust": {
       "release-type": "simple",
       "component": "language-steering-rust",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/language-steering-terraform": {
-      "release-type": "simple",
-      "component": "language-steering-terraform",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -992,18 +716,6 @@
         }
       ]
     },
-    "packages/language-web-scripting": {
-      "release-type": "simple",
-      "component": "language-web-scripting",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/license-picker": {
       "release-type": "simple",
       "component": "license-picker",
@@ -1016,93 +728,9 @@
         }
       ]
     },
-    "packages/lsp-go": {
-      "release-type": "simple",
-      "component": "lsp-go",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/lsp-python": {
-      "release-type": "simple",
-      "component": "lsp-python",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/lsp-rust": {
-      "release-type": "simple",
-      "component": "lsp-rust",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/lsp-shell": {
-      "release-type": "simple",
-      "component": "lsp-shell",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/lsp-terraform": {
-      "release-type": "simple",
-      "component": "lsp-terraform",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/lsp-typescript": {
-      "release-type": "simple",
-      "component": "lsp-typescript",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/matt-skills": {
       "release-type": "simple",
       "component": "matt-skills",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-1mcp": {
-      "release-type": "simple",
-      "component": "mcp-1mcp",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1148,18 +776,6 @@
         }
       ]
     },
-    "packages/mcp-mempalace": {
-      "release-type": "simple",
-      "component": "mcp-mempalace",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/mcp-package-version": {
       "release-type": "simple",
       "component": "mcp-package-version",
@@ -1175,18 +791,6 @@
     "packages/mcp-playwright": {
       "release-type": "simple",
       "component": "mcp-playwright",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/mcp-repomix": {
-      "release-type": "simple",
-      "component": "mcp-repomix",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1376,30 +980,6 @@
         }
       ]
     },
-    "packages/secrets-scan": {
-      "release-type": "simple",
-      "component": "secrets-scan",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/security": {
-      "release-type": "simple",
-      "component": "security",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
     "packages/session-review": {
       "release-type": "simple",
       "component": "session-review",
@@ -1415,30 +995,6 @@
     "packages/sniff": {
       "release-type": "simple",
       "component": "sniff",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/speckit": {
-      "release-type": "simple",
-      "component": "speckit",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/speckit-beads": {
-      "release-type": "simple",
-      "component": "speckit-beads",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1556,6 +1112,18 @@
         }
       ]
     },
+    "packages/steering-multi-agent": {
+      "release-type": "simple",
+      "component": "steering-multi-agent",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/steering-pragmatic": {
       "release-type": "simple",
       "component": "steering-pragmatic",
@@ -1571,18 +1139,6 @@
     "packages/steering-project-structure": {
       "release-type": "simple",
       "component": "steering-project-structure",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/steering-speckit": {
-      "release-type": "simple",
-      "component": "steering-speckit",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1619,6 +1175,30 @@
     "packages/steering-tools-scripts": {
       "release-type": "simple",
       "component": "steering-tools-scripts",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/token-savings": {
+      "release-type": "simple",
+      "component": "token-savings",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "apm.yml",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "packages/toolchain-cache-policy": {
+      "release-type": "simple",
+      "component": "toolchain-cache-policy",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
@@ -1703,18 +1283,6 @@
     "packages/write-agentic": {
       "release-type": "simple",
       "component": "write-agentic",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "yaml",
-          "path": "apm.yml",
-          "jsonpath": "$.version"
-        }
-      ]
-    },
-    "packages/write-docs": {
-      "release-type": "simple",
-      "component": "write-docs",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

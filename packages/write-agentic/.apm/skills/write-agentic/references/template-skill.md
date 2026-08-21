@@ -39,4 +39,4 @@ CAP <N>w clean · <M>w with findings
 
 Checks before lint: every step verifiable · no hedge in a MUST/DEFAULT/NOT line ·
 description has a phrase the user would actually type · scripts own anything
-deterministic (parsing, counting, validation) — prose never re-does script work.
+deterministic (parsing, counting, validation) -- prose never re-does script work.

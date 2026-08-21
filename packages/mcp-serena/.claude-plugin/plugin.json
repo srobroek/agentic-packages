@@ -1,7 +1,7 @@
 {
   "name": "mcp-serena",
-  "version": "1.2.1",
-  "description": "MCP server package for Serena semantic code tools. The launcher resolves the Codex or Claude Code context from the process ancestry and can be overridden with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent mcp_servers declarations should use the shared semantic route instead.",
+  "version": "1.5.0",
+  "description": "MCP server package for Serena semantic code tools. The launcher shares one Serena backend across agents in the same checkout, isolates linked worktrees, and applies resource and capacity limits to worktree backends.",
   "author": {
     "name": "Sjors Robroek"
   },

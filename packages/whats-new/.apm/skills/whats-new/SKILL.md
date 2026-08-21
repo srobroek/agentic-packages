@@ -5,8 +5,8 @@ description: Research breaking changes, deprecations, and new features between t
 
 # What's New (Upgrade & Change Research)
 
-On-demand research skill. For a named target — or, with no target, the things
-the current repo depends on — find what changed between what is **in use** and
+On-demand research skill. For a named target -- or, with no target, the things
+the current repo depends on -- find what changed between what is **in use** and
 the **latest**, and summarize it as: breaking changes, deprecations, new
 features/capabilities, and notable fixes.
 
@@ -20,29 +20,30 @@ post explaining a breaking change).
 
 - **Versioned software** (library, CLI, framework, runtime, package, container
   image): has a registry + a git repo + semver. Research a *version span*
-  current→latest. Recipes steps A–D.
+  current→latest. Recipes steps A--D.
 - **Service / technology / platform / API / model family** (AWS Bedrock,
   Anthropic/Claude models, OpenAI, GCP, Azure, Stripe, GitHub Actions): no
   semver. Research a *dated announcement stream* since the user's reference
   point. Recipes step E.
 
-A target can be both — research both sides when relevant.
+A target can be both -- research both sides when relevant.
 
 ## Inputs
 
 Honor whatever the user supplies; only discover the rest.
 
-- **Target** — if absent, discover it (step 1).
-- **Reference point** — for software, the current version; for a service, the
+- **Target** -- if absent, discover it (step 1).
+- **Reference point** -- for software, the current version; for a service, the
   user's baseline date or what they currently use. If absent for a service,
   default to the last 6 months and state it.
-- **Latest** — the registry's latest version, or "now" for a service stream.
+- **Latest** -- the registry's latest version, or "now" for a service stream.
 
 ## Workflow
 
 1. **Resolve the target and its kind.** If named, use it. Otherwise run
-   `scripts/detect.sh [dir]` to list declared dependencies. If `detect.sh`
-   returns more than one equally plausible candidate, list them and ask.
+   `scripts/detect.py [dir]` with Python 3.11 or newer (it uses the standard
+   library's `tomllib`) to list declared dependencies. If `detect.py` returns
+   more than one equally plausible candidate, list them and ask.
    Decide: versioned software or service/stream.
 
 2. **Resolve sources programmatically.**
@@ -53,7 +54,7 @@ Honor whatever the user supplies; only discover the rest.
      time window.
 
 3. **Gather changes programmatically.**
-   - *Software* (recipes C): bare `git` clone — CHANGELOG at the target tag +
+   - *Software* (recipes C): bare `git` clone -- CHANGELOG at the target tag +
      conventional-commit-classified log across the span. Enrich with host
      release notes via its API.
    - *Service* (recipes E): pull the feed/release-notes/model-list, filter to
@@ -67,11 +68,11 @@ Honor whatever the user supplies; only discover the rest.
    heading, feed entry date, doc URL) for every change flagged breaking or
    touching a public API.
 
-6. **Save or return** — return inline; save to a file only if asked or if the
+6. **Save or return** -- return inline; save to a file only if asked or if the
    report exceeds 500 words.
 
 > Anthropic / Claude models: the repo ships a dedicated **`claude-api`** skill
-> with current model IDs, pricing, and migration notes — prefer it for Claude
+> with current model IDs, pricing, and migration notes -- prefer it for Claude
 > specifics, and use this skill's step E only for the broader "what shipped
 > since" stream.
 
@@ -79,7 +80,7 @@ Honor whatever the user supplies; only discover the rest.
 
 - **Report, don't upgrade.** Never edit manifests, bump versions, or run installers.
 - **Programmatic over manual.** Catch yourself reading a rendered registry page → stop and use the matching recipe.
-- **Cover the whole span.** Every intermediate version (software) or the full window (service) — not just the endpoints.
+- **Cover the whole span.** Every intermediate version (software) or the full window (service) -- not just the endpoints.
 - **Classification is heuristic.** A `feat:`/`fix:`/`!` prefix is a signal, not ground truth; read the diff for load-bearing changes.
 - **State coverage honestly.** Name the sources that ran and those that were missing.
 - **Services have no semver.** Anchor on dates, not version numbers. Note announcements ≠ regional/account GA for service targets, always.
@@ -88,6 +89,6 @@ Honor whatever the user supplies; only discover the rest.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/detect.sh` | No-network enumeration of declared dependencies + pinned versions across ecosystems. |
+| `scripts/detect.py` | No-network enumeration of declared dependencies + pinned versions across ecosystems. |
 
 For everything network-facing use the commands in `references/recipes.md`.

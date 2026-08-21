@@ -1,5 +1,5 @@
 name: hooks-subagent-model
-version: 0.3.0
+version: 3.1.0
 description: >-
   Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn
   would inherit the parent session model. It allows explicit models and pinned
@@ -9,7 +9,7 @@ description: >-
   Agent calls have no effort field. Codex does not receive this hook.
 author: Sjors Robroek
 license: Apache-2.0
-type: hooks
+type: instructions
 target: claude
 includes: auto
 category: project-lifecycle

@@ -1,0 +1,10 @@
+{
+  "name": "hooks-worktrunk",
+  "version": "4.1.0",
+  "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. A SessionStart sweep reports Worktrunk worktrees that are abandoned -- clean, fully pushed, and untouched for weeks -- and reclaims their git-ignored build output; it never removes a worktree or branch, leaving that to `wt remove`, which already refuses an unmerged branch. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0",
+  "hooks": "./hooks/claude-hooks.json"
+}

@@ -1,22 +1,27 @@
 # Event-driven queue handoff
 
-`release-queue-watch` is a read-only sensor. It emits verified lifecycle and
-readiness records; the shepherd remains the only generic merge consumer and
-still revalidates GitHub, uses Beads gates, probes conflicts, and acquires the
+The shepherd's side of the watcher handoff. `release-queue-watch` owns the sensor
+itself: start mechanics, record shapes, transition semantics, and `lifecycleKey`
+are defined once in its `references/runtime.md`. Read that for the emitter
+contract; this file covers only what the shepherd does with a record.
+
+The shepherd is the only *generic* merge consumer. An orchestrate run's own
+integration shepherd owns that run's PRs; see orchestrate's `queue-watcher.md`
+for the run-scoped side of the same precedence rule. The shepherd still
+revalidates GitHub, uses Beads gates, probes conflicts, and acquires the
 repository merge slot.
 
 ## Ownership and routing
 
-Run one watcher per repository with one notification slot and REST
-reconciliation enabled. Start it with `pnpm --silent start`; consume stdout
-NDJSON plus structured stderr errors. Process records serially and do not read
-the next line until the current receipt is persisted.
+Start the watcher as `release-queue-watch` documents, with one notification slot.
+Process records serially and do not read the next line until the current receipt
+is persisted.
 
-An exact active `orchestrate` node owns its PR. The orchestrator resolves the
-record first. Only an unmatched record may be offered to the shepherd resolver.
-If a corresponding merge bead exists, stamp `integration_owner=orchestrate` so
-a standalone consumer also refuses it. This precedence prevents a gatekeeper
-and shepherd from racing to merge the same PR.
+An exact active `orchestrate` node owns its PR, and the orchestrator resolves the
+record first; only an unmatched record reaches the shepherd resolver. If a
+corresponding merge bead exists, stamp `integration_owner=orchestrate` so a
+standalone consumer also refuses it. This precedence prevents a gatekeeper and
+shepherd from racing to merge the same PR.
 
 | Watcher record | Shepherd action |
 |---|---|
@@ -47,7 +52,7 @@ the observed head is current.
 
 Handle the result as follows:
 
-1. `status=resolved` — apply every `requiredMetadata` field in one `bd update`.
+1. `status=resolved` -- apply every `requiredMetadata` field in one `bd update`.
    This creates `shepherd_event` plus `shepherd_event_pending` before handoff.
 2. Start the targeted shepherd pass, then stamp
    `shepherd_event_sent=<eventKey>`. The pass claims the exact bead before any
@@ -55,9 +60,9 @@ Handle the result as follows:
 3. Revalidate the PR, follow the normal decision table, and comment the outcome.
    After that durable outcome, stamp `shepherd_event_ack=<eventKey>`. A bead
    closed by the outcome needs no separate ack.
-4. `status=replay` — apply any emitted metadata, refresh the bead, and replay
+4. `status=replay` -- apply any emitted metadata, refresh the bead, and replay
    only a pending or sent event. `status=duplicate` already has a matching ack.
-5. `status=ignored` — do nothing. `reason=orchestrate-owned` must stay with the
+5. `status=ignored` -- do nothing. `reason=orchestrate-owned` must stay with the
    orchestrator. Invalid, stale, unmatched, or ambiguous records are logged and
    never guessed.
 

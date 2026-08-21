@@ -1,0 +1,9 @@
+{
+  "name": "agent-builder-high",
+  "version": "3.1.0",
+  "description": "Escalated implementation agent for complex bounded work, difficult debugging, and cross-module behaviour changes. Ships `builder-high`, the escalation tier above `agent-builder`'s `builder`.",
+  "author": {
+    "name": "Sjors Robroek"
+  },
+  "license": "Apache-2.0"
+}

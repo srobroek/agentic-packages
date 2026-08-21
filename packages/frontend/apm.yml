@@ -1,32 +1,23 @@
 name: frontend
-version: 4.0.1
+version: 5.3.0
 description: >-
   Frontend development and design toolkit: the Playwright browser skill,
   frontend steering, and external design/build skills (Impeccable, Interface
-  Design, Stitch) plus Hobson frontend, UI, accessibility, and landing-page
-  plugins.
+  Design, Stitch).
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 category: frontend
 tags:
   - bundle
   - frontend
 dependencies:
   apm:
-    - srobroek/agentic-packages/packages/playwright#>=4.0.0 <5.0.0
-    - srobroek/agentic-packages/packages/steering-frontend#>=2.1.0 <3.0.0
+    - srobroek/agentic-packages/packages/playwright#>=4.3.0 <5.0.0
+    - srobroek/agentic-packages/packages/steering-frontend#>=2.2.0 <3.0.0
     - >-
       pbakaus/impeccable/.agents/skills/impeccable#88f52ac4e6a5ce99d39a0f5d89e7ac3a168910f5
     - >-
       Dammyjay93/interface-design/.claude/skills/interface-design#2f9be3206855bcb2d1d0af262c8bae25cba6658d
     - >-
       google-labs-code/stitch-skills/plugins/stitch-design#3f64079d75d025bc5890c73669f27c26a2d80b31
-    - >-
-      wshobson/agents/plugins/frontend-mobile-development#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - wshobson/agents/plugins/ui-design#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/accessibility-compliance#5cc2549a50fc672230efd0a0307e2fd27ffba792
-    - >-
-      wshobson/agents/plugins/brand-landingpage#5cc2549a50fc672230efd0a0307e2fd27ffba792

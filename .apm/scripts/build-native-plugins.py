@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """Generate committed native plugin layout for every native-capable package.
 
 The marketplace `source: ./packages/<name>` entries are consumed by three
@@ -42,7 +46,6 @@ import importlib.util
 import json
 import re
 import shutil
-import sys
 from pathlib import Path
 
 import yaml
@@ -80,6 +83,7 @@ def _author_license(root_manifest: dict) -> tuple[dict | None, str | None]:
 # --------------------------------------------------------------------------- #
 # plugin.json
 # --------------------------------------------------------------------------- #
+
 
 def _plugin_manifest(
     pkg: dict,
@@ -122,6 +126,7 @@ def _plugin_manifest(
 # bundle dependencies
 # --------------------------------------------------------------------------- #
 
+
 def _bundle_dependencies(deps: list[object], *, target: str) -> list[dict]:
     """Map a bundle's first-party apm deps to native plugin `dependencies`.
 
@@ -150,15 +155,14 @@ def _bundle_dependencies(deps: list[object], *, target: str) -> list[dict]:
             locator = str(dep)
         m = _FIRST_PARTY.search(locator)
         if m:
-            out.append(
-                {"git": "srobroek/agentic-packages", "path": f"packages/{m.group(1)}"}
-            )
+            out.append({"git": "srobroek/agentic-packages", "path": f"packages/{m.group(1)}"})
     return out
 
 
 # --------------------------------------------------------------------------- #
 # mcp -> .mcp.json
 # --------------------------------------------------------------------------- #
+
 
 def _mcp_servers(manifest: dict) -> dict | None:
     """Build the common MCP server map from `dependencies.mcp`."""
@@ -192,6 +196,7 @@ def _mcp_servers(manifest: dict) -> dict | None:
 # hooks: resolve shared or target-specific sources
 # --------------------------------------------------------------------------- #
 
+
 def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
     """Return `(claude, codex)` hook sources for a package.
 
@@ -206,8 +211,12 @@ def _hook_sources(pkg_dir: Path) -> tuple[Path | None, Path | None]:
     universal = hooks_dir / "hooks.json"
     if universal.is_file():
         return universal, universal
-    claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(hooks_dir.glob("claude-hooks.json"))
-    codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(hooks_dir.glob("codex-hooks.json"))
+    claude = sorted(hooks_dir.glob("*-claude-hooks.json")) or sorted(
+        hooks_dir.glob("claude-hooks.json")
+    )
+    codex = sorted(hooks_dir.glob("*-codex-hooks.json")) or sorted(
+        hooks_dir.glob("codex-hooks.json")
+    )
     return (claude[0] if claude else None, codex[0] if codex else None)
 
 
@@ -224,11 +233,7 @@ def _plan_hooks(
         codex = None
     if claude is None and codex is None:
         return None, None
-    if (
-        claude is not None
-        and codex is not None
-        and filecmp.cmp(claude, codex, shallow=False)
-    ):
+    if claude is not None and codex is not None and filecmp.cmp(claude, codex, shallow=False):
         path = "./hooks/hooks.json"
         plan[path.removeprefix("./")] = claude.read_text(encoding="utf-8")
         return path, path
@@ -248,6 +253,7 @@ def _plan_hooks(
 # planning: compute the desired native tree for one package
 # --------------------------------------------------------------------------- #
 
+
 def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, object] | None:
     """Return {relpath: content} for the native files a package should have.
 
@@ -255,7 +261,6 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     are represented as (src_dir, "<dir-copy>"). Returns None for steering (no
     native layout).
     """
-    cls = pkg["classification"]
     pkg_dir = PACKAGES_DIR / pkg["dirname"]
     targets = set(pkg.get("targets") or ("claude", "codex"))
 
@@ -281,7 +286,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     agents_src = pkg_dir / ".apm" / "agents"
     if "claude" in targets and agents_src.is_dir():
         for f in sorted(agents_src.glob("*.agent.md")):
-            plan[f"agents/{f.name[:-len('.agent.md')]}.md"] = f.read_bytes()
+            plan[f"agents/{f.name[: -len('.agent.md')]}.md"] = f.read_bytes()
         for f in sorted(agents_src.glob("*.md")):
             if not f.name.endswith(".agent.md"):
                 plan[f"agents/{f.name}"] = f.read_bytes()
@@ -289,9 +294,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
     # MCP servers declared in the apm.yml dependencies.mcp block -> .mcp.json.
     mcp = _mcp_servers(manifest)
     if mcp is not None and "claude" in targets:
-        plan[".mcp.json"] = (
-            json.dumps({"mcpServers": mcp}, indent=2, ensure_ascii=False) + "\n"
-        )
+        plan[".mcp.json"] = json.dumps({"mcpServers": mcp}, indent=2, ensure_ascii=False) + "\n"
     if mcp is not None and "codex" in targets:
         # Codex accepts a direct server map or a wrapped `mcp_servers` object,
         # but not Claude's camel-case wrapper.
@@ -347,6 +350,7 @@ def _plan_package(pkg: dict, manifest: dict, defaults: tuple) -> dict[str, objec
 # --------------------------------------------------------------------------- #
 # apply / check
 # --------------------------------------------------------------------------- #
+
 
 def _materialize(pkg_dir: Path, plan: dict[str, object], check: bool) -> list[str]:
     """Write (or diff) the planned native files. Returns list of stale relpaths."""
@@ -409,7 +413,9 @@ def _sync_dir(src: Path, dst: Path, rel: str, pkg: str, check: bool) -> list[str
     """Mirror src -> dst exactly (content + membership). Returns stale relpaths."""
     stale: list[str] = []
     src_files = {p.relative_to(src) for p in src.rglob("*") if p.is_file()}
-    dst_files = {p.relative_to(dst) for p in dst.rglob("*") if p.is_file()} if dst.exists() else set()
+    dst_files = (
+        {p.relative_to(dst) for p in dst.rglob("*") if p.is_file()} if dst.exists() else set()
+    )
 
     for r in sorted(src_files):
         s, d = src / r, dst / r
@@ -427,6 +433,38 @@ def _sync_dir(src: Path, dst: Path, rel: str, pkg: str, check: bool) -> list[str
         else:
             (dst / r).unlink()
     return stale
+
+
+CODEX_CATALOG = ROOT / ".agents/plugins/marketplace.json"
+
+
+def _render_codex_catalog(ctx: dict) -> str:
+    """Render the Codex marketplace catalog from the inventory walk.
+
+    `apm pack` also writes this file, but it ignores each package's `target:` and
+    so lists every marketplace member -- including Claude-only packages such as
+    `hooks-subagent-model`, plus any external git member, none of which a Codex
+    install can resolve from
+    `./packages/<name>`. Owning it here keeps membership and `target:` in
+    agreement and puts the file under `--check`, so drift fails CI instead of
+    relying on someone reverting `apm pack`'s output by hand.
+    """
+    existing = json.loads(CODEX_CATALOG.read_text(encoding="utf-8"))
+    entries = []
+    for pkg in ctx["packages"]:
+        if "codex" not in set(pkg.get("targets") or ()):
+            continue
+        entry = {
+            "name": pkg["name"],
+            "source": {"source": "local", "path": f"./packages/{pkg['dirname']}"},
+            "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+        }
+        if pkg.get("category"):
+            entry["category"] = pkg["category"]
+        entries.append(entry)
+    out = {k: v for k, v in existing.items() if k != "plugins"}
+    out["plugins"] = sorted(entries, key=lambda e: e["name"])
+    return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -453,6 +491,15 @@ def main(argv: list[str] | None = None) -> int:
         elif not args.check and plan:
             n_written += 1
 
+    catalog = _render_codex_catalog(ctx)
+    n_codex = len(json.loads(catalog)["plugins"])
+    catalog_stale = CODEX_CATALOG.read_text(encoding="utf-8") != catalog
+    if catalog_stale:
+        if args.check:
+            all_stale.append(".agents/plugins/marketplace.json")
+        else:
+            CODEX_CATALOG.write_text(catalog, encoding="utf-8")
+
     if args.check:
         if all_stale:
             print("Native plugin layout out of date:")
@@ -466,6 +513,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(f"generated native plugin layout for {n_written} package(s)")
+    if catalog_stale:
+        print(f"regenerated Codex catalog: {n_codex} codex-target package(s)")
     return 0
 
 

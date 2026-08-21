@@ -11,7 +11,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-
 SUPPORTED_EVENTS = {
     "SessionStart",
     "SubagentStart",
@@ -25,12 +24,11 @@ SUPPORTED_EVENTS = {
     "Stop",
 }
 OBSOLETE_COMMAND_SUFFIXES = {
-    "/agent-coder/scripts/coder-delegation-reminder.sh",
+    "/agent-builder/scripts/coder-delegation-reminder.sh",
 }
 CODEX_UNAVAILABLE_PACKAGES = {
     "hooks-subagent-model",
     "hooks-subagent-worktree",
-    "hooks-worktree",
 }
 
 
@@ -47,9 +45,7 @@ def runtime_semantics(value: object) -> object:
     return value
 
 
-def command_script_path(
-    command: str, working_dir: Path | None = None
-) -> Path | None:
+def command_script_path(command: str, working_dir: Path | None = None) -> Path | None:
     """Return a checkable hook script path, resolving relative paths."""
     token = command.strip().split()[0] if command.strip() else ""
     if token.startswith("~"):
@@ -71,9 +67,7 @@ def handler_is_stale(handler: dict, working_dir: Path | None = None) -> bool:
     return script is not None and not script.is_file()
 
 
-def sanitize(
-    config: dict, working_dir: Path | None = None
-) -> tuple[dict, dict[str, int]]:
+def sanitize(config: dict, working_dir: Path | None = None) -> tuple[dict, dict[str, int]]:
     source_hooks = config.get("hooks", {})
     clean_hooks: dict[str, list[dict]] = {}
     counts = {
@@ -100,14 +94,8 @@ def sanitize(
                 if (
                     handler.get("type") != "command"
                     or handler_is_stale(handler, working_dir)
-                    or any(
-                        command_token.endswith(suffix)
-                        for suffix in OBSOLETE_COMMAND_SUFFIXES
-                    )
-                    or any(
-                        f"/{package}/" in command
-                        for package in CODEX_UNAVAILABLE_PACKAGES
-                    )
+                    or any(command_token.endswith(suffix) for suffix in OBSOLETE_COMMAND_SUFFIXES)
+                    or any(f"/{package}/" in command for package in CODEX_UNAVAILABLE_PACKAGES)
                 ):
                     counts["handlers_removed"] += 1
                     continue
@@ -135,10 +123,7 @@ def sanitize(
                     counts["duplicate_groups_removed"] += 1
                     existing_index = seen_groups[group_key]
                     existing_group = clean_groups[existing_index]
-                    if (
-                        not existing_group.get("_apm_source")
-                        and clean_group.get("_apm_source")
-                    ):
+                    if not existing_group.get("_apm_source") and clean_group.get("_apm_source"):
                         clean_groups[existing_index] = clean_group
                     continue
                 seen_groups[group_key] = len(clean_groups)
@@ -154,10 +139,7 @@ def sanitize(
 
 def referenced_hook_entries(config: dict, hooks_dir: Path) -> set[str]:
     """Return top-level hook-dir entries referenced by command handlers."""
-    pattern = re.compile(
-        re.escape(str(hooks_dir.expanduser().resolve()))
-        + r"/([^/\s\"']+)"
-    )
+    pattern = re.compile(re.escape(str(hooks_dir.expanduser().resolve())) + r"/([^/\s\"']+)")
     referenced: set[str] = set()
     for groups in (config.get("hooks") or {}).values():
         for group in groups:
@@ -226,11 +208,7 @@ def main() -> int:
     clean, counts = sanitize(original, working_dir)
     config_changed = clean != original
     hooks_dir = args.hooks_dir or args.path.parent / "hooks"
-    stale = (
-        prune_stale_entries(clean, hooks_dir, check=True)
-        if args.prune_stale
-        else []
-    )
+    stale = prune_stale_entries(clean, hooks_dir, check=True) if args.prune_stale else []
     changed = config_changed or bool(stale)
 
     if config_changed and not args.check:

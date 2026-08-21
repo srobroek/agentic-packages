@@ -1,7 +1,7 @@
 {
   "name": "language-terraform",
-  "version": "2.2.0",
-  "description": "Terraform and HCL toolkit: opinionated Terraform steering plus Hobson's deployment-strategies specialists. No dedicated quality skill yet.",
+  "version": "3.2.0",
+  "description": "Terraform and HCL toolkit: opinionated steering and Serena semantic code tools. No dedicated quality skill yet.",
   "author": {
     "name": "Sjors Robroek"
   },
@@ -9,11 +9,7 @@
   "dependencies": [
     {
       "git": "srobroek/agentic-packages",
-      "path": "packages/language-steering-terraform"
-    },
-    {
-      "git": "srobroek/agentic-packages",
-      "path": "packages/lsp-terraform"
+      "path": "packages/mcp-serena"
     }
   ]
 }

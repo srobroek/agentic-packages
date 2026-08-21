@@ -1,0 +1,23 @@
+agent: reasoner
+regime: clean
+prompt: |
+  Question: Should the cache key include the user's locale or only the resource ID?
+
+  Context:
+  - Cache entries are shared across all users.
+  - Resource content does not vary by locale.
+  - Locale-keyed cache multiplies entry count by 40 (40 supported locales).
+  - Current p99 cache miss rate: 3%.
+  - Cache backend has a 1 GB hard limit.
+sandbox:
+  files:
+    cache/policy.md: |
+      # Cache Policy
+      Key format: resource_id
+      TTL: 300s
+      Max size: 1 GB
+assert:
+  first_line: '^VERDICT: (?:RECOMMEND|REJECT|BLOCKED)\b'
+  max_words: 220
+  no_reprint: true
+timeout_s: 120

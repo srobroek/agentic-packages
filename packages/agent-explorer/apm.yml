@@ -1,5 +1,5 @@
 name: agent-explorer
-version: 1.1.0
+version: 3.0.1
 description: Read-only exploration agent for bounded code and configuration discovery.
 author: Sjors Robroek
 license: Apache-2.0

@@ -1,5 +1,146 @@
 # Changelog
 
+## [12.2.1](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.2.0...agentic-maintenance--v12.2.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([005da51](https://github.com/srobroek/agentic-packages/commit/005da5183f0754fc24f5490cc99bc347f5d5b344))
+
+## [12.2.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.1.0...agentic-maintenance--v12.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [12.1.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.0.2...agentic-maintenance--v12.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [12.0.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.0.1...agentic-maintenance--v12.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
+## [12.0.1](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.0.0...agentic-maintenance--v12.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [12.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v11.0.0...agentic-maintenance--v12.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7b63b60](https://github.com/srobroek/agentic-packages/commit/7b63b60828a8f675244f6cb99554723d07ca6a8f))
+
+## [11.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v10.0.0...agentic-maintenance--v11.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([f215865](https://github.com/srobroek/agentic-packages/commit/f21586533af761142538ca7082bd37cc5bd021ef))
+
+## [10.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v9.0.0...agentic-maintenance--v10.0.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **agents:** `agent-coder` is now `agent-builder` and `agent-coder-high` is `agent-builder-high`. The agents `parallel-builder`, `worker`, `coder-high`, `domain-specialist-medium` and `domain-specialist-xhigh` no longer exist; use `builder` with an explicit mode, `builder-high`, or `domain-specialist{,-high}`. Spawn calls naming a removed agent must be updated.
+
+### Bug Fixes
+
+* **agents:** pin every agent to a model, collapse duplicate tiers ([#771](https://github.com/srobroek/agentic-packages/issues/771)) ([fd8193f](https://github.com/srobroek/agentic-packages/commit/fd8193f6e1f8fb7a4bfcb889e24f4ccd5327a7f7))
+
+## [9.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v8.0.0...agentic-maintenance--v9.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1830127](https://github.com/srobroek/agentic-packages/commit/18301271a5088c8afc7ad4688974b1b1bc503241))
+
+## [8.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.4...agentic-maintenance--v8.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([6eee221](https://github.com/srobroek/agentic-packages/commit/6eee221e133ea777bec62030374ea3f3e43b01fd))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [7.0.4](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.3...agentic-maintenance--v7.0.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9e4c6f7](https://github.com/srobroek/agentic-packages/commit/9e4c6f703c35255a08cfc6acf6177ebbeb572581))
+
+## [7.0.3](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.2...agentic-maintenance--v7.0.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9efa212](https://github.com/srobroek/agentic-packages/commit/9efa2125f49d5091193e6712fdc050e9cf57be79))
+
+## [7.0.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.1...agentic-maintenance--v7.0.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2cd577e](https://github.com/srobroek/agentic-packages/commit/2cd577e73098023b623149cfc9cb554af2234246))
+
+## [7.0.1](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v7.0.0...agentic-maintenance--v7.0.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#677](https://github.com/srobroek/agentic-packages/issues/677)) ([546411c](https://github.com/srobroek/agentic-packages/commit/546411c55b213309f210db1810ac35f48e6e41fe))
+
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.3...agentic-maintenance--v7.0.0) (2026-07-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven bundle packages are removed. Anyone installing them must drop the dependency; no replacement is needed as the bundles provided no content beyond wshobson plugin passthroughs.
+
+### Features
+
+* drop bundled wshobson plugins and retire eleven empty bundles ([#671](https://github.com/srobroek/agentic-packages/issues/671)) ([6a3c4f9](https://github.com/srobroek/agentic-packages/commit/6a3c4f91a0ce805b0eb436cfd457d69670de4c42))
+
+## [6.1.3](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.2...agentic-maintenance--v6.1.3) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([830a7fb](https://github.com/srobroek/agentic-packages/commit/830a7fb397edaca2bb599a8223a944a5ea750da9))
+
 ## [6.1.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v6.1.1...agentic-maintenance--v6.1.2) (2026-07-22)
 
 

@@ -22,5 +22,5 @@ tags:
 dependencies:
   apm:
     - srobroek/agentic-packages/packages/python-quality#^0.1.2
-    - srobroek/agentic-packages/packages/language-steering-python#main
-    - wshobson/agents/plugins/python-development#main
+    - srobroek/agentic-packages/packages/mcp-serena#main
+    - mattpocock/skills/skills/productivity/grilling#main

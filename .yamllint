@@ -1,0 +1,16 @@
+---
+# Permissive config matching this repo's existing style:
+# - no document-start requirement (apm.yml files don't use ---)
+# - long lines allowed (workflow shell scripts exceed 80 chars by design)
+# - truthy values beyond [true, false] are fine in workflow on: blocks
+extends: default
+rules:
+  document-start: disable
+  line-length: disable
+  # The apm.yml generator mixes indented and non-indented block sequences;
+  # both are valid YAML, so don't enforce one style.
+  indentation:
+    indent-sequences: whatever
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+    check-keys: false

@@ -1,5 +1,5 @@
 name: steering-frontend
-version: 2.1.0
+version: 2.2.0
 description: >-
   Opinionated frontend conventions: framework choice by surface
   (React/Vue/Next/Astro), UI library picks, app vs server state, and browser
@@ -8,7 +8,6 @@ description: >-
 author: Sjors Robroek
 license: Apache-2.0
 type: instructions
-target: all
 includes: auto
 category: steering
 tags:

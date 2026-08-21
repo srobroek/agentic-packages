@@ -1,5 +1,6 @@
 ---
 description: Use Tauri MCP to build, test, debug, and automate Tauri v2 apps.
+applyTo: "{src-tauri/**,**/src-tauri/**,**/tauri.conf.json,**/tauri.*.conf.json}"
 ---
 
 This repo uses the Tauri MCP server to build, test, debug, and UI-drive a Tauri

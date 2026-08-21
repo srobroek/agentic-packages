@@ -1,6 +1,6 @@
 ---
 name: worktrunk-writer
-description: Manages isolated Worktrunk leases for delegated tool-using writers, reviewers, and repository agents.
+description: Use when delegating a tool-using agent, reviewer, or repository worker into an isolated Worktrunk lease.
 ---
 
 # Worktrunk Writer
@@ -14,28 +14,57 @@ TRIGGER
 
 ## Workflow
 
-1. When `--bead` is used, claim it as the exact `--actor` before preparation. PREPARE the checkout:
-   `scripts/worktrunk-writer.py prepare --repo <repo> --branch <branch> --base <base> --source <copy-source> --actor <unique-actor> --lease <unique-token> --runtime <claude|codex> --agent <agent> [--bead <id>] [--run <id>] [--node <id>] [--worktree-path <template>]`.
-2. Require `status=ready`. Spawn the harness agent with a wait-only brief in the existing path, without harness worktree isolation. Do not authorize tool use yet.
-3. Bind the returned unique harness agent ID: `scripts/worktrunk-writer.py bind --repo <repo> --path <path> --actor <actor> --lease <token> --context <agent-id> [--bead <id>]`. Only `status=bound` authorizes the agent brief.
-4. Every tool-using agent runs `scripts/worktrunk-writer.py validate --repo <repo> --path <path> --actor <actor> --lease <token> [--bead <id>]` before its first tool call.
-5. For fleet or gate evidence, run `scripts/worktrunk-writer.py inventory --repo <repo> [--full]`; consume only output with `schema=2`.
-6. LOAD references/lifecycle.md before merge, removal, hook design, or diagnosing a lifecycle failure.
+1. PREPARE without `--bead` when the parent must create the checkout before the agent claims:
+   `scripts/worktrunk-writer.py prepare --repo <repo> --branch <branch> --base <base> --source <source-branch> --actor <unique-actor> --lease <unique-token> --runtime <claude|codex> --agent <agent> [--run <id>] [--node <id>] [--worktree-path <template>]`. `prepare` is parent-managed and rejects `--bead`; the activation resource stays unassigned until the worker claims it. `--source` names the BRANCH whose checkout supplies the ignored-file copy, not a filesystem path: a path fails as `Branch <path> has no worktree`. `--base` is the ref the new branch starts from, and it must be the ref where the target work actually lives.
+2. Require `status=ready`. Allocate an ordinary tool user with exactly:
+   ```text
+   WAIT checkout={path}
+   Do not invoke tools or start work.
+   The controlling parent will send your task after binding your Worktrunk lease.
+   ```
+   A protocol-owning package may extend this canonical WAIT with its resource identity and release verb. The pre-spawn hook rejects an unprepared path and a task-bearing spawn once the protocol is engaged; before that it can only advise, so allocate deliberately.
+3. Record the parent-visible spawn handle. The waiting actor replies exactly `WAIT context={hook-visible-id}` through the `SubagentStart` handshake without invoking a tool. Bind both identities without `--bead`: `scripts/worktrunk-writer.py bind --repo {repo} --path {path} --actor {actor} --lease {token} --handle {runtime-handle} --ack 'WAIT context={hook-visible-id}'`. Require `status=bound`.
+4. Store `runtime_handle` and `runtime_context` on a Beads activation resource and read both back. Resume an ordinary agent with its task, or send exactly `CLAIM {id}` for bead-as-brief activation. An Agent resume is admitted only for a bound handle; bead-as-brief SendMessage is guarded by its orchestration package.
+5. The agent validates with `scripts/worktrunk-writer.py validate --repo {repo} --path {path} --actor {actor} --lease {token} [--bead {id}]` before repository tools. When the harness has no `cwd` field, every Bash call starts with `cd -- {path}`; file tools use absolute paths beneath it. Artifact nodes also require an absolute `artifacts_dir` outside the leased checkout. File writes and Bash output redirections outside the checkout and stamped artifact directory are denied.
+6. A claim-holder may spawn bounded implementation children in its own path, inheriting its actor and lease; the child never receives `--bead`. The exemption is decided from the spawner's recorded binding, so no extra step is needed: a child naming any other checkout is refused, and a spawner holding no lease is still denied. Bind a child's own handle only when it must be addressed directly.
+7. For fleet or gate evidence, run `scripts/worktrunk-writer.py inventory --repo <repo> [--full]`; it pins `list.json-schema=2` and reads `branch` plus `worktree.path`.
+8. RELEASE a checkout whose bound actor is gone: `scripts/worktrunk-writer.py release --repo {repo} --path {path} --actor {actor} --lease {token}`. Require `status=released`. It clears `context`, `contexts`, and `runtime-bindings` only. `branch`, `worktree`, `actor`, `lease`, and the working tree survive, so `bind` a replacement handle to reuse the prepared checkout and its commits. Without this a dead agent's binding makes every replacement fail `assert_bound_handle`.
+9. LOAD references/lifecycle.md before merge, removal, hook design, or diagnosing a lifecycle failure.
+
+## Worktrunk lifecycle hooks
+
+`scripts/worktrunk-writer.py lifecycle --event <pre-start|pre-switch|pre-remove> --repo <repo> [--path <path>] [--target <branch>]` is the hook entry point. Install it in project or user Worktrunk config; a human approves project hooks once with `wt config approvals add` and agents never pass `--yes`, so the hooks are inert until then.
+
+- `pre-switch` REFUSES a branch change on a leased checkout, because the stamped `branch` IS the lease identity. Raw `git switch` bypasses Worktrunk entirely, so the PreToolUse guard remains the backstop.
+- `pre-remove` clears the binding so teardown cannot strand a dead `runtime-bindings` entry.
+- `pre-start` releases a binding only when the activation resource proves the actor is finished: closed, or unassigned and not in progress. Liveness is not observable, so a slow actor is never reaped.
+
+An unleased checkout is a silent no-op on every event, keyed on the checkout's own `actor`/`lease` vars and never on whether an orchestrator is running. Every internal error fails OPEN: lease bookkeeping must never stop a worktree from starting.
+
+`subagent-exit` is the `SubagentStop` half, matched to the claim-holder roles. It stamps `exited` on the checkout and releases the binding ONLY when the activation resource already proves the work is over. A stop is not an ending: a claim-holder is resumable and its review loop depends on being woken for the same node, so releasing on every stop would strand a live actor between review rounds. The stamp is what lets a later prune be event-driven instead of a guess.
 
 ## Rules
 
 MUST `prepare` complete blocking `copy-ignored --require-include` from the explicit source before delegation.
+MUST Roll back the newly created checkout when blocking copy or lease setup fails.
 MUST A read-only reviewer use a unique `review/<scope>-<id>` branch based on the exact target SHA; use a separate review Bead or omit `--bead`.
-MUST Every tool-using subagent have its own prepared and bound Worktrunk path, including reviewers and auditors.
+MUST Every independently dispatched tool user have its own prepared path; a claim-holder's explicitly bound child may share that parent's path and lease.
+MUST Treat `runtime_handle` as the parent's routing identity and `runtime_context` as the hook identity; never infer one from the other.
 
 MUST A human approve project hooks with `wt config approvals add`; agents never pass `--yes`.
-MUST Beads remain optional; when active and `--bead` is supplied, durable anchors are stored there and checked for duplicate active leases.
-MUST A Beads-backed lease require an active Bead claimed by the exact agent actor before any anchors are written.
+MUST `prepare` and `bind` reject `--bead`; pass the unclaimed `--resource` to `bind` instead.
+MUST Pass `prepare --source` a BRANCH name, never a path; a path fails as "Branch <path> has no worktree".
+MUST Stamp the full envelope before `bind`: `scope`, `base_ref`, `base_sha`, `execution_task_kind`, `execution_kind`, `execution_dispatch`, `execution_agent`, and `complexity_tier`. `bind` names any that are missing, rather than letting the actor trip over the gap mid-task.
+MUST Stamp `integration_owner` on every merge bead carrying this run's `run_id`; `bind` refuses while one is unowned, because the repository-global shepherd may otherwise drain it mid-run.
+MUST Stamp the ref where the work actually lives as the base. Basing a node on `main` when its target only exists on an unmerged branch forces a cross-branch merge inside the checkout, and resolving another actor's conflicts is out of scope for any node.
+
+NOT Change the branch of a leased checkout. `git switch`, `git checkout -b`, and `git branch -m` strand the merge bead, PR, and lease anchors; report a BOUNCE or ask for a re-prepared checkout instead.
+NOT Reap a binding on a timer. Release requires either explicit orchestrator action or resource evidence that the actor finished.
 
 MUST Worktrunk vars contain join fields only; task state, model, and effort stay in the task system or brief.
 NOT Copy Worktrunk native plugins, activity markers, lifecycle logs, or task state into this package.
 NOT Force-remove a dirty or unintegrated worktree.
 
 OUTPUT
-L1 JSON with `status=ready|bound|valid|invalid`, exact branch/path anchors, and evidence paths.
+L1 JSON with `status=ready|bound|valid|released|invalid`, exact branch/path anchors, and evidence paths.
 CAP 120w when explaining a failure.

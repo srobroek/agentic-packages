@@ -1,6 +1,6 @@
 {
   "name": "hooks-subagent-model",
-  "version": "0.3.0",
+  "version": "3.1.0",
   "description": "Claude PreToolUse:Agent deny gate requiring an explicit model when a spawn would inherit the parent session model. It allows explicit models and pinned agent types. Denials include routing guidance. SUBAGENT_MODEL_GUARD_INHERIT_TYPES adds unpinned types. The hook fails open on malformed input. Reasoning effort stays in reusable agent definitions because Agent calls have no effort field. Codex does not receive this hook.",
   "author": {
     "name": "Sjors Robroek"

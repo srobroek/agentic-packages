@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
-"""Block non-draft or unlinked agent-issued ``gh pr create`` commands."""
+"""Deny agent-issued ``gh pr create`` that does not pass ``--draft``.
+
+One rule, because one rule earns a denial: a non-draft PR has already notified
+reviewers and started CI by the time anyone notices, and `gh pr ready` cannot
+un-send that.
+
+Beads linkage is intentionally not checked here. The merge queue discovers work
+through `bd list --label pr:merge` and probes it through bead metadata; the
+shepherd verifies its own anchors against the live PR. PR-body trailers would
+duplicate that source of truth and are not required by this guard.
+"""
 
 from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import shlex
-import shutil
-import subprocess
 import sys
 from typing import Any
-
 
 CONTROL = {";", "&&", "||", "|", "&", "(", ")"}
 SHELLS = {"bash", "sh", "zsh", "dash", "fish", "ksh"}
@@ -64,21 +70,34 @@ def deny(reason: str) -> None:
     )
 
 
-def payload_command(payload: Any) -> tuple[str, Path]:
+def advise(context: str) -> None:
+    """Allow the command but tell the model what could not be verified.
+
+    Used for an unparsable command. Denying on an inconclusive check turns every
+    parser gap into a blocked PR, which is the opposite of what a guard is for.
+    """
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "allow",
+                    "additionalContext": context,
+                }
+            }
+        )
+    )
+
+
+def payload_command(payload: Any) -> str:
+    """Extract the command. Codex sends a bare string, Claude sends an object."""
     if isinstance(payload, str):
-        return payload, Path.cwd()
+        return payload
     if not isinstance(payload, dict):
-        return "", Path.cwd()
+        return ""
     tool_input = payload.get("tool_input", "")
-    if isinstance(tool_input, dict):
-        command = tool_input.get("command", "")
-    else:
-        command = tool_input
-    raw_cwd = payload.get("cwd") or os.getcwd()
-    cwd = Path(raw_cwd)
-    return command if isinstance(
-        command, str
-    ) else "", cwd if cwd.is_dir() else Path.cwd()
+    command = tool_input.get("command", "") if isinstance(tool_input, dict) else tool_input
+    return command if isinstance(command, str) else ""
 
 
 def shell_tokens(command: str) -> list[str]:
@@ -276,16 +295,6 @@ def invocation_spans(command: str, depth: int = 0) -> list[list[str]]:
     return found
 
 
-def argument(invocation: list[str], long: str, short: str) -> str | None:
-    args = invocation[3:]
-    for index, token in enumerate(args):
-        if token in {long, short}:
-            return args[index + 1] if index + 1 < len(args) else None
-        if token.startswith(f"{long}=") or token.startswith(f"{short}="):
-            return token.split("=", 1)[1]
-    return None
-
-
 def draft_enabled(invocation: list[str]) -> bool:
     enabled = False
     true_values = {"1", "t", "true", "yes", "y", "on"}
@@ -297,165 +306,48 @@ def draft_enabled(invocation: list[str]) -> bool:
     return enabled
 
 
-def beads_workspace(cwd: Path) -> bool:
-    return any((parent / ".beads").is_dir() for parent in (cwd, *cwd.parents))
-
-
-def trailer_ids(body: str, name: str) -> list[str]:
-    prefix = f"{name}:"
-    ids: list[str] = []
-    for line in body.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith(prefix):
-            continue
-        value = stripped[len(prefix) :].strip()
-        if value and all(
-            character.isalnum() or character in "._-" for character in value
-        ):
-            ids.append(value)
-    return ids
-
-
-def bead_record(cwd: Path, bead_id: str) -> dict[str, Any] | None:
-    if not shutil.which("bd"):
-        return None
-    try:
-        result = subprocess.run(
-            ["bd", "-C", str(cwd), "show", bead_id, "--json"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            timeout=5,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode != 0:
-        return None
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(payload, list) or not payload or not isinstance(payload[0], dict):
-        return None
-    return payload[0]
-
-
-def validate(invocation: list[str], cwd: Path) -> str | None:
-    if not draft_enabled(invocation):
-        return (
-            "Agent-authored PRs must start as drafts. Re-run every gh pr create "
-            "invocation with --draft; use gh pr ready only after implementation, "
-            "local validation, and required review are complete."
-        )
-    if not beads_workspace(cwd):
-        return None
-
-    body = argument(invocation, "--body", "-b")
-    body_file = argument(invocation, "--body-file", "-F")
-    if body_file:
-        body_path = Path(body_file)
-        if not body_path.is_absolute():
-            body_path = cwd / body_path
-        try:
-            body = body_path.read_text(encoding="utf-8")
-        except OSError:
-            return (
-                f"Cannot verify PR body file '{body_file}'. Supply a readable "
-                "--body-file containing Tracks-Bead: <id>."
-            )
-    if not body:
-        return (
-            "PRs created in a Beads repository must supply --body or --body-file "
-            "with Tracks-Bead: <id>; implicit --fill/editor bodies cannot be verified."
-        )
-
-    tracks = trailer_ids(body, "Tracks-Bead")
-    closes = trailer_ids(body, "Closes-Bead")
-    merges = trailer_ids(body, "Merge-Bead")
-    if not tracks:
-        return "PR body must include at least one exact Tracks-Bead: <id> line."
-    if len(merges) != 1:
-        return "PR body must include exactly one Merge-Bead: <id> line."
-    merge_id = merges[0]
-    merge_record = bead_record(cwd, merge_id)
-    if merge_record is None:
-        return f"Merge-Bead '{merge_id}' is not resolvable from this repository."
-    labels = set(merge_record.get("labels", []))
-    if merge_record.get("status") != "open" or not {
-        "pr:merge",
-        "agent:integrator",
-    }.issubset(labels):
-        return (
-            f"Merge-Bead '{merge_id}' must be open and labeled pr:merge "
-            "and agent:integrator."
-        )
-    if merge_record.get("assignee"):
-        return f"Merge-Bead '{merge_id}' must be unassigned for PR Shepherd discovery."
-    metadata = merge_record.get("metadata")
-    required_metadata = {"branch", "repo", "origin_actor"}
-    if not isinstance(metadata, dict) or any(
-        not metadata.get(name) for name in required_metadata
-    ):
-        return (
-            f"Merge-Bead '{merge_id}' must have branch, repo, and origin_actor "
-            "metadata before PR creation."
-        )
-    for bead_id in tracks:
-        if bead_record(cwd, bead_id) is None:
-            return f"Tracks-Bead '{bead_id}' is not resolvable from this repository."
-    for bead_id in closes:
-        if bead_id not in tracks:
-            return f"Closes-Bead '{bead_id}' must also appear as Tracks-Bead."
-        work_record = bead_record(cwd, bead_id)
-        if work_record is None:
-            return f"Closes-Bead '{bead_id}' is not resolvable from this repository."
-        if work_record.get("status") == "closed":
-            return f"Closes-Bead '{bead_id}' is already closed; late closing edges are denied."
-        dependencies = work_record.get("dependencies", [])
-        edge_exists = any(
-            dependency.get("id") == merge_id
-            and dependency.get("dependency_type") == "blocks"
-            for dependency in dependencies
-            if isinstance(dependency, dict)
-        )
-        if not edge_exists:
-            return (
-                f"Closes-Bead '{bead_id}' must already depend on Merge-Bead "
-                f"'{merge_id}' before PR creation."
-            )
-    if set(metadata.get("tracks_beads", [])) != set(tracks) or set(
-        metadata.get("closes_beads", [])
-    ) != set(closes):
-        return (
-            f"Merge-Bead '{merge_id}' tracked/closing metadata must match the "
-            "PR body trailers."
-        )
-    return None
-
-
 def main() -> int:
     raw = sys.stdin.read()
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
         payload = raw
-    command, cwd = payload_command(payload)
+    command = payload_command(payload)
     if not command:
         return 0
-    likely_pr_create = all(word in command for word in ("gh", "pr", "create"))
+    # Cheap bail before tokenizing. This hook is registered on every Bash call,
+    # and the shell wrapper that used to do this filtering is gone. A strict
+    # superset of the real trigger, so it cannot hide a command the parser would
+    # have flagged.
+    if not all(word in command for word in ("gh", "pr", "create")):
+        return 0
     try:
         invocations = invocation_spans(command)
     except ValueError as error:
-        if likely_pr_create:
-            deny(f"PR creation command could not be safely parsed: {error}.")
+        # Allow, do not deny. PR bodies carry markdown: apostrophes, backticks,
+        # and nested quotes all make the tokenizer give up, and a command this
+        # guard cannot read is not evidence of a policy breach.
+        advise(
+            f"PR policy not verified: this command could not be parsed ({error}). "
+            "Ensure the invocation uses --draft."
+        )
         return 0
-    for invocation in invocations:
-        reason = validate(invocation, cwd)
-        if reason:
-            deny(reason)
-            return 0
+    if any(not draft_enabled(invocation) for invocation in invocations):
+        deny(
+            "Agent-authored PRs must start as drafts. Re-run every gh pr create "
+            "invocation with --draft; use gh pr ready only after implementation, "
+            "local validation, and required review are complete."
+        )
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        # Fail open, per the hook contract: an unexpected exception allows rather
+        # than blocking. Without this, a payload whose `cwd` was not a string raised
+        # TypeError and exited 1 instead of exiting 0 quietly.
+        raise SystemExit(0)

@@ -10,7 +10,7 @@ setup() {
 @test "Claude hook contract matches Serena documentation" {
   run jq -e '
     (.hooks | keys) == ["PreToolUse", "SessionEnd", "SessionStart"] and
-    .hooks.PreToolUse == [{matcher:"", hooks:[{type:"command", command:"serena-hooks remind --client=claude-code"}]}] and
+    .hooks.PreToolUse == [{matcher:"Read|Grep|Glob|Bash", hooks:[{type:"command", command:"serena-hooks remind --client=claude-code"}]}] and
     .hooks.SessionStart == [{matcher:"", hooks:[{type:"command", command:"serena-hooks activate --client=claude-code"}]}] and
     .hooks.SessionEnd == [{matcher:"", hooks:[{type:"command", command:"serena-hooks cleanup --client=claude-code"}]}]
   ' "$CLAUDE"

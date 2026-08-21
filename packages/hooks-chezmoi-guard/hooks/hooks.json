@@ -2,22 +2,24 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh",
+            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.py",
             "timeout": 10
           }
         ]
-      },
+      }
+    ],
+    "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/chezmoi-guard.sh",
-            "timeout": 10
+            "command": "${PLUGIN_ROOT}/scripts/chezmoi-sync.py",
+            "timeout": 15
           }
         ]
       }

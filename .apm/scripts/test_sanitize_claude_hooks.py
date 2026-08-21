@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 SCRIPT = Path(__file__).with_name("sanitize-claude-hooks.py")
 SPEC = importlib.util.spec_from_file_location("sanitize_claude_hooks", SCRIPT)
@@ -33,12 +32,12 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
     live = _make_script(hooks_dir, "live-pkg", "real.sh")
     obsolete = _make_script(
         hooks_dir,
-        "agent-coder",
+        "agent-builder",
         "coder-delegation-reminder.sh",
     )
     future_agent_coder_hook = _make_script(
         hooks_dir,
-        "agent-coder",
+        "agent-builder",
         "future-legitimate-hook.sh",
     )
     events = {
@@ -88,9 +87,7 @@ def test_clean_events_drops_only_dead_path_handlers(tmp_path: Path) -> None:
 def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
     events = {
-        "SessionStart": [
-            {"hooks": [{"type": "command", "command": "~/hooks/missing-reminder"}]}
-        ]
+        "SessionStart": [{"hooks": [{"type": "command", "command": "~/hooks/missing-reminder"}]}]
     }
     assert sanitize_claude_hooks.clean_events(events) == 1
     assert events == {}
@@ -99,14 +96,8 @@ def test_tilde_commands_are_resolved(tmp_path: Path, monkeypatch) -> None:
 def test_retired_agent_coder_hook_is_removed_even_if_script_exists(
     tmp_path: Path,
 ) -> None:
-    retired = _make_script(
-        tmp_path / "hooks", "agent-coder", "coder-delegation-reminder.sh"
-    )
-    events = {
-        "PreToolUse": [
-            {"hooks": [{"type": "command", "command": str(retired)}]}
-        ]
-    }
+    retired = _make_script(tmp_path / "hooks", "agent-builder", "coder-delegation-reminder.sh")
+    events = {"PreToolUse": [{"hooks": [{"type": "command", "command": str(retired)}]}]}
 
     assert sanitize_claude_hooks.clean_events(events) == 1
     assert events == {}
@@ -205,9 +196,7 @@ def test_cli_end_to_end_settings_sidecar_and_symlink(tmp_path: Path) -> None:
         "--prune-stale",
     ]
 
-    check = subprocess.run(
-        [*argv, "--check"], capture_output=True, text=True, check=False
-    )
+    check = subprocess.run([*argv, "--check"], capture_output=True, text=True, check=False)
     assert check.returncode == 1  # stale wiring detected
 
     apply = subprocess.run(argv, capture_output=True, text=True, check=False)
@@ -226,10 +215,52 @@ def test_cli_end_to_end_settings_sidecar_and_symlink(tmp_path: Path) -> None:
     assert json.loads(sidecar.read_text(encoding="utf-8")) == {}
     assert sorted(p.name for p in hooks_dir.iterdir()) == ["live-pkg"]
 
-    rerun = subprocess.run(
-        [*argv, "--check"], capture_output=True, text=True, check=False
-    )
+    rerun = subprocess.run([*argv, "--check"], capture_output=True, text=True, check=False)
     assert rerun.returncode == 0  # idempotent: nothing left to clean
+
+
+def test_claude_project_dir_missing_script_is_stale(tmp_path: Path) -> None:
+    """${CLAUDE_PROJECT_DIR} paths with a missing script must be flagged."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    events = {
+        "WorktreeCreate": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PROJECT_DIR}/scripts/worktree-create.sh",
+                    }
+                ]
+            }
+        ]
+    }
+    removed = sanitize_claude_hooks.clean_events(events, repo_root=repo_root)
+    assert removed == 1
+    assert events == {}
+
+
+def test_claude_project_dir_existing_script_is_kept(tmp_path: Path) -> None:
+    """${CLAUDE_PROJECT_DIR} paths with an existing script must be kept."""
+    repo_root = tmp_path / "repo"
+    script = repo_root / "scripts" / "real-hook.sh"
+    script.parent.mkdir(parents=True)
+    script.write_text("#!/bin/sh\n", encoding="utf-8")
+    events = {
+        "PreToolUse": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PROJECT_DIR}/scripts/real-hook.sh",
+                    }
+                ]
+            }
+        ]
+    }
+    removed = sanitize_claude_hooks.clean_events(events, repo_root=repo_root)
+    assert removed == 0
+    assert "PreToolUse" in events
 
 
 def test_cli_missing_files_is_a_noop(tmp_path: Path) -> None:

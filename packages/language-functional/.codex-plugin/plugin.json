@@ -1,9 +1,0 @@
-{
-  "name": "language-functional",
-  "version": "2.1.0",
-  "description": "Functional programming toolkit: Hobson's Elixir and Haskell functional-programming specialists.",
-  "author": {
-    "name": "Sjors Robroek"
-  },
-  "license": "Apache-2.0"
-}

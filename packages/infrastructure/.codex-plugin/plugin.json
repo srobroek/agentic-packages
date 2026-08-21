@@ -1,7 +1,7 @@
 {
   "name": "infrastructure",
-  "version": "3.2.0",
-  "description": "Infrastructure and operations toolkit: infrastructure steering plus Hobson cloud, Kubernetes, CI/CD, deployment, deployment-validation, and observability plugins.",
+  "version": "4.2.0",
+  "description": "Infrastructure and operations toolkit: infrastructure steering.",
   "author": {
     "name": "Sjors Robroek"
   },

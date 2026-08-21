@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/rtk-rewrite-guard.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/repomix-read-guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

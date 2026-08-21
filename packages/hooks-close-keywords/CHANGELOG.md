@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v1.0.2...hooks-close-keywords--v1.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [1.0.2](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v1.0.1...hooks-close-keywords--v1.0.2) (2026-08-17)
+
+
+### Bug Fixes
+
+* one undecodable byte no longer silences eleven more guards ([#852](https://github.com/srobroek/agentic-packages/issues/852)) ([3fb5835](https://github.com/srobroek/agentic-packages/commit/3fb58352d2f37ba67adc14ba3c03d204c1507a9e))
+
+## [1.0.1](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v1.0.0...hooks-close-keywords--v1.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [1.0.0](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v0.6.1...hooks-close-keywords--v1.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* the PreToolUse hook is now pr-close-guard.py and the pre-commit entry is commit-msg-rewrite.py; both require python3 on PATH. A project that vendored normalize-closes.sh must re-vendor commit-msg-rewrite.py alongside close_keywords.py.
+
+### Refactors
+
+* port the close-keyword hooks to Python ([#795](https://github.com/srobroek/agentic-packages/issues/795)) ([472e125](https://github.com/srobroek/agentic-packages/commit/472e125a9e57efbc447a6b92a8d38a144916c8c9))
+
+## [0.6.1](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v0.6.0...hooks-close-keywords--v0.6.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
 ## [0.6.0](https://github.com/srobroek/agentic-packages/compare/hooks-close-keywords--v0.5.1...hooks-close-keywords--v0.6.0) (2026-07-16)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "handover",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Save a self-contained recovery prompt to the shared handover store when pausing work, switching context, preserving unfinished state, or handing off to another session. In beads (bd) repos, flushes task state into beads and keeps the file narrative-only.",
   "author": {
     "name": "Sjors Robroek"

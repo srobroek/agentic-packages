@@ -1,5 +1,127 @@
 # Changelog
 
+## [7.2.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v7.1.0...project-lifecycle--v7.2.0) (2026-08-17)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([a24f100](https://github.com/srobroek/agentic-packages/commit/a24f1006d881429f056a01cb43a28dbf9c33911c))
+
+## [7.1.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v7.0.1...project-lifecycle--v7.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [7.0.1](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v7.0.0...project-lifecycle--v7.0.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2e89d20](https://github.com/srobroek/agentic-packages/commit/2e89d2093e420a321d4c5b97016ea464ae4c61ba))
+
+## [7.0.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v6.0.0...project-lifecycle--v7.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([2426e23](https://github.com/srobroek/agentic-packages/commit/2426e235338957156b64710fd8d306ece82d3e94))
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [6.0.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v5.0.0...project-lifecycle--v6.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([7b63b60](https://github.com/srobroek/agentic-packages/commit/7b63b60828a8f675244f6cb99554723d07ca6a8f))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.8...project-lifecycle--v5.0.0) (2026-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** sync internal package pins (major-level dep releases)
+
+### Features
+
+* **deps:** sync internal package pins (major-level dep releases) ([1ea2d17](https://github.com/srobroek/agentic-packages/commit/1ea2d17165aab551582be9a3c1f9c3d7c28f6dc4))
+
+## [4.2.8](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.7...project-lifecycle--v4.2.8) (2026-07-27)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([4b7aecd](https://github.com/srobroek/agentic-packages/commit/4b7aecd27b8adb681c4ac25f1b243bf1bed4d904))
+
+## [4.2.7](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.6...project-lifecycle--v4.2.7) (2026-07-26)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([35cb8e7](https://github.com/srobroek/agentic-packages/commit/35cb8e7bad05934c065b38610b4c599bf05d84d9))
+
+## [4.2.6](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.5...project-lifecycle--v4.2.6) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([6c55c29](https://github.com/srobroek/agentic-packages/commit/6c55c291106d03bdb7f5a2912a6a1aba76025c18))
+
+## [4.2.5](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.4...project-lifecycle--v4.2.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [4.2.4](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.3...project-lifecycle--v4.2.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9efa212](https://github.com/srobroek/agentic-packages/commit/9efa2125f49d5091193e6712fdc050e9cf57be79))
+
+## [4.2.3](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.2...project-lifecycle--v4.2.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([2cd577e](https://github.com/srobroek/agentic-packages/commit/2cd577e73098023b623149cfc9cb554af2234246))
+
+## [4.2.2](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.1...project-lifecycle--v4.2.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins to released versions ([#677](https://github.com/srobroek/agentic-packages/issues/677)) ([546411c](https://github.com/srobroek/agentic-packages/commit/546411c55b213309f210db1810ac35f48e6e41fe))
+
+## [4.2.1](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.2.0...project-lifecycle--v4.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([78b3c6b](https://github.com/srobroek/agentic-packages/commit/78b3c6b0d8b90b3d78e66913e25860bcc4628bf3))
+
+## [4.2.0](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.1.1...project-lifecycle--v4.2.0) (2026-07-23)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([#646](https://github.com/srobroek/agentic-packages/issues/646)) ([29f3dd0](https://github.com/srobroek/agentic-packages/commit/29f3dd0e10f84f9c740db515743cc057d83bbb4f))
+
 ## [4.1.1](https://github.com/srobroek/agentic-packages/compare/project-lifecycle--v4.1.0...project-lifecycle--v4.1.1) (2026-07-22)
 
 

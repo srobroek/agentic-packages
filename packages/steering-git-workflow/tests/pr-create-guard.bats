@@ -1,49 +1,59 @@
 #!/usr/bin/env bats
 
-setup() {
-  export PACKAGE_ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
-  export GUARD="$PACKAGE_ROOT/scripts/pr-create-guard.sh"
-  export TEST_REPO="$BATS_TEST_TMPDIR/repo"
-  export OUTSIDE_REPO="$BATS_TEST_TMPDIR/outside"
-  export FAKE_BIN="$BATS_TEST_TMPDIR/bin"
-  mkdir -p "$TEST_REPO/.beads" "$OUTSIDE_REPO" "$FAKE_BIN"
-  printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'case " $* " in' \
-    '  *" show merge-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-1","status":"open","issue_type":"task","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":["good-1"]}}]'\'' ;;' \
-    '  *" show merge-2 --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-2","status":"open","issue_type":"task","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
-    '  *" show merge-blocked --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-blocked","status":"blocked","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
-    '  *" show merge-unrouted --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-unrouted","status":"open","labels":["pr:merge"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
-    '  *" show merge-unanchored --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-unanchored","status":"open","labels":["pr:merge","agent:integrator"],"metadata":{"tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
-    '  *" show merge-assigned --json "*) printf '\''%s\n'\'' '\''[{"id":"merge-assigned","status":"open","assignee":"busy-agent","labels":["pr:merge","agent:integrator"],"metadata":{"branch":"fix/test","repo":"owner/repo","origin_actor":"test/agent","tracks_beads":["good-1"],"closes_beads":[]}}]'\'' ;;' \
-    '  *" show good-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"good-1","status":"open","labels":[],"dependencies":[{"id":"merge-1","dependency_type":"blocks"}]}]'\'' ;;' \
-    '  *" show other-1 --json "*) printf '\''%s\n'\'' '\''[{"id":"other-1","status":"open","labels":[],"dependencies":[]}]'\'' ;;' \
-    '  *" show "*) exit 1 ;;' \
-    'esac' > "$FAKE_BIN/bd"
-  chmod +x "$FAKE_BIN/bd"
-  export PATH="$FAKE_BIN:$PATH"
+# A bare `[[ ... ]]` that is not the LAST command in a bats test does not fail
+# the test: bash 3.2 does not apply errexit to it there. Every assertion below a
+# final one was therefore vacuous, which hid a real behaviour change in this very
+# suite. These helpers are function calls, and a failing function call does
+# propagate, so each assertion is load-bearing wherever it appears.
+has() {
+  if [[ "$1" != *"$2"* ]]; then
+    printf 'expected output to contain %s\nactual: %s\n' "$2" "$1" >&2
+    return 1
+  fi
 }
 
-@test "blocks a non-draft PR outside Beads" {
+lacks() {
+  if [[ "$1" == *"$2"* ]]; then
+    printf 'expected output NOT to contain %s\nactual: %s\n' "$2" "$1" >&2
+    return 1
+  fi
+}
+
+empty() {
+  if [ -n "$1" ]; then
+    printf 'expected no output\nactual: %s\n' "$1" >&2
+    return 1
+  fi
+}
+
+setup() {
+  export PACKAGE_ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+  export GUARD="$PACKAGE_ROOT/scripts/pr-create-guard.py"
+  export TEST_REPO="$BATS_TEST_TMPDIR/repo"
+  export OUTSIDE_REPO="$BATS_TEST_TMPDIR/outside"
+  mkdir -p "$TEST_REPO/.beads" "$OUTSIDE_REPO"
+}
+
+@test "blocks a non-draft PR" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --title x --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
   [ "$status" -eq 0 ]
-  [[ "$output" == *'permissionDecisionReason'* ]]
-  [[ "$output" == *'must start as drafts'* ]]
+  has "$output" 'permissionDecisionReason'
+  has "$output" 'must start as drafts'
 }
 
-@test "allows a draft PR without Beads linkage outside Beads" {
+@test "allows a draft PR" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --draft --title x --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
   [ "$status" -eq 0 ]
-  [ -z "$output" ]
+  empty "$output"
 }
 
-@test "allows native draft flag equivalents outside Beads" {
+@test "allows native draft flag equivalents" {
   for command in \
     'gh pr create -d --body y' \
     'gh pr create --draft=true --body y' \
@@ -52,8 +62,8 @@ setup() {
     'gh pr create -d=t --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
-    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-    [ -z "$output" ]
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+    empty "$output"
   done
 }
 
@@ -61,8 +71,8 @@ setup() {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --draft=false --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "uses last draft flag value" {
@@ -71,78 +81,22 @@ setup() {
     'gh pr create -d --draft=false --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
-    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-    [[ "$output" == *'must start as drafts'* ]]
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+    has "$output" 'must start as drafts'
   done
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --draft=false --draft --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ -z "$output" ]
-}
-
-@test "blocks a Beads PR without a tracking trailer" {
-  export FAKE_BD_WHERE=ok
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" \
-    --arg command 'gh pr create --draft --title x --body "## Summary"' \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'Tracks-Bead: <id>'* ]]
-}
-
-@test "allows a multiline inline body with a resolvable tracking trailer" {
-  export FAKE_BD_WHERE=ok
-  command=$'gh pr create --draft --title x --body "## Summary\nReady\n\n## Beads\nMerge-Bead: merge-1\nTracks-Bead: good-1\nCloses-Bead: good-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
-}
-
-@test "blocks an unknown tracking bead" {
-  export FAKE_BD_WHERE=ok
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-1\nTracks-Bead: missing-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *"not resolvable"* ]]
-}
-
-@test "blocks a Beads PR without exactly one merge bead" {
-  command=$'gh pr create --draft --body "## Beads\nTracks-Bead: good-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'exactly one Merge-Bead'* ]]
-}
-
-@test "blocks a closing bead that is not also tracked" {
-  export FAKE_BD_WHERE=ok
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-1\nTracks-Bead: good-1\nCloses-Bead: other-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *"must also appear as Tracks-Bead"* ]]
-}
-
-@test "allows a linked body file" {
-  export FAKE_BD_WHERE=ok
-  printf '%s\n' '## Beads' 'Merge-Bead: merge-2' 'Tracks-Bead: good-1' > "$TEST_REPO/pr-body.md"
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" \
-    --arg command 'gh pr create --draft --body-file pr-body.md' \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ "$status" -eq 0 ]
-  [ -z "$output" ]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
 @test "blocks an absolute-path gh invocation without draft" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command '/usr/bin/gh pr create --title x --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "blocks gh repo-global option forms without draft" {
@@ -153,8 +107,8 @@ setup() {
     'gh --repo=owner/repo pr create --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
-    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-    [[ "$output" == *'must start as drafts'* ]]
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+    has "$output" 'must start as drafts'
   done
 }
 
@@ -175,8 +129,8 @@ setup() {
     'sudo gh pr create --body y'; do
     export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
       '{cwd:$cwd,tool_input:{command:$command}}')"
-    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-    [[ "$output" == *'must start as drafts'* ]]
+    run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+    has "$output" 'must start as drafts'
   done
 }
 
@@ -184,121 +138,136 @@ setup() {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'command -v gh pr create' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ -z "$output" ]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
 @test "blocks nested shell PR creation without draft" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command "bash -lc 'gh pr create --title x --body y'" \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "checks every PR create invocation independently" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'gh pr create --draft --body one; gh pr create --body two' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "accepts Codex bare-string payload while enforcing draft" {
   export HOOK_PAYLOAD='gh pr create --body one'
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
-}
-
-@test "fails closed for PR creation when python checker fails" {
-  fail_bin="$BATS_TEST_TMPDIR/fail-bin"
-  mkdir -p "$fail_bin"
-  printf '%s\n' '#!/usr/bin/env sh' 'exit 127' > "$fail_bin/python3"
-  chmod +x "$fail_bin/python3"
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
-    --arg command 'gh pr create --draft --body one' \
-    '{cwd:$cwd,tool_input:{command:$command}}')"
-  run env PATH="$fail_bin:$PATH" bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'could not be verified'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "allows a quoted documentation mention of gh pr create" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'printf "%s" "use gh pr create --draft"' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
   [ "$status" -eq 0 ]
-  [ -z "$output" ]
+  empty "$output"
 }
 
 @test "blocks a later grouped non-draft invocation" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command '(gh pr create --draft --body x); gh pr create --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must start as drafts'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" 'must start as drafts'
 }
 
 @test "allows gh words passed as ordinary command arguments" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'printf "%s\n" gh pr create' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ -z "$output" ]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
 @test "allows gh words in a shell comment" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command 'echo ok # gh pr create' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ -z "$output" ]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
 @test "allows nested-shell text passed to echo" {
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" \
     --arg command "echo bash -lc 'gh pr create --body x'" \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [ -z "$output" ]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
-@test "blocks a closing trailer without a predeclared dependency edge" {
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-1\nTracks-Bead: other-1\nCloses-Bead: other-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
+# --- an inconclusive check must not deny -------------------------------------
+#
+# This used to deny. A guard that blocks whenever it cannot reach a verdict turns
+# every parser gap into a rejected PR.
+
+@test "allows with an advisory when the command cannot be parsed" {
+  # An apostrophe in the body defeats shell tokenizing, and PR bodies are
+  # markdown, so this is the ordinary case rather than an edge one.
+  command="gh pr create --draft --title t --body 'it"
+  command="${command}'"
+  command="${command}s got an apostrophe'"
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$OUTSIDE_REPO" --arg command "$command" \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must already depend on Merge-Bead'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  [ "$status" -eq 0 ]
+  has "$output" '"allow"'
+  has "$output" 'could not be parsed'
+  lacks "$output" '"deny"'
 }
 
-@test "blocks a merge bead that is not open" {
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-blocked\nTracks-Bead: good-1"'
+# --- a body is never inspected -----------------------------------------------
+#
+# The guard is PreToolUse, so a body file the same command is about to write does
+# not exist yet. Reading it denied a correct compound command and blamed the
+# file, which is readable a millisecond later.
+
+@test "allows a compound command that writes its own body file" {
+  command="printf x > $TEST_REPO/b.md && gh pr create --draft --body-file $TEST_REPO/b.md --title t"
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must be open'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  [ "$status" -eq 0 ]
+  empty "$output"
+  lacks "$output" 'body file'
 }
 
-@test "blocks a merge bead without integrator routing" {
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-unrouted\nTracks-Bead: good-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
+@test "allows an implicit body" {
+  # --fill and an editor body were denied as unverifiable. Neither is a policy
+  # breach.
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" \
+    --arg command 'gh pr create --draft --fill' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'agent:integrator'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  empty "$output"
 }
 
-@test "blocks a merge bead without durable anchors" {
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-unanchored\nTracks-Bead: good-1"'
+# --- a beads repository is not a trigger -------------------------------------
+
+@test "says nothing about beads in a beads repository" {
+  command=$'gh pr create --body "## Summary\nno trailers here"'
   export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'branch, repo, and origin_actor'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  has "$output" '"deny"'
+  has "$output" 'must start as drafts'
+  lacks "$output" 'Bead'
 }
 
-@test "blocks an assigned merge bead that would starve discovery" {
-  command=$'gh pr create --draft --body "## Beads\nMerge-Bead: merge-assigned\nTracks-Bead: good-1"'
-  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" --arg command "$command" \
+@test "allows a draft PR in a beads repository with no trailers" {
+  export HOOK_PAYLOAD="$(jq -cn --arg cwd "$TEST_REPO" \
+    --arg command 'gh pr create --draft --title x --body y' \
     '{cwd:$cwd,tool_input:{command:$command}}')"
-  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | "$GUARD"'
-  [[ "$output" == *'must be unassigned'* ]]
+  run bash -c 'printf "%s" "$HOOK_PAYLOAD" | python3 "$GUARD"'
+  [ "$status" -eq 0 ]
+  empty "$output"
 }

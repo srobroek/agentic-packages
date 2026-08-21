@@ -1,0 +1,15 @@
+agent: operator
+regime: clean
+prompt: |
+  In constants.py, change the value of `TIMEOUT` from 30 to 60.
+  Target: constants.py line 1.
+sandbox:
+  git: true
+  files:
+    constants.py: |
+      TIMEOUT = 30
+assert:
+  first_line: '^VERDICT: (?:COMPLETE|BLOCKED)\b'
+  max_words: 70
+  no_reprint: true
+timeout_s: 120

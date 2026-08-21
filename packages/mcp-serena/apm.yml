@@ -1,14 +1,12 @@
 name: mcp-serena
-version: 1.2.1
+version: 1.5.0
 description: >-
-  MCP server package for Serena semantic code tools. The launcher resolves the
-  Codex or Claude Code context from the process ancestry and can be overridden
-  with SERENA_MCP_CONTEXT. Codex releases that do not honor per-agent
-  mcp_servers declarations should use the shared semantic route instead.
+  MCP server package for Serena semantic code tools. The launcher shares one
+  Serena backend across agents in the same checkout, isolates linked worktrees,
+  and applies resource and capacity limits to worktree backends.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 category: mcp
 tags:
   - mcp
@@ -22,10 +20,10 @@ dependencies:
       args:
         - '-lc'
         - >-
-          ctx="${SERENA_MCP_CONTEXT:-}"; if [ -z "$ctx" ]; then ctx="agent";
-          pid="$PPID"; while [ "$pid" -gt 1 ]; do parent="$(ps -o args= -p
-          "$pid" 2>/dev/null | tr "[:upper:]" "[:lower:]")"; case "$parent" in
-          *claude*) ctx="claude-code"; break ;; *codex*) ctx="codex"; break ;;
-          esac; next="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')"; case
-          "$next" in ''|*[!0-9]*) break ;; esac; pid="$next"; done; fi; exec
-          serena start-mcp-server --context "$ctx" --project-from-cwd
+          launcher_rel="apm_modules/srobroek/agentic-packages/packages/mcp-serena/scripts/serena-pool.py";
+          for launcher in
+          "$PWD/apm_modules/_local/mcp-serena/scripts/serena-pool.py"
+          "$PWD/$launcher_rel" "${APM_HOME:-}/$launcher_rel"
+          "${HOME}/.apm/$launcher_rel" "$PWD/.apm/$launcher_rel"; do [ -r
+          "$launcher" ] && exec python3 "$launcher"; done; echo
+          serena-apm-launcher-not-found-run-apm-install >&2; exit 1

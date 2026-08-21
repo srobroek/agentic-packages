@@ -14,6 +14,10 @@
 #   merge-probe.sh eligibility
 #       -> reads gh PR JSON on stdin; prints eligible|draft|release|closed
 #
+# Review-bot rounds are a separate probe: bot-review-probe.py (Python, because
+# each bot signals actionability differently and that belongs in an adapter
+# table, not in jq).
+#
 # Portability floor: bash 3.2 + BSD coreutils.
 set -euo pipefail
 
@@ -43,10 +47,21 @@ case "$cmd" in
     # Modern merge-tree predicts the merge without touching the tree.
     # --name-only output: line 1 = tree OID, then conflicted paths, then a
     # blank line and informational messages. Exit 1 = conflicts.
+    # -z separates paths with NUL and emits them RAW. Without it git C-quotes any
+    # unusual path -- a tab becomes the eleven characters "wei\trd.txt", quotes and
+    # a literal backslash-t included -- and that quoted form flowed into
+    # landing-contract.py's content-addressed `failure-key`, silently changing the
+    # key and breaking bounce deduplication for that PR. Verified against real git.
+    #
+    # The output goes to a FILE, not a command substitution: bash strips NUL bytes
+    # from "$(...)", which would undo -z entirely and silently re-join every path.
+    zout="$(mktemp -t merge-probe.XXXXXX)"
+    trap 'rm -f "$zout"' EXIT
     set +e
-    out="$(git merge-tree --write-tree --name-only "$base_sha" "$br_sha" 2>/dev/null)"
+    git merge-tree --write-tree --name-only -z "$base_sha" "$br_sha" >"$zout" 2>/dev/null
     rc=$?
     set -e
+    out="$(tr '\0' '\n' <"$zout")"
     if [ -z "$out" ]; then
       # Older git: cannot predict the merge. Exit 2 (error/unknown), NOT 0 --
       # 0 would report "clean" for a merge nobody probed. Still list the
@@ -57,7 +72,25 @@ case "$cmd" in
       exit 2
     fi
     if [ "$rc" -ne 0 ]; then
-      printf '%s\n' "$out" | sed -n '2,/^$/p' | sed '/^$/d' | sort -u
+      # Records are NUL-separated: the tree OID first, then the conflicted paths,
+      # then an empty record before the informational block. Split on NUL in Python
+      # rather than shell: BSD awk cannot take NUL as RS (it stops after record 1),
+      # and `tr '\0' '\n'` would corrupt a path that legitimately contains a
+      # newline -- git leaves those raw under -z, verified against real git.
+      #
+      # Sorted bytewise, because landing-contract.py's failure-key hashes this list
+      # in order and a locale-dependent collation would change the key.
+      python3 -c '
+import sys
+data = open(sys.argv[1], "rb").read().split(b"\0")
+paths = []
+for record in data[1:]:
+    if record == b"":
+        break
+    paths.append(record)
+for path in sorted(set(paths)):
+    sys.stdout.buffer.write(path + b"\n")
+' "$zout"
       exit 1
     fi
     echo "clean"

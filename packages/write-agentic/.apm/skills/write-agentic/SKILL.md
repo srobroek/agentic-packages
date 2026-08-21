@@ -24,14 +24,19 @@ One workflow for three asset kinds. Pick the template, author at source, lint.
    non-triggers, install target, script/reference needs, external overlap.
 3. LOAD the matching template and follow it exactly.
 4. Run `scripts/lint.sh <file>` → fix every ERROR; justify or fix WARNs.
-5. Review: triggers concrete · description ≤25 words · no hedges on MUST/DEFAULT/NOT lines
-   (lint catches the lexicon) · output contract has verdict line + word cap (agents) ·
-   references one level deep.
+5. Review what lint cannot judge: are the triggers phrases a user would type, and
+   is every reference one level deep?
 
 ## Format rules (all kinds)
 
 MUST Enums in CAPS (`PASS|PARTIAL|FAIL`); decision tables as `situation → choice`.
 MUST No hedge words on normative lines (lint list); replace with an observable condition.
-MUST No model names in prose — tier routing lives in steering-subagent-routing.
+MUST No model names in prose -- tier routing lives in steering-subagent-routing.
+MUST State the rule, never argue for it. A steering line is read as an instruction,
+  so a defence of why the rule exists is tokens the agent pays on every load and
+  cannot act on. Write the reason only when it IS the rule (the measured number
+  that set a threshold, the failure the rule prevents, a gotcha the agent cannot
+  infer) or when an agent that does not know the reason would route around the
+  rule.
 DEFAULT Gotchas/env-facts may stay single sentences when a table would lose the trap.
-NOT User-facing text (reports, PR bodies) — never keyword prefixes.
+NOT User-facing text (reports, PR bodies) -- never keyword prefixes.

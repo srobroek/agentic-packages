@@ -1,5 +1,95 @@
 # Changelog
 
+## [5.1.1](https://github.com/srobroek/agentic-packages/compare/write-agentic--v5.1.0...write-agentic--v5.1.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* **pr-shepherd:** close the four remaining fuzz defects, unblock bats CI, and clear the ruff backlog ([#863](https://github.com/srobroek/agentic-packages/issues/863)) ([80ef3db](https://github.com/srobroek/agentic-packages/commit/80ef3db32dc2d604e7d9d65a904d712acb15e85f))
+
+## [5.1.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v5.0.1...write-agentic--v5.1.0) (2026-08-17)
+
+
+### Features
+
+* **codex:** validate packages and standardize language tooling ([#856](https://github.com/srobroek/agentic-packages/issues/856)) ([42edbfb](https://github.com/srobroek/agentic-packages/commit/42edbfb3948c0103f3ce3ef5ba6819a08ae73566))
+
+## [5.0.1](https://github.com/srobroek/agentic-packages/compare/write-agentic--v5.0.0...write-agentic--v5.0.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **code-intelligence:** stop shipping the unreachable subagent-context branch ([#834](https://github.com/srobroek/agentic-packages/issues/834)) ([6ca1ff5](https://github.com/srobroek/agentic-packages/commit/6ca1ff56e7e5dabbe7f15afb4631f3f4ca79e83b))
+
+## [5.0.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v4.0.1...write-agentic--v5.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814))
+
+### Refactors
+
+* **steering-pragmatic:** move conversational register to a Claude output style ([#814](https://github.com/srobroek/agentic-packages/issues/814)) ([aea023b](https://github.com/srobroek/agentic-packages/commit/aea023bba47a18a87ee1d366e9c1d7e54470b9b4))
+
+## [4.0.1](https://github.com/srobroek/agentic-packages/compare/write-agentic--v4.0.0...write-agentic--v4.0.1) (2026-07-25)
+
+
+### Refactors
+
+* cut duplicated rules from steering, agents and skills ([#728](https://github.com/srobroek/agentic-packages/issues/728)) ([8f892aa](https://github.com/srobroek/agentic-packages/commit/8f892aa01b3b0ffbb5888cca0dc4178d57ee967d))
+
+## [4.0.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.4.0...write-agentic--v4.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **write-docs:** requires the vale binary on PATH (mise use -g vale, or brew install vale). Suppression syntax changes from <!-- write-docs:allow E2 --> to Vale's <!-- vale WriteDocs.SlopLexicon = NO --> off/on pairs, which are block-scoped rather than line-scoped.
+
+### Features
+
+* **write-docs:** check documentation prose with Vale instead of a bespoke linter ([#721](https://github.com/srobroek/agentic-packages/issues/721)) ([43fc7f7](https://github.com/srobroek/agentic-packages/commit/43fc7f766c6f4a9c6317a71f18ba33ff3fbf507c))
+
+
+### Bug Fixes
+
+* allow orchestrate to install with Worktrunk 1.x ([18b38cd](https://github.com/srobroek/agentic-packages/commit/18b38cdc5a73b7044980077e62adeb5b6e8f234f))
+
+## [3.4.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.3...write-agentic--v3.4.0) (2026-07-25)
+
+
+### Features
+
+* **orchestrate:** bead-as-brief v2 — claim-bound contracts, delegation-first fleet, cache policy ([#713](https://github.com/srobroek/agentic-packages/issues/713)) ([e8deb15](https://github.com/srobroek/agentic-packages/commit/e8deb151d222e843e9bc80fc6808c9acc141124f))
+
+## [3.3.3](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.2...write-agentic--v3.3.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** scan agents draft in working turns and compose the report in one pass ([#701](https://github.com/srobroek/agentic-packages/issues/701)) ([bf85043](https://github.com/srobroek/agentic-packages/commit/bf850438e20baea869e654a65a985f5257b58e97))
+
+## [3.3.2](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.1...write-agentic--v3.3.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** open replies with the verdict token via imperative scaffold ([#697](https://github.com/srobroek/agentic-packages/issues/697)) ([64ce7aa](https://github.com/srobroek/agentic-packages/commit/64ce7aae82e1d69a2b7f0b8fd076c44f6cf768a1))
+
+## [3.3.1](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.3.0...write-agentic--v3.3.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **agents:** verdict line is the literal first line — no preamble, no markdown emphasis ([#688](https://github.com/srobroek/agentic-packages/issues/688)) ([0cef5d6](https://github.com/srobroek/agentic-packages/commit/0cef5d6698a0ee7b5f3337ef993a4bf9fb653e9a))
+
+## [3.3.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.2.0...write-agentic--v3.3.0) (2026-07-23)
+
+
+### Features
+
+* agent linter catches empty descriptions, over-constraint, missing triggers, and bloat ([#672](https://github.com/srobroek/agentic-packages/issues/672)) ([47feb78](https://github.com/srobroek/agentic-packages/commit/47feb78421542944aa0f1ee7947e1b3ebab0f08d))
+
 ## [3.2.0](https://github.com/srobroek/agentic-packages/compare/write-agentic--v3.1.0...write-agentic--v3.2.0) (2026-07-16)
 
 

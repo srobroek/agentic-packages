@@ -1,0 +1,30 @@
+agent: pr-reviewer
+regime: clean
+prompt: |
+  Review PR #42.
+
+  Title: rename `get_item` to `fetch_item` in store module
+  Files changed: store/items.py
+
+  Diff:
+  --- a/store/items.py
+  +++ b/store/items.py
+  @@ -1,5 +1,5 @@
+  -def get_item(item_id):
+  +def fetch_item(item_id):
+       return _db.find(item_id)
+
+  -result = get_item(1)
+  +result = fetch_item(1)
+sandbox:
+  files:
+    store/items.py: |
+      def fetch_item(item_id):
+          return _db.find(item_id)
+
+      result = fetch_item(1)
+assert:
+  first_line: '^VERDICT: (?:APPROVE|REQUEST-CHANGES|COMMENT)\b'
+  max_words: 200
+  no_reprint: true
+timeout_s: 120

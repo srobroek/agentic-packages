@@ -1,12 +1,11 @@
 name: presentation
-version: 2.1.0
+version: 2.2.0
 description: >-
   Presentation bundle for general decks, Marp slides, and PowerPoint template
   workflows.
 author: Sjors Robroek
 license: MIT
 type: skill
-target: all
 includes: auto
 category: presentation
 tags:

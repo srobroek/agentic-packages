@@ -1,12 +1,11 @@
 name: agent-pr-reviewer
-version: 3.1.1
+version: 3.2.0
 description: >-
   Subagent that reviews pull requests for code quality, security, and best
   practices.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
-target: all
 includes: auto
 category: quality
 tags:

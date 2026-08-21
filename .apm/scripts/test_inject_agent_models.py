@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT_COPY = Path(__file__).with_name("inject-agent-models.py")
 SCRIPT = (
     Path(__file__).parents[2]
@@ -51,6 +50,33 @@ def test_discovers_package_owned_mapping_and_patches_codex(tmp_path: Path) -> No
     assert 'model_reasoning_effort = "xhigh"' in text
 
 
+def test_identical_duplicate_across_packages_is_accepted(tmp_path: Path) -> None:
+    # Both language-go and language-rust (by design) declare the same four
+    # wshobson systems-programming agents with byte-identical values so each
+    # bundle is standalone-sufficient. Installing both must not raise.
+    for pkg in ("language-go", "language-rust"):
+        write_mapping(tmp_path / "packages" / pkg / ".apm" / "agent-models.yml")
+
+    mappings = injector.load_mappings(tmp_path)
+    assert mappings == {"coder": {"model": "gpt-5.6-luna", "reasoning_effort": "xhigh"}}
+
+
+def test_conflicting_duplicate_names_both_files_and_values(tmp_path: Path) -> None:
+    path_one = tmp_path / "packages" / "one" / ".apm" / "agent-models.yml"
+    path_two = tmp_path / "packages" / "two" / ".apm" / "agent-models.yml"
+    write_mapping(path_one, model="gpt-5.6-luna")
+    write_mapping(path_two, model="gpt-5.6-sol")
+
+    with pytest.raises(injector.MappingError) as exc_info:
+        injector.load_mappings(tmp_path)
+    msg = str(exc_info.value)
+    assert "conflicting mapping for coder" in msg
+    assert "packages/one" in msg
+    assert "packages/two" in msg
+    assert "gpt-5.6-luna" in msg
+    assert "gpt-5.6-sol" in msg
+
+
 def test_rejects_conflicting_package_mappings(tmp_path: Path) -> None:
     write_mapping(tmp_path / "packages" / "one" / ".apm" / "agent-models.yml")
     write_mapping(
@@ -69,26 +95,30 @@ def test_missing_deployed_agent_fails(tmp_path: Path) -> None:
         injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=False)
 
 
-def test_deployed_agent_without_mapping_fails(tmp_path: Path) -> None:
+def test_deployed_agent_without_mapping_is_skipped(tmp_path: Path) -> None:
+    """An unmapped deployed toml is left alone, and the mapped ones still inject.
+
+    A deployed agent with no mapping is not APM's to own -- hand-authored, or an
+    orphan a retired package left behind -- so it must not fail the lifecycle.
+    Source-side coverage is still enforced, by validate_source_coverage.
+    """
     write_mapping(tmp_path / ".apm" / "agent-models.yml")
     agents = tmp_path / ".codex" / "agents"
     agents.mkdir(parents=True)
-    (agents / "coder.toml").write_text(
+    coder = agents / "coder.toml"
+    coder.write_text(
         'name = "coder"\ndescription = "Codes"\ndeveloper_instructions = "Work"\n',
         encoding="utf-8",
     )
+    stale_body = 'name = "stale-agent"\ndescription = "Stale"\ndeveloper_instructions = "Work"\n'
     stale = agents / "stale-agent.toml"
-    stale.write_text(
-        'name = "stale-agent"\ndescription = "Stale"\n'
-        'developer_instructions = "Work"\n',
-        encoding="utf-8",
-    )
+    stale.write_text(stale_body, encoding="utf-8")
 
-    with pytest.raises(
-        injector.MappingError,
-        match=r"lacks agent-models\.yml entry: .*stale-agent\.toml \(stale-agent\)",
-    ):
-        injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=True)
+    # patch_codex returns the number of files it injected -- one (coder), not the
+    # unmapped stale-agent.
+    assert injector.patch_codex(tmp_path, injector.load_mappings(tmp_path), check=False) == 1
+    assert 'model = "gpt-5.6-luna"' in coder.read_text(encoding="utf-8")
+    assert stale.read_text(encoding="utf-8") == stale_body
 
 
 def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
@@ -96,7 +126,7 @@ def test_agent_source_without_mapping_fails(tmp_path: Path) -> None:
     source = tmp_path / "packages" / "unmapped" / "agents" / "reviewer.md"
     source.parent.mkdir(parents=True)
     source.write_text(
-        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        "---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n",
         encoding="utf-8",
     )
 
@@ -112,7 +142,7 @@ def test_apm_agent_source_without_mapping_fails(tmp_path: Path) -> None:
     source = tmp_path / "packages" / "unmapped" / ".apm" / "agents" / "reviewer.agent.md"
     source.parent.mkdir(parents=True)
     source.write_text(
-        '---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n',
+        "---\nname: reviewer\ndescription: Reviews\n---\n\nReview the change.\n",
         encoding="utf-8",
     )
 
