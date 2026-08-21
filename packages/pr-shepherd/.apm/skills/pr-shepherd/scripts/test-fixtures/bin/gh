@@ -135,7 +135,7 @@ local-gate-startup-rollup:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"STARTUP_FAILURE","jobs":[]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
-local-gate-unrelated-red:run:view | local-gate-cancelled-rollup:run:view | land-local-gate:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
+local-gate-unrelated-red:run:view | local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
@@ -167,12 +167,18 @@ local-gate-stale-pr:pr:view)
   printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
     "$STALE_HEAD" | apply_requested_jq "$@"
   ;;
-land-local-gate:pr:view)
+land-local-gate:pr:view | land-local-gate-replaced:pr:view)
   if [[ "$*" == *"headRefName"* ]]; then
     printf 'fix/test\tmain\thttps://example.test/pr/7\n'
     exit 0
   fi
   if [[ "$*" == *"statusCheckRollup"* ]]; then
+    if [[ "$FAKE_SCENARIO" == "land-local-gate-replaced" &&
+      ! -f "$FAKE_STATE/receipt-replaced" ]]; then
+      jq '.run_id = 99999999999' "$FAKE_STATE/local-gate.json" >"$FAKE_STATE/local-gate-replaced.json"
+      mv "$FAKE_STATE/local-gate-replaced.json" "$FAKE_STATE/local-gate.json"
+      touch "$FAKE_STATE/receipt-replaced"
+    fi
     printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
       "$EXPECTED_HEAD" | apply_requested_jq "$@"
     exit 0

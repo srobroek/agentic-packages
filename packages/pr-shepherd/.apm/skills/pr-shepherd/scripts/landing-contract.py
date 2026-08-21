@@ -1133,7 +1133,7 @@ def local_gate_failure_binding(repo: str, pr: str, run_id: int,
 
 def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
              approval_mode: str = "github", local_operator: str = "",
-             local_receipt: str = "") -> int:
+             local_receipt: str = "", validated_receipt: dict | None = None) -> int:
     require_sha(expected_head, "expected head")
     receipt = None
     if approval_mode in ("github", "external"):
@@ -1141,6 +1141,8 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
             fail(f"{approval_mode} approval does not accept local gate evidence")
     elif approval_mode == "local":
         receipt = local_gate_receipt(repo, expected_head, local_operator, local_receipt)
+        if validated_receipt is not None:
+            validated_receipt.update(receipt)
         if receipt["result"] != 0:
             return receipt["result"]
     else:
@@ -1428,11 +1430,26 @@ def record_merge_receipt(merge_bead: str, pr: str, pr_base: str, landing_base: s
         fail("cannot record remote merge receipt")
 
 
-def record_local_gate_admission(merge_bead: str, repo: str, pr: str, expected_head: str,
-                                operator: str, receipt_path: str) -> None:
-    receipt = local_gate_receipt(repo, expected_head, operator, receipt_path)
-    if receipt["result"] != 0:
+def record_local_gate_admission(merge_bead: str, pr: str, expected_head: str,
+                                operator: str, receipt_path: str,
+                                validated_receipt: dict) -> None:
+    if validated_receipt.get("result") != 0:
+        fail("local gate receipt was not validated before landing record")
+    try:
+        with open(receipt_path, "rb") as receipt_file:
+            current_bytes = receipt_file.read()
+        current = json.loads(current_bytes)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise Fail("local gate receipt changed before landing record") from error
+    current_sha = blob_digest(current_bytes)
+    if (
+        current_sha != validated_receipt.get("receipt_sha")
+        or not isinstance(current, dict)
+        or current.get("run_id") != validated_receipt.get("run_id")
+        or current.get("head_sha") != expected_head
+    ):
         fail("local gate receipt changed before landing record")
+    receipt = validated_receipt
     if not bd_ok(
         "update", merge_bead,
         "--set-metadata", "local_gate_mode=local",
@@ -1518,14 +1535,17 @@ def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: 
             merge_sha, "LANDING_RECOVERY_PROVED",
         )
 
+    validated_local_receipt = {} if approval_mode == "local" else None
     readiness = check_pr(
-        repo, pr, expected_head, pr_base, approval_mode, local_operator, local_receipt
+        repo, pr, expected_head, pr_base, approval_mode, local_operator, local_receipt,
+        validated_local_receipt,
     )
     if readiness != 0:
         return readiness
     if approval_mode == "local":
         record_local_gate_admission(
-            merge_bead, repo, pr, expected_head, local_operator, local_receipt
+            merge_bead, pr, expected_head, local_operator, local_receipt,
+            validated_local_receipt,
         )
     if git(
         "fetch", "--quiet", "--no-tags", "origin",

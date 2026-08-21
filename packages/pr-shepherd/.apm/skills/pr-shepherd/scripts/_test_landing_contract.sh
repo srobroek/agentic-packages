@@ -334,6 +334,19 @@ assert_contains "local_gate_mode=local" "$(<"$state/bd.log")" \
 assert_contains "local_gate_receipt_sha=" "$(<"$state/bd.log")" \
   "local receipt digest is recorded on the merge bead"
 
+new_state land-local-gate-replaced
+scenario=land-local-gate-replaced
+write_local_receipt
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" \
+  squash local operator-a "$state/local-gate.json"
+assert_eq 2 "$last_rc" "receipt replacement rejects local gate landing"
+assert_contains "receipt changed before landing record" "$last_output" \
+  "receipt replacement is reported as an unknown admission"
+assert_not_contains_file "local_gate_mode=local" "$state/bd.log" \
+  "receipt replacement does not record local admission metadata"
+assert_not_contains_file "pr merge" "$state/gh.log" \
+  "receipt replacement cannot reach the merge command"
+
 for local_failure in cancelled timeout; do
   new_state "local-gate-$local_failure"
   scenario="local-gate-$local_failure"
