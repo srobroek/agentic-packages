@@ -39,6 +39,41 @@ argument shape of every subcommand (`check-run`, `check-pr`, `land`,
 default. An orchestrated adapter may pass `external` only after a durable
 independent approval names the exact head. Both modes reject requested changes.
 
+The explicit `local` mode admits a red GitHub check only with an operator id
+and a receipt file:
+
+```bash
+scripts/landing-contract.py check-pr <repo> <pr> <head-sha> <pr-base> \
+  local <operator-id> <receipt-file>
+```
+
+The receipt uses schema `pr-shepherd/local-gate-v1` and contains these fields:
+
+| Key | Required value | Meaning |
+|---|---|---|
+| `schema` | `pr-shepherd/local-gate-v1` | Receipt format identifier |
+| `head_sha` | Exact `head-sha` argument | Reviewed PR head |
+| `operator_authorized` | `true` | Explicit operator authorization is present |
+| `authorization` | `operator-approved` | Authorization marker |
+| `authorized_by` | Exact `<operator-id>` argument | Authorized operator identity |
+| `local_gate` | `passed` | Local gate result |
+| `evidence_ref` | Non-empty string | Recorded local gate evidence reference |
+| `run_id` | Positive integer | GitHub Actions run to classify |
+| `failure_class` | `github_billing_zero_steps` or `github_startup_zero_steps` | Permitted remote failure class |
+
+Before admitting the PR, the contract requires:
+
+- The referenced GitHub run has the exact reviewed head.
+- The run is a completed billing or startup failure with zero jobs and zero steps.
+- Every red PR check links to that same Actions run.
+- Cancelled, timed-out, action-required, successful, or executed-step runs reject.
+- Stale identity, missing authorization, malformed receipt, review failure, or
+  merge conflict rejects.
+
+`land` accepts the same `local <operator-id> <receipt-file>` suffix. Before
+merging, it records the local mode, operator, run, failure class, evidence
+reference, reviewed head, and receipt digest on the merge bead.
+
 ## Exit contract
 
 | Exit | Meaning | Caller action |
@@ -139,14 +174,12 @@ Do not delete a quiet receipt. After proving a session dead or a PR cancelled,
 cite the evidence and use the matching recovery command: `recover-claim`,
 `recover-slot`, or `recover-waiter` (see usage for arguments).
 
-Each command refuses unsafe changed ownership and records a comment plus audit
-event. With `waiter-holder`, claim recovery releases only the dead generation's
-native holder token, closes that generation, and lets one successor atomically
-acquire a fresh generation. A delayed competitor cannot release the successor
-token or replace its waiter and recovery receipt. Waiter recovery finds and
-closes the current open generation and never mutates another queue entry.
-If a process died after GitHub merged, rerunning `land` resumes from the remote
-merge receipt and repeats final-base proof without another merge attempt.
+- Each command refuses unsafe changed ownership and records a comment plus audit event.
+- With `waiter-holder`, claim recovery releases only the dead generation's native holder token.
+- Claim recovery closes the dead generation and lets one successor atomically acquire a fresh generation.
+- A delayed competitor cannot release the successor token or replace its waiter and recovery receipt.
+- Waiter recovery finds and closes the current open generation and never mutates another queue entry.
+- If a process died after GitHub merged, rerunning `land` resumes from the remote merge receipt and repeats final-base proof without another merge attempt.
 
 Recovery itself is restartable. Before changing a claim, holder, or waiter, the
 command stores a deterministic `recovery_key` and `recovery_phase=prepared`.

@@ -43,6 +43,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # SLOT_QUEUED, which is an unrelated concept (local slot contention).
 STATE_QUEUED = "queued"
 STATE_EJECTED = "ejected"
+LOCAL_GATE_SCHEMA = "pr-shepherd/local-gate-v1"
 
 
 class Fail(Exception):
@@ -888,7 +889,13 @@ PR_READY_JQ = (
     'if length == 0 then "NONE" '
     'elif all(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED") then "GREEN" '
     'elif any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or '
-    '. == "ACTION_REQUIRED") then "RED" else "PENDING" end)] | @tsv'
+    '. == "ACTION_REQUIRED" or . == "STARTUP_FAILURE") then "RED" else "PENDING" end)] | @tsv'
+)
+
+LOCAL_GATE_RUN_JQ = (
+    '[.headSha,(.status // "NONE" | ascii_upcase),'
+    '(.conclusion // "NONE" | ascii_upcase),([.jobs[]?] | length),'
+    '([.jobs[]?.steps[]?] | length)] | @tsv'
 )
 
 PR_LANDED_JQ = (
@@ -1001,11 +1008,145 @@ def check_bead_anchors(merge_bead: str, repo: str, pr: str) -> int:
     return 0
 
 
+def local_gate_receipt(repo: str, expected_head: str, operator: str,
+                       receipt_path: str) -> dict:
+    if not operator:
+        fail("local gate operator authorization is required")
+    if not receipt_path or not os.path.isfile(receipt_path):
+        fail("local gate receipt must be an existing file")
+    try:
+        receipt_bytes = open(receipt_path, "rb").read()
+        receipt = json.loads(receipt_bytes)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise Fail("local gate receipt is malformed or not authorized") from error
+    evidence = receipt.get("evidence_ref") if isinstance(receipt, dict) else None
+    run_id = receipt.get("run_id") if isinstance(receipt, dict) else None
+    failure_class = receipt.get("failure_class") if isinstance(receipt, dict) else None
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("schema") != LOCAL_GATE_SCHEMA
+        or receipt.get("head_sha") != expected_head
+        or receipt.get("operator_authorized") is not True
+        or receipt.get("authorization") != "operator-approved"
+        or receipt.get("authorized_by") != operator
+        or receipt.get("local_gate") != "passed"
+        or not isinstance(evidence, str)
+        or not evidence
+        or "\t" in evidence
+        or "\n" in evidence
+        or isinstance(run_id, bool)
+        or not isinstance(run_id, int)
+        or run_id < 1
+        or failure_class not in ("github_billing_zero_steps", "github_startup_zero_steps")
+    ):
+        fail("local gate receipt is malformed or not authorized")
+
+    actual_head, status, conclusion, jobs, steps = gh_tsv(
+        ["run", "view", str(run_id), "--repo", repo,
+         "--json", "status,conclusion,headSha,jobs", "--jq", LOCAL_GATE_RUN_JQ],
+        f"cannot read local gate run {run_id}",
+        fields=5,
+    )
+    require_sha(actual_head, "local gate run head")
+    if actual_head != expected_head:
+        print(
+            f"LOCAL_GATE_STALE run={run_id} expected_head={expected_head} "
+            f"actual_head={actual_head}"
+        )
+        return {"result": EXIT_STALE}
+    if status != "COMPLETED":
+        print(f"LOCAL_GATE_WAITING run={run_id} status={status} head={actual_head}")
+        return {"result": EXIT_WAITING}
+    if conclusion == "FAILURE":
+        if failure_class != "github_billing_zero_steps":
+            print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
+            return {"result": EXIT_FAILED}
+    elif conclusion == "STARTUP_FAILURE":
+        if failure_class != "github_startup_zero_steps":
+            print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
+            return {"result": EXIT_FAILED}
+    elif conclusion in ("CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"):
+        print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
+        return {"result": EXIT_FAILED}
+    else:
+        fail(f"local gate run {run_id} has unsupported conclusion {conclusion or 'empty'}")
+    if not jobs.isdigit() or not steps.isdigit():
+        fail(f"local gate run {run_id} has invalid job evidence")
+    if int(jobs) != 0 or int(steps) != 0:
+        print(
+            f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} jobs={jobs} "
+            f"steps={steps} class={failure_class}"
+        )
+        return {"result": EXIT_FAILED}
+    receipt_sha = blob_digest(receipt_bytes)
+    print(
+        f"LOCAL_GATE_READY run={run_id} head={actual_head} operator={operator} "
+        f"class={failure_class} evidence={evidence} jobs={jobs} steps={steps}"
+    )
+    return {
+        "result": 0,
+        "run_id": run_id,
+        "failure_class": failure_class,
+        "evidence_ref": evidence,
+        "receipt_sha": receipt_sha,
+    }
+
+
+def local_gate_failure_binding(repo: str, pr: str, run_id: int,
+                               failure_class: str) -> int:
+    pattern = f"/actions/runs/{run_id}($|[^0-9])"
+    disallowed_conclusions = '.conclusion != "FAILURE"'
+    if failure_class == "github_startup_zero_steps":
+        disallowed_conclusions = (
+            '(.conclusion != "FAILURE" and .conclusion != "STARTUP_FAILURE")'
+        )
+    binding_jq = (
+        '[.statusCheckRollup[]? | '
+        '{conclusion: ((.conclusion // .state // .status // "") | ascii_upcase), '
+        'url: (.detailsUrl // .targetUrl // .url // "")} | '
+        'select(.conclusion == "FAILURE" or .conclusion == "ERROR" or '
+        '.conclusion == "CANCELLED" or .conclusion == "TIMED_OUT" or '
+        '.conclusion == "ACTION_REQUIRED" or .conclusion == "STARTUP_FAILURE")] | '
+        f'[length, (map(select(.url | test("{pattern}"))) | length), '
+        f'(map(select({disallowed_conclusions})) | length)] | @tsv'
+    )
+    red_count, bound_count, disallowed_count = gh_tsv(
+        ["pr", "view", pr, "--repo", repo, "--json", "statusCheckRollup",
+         "--jq", binding_jq],
+        f"cannot read PR {pr} local gate checks",
+        fields=3,
+    )
+    if not all(value.isdigit() for value in (red_count, bound_count, disallowed_count)):
+        fail(f"PR {pr} local gate checks are malformed")
+    if (
+        int(red_count) == 0
+        or int(red_count) != int(bound_count)
+        or int(disallowed_count) != 0
+    ):
+        print(
+            f"LOCAL_GATE_FAILED pr={pr} run={run_id} red_checks={red_count} "
+            f"bound_checks={bound_count} disallowed_checks={disallowed_count}"
+        )
+        return EXIT_FAILED
+    return 0
+
+
 def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
-             approval_mode: str = "github") -> int:
+             approval_mode: str = "github", local_operator: str = "",
+             local_receipt: str = "", validated_receipt: dict | None = None) -> int:
     require_sha(expected_head, "expected head")
-    if approval_mode not in ("github", "external"):
-        fail("approval mode must be github or external")
+    receipt = None
+    if approval_mode in ("github", "external"):
+        if local_operator or local_receipt:
+            fail(f"{approval_mode} approval does not accept local gate evidence")
+    elif approval_mode == "local":
+        receipt = local_gate_receipt(repo, expected_head, local_operator, local_receipt)
+        if validated_receipt is not None:
+            validated_receipt.update(receipt)
+        if receipt["result"] != 0:
+            return receipt["result"]
+    else:
+        fail("approval mode must be github, external, or local")
     state, draft, mergeable, review, base, head, checks = gh_tsv(
         ["pr", "view", pr, "--repo", repo,
          "--json",
@@ -1014,6 +1155,12 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
         f"cannot read PR {pr}",
         fields=7,
     )
+    if approval_mode == "local":
+        binding_rc = local_gate_failure_binding(
+            repo, pr, receipt["run_id"], receipt["failure_class"]
+        )
+        if binding_rc != 0:
+            return binding_rc
     if head != expected_head or base != expected_base:
         print(
             f"PR_STALE pr={pr} expected_head={expected_head} actual_head={head or 'unknown'} "
@@ -1023,7 +1170,11 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
     if state != "OPEN":
         print(f"PR_NOT_OPEN pr={pr} state={state or 'unknown'}")
         return EXIT_FAILED
-    if mergeable == "CONFLICTING" or review == "CHANGES_REQUESTED" or checks == "RED":
+    if (
+        mergeable == "CONFLICTING"
+        or review == "CHANGES_REQUESTED"
+        or (checks == "RED" and approval_mode != "local")
+    ):
         print(f"PR_FAILED pr={pr} mergeable={mergeable} review={review} checks={checks}")
         return EXIT_FAILED
     if draft == "true" or checks == "PENDING" or (
@@ -1034,7 +1185,10 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
             f"approval={approval_mode} checks={checks}"
         )
         return EXIT_WAITING
-    if mergeable != "MERGEABLE" or checks not in ("GREEN", "NONE"):
+    if mergeable != "MERGEABLE" or (
+        checks not in ("GREEN", "NONE")
+        and not (approval_mode == "local" and checks == "RED")
+    ):
         fail(
             f"PR {pr} readiness is unknown (mergeable={mergeable or 'empty'}, "
             f"checks={checks or 'empty'})"
@@ -1276,6 +1430,46 @@ def record_merge_receipt(merge_bead: str, pr: str, pr_base: str, landing_base: s
         fail("cannot record remote merge receipt")
 
 
+def record_local_gate_admission(merge_bead: str, pr: str, expected_head: str,
+                                operator: str, receipt_path: str,
+                                validated_receipt: dict) -> None:
+    if validated_receipt.get("result") != 0:
+        fail("local gate receipt was not validated before landing record")
+    try:
+        with open(receipt_path, "rb") as receipt_file:
+            current_bytes = receipt_file.read()
+        current = json.loads(current_bytes)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise Fail("local gate receipt changed before landing record") from error
+    current_sha = blob_digest(current_bytes)
+    if (
+        current_sha != validated_receipt.get("receipt_sha")
+        or not isinstance(current, dict)
+        or current.get("run_id") != validated_receipt.get("run_id")
+        or current.get("head_sha") != expected_head
+    ):
+        fail("local gate receipt changed before landing record")
+    receipt = validated_receipt
+    if not bd_ok(
+        "update", merge_bead,
+        "--set-metadata", "local_gate_mode=local",
+        "--set-metadata", f"local_gate_operator={operator}",
+        "--set-metadata", f"local_gate_head_sha={expected_head}",
+        "--set-metadata", f"local_gate_run_id={receipt['run_id']}",
+        "--set-metadata", f"local_gate_failure_class={receipt['failure_class']}",
+        "--set-metadata", f"local_gate_evidence={receipt['evidence_ref']}",
+        "--set-metadata", f"local_gate_receipt_sha={receipt['receipt_sha']}",
+    ):
+        fail("cannot persist local gate admission")
+    if not bd_ok(
+        "comment", merge_bead,
+        f"LOCAL_GATE pr={pr} head_sha={expected_head} operator={operator} "
+        f"run={receipt['run_id']} class={receipt['failure_class']} "
+        f"evidence={receipt['evidence_ref']} receipt_sha={receipt['receipt_sha']}",
+    ):
+        fail("cannot record local gate admission")
+
+
 def hold_for_landing_base(merge_bead: str, pr: str, pr_base: str, landing_base: str,
                           merge_sha: str) -> None:
     if not bd_ok("update", merge_bead, "--set-metadata", "landing_state=waiting_base"):
@@ -1310,7 +1504,8 @@ def prove_remote_merge(merge_bead: str, repo: str, pr: str, pr_base: str, landin
 
 
 def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: str,
-               recorded_base: str, expected_head: str, method: str, approval_mode: str):
+               recorded_base: str, expected_head: str, method: str, approval_mode: str,
+               local_operator: str = "", local_receipt: str = ""):
     require_sha(recorded_base, "recorded base")
     require_sha(expected_head, "expected head")
     if method not in ("merge", "rebase", "squash"):
@@ -1340,9 +1535,18 @@ def land_owned(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: 
             merge_sha, "LANDING_RECOVERY_PROVED",
         )
 
-    readiness = check_pr(repo, pr, expected_head, pr_base, approval_mode)
+    validated_local_receipt = {} if approval_mode == "local" else None
+    readiness = check_pr(
+        repo, pr, expected_head, pr_base, approval_mode, local_operator, local_receipt,
+        validated_local_receipt,
+    )
     if readiness != 0:
         return readiness
+    if approval_mode == "local":
+        record_local_gate_admission(
+            merge_bead, pr, expected_head, local_operator, local_receipt,
+            validated_local_receipt,
+        )
     if git(
         "fetch", "--quiet", "--no-tags", "origin",
         f"refs/heads/{pr_base}:refs/remotes/origin/{pr_base}",
@@ -1458,7 +1662,8 @@ def resume_queued_landing(merge_bead: str, repo: str, pr: str, pr_base: str, lan
 
 def land_pr(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: str,
             recorded_base: str, expected_head: str, method: str,
-            approval_mode: str = "github") -> int:
+            approval_mode: str = "github", local_operator: str = "",
+            local_receipt: str = "") -> int:
     receipt = landing_receipt(merge_bead)
     if receipt.get("landing_state") == STATE_QUEUED:
         landing_rc = resume_queued_landing(
@@ -1470,7 +1675,7 @@ def land_pr(merge_bead: str, repo: str, pr: str, pr_base: str, landing_base: str
             holder,
             lambda: land_owned(
                 merge_bead, repo, pr, pr_base, landing_base, recorded_base,
-                expected_head, method, approval_mode,
+                expected_head, method, approval_mode, local_operator, local_receipt,
             ),
         )
     if landing_rc != 0:
@@ -2231,10 +2436,10 @@ def ready_ids() -> int:
 # --------------------------------------------------------------------------
 
 USAGE = """usage: landing-contract.py check-run <repo> <run-id> <head-sha>
-       landing-contract.py check-pr <repo> <pr> <head-sha> <pr-base> [github|external]
+       landing-contract.py check-pr <repo> <pr> <head-sha> <pr-base> [github|external|local [operator-id] [receipt-file]]
        landing-contract.py check-anchors <merge-bead> <repo> <pr>
        landing-contract.py verify-landed <repo> <pr> <base> <recorded-base-sha> <head-sha> <merge-sha>
-       landing-contract.py land <merge-bead> <repo> <pr> <pr-base> <landing-base> <recorded-base-sha> <head-sha> <merge|rebase|squash> [github|external]
+       landing-contract.py land <merge-bead> <repo> <pr> <pr-base> <landing-base> <recorded-base-sha> <head-sha> <merge|rebase|squash> [github|external|local [operator-id] [receipt-file]]
        landing-contract.py acquire-slot <stable-holder> [attempts] [poll-seconds] [resume|requeue]
        landing-contract.py release-slot <stable-holder> [terminal|retryable]
        landing-contract.py with-slot <stable-holder> -- <command> [args...]
@@ -2271,10 +2476,10 @@ def queue_state_cli(repo: str, pr: str) -> int:
 # name -> (minimum args, maximum args or None for unbounded, handler)
 COMMANDS = {
     "check-run": (3, 3, check_run),
-    "check-pr": (4, 5, check_pr),
+    "check-pr": (4, 7, check_pr),
     "check-anchors": (3, 3, check_bead_anchors),
     "verify-landed": (6, 6, verify_landed),
-    "land": (8, 9, land_pr),
+    "land": (8, 11, land_pr),
     "acquire-slot": (1, 4, None),
     "release-slot": (1, 2, release_slot),
     "with-slot": (3, None, None),
@@ -2293,10 +2498,10 @@ COMMANDS = {
 
 ARITY_MESSAGE = {
     "check-run": "check-run expects 3 arguments",
-    "check-pr": "check-pr expects 4-5 arguments",
+    "check-pr": "check-pr expects 4-7 arguments",
     "check-anchors": "check-anchors expects 3 arguments",
     "verify-landed": "verify-landed expects 6 arguments",
-    "land": "land expects 8-9 arguments",
+    "land": "land expects 8-11 arguments",
     "acquire-slot": "acquire-slot expects 1-4 arguments",
     "release-slot": "release-slot expects 1-2 arguments",
     "with-slot": "with-slot expects a holder and command",

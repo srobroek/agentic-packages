@@ -59,6 +59,12 @@ the same pass; document nothing outside bead comments.
    one stable explicit holder and no
    `--wait` → `gh pr merge` → verify landing/completion → holder-verified
    release → close the merge bead.
+6a. Local approval is opt-in and requires `landing-contract.py land … local
+    <operator-id> <receipt-file>`. Admit only a completed billing/startup
+    failure with zero jobs and zero steps, an operator-approved receipt for
+    the exact head, and red checks bound to that run. Review changes, conflict,
+    cancellation, timeout, action-required, stale identity, missing receipt,
+    and executed-step evidence remain failures.
 7. Reconcile closing work through native dependencies after a merge bead
    closes: require `bd ready`, approved state,
    resolved children/gates, and every closing PR verified on the repository

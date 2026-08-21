@@ -206,6 +206,162 @@ assert_eq 11 "$last_rc" "empty review parsing still enforces exact base identity
 assert_contains "actual_base=main" "$last_output" \
   "stale base reports the unshifted live identity"
 
+write_local_receipt() {
+  local failure_class="${1:-github_billing_zero_steps}"
+  local head="${2:-$EXPECTED_HEAD}"
+  local operator="${3:-operator-a}"
+  jq -cn --arg schema pr-shepherd/local-gate-v1 --arg head "$head" \
+    --arg operator "$operator" --arg failure_class "$failure_class" \
+    '{schema: $schema, head_sha: $head, operator_authorized: true,
+      authorization: "operator-approved", authorized_by: $operator,
+      local_gate: "passed", evidence_ref: "artifacts/local-gate.json",
+      run_id: 32477339806, failure_class: $failure_class}' \
+    >"$state/local-gate.json"
+}
+
+new_state local-gate
+scenario=local-gate
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 0 "$last_rc" "operator-approved zero-step billing gate is admitted"
+assert_contains "approval=local" "$last_output" "local gate mode is explicit"
+assert_contains "LOCAL_GATE_READY" "$last_output" "local gate receipt is verified"
+
+new_state local-gate-startup
+scenario=local-gate-startup
+write_local_receipt github_startup_zero_steps
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 0 "$last_rc" "operator-approved zero-step startup gate is admitted"
+
+new_state local-gate-startup-rollup
+scenario=local-gate-startup-rollup
+write_local_receipt github_startup_zero_steps
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 0 "$last_rc" "startup failure rollup bound to the local gate is admitted"
+
+new_state local-gate-no-authorization
+scenario=local-gate
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local "" "$state/local-gate.json"
+assert_eq 2 "$last_rc" "local gate requires explicit operator authorization"
+assert_not_contains "PR_READY" "$last_output" "missing operator authorization cannot admit"
+
+new_state local-gate-stale-receipt
+scenario=local-gate
+write_local_receipt github_billing_zero_steps "$STALE_HEAD"
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 2 "$last_rc" "local gate receipt must bind the expected head"
+
+new_state local-gate-stale-run
+scenario=local-gate-stale-run
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 11 "$last_rc" "local gate run identity must match the reviewed head"
+assert_contains LOCAL_GATE_STALE "$last_output" "stale local gate run is classified"
+
+new_state local-gate-steps
+scenario=local-gate-steps
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a real failure with executed steps"
+assert_contains LOCAL_GATE_FAILED "$last_output" "executed-step failure is classified"
+
+new_state local-gate-job-no-steps
+scenario=local-gate-job-no-steps
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a job with zero steps"
+assert_contains "jobs=1 steps=0" "$last_output" "nonzero job evidence is classified"
+
+new_state local-gate-action-required
+scenario=local-gate-action-required
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects action-required runs"
+
+for local_pr_failure in conflict review stale-pr; do
+  new_state "local-gate-$local_pr_failure"
+  scenario="local-gate-$local_pr_failure"
+  write_local_receipt
+  run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+  case "$local_pr_failure" in
+  conflict)
+    assert_eq 12 "$last_rc" "local gate rejects merge conflicts"
+    assert_contains "mergeable=CONFLICTING" "$last_output" "local conflict is classified"
+    ;;
+  review)
+    assert_eq 12 "$last_rc" "local gate rejects requested changes"
+    assert_contains "review=CHANGES_REQUESTED" "$last_output" "local review failure is classified"
+    ;;
+  stale-pr)
+    assert_eq 11 "$last_rc" "local gate rejects stale live PR identity"
+    assert_contains "actual_head=$STALE_HEAD" "$last_output" "local stale PR identity is reported"
+    ;;
+  esac
+done
+
+new_state local-gate-missing-receipt
+scenario=local-gate
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/missing.json"
+assert_eq 2 "$last_rc" "local gate requires a receipt file"
+assert_not_contains "PR_READY" "$last_output" "missing local receipt cannot admit"
+
+new_state local-gate-unrelated-red
+scenario=local-gate-unrelated-red
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects an unrelated genuine red check"
+assert_contains "red_checks=2 bound_checks=1" "$last_output" \
+  "unrelated red check is visible in rejection"
+
+new_state local-gate-cancelled-rollup
+scenario=local-gate-cancelled-rollup
+write_local_receipt
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 12 "$last_rc" "local gate rejects a cancelled red rollup"
+assert_contains "disallowed_checks=1" "$last_output" \
+  "cancelled red rollup is classified as genuine failure"
+
+new_state land-local-gate
+scenario=land-local-gate
+write_local_receipt
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" \
+  squash local operator-a "$state/local-gate.json"
+assert_eq 0 "$last_rc" "local gate landing records and proves the admission"
+assert_contains "LANDING_COMPLETE" "$last_output" "local gate landing completes"
+assert_contains "local_gate_mode=local" "$(<"$state/bd.log")" \
+  "local mode is recorded on the merge bead"
+assert_contains "local_gate_receipt_sha=" "$(<"$state/bd.log")" \
+  "local receipt digest is recorded on the merge bead"
+
+new_state land-local-gate-replaced
+scenario=land-local-gate-replaced
+write_local_receipt
+run_contract land merge-1 owner/repo 7 main main "$RECORDED_BASE" "$EXPECTED_HEAD" \
+  squash local operator-a "$state/local-gate.json"
+assert_eq 2 "$last_rc" "receipt replacement rejects local gate landing"
+assert_contains "receipt changed before landing record" "$last_output" \
+  "receipt replacement is reported as an unknown admission"
+assert_not_contains_file "local_gate_mode=local" "$state/bd.log" \
+  "receipt replacement does not record local admission metadata"
+assert_not_contains_file "pr merge" "$state/gh.log" \
+  "receipt replacement cannot reach the merge command"
+
+for local_failure in cancelled timeout; do
+  new_state "local-gate-$local_failure"
+  scenario="local-gate-$local_failure"
+  write_local_receipt
+  run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+  assert_eq 12 "$last_rc" "local gate rejects $local_failure runs"
+done
+
+new_state local-gate-malformed
+scenario=local-gate
+printf '{"schema":"pr-shepherd/local-gate-v1","head_sha":"%s"}\n' "$EXPECTED_HEAD" \
+  >"$state/local-gate.json"
+run_contract check-pr owner/repo 7 "$EXPECTED_HEAD" main local operator-a "$state/local-gate.json"
+assert_eq 2 "$last_rc" "local gate rejects incomplete evidence"
+
 new_state slot-contention
 scenario=slot-contention
 run_contract acquire-slot stable-holder 3 0

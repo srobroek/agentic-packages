@@ -99,6 +99,105 @@ queue-proved:api:*)
 stale-run:run:view)
   printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
   ;;
+local-gate:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-startup:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"STARTUP_FAILURE","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-stale-run:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
+    "$STALE_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-steps:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[{"name":"test"}]}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-job-no-steps:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[]}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-action-required:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"ACTION_REQUIRED","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-cancelled:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"CANCELLED","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-timeout:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"TIMED_OUT","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-startup-rollup:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"STARTUP_FAILURE","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-unrelated-red:run:view | local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate:pr:view | local-gate-startup:pr:view | local-gate-stale-run:pr:view | local-gate-steps:pr:view | local-gate-job-no-steps:pr:view | local-gate-cancelled:pr:view | local-gate-timeout:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-startup-rollup:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"STARTUP_FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-unrelated-red:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"},{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/99999999999"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-cancelled-rollup:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"CANCELLED","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-conflict:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"CONFLICTING","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-review:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"CHANGES_REQUESTED","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-stale-pr:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+    "$STALE_HEAD" | apply_requested_jq "$@"
+  ;;
+land-local-gate:pr:view | land-local-gate-replaced:pr:view)
+  if [[ "$*" == *"headRefName"* ]]; then
+    printf 'fix/test\tmain\thttps://example.test/pr/7\n'
+    exit 0
+  fi
+  if [[ "$*" == *"statusCheckRollup"* ]]; then
+    if [[ "$FAKE_SCENARIO" == "land-local-gate-replaced" &&
+      ! -f "$FAKE_STATE/receipt-replaced" ]]; then
+      jq '.run_id = 99999999999' "$FAKE_STATE/local-gate.json" >"$FAKE_STATE/local-gate-replaced.json"
+      mv "$FAKE_STATE/local-gate-replaced.json" "$FAKE_STATE/local-gate.json"
+      touch "$FAKE_STATE/receipt-replaced"
+    fi
+    printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+      "$EXPECTED_HEAD" | apply_requested_jq "$@"
+    exit 0
+  fi
+  view_count=0
+  if [[ -f "$FAKE_STATE/view-count" ]]; then
+    read -r view_count <"$FAKE_STATE/view-count"
+  fi
+  view_count=$((view_count + 1))
+  printf '%s\n' "$view_count" >"$FAKE_STATE/view-count"
+  if [[ "$view_count" -eq 1 ]]; then
+    printf 'OPEN\t%s\tNONE\n' "$EXPECTED_HEAD"
+  elif [[ "$view_count" -eq 2 ]]; then
+    printf 'MERGED\t%s\t%s\n' "$EXPECTED_HEAD" "$EXPECTED_MERGE"
+  else
+    printf 'MERGED\t2026-07-22T00:00:00Z\t%s\tmain\t%s\thttps://example.test/pr/7\n' \
+      "$EXPECTED_MERGE" "$EXPECTED_HEAD"
+  fi
+  ;;
 anchor-ok:pr:view | anchor-branch-mismatch:pr:view)
   # headRefName, baseRefName, url -- the anchor probe's shape.
   head_branch=fix/test
@@ -207,6 +306,15 @@ land-stack-hold:api:*)
     exit 99
   fi
   ;;
+land-local-gate:api:*)
+  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+    printf '%s\n' "$REMOTE_BASE"
+  elif [[ "$2" == *"/compare/"* ]]; then
+    printf 'ahead\n'
+  else
+    exit 99
+  fi
+  ;;
 land-head-race:pr:merge)
   if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
     touch "$FAKE_STATE/atomic-head-guard"
@@ -216,6 +324,14 @@ land-head-race:pr:merge)
   exit 99
   ;;
 land-stack-hold:pr:merge)
+  if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
+    touch "$FAKE_STATE/atomic-head-guard"
+    exit 0
+  fi
+  printf 'missing exact head guard\n' >&2
+  exit 99
+  ;;
+land-local-gate:pr:merge)
   if [[ "$*" == *"--match-head-commit $EXPECTED_HEAD"* ]]; then
     touch "$FAKE_STATE/atomic-head-guard"
     exit 0

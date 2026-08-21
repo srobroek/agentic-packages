@@ -72,6 +72,7 @@ TRIGGER
 | merge conflicts | bounce → agent:coder with the conflict file list |
 | CI red | dedupe-check, then bounce → agent:coder with failing check names + `gh run view --log-failed` excerpt |
 | changes requested | bounce → agent:coder with the review summary |
+| explicit local gate | require an operator-approved receipt for this exact head, then run `scripts/landing-contract.py land … local <operator-id> <receipt-file>`; only a completed billing/startup failure with zero jobs and zero steps is admissible |
 | not approved | comment once per observed state, release the claim, continue |
 | checks pending | attach a gh:run gate only when a concrete run id exists; otherwise comment, release, continue |
 
