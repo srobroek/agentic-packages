@@ -314,6 +314,55 @@ class BeadsConflictTests(unittest.TestCase):
             [],
         )
 
+    def test_json_encoded_list_also_exempts(self) -> None:
+        # `bd --set-metadata tracks_beads='["active-1"]'` stores the value as a
+        # string, so the list arrives JSON-encoded rather than as a real list. The
+        # sibling cases above pass real lists, which no `bd` invocation produces.
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-1",
+                        "status": "open",
+                        "metadata": {
+                            "branch": "agent/task",
+                            "tracks_beads": '["active-1"]',
+                            "closes_beads": '["active-1"]',
+                        },
+                    }
+                ]
+            ),
+            [],
+        )
+
+    def test_json_encoded_list_naming_another_bead_still_conflicts(self) -> None:
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-2",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "tracks_beads": '["other-9"]'},
+                    }
+                ]
+            ),
+            ["merge-2"],
+        )
+
+    def test_unparseable_string_is_not_an_exemption(self) -> None:
+        self.assertEqual(
+            self._conflicts(
+                [
+                    {
+                        "id": "merge-4",
+                        "status": "open",
+                        "metadata": {"branch": "agent/task", "tracks_beads": "[not json"},
+                    }
+                ]
+            ),
+            ["merge-4"],
+        )
+
     def test_merge_bead_tracking_a_different_bead_still_conflicts(self) -> None:
         # The exemption is per-bead, not a blanket pass for anything with a
         # tracks_beads key: this one claims our branch while tracking someone else.

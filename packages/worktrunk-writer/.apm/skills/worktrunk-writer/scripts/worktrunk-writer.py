@@ -288,6 +288,14 @@ def tracks_bead(metadata: dict[str, Any], bead: str) -> bool:
         if isinstance(value, str):
             if value == bead:
                 return True
+            # `bd --set-metadata` stores every value as a string, so a list of ids
+            # arrives JSON-encoded and compares equal to no bare id.
+            try:
+                decoded = json.loads(value)
+            except ValueError:
+                continue
+            if isinstance(decoded, (list, tuple)) and bead in decoded:
+                return True
         elif isinstance(value, (list, tuple)) and bead in value:
             return True
     return False
