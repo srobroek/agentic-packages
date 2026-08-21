@@ -1236,18 +1236,18 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
         f"cannot read PR {pr}",
         fields=7,
     )
-    if approval_mode == "local":
-        binding_rc = local_gate_failure_binding(
-            repo, pr, receipt["run_id"], expected_head, receipt["failure_class"]
-        )
-        if binding_rc != 0:
-            return binding_rc
     if head != expected_head or base != expected_base:
         print(
             f"PR_STALE pr={pr} expected_head={expected_head} actual_head={head or 'unknown'} "
             f"expected_base={expected_base} actual_base={base or 'unknown'}"
         )
         return EXIT_STALE
+    if approval_mode == "local":
+        binding_rc = local_gate_failure_binding(
+            repo, pr, receipt["run_id"], expected_head, receipt["failure_class"]
+        )
+        if binding_rc != 0:
+            return binding_rc
     if state != "OPEN":
         print(f"PR_NOT_OPEN pr={pr} state={state or 'unknown'}")
         return EXIT_FAILED

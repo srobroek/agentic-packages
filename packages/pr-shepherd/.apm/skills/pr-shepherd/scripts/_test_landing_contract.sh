@@ -316,6 +316,8 @@ for local_pr_failure in conflict review stale-pr; do
   stale-pr)
     assert_eq 11 "$last_rc" "local gate rejects stale live PR identity"
     assert_contains "actual_head=$STALE_HEAD" "$last_output" "local stale PR identity is reported"
+    assert_not_contains_file "run view 32484277869" "$state/gh.log" \
+      "stale PR identity rejects before red-run binding"
     ;;
   esac
 done

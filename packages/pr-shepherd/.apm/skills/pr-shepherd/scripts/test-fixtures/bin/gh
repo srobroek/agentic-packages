@@ -170,7 +170,14 @@ local-gate-unrelated-red:run:view)
     emit_billing_run "$EXPECTED_HEAD" "$@"
   fi
   ;;
-local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
+local-gate-stale-pr:run:view)
+  if [[ "$3" == "32484277869" ]]; then
+    emit_billing_run "$STALE_HEAD" "$@"
+  else
+    emit_billing_run "$EXPECTED_HEAD" "$@"
+  fi
+  ;;
+local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view)
   emit_billing_run "$EXPECTED_HEAD" "$@"
   ;;
 local-gate:pr:view | local-gate-startup:pr:view | local-gate-stale-run:pr:view | local-gate-steps:pr:view | local-gate-job-no-steps:pr:view | local-gate-billing-no-annotation:pr:view | local-gate-billing-wrong-annotation:pr:view | local-gate-cancelled:pr:view | local-gate-timeout:pr:view)
@@ -202,7 +209,7 @@ local-gate-review:pr:view)
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-stale-pr:pr:view)
-  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32484277869"}]}\n' \
     "$STALE_HEAD" | apply_requested_jq "$@"
   ;;
 land-local-gate:pr:view | land-local-gate-replaced:pr:view)
