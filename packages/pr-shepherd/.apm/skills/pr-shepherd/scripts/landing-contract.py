@@ -44,6 +44,10 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_QUEUED = "queued"
 STATE_EJECTED = "ejected"
 LOCAL_GATE_SCHEMA = "pr-shepherd/local-gate-v1"
+BILLING_ANNOTATION = (
+    "The job was not started because recent account payments have failed or "
+    "your spending limit needs to be increased."
+)
 
 
 class Fail(Exception):
@@ -895,7 +899,10 @@ PR_READY_JQ = (
 LOCAL_GATE_RUN_JQ = (
     '[.headSha,(.status // "NONE" | ascii_upcase),'
     '(.conclusion // "NONE" | ascii_upcase),([.jobs[]?] | length),'
-    '([.jobs[]?.steps[]?] | length)] | @tsv'
+    '([.jobs[]?.steps[]?] | length),'
+    '([.jobs[]? | {id: (.databaseId // 0), '
+    'conclusion: ((.conclusion // "NONE") | ascii_upcase), '
+    'steps: ([.steps[]?] | length)}] | tojson)] | @tsv'
 )
 
 PR_LANDED_JQ = (
@@ -1008,6 +1015,80 @@ def check_bead_anchors(merge_bead: str, repo: str, pr: str) -> int:
     return 0
 
 
+def local_gate_run_evidence(repo: str, run_id: int, expected_head: str,
+                            failure_class: str) -> dict:
+    actual_head, status, conclusion, jobs, steps, job_evidence_json = gh_tsv(
+        ["run", "view", str(run_id), "--repo", repo,
+         "--json", "status,conclusion,headSha,jobs", "--jq", LOCAL_GATE_RUN_JQ],
+        f"cannot read local gate run {run_id}",
+        fields=6,
+    )
+    require_sha(actual_head, "local gate run head")
+    if actual_head != expected_head:
+        print(
+            f"LOCAL_GATE_STALE run={run_id} expected_head={expected_head} "
+            f"actual_head={actual_head}"
+        )
+        return {"result": EXIT_STALE}
+    if status != "COMPLETED":
+        print(f"LOCAL_GATE_WAITING run={run_id} status={status} head={actual_head}")
+        return {"result": EXIT_WAITING}
+    if not jobs.isdigit() or not steps.isdigit():
+        fail(f"local gate run {run_id} has invalid job evidence")
+    try:
+        job_evidence = json.loads(job_evidence_json)
+    except json.JSONDecodeError as error:
+        raise Fail(f"local gate run {run_id} has invalid job evidence") from error
+    if (
+        not isinstance(job_evidence, list)
+        or len(job_evidence) != int(jobs)
+        or any(
+            not isinstance(job, dict)
+            or isinstance(job.get("id"), bool)
+            or not isinstance(job.get("id"), int)
+            or job["id"] < 1
+            or not isinstance(job.get("conclusion"), str)
+            or isinstance(job.get("steps"), bool)
+            or not isinstance(job.get("steps"), int)
+            or job["steps"] < 0
+            for job in job_evidence
+        )
+        or sum(job["steps"] for job in job_evidence) != int(steps)
+    ):
+        fail(f"local gate run {run_id} has invalid job evidence")
+    if int(steps) != 0:
+        print(
+            f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} jobs={jobs} "
+            f"steps={steps} class={failure_class}"
+        )
+        return {"result": EXIT_FAILED}
+    if conclusion == "FAILURE" and failure_class == "github_billing_zero_steps":
+        failed_jobs = [job for job in job_evidence if job["conclusion"] == "FAILURE"]
+        if (
+            not failed_jobs
+            or any(job["conclusion"] not in ("FAILURE", "SKIPPED") for job in job_evidence)
+            or any(not github_billing_failure(repo, job["id"]) for job in failed_jobs)
+        ):
+            print(
+                f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} jobs={jobs} "
+                f"steps={steps} class={failure_class} billing_signal=absent"
+            )
+            return {"result": EXIT_FAILED}
+    elif conclusion == "STARTUP_FAILURE" and failure_class == "github_startup_zero_steps":
+        if any(
+            job["conclusion"] not in ("FAILURE", "STARTUP_FAILURE", "SKIPPED")
+            for job in job_evidence
+        ):
+            print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
+            return {"result": EXIT_FAILED}
+    elif conclusion in ("FAILURE", "STARTUP_FAILURE", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"):
+        print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
+        return {"result": EXIT_FAILED}
+    else:
+        fail(f"local gate run {run_id} has unsupported conclusion {conclusion or 'empty'}")
+    return {"result": 0, "head": actual_head, "jobs": jobs, "steps": steps}
+
+
 def local_gate_receipt(repo: str, expected_head: str, operator: str,
                        receipt_path: str) -> dict:
     if not operator:
@@ -1041,47 +1122,13 @@ def local_gate_receipt(repo: str, expected_head: str, operator: str,
     ):
         fail("local gate receipt is malformed or not authorized")
 
-    actual_head, status, conclusion, jobs, steps = gh_tsv(
-        ["run", "view", str(run_id), "--repo", repo,
-         "--json", "status,conclusion,headSha,jobs", "--jq", LOCAL_GATE_RUN_JQ],
-        f"cannot read local gate run {run_id}",
-        fields=5,
-    )
-    require_sha(actual_head, "local gate run head")
-    if actual_head != expected_head:
-        print(
-            f"LOCAL_GATE_STALE run={run_id} expected_head={expected_head} "
-            f"actual_head={actual_head}"
-        )
-        return {"result": EXIT_STALE}
-    if status != "COMPLETED":
-        print(f"LOCAL_GATE_WAITING run={run_id} status={status} head={actual_head}")
-        return {"result": EXIT_WAITING}
-    if conclusion == "FAILURE":
-        if failure_class != "github_billing_zero_steps":
-            print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
-            return {"result": EXIT_FAILED}
-    elif conclusion == "STARTUP_FAILURE":
-        if failure_class != "github_startup_zero_steps":
-            print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
-            return {"result": EXIT_FAILED}
-    elif conclusion in ("CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"):
-        print(f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} class={failure_class}")
-        return {"result": EXIT_FAILED}
-    else:
-        fail(f"local gate run {run_id} has unsupported conclusion {conclusion or 'empty'}")
-    if not jobs.isdigit() or not steps.isdigit():
-        fail(f"local gate run {run_id} has invalid job evidence")
-    if int(jobs) != 0 or int(steps) != 0:
-        print(
-            f"LOCAL_GATE_FAILED run={run_id} conclusion={conclusion} jobs={jobs} "
-            f"steps={steps} class={failure_class}"
-        )
-        return {"result": EXIT_FAILED}
+    run = local_gate_run_evidence(repo, run_id, expected_head, failure_class)
+    if run["result"] != 0:
+        return {"result": run["result"]}
     receipt_sha = blob_digest(receipt_bytes)
     print(
-        f"LOCAL_GATE_READY run={run_id} head={actual_head} operator={operator} "
-        f"class={failure_class} evidence={evidence} jobs={jobs} steps={steps}"
+        f"LOCAL_GATE_READY run={run_id} head={run['head']} operator={operator} "
+        f"class={failure_class} evidence={evidence} jobs={run['jobs']} steps={run['steps']}"
     )
     return {
         "result": 0,
@@ -1092,14 +1139,23 @@ def local_gate_receipt(repo: str, expected_head: str, operator: str,
     }
 
 
+def github_billing_failure(repo: str, job_id: int) -> bool:
+    annotation_jq = (
+        '[.[] | select(.annotation_level == "failure" and .path == ".github" '
+        'and .start_line == 1 and .end_line == 1 '
+        f'and (.message | startswith({json.dumps(BILLING_ANNOTATION)})))] | length'
+    )
+    count = gh_value(
+        ["api", f"repos/{repo}/check-runs/{job_id}/annotations?per_page=100", "--jq", annotation_jq],
+        f"cannot read local gate job {job_id} annotations",
+    )
+    if not count.isdigit():
+        fail(f"local gate job {job_id} annotations are malformed")
+    return int(count) > 0
+
+
 def local_gate_failure_binding(repo: str, pr: str, run_id: int,
-                               failure_class: str) -> int:
-    pattern = f"/actions/runs/{run_id}($|[^0-9])"
-    disallowed_conclusions = '.conclusion != "FAILURE"'
-    if failure_class == "github_startup_zero_steps":
-        disallowed_conclusions = (
-            '(.conclusion != "FAILURE" and .conclusion != "STARTUP_FAILURE")'
-        )
+                               expected_head: str, failure_class: str) -> int:
     binding_jq = (
         '[.statusCheckRollup[]? | '
         '{conclusion: ((.conclusion // .state // .status // "") | ascii_upcase), '
@@ -1107,22 +1163,47 @@ def local_gate_failure_binding(repo: str, pr: str, run_id: int,
         'select(.conclusion == "FAILURE" or .conclusion == "ERROR" or '
         '.conclusion == "CANCELLED" or .conclusion == "TIMED_OUT" or '
         '.conclusion == "ACTION_REQUIRED" or .conclusion == "STARTUP_FAILURE")] | '
-        f'[length, (map(select(.url | test("{pattern}"))) | length), '
-        f'(map(select({disallowed_conclusions})) | length)] | @tsv'
+        'tojson'
     )
-    red_count, bound_count, disallowed_count = gh_tsv(
+    red_json = gh_value(
         ["pr", "view", pr, "--repo", repo, "--json", "statusCheckRollup",
          "--jq", binding_jq],
         f"cannot read PR {pr} local gate checks",
-        fields=3,
     )
-    if not all(value.isdigit() for value in (red_count, bound_count, disallowed_count)):
-        fail(f"PR {pr} local gate checks are malformed")
-    if (
-        int(red_count) == 0
-        or int(red_count) != int(bound_count)
-        or int(disallowed_count) != 0
+    try:
+        red_checks = json.loads(red_json)
+    except json.JSONDecodeError as error:
+        raise Fail(f"PR {pr} local gate checks are malformed") from error
+    if not isinstance(red_checks, list) or any(
+        not isinstance(check, dict)
+        or not isinstance(check.get("conclusion"), str)
+        or not isinstance(check.get("url"), str)
+        for check in red_checks
     ):
+        fail(f"PR {pr} local gate checks are malformed")
+    allowed_conclusions = {"FAILURE"}
+    if failure_class == "github_startup_zero_steps":
+        allowed_conclusions.add("STARTUP_FAILURE")
+    run_pattern = re.compile(r"/actions/runs/([1-9][0-9]*)(?:$|[^0-9])")
+    bound_count = 0
+    disallowed_count = 0
+    for check in red_checks:
+        match = run_pattern.search(check["url"])
+        if check["conclusion"] not in allowed_conclusions or match is None:
+            disallowed_count += 1
+            continue
+        check_run_id = int(match.group(1))
+        if check_run_id == run_id:
+            bound_count += 1
+            continue
+        try:
+            extra = local_gate_run_evidence(repo, check_run_id, expected_head, failure_class)
+        except Fail:
+            extra = {"result": EXIT_FAILED}
+        if extra["result"] != 0:
+            disallowed_count += 1
+    red_count = len(red_checks)
+    if red_count == 0 or bound_count == 0 or disallowed_count != 0:
         print(
             f"LOCAL_GATE_FAILED pr={pr} run={run_id} red_checks={red_count} "
             f"bound_checks={bound_count} disallowed_checks={disallowed_count}"
@@ -1157,7 +1238,7 @@ def check_pr(repo: str, pr: str, expected_head: str, expected_base: str,
     )
     if approval_mode == "local":
         binding_rc = local_gate_failure_binding(
-            repo, pr, receipt["run_id"], receipt["failure_class"]
+            repo, pr, receipt["run_id"], expected_head, receipt["failure_class"]
         )
         if binding_rc != 0:
             return binding_rc

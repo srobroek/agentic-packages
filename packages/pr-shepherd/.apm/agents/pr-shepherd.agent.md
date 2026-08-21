@@ -61,8 +61,10 @@ the same pass; document nothing outside bead comments.
    release → close the merge bead.
 6a. Local approval is opt-in and requires `landing-contract.py land … local
     <operator-id> <receipt-file>`. Admit only a completed billing/startup
-    failure with zero jobs and zero steps, an operator-approved receipt for
-    the exact head, and red checks bound to that run. Review changes, conflict,
+    failure with zero executed steps and GitHub's billing annotation or
+    `STARTUP_FAILURE` conclusion, an operator-approved receipt for
+    the exact head, and red checks independently bound to that failure class.
+    Review changes, conflict,
     cancellation, timeout, action-required, stale identity, missing receipt,
     and executed-step evidence remain failures.
 7. Reconcile closing work through native dependencies after a merge bead

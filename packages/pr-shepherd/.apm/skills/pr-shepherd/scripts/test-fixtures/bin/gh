@@ -22,6 +22,17 @@ apply_requested_jq() {
   jq -r "$filter"
 }
 
+emit_billing_run() {
+  local head="$1"
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"databaseId":96795142026,"conclusion":"FAILURE","steps":[]},{"databaseId":96795143807,"conclusion":"SKIPPED","steps":[]}]}\n' \
+    "$head" | apply_requested_jq "$@"
+}
+
+emit_billing_annotation() {
+  printf '[{"path":".github","start_line":1,"end_line":1,"annotation_level":"failure","message":"The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the Billing & plans section in your settings"}]\n' |
+    apply_requested_jq "$@"
+}
+
 emit_queue() {
   # GraphQL merge-queue probe shape. REST branch protection carries no
   # merge-queue field at all, so the contract asks GraphQL and this fake answers
@@ -34,6 +45,16 @@ emit_queue() {
 readonly QUEUE_ENTRY='{"state":"QUEUED","position":0,"headCommit":{"oid":"'"${EXPECTED_HEAD:-}"'"}}'
 
 case "$FAKE_SCENARIO:${1:-}:${2:-}" in
+local-gate:api:* | local-gate-repeated-billing:api:* | local-gate-unrelated-red:api:* | local-gate-cancelled-rollup:api:* | local-gate-conflict:api:* | local-gate-review:api:* | local-gate-stale-pr:api:*)
+  emit_billing_annotation "$@"
+  ;;
+local-gate-job-no-steps:api:* | local-gate-billing-no-annotation:api:*)
+  printf '[]\n' | apply_requested_jq "$@"
+  ;;
+local-gate-billing-wrong-annotation:api:*)
+  printf '[{"path":".github","start_line":1,"end_line":1,"annotation_level":"failure","message":"The workflow is not valid."}]\n' |
+    apply_requested_jq "$@"
+  ;;
 queue-*:api:graphql)
   case "$FAKE_SCENARIO" in
   queue-detect-failure) exit 1 ;;
@@ -100,8 +121,10 @@ stale-run:run:view)
   printf '%s\tcompleted\tsuccess\thttps://example.test/run/1\n' "$STALE_HEAD"
   ;;
 local-gate:run:view)
-  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
-    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  emit_billing_run "$EXPECTED_HEAD" "$@"
+  ;;
+local-gate-repeated-billing:run:view)
+  emit_billing_run "$EXPECTED_HEAD" "$@"
   ;;
 local-gate-startup:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"STARTUP_FAILURE","jobs":[]}\n' \
@@ -112,11 +135,15 @@ local-gate-stale-run:run:view)
     "$STALE_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-steps:run:view)
-  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[{"name":"test"}]}]}\n' \
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"databaseId":96795142026,"conclusion":"FAILURE","steps":[{"name":"test"}]}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-job-no-steps:run:view)
-  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"steps":[]}]}\n' \
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"databaseId":96795142026,"conclusion":"FAILURE","steps":[]}]}\n' \
+    "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  ;;
+local-gate-billing-no-annotation:run:view | local-gate-billing-wrong-annotation:run:view)
+  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"databaseId":96795142026,"conclusion":"FAILURE","steps":[]}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-action-required:run:view)
@@ -135,12 +162,23 @@ local-gate-startup-rollup:run:view)
   printf '{"headSha":"%s","status":"COMPLETED","conclusion":"STARTUP_FAILURE","jobs":[]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
-local-gate-unrelated-red:run:view | local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
-  printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[]}\n' \
+local-gate-unrelated-red:run:view)
+  if [[ "$3" == "99999999999" ]]; then
+    printf '{"headSha":"%s","status":"COMPLETED","conclusion":"FAILURE","jobs":[{"databaseId":99999999998,"conclusion":"FAILURE","steps":[{"name":"test"}]}]}\n' \
+      "$EXPECTED_HEAD" | apply_requested_jq "$@"
+  else
+    emit_billing_run "$EXPECTED_HEAD" "$@"
+  fi
+  ;;
+local-gate-cancelled-rollup:run:view | land-local-gate:run:view | land-local-gate-replaced:run:view | local-gate-conflict:run:view | local-gate-review:run:view | local-gate-stale-pr:run:view)
+  emit_billing_run "$EXPECTED_HEAD" "$@"
+  ;;
+local-gate:pr:view | local-gate-startup:pr:view | local-gate-stale-run:pr:view | local-gate-steps:pr:view | local-gate-job-no-steps:pr:view | local-gate-billing-no-annotation:pr:view | local-gate-billing-wrong-annotation:pr:view | local-gate-cancelled:pr:view | local-gate-timeout:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
-local-gate:pr:view | local-gate-startup:pr:view | local-gate-stale-run:pr:view | local-gate-steps:pr:view | local-gate-job-no-steps:pr:view | local-gate-cancelled:pr:view | local-gate-timeout:pr:view)
-  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"}]}\n' \
+local-gate-repeated-billing:pr:view)
+  printf '{"state":"OPEN","isDraft":false,"mergeable":"MERGEABLE","reviewDecision":"NONE","baseRefName":"main","headRefOid":"%s","statusCheckRollup":[{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32477339806"},{"conclusion":"FAILURE","detailsUrl":"https://github.com/owner/repo/actions/runs/32484277869"}]}\n' \
     "$EXPECTED_HEAD" | apply_requested_jq "$@"
   ;;
 local-gate-startup-rollup:pr:view)
@@ -306,8 +344,10 @@ land-stack-hold:api:*)
     exit 99
   fi
   ;;
-land-local-gate:api:*)
-  if [[ "$2" == *"/git/ref/heads/main" ]]; then
+land-local-gate:api:* | land-local-gate-replaced:api:*)
+  if [[ "$2" == *"/check-runs/96795142026/annotations"* ]]; then
+    emit_billing_annotation "$@"
+  elif [[ "$2" == *"/git/ref/heads/main" ]]; then
     printf '%s\n' "$REMOTE_BASE"
   elif [[ "$2" == *"/compare/"* ]]; then
     printf 'ahead\n'
