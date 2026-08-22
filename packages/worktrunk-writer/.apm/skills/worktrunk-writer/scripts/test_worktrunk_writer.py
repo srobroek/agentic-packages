@@ -2525,12 +2525,17 @@ class BindingIndexTests(unittest.TestCase):
     def inventory_by_repo(self, repo, **kwargs):
         return [self.item] if Path(repo).resolve() == self.repo_a else []
 
-    def invoke_hook(self, payload: dict, *, issue: dict | None = None) -> str:
+    def invoke_hook(
+        self, payload: dict, *, issue: dict | None = None, bead_error: Exception | None = None
+    ) -> str:
         stdout = io.StringIO()
         completed = subprocess.CompletedProcess([], 0, "", "")
+        bead = (
+            {"side_effect": bead_error} if bead_error else {"return_value": issue or self.issue}
+        )
         with (
             patch.object(MODULE, "wt_inventory", side_effect=self.inventory_by_repo),
-            patch.object(MODULE, "one_bead", return_value=issue or self.issue),
+            patch.object(MODULE, "one_bead", **bead),
             patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
             patch.object(MODULE.subprocess, "run", return_value=completed),
             patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
@@ -2587,6 +2592,23 @@ class BindingIndexTests(unittest.TestCase):
         gone.rmdir()
         self.assertEqual(
             self.invoke_hook(self.bash_payload(self.repo_a, f"cd -- {self.leased} && echo hi")),
+            "",
+        )
+        self.assertEqual(self.indexed_keys(), [])
+
+    def test_an_entry_whose_bead_cannot_be_read_falls_back_and_is_pruned(self) -> None:
+        """A closed, deleted, or unreachable bead is stale, not a redirect.
+
+        Ephemeral wisps are deleted on close, and `bd` missing from PATH or an
+        unopenable database reads the same way, so denying here blocked every
+        mutation and continuation for the identifier.
+        """
+        self.index_entry()
+        self.assertEqual(
+            self.invoke_hook(
+                self.bash_payload(self.repo_a, f"cd -- {self.leased} && echo hi"),
+                bead_error=MODULE.ContractError("bd show demo-1 --json: issue not found"),
+            ),
             "",
         )
         self.assertEqual(self.indexed_keys(), [])

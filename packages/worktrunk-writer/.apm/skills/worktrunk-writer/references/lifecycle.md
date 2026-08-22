@@ -111,12 +111,14 @@ directory may sit in another. `bind` records the state repo twice:
   and the bead id.
 
 `hook` and `subagent-exit` resolve the state repo through the index, then read
-`metadata.repo` from the named bead. A disagreement between the two, or an
-unreadable bead, refuses the call. An identifier with no entry resolves the
-repository that owns the caller's working directory, and so does an entry whose
-repo path no longer exists: that entry names a deleted checkout rather than a
-redirect, so the resolver drops it. `release`, and a `subagent-exit` whose
-activation resource is already resolved, delete the entry.
+`metadata.repo` from the named bead. Only a readable bead naming a different repo
+refuses the call, since that is the one case that redirects a lease lookup.
+
+An identifier with no entry resolves the repository that owns the caller's
+working directory. So does an entry the bead cannot confirm: a repo path that no
+longer exists names a deleted checkout, and a bead that cannot be read is closed,
+deleted, or unreachable. The resolver drops such an entry. `release`, and a
+`subagent-exit` whose activation resource is already resolved, delete the entry.
 
 ## Merge and removal
 

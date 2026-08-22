@@ -1295,7 +1295,9 @@ def read_binding_index() -> dict[str, dict[str, str]]:
 def write_binding_index(entries: dict[str, dict[str, str]]) -> None:
     path = context_index_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f"{path.name}.tmp")
+    # Two hooks fire concurrently often enough that one fixed staging name lets one
+    # process replace the file another is still writing.
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     temporary.write_text(json.dumps(entries, indent=2, sort_keys=True))
     temporary.replace(path)
 
@@ -1330,21 +1332,29 @@ def indexed_state_repo(*identifiers: str | None) -> Path | None:
     """State repo for the first indexed identifier, confirmed against its bead.
 
     The index only points; `metadata.repo` on the activation bead is the authority.
-    A repo the bead does not name, or a bead that cannot be read, raises rather than
-    falling back, so a stale or hand-edited entry cannot redirect a lease lookup.
+    Only a readable bead that names a different repo is a redirect, and that alone
+    raises, so a hand-edited entry cannot steer a lease lookup.
 
-    A directory that has vanished is a deleted or moved checkout rather than a
-    redirect, so the entry is dropped and the caller keeps its cwd-derived repo.
+    An entry the bead cannot confirm is stale rather than hostile: a vanished
+    directory is a deleted or moved checkout, and an unreadable bead is a closed,
+    deleted, or unreachable one. Both drop the entry and leave the caller its
+    cwd-derived repo, because denying instead would block every mutation and
+    continuation for that identifier in any repository.
     """
     entries = read_binding_index()
     entry = next((entries[key] for key in identifiers if key and key in entries), None)
     if entry is None:
         return None
     repo = Path(entry["repo"]).resolve()
-    if not repo.is_dir():
+    issue: dict[str, Any] | None = None
+    if repo.is_dir():
+        try:
+            issue = one_bead(repo, entry["bead"])
+        except (ContractError, OSError, ValueError):
+            issue = None
+    if issue is None:
         forget_binding_repo({entry["context"], entry["handle"]})
         return None
-    issue = one_bead(repo, entry["bead"])
     stamped = (issue.get("metadata") or {}).get("repo")
     if not isinstance(stamped, str) or Path(stamped).resolve() != repo:
         raise ContractError(
