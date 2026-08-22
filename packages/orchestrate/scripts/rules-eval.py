@@ -41,13 +41,18 @@ from pathlib import Path
 BD = os.environ.get("BD_BIN", "bd")
 RULES_DIR = os.environ.get("RULES_DIR", "")
 
+# Metadata key holding the bead's metadata as of the claim, snapshotted by
+# orchestrator-claim-deny.py. beads records no per-key writer (`bd show --json`
+# carries no metadata field authorship, `bd history` is squashed, and the audit
+# trail's `field_change` entries cover status/assignee/priority only), so this
+# snapshot is the only evidence separating a value the claiming role wrote from
+# one another actor stamped before the claim (astro-plan-indxl).
+CLAIM_BASELINE_KEY = "claim_metadata_baseline"
+
 # Metadata keys the orchestrator stamps before the claim exists, per
-# spawn-brief.md "Required node metadata". `deny_metadata` is presence-based:
-# beads records no per-key writer (`bd show --json` carries no metadata field
-# authorship, `bd history` is squashed, and the audit trail's `field_change`
-# entries cover status/assignee/priority only), so a denied anchor blocks the
-# role for a write the orchestrator made. Exempt them centrally instead of
-# relying on every rules author to omit them (astro-plan-78v0).
+# spawn-brief.md "Required node metadata". These stay exempt even when a
+# baseline exists, because the orchestrator may re-stamp an anchor after the
+# claim (astro-plan-78v0).
 ORCHESTRATOR_ANCHORS = frozenset(
     {
         "actor",
@@ -150,6 +155,24 @@ def _leading_verb(text: str) -> str:
 def _has_metadata(bead: dict, key: str) -> bool:
     v = (bead.get("metadata") or {}).get(key)
     return v is not None and v != ""
+
+
+def _claim_baseline(bead: dict) -> dict | None:
+    """Metadata as of the claim, or None when no snapshot was recorded.
+
+    None means authorship is unknowable, so callers fall back to presence —
+    never weaker than the behaviour before the snapshot existed.
+    """
+    raw = (bead.get("metadata") or {}).get(CLAIM_BASELINE_KEY)
+    if isinstance(raw, dict):
+        return raw
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def _artifact_output_ref_contained(bead: dict) -> bool:
@@ -469,18 +492,22 @@ def main() -> None:
                     "detail": f"status={ds} set by an agent forbidden to set it",
                 }
             )
+    baseline = _claim_baseline(bead)
     for dm in authority.get("deny_metadata") or []:
         if dm in ORCHESTRATOR_ANCHORS:
             continue
-        if _has_metadata(bead, dm):
-            violations.append(
-                {
-                    "check": "metadata_authority",
-                    "detail": (
-                        f"metadata.{dm} is set and this role may not own it; unset it or escalate"
-                    ),
-                }
+        if not _has_metadata(bead, dm):
+            continue
+        if baseline is not None:
+            if baseline.get(dm) == (bead.get("metadata") or {}).get(dm):
+                continue
+            detail = (
+                f"metadata.{dm} changed under this claim and this role may not own it; "
+                "restore the pre-claim value or escalate"
             )
+        else:
+            detail = f"metadata.{dm} is set and this role may not own it; unset it or escalate"
+        violations.append({"check": "metadata_authority", "detail": detail})
 
     if not failed and not violations:
         emit_allow()

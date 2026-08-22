@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.3.0...worktrunk-writer--v2.3.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* merge bead no longer blocks its own implementer from taking a lease ([#877](https://github.com/srobroek/agentic-packages/issues/877)) ([59f130d](https://github.com/srobroek/agentic-packages/commit/59f130dc32b641192c631a8f492ceb54cb6be9d3))
+
 ## [2.3.0](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.2.1...worktrunk-writer--v2.3.0) (2026-08-17)
 
 
