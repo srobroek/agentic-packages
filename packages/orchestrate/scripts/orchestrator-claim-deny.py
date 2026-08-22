@@ -31,7 +31,7 @@ BD = os.environ.get("BD_BIN", "bd")
 CLAIM_BASELINE_KEY = "claim_metadata_baseline"
 # Global flags that consume the next token, which would otherwise read as the
 # subcommand or the bead id.
-VALUE_FLAGS = frozenset({"-C", "--db", "--dir"})
+VALUE_FLAGS = frozenset({"-C", "--actor", "--db", "--directory", "--dolt-auto-commit"})
 
 DENY_MSG = (
     "orchestrators route work, they never claim beads; only a worker command "
@@ -161,11 +161,16 @@ def has_worker_actor_envelope(command: str) -> bool:
     return claim_count > 0
 
 
-def claim_bead_id(segment: list[str]) -> str:
-    """Bead id in `bd [flags] <subcommand> <id> ... --claim`, or '' if unclear."""
+def claim_bead_ids(segment: list[str]) -> list[str]:
+    """Bead ids in `bd [flags] <subcommand> <id...> --claim`.
+
+    `bd update` takes `[id...]` and claims every one of them, so every
+    positional after the subcommand is a candidate. A positional that is really
+    a subcommand flag value resolves to no bead and is skipped by the caller.
+    """
     start = next((i for i, t in enumerate(segment) if os.path.basename(t) == "bd"), -1)
     if start < 0:
-        return ""
+        return []
     positionals: list[str] = []
     skip = False
     for token in segment[start + 1 :]:
@@ -178,9 +183,7 @@ def claim_bead_id(segment: list[str]) -> str:
         if token.startswith("-"):
             continue
         positionals.append(token)
-        if len(positionals) == 2:
-            return positionals[1]
-    return ""
+    return positionals[1:]
 
 
 def bead_metadata(bead_id: str) -> dict[str, str] | None:
@@ -219,33 +222,34 @@ def snapshot_claim_baseline(command: str) -> None:
     """Record each claimed bead's pre-claim metadata.
 
     Best effort: an absent snapshot degrades the stop-time authority check to
-    presence, which is the behaviour that predates it. Re-claiming overwrites
-    the snapshot, so a claim that is later refused leaves a harmless one.
+    presence, which is the behaviour that predates it. The first snapshot for a
+    bead wins; a later claim of the same bead leaves it alone, so an idempotent
+    re-claim cannot re-baseline a key the role wrote after the first claim.
     """
     for segment in shell_segments(command):
         if not segment_invokes_bd_claim(segment):
             continue
-        bead_id = claim_bead_id(segment)
-        if not bead_id:
-            continue
-        metadata = bead_metadata(bead_id)
-        if metadata is None:
-            continue
-        metadata.pop(CLAIM_BASELINE_KEY, None)
-        try:
-            subprocess.run(
-                [
-                    BD,
-                    "update",
-                    bead_id,
-                    "--metadata",
-                    json.dumps({CLAIM_BASELINE_KEY: json.dumps(metadata, sort_keys=True)}),
-                ],
-                capture_output=True,
-                timeout=8,
-            )
-        except Exception:
-            continue
+        for bead_id in claim_bead_ids(segment):
+            metadata = bead_metadata(bead_id)
+            if metadata is None:
+                continue
+            if metadata.get(CLAIM_BASELINE_KEY):
+                continue
+            metadata.pop(CLAIM_BASELINE_KEY, None)
+            try:
+                subprocess.run(
+                    [
+                        BD,
+                        "update",
+                        bead_id,
+                        "--metadata",
+                        json.dumps({CLAIM_BASELINE_KEY: json.dumps(metadata, sort_keys=True)}),
+                    ],
+                    capture_output=True,
+                    timeout=8,
+                )
+            except Exception:
+                continue
 
 
 def main():
