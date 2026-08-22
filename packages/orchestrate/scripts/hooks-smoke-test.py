@@ -11,8 +11,10 @@ suite (rules-eval-test.py). Also validates both hook JSON configs parse and
 reference only existing scripts. Exits non-zero on any failure.
 """
 
+import atexit
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -67,7 +69,36 @@ check(
 out, _ = run_hook("contract-start.py", {"session_id": "s"})
 check("no agent id -> no injection", out == {})
 
+
+def bd_stub_env():
+    """Env pointing the claim hook at a recording `bd` stub.
+
+    An allowed claim now snapshots pre-claim metadata, so every allow-path case
+    must be kept away from the ambient beads database.
+    """
+    directory = tempfile.mkdtemp(prefix="hooks-smoke-bd-")
+    atexit.register(shutil.rmtree, directory, True)
+    stub = os.path.join(directory, "bd")
+    calls = os.path.join(directory, "calls")
+    with open(stub, "w") as fh:
+        fh.write(
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$*" >> "$BD_STUB_CALLS"\n'
+            'if [ "$1" = show ]; then\n'
+            '  printf \'{"metadata":{"pr":"https://x/pull/1","branch":"b"\'\n'
+            '  if [ -n "$BD_STUB_BASELINE" ]; then\n'
+            '    printf \',"claim_metadata_baseline":"{}"\'\n'
+            "  fi\n"
+            "  printf '}}'\n"
+            "fi\n"
+            "exit 0\n"
+        )
+    os.chmod(stub, 0o755)
+    return {"BD_BIN": stub, "BD_STUB_CALLS": calls}, calls
+
+
 print("=== orchestrator-claim-deny.py ===")
+BD_STUB, BD_STUB_CALLS = bd_stub_env()
 # no run marker -> allow
 out, _ = run_hook("orchestrator-claim-deny.py", {"tool_input": {"command": "bd update x --claim"}})
 check("no run marker -> allow", out == {})
@@ -114,7 +145,7 @@ out, _ = run_hook(
             )
         }
     },
-    env={"ORCHESTRATE_RUN": "1"},
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
 )
 check("in run + bound worker claim -> allow", out == {}, str(out))
 out, _ = run_hook(
@@ -127,9 +158,109 @@ out, _ = run_hook(
             )
         }
     },
-    env={"ORCHESTRATE_RUN": "1"},
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
 )
 check("in run + resolved worker ACTOR -> allow", out == {}, str(out))
+# The claim-time snapshot is what lets SubagentStop tell the role's own write
+# from a value another actor stamped before the claim (astro-plan-indxl).
+open(BD_STUB_CALLS, "w").close()
+out, _ = run_hook(
+    "orchestrator-claim-deny.py",
+    {
+        "tool_input": {
+            "command": (
+                'BEADS_ACTOR="claude/researcher/s1" BD_ACTOR="claude/researcher/s1" '
+                "bd -C /tmp/repo update astro-node-1 --claim"
+            )
+        }
+    },
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
+)
+_calls = Path(BD_STUB_CALLS).read_text()
+check(
+    "allowed worker claim snapshots pre-claim metadata",
+    out == {}
+    and "show astro-node-1" in _calls
+    and "claim_metadata_baseline" in _calls
+    and "https://x/pull/1" in _calls,
+    _calls,
+)
+open(BD_STUB_CALLS, "w").close()
+out, _ = run_hook(
+    "orchestrator-claim-deny.py",
+    {
+        "tool_input": {
+            "command": 'BEADS_ACTOR="root" BD_ACTOR="root" bd update astro-node-1 --claim'
+        }
+    },
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
+)
+check(
+    "denied claim writes no snapshot",
+    pretool_denied(out) and Path(BD_STUB_CALLS).read_text() == "",
+    Path(BD_STUB_CALLS).read_text(),
+)
+# `--directory` is the long form of `-C`; treating it as a valueless flag read
+# the repo path as the subcommand and silently skipped the snapshot.
+open(BD_STUB_CALLS, "w").close()
+out, _ = run_hook(
+    "orchestrator-claim-deny.py",
+    {
+        "tool_input": {
+            "command": (
+                'BEADS_ACTOR="claude/researcher/s1" BD_ACTOR="claude/researcher/s1" '
+                "bd --directory /tmp/repo update astro-node-1 --claim"
+            )
+        }
+    },
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
+)
+_calls = Path(BD_STUB_CALLS).read_text()
+check(
+    "--directory does not hide the bead id",
+    out == {} and "show astro-node-1" in _calls,
+    _calls,
+)
+# `bd update` takes [id...] and claims every id, so every id needs a baseline.
+open(BD_STUB_CALLS, "w").close()
+out, _ = run_hook(
+    "orchestrator-claim-deny.py",
+    {
+        "tool_input": {
+            "command": (
+                'BEADS_ACTOR="claude/researcher/s1" BD_ACTOR="claude/researcher/s1" '
+                "bd update astro-node-1 astro-node-2 --claim"
+            )
+        }
+    },
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB},
+)
+_calls = Path(BD_STUB_CALLS).read_text()
+check(
+    "multi-id claim snapshots every bead",
+    out == {} and "show astro-node-1" in _calls and "show astro-node-2" in _calls,
+    _calls,
+)
+# A re-claim must not re-baseline a key the role wrote after the first claim.
+open(BD_STUB_CALLS, "w").close()
+out, _ = run_hook(
+    "orchestrator-claim-deny.py",
+    {
+        "tool_input": {
+            "command": (
+                'BEADS_ACTOR="claude/researcher/s1" BD_ACTOR="claude/researcher/s1" '
+                "bd update astro-node-1 --claim"
+            )
+        }
+    },
+    env={"ORCHESTRATE_RUN": "1", **BD_STUB, "BD_STUB_BASELINE": "1"},
+)
+_calls = Path(BD_STUB_CALLS).read_text()
+check(
+    "existing baseline is not overwritten",
+    out == {} and "claim_metadata_baseline" not in _calls,
+    _calls,
+)
 out, _ = run_hook(
     "orchestrator-claim-deny.py",
     {
