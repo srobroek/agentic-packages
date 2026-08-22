@@ -125,17 +125,6 @@ def test_a_healthy_merge_bead_is_allowed(workspace: dict) -> None:
     assert decision is None, reason
 
 
-def test_a_merge_bead_for_another_branch_is_ignored(workspace: dict) -> None:
-    """Beads exist, none anchors this branch, so there is nothing to judge."""
-    other = bead()
-    other["metadata"]["branch"] = "feat/unrelated"
-    load(workspace, [other])
-
-    _, decision, _ = run_guard(create(), workspace)
-
-    assert decision is None
-
-
 # --- one refusal per defect --------------------------------------------------
 
 
@@ -168,6 +157,30 @@ def test_an_unusable_merge_bead_is_denied(
     assert expected in reason, "a denial must name the defect, not just refuse"
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param(f"gh -R acme/widget pr create --draft --head {BRANCH}", id="short-R"),
+        pytest.param(
+            f"gh --repo acme/widget pr create --draft --head {BRANCH}", id="long-repo"
+        ),
+        pytest.param(
+            f"gh --repo=acme/widget pr create --draft --head {BRANCH}", id="attached-value"
+        ),
+        pytest.param(f"gh -Racme/widget pr create --draft --head {BRANCH}", id="attached-short"),
+    ],
+)
+def test_a_flag_before_the_subcommand_does_not_bypass_the_guard(
+    command: str, workspace: dict
+) -> None:
+    """`gh -R owner/repo pr create` is valid, and shifts the operand window."""
+    load(workspace, [bead(status="closed")])
+
+    _, decision, _ = run_guard(command, workspace)
+
+    assert decision == "deny"
+
+
 def test_two_merge_beads_for_one_branch_are_denied(workspace: dict) -> None:
     """The queue resolves by branch, so it cannot choose between two."""
     load(workspace, [bead(), bead(id="bd-2")])
@@ -178,13 +191,61 @@ def test_two_merge_beads_for_one_branch_are_denied(workspace: dict) -> None:
     assert "bd-1" in reason and "bd-2" in reason
 
 
-def test_a_missing_merge_bead_is_allowed(workspace: dict) -> None:
-    """A repository may track work in beads without routing pull requests to a queue."""
+def test_a_missing_merge_bead_is_denied_where_the_convention_is_used(
+    workspace: dict,
+) -> None:
+    """One merge bead anywhere means the queue is in use, so this branch needs one."""
+    other = bead(id="bd-9")
+    other["metadata"]["branch"] = "feat/unrelated"
+    load(workspace, [other])
+
+    _, decision, reason = run_guard("gh pr create --draft --head feat/orphan", workspace)
+
+    assert decision == "deny"
+    assert "feat/orphan" in reason
+
+
+def test_a_bead_whose_branch_metadata_is_absent_denies_the_branch(
+    workspace: dict,
+) -> None:
+    """A bead that anchors nothing cannot answer for this branch."""
+    load(workspace, [without_metadata("branch")])
+
+    _, decision, reason = run_guard(create(), workspace)
+
+    assert decision == "deny"
+    assert "No merge bead anchors" in reason
+
+
+def test_a_repository_with_no_merge_bead_at_all_is_untouched(workspace: dict) -> None:
+    """Tracking work in beads does not imply a merge queue."""
     load(workspace, [])
 
     _, decision, _ = run_guard(create(), workspace)
 
     assert decision is None
+
+
+@pytest.mark.parametrize(
+    "head",
+    [
+        pytest.param("feat/thing-extra", id="branch-extends-the-anchor"),
+        pytest.param("feat/thi", id="branch-is-a-prefix-of-the-anchor"),
+    ],
+)
+def test_the_branch_match_is_exact_not_a_prefix(head: str, workspace: dict) -> None:
+    """Rewriting matches_branch to a prefix comparison must fail here.
+
+    The only bead present is defective, so a prefix match would reach it and refuse
+    for the defect. An exact match reaches no bead, and the branch is refused for
+    having none. The two refusals carry different reasons.
+    """
+    load(workspace, [bead(status="closed")])
+
+    _, decision, reason = run_guard(f"gh pr create --draft --head {head}", workspace)
+
+    assert decision == "deny"
+    assert "No merge bead anchors" in reason, "a prefix match reached the wrong bead"
 
 
 # --- the branch, and the directory it is read from ---------------------------
@@ -304,10 +365,6 @@ def test_a_failed_lookup_advises_rather_than_denying(workspace: dict) -> None:
         pytest.param("not json {", id="malformed"),
         pytest.param("[]", id="not-an-object"),
         pytest.param('{"tool_input": null}', id="null-tool-input"),
-        pytest.param(
-            '{"cwd": 7, "tool_input": {"command": "gh pr create --head feat/other"}}',
-            id="cwd-not-a-string",
-        ),
         # Unbalanced quotes: the shell would reject this command too.
         pytest.param(
             '{"tool_input":{"command":"gh pr create --title \'x"}}', id="unbalanced-quotes"
@@ -327,6 +384,23 @@ def test_an_unusable_payload_allows(payload: str, workspace: dict) -> None:
 
     assert result.returncode == 0
     assert not result.stdout.strip()
+
+
+def test_a_non_string_cwd_does_not_crash(workspace: dict) -> None:
+    """The wrapper exits 0 on any internal defect, so a crash would read as a pass."""
+    load(workspace, [])
+    payload = json.dumps({"cwd": 7, "tool_input": {"command": create()}})
+    result = subprocess.run(
+        [sys.executable, str(GUARD)],
+        input=payload,
+        capture_output=True,
+        text=True,
+        env=workspace["env"],
+        timeout=30,
+    )
+
+    assert result.returncode == 0
+    assert "Traceback" not in result.stderr
 
 
 def test_never_emits_ask(workspace: dict) -> None:

@@ -12,9 +12,10 @@ trailer requirement is circular: it demands a line in every pull request body in
 order to check that line, and nothing else reads it. `metadata.branch` is the join
 key the merge queue itself uses, so the guard and the queue read one record.
 
-Absence is not a violation. Zero matching beads allows, because a repository may
-track work in beads without routing pull requests through a merge queue, and
-denying there would reimpose the universal demand a trailer made.
+A missing merge bead is refused wherever the convention is in use, which is any
+repository holding at least one bead with a merge-queue label. A repository that
+tracks work in beads and has no merge queue holds none, and the guard stays quiet
+there rather than demanding a bead the workflow never uses.
 
 Fail open on everything unverifiable: no bd, no beads workspace, an unreadable
 payload, an unparsable command, a lookup that cannot complete. A guard that cannot
@@ -33,8 +34,9 @@ import sys
 REQUIRED_LABELS = ("pr:merge", "agent:integrator")
 
 # Anchors the merge queue reads to match a bead against a live pull request.
-# `branch` is not listed: it is the key this guard joined on, so a bead reached
-# here has it by construction.
+# `branch` is absent because it is enforced earlier and more strongly: a bead whose
+# branch metadata is missing or wrong matches no branch, and a branch with no match
+# is refused outright where the convention is in use.
 REQUIRED_METADATA = ("repo", "origin_actor")
 
 # `bd` is Dolt-backed: a healthy call still takes about a second, and load pushes
@@ -141,6 +143,12 @@ def candidate_beads(cwd: str) -> list[dict]:
 
 
 def matches_branch(record: dict, branch: str) -> bool:
+    """Whether this bead anchors exactly this branch.
+
+    Equality, never a prefix: `feat/thing` and `feat/thing-extra` are different
+    branches with different pull requests, and a prefix match would let either
+    one's bead answer for the other.
+    """
     metadata = record.get("metadata")
     return isinstance(metadata, dict) and metadata.get("branch") == branch
 
@@ -203,8 +211,7 @@ def main() -> int:
     runs = [
         arguments
         for arguments in beads_hooks.gh_invocations(command)
-        if [word for word in arguments if not word.startswith("-")][:2]
-        == ["pr", "create"]
+        if beads_hooks.gh_command_path(arguments) == ["pr", "create"]
     ]
     if not runs:
         return 0
@@ -233,8 +240,20 @@ def main() -> int:
 
         matching = [record for record in candidates if matches_branch(record, branch)]
         if not matching:
-            # A repository may track work in beads without a merge queue.
-            continue
+            if not candidates:
+                # No bead in this repository has ever carried a merge-queue label,
+                # so the convention is not in use here and there is nothing to
+                # enforce. Tracking work in beads does not imply a merge queue.
+                continue
+            beads_hooks.deny(
+                f"No merge bead anchors branch {branch}. This repository routes pull "
+                f"requests through a merge queue, which finds the bead by matching "
+                f"metadata.branch, so a pull request without one is never picked up. "
+                f"Create a bead labelled {' and '.join(REQUIRED_LABELS)} with "
+                f"metadata.branch set to {branch}, or correct the branch metadata on "
+                f"the bead that was meant to anchor it."
+            )
+            return 0
         if len(matching) > 1:
             ids = ", ".join(sorted(str(record.get("id")) for record in matching))
             beads_hooks.deny(

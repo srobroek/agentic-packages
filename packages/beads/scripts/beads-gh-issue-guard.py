@@ -57,8 +57,8 @@ def mutates_an_issue(command: str) -> bool:
     import beads_hooks
 
     for arguments in beads_hooks.gh_invocations(command):
-        rest = [word for word in arguments if not word.startswith("-")]
-        if len(rest) >= 2 and rest[0] == "issue" and rest[1] in MUTATING:
+        path = beads_hooks.gh_command_path(arguments)
+        if len(path) == 2 and path[0] == "issue" and path[1] in MUTATING:
             return True
     return False
 

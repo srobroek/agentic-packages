@@ -30,6 +30,13 @@ SEPARATORS = frozenset({";", "&&", "||", "&", "|"})
 # `x=$(gh` are each one token to the lexer.
 VERB_PREFIXES = ("=", "$(", "`", "(", "{", ";", "&", "|")
 
+# gh flags that take the next token as a value and are accepted before the command
+# path. `gh -R owner/repo pr create` is valid, so dropping flag tokens without
+# dropping this value reads `owner/repo` as the command group and matches nothing.
+# Attached forms (`-Rowner/repo`, `--repo=owner/repo`) carry the value inside the
+# flag token and need no skip.
+GH_VALUE_FLAGS = frozenset({"-R", "--repo"})
+
 
 def payload_fields(payload: str) -> tuple[str, str]:
     """Return the command and the directory it runs in, from a hook payload."""
@@ -117,6 +124,29 @@ def gh_invocations(command: str) -> list[list[str]]:
         if verb == "gh" or verb.endswith("/gh"):
             runs.append(tokens[index + 1 :])
     return runs
+
+
+def gh_command_path(arguments: list[str]) -> list[str]:
+    """The group and subcommand a gh invocation names, ignoring preceding flags.
+
+    Returns at most two tokens. Resolving the path by position in the operand list
+    is what a guard must not do: any flag before the subcommand shifts that window,
+    so `gh -R owner/repo pr create` would read as group `owner/repo`, and a guard
+    keyed on `pr create` would pass it while refusing the unflagged form.
+    """
+    path: list[str] = []
+    skip_value = False
+    for token in arguments:
+        if skip_value:
+            skip_value = False
+            continue
+        if token.startswith("-"):
+            skip_value = token in GH_VALUE_FLAGS
+            continue
+        path.append(token)
+        if len(path) == 2:
+            break
+    return path
 
 
 def beads_active(cwd: str) -> bool:
