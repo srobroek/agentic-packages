@@ -1,5 +1,5 @@
 name: beads
-version: 2.1.1
+version: 2.2.0
 description: >-
   Beads (bd) conventions for persistent task DAGs, atomic claims, native reply
   threads, decision records, ambiguity handling, actor identity, JSON envelopes,
@@ -12,14 +12,14 @@ description: >-
   absent, closed, mislabelled, assigned, or missing a `repo` or `origin_actor`
   anchor, resolving that bead from `metadata.branch` rather than a PR-body
   trailer, and engaging only where the repository already uses merge beads.
-  Opt-in sync hooks prefer native Dolt sync -- pull at
-  session start, a detached push at session end once a `git push --dry-run`
-  probe confirms it goes through, with a configurable pusher for hosts that need
-  a wrapper -- and fall back to JSONL over ordinary git otherwise. The same
-  session-start hook reports when Dolt history has grown enough to trim, and
-  never trims it. Global `bd setup` wires session start; `bd init --skip-hooks`
-  initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and
-  activates only in repositories with `.beads/`.
+  Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached
+  push at session end once a `git push --dry-run` probe confirms it goes
+  through, with a configurable pusher for hosts that need a wrapper -- and fall
+  back to JSONL over ordinary git otherwise. The same session-start hook reports
+  when Dolt history has grown enough to trim, and never trims it. Global `bd
+  setup` wires session start; `bd init --skip-hooks` initializes repositories.
+  Requires Beads >= 1.1.0 and python3 on PATH, and activates only in
+  repositories with `.beads/`.
 author: Sjors Robroek
 license: Apache-2.0
 type: hybrid
