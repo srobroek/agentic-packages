@@ -2436,5 +2436,215 @@ class ReleaseTests(unittest.TestCase):
                     MODULE.release(args)
 
 
+class BindingIndexTests(unittest.TestCase):
+    """The state repo comes from the binding, not from the agent's cwd.
+
+    A checkout leased in repo A is invisible to an agent whose cwd sits in repo B,
+    so every lease lookup keyed on cwd resolved zero holders there: the mutation
+    guard fell silent and `subagent-exit` no-opped.
+    """
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.state = root / "state"
+        self.repo_a = root / "repo-a"
+        self.repo_b = root / "repo-b"
+        self.leased = self.repo_a / "leased"
+        for path in (self.state, self.repo_b, self.leased):
+            path.mkdir(parents=True)
+        self.item = {
+            "branch": "writer/leased",
+            "path": str(self.leased),
+            "kind": "worktree",
+            "vars": {
+                "actor": "writer-actor",
+                "lease": "lease-a",
+                "context": "ctx-1",
+                "runtime-bindings": json.dumps([{"context": "ctx-1", "handle": "handle-1"}]),
+                "resource": "demo-1",
+            },
+        }
+        self.issue = {
+            "id": "demo-1",
+            "status": "in_progress",
+            "assignee": "writer-actor",
+            "metadata": {"repo": str(self.repo_a)},
+        }
+        self.env = {"XDG_STATE_HOME": str(self.state)}
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def index_entry(self, repo: Path | None = None) -> None:
+        with patch.dict(os.environ, self.env):
+            MODULE.record_binding_repo("ctx-1", "handle-1", repo or self.repo_a, "demo-1")
+
+    def indexed_keys(self) -> list[str]:
+        with patch.dict(os.environ, self.env):
+            return sorted(MODULE.read_binding_index())
+
+    def inventory_by_repo(self, repo, **kwargs):
+        return [self.item] if Path(repo).resolve() == self.repo_a else []
+
+    def invoke_hook(self, payload: dict, *, issue: dict | None = None) -> str:
+        stdout = io.StringIO()
+        completed = subprocess.CompletedProcess([], 0, "", "")
+        with (
+            patch.object(MODULE, "wt_inventory", side_effect=self.inventory_by_repo),
+            patch.object(MODULE, "one_bead", return_value=issue or self.issue),
+            patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(MODULE.subprocess, "run", return_value=completed),
+            patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            patch.object(sys, "stdout", stdout),
+            patch.dict(os.environ, self.env, clear=True),
+        ):
+            self.assertEqual(MODULE.hook(), 0)
+        return stdout.getvalue()
+
+    def bash_payload(self, cwd: Path, command: str) -> dict:
+        return {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "agent_id": "ctx-1",
+            "cwd": str(cwd),
+            "tool_input": {"command": command},
+        }
+
+    def test_a_lease_in_another_repo_still_governs_this_call(self) -> None:
+        self.index_entry()
+        decision = json.loads(
+            self.invoke_hook(self.bash_payload(self.repo_b, f"cd -- {self.repo_b} && echo hi"))
+        )["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn(str(self.leased), decision["permissionDecisionReason"])
+
+    def test_the_holder_reaches_its_own_checkout_from_a_foreign_cwd(self) -> None:
+        self.index_entry()
+        self.assertEqual(
+            self.invoke_hook(self.bash_payload(self.repo_b, f"cd -- {self.leased} && echo hi")),
+            "",
+        )
+
+    def test_an_entry_the_bead_contradicts_is_denied(self) -> None:
+        self.index_entry()
+        reason = json.loads(
+            self.invoke_hook(
+                self.bash_payload(self.repo_b, f"cd -- {self.leased} && echo hi"),
+                issue={**self.issue, "metadata": {"repo": str(self.repo_b)}},
+            )
+        )["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn(str(self.repo_a), reason)
+        self.assertIn(str(self.repo_b), reason)
+
+    def test_a_missing_entry_falls_back_to_the_cwd_repo(self) -> None:
+        decision = json.loads(
+            self.invoke_hook(self.bash_payload(self.repo_a, f"cd -- {self.repo_a} && echo hi"))
+        )["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertEqual(self.indexed_keys(), [])
+
+    def test_a_malformed_entry_is_ignored(self) -> None:
+        with patch.dict(os.environ, self.env):
+            path = MODULE.context_index_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"ctx-1": {"bead": "demo-1"}}))
+            self.assertEqual(MODULE.read_binding_index(), {})
+            self.assertIsNone(MODULE.indexed_state_repo("ctx-1"))
+
+    def exit_hook(self, cwd: Path, *, stale: bool) -> tuple[list[str], list[str]]:
+        stamped: list[str] = []
+        cleared: list[str] = []
+        payload = {"agent_type": "domain-specialist", "agent_id": "ctx-1", "cwd": str(cwd)}
+        with (
+            patch.object(MODULE, "run", return_value=SimpleNamespace(stdout=str(cwd), stderr="")),
+            patch.object(MODULE, "wt_inventory", side_effect=self.inventory_by_repo),
+            patch.object(MODULE, "one_bead", return_value=self.issue),
+            patch.object(MODULE, "stale_binding", return_value=stale),
+            patch.object(MODULE, "set_var", side_effect=lambda r, b, k, v: stamped.append(k)),
+            patch.object(MODULE, "clear_var", side_effect=lambda r, b, k: cleared.append(k)),
+            patch("sys.stdin", io.StringIO(json.dumps(payload))),
+            patch.dict(os.environ, self.env),
+        ):
+            self.assertEqual(MODULE.subagent_exit(), 0)
+        return stamped, cleared
+
+    def test_exit_clears_a_binding_recorded_in_another_repo(self) -> None:
+        self.index_entry()
+        stamped, cleared = self.exit_hook(self.repo_b, stale=True)
+        self.assertEqual(stamped, ["exited"])
+        self.assertEqual(sorted(cleared), ["context", "contexts", "runtime-bindings"])
+        self.assertEqual(self.indexed_keys(), [])
+
+    def test_exit_keeps_the_entry_for_a_resumable_actor(self) -> None:
+        self.index_entry()
+        stamped, cleared = self.exit_hook(self.repo_b, stale=False)
+        self.assertEqual((stamped, cleared), (["exited"], []))
+        self.assertEqual(self.indexed_keys(), ["ctx-1", "handle-1"])
+
+    def test_release_removes_the_entry(self) -> None:
+        self.index_entry()
+        args = SimpleNamespace(
+            repo=str(self.repo_a), path=str(self.leased), actor="writer-actor", lease="lease-a"
+        )
+        with (
+            patch.object(MODULE, "wt_inventory", return_value=[self.item]),
+            patch.object(MODULE, "validate", return_value={"status": "valid"}),
+            patch.object(MODULE, "clear_var"),
+            patch.dict(os.environ, self.env),
+        ):
+            self.assertEqual(MODULE.release(args)["status"], "released")
+        self.assertEqual(self.indexed_keys(), [])
+
+    def test_release_still_requires_the_matching_actor_and_lease(self) -> None:
+        self.index_entry()
+        args = SimpleNamespace(
+            repo=str(self.repo_a), path=str(self.leased), actor="writer-actor", lease="wrong"
+        )
+        with (
+            patch.object(MODULE, "wt_inventory", return_value=[self.item]),
+            patch.object(MODULE, "validate", side_effect=MODULE.ContractError("lease mismatch")),
+            patch.dict(os.environ, self.env),
+        ):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.release(args)
+        self.assertEqual(self.indexed_keys(), ["ctx-1", "handle-1"])
+
+    def test_bind_stamps_the_repo_on_the_bead_and_indexes_it(self) -> None:
+        args = SimpleNamespace(
+            repo=str(self.repo_a),
+            path=str(self.leased),
+            actor="writer-actor",
+            lease="lease-a",
+            handle="handle-1",
+            context=None,
+            ack="WAIT context=ctx-1",
+            bead=None,
+            resource="demo-1",
+        )
+        with (
+            patch.object(MODULE, "wt_inventory", return_value=[self.item]),
+            patch.object(MODULE, "validate", return_value={"status": "valid"}),
+            patch.object(MODULE, "beads_active", return_value=True),
+            patch.object(MODULE, "assert_activation_resource_available"),
+            patch.object(MODULE, "set_var"),
+            patch.object(MODULE, "run") as command,
+            patch.dict(os.environ, self.env),
+        ):
+            self.assertEqual(MODULE.bind(args)["status"], "bound")
+        argv = command.call_args.args[0]
+        self.assertEqual(json.loads(argv[-1])["repo"], str(self.repo_a))
+        with patch.dict(os.environ, self.env):
+            self.assertEqual(
+                MODULE.read_binding_index()["ctx-1"],
+                {
+                    "repo": str(self.repo_a),
+                    "bead": "demo-1",
+                    "context": "ctx-1",
+                    "handle": "handle-1",
+                },
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
