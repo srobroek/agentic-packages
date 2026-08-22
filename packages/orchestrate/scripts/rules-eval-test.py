@@ -554,6 +554,43 @@ for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "run
         failed += 1
         print(f"  FAIL spawn-brief anchor {_key} is not exempt")
 
+print("=== linked comment hydration ===")
+
+
+def _hydrate(bead_payload):
+    """Run hydrate_comments against a stub bd exposing one relates-to link."""
+
+    def stub_bd_json(*args):
+        if args[0] == "comments":
+            if args[1] == "node-1":
+                return [{"text": "ASSIGN node-1"}]
+            return [{"text": "REVIEW node-1 verdict:approve"}]
+        return {
+            "id": "node-1",
+            "dependencies": [{"id": "wisp-1", "dependency_type": "relates-to"}],
+            "dependents": None,
+        }
+
+    MODULE.bd_json = stub_bd_json
+    try:
+        MODULE.hydrate_comments(bead_payload)
+    finally:
+        MODULE.bd_json = original_bd_json
+    return bead_payload
+
+
+for _name, _kind in (
+    ("an ordinary node bead", {}),
+    ("an execution_kind resource", {"execution_kind": "review"}),
+):
+    _hydrated = _hydrate(bead(id="node-1", metadata=dict(_kind)))
+    if MODULE._linked_comment_verbs(_hydrated) == ["REVIEW"]:
+        passed += 1
+        print(f"  ok   linked comments hydrate for {_name}")
+    else:
+        failed += 1
+        print(f"  FAIL linked comments hydrate for {_name} -> {_hydrated.get('linked_comments')!r}")
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

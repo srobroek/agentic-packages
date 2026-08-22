@@ -315,14 +315,20 @@ def resolve_claimed_bead(payload: dict, agent_type: str) -> tuple[dict | None, l
 
 
 def hydrate_comments(bead: dict) -> None:
+    """Populate `comments` and `linked_comments` for predicate evaluation.
+
+    `linked_comments` is populated for every bead, not only for ones carrying
+    top-level `ephemeral`/`wisp_type`. Resource kind is also declarable through
+    `metadata.execution_kind` (see `resource_kind`), and `reviewer` and `scribe`
+    require `linked.comment.verb` unconditionally, so keying hydration on the
+    top-level flags left those checks reading a permanently empty list -- a
+    completion gate no agent could satisfy.
+    """
     bead_id = bead.get("id")
     if not bead_id:
         return
     comments = bd_json("comments", bead_id, "--json")
     bead["comments"] = comments if isinstance(comments, list) else []
-
-    if not bead.get("ephemeral") and not bead.get("wisp_type"):
-        return
 
     shown = bd_json("show", bead_id, "--json")
     if isinstance(shown, list) and len(shown) == 1:
