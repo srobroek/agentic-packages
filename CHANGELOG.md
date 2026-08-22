@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.3...srobroek-agentic--v29.2.0) (2026-08-22)
+
+
+### Features
+
+* deny a pull request whose merge bead cannot be picked up ([#881](https://github.com/srobroek/agentic-packages/issues/881)) ([2e12b38](https://github.com/srobroek/agentic-packages/commit/2e12b38c65d6529edf08171c0a467227a6c6be80))
+
 ## [29.1.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.2...srobroek-agentic--v29.1.3) (2026-08-18)
 
 

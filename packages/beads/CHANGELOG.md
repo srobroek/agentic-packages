@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.1.1...beads--v2.2.0) (2026-08-22)
+
+
+### Features
+
+* deny a pull request whose merge bead cannot be picked up ([#881](https://github.com/srobroek/agentic-packages/issues/881)) ([2e12b38](https://github.com/srobroek/agentic-packages/commit/2e12b38c65d6529edf08171c0a467227a6c6be80))
+
 ## [2.1.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.1.0...beads--v2.1.1) (2026-08-17)
 
 
