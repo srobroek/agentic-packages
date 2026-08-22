@@ -1,5 +1,22 @@
 # Changelog
 
+## [6.3.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.2.2...pr-shepherd--v6.3.0) (2026-08-22)
+
+
+### Features
+
+* **pr-shepherd:** admit authorized local gates ([5c34a3c](https://github.com/srobroek/agentic-packages/commit/5c34a3cbefe98c83b6a642817d98deee32ad471d))
+
+
+### Bug Fixes
+
+* **pr-shepherd:** admit zero-job billing failures ([088a7a6](https://github.com/srobroek/agentic-packages/commit/088a7a6f9ffc135f41027fb85228eb55501c55c6))
+* **pr-shepherd:** classify billing-blocked jobs ([54e6d3d](https://github.com/srobroek/agentic-packages/commit/54e6d3d5d67d487bb918baea5a8440ddcf56637d))
+* **pr-shepherd:** classify synthetic billing jobs ([b3cf995](https://github.com/srobroek/agentic-packages/commit/b3cf995ab849348fe1e7fdba31ee4a1b6ddbbdc1))
+* **pr-shepherd:** pin local gate receipt during landing ([7deb704](https://github.com/srobroek/agentic-packages/commit/7deb704c0a6842b13f811f304007d8b808eb2825))
+* **pr-shepherd:** reject stale local gate identity first ([b3b4e93](https://github.com/srobroek/agentic-packages/commit/b3b4e9315807330d983ba30840dc43c9311a1ad8))
+* **pr-shepherd:** require empty local gate runs ([4565dd2](https://github.com/srobroek/agentic-packages/commit/4565dd258656f476229f53f0dd5b483cd941964b))
+
 ## [6.2.2](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.2.1...pr-shepherd--v6.2.2) (2026-08-17)
 
 
