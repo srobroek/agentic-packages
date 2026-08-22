@@ -23,6 +23,40 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+STATE_HOME = tempfile.TemporaryDirectory()
+
+
+def setUpModule() -> None:
+    """Point the whole suite at a throwaway XDG state home.
+
+    `context_index_path()` falls back to `Path.home()`, so any test that binds or
+    reads the binding index writes the developer's real
+    `~/.local/state/worktrunk-writer/contexts.json` when this is unset.
+    """
+    os.environ["XDG_STATE_HOME"] = STATE_HOME.name
+
+
+def tearDownModule() -> None:
+    STATE_HOME.cleanup()
+
+
+def cleared_env(**overrides: str):
+    """Reduce the environment to `overrides`, keeping the suite's state home.
+
+    Clearing proves the guard works with no writer variables set; XDG_STATE_HOME
+    has to survive that so a cleared environment cannot reach the real index.
+    """
+    return patch.dict(
+        os.environ,
+        {"XDG_STATE_HOME": os.environ["XDG_STATE_HOME"], **overrides},
+        clear=True,
+    )
+
+
+def clear_binding_index() -> None:
+    MODULE.context_index_path().unlink(missing_ok=True)
+
+
 def hook_manifest_root() -> Path:
     """Locate package hook manifests in source and installed skill layouts."""
     candidates = [SCRIPT.parents[3] / "hooks"]
@@ -181,16 +215,16 @@ class HandshakeEngagementTests(unittest.TestCase):
         spec.loader.exec_module(self.mod)
 
     def test_operator_opt_in_engages_without_a_lease(self) -> None:
-        with patch.dict(os.environ, {"WORKTRUNK_WRITER_ENFORCE": "1"}, clear=True):
+        with cleared_env(WORKTRUNK_WRITER_ENFORCE="1"):
             self.assertTrue(self.mod.protocol_engaged({}))
 
     def test_external_writer_env_engages(self) -> None:
-        with patch.dict(os.environ, {"WORKTRUNK_WRITER_LEASE": "l"}, clear=True):
+        with cleared_env(WORKTRUNK_WRITER_LEASE="l"):
             self.assertTrue(self.mod.protocol_engaged({}))
 
     def test_absent_wt_reads_as_no_protocol(self) -> None:
         with (
-            patch.dict(os.environ, {}, clear=True),
+            cleared_env(),
             patch.object(self.mod.shutil, "which", return_value=None),
         ):
             self.assertFalse(self.mod.protocol_engaged({"cwd": "/tmp"}))
@@ -198,7 +232,7 @@ class HandshakeEngagementTests(unittest.TestCase):
     def test_a_repository_holding_a_lease_engages(self) -> None:
         inventory = [{"branch": "w/a", "path": "/tmp/w-a", "vars": {"actor": "a", "lease": "l"}}]
         with (
-            patch.dict(os.environ, {}, clear=True),
+            cleared_env(),
             patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
             patch.object(self.mod, "_writer") as loader,
         ):
@@ -208,7 +242,7 @@ class HandshakeEngagementTests(unittest.TestCase):
 
     def test_a_repository_with_no_lease_does_not_engage(self) -> None:
         with (
-            patch.dict(os.environ, {}, clear=True),
+            cleared_env(),
             patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
             patch.object(self.mod, "_writer") as loader,
         ):
@@ -218,7 +252,7 @@ class HandshakeEngagementTests(unittest.TestCase):
 
     def test_an_inventory_error_fails_toward_no_protocol(self) -> None:
         with (
-            patch.dict(os.environ, {}, clear=True),
+            cleared_env(),
             patch.object(self.mod.shutil, "which", return_value="/usr/bin/wt"),
             patch.object(self.mod, "_writer") as loader,
         ):
@@ -895,7 +929,7 @@ class RuntimeHookTests(unittest.TestCase):
             patch.object(MODULE.subprocess, "run", return_value=completed),
             patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
             patch.object(sys, "stdout", stdout),
-            patch.dict(os.environ, env or {}, clear=True),
+            cleared_env(**(env or {})),
         ):
             self.assertEqual(MODULE.hook(), 0)
         return stdout.getvalue()
@@ -1289,6 +1323,10 @@ COMPLETE_ENVELOPE = {
 
 
 class BindingTests(unittest.TestCase):
+    def setUp(self) -> None:
+        # bind indexes its fixture repo, and the temp repo is gone by the next test.
+        self.addCleanup(clear_binding_index)
+
     def test_bind_accepts_exact_context_acknowledgement(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repo = Path(temp)
@@ -2537,12 +2575,40 @@ class BindingIndexTests(unittest.TestCase):
         self.assertIn(str(self.repo_a), reason)
         self.assertIn(str(self.repo_b), reason)
 
+    def test_an_entry_naming_a_deleted_directory_falls_back_and_is_pruned(self) -> None:
+        """A vanished checkout is not the redirect attempt the test above denies.
+
+        Denying it blocked every mutation and continuation for the context, in any
+        repository, until someone hand-edited the index.
+        """
+        gone = self.repo_a / "gone"
+        gone.mkdir()
+        self.index_entry(gone)
+        gone.rmdir()
+        self.assertEqual(
+            self.invoke_hook(self.bash_payload(self.repo_a, f"cd -- {self.leased} && echo hi")),
+            "",
+        )
+        self.assertEqual(self.indexed_keys(), [])
+
     def test_a_missing_entry_falls_back_to_the_cwd_repo(self) -> None:
         decision = json.loads(
             self.invoke_hook(self.bash_payload(self.repo_a, f"cd -- {self.repo_a} && echo hi"))
         )["hookSpecificOutput"]
         self.assertEqual(decision["permissionDecision"], "deny")
         self.assertEqual(self.indexed_keys(), [])
+
+    def test_a_cleared_environment_cannot_reach_the_developers_index(self) -> None:
+        """No test may write the real `~/.local/state/worktrunk-writer/contexts.json`.
+
+        The hook tests clear the environment to prove the guard needs no writer
+        variables, which also dropped XDG_STATE_HOME and sent every index read and
+        write to the developer's live state.
+        """
+        real = Path.home() / ".local" / "state" / MODULE.CONTEXT_INDEX_RELATIVE
+        with cleared_env():
+            self.assertNotEqual(MODULE.context_index_path(), real)
+            self.assertEqual(MODULE.context_index_path().parents[1], Path(STATE_HOME.name))
 
     def test_a_malformed_entry_is_ignored(self) -> None:
         with patch.dict(os.environ, self.env):

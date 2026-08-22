@@ -1332,6 +1332,9 @@ def indexed_state_repo(*identifiers: str | None) -> Path | None:
     The index only points; `metadata.repo` on the activation bead is the authority.
     A repo the bead does not name, or a bead that cannot be read, raises rather than
     falling back, so a stale or hand-edited entry cannot redirect a lease lookup.
+
+    A directory that has vanished is a deleted or moved checkout rather than a
+    redirect, so the entry is dropped and the caller keeps its cwd-derived repo.
     """
     entries = read_binding_index()
     entry = next((entries[key] for key in identifiers if key and key in entries), None)
@@ -1339,10 +1342,8 @@ def indexed_state_repo(*identifiers: str | None) -> Path | None:
         return None
     repo = Path(entry["repo"]).resolve()
     if not repo.is_dir():
-        raise ContractError(
-            f"binding index names state repo {str(repo)!r} for {entry['context']!r}, "
-            "which does not exist"
-        )
+        forget_binding_repo({entry["context"], entry["handle"]})
+        return None
     issue = one_bead(repo, entry["bead"])
     stamped = (issue.get("metadata") or {}).get("repo")
     if not isinstance(stamped, str) or Path(stamped).resolve() != repo:
