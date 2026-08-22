@@ -317,12 +317,17 @@ def resolve_claimed_bead(payload: dict, agent_type: str) -> tuple[dict | None, l
 def hydrate_comments(bead: dict) -> None:
     """Populate `comments` and `linked_comments` for predicate evaluation.
 
-    `linked_comments` is populated for every bead, not only for ones carrying
+    `relates-to` links hydrate for every bead, not only for ones carrying
     top-level `ephemeral`/`wisp_type`. Resource kind is also declarable through
     `metadata.execution_kind` (see `resource_kind`), and `reviewer` and `scribe`
     require `linked.comment.verb` unconditionally, so keying hydration on the
     top-level flags left those checks reading a permanently empty list -- a
     completion gate no agent could satisfy.
+
+    `replies-to` stays scoped to wisps. `thread-message.py` links every message
+    with `replies-to`, so following it on an ordinary bead would let an actor
+    satisfy its own completion check by sending itself a message whose first
+    token is a completion verb, with no wisp verdict in existence.
     """
     bead_id = bead.get("id")
     if not bead_id:
@@ -337,12 +342,16 @@ def hydrate_comments(bead: dict) -> None:
         bead["linked_comments"] = []
         return
 
+    edge_types = {"relates-to"}
+    if bead.get("ephemeral") or bead.get("wisp_type"):
+        edge_types.add("replies-to")
+
     linked_comments = []
     linked_ids = {
         link.get("id")
         for key in ("dependencies", "dependents")
         for link in (shown.get(key) or [])
-        if link.get("id") and link.get("dependency_type") in {"relates-to", "replies-to"}
+        if link.get("id") and link.get("dependency_type") in edge_types
     }
     for linked_id in sorted(linked_ids):
         payload = bd_json("comments", linked_id, "--json")

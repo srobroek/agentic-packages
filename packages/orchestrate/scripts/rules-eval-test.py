@@ -558,16 +558,21 @@ print("=== linked comment hydration ===")
 
 
 def _hydrate(bead_payload):
-    """Run hydrate_comments against a stub bd exposing one relates-to link."""
+    """Run hydrate_comments against a stub bd exposing one link of each edge type."""
 
     def stub_bd_json(*args):
         if args[0] == "comments":
             if args[1] == "node-1":
                 return [{"text": "ASSIGN node-1"}]
+            if args[1] == "msg-1":
+                return [{"text": "REPORTED node-1 self-sent"}]
             return [{"text": "REVIEW node-1 verdict:approve"}]
         return {
             "id": "node-1",
-            "dependencies": [{"id": "wisp-1", "dependency_type": "relates-to"}],
+            "dependencies": [
+                {"id": "wisp-1", "dependency_type": "relates-to"},
+                {"id": "msg-1", "dependency_type": "replies-to"},
+            ],
             "dependents": None,
         }
 
@@ -586,10 +591,18 @@ for _name, _kind in (
     _hydrated = _hydrate(bead(id="node-1", metadata=dict(_kind)))
     if MODULE._linked_comment_verbs(_hydrated) == ["REVIEW"]:
         passed += 1
-        print(f"  ok   linked comments hydrate for {_name}")
+        print(f"  ok   relates-to comments hydrate for {_name}, replies-to excluded")
     else:
         failed += 1
         print(f"  FAIL linked comments hydrate for {_name} -> {_hydrated.get('linked_comments')!r}")
+
+_hydrated = _hydrate(bead(id="node-1", ephemeral=True))
+if MODULE._linked_comment_verbs(_hydrated) == ["REPORTED", "REVIEW"]:
+    passed += 1
+    print("  ok   a wisp still hydrates its replies-to thread")
+else:
+    failed += 1
+    print(f"  FAIL wisp replies-to hydration -> {_hydrated.get('linked_comments')!r}")
 
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
