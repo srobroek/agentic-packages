@@ -2580,6 +2580,22 @@ class BindingIndexTests(unittest.TestCase):
         self.assertIn(str(self.repo_a), reason)
         self.assertIn(str(self.repo_b), reason)
 
+    def test_an_entry_whose_bead_carries_no_repo_is_denied(self) -> None:
+        """An unstamped bead is readable and declines to confirm, so it is not stale.
+
+        This branch shares its raise with the mismatch above, so without its own test
+        either one reads as covered by the other.
+        """
+        self.index_entry()
+        reason = json.loads(
+            self.invoke_hook(
+                self.bash_payload(self.repo_b, f"cd -- {self.leased} && echo hi"),
+                issue={**self.issue, "metadata": {}},
+            )
+        )["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("metadata.repo is None", reason)
+        self.assertEqual(self.indexed_keys(), ["ctx-1", "handle-1"])
+
     def test_an_entry_naming_a_deleted_directory_falls_back_and_is_pruned(self) -> None:
         """A vanished checkout is not the redirect attempt the test above denies.
 

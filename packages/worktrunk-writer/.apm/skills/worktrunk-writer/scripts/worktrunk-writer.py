@@ -1295,8 +1295,9 @@ def read_binding_index() -> dict[str, dict[str, str]]:
 def write_binding_index(entries: dict[str, dict[str, str]]) -> None:
     path = context_index_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Two hooks fire concurrently often enough that one fixed staging name lets one
-    # process replace the file another is still writing.
+    # A per-process staging name stops one hook replacing a file another is still
+    # writing. It does not make read-modify-write atomic: a prune racing a bind can
+    # still drop the other entry, which degrades that identifier to the cwd fallback.
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     temporary.write_text(json.dumps(entries, indent=2, sort_keys=True))
     temporary.replace(path)
@@ -1332,8 +1333,9 @@ def indexed_state_repo(*identifiers: str | None) -> Path | None:
     """State repo for the first indexed identifier, confirmed against its bead.
 
     The index only points; `metadata.repo` on the activation bead is the authority.
-    Only a readable bead that names a different repo is a redirect, and that alone
-    raises, so a hand-edited entry cannot steer a lease lookup.
+    A readable bead raises unless its `metadata.repo` resolves to the indexed repo.
+    An unstamped bead raises as well: it is readable and declines to confirm, and a
+    cross-check that could not run must not read as one that passed.
 
     An entry the bead cannot confirm is stale rather than hostile: a vanished
     directory is a deleted or moved checkout, and an unreadable bead is a closed,

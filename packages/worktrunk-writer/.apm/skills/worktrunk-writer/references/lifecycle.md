@@ -111,8 +111,9 @@ directory may sit in another. `bind` records the state repo twice:
   and the bead id.
 
 `hook` and `subagent-exit` resolve the state repo through the index, then read
-`metadata.repo` from the named bead. Only a readable bead naming a different repo
-refuses the call, since that is the one case that redirects a lease lookup.
+`metadata.repo` from the named bead. A readable bead refuses the call unless its
+`metadata.repo` resolves to the indexed repo. A bead carrying no `repo` key refuses
+too, because a cross-check that could not run is not a cross-check that passed.
 
 An identifier with no entry resolves the repository that owns the caller's
 working directory. So does an entry the bead cannot confirm: a repo path that no
