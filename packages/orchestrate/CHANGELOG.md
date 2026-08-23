@@ -1,5 +1,29 @@
 # Changelog
 
+## [18.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v17.0.0...orchestrate--v18.0.0) (2026-08-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** the domain-specialist and domain-specialist-high agents are renamed to architect and architect-high. Deployed copies are not pruned by APM and must be deleted by hand.
+* **orchestrate:** retire the activation handshake enforcement
+
+### Features
+
+* **orchestrate:** rename domain-specialist to architect and fix the role contract ([31b5386](https://github.com/srobroek/agentic-packages/commit/31b5386b8f60a4ecab2d9cdbc4739ad0ed737524))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([478022c](https://github.com/srobroek/agentic-packages/commit/478022c3cf7eafbf854602394753ca833260a43d))
+* **orchestrate:** repoint conformance skips and smoke test at the renamed agent ([771bbac](https://github.com/srobroek/agentic-packages/commit/771bbac14508eebf3d03a37ac81c77f5d4a07e1d))
+
+
+### Refactors
+
+* **orchestrate:** drop actor-string guessing from the claim guard ([f814655](https://github.com/srobroek/agentic-packages/commit/f8146553b8a8a349dd69701c03d143de21ae8092))
+* **orchestrate:** retire the activation handshake enforcement ([1193db4](https://github.com/srobroek/agentic-packages/commit/1193db4bbd33d356e2709686a455c08e2299525a))
+
 ## [17.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.5.0...orchestrate--v17.0.0) (2026-08-23)
 
 

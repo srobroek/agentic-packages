@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.1](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v6.1.0...agent-conformance--v6.1.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **orchestrate:** repoint conformance skips and smoke test at the renamed agent ([771bbac](https://github.com/srobroek/agentic-packages/commit/771bbac14508eebf3d03a37ac81c77f5d4a07e1d))
+
 ## [6.1.0](https://github.com/srobroek/agentic-packages/compare/agent-conformance--v6.0.1...agent-conformance--v6.1.0) (2026-08-17)
 
 

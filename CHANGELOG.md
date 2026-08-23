@@ -1,5 +1,21 @@
 # Changelog
 
+## [31.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v30.0.0...srobroek-agentic--v31.0.0) (2026-08-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** the domain-specialist and domain-specialist-high agents are renamed to architect and architect-high. Deployed copies are not pruned by APM and must be deleted by hand.
+
+### Features
+
+* **orchestrate:** rename domain-specialist to architect and fix the role contract ([31b5386](https://github.com/srobroek/agentic-packages/commit/31b5386b8f60a4ecab2d9cdbc4739ad0ed737524))
+
+
+### Documentation
+
+* **scripts:** repoint hook-contract examples off the retired package ([43a9b2e](https://github.com/srobroek/agentic-packages/commit/43a9b2e73fdfa528c1ae8cc558a133310bf170ff))
+
 ## [30.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.3.0...srobroek-agentic--v30.0.0) (2026-08-23)
 
 
