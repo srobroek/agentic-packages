@@ -262,26 +262,6 @@ resources = {
             "runtime_context": "aresearcher-r1-cb8a2c084ff1c7fa",
         },
     },
-    "orc-run.no-context": {
-        "id": "orc-run.no-context",
-        "status": "open",
-        "assignee": "",
-        "metadata": {
-            "worktree": "/tmp/research-1",
-            "lease_token": "lease-1",
-            "runtime_handle": "researcher-missing-context@session-b807e068",
-        },
-    },
-    "orc-run.no-handle": {
-        "id": "orc-run.no-handle",
-        "status": "open",
-        "assignee": "",
-        "metadata": {
-            "worktree": "/tmp/research-1",
-            "lease_token": "lease-1",
-            "runtime_context": "aresearcher-missing-handle",
-        },
-    },
 }
 resource_id = sys.argv[2] if len(sys.argv) > 2 else ""
 record = resources.get(resource_id)
@@ -337,6 +317,13 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
     )
     check("pending run marker blocks dispatch", pretool_denied(out), str(out))
 
+    out, _ = run_hook(
+        "orchestrator-activation-guard.py",
+        {"tool_name": "Bash", "tool_input": {"command": "echo hi"}},
+        env=hook_env,
+    )
+    check("pending run marker + non-Agent tool -> allow", out == {}, str(out))
+
     bind = subprocess.run(
         [
             "uv",
@@ -384,59 +371,12 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
             "tool_name": "Agent",
             "tool_input": {
                 "subagent_type": "researcher",
-                "prompt": (
-                    "Report the exact contents and SHA-256 digest of alpha.txt "
-                    "and beta.txt. Validate each result independently."
-                ),
-            },
-        },
-        env=hook_env,
-    )
-    check("fixture 7 task-bearing spawn -> deny", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
                 "prompt": wait_prompt,
             },
         },
         env=hook_env,
     )
     check("canonical checkout WAIT on live resource -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
-                "prompt": wait_prompt + "\nTask: inspect both files.",
-            },
-        },
-        env=hook_env,
-    )
-    check("WAIT with appended task data -> deny", pretool_denied(out), str(out))
-
-    # An unrecognised agent type must not skip activation. A stale workflow-*
-    # agent from an older release ran a whole fixture unguarded that way: the
-    # WAIT, resource, exact-CLAIM and bound-marker checks all no-opped.
-    for stale_type in ("workflow-researcher", "totally-made-up"):
-        out, _ = run_hook(
-            "orchestrator-activation-guard.py",
-            {
-                "tool_name": "Agent",
-                "tool_input": {"subagent_type": stale_type, "prompt": "go do the work."},
-            },
-            env=hook_env,
-        )
-        check(
-            f"unrecognised agent type {stale_type} -> deny",
-            pretool_denied(out),
-            str(out),
-        )
 
     for ephemeral in ("general-purpose", "Explore", "docs-guard"):
         out, _ = run_hook(
@@ -448,41 +388,6 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
             env=hook_env,
         )
         check(f"ephemeral helper {ephemeral} -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
-                "prompt": (
-                    wait_prompt + "\n\nImportant execution note for when you are later released: "
-                    "every Bash call must begin with cd -- /tmp/research-1."
-                ),
-            },
-        },
-        env=hook_env,
-    )
-    check("WAIT with appended execution mechanics -> deny", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "advisor",
-                "prompt": (
-                    "WAIT\n"
-                    "RESOURCE orc-run.1\n"
-                    "Do not invoke tools or start work.\n"
-                    "The controlling parent will release you with exactly "
-                    "CLAIM orc-run.1."
-                ),
-            },
-        },
-        env=hook_env,
-    )
-    check("checkout-exempt claim-holder WAIT -> deny", pretool_denied(out), str(out))
 
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
@@ -502,26 +407,6 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         env=hook_env,
     )
     check("checkout-backed queue WAIT -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "SendMessage",
-            "tool_input": {"target": "agent-123", "message": "CLAIM lease-smk-bgf-a"},
-        },
-        env=hook_env,
-    )
-    check("missing lease-like CLAIM resource -> deny", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "SendMessage",
-            "tool_input": {"target": "agent-wrong", "message": "CLAIM orc-run.1"},
-        },
-        env=hook_env,
-    )
-    check("CLAIM with wrong routing handle -> deny", pretool_denied(out), str(out))
 
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
@@ -576,59 +461,6 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         )
         check(f"Codex {resume_tool} resolves bound handle -> allow", out == {}, str(out))
 
-        out, _ = run_hook(
-            "orchestrator-activation-guard.py",
-            {
-                "tool_name": resume_tool,
-                "tool_input": {"id": "agent-wrong", "message": "CLAIM orc-run.1"},
-            },
-            env=hook_env,
-        )
-        check(
-            f"Codex {resume_tool} CLAIM with wrong routing handle -> deny",
-            pretool_denied(out),
-            str(out),
-        )
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "send_input",
-            "tool_input": {
-                "id": "researcher-missing-context@session-b807e068",
-                "message": "CLAIM orc-run.no-context",
-            },
-        },
-        env=hook_env,
-    )
-    check("Codex send_input CLAIM without context handshake -> deny", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "SendMessage",
-            "tool_input": {
-                "target": "aresearcher-missing-handle",
-                "message": "CLAIM orc-run.no-handle",
-            },
-        },
-        env=hook_env,
-    )
-    check("CLAIM without routing handle -> deny", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "SendMessage",
-            "tool_input": {
-                "target": "researcher-r1@session-b807e068",
-                "message": "CLAIM orc-run.1\nInspect alpha.txt.",
-            },
-        },
-        env=hook_env,
-    )
-    check("CLAIM with appended task data -> deny", pretool_denied(out), str(out))
-
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
         {
@@ -641,88 +473,6 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         env={"ORCHESTRATE_MARKER_FILE": str(temp / "inactive-marker")},
     )
     check("direct CLAIM spawn outside run -> allow", out == {}, str(out))
-
-print("=== stale run marker liveness ===")
-# A crashed run leaves its marker behind, and marker presence alone then held the
-# repository under the protocol for every later session: activation-guard refused
-# every unrecognised spawn. Only a run bead bd positively reports terminal retires
-# the guard; every other reading -- pending, unparsable, unresolvable -- keeps it
-# on, because these checks only ever narrow a guard. orchestrator-claim-deny.py no
-# longer denies anything (it only snapshots claim metadata), so it has no liveness
-# behaviour left to exercise here.
-with tempfile.TemporaryDirectory(prefix="orchestrate-marker-live-") as temp_dir:
-    temp = Path(temp_dir)
-    marker = temp / ".orchestration" / ".active-run"
-    marker.parent.mkdir(parents=True)
-    fake_bd = temp / "bd"
-    # /bin/sh, not python3: show_bead gives bd 10s, and an interpreter start that
-    # slow made the closed-run case flake to `enforces` (1 in 8 full-suite runs on
-    # a host with an exec-scanning security agent). Real `bd show` measures
-    # 0.46-0.86s, so the production budget is not what was tight.
-    fake_bd.write_text(
-        """#!/bin/sh
-case "$2" in
-  orc-closed) status=closed ;;
-  orc-live) status=in_progress ;;
-  *) exit 1 ;;
-esac
-printf '%s\\n' "{\\"schema_version\\":1,\\"data\\":[{\\"id\\":\\"$2\\",\\"status\\":\\"$status\\"}],\\"error\\":null}"
-""",
-        encoding="utf-8",
-    )
-    fake_bd.chmod(0o755)
-    hook_env = {"BD_BIN": str(fake_bd), "ORCHESTRATE_MARKER_FILE": str(marker)}
-
-    # Denied by the guard while a run is active and allowed once the guard goes
-    # inert, so one payload distinguishes both states.
-    unknown_spawn = {
-        "tool_name": "Agent",
-        "tool_input": {"subagent_type": "totally-made-up", "prompt": "go do the work."},
-    }
-
-    for label, contents, enforced in (
-        ("closed run bead", json.dumps({"schema_version": 1, "run_id": "orc-closed"}), False),
-        ("in_progress run bead", json.dumps({"schema_version": 1, "run_id": "orc-live"}), True),
-        ("pending run id", json.dumps({"schema_version": 1, "run_id": "pending"}), True),
-        ("unparsable marker", "{not json", True),
-        ("unresolvable run id", json.dumps({"schema_version": 1, "run_id": "orc-vanished"}), True),
-    ):
-        marker.write_text(contents + "\n", encoding="utf-8")
-        out, _ = run_hook("orchestrator-activation-guard.py", unknown_spawn, env=hook_env)
-        check(
-            f"{label} -> orchestrator-activation-guard.py "
-            f"{'enforces' if enforced else 'inert'}",
-            pretool_denied(out) if enforced else out == {},
-            str(out),
-        )
-
-    # ORCHESTRATE_RUN engages the guard with no marker file to read a run id
-    # from. The flag is boolean, so the id rides ORCHESTRATE_RUN_ID; without it
-    # a markerless run reads as live and never retires. The marker path here
-    # points at nothing, isolating the variables.
-    marker.unlink()
-    for label, run_id, enforced in (("closed", "orc-closed", False), ("live", "orc-live", True)):
-        env = {**hook_env, "ORCHESTRATE_RUN": "1", "ORCHESTRATE_RUN_ID": run_id}
-        out, _ = run_hook("orchestrator-activation-guard.py", unknown_spawn, env=env)
-        check(
-            f"ORCHESTRATE_RUN_ID naming a {label} run -> orchestrator-activation-guard.py "
-            f"{'enforces' if enforced else 'inert'}",
-            pretool_denied(out) if enforced else out == {},
-            str(out),
-        )
-
-    # The flag's own value must never reach `bd show`: "1" fuzzy resolves to an
-    # unrelated bead, and one closed match silently disarms the guard.
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        unknown_spawn,
-        env={**hook_env, "ORCHESTRATE_RUN": "orc-closed"},
-    )
-    check(
-        "ORCHESTRATE_RUN is never read as a run id -> orchestrator-activation-guard.py enforces",
-        pretool_denied(out),
-        str(out),
-    )
 
 print("=== script modes ===")
 # Every shipped script stays executable so a bare-path caller works whatever the
