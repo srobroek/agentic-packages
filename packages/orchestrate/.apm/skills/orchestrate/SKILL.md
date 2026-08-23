@@ -203,6 +203,7 @@ Role: lead session / orchestrator.
 | `references/message-grammar.md` | per-verb field table + worked example |
 | `references/comms-block.md` | canonical protocol; auto-injected via `SubagentStart`; paste into teammate briefs |
 | `references/beads-store.md` | the state store: epic/node beads, state mapping, git-anchor contract, audit, merge-slot, gates |
+| `references/decisions.md` | cross-boundary `decision` beads, edge-type rendering, duplicate/supersession resolution (read only when a choice leaves one bead's scope) |
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
 | Scripts | `run-status.py` · `scope-check.py` · `discover-agents.py` ·
