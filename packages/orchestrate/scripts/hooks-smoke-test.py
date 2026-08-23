@@ -61,7 +61,7 @@ def pretool_denied(output):
 
 
 print("=== contract-start.py (injector) ===")
-out, _ = run_hook("contract-start.py", {"agent_id": "coder-x", "agent_type": "domain-specialist"})
+out, _ = run_hook("contract-start.py", {"agent_id": "coder-x", "agent_type": "architect"})
 check(
     "subagent with id -> injects contract",
     out.get("hookSpecificOutput", {}).get("additionalContext", "").startswith("Bead contract"),
@@ -602,7 +602,7 @@ check(
 
 checkout_start_contract = "every claude bash input starts with the literal `cd -- <checkout> &&`"
 for name in (
-    "domain-specialist",
+    "architect",
     "researcher",
     "reviewer",
     "advisor",
@@ -640,7 +640,7 @@ check(
     and "remote-side (`gh`, merge-tree probes) - no worktree" not in roles_contract,
 )
 
-with open(os.path.join(AGENTS, "domain-specialist.agent.md")) as fh:
+with open(os.path.join(AGENTS, "architect.agent.md")) as fh:
     specialist = fh.read()
 check(
     "specialist claim sets stable Beads actor",
