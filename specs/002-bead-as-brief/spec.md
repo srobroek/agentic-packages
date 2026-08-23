@@ -18,10 +18,10 @@ An orchestrator operator runs a multi-agent implementation. Every task's instruc
 
 **Why this priority**: This is the foundation every other story builds on; without bead-resident briefs, contracts and wake fallbacks have nothing to validate or recover from.
 
-**Independent Test**: Create a node bead with BRIEF and metadata, allocate an
-agent with the canonical WAIT bootstrap, bind its runtime, activate it with
-only `CLAIM <bead-id>`, kill it mid-task, and verify a replacement continues
-from the last checkpoint without information from the first agent's prompt.
+**Independent Test**: Create a node bead with BRIEF and metadata, stamp its
+`metadata.worktree`, activate an agent with only `CLAIM <bead-id>`, kill it
+mid-task, and verify a replacement continues from the last checkpoint without
+information from the first agent's prompt.
 
 **Acceptance Scenarios**:
 

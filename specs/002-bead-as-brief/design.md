@@ -21,10 +21,11 @@ orc-pyq.
 
 ## Principles
 
-1. **Bead-as-brief.** The bead carries the task. Runtime construction uses the
-   canonical WAIT-only allocation, followed by bind, runtime-context stamping,
-   and a separate `CLAIM <id>` activation. Nodes are crash-resumable,
-   queue-handoffable, and auditable without orchestrator relay.
+1. **Bead-as-brief.** The bead carries the task. Activation is a bare
+   `CLAIM <id>`: the agent reads its scope, base and evidence kind off the bead,
+   and its checkout off `metadata.worktree`. Nothing is bound, acknowledged, or
+   stamped beforehand, so nodes are crash-resumable, queue-handoffable, and
+   auditable without orchestrator relay.
 2. **Claim ⟺ contract.** An actor holding a claim is bound by a completion
    and authority contract, enforced at SubagentStop. An actor without a claim
    has no bead contract. Both directions hold for every agent, known or not.
@@ -467,9 +468,12 @@ One agent definition, parameterized at spawn -- never per-trade definitions.
 - **Delegation-first:** keep work that depends on accumulated domain context;
   delegate work whose volume would displace that context.
 - **Children:** prompt-briefed and one-shot. They edit only inside the
-  specialist's prepared Worktrunk checkout after the specialist binds each
-  returned child ID to its path/actor/lease. They never claim, touch
-  Beads/PRs/pushes, or manage worktrees. None survives its node.
+  architect's checkout, which the architect reads from its own bead's
+  `metadata.worktree`; a child gets no allocation of its own, so there is
+  nothing to hand back and nothing to bind. The brief names the exact files the
+  child owns, because a child cannot see its siblings and file ownership is only
+  as real as the brief that states it. They never claim, touch Beads/PRs/pushes,
+  or manage worktrees. None survives its node.
 - **Parallelism:** more simultaneous nodes in one domain than a serial
   specialist can pipeline → T0 spawns `<role>-<domain>-2`. Never
   sub-specialists: only T0 creates claim-holders; a domain that seems to need
