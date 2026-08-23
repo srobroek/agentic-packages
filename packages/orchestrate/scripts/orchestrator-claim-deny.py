@@ -5,9 +5,9 @@
 # ///
 """PreToolUse hook — claim baseline snapshot (run-marker gated).
 
-T0 never claiming beads is now enforced by bd itself: worktrunk-writer's
-assert_bead_authority/assert_bead_claim deny a write whose target checkout's
-Worktrunk `bead` var does not resolve back to the claiming assignee. Guessing
+T0 never claiming beads is now enforced by the bead claim itself: a write is
+authorised by the claim on the bead whose `metadata.worktree` names the target
+checkout, cross-checked against that checkout's Worktrunk `bead` var. Guessing
 the actor from BEADS_ACTOR/BD_ACTOR shell text was this hook's own enforcement
 before that landed, and it is redundant now, so it is gone.
 

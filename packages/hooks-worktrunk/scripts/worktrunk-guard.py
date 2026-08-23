@@ -616,8 +616,7 @@ def worktrunk_enforceable(payload: object) -> bool:
     """Whether this environment can act on the guidance the guard would give.
 
     Denying `git worktree` where `wt` is absent, or outside a work tree, is a hard
-    stall: the caller has no route to the suggested command. Mirrors the gates in
-    worktrunk-writer.py's `hook`. Behaviour is unchanged wherever both are present.
+    stall: the caller has no route to the suggested command.
     """
     if shutil.which("wt") is None:
         return False

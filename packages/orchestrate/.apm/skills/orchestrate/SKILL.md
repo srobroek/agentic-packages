@@ -157,12 +157,9 @@ Role: lead session / orchestrator.
    then stamp the node's bead id on that branch with `wt config state vars
    set bead <bead-id> --branch <branch>`. Write the complete BRIEF and stamp
    `branch` and canonical `worktree` (as `metadata.worktree`) on the unclaimed
-   node, then read them back. Spawn with only the
-   canonical WAIT bootstrap; do not put CLAIM in the Agent prompt. Record the
-   parent-visible handle, require its exact `WAIT context={id}`
-   acknowledgement, and bind both values. Stamp and read back
-   `runtime_handle` and `runtime_context`, then send a separate exact
-   `CLAIM {node-id}` message to `runtime_handle`. The role definition owns
+   node, then read them back. Spawn with `CLAIM {node-id}` as the whole prompt:
+   the bead already carries the task, the scope and the checkout, so there is
+   nothing to acknowledge and no runtime id to bind. The role definition owns
    claim and validation.
    A BOUNCE invalidates that attempt: repair the envelope and redispatch from
    durable state; never continue or close the bounced actor by manual
