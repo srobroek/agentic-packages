@@ -39,6 +39,7 @@ includes:
   - .apm/skills/orchestrate/scripts/msg-lint.py
   - .apm/skills/orchestrate/scripts/pull-worker.py
   - .apm/skills/orchestrate/scripts/resolve-queue-dispatch.py
+  - .apm/skills/orchestrate/scripts/run-status.py
   - .apm/skills/orchestrate/scripts/scope-check.py
   - .apm/skills/orchestrate/scripts/thread-message.py
   - .apm/skills/orchestrate/scripts/worktree-sweep.sh

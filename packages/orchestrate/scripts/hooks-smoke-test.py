@@ -726,7 +726,7 @@ print("=== stale run marker liveness ===")
 # repository under the protocol for every later session: claim-deny refused every
 # `bd ... --claim`, activation-guard refused every unrecognised spawn. Only a run
 # bead bd positively reports terminal retires the guards; every other reading --
-# pending, unparseable, unresolvable -- keeps them on, because these checks only
+# pending, unparsable, unresolvable -- keeps them on, because these checks only
 # ever narrow a guard.
 with tempfile.TemporaryDirectory(prefix="orchestrate-marker-live-") as temp_dir:
     temp = Path(temp_dir)
@@ -765,7 +765,7 @@ printf '%s\\n' "{\\"schema_version\\":1,\\"data\\":[{\\"id\\":\\"$2\\",\\"status
         ("closed run bead", json.dumps({"schema_version": 1, "run_id": "orc-closed"}), False),
         ("in_progress run bead", json.dumps({"schema_version": 1, "run_id": "orc-live"}), True),
         ("pending run id", json.dumps({"schema_version": 1, "run_id": "pending"}), True),
-        ("unparseable marker", "{not json", True),
+        ("unparsable marker", "{not json", True),
         ("unresolvable run id", json.dumps({"schema_version": 1, "run_id": "orc-vanished"}), True),
     ):
         marker.write_text(contents + "\n", encoding="utf-8")

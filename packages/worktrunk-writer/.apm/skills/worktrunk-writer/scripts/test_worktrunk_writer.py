@@ -384,7 +384,7 @@ class BeadsConflictTests(unittest.TestCase):
             ["merge-2"],
         )
 
-    def test_unparseable_string_is_not_an_exemption(self) -> None:
+    def test_unparsable_string_is_not_an_exemption(self) -> None:
         self.assertEqual(
             self._conflicts(
                 [
@@ -2192,7 +2192,7 @@ class MarkerLivenessTests(unittest.TestCase):
     def test_pending_marker_is_live(self) -> None:
         self.assertTrue(self.live('{"run_id": "pending"}'))
 
-    def test_unparseable_marker_is_live(self) -> None:
+    def test_unparsable_marker_is_live(self) -> None:
         self.assertTrue(self.live("not json at all"))
 
     def test_absent_task_system_is_live(self) -> None:
@@ -2363,7 +2363,7 @@ class SubagentExitTests(unittest.TestCase):
             with patch("sys.stdin", io.StringIO(json.dumps({"agent_id": "ctx-1"}))):
                 self.assertEqual(MODULE.subagent_exit(), 0)
 
-    def test_unparseable_stdin_exits_clean(self) -> None:
+    def test_unparsable_stdin_exits_clean(self) -> None:
         with patch("sys.stdin", io.StringIO("not json")):
             self.assertEqual(MODULE.subagent_exit(), 0)
 

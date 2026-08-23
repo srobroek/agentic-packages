@@ -1198,7 +1198,7 @@ def marker_run_live(cwd: Path, marker: Path) -> bool:
     """Whether the marker names a run that is still going.
 
     A crashed run leaves its marker behind, and a stale marker used to hold the
-    repository under the protocol indefinitely. Unreadable marker, unparseable
+    repository under the protocol indefinitely. Unreadable marker, unparsable
     run id, or an absent task system all read as live: this narrows a guard, so
     every uncertainty resolves toward keeping it on.
     """

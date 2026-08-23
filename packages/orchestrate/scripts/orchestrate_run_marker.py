@@ -16,7 +16,7 @@ denial is these guards' only effect, so gating the emission makes a dead run
 inert on every path at once, including ones added later.
 
 Every uncertainty resolves toward live, because these functions only ever narrow
-a guard. An unreadable or unparseable marker, an absent run id, the `pending`
+a guard. An unreadable or unparsable marker, an absent run id, the `pending`
 sentinel that orchestrator-run-activate.py writes before the run epic exists, and
 an unreachable or absent bd all read as live. A run is dead only when bd
 positively reports its run bead terminal.
