@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree--v3.1.0...hooks-subagent-worktree--v3.1.1) (2026-08-23)
+
+
+### Performance
+
+* **hooks:** stop steering read-only worktree inspection through wt ([ae2e51a](https://github.com/srobroek/agentic-packages/commit/ae2e51a30904809dbdcd30a9e8732b1958bb140c))
+
 ## [3.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-subagent-worktree--v3.0.2...hooks-subagent-worktree--v3.1.0) (2026-08-17)
 
 

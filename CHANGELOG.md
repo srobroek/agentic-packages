@@ -1,5 +1,23 @@
 # Changelog
 
+## [30.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.3.0...srobroek-agentic--v30.0.0) (2026-08-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the worktrunk-writer package no longer exists. Installs depending on it must drop the dependency; its PREPARE/WAIT/BIND handshake and lease vars are gone, and write authority now comes from holding the bead claim.
+
+### Features
+
+* retire the worktrunk-writer package ([69fc797](https://github.com/srobroek/agentic-packages/commit/69fc7976959be768dea35f38bcbde318af253d2d))
+* validate permissionMode against the legal modes ([9db28af](https://github.com/srobroek/agentic-packages/commit/9db28afa7840fa730b02e6cdb1fb221a00d19d49))
+
+
+### Bug Fixes
+
+* **orchestrate:** carry the run id in its own variable, not the arm flag ([2baad2a](https://github.com/srobroek/agentic-packages/commit/2baad2a182ccc704d7d69948cacb8a8668353569))
+* rule 1 no longer passes vacuously on a set-membership tool gate ([fa2e33c](https://github.com/srobroek/agentic-packages/commit/fa2e33ccb8f0a0496753c66f5521d5cf2f3e3952))
+
 ## [29.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.2.1...srobroek-agentic--v29.3.0) (2026-08-23)
 
 
