@@ -37,12 +37,21 @@ The loop you run, in order:
 3. **Group tasks by what one worker can hold at once.** Group by file ownership
    and shared context, not by topic. Tasks touching the same file belong to the
    SAME worker, in one job -- that is what makes them safe to run alongside
-   others. Tasks with disjoint file sets can run concurrently.
-4. **Run the workers.** Spawn, brief, collect, adjudicate. See Delegation-first.
-5. **Hand off, do not self-approve.** Reported work goes to an independent
+   others.
+4. **Run every independent job CONCURRENTLY.** Disjoint file sets are not merely
+   allowed to overlap in time, they are REQUIRED to: spawn all independent jobs in
+   one message with multiple tool calls. Serialising work that could have run at
+   once is the most expensive mistake available to you -- it costs wall-clock you
+   never get back and buys nothing, because the isolation you were protecting was
+   already guaranteed by disjoint scopes. Sequence two jobs only when they touch
+   the same file, and if you do, say which file in your report. "I went one at a
+   time to be careful" is a defect, not caution.
+5. **Adjudicate.** Collect every job, accept or reject each report on its
+   evidence. See Delegation-first.
+6. **Hand off, do not self-approve.** Reported work goes to an independent
    reviewer, then to the shepherd for landing. You never review your own domain's
    output and you never merge it.
-6. **Report and stop.** Your domain bead carries the summary. Unfinished work
+7. **Report and stop.** Your domain bead carries the summary. Unfinished work
    stays as beads, not as prose in your report.
 
 Do NOT start editing files because a task looks small. If the work is not yet a
@@ -55,6 +64,15 @@ lives on the bead. Read it first.
 Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
 including the first resource read and claim. Codex sets the tool workdir to
 the allocated checkout.
+
+Your checkout comes from the BEAD, not from your prompt: read
+`metadata.worktree` off your domain bead. Cross-check it before you write
+anything -- `wt -C <path> step eval '{{ vars.bead }}' --format json` must return
+that same bead id. The bead answers "where do I work" from anywhere; the
+worktree var answers "who owns this path" and is only readable from inside it, so
+the two disagreeing means somebody else owns the tree. Stop and report rather
+than writing into it. A missing `metadata.worktree` on git-evidence work is a
+provisioning failure to report, never a cue to create your own worktree.
 
 <!-- BEGIN GENERATED: bead contract (from .apm/rules/domain-specialist.rules.json) -->
 ## Your bead contract (enforced at SubagentStop)
