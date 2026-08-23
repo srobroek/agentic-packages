@@ -1,35 +1,34 @@
 # Planning and pluggable frameworks
 
-You (the orchestrator) always own the **high-level** plan. How the work is
-decomposed into executable units is **pluggable**: use an external framework when
-the project already has one, otherwise build the default runtime DAG.
+You (the orchestrator) own the high-level plan. The decomposition into executable
+units is pluggable. Use an external framework when the project has one. Otherwise
+build the default runtime DAG.
 
-Owning the plan means owning the **decisions and the graph**, not doing the deep
+Owning the plan means owning the decisions and the graph, not doing the deep
 reading yourself. Push codebase exploration and any large planning pass to
-read-only agents (`Explore`, `Plan`) and keep only their conclusions -- the
+read-only agents (`Explore`, `Plan`) and keep only their conclusions. The
 orchestrator stays lean so its context lasts the whole run.
 
 ## Decide the planning system
 
-- **External framework in play (SpecKit or similar):** be aware of it and delegate
-  the actual **speccing** to its own commands and agents (the `speckit-*` skills
-  its extensions install, plus the `speckit-verify` and `speckit-sync` agents).
-  Use *that* system's graph/tasks as the unit
-  of work and **skip the default decomposition below**. A beads-managed SpecKit
-  molecule already IS a dependency-aware run DAG --
-  label its step beads `orc-node` and add `scope` metadata rather than building
-  a second graph on top (`references/beads-store.md`). Questions the spec agents
-  raise during speccing/grilling bubble to you as `ASK` and then to the user.
+- **External framework in play (SpecKit or similar):** delegate the speccing to
+  its own commands and agents: the `speckit-*` skills its extensions install, plus
+  the `speckit-verify` and `speckit-sync` agents. Take that system's tasks as the
+  unit of work and skip the default decomposition below. A beads-managed SpecKit
+  molecule is already a dependency-aware run DAG. Label its step beads `orc-node`
+  and add `scope` metadata rather than building a second graph on top
+  (`references/beads-store.md`). Questions the spec agents raise bubble to you as
+  `ASK` and then to the user.
 - **No framework:** build the default runtime DAG as node beads under the run
   epic (below).
-- **Work spanning >3 tasks with cross-cutting deps, or an unfamiliar subsystem:**
-  delegate a deep planning pass to the read-only `Plan` agent before committing
-  the decomposition; you still own the final graph.
+- **Work spanning more than three tasks with cross-cutting deps, or an unfamiliar
+  subsystem:** delegate a deep planning pass to the read-only `Plan` agent before
+  committing the decomposition. You still own the final graph.
 
 ## Default DAG decomposition
 
-The DAG is per-project and runtime-mutable -- you add nodes/edges and agents update
-state live. It is NOT a static authored graph.
+The DAG is per-project and runtime-mutable. You add nodes and edges, and agents
+update state live. It is not a static authored graph.
 
 1. Split the work into tasks small enough for one worker. Give every task a
    disjoint `scope`: tracked-file globs for git work, or canonical artifact and
@@ -46,44 +45,43 @@ state live. It is NOT a static authored graph.
 
 ## Routing envelope
 
-Write the route before dispatch so recovery never has to infer it from prose.
+Before dispatch, write the route, so recovery never has to infer it from prose.
 
 | Field | Value |
 |---|---|
-| `scope` metadata | owned tracked-file globs or canonical non-git resource prefixes; never empty |
-| `execution_task_kind` metadata | stable routing kind such as `code`, `docs`, `research`, `review`, or `operations` |
-| `execution_capabilities` metadata | JSON list of required capability slugs |
-| `cap:<slug>` labels | one label per required capability; mirrors the metadata for queue admission |
+| `scope` metadata | owned tracked-file globs or canonical non-git resource prefixes. Never empty |
+| `execution_task_kind` metadata | stable routing kind: `code`, `docs`, `research`, `review`, `operations` |
 | `execution_kind` metadata | `git`, `artifact`, `comment`, or `external` |
-| `execution_agent` metadata | selected agent type when directed; absent before generic pull |
+| `execution_agent` metadata | selected agent type when directed. Absent while the bead waits in a queue |
 | `execution_dispatch` metadata | `explicit`, `specialist`, or `generic` |
-| `agent:<queue>` label | compatible generic queue; absent from directed work |
+| `orc-node` label | run-DAG membership. Every ready query filters on it |
+| `agent:<queue>` label | compatible generic queue. Absent from directed work |
 
 `execution_kind=git` means tracked files change, even when the task is
-documentation or configuration. It requires commit, push, and shepherd
-integration through the Worktrunk writer contract. Other evidence modes require
-an `output_ref` or verifiable external-state reference and never require an
-empty commit.
+documentation or configuration. It needs commit, `push` metadata, and shepherd
+integration through the Worktrunk writer contract. `push` is metadata in every
+role rules file and has no label form. Other evidence modes need an `output_ref`
+or verifiable external-state reference, never an empty commit.
 
 ## Dispatch ready work
 
 Apply one route only, in this order:
 
 1. **Explicit actor:** a bead with an assignee goes only to that actor. Confirm
-   its declared task kinds, capabilities, access, and scope are compatible,
-   then send only `CLAIM {bead-id}`. An incompatible explicit assignment
-   remains pinned and unclaimed. Automatic correction may update only
-   evidence-backed routing-envelope fields; it never changes the assignee. An
-   actor change requires explicit release/requeue or coordinator/human
-   reassignment under the handoff and dead-claim recovery contracts.
+   its `execution_task_kind`, `execution_kind`, and `scope` are compatible, then
+   send only `CLAIM {bead-id}`. An incompatible explicit assignment remains pinned
+   and unclaimed. Automatic correction may update only evidence-backed envelope
+   fields. It never changes the assignee. An actor change needs an explicit release
+   or requeue, or a coordinator reassignment under the recovery contracts.
 2. **Specialist:** for an unassigned bead, choose the narrowest catalogued
-   specialist whose task kinds and capabilities cover the routing envelope.
-   Stamp its actor before sending only `CLAIM {bead-id}`.
-3. **Generic pull:** use only when no compatible specialist is selected. Admit
-   the bead to one `agent:<queue>` whose declared task kinds and capabilities
-   cover every requirement. Leave it unassigned.
+   specialist that handles its `execution_task_kind` and `execution_kind`. Stamp
+   `actor`, `execution_agent`, and `execution_dispatch=specialist` before sending
+   only `CLAIM {bead-id}`.
+3. **Queue:** use only when no specialist is selected. Add one `agent:<queue>`
+   label with `bd update <id> --add-label agent:<queue>`, stamp
+   `execution_dispatch=generic`, and leave the bead unassigned.
 
-A generic worker claims the first ready bead in its admitted queue atomically:
+A queue actor claims the first-ready bead in its admitted queue atomically:
 
 ```
 bd ready --parent <epic> --label orc-node --label agent:<queue> \
@@ -92,42 +90,38 @@ bd ready --parent <epic> --label orc-node --label agent:<queue> \
   --claim --json
 ```
 
-The worker accepts the bead returned by `--claim`; it never lists candidates
-and cherry-picks one. Spawn or wake a pull worker only for queues with observed
-ready work. One activation owns at most one node and cannot claim another until
-the first node is terminal. An empty result after a claim race changes no bead.
+The actor accepts the bead returned by `--claim`. It never lists candidates and
+cherry-picks one. Spawn or wake a queue actor only for queues with observed ready
+work. One activation owns at most one node and cannot claim another until the
+first node is terminal. After a claim race, an empty result changes no bead.
 
-Pull is command-on-wake and requires only Beads 1.1.0 plus the agent harness;
-it does not require Gas Town, a lease service, a poll loop, or a daemon.
-
-The coordinator removes or changes `agent:<queue>` only while the bead is
-unassigned. A capability mismatch discovered after claim is a routing defect:
-the worker does no task work, records the mismatch, and sends `BLOCKED
-kind:design` so the coordinator can repair the route.
+While a bead stays unassigned, the coordinator may add, remove, or change its
+`agent:<queue>`. A routing envelope the actor cannot satisfy is a routing defect:
+it does no task work, records the mismatch, and sends `BLOCKED kind:design` so the
+coordinator can repair the route.
 
 ## Merge order is not encoded
 
-Do not encode merge order in the graph -- you cannot predict which coders finish
+Do not encode merge order in the graph. You cannot predict which coders finish
 when. Approved branches integrate under the exclusive merge slot
-(`bd merge-slot acquire` without `--wait`); a held slot is advisory, so report
-the holder, defer, and retry. Order follows successful acquisition, not a queue
-or FIFO guarantee. Integrations remain conflict-guarded
-by the shepherd (`conflict-probe.sh`). The graph expresses *dependencies* (what
-must happen before what), not *integration sequence*.
+(`bd merge-slot acquire` without `--wait`). A held slot is advisory, so report the
+holder and retry later. Order follows successful acquisition, not a queue or FIFO
+guarantee. The shepherd conflict-guards every integration
+(`conflict-probe.sh`). The graph expresses dependencies, not integration sequence.
 
 For GitHub-backed runs, `release-queue-watch` priority affects which eligible
 PR readiness hint arrives first. It does not rewrite the DAG or reserve the
-merge slot. The orchestrator admits only an exact existing approved node, and
-the shepherd's slot waiters remain the integration order after admission.
+merge slot. The orchestrator admits only an exact existing approved node. After
+admission, the shepherd's slot waiters remain the integration order.
 
 ## Scope hygiene
 
-Good scopes are the single most important planning decision:
+Scope choice decides whether nodes can run concurrently:
 - Prefer directory-level ownership (`src/auth/**`) over scattering one node across
   many trees.
-- If two tasks must touch the same file, they are not concurrent -- give one a
+- If two tasks must touch the same file, they are not concurrent. Give one a
   dependency on the other (`bd dep add`) so the ready front serializes them.
-- Shared contracts/interfaces that several nodes depend on should be their own
+- A shared contract or interface that two or more nodes depend on must be its own
   early node that the others depend on.
 - Artifact-only and external-state scopes use stable prefixes such as
   `artifact:/abs/path` or `external:<system>/<resource>` so overlap is checked
