@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.2.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.2.0...srobroek-agentic--v29.2.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* stop refusing agent exits over metadata the orchestrator set before the claim ([#879](https://github.com/srobroek/agentic-packages/issues/879)) ([2376a30](https://github.com/srobroek/agentic-packages/commit/2376a3021672dee2d8cae654cb7bcac1e5a7a742))
+
 ## [29.2.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.1.3...srobroek-agentic--v29.2.0) (2026-08-22)
 
 

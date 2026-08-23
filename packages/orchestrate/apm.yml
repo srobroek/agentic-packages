@@ -1,5 +1,5 @@
 name: orchestrate
-version: 16.3.2
+version: 16.4.0
 description: >-
   Coordinates parallel subagents through Beads-backed DAGs, claims, threaded
   replies, decisions, review, and merge state. Supports exact, specialist,

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.3.1...worktrunk-writer--v2.3.2) (2026-08-23)
+
+
+### Bug Fixes
+
+* worktrunk writer leases stay enforced when the agent works in another repository ([#884](https://github.com/srobroek/agentic-packages/issues/884)) ([0aacca8](https://github.com/srobroek/agentic-packages/commit/0aacca8cfbd551b75cecb96331185a652e9e8ff8))
+
 ## [2.3.1](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.3.0...worktrunk-writer--v2.3.1) (2026-08-22)
 
 
