@@ -286,7 +286,7 @@
     {
       "name": "core",
       "description": "Baseline bundle for any repo: layers the project-lifecycle, code-intelligence, and agentic-maintenance sub-bundles, plus resume-session and the Matt Pocock grill workflows.",
-      "version": "20.4.0",
+      "version": "20.4.1",
       "tags": [
         "bundle",
         "baseline"
@@ -544,7 +544,7 @@
     {
       "name": "hooks-subagent-worktree",
       "description": "Non-blocking worktree-isolation advisory on every subagent spawn. A PreToolUse:Agent hook injects a short reminder -- if the subagent WRITES files and runs in parallel with other writers, pass `isolation:\"worktree\"` (Claude branches it from your current HEAD); a read-only, different-repo, or lone-writer subagent needs none -- and if it does run isolated, to COMMIT before finishing so the worktree branch retains the work. It NEVER denies a spawn (superseding the 1.x deny-gate, which guessed wrong and blocked legitimate work) and stays silent once isolation is already declared. Claude-only (the Agent spawn tool is Claude-specific); the Codex variant is a no-op. Requires python3 on PATH.",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "tags": [
         "hooks",
         "worktree",
@@ -558,7 +558,7 @@
     {
       "name": "hooks-worktrunk",
       "description": "Enforces Worktrunk as the worktree-management interface for Claude and Codex. A cross-runtime PreToolUse guard denies direct git worktree and gh pr checkout commands with the equivalent wt command, a PreToolUse:Agent guard denies harness isolation:\"worktree\" in favor of a parent-prepared checkout, and Claude-only WorktreeCreate/WorktreeRemove handlers route the native worktree lifecycle through wt. A SessionStart sweep reports Worktrunk worktrees that are abandoned -- clean, fully pushed, and untouched for weeks -- and reclaims their git-ignored build output; it never removes a worktree or branch, leaving that to `wt remove`, which already refuses an unmerged branch. Steering and config templates cover official plugins, agent checkout isolation, lifecycle hook ownership, repository-scoped build targets, copy-ignored warm starts, deterministic dev-server ports, aliases, and LLM commit generation.",
-      "version": "4.1.0",
+      "version": "4.1.1",
       "tags": [
         "hooks",
         "worktrunk",
@@ -776,7 +776,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "16.5.0",
+      "version": "17.0.0",
       "tags": [
         "skill",
         "agent",
@@ -811,7 +811,7 @@
     {
       "name": "pr-shepherd",
       "description": "Cross-session PR shepherd with beads as its durable state store. It validates exact check and head identity, honors persisted merge-slot order, merges with an atomic head guard, proves exact content on the final landing branch, and reconciles partial bounce writes through durable receipts. Stacked PRs remain open after their intermediate merge until their content reaches the landing branch. On a base with a GitHub merge queue it records the enqueue, proves the landing on a later pass, and bounces an ejection instead of reporting a merge. The skill and standalone agent optionally consume release-queue-watch records with crash-replay receipts. Requires bd, gh, git, and jq; inert in repositories without .beads/.",
-      "version": "6.4.0",
+      "version": "6.4.1",
       "tags": [
         "beads",
         "merge-queue",
