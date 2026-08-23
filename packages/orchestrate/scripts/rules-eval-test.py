@@ -554,6 +554,141 @@ for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "run
         failed += 1
         print(f"  FAIL spawn-brief anchor {_key} is not exempt")
 
+
+# deny_metadata compares against the claim-time snapshot: the shepherd stamps
+# metadata.pr on a node the specialist then re-claims for a review round, and
+# presence alone made every later exit unreachable (astro-plan-indxl).
+def _pr_node(baseline: dict | None, pr: str = "https://x/pull/1"):
+    metadata = {
+        "execution_kind": "git",
+        "branch": "node-pr",
+        "push": "abc123",
+        "pr": pr,
+    }
+    if baseline is not None:
+        metadata[MODULE.CLAIM_BASELINE_KEY] = json.dumps(baseline)
+    return bead(
+        id="tpr",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata=metadata,
+        comments=[{"text": "BRIEF do the thing"}, {"text": "REPORTED done, verified"}],
+    )
+
+
+run(
+    "denied key unchanged since the claim does not block",
+    "allow",
+    _pr_node({"pr": "https://x/pull/1", "branch": "node-pr"}),
+)
+run(
+    "the claiming role changing a denied key still blocks",
+    "block",
+    _pr_node({"pr": "https://x/pull/0", "branch": "node-pr"}),
+)
+run(
+    "the claiming role introducing a denied key still blocks",
+    "block",
+    _pr_node({"branch": "node-pr"}),
+)
+run(
+    "no snapshot falls back to presence",
+    "block",
+    _pr_node(None),
+)
+
+print("=== linked comment hydration ===")
+
+
+def _hydrate(bead_payload):
+    """Run hydrate_comments against a stub bd exposing one link of each edge type."""
+
+    def stub_bd_json(*args):
+        if args[0] == "comments":
+            if args[1] == "node-1":
+                return [{"text": "ASSIGN node-1"}]
+            if args[1] == "msg-1":
+                return [{"text": "REPORTED node-1 self-sent"}]
+            return [{"text": "REVIEW node-1 verdict:approve"}]
+        return {
+            "id": "node-1",
+            "dependencies": [
+                {"id": "wisp-1", "dependency_type": "relates-to"},
+                {"id": "msg-1", "dependency_type": "replies-to"},
+            ],
+            "dependents": None,
+        }
+
+    MODULE.bd_json = stub_bd_json
+    try:
+        MODULE.hydrate_comments(bead_payload)
+    finally:
+        MODULE.bd_json = original_bd_json
+    return bead_payload
+
+
+for _name, _kind in (
+    ("an ordinary node bead", {}),
+    ("an execution_kind resource", {"execution_kind": "review"}),
+):
+    _hydrated = _hydrate(bead(id="node-1", metadata=dict(_kind)))
+    if MODULE._linked_comment_verbs(_hydrated) == ["REVIEW"]:
+        passed += 1
+        print(f"  ok   relates-to comments hydrate for {_name}, replies-to excluded")
+    else:
+        failed += 1
+        print(f"  FAIL linked comments hydrate for {_name} -> {_hydrated.get('linked_comments')!r}")
+
+_hydrated = _hydrate(bead(id="node-1", ephemeral=True))
+if MODULE._linked_comment_verbs(_hydrated) == ["REPORTED", "REVIEW"]:
+    passed += 1
+    print("  ok   a wisp still hydrates its replies-to thread")
+else:
+    failed += 1
+    print(f"  FAIL wisp replies-to hydration -> {_hydrated.get('linked_comments')!r}")
+
+print("=== hydration and claim-baseline compose ===")
+
+_REVIEW_BASELINE = {"pr": "https://x/pull/1", "branch": "node-1"}
+
+
+def _reclaimed_review_node(pr: str):
+    """A reviewer-claimed orc-node whose exit needs both behaviours at once.
+
+    The verdict lives on a relates-to wisp, reachable only once hydration
+    covers non-wisp beads, and metadata.pr was stamped by the shepherd before
+    the claim, so it must match the baseline instead of counting as a write.
+    """
+    return _hydrate(
+        bead(
+            id="node-1",
+            status="in_progress",
+            labels=["orc-node", "agent:reviewer"],
+            metadata={
+                "execution_kind": "review",
+                "branch": "node-1",
+                "pr": pr,
+                MODULE.CLAIM_BASELINE_KEY: json.dumps(_REVIEW_BASELINE),
+            },
+        )
+    )
+
+
+run(
+    "node hydrates its verdict and keeps stamped pr",
+    "allow",
+    _reclaimed_review_node("https://x/pull/1"),
+    agent_type="reviewer",
+    rules_file=REVIEWER,
+)
+run(
+    "the same node blocks when it rewrote pr",
+    "block",
+    _reclaimed_review_node("https://x/pull/2"),
+    agent_type="reviewer",
+    rules_file=REVIEWER,
+)
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

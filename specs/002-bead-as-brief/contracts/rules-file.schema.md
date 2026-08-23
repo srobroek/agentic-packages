@@ -20,7 +20,9 @@ completion:
 # runtime intercepts; defense-in-depth only)
 authority:
   deny_states: [<state>, ...]       # states this agent may never set
-  deny_metadata: [<key>, ...]       # keys this agent may never write
+  deny_metadata: [<key>, ...]       # keys this agent may never write or change;
+                                    # a value already present at claim time is
+                                    # not a violation
   deny_labels: [<glob>, ...]        # label writes this agent may never do
 
 # Unconditional exit — always allowed regardless of checklist

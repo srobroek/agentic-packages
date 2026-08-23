@@ -11,6 +11,11 @@
           },
           {
             "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/pr-merge-bead-guard.py",
+            "statusMessage": "Checking the merge bead for this branch..."
+          },
+          {
+            "type": "command",
             "command": "${PLUGIN_ROOT}/scripts/beads-sync-stage.py",
             "statusMessage": "Staging beads JSONL for commit..."
           }

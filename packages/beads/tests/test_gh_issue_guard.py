@@ -76,6 +76,11 @@ def run_guard(command: str, workspace: dict) -> tuple[int, str | None, str]:
         pytest.param("x=$(gh issue create --title y)", id="inside-a-substitution"),
         pytest.param("(gh issue close 5)", id="inside-a-subshell"),
         pytest.param("/opt/homebrew/bin/gh issue close 5", id="by-absolute-path"),
+        # A flag before the subcommand shifts the operand window: unless the value
+        # of `-R` is skipped, `acme/widget` reads as the command group.
+        pytest.param("gh -R acme/widget issue close 42", id="behind-a-repo-flag"),
+        pytest.param("gh --repo acme/widget issue close 42", id="behind-a-long-repo-flag"),
+        pytest.param("gh --repo=acme/widget issue close 42", id="behind-an-attached-value"),
     ],
 )
 def test_a_mutating_issue_command_is_denied(command: str, workspace: dict) -> None:
