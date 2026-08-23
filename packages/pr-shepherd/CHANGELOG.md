@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.4.0...pr-shepherd--v6.4.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([0c128c3](https://github.com/srobroek/agentic-packages/commit/0c128c39df0c8dda392cadd349c5eb40109c50c0))
+
 ## [6.4.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.3.0...pr-shepherd--v6.4.0) (2026-08-23)
 
 

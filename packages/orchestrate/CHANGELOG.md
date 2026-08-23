@@ -1,5 +1,31 @@
 # Changelog
 
+## [17.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.5.0...orchestrate--v17.0.0) (2026-08-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* the worktrunk-writer package no longer exists. Installs depending on it must drop the dependency; its PREPARE/WAIT/BIND handshake and lease vars are gone, and write authority now comes from holding the bead claim.
+* **orchestrate:** the PreToolUse:Agent activation guard no longer ships. Callers relying on it to reject a task-bearing spawn get no denial; enforce through the bead claim instead.
+
+### Features
+
+* retire the worktrunk-writer package ([69fc797](https://github.com/srobroek/agentic-packages/commit/69fc7976959be768dea35f38bcbde318af253d2d))
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([0c128c3](https://github.com/srobroek/agentic-packages/commit/0c128c39df0c8dda392cadd349c5eb40109c50c0))
+* **orchestrate:** an architect inherits state, and a child needs no lease handshake ([13f9a8a](https://github.com/srobroek/agentic-packages/commit/13f9a8a5e08b466ecf1d141fd751eed91ab24c48))
+* **orchestrate:** bound the rules-eval read phase and match Codex resume tools ([8d08c26](https://github.com/srobroek/agentic-packages/commit/8d08c266403604c380a838ef81a3d317f937a93a))
+* **orchestrate:** carry the run id in its own variable, not the arm flag ([2baad2a](https://github.com/srobroek/agentic-packages/commit/2baad2a182ccc704d7d69948cacb8a8668353569))
+* **orchestrate:** compare globs when scope prefixes are equal ([e9d1911](https://github.com/srobroek/agentic-packages/commit/e9d191187dac482c62fb9d8c9d788f62a114c6b2))
+* **orchestrate:** say what a child does, not what a hook might advise ([5c24507](https://github.com/srobroek/agentic-packages/commit/5c24507890319b14729a17b6dbde312d14098431))
+* **orchestrate:** ship the formula library the pack contract declares ([2bccf69](https://github.com/srobroek/agentic-packages/commit/2bccf69a8cfd8967a198b9c36886851d8956d316))
+* **orchestrate:** state inherited work as normal, not as a mess to expect ([d84f32f](https://github.com/srobroek/agentic-packages/commit/d84f32f9aef2220cd75ad1525b26f34944e74898))
+* **orchestrate:** stop denying direct spawns of named agents ([eb4dff8](https://github.com/srobroek/agentic-packages/commit/eb4dff88d87ae9f0904ad555bfd54cdc27af819a))
+* rule 1 no longer passes vacuously on a set-membership tool gate ([fa2e33c](https://github.com/srobroek/agentic-packages/commit/fa2e33ccb8f0a0496753c66f5521d5cf2f3e3952))
+
 ## [16.5.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.4.0...orchestrate--v16.5.0) (2026-08-23)
 
 
