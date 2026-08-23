@@ -1227,20 +1227,6 @@
       "source": "./packages/whats-new"
     },
     {
-      "name": "worktrunk-writer",
-      "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
-      "version": "2.3.3",
-      "tags": [
-        "worktrunk",
-        "worktree",
-        "agents",
-        "isolation",
-        "lifecycle"
-      ],
-      "category": "project-lifecycle",
-      "source": "./packages/worktrunk-writer"
-    },
-    {
       "name": "write-agentic",
       "description": "Author or update skills, steering, or agent definitions using standard machine-language templates and a lint script that validates them.",
       "version": "5.1.1",

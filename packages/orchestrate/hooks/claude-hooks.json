@@ -50,17 +50,6 @@
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Agent|SendMessage",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && python3 ${PLUGIN_ROOT}/scripts/orchestrator-activation-guard.py",
-            "statusMessage": "Checking claim-holder activation sequence...",
-            "timeout": 30
-          }
-        ]
       }
     ]
   }

@@ -101,7 +101,6 @@ run.
 ## Package-specific adaptations
 
 - `agent-builder`: APM transforms the bundled agents for both runtimes; both install without per-edit delegation reminders.
-- `worktrunk-writer`: both runtimes consume parent-created Worktrunk leases; Codex unified shell paths remain outside complete hook interception.
 - `speckit`: script-side filtering replaces Claude `if`; there is no Skill-tool reminder event.
 - `orchestrate`: Codex spawn briefs embed protocol because skill-frontmatter hooks do not execute.
 - `language-*`: Serena over MCP is the standard semantic and LSP-backed code interface for both Claude and Codex.
@@ -154,7 +153,6 @@ plugin manifests do not support every APM component type.
 | `language-typescript` | Full | Installs TypeScript quality and steering plus Serena over MCP, the standard semantic and LSP-backed interface for both Claude and Codex. |
 | `orchestrate` | Partial | Skill works; native Codex role profiles receive task-specific spawn briefs because APM agents are Claude-only and Codex ignores skill-frontmatter hooks. |
 | `release-please` | Partial | Skill works; Bash advisory inherits Codex simple-shell interception limits. |
-| `worktrunk-writer` | Partial | Preparation, explicit lease validation, inventory, and apply_patch/simple Bash hooks work; unified shell paths still require sandbox policy and explicit validation. |
 
 ## Validation
 

@@ -1205,18 +1205,6 @@
       "category": "code-intelligence"
     },
     {
-      "name": "worktrunk-writer",
-      "source": {
-        "source": "local",
-        "path": "./packages/worktrunk-writer"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "project-lifecycle"
-    },
-    {
       "name": "write-agentic",
       "source": {
         "source": "local",

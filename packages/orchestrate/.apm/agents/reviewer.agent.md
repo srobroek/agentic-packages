@@ -35,9 +35,9 @@ dimension. A blocked review writes `BLOCKED` on the wisp and may exit.
    BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update "$WISP_ID" --claim
    ```
 
-3. When the wisp has a Worktrunk lease, load `worktrunk-writer` and validate
-   its canonical `worktree`, actor, and lease before repository tools. Refuse
-   a missing or mismatched anchor.
+3. When the wisp names a checkout, cross-check its `metadata.worktree` against
+   `wt -C <path> step eval '{{ vars.bead }}' --format json` before repository
+   tools. Refuse a missing path or a bead var that names a different bead.
 4. Re-read the wisp after claim. A claim race, wrong actor, missing node link,
    or stale PR head is `BLOCKED`; do not review a guessed target.
 

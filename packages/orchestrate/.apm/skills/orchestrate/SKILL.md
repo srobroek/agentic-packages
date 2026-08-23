@@ -41,8 +41,9 @@ Role: lead session / orchestrator.
    mechanical work.
 3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
    tool background subagents (`subagent_type: domain-specialist`), addressed
-   by their parent-visible runtime handles. Allocate every checkout through
-   the `worktrunk-writer` contract.
+   by their parent-visible runtime handles. Allocate every checkout with plain
+   Worktrunk, then stamp the bead id on the branch and the canonical worktree
+   path on the bead; the bead claim is the lock.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
    unsure whether the trigger is met → use subagents.
@@ -85,9 +86,8 @@ Role: lead session / orchestrator.
 
 ## Workflow
 
-1. Check the prerequisites: `bd` (run state), `wt` (all local checkout
-   lifecycle), and the package dependency's `worktrunk-writer` skill. Missing
-   `bd` → stop; there is no fallback store. Missing `wt` or the writer contract
+1. Check the prerequisites: `bd` (run state) and `wt` (all local checkout
+   lifecycle). Missing `bd` → stop; there is no fallback store. Missing `wt`
    → stop. No database yet → `bd init --stealth --prefix orc`. Create the run epic bead (metadata:
    run id, primary branch, base sha, artifacts dir) and the artifacts directory
    outside every worktree:
@@ -153,9 +153,11 @@ Role: lead session / orchestrator.
    only when a bounded status or ledger drain is needed.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
    `scope-check.py --candidate <bead> --epic <epic>` per candidate): create
-   the writer checkout through `worktrunk-writer prepare` without `--bead`.
-   Write the complete BRIEF and stamp the returned anchors, stable actor, and
-   lease on the unclaimed node, then read them back. Spawn with only the
+   the writer checkout with plain Worktrunk (`wt switch --create <branch>`),
+   then stamp the node's bead id on that branch with `wt config state vars
+   set bead <bead-id> --branch <branch>`. Write the complete BRIEF and stamp
+   `branch` and canonical `worktree` (as `metadata.worktree`) on the unclaimed
+   node, then read them back. Spawn with only the
    canonical WAIT bootstrap; do not put CLAIM in the Agent prompt. Record the
    parent-visible handle, require its exact `WAIT context={id}`
    acknowledgement, and bind both values. Stamp and read back

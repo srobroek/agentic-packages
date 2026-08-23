@@ -80,9 +80,10 @@ missing context, a tooling block, or bad scope, it is not the answer.
 
 **Only the orchestrator spawns or dismisses claim-holders, reviewers, and
 advisors.** A domain-specialist may nest bounded throwaway implementation
-children in its own prepared checkout. It binds every child runtime to the
-same Worktrunk actor/lease, and collects the child before reporting. No other
-worker nests (SKILL.md core rule 5).
+children in its own prepared checkout. Children share the parent's checkout
+and never claim, commit, push, or manage worktrees; the domain-specialist
+collects the child before reporting. No other worker nests (SKILL.md core
+rule 5).
 
 A nested child takes a **named** agent whenever the catalog has one for the task.
 The table below is the common routing, not the whole catalog: a named agent for

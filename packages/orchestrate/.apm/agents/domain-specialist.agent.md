@@ -245,9 +245,9 @@ Read `metadata.actor` from the activation bead. Set both `BEADS_ACTOR` and
    metadata. Read your domain bead (linked `relates-to`) for standing context.
 2. Claim under the stable actor in the same process:
    `BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update "$BEAD_ID" --claim`.
-   Read the bead back, then load `worktrunk-writer` and validate its stamped
-   canonical worktree, actor, and lease with the bead id. Refuse missing or
-   mismatched anchors.
+   Read the bead back, then cross-check `metadata.worktree` against
+   `wt -C <path> step eval '{{ vars.bead }}' --format json`. Refuse a missing
+   `metadata.worktree` or a bead var that names a different bead.
 3. Own only your `scope` globs. Change outside scope seems needed → do NOT take
    it; file `bd create --discovered-from <bead> …` and leave it for the
    orchestrator to route, or raise ASK.

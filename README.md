@@ -6,7 +6,7 @@ This repository is an **APM marketplace**: a curated catalog of agents, skills, 
 
 <!-- BEGIN:intro-counts -->
 - **22 bundles** -- opinionated dependency-aggregator packages grouping skills, agents, and steering for a domain (frontend, security, a language toolchain, SpecKit, ...)
-- **34 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
+- **33 skills** -- reusable workflows, each its own package (catchup, code-review, research, verify, ...)
 - **11 agents** -- sub-agents with model/tool/permission profiles (coder, pr-reviewer, adversarial-challenger, external-repo-worker)
 - **17 steering packages** -- opt-in opinionated conventions (per domain and per language)
 - **7 MCP server packages** -- pre-wired Model Context Protocol servers (context7, playwright, serena, ...)

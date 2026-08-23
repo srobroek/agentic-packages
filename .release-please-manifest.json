@@ -101,6 +101,5 @@
   "packages/verify": "3.1.0",
   "packages/web-fetch": "2.2.0",
   "packages/whats-new": "3.1.0",
-  "packages/worktrunk-writer": "2.3.3",
   "packages/write-agentic": "5.1.1"
 }

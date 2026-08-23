@@ -31,11 +31,11 @@ between tool calls. Without the inline form the claim is refused with
 "orchestrators route work, they never claim beads", which names your identity
 rather than the real fault.
 
-Lease recoveries you own, both from `worktrunk-writer`:
+Recoveries you own:
 
-- A checkout bound to an agent that is gone: `worktrunk-writer.py release --repo
-  <repo> --path <path> --actor <actor> --lease <token>` clears the binding and
-  keeps the branch, working tree, and commits, so a replacement actor can bind.
+- A checkout whose claim-holder is gone: clear the bead's assignee, on evidence
+  the actor is genuinely absent and never on age alone. The branch, working
+  tree, and commits stay, so a replacement actor can claim and resume in place.
 - Bead writes that will not publish: the local embedded Dolt DB is authoritative
   for readers in this repo, but `bd dolt push` publishes to the shared remote.
   Report it as outstanding rather than leaving the orchestrator to discover it.

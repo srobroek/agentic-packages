@@ -43,4 +43,3 @@ dependencies:
     - srobroek/agentic-packages/packages/release-queue-watch#>=0.7.0 <1.0.0
     - srobroek/agentic-packages/packages/agent-quality-guards#>=2.1.0 <3.0.0
     - srobroek/agentic-packages/packages/hooks-worktrunk#>=4.1.0 <5.0.0
-    - srobroek/agentic-packages/packages/worktrunk-writer#>=2.3.3 <3.0.0

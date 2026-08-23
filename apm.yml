@@ -787,15 +787,6 @@ marketplace:
         - research
         - services
         - release-notes
-    - name: worktrunk-writer
-      source: ./packages/worktrunk-writer
-      category: project-lifecycle
-      tags:
-        - worktrunk
-        - worktree
-        - agents
-        - isolation
-        - lifecycle
     - name: write-agentic
       source: ./packages/write-agentic
       category: agentic-maintenance

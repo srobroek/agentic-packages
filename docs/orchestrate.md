@@ -18,9 +18,9 @@ fallback store.
 apm install orchestrate@srobroek-agentic --target claude,codex
 ```
 
-Runtime dependencies: `beads` (state store), `worktrunk-writer` and
-`hooks-worktrunk` (checkout allocation), `agent-quality-guards` (read-only
-triage roles), `release-queue-watch` (PR-readiness sensor).
+Runtime dependencies: `beads` (state store), `hooks-worktrunk` (checkout
+allocation), `agent-quality-guards` (read-only triage roles),
+`release-queue-watch` (PR-readiness sensor).
 
 ## Object model
 
@@ -149,17 +149,17 @@ Spawn and activation are separate operations:
 ```mermaid
 sequenceDiagram
     participant L as lead
-    participant W as worktrunk-writer
+    participant P as provisioner
     participant A as agent runtime
-    L->>W: prepare (no --bead)
-    W-->>L: branch, worktree, lease_token
-    L->>L: stamp branch · worktree · base_sha · actor · lease<br/>on the UNCLAIMED bead, then read back
+    L->>P: create worktree, then<br/>wt config state vars set bead {id} --branch {branch}
+    P-->>L: branch stamped with the bead var
+    L->>L: stamp branch · worktree · base_sha<br/>on the UNCLAIMED bead, then read back
     L->>A: Agent(...) with the WAIT bootstrap only
     Note over A: spawns, invokes no tools
     A-->>L: "WAIT context={runtime_context}" (entire first reply)
-    L->>L: bind handle + context to path, actor, lease<br/>stamp runtime_handle + runtime_context, read back
+    L->>L: bind handle + context to path<br/>stamp runtime_handle + runtime_context, read back
     L->>A: SendMessage "CLAIM {id}"
-    A->>A: claim under metadata.actor,<br/>validate lease, start work
+    A->>A: claim metadata.worktree, cross-check<br/>wt -C {path} step eval '{{ vars.bead }}' --format json == {id},<br/>start work
 ```
 
 A `BOUNCE` invalidates that attempt. Repair the durable envelope and redispatch a

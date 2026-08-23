@@ -300,11 +300,11 @@ template.
 
 | When | Who | Stamp |
 |---|---|---|
-| Writer checkout prepared | orchestrator | stamp node `branch`, canonical `worktree`, `base_sha`, stable `actor`, and `lease_token` |
-| Tool-using reviewer prepared | orchestrator | stamp the review wisp with its own `branch`, canonical `worktree`, `actor`, and `lease_token` |
-| Tool-using advisor/researcher prepared | orchestrator | stamp the escalation wisp or research node with its own `branch`, canonical `worktree`, `actor`, and `lease_token` |
-| Runtime bound | orchestrator | bind acknowledged `runtime_context` to the lease; stamp it with parent-visible `runtime_handle`, read both back, then send only `CLAIM {resource-id}` to the handle |
-| Claim | claim-holder | set `BEADS_ACTOR` and `BD_ACTOR` to `metadata.actor` in the claim process; validate branch/worktree/lease anchors |
+| Writer checkout prepared | orchestrator | `wt switch --create <branch>`, stamp Worktrunk var `bead=<bead-id>` on the branch (`wt config state vars set bead <bead-id> --branch <branch>`), stamp node `branch`, canonical `worktree`, `base_sha` |
+| Tool-using reviewer prepared | orchestrator | stamp Worktrunk var `bead=<review-wisp-id>` on the review checkout's branch, stamp the review wisp with its own `branch` and canonical `worktree` |
+| Tool-using advisor/researcher prepared | orchestrator | stamp Worktrunk var `bead=<node-id>` on the checkout's branch, stamp the escalation wisp or research node with its own `branch` and canonical `worktree` |
+| Runtime bound | orchestrator | bind acknowledged `runtime_context` to the claim; stamp it with parent-visible `runtime_handle`, read both back, then send only `CLAIM {resource-id}` to the handle |
+| Claim | claim-holder | read `metadata.worktree` off the claimed bead (the only authoritative source of where it works); cross-check `wt -C <path> step eval '{{ vars.bead }}' --format json` returns the same bead id -- mismatch means another actor owns the tree, stop and do not write |
 | Report (after push) | domain-specialist | stamp `push=<pushed commit SHA>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
@@ -313,7 +313,7 @@ Add a `repo` key when work lands in a different repository than the run epic.
 `scope`. Every claim-holder resource owns its own canonical `worktree`; do not
 store reviewer or advisor paths on the work node. Branch, push, PR, and merge
 anchors survive checkout teardown. Runtime context and worktree pointers are
-cleared only after the actor is released and the checkout is reclaimed.
+cleared only after the bead's claim is released and the checkout is reclaimed.
 
 ## Ready front + scope disjointness
 

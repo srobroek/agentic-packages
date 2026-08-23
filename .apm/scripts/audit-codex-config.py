@@ -78,7 +78,6 @@ CODEX_DIFFERENCE_PACKAGES = {
     "language-typescript",
     "orchestrate",
     "release-please",
-    "worktrunk-writer",
 }
 SUPPORTED_PACKAGE_TARGETS = {"all", "claude", "codex"}
 HOOK_MANIFEST_CLASSIFICATION = {
@@ -111,8 +110,6 @@ HOOK_MANIFEST_CLASSIFICATION = {
     "packages/steering-pragmatic/.apm/hooks/hooks.json": "native-required",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-claude-hooks.json": "target-specific compatibility",
     "packages/steering-git-workflow/.apm/hooks/git-workflow-codex-hooks.json": "target-specific compatibility",
-    "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-claude-hooks.json": "target-specific compatibility",
-    "packages/worktrunk-writer/.apm/hooks/worktrunk-writer-codex-hooks.json": "target-specific compatibility",
 }
 OBSOLETE_HOOK_MANIFESTS = {
     "packages/agent-builder/.apm/hooks/agent-builder-claude-hooks.json",
