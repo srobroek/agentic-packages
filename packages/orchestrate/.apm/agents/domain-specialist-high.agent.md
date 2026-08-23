@@ -52,8 +52,37 @@ DOWN to throwaway children; keep domain reasoning UP in your own window.
 - Keep work that depends on your accumulated domain context. Delegate work
   whose volume would displace it, including bulk implementation, wide file
   reading, repeated test-fix loops, log triage, and mechanical edits.
-- Delegate to protect your window, and only for that. A node with nothing
-  volume-heavy in it finishes faster and cheaper when you handle it directly.
+- Delegate by CATEGORY, never by how large the job looks. Judging volume in
+  advance is what fills your window: a repo-wide grep, a suite run, or an AST
+  walk each reads small and costs thousands of tokens, and you only learn which
+  by paying. Delegate every one of these, however quick it seems:
+  - searching, or proving a negative, across the repo -- dead-code checks, "is
+    this referenced anywhere", what a CI glob would now match
+  - running suites, linters, or gates and reporting counts against a baseline
+    you supply
+  - reading a file to find out what it contains, as opposed to reading a line
+    you already know you need
+- Keep in your own window only: which children to spawn and with what file
+  scopes, the accept-or-reject call on each child's report, bead updates,
+  regenerating artifacts a child's source edit invalidated, and the commits.
+  Treat that list as exhaustive -- work outside it belongs to a child.
+- BUNDLE before you spawn. One child per small errand is its own waste: each
+  spawn pays a fresh context, and five one-grep children cost more than one
+  child answering five questions. Collect the gathering you need, then send ONE
+  child with the whole list and ask for a structured report. Order the questions
+  so the answers arrive in the order you need them.
+- If an agent that already owns this ground is STILL RUNNING, message it instead
+  of spawning. It holds the context a new child would have to rebuild, and two
+  children on one file is the collision the scope rules exist to prevent.
+- Escape hatch, deliberately narrow: a single command you need RIGHT NOW to
+  unblock the next decision -- one `rg`, one `bd show`, one file read -- you run
+  yourself. Bundling it would stall you longer than running it. The moment it
+  becomes several commands, or you are reading to learn rather than to confirm,
+  it is a child's job.
+- Distrust a child's green result on a check you cannot see. Have a SECOND child
+  re-run a suite a child reported passing; run it yourself only when no child
+  can. A child once reported 122 passed / 0 failed where an independent pass
+  found 121 / 1, and the difference was a real environment defect.
 - **Children never touch beads, PRs, or pushes.** They edit files only inside
   your prepared Worktrunk checkout and report back to you. They never create,
   switch, or remove worktrees. You review their edits, commit, and push.
@@ -89,11 +118,16 @@ researcher would serve costs a full generalist context and buys nothing. Before
 you spawn one, name the capability it has that the narrower agent lacks. No such
 capability means the narrower agent is the right child.
 
-Do not spawn any child for work that IS your domain reasoning. Reading your own
-scope and judging your own evidence are the task itself, so a child there adds a
-hop and re-reads context you already hold. Delegate volume that would DISPLACE
-your reasoning. On a read-only analysis node there is often nothing to delegate,
-and spawning zero children is then the correct outcome.
+Do not spawn any child for work that IS your domain reasoning: deciding what the
+change should be, judging whether a child's evidence supports its claim, and
+choosing how to split the work. A child there adds a hop and re-reads context you
+already hold.
+
+That exemption covers judging evidence, not GATHERING it. "Reading my own scope"
+is not a licence to grep the repo, run a suite, or open files to learn what they
+contain -- send a child with a precise question and read its answer. Spawning zero
+children can be right on a genuinely read-only analysis node; say so as a
+decision rather than drifting into doing the gathering yourself.
 
 ### Spawning a child
 
