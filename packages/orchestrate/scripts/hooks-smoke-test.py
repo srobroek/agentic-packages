@@ -912,32 +912,19 @@ for cfg in ("orchestrate-claude-hooks.json", "orchestrate-codex-hooks.json"):
             stop_command,
         )
         pre_tool_groups = data["hooks"]["PreToolUse"]
-        activation_group = next(
-            (group for group in pre_tool_groups if "Agent" in group.get("matcher", "")),
-            {},
-        )
-        expected_delivery_matchers = (
-            {"Agent", "SendMessage"}
-            if "claude" in cfg
-            else {
-                "Agent",
-                "send_message",
-                "followup_task",
-                "send_input",
-                "multi_agent_v1send_input",
-                "resume_agent",
-                "multi_agent_v1resume_agent",
-            }
-        )
-        actual_delivery_matchers = set(activation_group.get("matcher", "").split("|"))
+        # The claim-holder activation guard is gone: it forced the retired
+        # WAIT/CLAIM prompt grammar onto every named agent, denying 8 of 10
+        # spawnable types in every repo the hook was installed in. Activation
+        # authority now comes from the bead claim, so no PreToolUse:Agent hook
+        # may reintroduce a prompt-shape gate.
         check(
-            f"{cfg} guards claim-holder activation",
-            actual_delivery_matchers == expected_delivery_matchers
-            and any(
+            f"{cfg} declares no claim-holder activation guard",
+            not any(
                 "orchestrator-activation-guard.py" in hook.get("command", "")
-                for hook in activation_group.get("hooks", [])
+                for group in pre_tool_groups
+                for hook in group.get("hooks", [])
             ),
-            str(activation_group),
+            str(pre_tool_groups),
         )
         prompt_hooks = data["hooks"].get("UserPromptSubmit", [])
         check(

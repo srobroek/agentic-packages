@@ -50,17 +50,6 @@
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Agent|send_message|followup_task|send_input|multi_agent_v1send_input|resume_agent|multi_agent_v1resume_agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && uv run --quiet --script ${PLUGIN_ROOT}/scripts/orchestrator-activation-guard.py",
-            "statusMessage": "Checking claim-holder activation sequence...",
-            "timeout": 30
-          }
-        ]
       }
     ]
   }
