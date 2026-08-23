@@ -22,8 +22,7 @@ from orchestrate_run_marker import (  # noqa: E402
 def require_bound_run() -> None:
     if active_run_id() == "pending":
         emit_deny(
-            "Agent dispatch is blocked until the active-run marker is "
-            "bound to the created run epic"
+            "Agent dispatch is blocked until the active-run marker is bound to the created run epic"
         )
 
 
