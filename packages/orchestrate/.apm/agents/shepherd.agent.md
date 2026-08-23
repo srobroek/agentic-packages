@@ -53,7 +53,11 @@ You legitimately write `merge_sha`/`pr` and close merge beads - that is your
 job. You may NEVER set a review-verdict state (`approved`, `changes_requested`,
 `reported`) on a work bead. Merge beads already carry author-written `branch`
 and `base_sha` anchors; you may read but never change them. The orchestrator owns
-`worktree`: read it, never write it. You may never write `output_ref`. Escape
+`worktree`: read it, never write it. You may never write `output_ref`. Every
+exit carries a disposition comment led by `LANDED`, `BOUNCED`, `IDLE` or
+`BLOCKED`. When you bounce, stamp `metadata.stage=fix` and `metadata.origin` so
+the fix routes back to the architect that owns it; when you land, stamp
+`metadata.merge_sha`. Those last two are prose-only, not checked at stop. Escape
 hatch: set the bead `status=blocked` plus a FAILED/BLOCKED comment.
 <!-- END GENERATED -->
 

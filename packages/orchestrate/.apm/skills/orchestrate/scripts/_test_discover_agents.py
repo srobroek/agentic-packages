@@ -212,7 +212,7 @@ class DiscoverAgentsTest(unittest.TestCase):
         # Assert the discovered model matches the definition's own frontmatter
         # rather than a literal. These pins move whenever routing is re-evaluated,
         # and a hardcoded tier makes every such change look like a discovery bug.
-        for name in ("domain-specialist", "researcher", "shepherd"):
+        for name in ("architect", "researcher", "shepherd"):
             self.assertEqual(agents[name]["model"], self.frontmatter_model(package_agents, name))
             self.assertEqual(
                 agents[name]["tools"],

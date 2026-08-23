@@ -21,7 +21,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 EVAL = os.path.join(HERE, "rules-eval.py")
 RULES = os.path.abspath(os.path.join(HERE, "..", ".apm", "rules"))
-DS = os.path.join(RULES, "domain-specialist.rules.json")
+ARCH = os.path.join(RULES, "architect.rules.json")
 ADVISOR = os.path.join(RULES, "advisor.rules.json")
 RESEARCHER = os.path.join(RULES, "researcher.rules.json")
 REVIEWER = os.path.join(RULES, "reviewer.rules.json")
@@ -36,7 +36,7 @@ passed = 0
 failed = 0
 
 
-def run(name, want, bead, agent_type="domain-specialist", rules_file=DS):
+def run(name, want, bead, agent_type="architect", rules_file=ARCH):
     global passed, failed
     payload = {"agent_type": agent_type, "_bead": bead}
     if rules_file:
@@ -379,6 +379,19 @@ run(
         id="t20",
         status="closed",
         metadata={"pr": 42, "merge_sha": "abc123", "branch": "feature/demo"},
+        comments=[{"text": "LANDED merge_sha=abc123"}],
+    ),
+    agent_type="shepherd",
+    rules_file=SHEPHERD,
+)
+
+run(
+    "shepherd exit without a disposition comment",
+    "block",
+    bead(
+        id="t20b",
+        status="closed",
+        metadata={"pr": 42, "merge_sha": "abc123", "branch": "feature/demo"},
     ),
     agent_type="shepherd",
     rules_file=SHEPHERD,
@@ -479,14 +492,14 @@ MODULE.bd_json = lambda *_args: [
     bead(
         id="t22",
         status="in_progress",
-        assignee="domain-specialist-files",
+        assignee="architect-files",
         metadata={"runtime_context": "runtime-agent-22"},
     )
 ]
 try:
     _resolved, violations = MODULE.resolve_claimed_bead(
-        {"agent_id": "runtime-agent-22", "agent_type": "domain-specialist"},
-        "domain-specialist",
+        {"agent_id": "runtime-agent-22", "agent_type": "architect"},
+        "architect",
     )
 finally:
     MODULE.bd_json = original_bd_json
@@ -521,7 +534,7 @@ run(
         status="closed",
         labels=["agent:integrator"],
         metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
-        comments=[{"body": "MERGED merge_sha=abc1234"}],
+        comments=[{"body": "LANDED merge_sha=abc1234"}],
     ),
     agent_type="shepherd",
     rules_file=SHEPHERD,
@@ -545,7 +558,7 @@ run(
         status="closed",
         labels=["agent:integrator"],
         metadata={"worktree": "/tmp/wt", "output_ref": "/tmp/somewhere"},
-        comments=[{"body": "MERGED merge_sha=abc1234"}],
+        comments=[{"body": "LANDED merge_sha=abc1234"}],
     ),
     agent_type="shepherd",
     rules_file=SHEPHERD,

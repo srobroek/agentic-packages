@@ -16,15 +16,15 @@ agents:
   # the Codex model+effort pair below is a separate mapping and may differ.
   #   cheap rung: Luna/high  -- TB-v2.1 69.7, coding 63.3, $0.095/task
   #   deep  rung: Sol/medium -- TB-v2.1 86.1, coding 76.3, $0.314/task
-  domain-specialist:
+  architect:
     codex:
       model: gpt-5.6-sol
       reasoning_effort: medium
-  domain-specialist-high:
+  architect-high:
     codex:
       model: gpt-5.6-sol
       reasoning_effort: high
-  # Escalation-only. See gen-domain-specialist-variants.py TIER_NOTE. Sol/high
+  # Escalation-only. See gen-architect-variants.py TIER_NOTE. Sol/high
   # buys +1.2 TB-v2.1 and +4.0 agentic over Sol/medium for 1.44x; that margin
   # only pays on a node that already failed at the deep rung on reasoning depth.
   reviewer:
