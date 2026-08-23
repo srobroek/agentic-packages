@@ -252,11 +252,11 @@ SET_GATE_SCRIPT = (
 
 
 def test_an_unrouted_set_membership_gate_is_rejected(tmp_path: Path) -> None:
-    """`worktrunk-writer` gates on module-level set constants, not a comparison.
+    """A guard gating on module-level set constants, not a comparison.
 
-    The three regexes matched nothing there, so the check could not report a
-    finding about that package either way -- which is how a NotebookEdit wiring
-    gap survived a green pipeline.
+    The three regexes match nothing there, so without the set-gate resolver the
+    check could not report a finding about a package like this either way --
+    letting a NotebookEdit wiring gap survive a green pipeline.
     """
     build_package(
         tmp_path, "hooks-example", matcher="Bash|Edit|Write|MultiEdit|Agent",
@@ -305,9 +305,11 @@ def test_a_set_of_unrelated_strings_is_not_a_tool_gate(tmp_path: Path) -> None:
 def test_an_empty_subagent_matcher_does_not_route_tools(tmp_path: Path) -> None:
     """`SubagentStart` matches agent names, so its empty matcher is not "every tool".
 
-    Folding every event's matchers into one set put `*` there and switched rule 1
-    off for the manifest's PreToolUse entries too -- the reason `worktrunk-writer`
-    passed even after its NotebookEdit binding was removed by hand.
+    Folding every event's matchers into one set would put `*` there and switch
+    rule 1 off for the manifest's PreToolUse entries too -- exactly the shape
+    `beads` and `orchestrate` ship (an empty `SubagentStart` matcher alongside a
+    populated `PreToolUse` matcher), so a NotebookEdit binding removed by hand
+    must still be caught there.
     """
     package = build_package(tmp_path, "hooks-example", matcher="Bash|Edit|Write|MultiEdit|Agent")
     (package / "scripts" / "guard.py").write_text(SET_GATE_SCRIPT)
@@ -343,10 +345,10 @@ def test_an_empty_subagent_matcher_does_not_route_tools(tmp_path: Path) -> None:
 
 
 def test_a_script_outside_the_scripts_directory_is_inspected(tmp_path: Path) -> None:
-    """`worktrunk-writer` invokes `.apm/skills/*/scripts/`, not `scripts/`.
+    """`toolchain-cache-policy` invokes `.apm/hooks/scripts/`, not `scripts/`.
 
-    Resolving by name against `scripts/` alone found zero scripts there, so the
-    package was skipped entirely and every rule was vacuous for it.
+    Resolving by name against `scripts/` alone would find zero scripts there, so
+    the package would be skipped entirely and every rule vacuous for it.
     """
     package = build_package(tmp_path, "hooks-example", matcher="Edit|Write")
     nested = package / ".apm" / "skills" / "example" / "scripts"

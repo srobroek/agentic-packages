@@ -161,9 +161,10 @@ def manifest_matchers(manifest: Path) -> tuple[set[str], set[str]]:
 
     Only the tool-dispatching events contribute matchers. A `SubagentStart`
     entry matches agent names and its empty matcher means "every subagent",
-    which says nothing about tool routing -- but folding it into one set put
-    `*` there and disabled rule 1 for the manifest's `PreToolUse` entries as
-    well, which is how `worktrunk-writer` passed vacuously.
+    which says nothing about tool routing -- but folding it into one set puts
+    `*` there and disables rule 1 for the manifest's `PreToolUse` entries as
+    well. `beads` and `orchestrate` ship exactly this shape: an empty
+    `SubagentStart` matcher next to a populated `PreToolUse` matcher.
     """
     matchers: set[str] = set()
     events: set[str] = set()
@@ -202,11 +203,10 @@ def matchers_and_events(package: Path) -> tuple[set[str], set[str]]:
 def hook_scripts(package: Path) -> list[Path]:
     """Scripts a hook manifest actually invokes.
 
-    Resolved by the manifest's own path rather than by globbing `scripts/`: the
-    scripts `worktrunk-writer` and `toolchain-cache-policy` invoke live under
-    `.apm/skills/*/scripts/` and `.apm/hooks/scripts/`, and a name-only match
-    against one directory silently inspected zero scripts for both, which made
-    every rule vacuous there.
+    Resolved by the manifest's own path rather than by globbing `scripts/`:
+    `toolchain-cache-policy` invokes its script from `.apm/hooks/scripts/`, not
+    `scripts/`, and a name-only match against one directory would silently
+    inspect zero scripts for it, making every rule vacuous there.
     """
     found: set[Path] = set()
     for manifest in hook_manifests(package):
@@ -273,8 +273,9 @@ def _set_gate_tools(source: str) -> set[str]:
     """Tool names reachable through a `tool in SOME_SET | OTHER_SET` gate.
 
     Deliberately not dataflow analysis: it resolves module-level set constants
-    referenced by an `in`/`not in` test on a plain name, which is the shape
-    `worktrunk-writer` uses and the shape the three regexes above cannot see.
+    referenced by an `in`/`not in` test on a plain name -- a guard that gates
+    on `tool in MUTATION_TOOLS | SPAWN_TOOLS` rather than a direct string
+    comparison, a shape the three regexes above cannot see.
     """
     try:
         tree = ast.parse(source)
