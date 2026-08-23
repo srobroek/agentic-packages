@@ -68,33 +68,76 @@ def effective_cwd(command: str, session_cwd: str) -> str:
     prefixes a Bash call with `cd <path> &&`. Resolving beads state against the
     session directory instead of the command's directory makes a guard judge the
     wrong repository, and no `cd` prefix can correct it.
+
+    Returns "" when the command names a directory this cannot resolve -- a
+    `cd $(cat file)`, a leading brace block, a subshell. Text cannot resolve
+    those, and answering with the session directory instead is the failure that
+    matters: a guard then judges a repository the command never touched. A live
+    `gh pr create` for a repo with no beads workspace was blocked that way,
+    demanding a merge bead the target repo could not have. Callers must treat ""
+    as "unknown, do not judge" -- see `beads_active`.
     """
+    # `shlex.split` does not treat `;` or a newline as a separator, so
+    # `cd /x; gh` lexes the path and the semicolon as ONE token and the segment
+    # loop never sees a boundary. Give the lexer punctuation awareness instead,
+    # and let it emit `;` and `&&` as their own tokens.
+    # A newline separates commands as surely as `;` does, but punctuation_chars
+    # drops it, so a brace block's `cd` line would run on into the next command.
+    # Read only the first non-empty line; a `cd` prefix never spans lines.
+    first_line = next((line for line in command.splitlines() if line.strip()), "")
+    lexer = shlex.shlex(first_line, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
     try:
-        tokens = shlex.split(command)
+        tokens = list(lexer)
     except ValueError:
-        return session_cwd
+        # An unbalanced quote means the command cannot be read at all. Saying
+        # "unknown" is the safe answer; naming the session directory would have a
+        # caller judge a repository this never identified.
+        return ""
 
     segment: list[str] = []
     for token in tokens:
         if token in SEPARATORS:
             break
         segment.append(token)
+
+    # A brace block or subshell hides the `cd` behind its opener, so strip those
+    # before looking for it: `{ cd /x` and `( cd /x` both mean cd /x.
+    while segment[:1] in (["{"], ["("]):
+        segment = segment[1:]
+
     if segment[:1] != ["cd"]:
+        # No cd prefix at all: the command runs where the session is.
         return session_cwd
 
     # `--` ends option parsing for `cd`; it names no directory.
     arguments = [token for token in segment[1:] if token != "--"]
-    if len(arguments) != 1 or arguments[0] in {"", "-"}:
+    if not arguments or arguments[0] in {"", "-"}:
         return session_cwd
 
-    target = os.path.expanduser(arguments[0])
+    # Shell expansion the hook cannot perform: substitution, a variable, a glob.
+    # The directory is real but unknowable from text, so say so rather than
+    # silently answering with the session directory. `punctuation_chars` emits
+    # `$` and a backtick as their own tokens, so test every argument token, not
+    # just the first.
+    if any(
+        marker in token for token in arguments for marker in ("$", "`", "*", "?", "(")
+    ):
+        return ""
+
+    if len(arguments) != 1:
+        return ""
+    argument = arguments[0]
+
+    target = os.path.expanduser(argument)
     if not os.path.isabs(target):
         target = os.path.join(session_cwd or os.getcwd(), target)
     try:
         resolved = os.path.realpath(target)
     except OSError:
-        return session_cwd
-    return resolved if os.path.isdir(resolved) else session_cwd
+        return ""
+    return resolved if os.path.isdir(resolved) else ""
 
 
 def gh_invocations(command: str) -> list[list[str]]:
@@ -155,13 +198,19 @@ def beads_active(cwd: str) -> bool:
     Asks `bd` rather than walking for a `.beads` directory. A workspace in a
     shared ancestor -- `~/.beads` is common -- makes every repository under the
     home directory look beads-enabled.
+
+    An empty `cwd` means `effective_cwd` could not resolve where the command
+    runs. Answering for the current process would judge the session's repository
+    instead, so treat unknown as not-active and let the caller stand down.
     """
     if shutil.which("bd") is None:
+        return False
+    if not cwd:
         return False
     try:
         return (
             subprocess.run(
-                ["bd", "-C", cwd or ".", "where"],
+                ["bd", "-C", cwd, "where"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=False,
