@@ -61,7 +61,7 @@ Agents shipped by the package, and what each may claim:
 | Role | Agent | Model / effort | Writes | Claims |
 |---|---|---|---|---|
 | Orchestrator | lead session | session model | briefs, wisp shells, leases | nothing; hook-denied |
-| Domain specialist | `domain-specialist` (+ `-low/-medium/-high/-xhigh`) | sonnet, per-variant effort | its `scope` only | one node at a time |
+| Architect | `architect` (+ `-low/-medium/-high/-xhigh`) | sonnet, per-variant effort | its `scope` only | one node at a time |
 | Reviewer | `reviewer` | sonnet / high, read-only | verdicts and findings | one review wisp |
 | Advisor | `advisor` | opus / high, read-only | one `ADVICE` answer | one escalation wisp |
 | Researcher | `researcher` | sonnet / medium, read-only | artifact output | node or escalation wisp |
@@ -74,8 +74,8 @@ Read-only triage roles arrive from `agent-quality-guards`: `docs-guard`,
 decisions stay with `reviewer`, `researcher`, or `advisor`.
 
 Agent spawn calls carry `model` but not `effort`, which is frontmatter-static.
-The `domain-specialist-*` variants exist so `complexity_tier` can route to an
-effort tier; `gen-domain-specialist-variants.py` stamps them from the base
+The `architect-*` variants exist so `complexity_tier` can route to an
+effort tier; `gen-architect-variants.py` stamps them from the base
 definition.
 
 ### Spawn topology
@@ -85,7 +85,7 @@ Only the lead spawns claim-holders, and only a specialist nests children:
 ```mermaid
 graph TD
     O["orchestrator (lead session)"]
-    O --> SP["domain-specialist<br/>node bead"]
+    O --> SP["architect<br/>node bead"]
     O --> RV["reviewer<br/>review wisp"]
     O --> AD["advisor<br/>escalation wisp"]
     O --> RS["researcher<br/>node or wisp"]
@@ -184,7 +184,7 @@ agent over wisps:
 
 ```mermaid
 graph LR
-    SP["domain-specialist"] -- "BLOCKED kind:design" --> EW["escalation wisp"]
+    SP["architect"] -- "BLOCKED kind:design" --> EW["escalation wisp"]
     AD["advisor"] -- "ADVICE" --> EW
     EW -- "specialist reads the answer" --> SP
     RV["reviewer"] -- "FIX items" --> RW["review wisp"]
@@ -305,7 +305,7 @@ and the stated contract cannot drift.
 
 | Role | Must produce | Cannot set |
 |---|---|---|
-| `domain-specialist` | `REPORTED` plus branch and push (git) or a contained `output_ref` (artifact), and the reviewer handoff label | status `closed`, `merge_sha`, `pr` |
+| `architect` | `REPORTED` plus branch and push (git) or a contained `output_ref` (artifact), and the reviewer handoff label | status `closed`, `merge_sha`, `pr` |
 | `reviewer` | a `REVIEW` verdict | state `merged`, `push`, `merge_sha`, `pr` |
 | `advisor` | one `ADVICE` answer | `merged`, `approved`, `changes_requested`, all delivery metadata |
 | `researcher` | `REPORTED` with an `output_ref` or a wisp answer | `merged`, `approved`, `push`, `merge_sha`, `pr` |

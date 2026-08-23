@@ -28,7 +28,7 @@ RULES = os.path.abspath(os.path.join(HERE, "..", ".apm", "rules"))
 EVAL = os.path.join(HERE, "rules-eval.py")
 DENY = os.path.join(HERE, "orchestrator-claim-deny.py")
 START = os.path.join(HERE, "contract-start.py")
-DS = os.path.join(RULES, "domain-specialist.rules.json")
+ARCH = os.path.join(RULES, "architect.rules.json")
 
 findings = []
 runs = 0
@@ -133,7 +133,7 @@ def attack_vectors():
         b.update(kw)
         return b
 
-    def ev(bead_obj, agent="builder", rf=DS):
+    def ev(bead_obj, agent="builder", rf=ARCH):
         p = {"agent_type": agent, "_bead": bead_obj}
         if rf:
             p["_rules_file"] = rf
