@@ -1,5 +1,18 @@
 # Changelog
 
+## [16.4.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.3.2...orchestrate--v16.4.0) (2026-08-23)
+
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([dfbe7de](https://github.com/srobroek/agentic-packages/commit/dfbe7de53326227b9ee3b27a7d9e60abefc2fe0b))
+
+
+### Bug Fixes
+
+* **orchestrate:** hydrate linked comments for every claimed bead ([#880](https://github.com/srobroek/agentic-packages/issues/880)) ([2189425](https://github.com/srobroek/agentic-packages/commit/2189425b1cef33eb1fee4a58c6faaca89f79c3f6))
+* stop refusing agent exits over metadata the orchestrator set before the claim ([#879](https://github.com/srobroek/agentic-packages/issues/879)) ([2376a30](https://github.com/srobroek/agentic-packages/commit/2376a3021672dee2d8cae654cb7bcac1e5a7a742))
+
 ## [16.3.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.3.1...orchestrate--v16.3.2) (2026-08-18)
 
 
