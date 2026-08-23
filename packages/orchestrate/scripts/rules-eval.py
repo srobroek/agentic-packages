@@ -36,15 +36,37 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 BD = os.environ.get("BD_BIN", "bd")
 RULES_DIR = os.environ.get("RULES_DIR", "")
 
-# Per-write ceiling. The bounce path runs three writes in sequence, so 3x this
-# must clear the SubagentStop hook's 45s timeout with room for the preceding
-# reads (bd_json, 20s each). A stalled bd write has been observed at 120s.
+# The SubagentStop hook running this script is killed at 45s (claude-hooks.json).
+# Reads and writes share that one budget, and the verdict is emitted only after the
+# writes, so a read phase that overruns costs enforcement entirely.
+#
+# Reads are bounded by a single deadline rather than a per-call ceiling because the
+# call count is unbounded: hydrate_comments reads one bead per linked resource.
+# A real `bd show` runs in under 1s. A stalled bd write has been observed at 120s.
+BD_READ_BUDGET = 12
+BD_READ_TIMEOUT = 5
+# Per-write ceiling; the bounce path runs three writes in sequence.
 BD_WRITE_TIMEOUT = 10
+
+_read_deadline: float | None = None
+
+
+def _read_timeout() -> float:
+    """Seconds the next read may take: the per-call cap, clamped to what remains.
+
+    The deadline starts at the first read, not at import, so the test suite can
+    exercise the budget by resetting this to None.
+    """
+    global _read_deadline
+    if _read_deadline is None:
+        _read_deadline = time.monotonic() + BD_READ_BUDGET
+    return min(float(BD_READ_TIMEOUT), _read_deadline - time.monotonic())
 
 # Metadata key holding the bead's metadata as of the claim, snapshotted by
 # orchestrator-claim-deny.py. beads records no per-key writer (`bd show --json`
@@ -103,7 +125,15 @@ def read_payload() -> dict:
 
 
 def bd_json(*args) -> object:
-    """Run a bd command expecting JSON; return parsed value or None."""
+    """Run a bd command expecting JSON; return parsed value or None.
+
+    Shares one deadline with every other read (see `_read_timeout`); once it is
+    spent, reads return None immediately and evaluation proceeds on what it has.
+    """
+    budget = _read_timeout()
+    if budget <= 0:
+        sys.stderr.write(f"rules-eval: read budget spent, skipping bd {args[0]}\n")
+        return None
     try:
         env = {
             **os.environ,
@@ -115,7 +145,7 @@ def bd_json(*args) -> object:
             [BD, *args],
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=budget,
             env=env,
         )
         if out.returncode != 0 or not out.stdout.strip():

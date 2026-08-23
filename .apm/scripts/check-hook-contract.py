@@ -37,6 +37,7 @@ Exit 0 when clean, 1 with a per-finding report otherwise.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import sys
@@ -53,6 +54,7 @@ PACKAGES = ROOT / "packages"
 TOOL_SURFACES = (
     "apply_patch",
     "MultiEdit",
+    "NotebookEdit",
     "Edit",
     "Write",
     "Bash",
@@ -67,6 +69,11 @@ TOOL_SURFACES = (
 # faces the agent providing them. `speckit` splits exactly this way: its
 # codex-hooks.json binds `apply_patch` and its claude-hooks.json correctly does not.
 TOOL_OWNER = {"apply_patch": "codex"}
+
+# Events whose matcher names a TOOL. Every other event matches something else
+# (`SubagentStart` and `SubagentStop` match agent names), so its matcher cannot
+# route or fail to route a tool.
+TOOL_EVENTS = ("PreToolUse", "PostToolUse")
 
 
 def manifest_audience(manifest: Path) -> str:
@@ -150,7 +157,14 @@ def hook_manifests(package: Path) -> list[Path]:
 
 
 def manifest_matchers(manifest: Path) -> tuple[set[str], set[str]]:
-    """The matcher alternatives and event names ONE manifest binds."""
+    """The TOOL matcher alternatives and event names ONE manifest binds.
+
+    Only the tool-dispatching events contribute matchers. A `SubagentStart`
+    entry matches agent names and its empty matcher means "every subagent",
+    which says nothing about tool routing -- but folding it into one set put
+    `*` there and disabled rule 1 for the manifest's `PreToolUse` entries as
+    well, which is how `worktrunk-writer` passed vacuously.
+    """
     matchers: set[str] = set()
     events: set[str] = set()
     try:
@@ -162,7 +176,7 @@ def manifest_matchers(manifest: Path) -> tuple[set[str], set[str]]:
         return matchers, events
     for event, entries in hooks.items():
         events.add(event)
-        if not isinstance(entries, list):
+        if not isinstance(entries, list) or event not in TOOL_EVENTS:
             continue
         for entry in entries:
             if not isinstance(entry, dict):
@@ -186,15 +200,24 @@ def matchers_and_events(package: Path) -> tuple[set[str], set[str]]:
 
 
 def hook_scripts(package: Path) -> list[Path]:
-    """Scripts a hook manifest actually invokes, by name."""
-    referenced: set[str] = set()
+    """Scripts a hook manifest actually invokes.
+
+    Resolved by the manifest's own path rather than by globbing `scripts/`: the
+    scripts `worktrunk-writer` and `toolchain-cache-policy` invoke live under
+    `.apm/skills/*/scripts/` and `.apm/hooks/scripts/`, and a name-only match
+    against one directory silently inspected zero scripts for both, which made
+    every rule vacuous there.
+    """
+    found: set[Path] = set()
     for manifest in hook_manifests(package):
         text = manifest.read_text(encoding="utf-8", errors="replace")
-        referenced.update(re.findall(r"scripts/([A-Za-z0-9_.-]+\.(?:py|sh))", text))
-    directory = package / "scripts"
-    if not directory.is_dir():
-        return []
-    return sorted(path for path in directory.iterdir() if path.name in referenced)
+        for relative in re.findall(
+            r"((?:[A-Za-z0-9_.-]+/)*scripts/[A-Za-z0-9_.-]+\.(?:py|sh))", text
+        ):
+            script = package / relative
+            if script.is_file():
+                found.add(script)
+    return sorted(found)
 
 
 def package_target(package: Path) -> str:
@@ -209,13 +232,77 @@ def package_target(package: Path) -> str:
     return target if isinstance(target, str) else ""
 
 
+def _module_level_tool_sets(tree: ast.Module) -> dict[str, set[str]]:
+    """Module-level names bound to a set literal of tool names.
+
+    Only literal `{...}` and `frozenset({...})` forms, and only sets naming a
+    known tool surface, so a set of unrelated strings is not read as a tool gate.
+    """
+    sets: dict[str, set[str]] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            targets = statement.targets
+        elif isinstance(statement, ast.AnnAssign):
+            targets = [statement.target]
+        else:
+            continue
+        value = statement.value
+        if (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Name)
+            and value.func.id in ("frozenset", "set")
+            and len(value.args) == 1
+        ):
+            value = value.args[0]
+        if not isinstance(value, (ast.Set, ast.List, ast.Tuple)):
+            continue
+        names = {
+            element.value
+            for element in value.elts
+            if isinstance(element, ast.Constant) and isinstance(element.value, str)
+        }
+        if len(names) != len(value.elts) or not names & set(TOOL_SURFACES):
+            continue
+        for target in targets:
+            if isinstance(target, ast.Name):
+                sets[target.id] = names
+    return sets
+
+
+def _set_gate_tools(source: str) -> set[str]:
+    """Tool names reachable through a `tool in SOME_SET | OTHER_SET` gate.
+
+    Deliberately not dataflow analysis: it resolves module-level set constants
+    referenced by an `in`/`not in` test on a plain name, which is the shape
+    `worktrunk-writer` uses and the shape the three regexes above cannot see.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return set()
+    constants = _module_level_tool_sets(tree)
+    if not constants:
+        return set()
+    gated: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare) or not isinstance(node.left, ast.Name):
+            continue
+        if not any(isinstance(op, (ast.In, ast.NotIn)) for op in node.ops):
+            continue
+        for comparator in node.comparators:
+            for referenced in ast.walk(comparator):
+                if isinstance(referenced, ast.Name):
+                    gated |= constants.get(referenced.id, set())
+    return gated
+
+
 def branches_on(source: str, tool: str) -> bool:
     """Whether the script dispatches on `tool` as a tool-name value."""
     for template in BRANCH_PATTERNS:
         pattern = template.replace("TOOL", re.escape(tool))
         if re.search(pattern, source, re.MULTILINE):
             return True
-    return False
+    return tool in _set_gate_tools(source)
 
 
 def check_matcher_coverage(package: Path, scripts: list[Path]) -> list[Finding]:
@@ -252,7 +339,8 @@ def check_matcher_coverage(package: Path, scripts: list[Path]) -> list[Finding]:
                         Finding(
                             "matcher-coverage",
                             f"{package.name}/{relative}",
-                            f"scripts/{script.name} branches on tool {tool!r}, but no "
+                            f"{script.relative_to(package).as_posix()} branches on tool "
+                            f"{tool!r}, but no "
                             f"matcher here routes it (matchers: "
                             f"{sorted(m for m in matchers if m) or 'none'}). The branch "
                             f"is unreachable; add {tool!r} to the matcher or drop the "
@@ -271,7 +359,7 @@ def check_output_fields(package: Path, scripts: list[Path], target: str) -> list
             findings.append(
                 Finding(
                     "no-ask",
-                    f"{package.name}/scripts/{script.name}",
+                    f"{package.name}/{script.relative_to(package).as_posix()}",
                     'emits permissionDecision "ask", which waits for a human and '
                     "stalls an autonomous run. Constitution III forbids it: deny "
                     "with actionable guidance, or allow with an advisory.",
@@ -285,7 +373,7 @@ def check_output_fields(package: Path, scripts: list[Path], target: str) -> list
                 findings.append(
                     Finding(
                         "cross-tool-output",
-                        f"{package.name}/scripts/{script.name}",
+                        f"{package.name}/{script.relative_to(package).as_posix()}",
                         f"emits {field!r}, which only Claude consumes, but the "
                         f"package declares target: all. Under Codex this path is a "
                         f"silent no-op. Emit a field from the cross-tool decision "

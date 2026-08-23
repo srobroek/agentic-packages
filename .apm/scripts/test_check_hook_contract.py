@@ -241,6 +241,149 @@ def test_a_codex_only_tool_is_not_required_in_a_claude_manifest(tmp_path: Path) 
     assert code == 0, output
 
 
+SET_GATE_SCRIPT = (
+    "import sys\n"
+    'MUTATION_TOOLS = {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"}\n'
+    'SPAWN_TOOLS = {"Agent"}\n'
+    "tool = sys.argv[1]\n"
+    "if tool not in SPAWN_TOOLS | MUTATION_TOOLS:\n"
+    "    sys.exit(0)\n"
+)
+
+
+def test_an_unrouted_set_membership_gate_is_rejected(tmp_path: Path) -> None:
+    """`worktrunk-writer` gates on module-level set constants, not a comparison.
+
+    The three regexes matched nothing there, so the check could not report a
+    finding about that package either way -- which is how a NotebookEdit wiring
+    gap survived a green pipeline.
+    """
+    build_package(
+        tmp_path, "hooks-example", matcher="Bash|Edit|Write|MultiEdit|Agent",
+        script=SET_GATE_SCRIPT,
+    )
+
+    code, output = run_check(tmp_path)
+
+    assert code == 1, "a set-gated tool no matcher routes must fail the check"
+    assert "matcher-coverage" in output
+    assert "NotebookEdit" in output
+
+
+def test_a_routed_set_membership_gate_passes(tmp_path: Path) -> None:
+    """Without this the widened rule could be satisfied by flagging everything."""
+    build_package(
+        tmp_path,
+        "hooks-example",
+        matcher="Bash|Edit|Write|MultiEdit|NotebookEdit|Agent",
+        script=SET_GATE_SCRIPT,
+    )
+
+    code, output = run_check(tmp_path)
+
+    assert code == 0, output
+
+
+def test_a_set_of_unrelated_strings_is_not_a_tool_gate(tmp_path: Path) -> None:
+    build_package(
+        tmp_path,
+        "hooks-example",
+        matcher="Bash",
+        script=(
+            "import sys\n"
+            'REASONS = {"lease", "claim", "NotebookEdit-ish"}\n'
+            "if sys.argv[1] not in REASONS:\n"
+            "    sys.exit(0)\n"
+        ),
+    )
+
+    code, output = run_check(tmp_path)
+
+    assert code == 0, output
+
+
+def test_an_empty_subagent_matcher_does_not_route_tools(tmp_path: Path) -> None:
+    """`SubagentStart` matches agent names, so its empty matcher is not "every tool".
+
+    Folding every event's matchers into one set put `*` there and switched rule 1
+    off for the manifest's PreToolUse entries too -- the reason `worktrunk-writer`
+    passed even after its NotebookEdit binding was removed by hand.
+    """
+    package = build_package(tmp_path, "hooks-example", matcher="Bash|Edit|Write|MultiEdit|Agent")
+    (package / "scripts" / "guard.py").write_text(SET_GATE_SCRIPT)
+    (package / "hooks" / "hooks.json").write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "SubagentStart": [
+                        {
+                            "matcher": "",
+                            "hooks": [
+                                {"type": "command", "command": "${PLUGIN_ROOT}/scripts/guard.py"}
+                            ],
+                        }
+                    ],
+                    "PreToolUse": [
+                        {
+                            "matcher": "Bash|Edit|Write|MultiEdit|Agent",
+                            "hooks": [
+                                {"type": "command", "command": "${PLUGIN_ROOT}/scripts/guard.py"}
+                            ],
+                        }
+                    ],
+                }
+            }
+        )
+    )
+
+    code, output = run_check(tmp_path)
+
+    assert code == 1, "an empty SubagentStart matcher must not excuse an unrouted tool"
+    assert "NotebookEdit" in output
+
+
+def test_a_script_outside_the_scripts_directory_is_inspected(tmp_path: Path) -> None:
+    """`worktrunk-writer` invokes `.apm/skills/*/scripts/`, not `scripts/`.
+
+    Resolving by name against `scripts/` alone found zero scripts there, so the
+    package was skipped entirely and every rule was vacuous for it.
+    """
+    package = build_package(tmp_path, "hooks-example", matcher="Edit|Write")
+    nested = package / ".apm" / "skills" / "example" / "scripts"
+    nested.mkdir(parents=True)
+    (nested / "nested.py").write_text(
+        'import sys\nif tool_name == "apply_patch":\n    sys.exit(0)\n'
+    )
+    (package / "hooks" / "hooks.json").write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "PreToolUse": [
+                        {
+                            "matcher": "Edit|Write",
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": (
+                                        "${PLUGIN_ROOT}/.apm/skills/example/scripts/nested.py"
+                                    ),
+                                }
+                            ],
+                        }
+                    ]
+                }
+            }
+        )
+    )
+    (package / "scripts" / "guard.py").unlink()
+
+    code, output = run_check(tmp_path)
+
+    assert code == 1, "a nested script's unrouted branch must still be reported"
+    assert "matcher-coverage" in output
+    assert "nested.py" in output
+
+
 # --- rule 2: output fields must suit the declared target ----------------------
 
 

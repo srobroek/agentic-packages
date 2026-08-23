@@ -15,6 +15,8 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EVAL = os.path.join(HERE, "rules-eval.py")
@@ -729,6 +731,146 @@ run(
     agent_type="reviewer",
     rules_file=REVIEWER,
 )
+
+print("=== read budget fits the hook timeout ===")
+
+HOOK_MANIFESTS = [
+    os.path.abspath(os.path.join(HERE, "..", rel))
+    for rel in (
+        "hooks/claude-hooks.json",
+        "hooks/codex-hooks.json",
+        ".apm/hooks/orchestrate-claude-hooks.json",
+        ".apm/hooks/orchestrate-codex-hooks.json",
+    )
+]
+
+
+def _subagent_stop_timeouts(path):
+    with open(path) as fh:
+        manifest = json.load(fh)
+    return [
+        hook["timeout"]
+        for entry in manifest["hooks"].get("SubagentStop", [])
+        for hook in entry["hooks"]
+        if "rules-eval.py" in hook.get("command", "")
+    ]
+
+
+for _manifest in HOOK_MANIFESTS:
+    _timeouts = _subagent_stop_timeouts(_manifest)
+    # Worst case: the whole read budget, then the three-write bounce path, all
+    # before the verdict is emitted.
+    _worst = MODULE.BD_READ_BUDGET + 3 * MODULE.BD_WRITE_TIMEOUT
+    if _timeouts and all(_worst <= t for t in _timeouts):
+        passed += 1
+        print(f"  ok   {_worst}s worst case fits {_timeouts} in {os.path.basename(_manifest)}")
+    else:
+        failed += 1
+        print(f"  FAIL {_worst}s worst case vs {_timeouts} in {os.path.basename(_manifest)}")
+
+
+def _stalled_bd(tmpdir):
+    """A bd whose reads hang, except `show` which yields five relates-to links.
+
+    Hydration reads one bead per link, so the call count is data-driven; only a
+    shared deadline bounds it.
+    """
+    log = os.path.join(tmpdir, "calls.log")
+    script = os.path.join(tmpdir, "bd")
+    links = json.dumps(
+        {
+            "id": "node-1",
+            "dependencies": [
+                {"id": f"wisp-{n}", "dependency_type": "relates-to"} for n in range(5)
+            ],
+            "dependents": [],
+        }
+    )
+    with open(script, "w") as fh:
+        fh.write(
+            "#!/bin/sh\n"
+            f'echo "$@" >> {log}\n'
+            f'if [ "$1" = show ]; then printf %s {json.dumps(links)}; exit 0; fi\n'
+            "sleep 60\n"
+        )
+    os.chmod(script, 0o755)
+    return script, log
+
+
+with tempfile.TemporaryDirectory() as _tmp:
+    _fake_bd, _call_log = _stalled_bd(_tmp)
+    _original_bd, _original_budget, _original_per_call = (
+        MODULE.BD,
+        MODULE.BD_READ_BUDGET,
+        MODULE.BD_READ_TIMEOUT,
+    )
+    MODULE.BD = _fake_bd
+    MODULE.BD_READ_BUDGET = 2
+    MODULE.BD_READ_TIMEOUT = 1
+    MODULE._read_deadline = None
+    _target = bead(id="node-1", status="in_progress", labels=["orc-node", "agent:reviewer"])
+    _started = time.monotonic()
+    try:
+        MODULE.resolve_claimed_bead({"agent_id": "runtime-1", "agent_type": "reviewer"}, "reviewer")
+        MODULE.hydrate_comments(_target)
+        _elapsed = time.monotonic() - _started
+        with open(_call_log) as fh:
+            _stalled_calls = [line for line in fh if not line.startswith("show ")]
+    finally:
+        MODULE.BD = _original_bd
+        MODULE.BD_READ_BUDGET = _original_budget
+        MODULE.BD_READ_TIMEOUT = _original_per_call
+        MODULE._read_deadline = None
+
+    if _elapsed <= 3:
+        passed += 1
+        print(f"  ok   stalled bd reads stay inside the 2s budget ({_elapsed:.1f}s)")
+    else:
+        failed += 1
+        print(f"  FAIL stalled bd reads overran the 2s budget ({_elapsed:.1f}s)")
+
+    # resolve_claimed_bead attempts three reads and hydration two more; the
+    # per-call cap alone would let all five run, for 5x the elapsed ceiling.
+    if 2 <= len(_stalled_calls) < 5:
+        passed += 1
+        print(f"  ok   the deadline refused reads past {len(_stalled_calls)} stalled calls")
+    else:
+        failed += 1
+        print(f"  FAIL stalled read count does not show the deadline binding -> {_stalled_calls!r}")
+
+    if _target.get("comments") == [] and _target.get("linked_comments") == []:
+        passed += 1
+        print("  ok   an expired read budget yields empty hydration, not an exception")
+    else:
+        failed += 1
+        print(f"  FAIL hydration after budget expiry -> {_target!r}")
+
+# The bounce path runs after the reads, so an exhausted read deadline must not
+# swallow the writes that advance contract state.
+with tempfile.TemporaryDirectory() as _tmp:
+    _write_log = os.path.join(_tmp, "writes.log")
+    _writer = os.path.join(_tmp, "bd")
+    with open(_writer, "w") as fh:
+        fh.write(f'#!/bin/sh\necho "$@" >> {_write_log}\n')
+    os.chmod(_writer, 0o755)
+    _original_bd = MODULE.BD
+    MODULE.BD = _writer
+    MODULE._read_deadline = time.monotonic() - 1
+    try:
+        MODULE.bd_json("comments", "node-1", "--json")
+        MODULE.bd_write("comment", "node-1", "BOUNCE")
+        MODULE.bd_write("update", "node-1", "--assignee", "")
+    finally:
+        MODULE.BD = _original_bd
+        MODULE._read_deadline = None
+    with open(_write_log) as fh:
+        _writes = [line.split()[0] for line in fh]
+if _writes == ["comment", "update"]:
+    passed += 1
+    print("  ok   writes still run once the read budget is spent")
+else:
+    failed += 1
+    print(f"  FAIL writes after read-budget expiry -> {_writes!r}")
 
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")

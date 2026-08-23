@@ -205,6 +205,9 @@ def main() -> None:
         "followup_task",
         "send_input",
         "multi_agent_v1send_input",
+        "resume_agent",
+        "agents.resume_agent",
+        "multi_agent_v1resume_agent",
     }:
         message = str(
             tool_input.get("message") or tool_input.get("content") or tool_input.get("prompt") or ""
