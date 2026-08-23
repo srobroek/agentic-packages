@@ -85,3 +85,9 @@ graphify-out/
 
 # Audit raw evidence: per-agent transcripts (large, disposable).
 .audit-2026-07/raw/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
