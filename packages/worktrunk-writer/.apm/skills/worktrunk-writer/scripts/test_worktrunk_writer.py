@@ -2884,5 +2884,273 @@ class SubprocessTimeoutTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "")
 
 
+class BeadAuthorityTests(unittest.TestCase):
+    """Write authority keyed on the claimed bead of a leaseless checkout."""
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        root = Path(self.temp.name).resolve()
+        self.repo = root / "repo"
+        self.child = root / "child"
+        self.sibling = root / "sibling"
+        self.leased = root / "leased"
+        self.outside = root / "outside"
+        for path in (self.repo, self.child, self.sibling, self.leased, self.outside):
+            path.mkdir()
+        self.beads = {
+            "orc-child": {
+                "id": "orc-child",
+                "assignee": "child-actor",
+                "status": "in_progress",
+                "parent": "orc-parent",
+                "metadata": {},
+            },
+            "orc-parent": {
+                "id": "orc-parent",
+                "metadata": {"worktree": str(self.child)},
+            },
+            "orc-sibling": {
+                "id": "orc-sibling",
+                "assignee": "sibling-actor",
+                "metadata": {"worktree": str(self.sibling)},
+            },
+        }
+        self.inventory = [
+            {
+                "branch": "agent/child",
+                "path": str(self.child),
+                "kind": "worktree",
+                "vars": {"actor": "child-actor", "bead": "orc-child"},
+            },
+            {
+                "branch": "agent/sibling",
+                "path": str(self.sibling),
+                "kind": "worktree",
+                "vars": {"actor": "sibling-actor", "bead": "orc-sibling"},
+            },
+            {
+                "branch": "writer/leased",
+                "path": str(self.leased),
+                "kind": "worktree",
+                "vars": {
+                    "actor": "leased-actor",
+                    "lease": "leased-lease",
+                    "bead": "orc-sibling",
+                    "context": "leased-agent-1",
+                },
+            },
+        ]
+        MODULE.bead_record.cache_clear()
+        self.addCleanup(MODULE.bead_record.cache_clear)
+        self.addCleanup(self.temp.cleanup)
+
+    def show(self, bead: str) -> dict:
+        record = self.beads.get(bead)
+        if record is None:
+            raise MODULE.ContractError(f"expected one Bead for {bead}")
+        return record
+
+    def stubbed(self, *, beads_active: bool = True):
+        return (
+            patch.object(MODULE, "one_bead", side_effect=lambda repo, bead: self.show(bead)),
+            patch.object(MODULE, "beads_active", return_value=beads_active),
+        )
+
+    def authority(self, target: Path, cwd: Path, *, beads_active: bool = True):
+        stubs = self.stubbed(beads_active=beads_active)
+        with stubs[0], stubs[1]:
+            return MODULE.assert_bead_authority(self.inventory, target, cwd, self.repo)
+
+    def resolve(self, bead: str) -> Path | None:
+        with patch.object(MODULE, "one_bead", side_effect=lambda repo, name: self.show(name)):
+            return MODULE.bead_worktree(self.repo, bead)
+
+    def test_resolver_prefers_the_beads_own_anchor(self) -> None:
+        self.beads["orc-child"]["metadata"] = {"worktree_path": str(self.sibling)}
+        self.assertEqual(self.resolve("orc-child"), self.sibling)
+
+    def test_resolver_inherits_from_the_parent(self) -> None:
+        self.assertEqual(self.resolve("orc-child"), self.child)
+
+    def test_resolver_inherits_from_a_grandparent(self) -> None:
+        self.beads["orc-parent"] = {"id": "orc-parent", "parent": "orc-grand", "metadata": {}}
+        self.beads["orc-grand"] = {"id": "orc-grand", "metadata": {"worktree": str(self.child)}}
+        self.assertEqual(self.resolve("orc-child"), self.child)
+
+    def test_resolver_returns_none_when_no_ancestor_carries_an_anchor(self) -> None:
+        self.beads["orc-parent"] = {"id": "orc-parent", "metadata": {}}
+        self.assertIsNone(self.resolve("orc-child"))
+
+    def test_resolver_terminates_on_a_parent_cycle(self) -> None:
+        self.beads["orc-parent"] = {"id": "orc-parent", "parent": "orc-child", "metadata": {}}
+        self.assertIsNone(self.resolve("orc-child"))
+
+    def test_resolver_returns_none_for_an_unreadable_bead(self) -> None:
+        self.assertIsNone(self.resolve("orc-missing"))
+
+    def test_resolver_memoizes_each_bead(self) -> None:
+        with patch.object(
+            MODULE, "one_bead", side_effect=lambda repo, name: self.show(name)
+        ) as show:
+            MODULE.bead_worktree(self.repo, "orc-child")
+            MODULE.bead_worktree(self.repo, "orc-child")
+        self.assertEqual(show.call_count, 2)
+
+    def test_authority_is_inert_outside_every_bead_keyed_checkout(self) -> None:
+        self.assertIsNone(self.authority(self.outside / "f.txt", self.outside))
+
+    def test_authority_allows_a_claimed_checkout_writing_to_itself(self) -> None:
+        item = self.authority(self.child / "f.txt", self.child)
+        self.assertEqual(MODULE.item_path(item), self.child)
+
+    def test_authority_denies_a_target_outside_the_callers_checkout(self) -> None:
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(self.outside / "f.txt", self.child)
+        message = str(caught.exception)
+        self.assertIn(str(self.outside), message)
+        self.assertIn(str(self.child), message)
+        self.assertIn("cd --", message)
+
+    def test_authority_denies_a_write_into_a_sibling_checkout(self) -> None:
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(self.sibling / "f.txt", self.child)
+        message = str(caught.exception)
+        self.assertIn("orc-child", message)
+        self.assertIn("orc-sibling", message)
+
+    def test_authority_denies_a_bead_that_resolves_elsewhere(self) -> None:
+        self.beads["orc-parent"]["metadata"] = {"worktree": str(self.outside)}
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(self.child / "f.txt", self.child)
+        self.assertIn(str(self.outside), str(caught.exception))
+        self.assertIn(str(self.child), str(caught.exception))
+
+    def test_authority_denies_a_bead_with_no_resolvable_worktree(self) -> None:
+        self.beads["orc-parent"] = {"id": "orc-parent", "metadata": {}}
+        with self.assertRaises(MODULE.ContractError):
+            self.authority(self.child / "f.txt", self.child)
+
+    def test_authority_allows_a_provisioned_but_unclaimed_bead(self) -> None:
+        # The parent stamps the checkout before the child exists to claim it, so a
+        # presence-only assignee check would deny every freshly provisioned worktree.
+        self.beads["orc-child"].pop("assignee")
+        self.assertIsNotNone(self.authority(self.child / "f.txt", self.child))
+
+    def test_authority_denies_a_bead_claimed_by_another_actor(self) -> None:
+        self.beads["orc-child"]["assignee"] = "other-actor"
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(self.child / "f.txt", self.child)
+        message = str(caught.exception)
+        self.assertIn("other-actor", message)
+        self.assertIn("child-actor", message)
+
+    def become_artifact_node(self, artifacts: Path) -> None:
+        self.beads["orc-parent"]["metadata"] = {
+            "worktree": str(self.child),
+            "execution_kind": "artifact",
+            "artifacts_dir": str(artifacts),
+        }
+        self.beads["orc-child"]["metadata"] = {
+            "execution_kind": "artifact",
+            "artifacts_dir": str(artifacts),
+        }
+
+    def test_authority_allows_an_artifact_node_writing_under_its_artifacts_dir(self) -> None:
+        artifacts = self.outside / "artifacts"
+        self.become_artifact_node(artifacts)
+        item = self.authority(artifacts / "report.md", self.child)
+        self.assertEqual(MODULE.item_path(item), self.child)
+
+    def test_authority_denies_an_artifact_node_writing_outside_its_artifacts_dir(self) -> None:
+        self.become_artifact_node(self.outside / "artifacts")
+        with self.assertRaises(MODULE.ContractError):
+            self.authority(self.outside / "elsewhere.md", self.child)
+
+    def test_authority_denies_a_non_artifact_bead_writing_under_an_artifacts_dir(self) -> None:
+        artifacts = self.outside / "artifacts"
+        self.beads["orc-child"]["metadata"] = {"artifacts_dir": str(artifacts)}
+        with self.assertRaises(MODULE.ContractError):
+            self.authority(artifacts / "report.md", self.child)
+
+    def test_authority_rejects_an_artifacts_dir_nested_in_the_worktree(self) -> None:
+        # A nested artifacts_dir grants no escape: the only target that reaches the
+        # artifact allowance is one outside the checkout, and the anchor invariant
+        # refuses to sanction it.
+        self.become_artifact_node(self.child / "artifacts")
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(self.outside / "report.md", self.child)
+        self.assertIn("outside its disposable worktree", str(caught.exception))
+
+    def test_authority_denies_an_artifact_node_whose_bead_another_actor_claims(self) -> None:
+        artifacts = self.outside / "artifacts"
+        self.become_artifact_node(artifacts)
+        self.beads["orc-child"]["assignee"] = "other-actor"
+        with self.assertRaises(MODULE.ContractError) as caught:
+            self.authority(artifacts / "report.md", self.child)
+        self.assertIn("other-actor", str(caught.exception))
+
+    def test_authority_is_inert_when_beads_is_unreachable(self) -> None:
+        self.beads["orc-child"]["assignee"] = "other-actor"
+        self.assertIsNone(self.authority(self.child / "f.txt", self.child, beads_active=False))
+
+    def test_authority_leaves_a_leased_checkout_to_the_lease_path(self) -> None:
+        self.assertIsNone(self.authority(self.leased / "f.txt", self.leased))
+
+    def invoke_hook(self, payload: dict) -> str:
+        stdout = io.StringIO()
+        completed = subprocess.CompletedProcess([], 0, "", "")
+        stubs = self.stubbed()
+        with (
+            stubs[0],
+            stubs[1],
+            patch.object(MODULE, "wt_inventory", return_value=self.inventory),
+            patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(MODULE.subprocess, "run", return_value=completed),
+            patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            patch.object(sys, "stdout", stdout),
+            cleared_env(),
+        ):
+            self.assertEqual(MODULE.hook(), 0)
+        return stdout.getvalue()
+
+    def test_hook_allows_an_edit_inside_a_claimed_bead_keyed_checkout(self) -> None:
+        self.assertEqual(
+            self.invoke_hook(
+                {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Edit",
+                    "cwd": str(self.child),
+                    "tool_input": {"file_path": str(self.child / "f.txt")},
+                }
+            ),
+            "",
+        )
+
+    def test_hook_denies_a_bash_call_that_never_entered_the_checkout(self) -> None:
+        output = self.invoke_hook(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "cwd": str(self.child),
+                "tool_input": {"command": f"echo hi > {self.outside / 'f.txt'}"},
+            }
+        )
+        decision = json.loads(output)["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn(str(self.child), decision["permissionDecisionReason"])
+
+    def test_hook_still_denies_an_unbound_write_into_a_leased_checkout(self) -> None:
+        """The lease path keeps its say wherever bead authority returns None."""
+        output = self.invoke_hook(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Edit",
+                "cwd": str(self.leased),
+                "tool_input": {"file_path": str(self.leased / "f.txt")},
+            }
+        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+
 if __name__ == "__main__":
     unittest.main()

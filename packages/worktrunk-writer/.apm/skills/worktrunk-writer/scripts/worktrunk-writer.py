@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import os
 import re
@@ -288,6 +289,42 @@ def one_bead(repo: Path, bead: str) -> dict[str, Any]:
     if isinstance(payload, dict):
         return payload
     raise ContractError(f"expected one Bead for {bead}")
+
+
+BEAD_ANCESTRY_DEPTH = 5
+
+
+@functools.cache
+def bead_record(repo: Path, bead: str) -> dict[str, Any] | None:
+    """Memoized `one_bead`, None when the bead cannot be read.
+
+    A single tool call yields several mutation targets that resolve the same
+    bead, and `bd show` costs ~0.7s against a 10s PreToolUse budget.
+    """
+    try:
+        return one_bead(repo, bead)
+    except ContractError:
+        return None
+
+
+def bead_worktree(repo: Path, bead: str) -> Path | None:
+    """Resolved worktree anchor of `bead`, inherited from its `parent` chain when it has none.
+
+    The walk is depth-bounded so a malformed `parent` cycle cannot hang the hook.
+    """
+    for _ in range(BEAD_ANCESTRY_DEPTH):
+        record = bead_record(repo, bead)
+        if not isinstance(record, dict):
+            return None
+        metadata = bead_metadata(record)
+        anchor = metadata.get("worktree") or metadata.get("worktree_path")
+        if anchor:
+            return Path(str(anchor)).resolve()
+        parent = record.get("parent")
+        if not isinstance(parent, str) or not parent:
+            return None
+        bead = parent
+    return None
 
 
 def tracks_bead(metadata: dict[str, Any], bead: str) -> bool:
@@ -1235,8 +1272,8 @@ def protocol_engaged(
     every unrelated agent under the contract. Enforcement engages only on
     positive evidence -- an operator opt-in, an external writer stamp, a
     caller whose runtime context already holds a lease, a caller running
-    inside a leased checkout, an allocation that speaks the WAIT grammar, or
-    an active orchestration run that owns the whole handshake.
+    inside a leased or bead-keyed checkout, an allocation that speaks the WAIT
+    grammar, or an active orchestration run that owns the whole handshake.
     """
     if expected_lease or os.environ.get("WORKTRUNK_WRITER_ENFORCE"):
         return True
@@ -1244,6 +1281,8 @@ def protocol_engaged(
     if context and any(context in bound_contexts(item) for item in inventory):
         return True
     if containing_item(leased_items(inventory), cwd) is not None:
+        return True
+    if containing_item(bead_keyed_items(inventory), cwd) is not None:
         return True
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
@@ -1702,6 +1741,120 @@ def assert_runtime_lease(
     return item
 
 
+def bead_keyed_items(inventory: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Checkouts whose write authority comes from a claimed bead rather than a lease."""
+    return [
+        item
+        for item in inventory
+        if worktrunk_vars(item).get("bead") and not worktrunk_vars(item).get("lease")
+    ]
+
+
+def bead_metadata(record: dict[str, Any]) -> dict[str, Any]:
+    value = record.get("metadata")
+    return value if isinstance(value, dict) else {}
+
+
+def assert_bead_claim(
+    record: dict[str, Any],
+    item: dict[str, Any],
+    bead: str,
+) -> None:
+    """Require the bead's claim to name this checkout's actor, if it is claimed at all.
+
+    A provisioned-but-unclaimed bead is the legitimate pre-spawn state: the parent
+    stamps the checkout before the child exists to claim it, so absence passes.
+    """
+    assignee = record.get("assignee")
+    actor = worktrunk_vars(item).get("actor")
+    if assignee and assignee != actor:
+        raise ContractError(
+            f"Bead {bead} is claimed by {assignee!r}; checkout "
+            f"{str(item_path(item))!r} names actor {actor!r}"
+        )
+
+
+def bead_artifact_target_allowed(
+    repo: Path,
+    item: dict[str, Any],
+    target: Path,
+) -> bool:
+    """Whether `target` is this bead-keyed checkout's own artifacts output.
+
+    An artifact-kind bead must write its report under an `artifacts_dir` that by
+    contract lives outside its disposable worktree, so the confinement rule alone
+    would deny the one write it exists to make. None of the lease path's
+    branch/actor/lease_token metadata equalities apply here: the claim is the
+    bead-keyed equivalent, and it is checked by the caller.
+    """
+    bead = str(worktrunk_vars(item)["bead"])
+    metadata = bead_metadata(bead_record(repo, bead) or {})
+    if metadata.get("execution_kind") != "artifact":
+        return False
+    checkout = item_path(item)
+    if checkout is None:
+        return False
+    validate_bead_artifacts(metadata, checkout, bead)
+    try:
+        relative = target.resolve().relative_to(Path(str(metadata["artifacts_dir"])).resolve())
+    except ValueError:
+        return False
+    return bool(relative.parts)
+
+
+def assert_bead_authority(
+    inventory: list[dict[str, Any]],
+    target: Path,
+    cwd: Path,
+    repo: Path,
+) -> dict[str, Any] | None:
+    """Authorise a write against the claimed bead of its checkout.
+
+    Returns the owning item when the write is authorised, None when no
+    bead-keyed checkout is implicated -- in which case the lease path decides.
+    An unreachable Beads must neither allow nor deny everything, so it also
+    returns None.
+    """
+    candidates = bead_keyed_items(inventory)
+    owner = containing_item(candidates, target)
+    caller = containing_item(candidates, cwd)
+    if owner is None and caller is None:
+        return None
+    if not beads_active(repo):
+        return None
+    if owner is None:
+        checkout = item_path(caller)
+        bead = str(worktrunk_vars(caller)["bead"])
+        if bead_artifact_target_allowed(repo, caller, target):
+            assert_bead_claim(bead_record(repo, bead) or {}, caller, bead)
+            return caller
+        # Same failure mode as assert_runtime_lease's unleased message: agents
+        # read it as a broken claim when the cause is a Bash call that inherited
+        # the parent directory.
+        raise ContractError(
+            f"writer mutation targets {str(target)!r}, which is outside the "
+            f"bead-keyed checkout {str(checkout)!r}. A Bash command must begin "
+            f"with 'cd -- {str(checkout)}'"
+        )
+    if caller is not None and owner is not caller:
+        raise ContractError(
+            f"writer mutation targets checkout {str(item_path(owner))!r} "
+            f"(bead {worktrunk_vars(owner).get('bead')}) from checkout "
+            f"{str(item_path(caller))!r} (bead {worktrunk_vars(caller).get('bead')})"
+        )
+    variables = worktrunk_vars(owner)
+    bead = str(variables["bead"])
+    checkout = item_path(owner)
+    resolved = bead_worktree(repo, bead)
+    if resolved is None or resolved != checkout:
+        raise ContractError(
+            f"Bead {bead} resolves to worktree {str(resolved)!r}; checkout "
+            f"{str(checkout)!r} claims it"
+        )
+    assert_bead_claim(bead_record(repo, bead) or {}, owner, bead)
+    return owner
+
+
 def hook_deny(error: ContractError) -> int:
     reason = f"Blocked by worktrunk-writer lease validation: {error}"
     print(
@@ -1824,6 +1977,11 @@ def hook() -> int:
     targets = mutation_targets(payload, cwd)
     try:
         for target in targets:
+            # Bead authority runs first: assert_runtime_lease denies a bound
+            # context in a leaseless repository, so reaching it in the
+            # bead-keyed case would deny every call.
+            if assert_bead_authority(inventory, target, cwd, repo) is not None:
+                continue
             item = assert_runtime_lease(
                 payload,
                 inventory,

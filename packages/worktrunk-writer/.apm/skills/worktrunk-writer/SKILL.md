@@ -31,6 +31,15 @@ TRIGGER
 8. RELEASE a checkout whose bound actor is gone: `scripts/worktrunk-writer.py release --repo {repo} --path {path} --actor {actor} --lease {token}`. Require `status=released`. It clears `context`, `contexts`, and `runtime-bindings` only. `branch`, `worktree`, `actor`, `lease`, and the working tree survive, so `bind` a replacement handle to reuse the prepared checkout and its commits. Without this a dead agent's binding makes every replacement fail `assert_bound_handle`.
 9. LOAD references/lifecycle.md before merge, removal, hook design, or diagnosing a lifecycle failure.
 
+## Bead-keyed enforcement
+
+A checkout stamped with `actor` and `bead` vars and no `lease` is enforced against its claimed bead instead of a lease.
+
+- The bead's worktree anchor is `metadata.worktree` or `metadata.worktree_path`, inherited up the `parent` chain when the bead carries neither.
+- A bead with no assignee is provisioned but unclaimed, which is the pre-spawn state, and its checkout may write.
+- A bead whose assignee is a different actor than the checkout's `actor` is denied, as is a target in a sibling agent's checkout or anywhere outside the checkout.
+- An artifact node writes under its bead's absolute `artifacts_dir` outside the checkout.
+
 ## Worktrunk lifecycle hooks
 
 `scripts/worktrunk-writer.py lifecycle --event <pre-start|pre-switch|pre-remove> --repo <repo> [--path <path>] [--target <branch>]` is the hook entry point. Install it in project or user Worktrunk config; a human approves project hooks once with `wt config approvals add` and agents never pass `--yes`, so the hooks are inert until then.
