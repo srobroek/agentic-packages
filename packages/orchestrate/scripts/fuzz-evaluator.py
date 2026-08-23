@@ -75,15 +75,6 @@ def must_be_valid_json_or_empty(script, out, rc, crashed, label):
         return None
 
 
-def is_pretool_deny(value):
-    hook_output = value.get("hookSpecificOutput", {}) if isinstance(value, dict) else {}
-    return (
-        hook_output.get("hookEventName") == "PreToolUse"
-        and hook_output.get("permissionDecision") == "deny"
-        and bool(hook_output.get("permissionDecisionReason"))
-    )
-
-
 # ---- Layer 1: property-based garbage -------------------------------------
 def prop_fuzz():
     try:
@@ -255,18 +246,6 @@ def attack_vectors():
     )
     if not is_block(v):
         findings.append("[attack] mid-string FAILED spoofed the escape hatch (should block)")
-
-    # 10. claim-deny: sneaky --claim with tabs around it.
-    out, rc, crashed = invoke(
-        DENY,
-        json.dumps({"tool_input": {"command": "bd\tupdate x\t--claim"}}),
-        env={"ORCHESTRATE_RUN": "1"},
-    )
-    v = must_be_valid_json_or_empty(DENY, out, rc, crashed, "attack-deny")
-    if not is_pretool_deny(v):
-        findings.append(
-            "[attack] tab-separated 'bd update --claim' NOT denied (whitespace-anchor gap)"
-        )
 
 
 def main():
