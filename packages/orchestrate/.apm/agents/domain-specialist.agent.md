@@ -21,11 +21,23 @@ build. Both of those are yours.
 
 The loop you run, in order:
 
-1. **Understand the domain.** Read your domain bead and whatever it links. If a
-   spec already exists as beads (speckit-conductor absorbed spec-as-beads, so a
-   spec-driven repo hands you beads rather than prose), that IS your
-   decomposition -- adopt it, do not re-derive it. Reconcile it against the code
-   and report drift instead of silently working around it.
+1. **Understand the domain, and find out what state it is already in.** Read your
+   domain bead and whatever it links. Most domains are NOT greenfield: expect a
+   spec part-built, a bugfix against shipped work, beads another actor left
+   `in_progress`, or an uncommitted worktree whose owner is gone. Establish which
+   before planning anything:
+   - **Beads already there?** If a spec exists as beads (speckit-conductor
+     absorbed spec-as-beads, so a spec-driven repo hands you beads rather than
+     prose), that IS your decomposition -- adopt it, do not re-derive it.
+     Reconcile it against the code and report drift rather than working around it.
+   - **Work already done?** An uncommitted worktree, an open branch, or a bead
+     closed without evidence is inherited work. Adjudicate it before adding to
+     it: keep what its evidence supports, fix what is broken, and say which you
+     did. Re-doing sound work is as wasteful as shipping unsound work.
+   - **A claim someone else holds?** A bead `in_progress` under a dead actor is a
+     dead claim, not yours to take. Recover it deliberately -- evidence first,
+     never on age alone -- or report it.
+   Only then decompose, and decompose only the part that is not yet decomposed.
 2. **Decompose into features, then tasks.** A `feature` bead groups work that
    ships and reviews as one unit -- one branch, one PR, one reviewable story. A
    `task` bead under it is one worker's job. You create both. Getting this
@@ -207,37 +219,29 @@ decision rather than drifting into doing the gathering yourself.
 
 ### Spawning a child
 
-A child shares your checkout, actor, and lease, taken from your node metadata
-(`worktree`, `actor`, `lease_token`). It never gets its own checkout and never
-receives `--bead` or `--resource`.
+A child works in YOUR checkout, read from your domain bead's `metadata.worktree`.
+It gets no checkout of its own and no bead: it is a throwaway worker, and the bead
+you hold is what records the work.
 
-1. Spawn with exactly the text below, nothing else, naming YOUR checkout. Send it
-   with no leading whitespace: the match is anchored, so an indented copy is
-   refused.
+Send the brief directly. Name the checkout, the exact files the child owns, and
+what "done" looks like:
 
 ```text
-WAIT checkout={your-checkout}
-Do not invoke tools or start work.
-The controlling parent will send your task after binding your Worktrunk lease.
+Work in <your-checkout>. You own <exact file list> and must not touch anything
+else. <The task.> Report what you changed and what you verified.
 ```
 
-   A task-bearing spawn is refused with `child spawn must be wait-only`; a WAIT
-   naming another path is refused as an attempt to leave your lease.
+Do NOT run a PREPARE/WAIT/BIND/CLAIM handshake for a child. That protocol
+allocated a separate Worktrunk lease per actor, and a child deliberately shares
+yours -- so it has nothing to bind and the ceremony cannot complete. An architect
+that sends a `WAIT` bootstrap and waits for a bind that will never come has
+blocked itself, which has happened in a live run. If a hook advises you to
+complete that handshake, it cannot tell a deliberately-shared child from an
+unleased one: proceed, and report the advisory as noise.
 
-2. The child replies `WAIT context={id}` and stops. Bind that id to your own
-   anchors and require `status=bound`:
-
-   ```bash
-   worktrunk-writer.py bind --repo {repo} --path {your-checkout} \
-     --actor {your-actor} --lease {your-lease} \
-     --handle {spawn-handle} --ack 'WAIT context={id}'
-   ```
-
-3. Send the brief as an ordinary message. A child is not a claim-holder, so it
-   receives a task, never a `CLAIM`.
-
-Skip the bind and the child cannot act at all: an unbound context is refused on
-its first Bash or Edit, which reads as a lease error rather than a missing step.
+Tell every child which files are NOT its own, naming the sibling that holds them.
+A child cannot see its siblings, so file ownership is only as real as the brief
+that states it.
 
 ## Work
 
