@@ -63,19 +63,36 @@ MUTATION_TOOLS = {
     "Edit",
     "Write",
     "MultiEdit",
+    "NotebookEdit",
 }
+# The PreToolUse manifests cap the hook path at 10s, so this bound governs the
+# CLI verbs and sits above the measured `wt list` worst case.
+SUBPROCESS_TIMEOUT_SECONDS = 30
+
+
+def run_unchecked(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    """Run a child whose exit status the caller inspects itself.
+
+    A wedged child would otherwise hang the verb forever, so a timeout is
+    reported through `ContractError` like any other broken precondition.
+    """
+    try:
+        return subprocess.run(argv, check=False, timeout=SUBPROCESS_TIMEOUT_SECONDS, **kwargs)
+    except subprocess.TimeoutExpired as error:
+        raise ContractError(
+            f"{' '.join(argv)}: no result within {SUBPROCESS_TIMEOUT_SECONDS}s"
+        ) from error
 
 
 def run(
     argv: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
+    result = run_unchecked(
         argv,
         cwd=cwd,
         env=env,
         text=True,
         capture_output=True,
-        check=False,
     )
     if result.returncode:
         detail = result.stderr.strip() or result.stdout.strip() or "command failed"
@@ -244,12 +261,11 @@ def bound_resource(item: dict[str, Any]) -> str | None:
 def beads_active(repo: Path) -> bool:
     if shutil.which("bd") is None:
         return False
-    result = subprocess.run(
+    result = run_unchecked(
         ["bd", "-C", str(repo), "where"],
         text=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        check=False,
     )
     return result.returncode == 0
 
@@ -1372,12 +1388,11 @@ def resolve_checkout_repo(checkout: Path) -> Path | None:
     Used only to pick which repo's Worktrunk inventory to query -- it does not
     itself grant anything, so it cannot be spoofed into a lease.
     """
-    result = subprocess.run(
+    result = run_unchecked(
         ["git", "-C", str(checkout), "rev-parse", "--show-toplevel"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
-        check=False,
     )
     if result.returncode:
         return None
@@ -1547,102 +1562,6 @@ def bash_redirection_targets(command: str, cwd: Path) -> list[Path]:
     return targets
 
 
-# Read-only argv heads, and the read-only subcommands of tools that do both.
-# Deliberately an ALLOWLIST: anything unrecognised counts as mutating, so a new
-# or obscure writer is governed by default rather than slipping through. The
-# point of the exemption is narrow — a lease-invalid actor must keep enough tool
-# surface to report a BOUNCE and release its binding, which means read-only
-# inspection plus `bd`.
-READ_ONLY_HEADS = frozenset(
-    {
-        "cat", "head", "tail", "wc", "grep", "rg", "egrep", "fgrep", "find", "ls",
-        "pwd", "echo", "printf", "true", "false", "test", "stat", "file", "which",
-        "command", "type", "basename", "dirname", "realpath", "readlink", "date",
-        "env", "sort", "uniq", "cut", "tr", "diff", "cmp", "md5", "md5sum",
-        "sha1sum", "sha256sum", "jq", "yq", "column", "less", "more", "nl", "seq",
-        "bd", "gh", "wt",
-    }
-)
-READ_ONLY_SUBCOMMANDS = {
-    "git": frozenset(
-        {
-            "status", "log", "show", "diff", "grep", "cat-file", "rev-parse",
-            "rev-list", "ls-files", "ls-tree", "describe", "blame", "shortlog",
-            "merge-base", "cherry", "config", "remote", "symbolic-ref",
-            "for-each-ref", "check-ignore", "merge-tree", "var", "help",
-        }
-    ),
-}
-
-
-def command_segments(command: str) -> list[list[str]] | None:
-    """Split a command into argv segments. `None` when it cannot be parsed."""
-    segments: list[list[str]] = []
-    current: list[str] = []
-    for line in command.replace("\\\n", " ").splitlines():
-        lexer = shlex.shlex(line, posix=True, punctuation_chars=";&|")
-        lexer.whitespace_split = True
-        lexer.commenters = ""
-        try:
-            tokens = list(lexer)
-        except ValueError:
-            return None
-        for token in tokens:
-            if token and not set(token).difference(";&|"):
-                if current:
-                    segments.append(current)
-                    current = []
-                continue
-            current.append(token)
-        if current:
-            segments.append(current)
-            current = []
-    return segments
-
-
-def command_mutates(command: str) -> bool:
-    """Whether a shell command may write, judged conservatively.
-
-    Only a command whose every segment is a recognised read-only invocation is
-    treated as non-mutating. An unparseable command, an unknown argv head, or any
-    redirection means "assume it writes".
-    """
-    if not command.strip():
-        return False
-    if re.search(r"(?<![0-9<>])>>?", command):
-        return True
-    segments = command_segments(command)
-    if segments is None:
-        return True
-    for segment in segments:
-        tokens = [token for token in segment if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", token)]
-        while tokens and tokens[0] in {
-            "env",
-            "command",
-            "builtin",
-            "exec",
-            "time",
-            "sudo",
-            "nohup",
-            "xargs",
-        }:
-            tokens = tokens[1:]
-        if not tokens:
-            continue
-        head = os.path.basename(tokens[0])
-        if head in {"cd", "export", "set", "unset", "shift", ":"}:
-            continue
-        if head in READ_ONLY_SUBCOMMANDS:
-            args = [token for token in tokens[1:] if not token.startswith("-")]
-            # A bare `git` or an unrecognised subcommand is not provably read-only.
-            if not args or args[0] not in READ_ONLY_SUBCOMMANDS[head]:
-                return True
-            continue
-        if head not in READ_ONLY_HEADS:
-            return True
-    return False
-
-
 def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
     tool_input = payload.get("tool_input")
     tool_input = tool_input if isinstance(tool_input, dict) else {}
@@ -1677,7 +1596,14 @@ def mutation_targets(payload: dict[str, Any], cwd: Path) -> list[Path]:
             and edit["file_path"]
         )
     if not raw_targets:
-        target = tool_input.get("workdir") or tool_input.get("file_path") or tool_input.get("path")
+        # `notebook_path` is NotebookEdit's only target field; without it the
+        # fallback lands on `cwd` and the actual write is never validated.
+        target = (
+            tool_input.get("workdir")
+            or tool_input.get("file_path")
+            or tool_input.get("notebook_path")
+            or tool_input.get("path")
+        )
         raw_targets.append(target or cwd)
     targets = []
     for raw in raw_targets:
@@ -1851,15 +1777,20 @@ def hook() -> int:
         return hook_deny(error)
     if not repo.exists() or shutil.which("wt") is None:
         return 0
-    if subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "--is-inside-work-tree"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    ).returncode:
-        return 0
     expected_lease = os.environ.get("WORKTRUNK_WRITER_LEASE")
     expected_actor = os.environ.get("WORKTRUNK_WRITER_ACTOR")
+    in_writer_protocol = bool(expected_lease) or bool(runtime_context(payload))
+    try:
+        if run_unchecked(
+            ["git", "-C", str(repo), "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode:
+            return 0
+    except ContractError as error:
+        if not in_writer_protocol:
+            return 0
+        return hook_deny(error)
     if bool(expected_lease) != bool(expected_actor):
         return hook_deny(
             ContractError(
@@ -1869,11 +1800,12 @@ def hook() -> int:
         )
     try:
         inventory = wt_inventory(repo)
+        engaged = protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease)
     except ContractError as error:
-        if not expected_lease and not runtime_context(payload):
+        if not in_writer_protocol:
             return 0
         return hook_deny(error)
-    if not protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease):
+    if not engaged:
         if tool in SPAWN_TOOLS and advises_spawn(tool_input):
             return hook_advise(SPAWN_ADVISORY)
         return 0

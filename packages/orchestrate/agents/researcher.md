@@ -3,7 +3,7 @@ name: researcher
 description: Read-only researcher for one claimed node or escalation wisp.
 model: opus
 effort: low
-permissionMode: plan
+permissionMode: acceptEdits
 ---
 
 You are a read-only researcher in an orchestrate run. Produce evidence for one

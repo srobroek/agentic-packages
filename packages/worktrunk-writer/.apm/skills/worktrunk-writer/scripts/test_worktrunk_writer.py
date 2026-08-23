@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import importlib.util
 import io
 import json
@@ -1022,6 +1023,38 @@ class RuntimeHookTests(unittest.TestCase):
             "",
         )
 
+    def test_bound_notebook_write_outside_the_lease_is_denied(self) -> None:
+        """NotebookEdit names its target `notebook_path`, not `file_path`.
+
+        Reading only `file_path` made the target fall back to `cwd`, so a bound
+        writer's notebook write to any path at all validated the leased cwd and
+        passed.
+        """
+        output = self.invoke_hook(
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "NotebookEdit",
+                "agent_id": "claude-agent-1",
+                "cwd": str(self.claude),
+                "tool_input": {"notebook_path": str(self.outside / "escape.ipynb")},
+            }
+        )
+        self.assertEqual(json.loads(output)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+    def test_bound_notebook_write_inside_the_lease_is_allowed(self) -> None:
+        self.assertEqual(
+            self.invoke_hook(
+                {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "NotebookEdit",
+                    "agent_id": "claude-agent-1",
+                    "cwd": str(self.claude),
+                    "tool_input": {"notebook_path": str(self.claude / "analysis.ipynb")},
+                }
+            ),
+            "",
+        )
+
     def test_an_active_orchestration_run_engages_enforcement(self) -> None:
         marker = self.primary / ".orchestration" / ".active-run"
         marker.parent.mkdir(parents=True, exist_ok=True)
@@ -1562,6 +1595,30 @@ class HookManifestTests(unittest.TestCase):
         self.assertIn("Edit", claude_tools)
         self.assertNotIn("apply_patch", claude_tools)
         self.assertIn("apply_patch", codex_tools)
+        self.assertIn("NotebookEdit", claude_tools)
+        self.assertIn("NotebookEdit", codex_tools)
+
+    def test_mutation_manifests_match_every_governed_mutation_tool(self) -> None:
+        """A tool in MUTATION_TOOLS the manifests never match is never validated."""
+        hooks = hook_manifest_root()
+        for name, runtime_tools in (
+            (
+                "worktrunk-writer-claude-hooks.json",
+                {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"},
+            ),
+            (
+                "worktrunk-writer-codex-hooks.json",
+                {"Bash", "apply_patch", "Edit", "Write", "MultiEdit", "NotebookEdit"},
+            ),
+        ):
+            manifest = json.loads((hooks / name).read_text())
+            matched = {
+                tool
+                for entry in manifest["hooks"]["PreToolUse"]
+                for tool in entry["matcher"].split("|")
+            }
+            self.assertEqual(runtime_tools - matched, set(), name)
+            self.assertEqual(runtime_tools - MODULE.MUTATION_TOOLS, set(), name)
 
     def test_runtime_manifests_anchor_scripts_at_project_root(self) -> None:
         hooks = hook_manifest_root()
@@ -2748,6 +2805,83 @@ class BindingIndexTests(unittest.TestCase):
                     "handle": "handle-1",
                 },
             )
+
+
+class SubprocessTimeoutTests(unittest.TestCase):
+    def test_every_subprocess_run_call_bounds_its_child(self) -> None:
+        """A call site with no timeout hangs the verb forever on a wedged child."""
+        tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
+        unbounded = [
+            node.lineno
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "run"
+            and getattr(node.func.value, "id", None) == "subprocess"
+            and not any(keyword.arg == "timeout" for keyword in node.keywords)
+        ]
+        self.assertEqual(unbounded, [], f"subprocess.run without timeout at lines {unbounded}")
+
+    def test_a_wedged_child_raises_the_contract_error(self) -> None:
+        expired = subprocess.TimeoutExpired(["wt", "list"], MODULE.SUBPROCESS_TIMEOUT_SECONDS)
+        with patch.object(MODULE.subprocess, "run", side_effect=expired):
+            with self.assertRaises(MODULE.ContractError) as caught:
+                MODULE.run(["wt", "list"])
+        message = str(caught.exception)
+        self.assertIn("wt list", message)
+        self.assertIn(str(MODULE.SUBPROCESS_TIMEOUT_SECONDS), message)
+
+    def test_a_wedged_beads_probe_reports_inactive_beads(self) -> None:
+        expired = subprocess.TimeoutExpired(["bd", "where"], MODULE.SUBPROCESS_TIMEOUT_SECONDS)
+        with (
+            patch.object(MODULE.shutil, "which", return_value="/usr/bin/bd"),
+            patch.object(MODULE.subprocess, "run", side_effect=expired),
+        ):
+            with self.assertRaises(MODULE.ContractError):
+                MODULE.beads_active(Path("/tmp/repo"))
+
+    def test_a_wedged_git_probe_does_not_crash_the_hook(self) -> None:
+        """The hook must answer through its deny channel, never a traceback."""
+        expired = subprocess.TimeoutExpired(["git", "rev-parse"], 30)
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "agent_id": "claude-agent-1",
+            "cwd": "/tmp",
+            "tool_input": {"command": "git status"},
+        }
+        stdout = io.StringIO()
+        with (
+            patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(MODULE.subprocess, "run", side_effect=expired),
+            patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            patch.object(sys, "stdout", stdout),
+            cleared_env(),
+        ):
+            self.assertEqual(MODULE.hook(), 0)
+        decision = json.loads(stdout.getvalue())["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn("30s", decision["permissionDecisionReason"])
+
+    def test_a_wedged_git_probe_leaves_an_unrelated_caller_alone(self) -> None:
+        """Outside the writer protocol the hook stays inert, wedged child or not."""
+        expired = subprocess.TimeoutExpired(["git", "rev-parse"], 30)
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "cwd": "/tmp",
+            "tool_input": {"command": "git status"},
+        }
+        stdout = io.StringIO()
+        with (
+            patch.object(MODULE.shutil, "which", return_value="/usr/bin/wt"),
+            patch.object(MODULE.subprocess, "run", side_effect=expired),
+            patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            patch.object(sys, "stdout", stdout),
+            cleared_env(),
+        ):
+            self.assertEqual(MODULE.hook(), 0)
+        self.assertEqual(stdout.getvalue(), "")
 
 
 if __name__ == "__main__":
