@@ -216,7 +216,7 @@ def push_permitted(cwd: str, timeout: float = 30) -> int:
 
 
 def payload(raw: str) -> dict:
-    """Hook payload as a dict, empty when it is missing or unparseable."""
+    """Hook payload as a dict, empty when it is missing or unparsable."""
     try:
         data = json.loads(raw)
     except (ValueError, TypeError):
