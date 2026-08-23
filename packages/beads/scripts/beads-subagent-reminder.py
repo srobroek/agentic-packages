@@ -3,7 +3,8 @@
 
 SessionStart (bd prime) does not fire for subagents, so without this a
 spawned worker has only compiled steering. Inject the minimal contract:
-where its work queues are, claim-before-work, and the close protocol.
+where its work queues are, claim-before-work, and the close protocol,
+plus the memories scoped to this actor by BEADS_MEMORY_PREFIXES.
 Deliberately NOT bd prime (~1-2k tokens); this stays a few lines.
 
 Self-gating: silent unless bd is installed AND the spawn cwd has a beads
@@ -17,6 +18,10 @@ import os
 import shutil
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import beads_sync  # noqa: E402
 
 CONTEXT = (
     "This repo tracks work in beads (bd)."
@@ -62,11 +67,18 @@ def main() -> int:
     if where.returncode != 0:
         return 0
 
+    context = CONTEXT
+    scoped = beads_sync.render_memories(
+        beads_sync.memories(cwd, beads_sync.memory_prefixes())
+    )
+    if scoped:
+        context = f"{context}\n{scoped}"
+
     json.dump(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SubagentStart",
-                "additionalContext": CONTEXT,
+                "additionalContext": context,
             }
         },
         sys.stdout,
