@@ -214,7 +214,7 @@
     {
       "name": "beads",
       "description": "Beads (bd) conventions for persistent task DAGs, atomic claims, native reply threads, decision records, ambiguity handling, actor identity, JSON envelopes, and Dolt sync. Steering separates local comments from cross-boundary decisions and harness wakes from persisted messages, and owns the carrier doctrine that dependent packages map onto. A build-formula skill covers formula authoring: conditional steps, gates, composition, and the assertions that prove a formula pours the DAG it declares. A guard denies mutating `gh issue` commands in Beads repositories. A second guard denies a `gh pr create` whose merge bead is absent, closed, mislabelled, assigned, or missing a `repo` or `origin_actor` anchor, resolving that bead from `metadata.branch` rather than a PR-body trailer, and engaging only where the repository already uses merge beads. Opt-in sync hooks prefer native Dolt sync -- pull at session start, a detached push at session end once a `git push --dry-run` probe confirms it goes through, with a configurable pusher for hosts that need a wrapper -- and fall back to JSONL over ordinary git otherwise. The same session-start hook reports when Dolt history has grown enough to trim, and never trims it. Global `bd setup` wires session start; `bd init --skip-hooks` initializes repositories. Requires Beads >= 1.1.0 and python3 on PATH, and activates only in repositories with `.beads/`.",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "tags": [
         "beads",
         "issue-tracking",
@@ -776,7 +776,7 @@
     {
       "name": "orchestrate",
       "description": "Coordinates parallel subagents through Beads-backed DAGs, claims, threaded replies, decisions, review, and merge state. Supports exact, specialist, generic-pull, writable-fallback, and read-only research dispatch. Bundles coder (with effort-tier variants), researcher, reviewer, advisor, shepherd, and scribe. Quality triage roles (docs-guard, lint-guard, data-metrics-summarizer, maintenance-metrics-reader, reviewer-mechanics) come from the agent-quality-guards dependency. Includes deterministic scope, discovery, claim, message, decision, queue, and conflict scripts plus shared PR shepherd landing safeguards. Requires the bd CLI.",
-      "version": "16.4.0",
+      "version": "16.5.0",
       "tags": [
         "skill",
         "agent",
@@ -1134,7 +1134,7 @@
     {
       "name": "token-savings",
       "description": "Context-cost reduction for Claude and Codex, with the measurement instrument that decides whether the reduction is real. A PreToolUse guard routes selected read-only commands through rtk, scoped to an allowlist verified to preserve content, and a second denies reading a repomix pack (six context windows on a large repository) while naming the rg and awk that search it. Oversized shell output spills to a file with its recovery commands. The tokenmeter A/B harness measures runs from transcript usage records instead of a tool's self-report, and repomix-tune re-derives every pack-filtering claim on the installed repomix. Telemetry stays off. Requires python3 on PATH; rtk and repomix are optional and every path degrades to a no-op without them.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "tags": [
         "tokens",
         "context",
@@ -1229,7 +1229,7 @@
     {
       "name": "worktrunk-writer",
       "description": "Reusable Worktrunk writer lifecycle for Claude and Codex. Pre-creates named worktrees, copies only allowlisted ignored files, records a branch lease, validates writer paths before mutation, consumes Worktrunk schema-2 JSON fleet evidence, and delegates merge and removal safety to Worktrunk. Beads metadata is joined when the repository has an active beads workspace. Worktrunk's native plugins remain the owner of runtime activity markers and lifecycle events.",
-      "version": "2.3.2",
+      "version": "2.3.3",
       "tags": [
         "worktrunk",
         "worktree",

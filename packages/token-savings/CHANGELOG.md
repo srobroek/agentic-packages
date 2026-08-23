@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/token-savings--v1.1.0...token-savings--v1.1.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **token-savings:** never spill a read of the spill store ([e472c54](https://github.com/srobroek/agentic-packages/commit/e472c54b9b0c73ff7ebf92c6ac0ac70bc1e2f934))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/token-savings--v1.0.1...token-savings--v1.1.0) (2026-08-17)
 
 
