@@ -26,16 +26,14 @@ The controlling parent will release you with exactly CLAIM <bead-or-wisp-id>.
 ```
 
 The resource must exist and remain unclaimed. A checkout-backed resource must
-already carry its canonical worktree and lease. The orchestrator binds and
-stamps the returned runtime before sending the separate activation message.
-No task data, runtime mechanics appendix, or combined WAIT plus CLAIM message
-is valid.
+already carry its canonical `metadata.worktree` as an absolute path. The
+orchestrator sends the activation message as a separate message to the waiting
+runtime. No task data, runtime mechanics appendix, or combined WAIT plus CLAIM
+message is valid.
 
-The spawn result supplies `runtime_handle`, used by the parent for resume and
-message routing. The SubagentStart handshake supplies a tool-free
-`WAIT context=<runtime_context>` acknowledgement. The parent binds the context
-to the lease, stamps both identities, reads them back, then sends CLAIM to the
-handle. Equal values are valid but never assumed.
+Write authority comes from holding the claim. The claim-holder takes it with
+`bd update <resource-id> --claim`, which sets the assignee, and holds it until
+it stops.
 
 A queue actor also receives a checkout:
 
@@ -51,14 +49,15 @@ The controlling parent will release you with exactly CLAIM queue:<label-filter>.
 `<role>-<node-bead>` (node-scoped) · `<role>-<domain>[-n]` (specialist) ·
 `advisor-<wisp-id>` · `shepherd-<run>-<repo>` (in-run) ·
 `pr-shepherd-<repo>` (repository-global) · children `<parent>.<k>` (never
-claim). The universal Stop hook derives the claim query from the assignee name
-- naming is load-bearing.
+claim). The universal Stop hook derives its `--assignee` fallback query from the
+assignee name. A resource that carries no `worktree` resolves only through that
+query.
 
 ## Wake protocol
 
 1. Probe capability at run start (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`).
-2. Wake = `SendMessage(runtime_handle)` → on dead handle → respawn
-   `CLAIM <same-bead>` under the same actor name.
+2. Wake = `SendMessage` to the actor's live runtime → on a dead runtime →
+   respawn `CLAIM <same-bead>` under the same actor name.
 3. Respawned actor reads: bead metadata → BRIEF → durable comments → worklog
    wisp thread (via links). Resume point = last CHECKPOINT.
 4. No live waiting: blocked actors write the escalation wisp, checkpoint, and

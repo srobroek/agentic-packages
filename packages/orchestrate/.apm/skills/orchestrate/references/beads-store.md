@@ -381,17 +381,23 @@ template.
 | Writer checkout prepared | orchestrator | `wt switch --create <branch>`, stamp Worktrunk var `bead=<bead-id>` on the branch (`wt config state vars set bead <bead-id> --branch <branch>`), stamp node `branch`, canonical `worktree`, `base_sha` |
 | Tool-using reviewer prepared | orchestrator | stamp Worktrunk var `bead=<review-wisp-id>` on the review checkout's branch, stamp the review wisp with its own `branch` and canonical `worktree` |
 | Tool-using advisor/researcher prepared | orchestrator | stamp Worktrunk var `bead=<node-id>` on the checkout's branch, stamp the escalation wisp or research node with its own `branch` and canonical `worktree` |
-| Runtime bound | orchestrator | bind acknowledged `runtime_context` to the claim; stamp it with parent-visible `runtime_handle`, read both back, then send only `CLAIM {resource-id}` to the handle |
+| Runtime waiting | orchestrator | send only `CLAIM {resource-id}` to the waiting runtime, as a separate message |
 | Claim | claim-holder | read `metadata.worktree` off the claimed bead (the only authoritative source of where it works); cross-check `wt -C <path> step eval '{{ vars.bead }}' --format json` returns the same bead id -- mismatch means another actor owns the tree, stop and do not write |
 | Report (after push) | domain-specialist | stamp `push=<pushed commit SHA>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
 Add a `repo` key when work lands in a different repository than the run epic.
 `--metadata` merges with existing keys, so stamps never clobber `node` or
-`scope`. Every claim-holder resource owns its own canonical `worktree`; do not
-store reviewer or advisor paths on the work node. Branch, push, PR, and merge
-anchors survive checkout teardown. Runtime context and worktree pointers are
-cleared only after the bead's claim is released and the checkout is reclaimed.
+`scope`. Branch, push, PR, and merge anchors survive checkout teardown.
+
+`worktree` rules:
+
+- Every claim-holder resource owns its own canonical `worktree`. Do not store
+  reviewer or advisor paths on the work node.
+- Stamp it as an absolute path. The SubagentStop hook matches the agent's `cwd`
+  against that value.
+- Clear the pointer only after the claim-holder releases its claim and the
+  orchestrator reclaims the checkout.
 
 Choosing between a label and a metadata key is a cardinality rule, not a style
 preference. Both filter on `bd ready` and both compose with `--claim`, so

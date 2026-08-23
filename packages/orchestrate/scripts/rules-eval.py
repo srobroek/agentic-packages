@@ -93,8 +93,6 @@ ORCHESTRATOR_ANCHORS = frozenset(
         "execution_kind",
         "execution_task_kind",
         "lease_token",
-        "runtime_context",
-        "runtime_handle",
         "scope",
         "worktree",
     }
@@ -306,18 +304,6 @@ def _status(bead: dict) -> str:
     return bead.get("status") or bead.get("state") or ""
 
 
-def runtime_context(payload: dict) -> str:
-    for key in ("agent_id", "subagent_id"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    if payload.get("agent_type") or payload.get("subagent_type"):
-        value = payload.get("session_id")
-        if isinstance(value, str) and value:
-            return value
-    return ""
-
-
 def _resource_sort_key(issue: dict) -> tuple[str, str]:
     return (str(issue.get("updated_at") or ""), str(issue.get("id") or ""))
 
@@ -335,9 +321,38 @@ def _dedupe_resources(resources: list[dict]) -> list[dict]:
     return list(by_id.values())
 
 
+def _claim_release_violations(active: list[dict]) -> list[dict]:
+    if not active:
+        return []
+    return [
+        {
+            "check": "claim_release",
+            "detail": "active claims remain at stop: "
+            + ",".join(sorted(str(issue.get("id")) for issue in active)),
+        }
+    ]
+
+
+def _cwd_in_worktree(cwd: Path, issue: dict) -> bool:
+    """Whether `cwd` is the bead's worktree root or a directory inside it.
+
+    Segment-boundary containment, not a prefix test: sibling worktrees such as
+    `arch-worktrunk` and `arch-worktrunk-int` coexist in the live store.
+    """
+    worktree_raw = (issue.get("metadata") or {}).get("worktree")
+    if not isinstance(worktree_raw, str) or not worktree_raw:
+        return False
+    worktree = Path(worktree_raw)
+    if not worktree.is_absolute():
+        return False
+    return cwd.is_relative_to(worktree.resolve())
+
+
 def resolve_claimed_bead(payload: dict, agent_type: str) -> tuple[dict | None, list[dict]]:
-    context = runtime_context(payload)
-    if context:
+    cwd_raw = payload.get("cwd")
+    cwd = Path(cwd_raw) if isinstance(cwd_raw, str) and cwd_raw else None
+    if cwd is not None and cwd.is_absolute():
+        cwd = cwd.resolve()
         resources = bd_json(
             "list",
             "--include-infra",
@@ -345,25 +360,17 @@ def resolve_claimed_bead(payload: dict, agent_type: str) -> tuple[dict | None, l
             "--json",
         )
         if isinstance(resources, list):
-            matches = [
-                issue
-                for issue in resources
-                if (issue.get("metadata") or {}).get("runtime_context") == context
-            ]
-            matches = _dedupe_resources(matches)
+            # A worktree is legitimately carried by several beads at once, so the
+            # active claim is what makes it a usable key.
+            matches = _dedupe_resources(
+                [
+                    issue
+                    for issue in resources
+                    if _active_claim(issue) and _cwd_in_worktree(cwd, issue)
+                ]
+            )
             if matches:
-                active = [issue for issue in matches if _active_claim(issue)]
-                selected = max(active or matches, key=_resource_sort_key)
-                violations = []
-                if active:
-                    violations.append(
-                        {
-                            "check": "claim_release",
-                            "detail": "active claims remain at stop: "
-                            + ",".join(sorted(str(issue.get("id")) for issue in active)),
-                        }
-                    )
-                return selected, violations
+                return max(matches, key=_resource_sort_key), _claim_release_violations(matches)
 
     for actor in dict.fromkeys(
         value
@@ -387,16 +394,7 @@ def resolve_claimed_bead(payload: dict, agent_type: str) -> tuple[dict | None, l
             resources = _dedupe_resources(claimed)
             active = [issue for issue in resources if _active_claim(issue)]
             selected = max(active or resources, key=_resource_sort_key)
-            violations = []
-            if active:
-                violations.append(
-                    {
-                        "check": "claim_release",
-                        "detail": "active claims remain at stop: "
-                        + ",".join(sorted(str(issue.get("id")) for issue in active)),
-                    }
-                )
-            return selected, violations
+            return selected, _claim_release_violations(active)
     return None, []
 
 

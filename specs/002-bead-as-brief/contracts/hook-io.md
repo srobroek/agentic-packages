@@ -8,16 +8,28 @@
 |---|---|---|---|
 | `agent_type` | ✓ | ✓ | rules-file selection / universal dispatch |
 | `agent_id` | ✓ | ✓ | actor-name derivation |
+| `cwd` | ✓ | ✓ | activation-resource resolution against `metadata.worktree` |
+| `session_id` | ✓ | ✓ | read by the hook; not part of resource resolution |
 | `stop_hook_active` | ✗ | ✓ | Codex re-entrancy guard |
 | `transcript_path` | ✓ | ✓ (`agent_transcript_path`) | unused (bead is the record) |
 
-**Activation-resource resolution**: the orchestrator stamps the hook-visible
-id as `metadata.runtime_context`. The hook queries infrastructure and durable
-resources with `bd list --include-infra --all --json`, selects the most recent
-resource for that context, and validates it after claim release or wisp
-closure. `metadata.runtime_handle` is parent routing state and is not used for
-hook identity. A legacy resource without runtime context falls back to actor
-lookup. Any active claim at stop is a `claim_release` violation.
+`cwd` is the agent's own working directory, so it follows the agent into its
+Worktrunk checkout and reports that path rather than the primary checkout.
+
+**Activation-resource resolution**: the hook resolves the claimed resource in
+this order.
+
+1. Query infrastructure and durable resources with
+   `bd list --include-infra --all --json`.
+2. Match `cwd` against each resource's `metadata.worktree` by path-segment
+   containment. Plain string prefixing is invalid, because sibling worktree
+   paths share prefixes.
+3. Narrow the matches to the active claim: status `in_progress` with a
+   non-empty assignee.
+4. For a resource carrying no `worktree`, fall back to `--assignee` lookup on
+   the derived actor name.
+
+Any active claim at stop is a `claim_release` violation.
 
 **Output (stdout JSON)** -- Codex requires JSON; Claude accepts it:
 
@@ -65,12 +77,12 @@ Ordinary prompts leave no marker. A marker write failure blocks the prompt.
 
 For claim-holder Agent spawns, accepts only the checkout-backed WAIT grammar
 from the activation protocol. A directed resource must resolve through
-`bd show`, remain non-terminal and unclaimed, and match its stamped checkout
-and lease. For SendMessage activation, accepts only
-`CLAIM <resource-id>` sent to `metadata.runtime_handle` after
-`metadata.runtime_context` is present, or a canonical checkout-backed queue
-claim. Task-bearing, combined, missing-resource, missing-handshake,
-wrong-handle, and pending-marker activations are denied. Denials use the PreToolUse
+`bd show`, remain non-terminal and unclaimed, and carry the same absolute
+`metadata.worktree` as the checkout named in the WAIT text. For SendMessage
+activation, accepts only `CLAIM <resource-id>` sent to the waiting runtime, or
+a canonical checkout-backed queue claim. Task-bearing, combined,
+missing-resource, wrong-checkout, and pending-marker activations are denied.
+Denials use the PreToolUse
 `hookSpecificOutput.permissionDecision=deny` envelope accepted by both
 runtimes.
 

@@ -60,7 +60,7 @@ Agents shipped by the package, and what each may claim:
 
 | Role | Agent | Model / effort | Writes | Claims |
 |---|---|---|---|---|
-| Orchestrator | lead session | session model | briefs, wisp shells, leases | nothing; hook-denied |
+| Orchestrator | lead session | session model | briefs, wisp shells, checkouts | nothing; hook-denied |
 | Architect | `architect` (+ `-low/-medium/-high/-xhigh`) | sonnet, per-variant effort | its `scope` only | one node at a time |
 | Reviewer | `reviewer` | sonnet / high, read-only | verdicts and findings | one review wisp |
 | Advisor | `advisor` | opus / high, read-only | one `ADVICE` answer | one escalation wisp |
@@ -94,7 +94,7 @@ graph TD
     SP --> CH["bounded children<br/>no claim · no commit · no push<br/>no worktree lifecycle · no spawn"]
 ```
 
-Children share the specialist's checkout, actor, and lease. Every other actor
+Children share the specialist's checkout and actor. Every other actor
 spawns nothing. The lead is also the sole dismisser.
 
 ## Node lifecycle
@@ -153,17 +153,16 @@ sequenceDiagram
     participant A as agent runtime
     L->>P: create worktree, then<br/>wt config state vars set bead {id} --branch {branch}
     P-->>L: branch stamped with the bead var
-    L->>L: stamp branch · worktree · base_sha<br/>on the UNCLAIMED bead, then read back
+    L->>L: stamp branch · absolute worktree · base_sha<br/>on the UNCLAIMED bead, then read back
     L->>A: Agent(...) with the WAIT bootstrap only
     Note over A: spawns, invokes no tools
-    A-->>L: "WAIT context={runtime_context}" (entire first reply)
-    L->>L: bind handle + context to path<br/>stamp runtime_handle + runtime_context, read back
+    A-->>L: the WAIT line (entire first reply)
     L->>A: SendMessage "CLAIM {id}"
-    A->>A: claim metadata.worktree, cross-check<br/>wt -C {path} step eval '{{ vars.bead }}' --format json == {id},<br/>start work
+    A->>A: bd update {id} --claim, read metadata.worktree,<br/>cross-check wt -C {path} step eval '{{ vars.bead }}' --format json == {id},<br/>start work
 ```
 
 A `BOUNCE` invalidates that attempt. Repair the durable envelope and redispatch a
-fresh runtime; the bounced handle is never continued or hand-fed the missing
+fresh runtime; the bounced runtime is never continued or hand-fed the missing
 data.
 
 Routing applies one rule, in order:
@@ -291,12 +290,12 @@ call.
 | `SubagentStart` | `contract-start.py` | tells every spawn that claiming a bead binds its contract |
 | `SubagentStart` (skill-scoped) | `inject-comms.sh` | injects `comms-block.md`; a failure warns loudly on stderr and still exits 0 |
 | `PreToolUse` (Bash) | `orchestrator-claim-deny.py` | denies `bd ... --claim` in the lead while a run is active |
-| `PreToolUse` (Agent, SendMessage) | `orchestrator-activation-guard.py` | enforces the WAIT, bind, CLAIM order |
+| `PreToolUse` (Agent, SendMessage) | `orchestrator-activation-guard.py` | enforces the WAIT then CLAIM order |
 | `SubagentStop` | `rules-eval.py` | evaluates the stopping actor's claimed bead against its rules file |
 
-The activation guard refuses a `CLAIM` whose resource is terminal, absent,
-already claimed, missing a prepared lease, or bound to a different runtime
-handle. It also denies a task-bearing spawn of an unrecognised agent type: an
+The activation guard refuses a `CLAIM` whose resource is terminal, absent, or
+already claimed. It also refuses one whose stamped checkout differs from the
+checkout its WAIT text names. It also denies a task-bearing spawn of an unrecognised agent type: an
 activation that cannot be verified is worse than a refused one.
 
 `rules-eval.py` reads one JSON rules file per role. That same file compiles the
@@ -332,15 +331,15 @@ source of truth. After lead compaction or a crash:
    `assignee`, its dispatch mode, and its `state:` label. Confirm every stamped
    checkout through `wt list --format=json`.
 3. Run `bd merge-slot check`. Never infer a dead holder from age.
-4. Resume each live assignee with `CLAIM {same-resource}` to its handle, or
-   respawn the same actor and send the same activation.
-5. Restart watchers with `--slots=1` and replay any dispatch lacking a matching
-   ack.
+4. Resume each live assignee with `CLAIM {same-resource}`, or respawn the same
+   actor and send the same activation.
+5. Restart watchers with `--slots=1` and replay any dispatch whose resource
+   carries no claim.
 
-Dead-claim recovery needs evidence rather than a timestamp. No lease expiry and
-no daemon exist. Clear ownership only once the platform reports the handle
-stopped, the actor releases it, or the user confirms the session is dead. Record
-that evidence, then:
+Dead-claim recovery needs evidence rather than a timestamp. No ownership
+timeout and no daemon exist. Clear ownership only once the platform reports the
+runtime stopped, the actor releases it, or the user confirms that the session is
+dead. Record that evidence, then:
 
 ```bash
 bd update <bead> --assignee "" --status open
