@@ -77,7 +77,10 @@ runtimes.
 ## PreToolUse claim-deny (orchestrator)
 
 Fires only when the run marker is set by UserPromptSubmit or
-`ORCHESTRATE_RUN`. Matches `bd` commands carrying `--claim`. T0 claims are
+`ORCHESTRATE_RUN`. That variable is a boolean flag which arms the guards and
+never retires them; a run with no marker file names its run bead in
+`ORCHESTRATE_RUN_ID` so liveness can expire it. Matches `bd` commands carrying
+`--claim`. T0 claims are
 denied. A worker claim passes only when the command prefix carries equal,
 non-lead `BEADS_ACTOR` and `BD_ACTOR` identities; every claim segment in a
 multi-command input must satisfy that envelope. Without a run marker, allow

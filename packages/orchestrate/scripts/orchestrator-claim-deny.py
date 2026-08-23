@@ -8,7 +8,8 @@
 T0 (the orchestrator session) never claims beads; it routes. This hook denies
 any `bd ... --claim` issued while an orchestrate run is active. The run marker
 (env ORCHESTRATE_RUN or ./.orchestration/.active-run) scopes it so ordinary
-interactive sessions are untouched.
+interactive sessions are untouched. ORCHESTRATE_RUN only arms the hook;
+ORCHESTRATE_RUN_ID names the run bead whose status can retire it.
 
 On an allowed worker claim it also snapshots the bead's metadata as of the
 claim into metadata.claim_metadata_baseline, which is what lets the

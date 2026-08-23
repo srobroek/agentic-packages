@@ -97,15 +97,22 @@ def show_bead(bead_id: str, timeout: float = 10) -> dict | None:
 
 
 def active_run_id() -> str:
-    """Run id the marker names; "" when the marker is absent or unreadable."""
+    """Run id the active run names; "" when neither source names one.
+
+    ORCHESTRATE_RUN engages the guards on its own but is boolean -- callers set
+    it to "1" -- so it can never answer here: a "1" fed to `bd show` fuzzy
+    resolves to whatever unrelated bead it matches, and one closed match retires
+    the guards silently. A markerless run that needs to retire names its bead in
+    ORCHESTRATE_RUN_ID; the flag alone arms the guards and never expires them.
+    """
     try:
         with open(marker_path(), encoding="utf-8") as handle:
             value = json.loads(handle.read())
     except (OSError, json.JSONDecodeError, TypeError):
-        return ""
-    if isinstance(value, dict):
-        return str(value.get("run_id") or "")
-    return ""
+        value = None
+    if isinstance(value, dict) and value.get("run_id"):
+        return str(value["run_id"])
+    return os.environ.get("ORCHESTRATE_RUN_ID", "")
 
 
 def run_live() -> bool:
