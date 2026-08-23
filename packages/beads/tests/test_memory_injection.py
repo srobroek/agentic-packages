@@ -113,7 +113,7 @@ def test_timeout_degrades_to_empty(bd_stub, tmp_path):
     assert beads_sync.memories(str(tmp_path), ["arch-"], timeout=0.5) == {}
 
 
-def test_unparseable_output_degrades_to_empty(bd_stub, tmp_path):
+def test_unparsable_output_degrades_to_empty(bd_stub, tmp_path):
     bd_stub("#!/bin/sh\nprintf 'not json'\n")
     assert beads_sync.memories(str(tmp_path), ["arch-"]) == {}
 
@@ -203,7 +203,7 @@ def test_subagent_without_prefixes_is_silent(primed, monkeypatch, capsys):
 
 
 @pytest.mark.parametrize("raw", ["", "not json", "[]"])
-def test_unparseable_payload_does_not_prime(primed, monkeypatch, capsys, raw):
+def test_unparsable_payload_does_not_prime(primed, monkeypatch, capsys, raw):
     """A guessed cwd must not be primed -- it may be another project's workspace."""
     module = load("beads-sync-session")
     monkeypatch.chdir(primed)
