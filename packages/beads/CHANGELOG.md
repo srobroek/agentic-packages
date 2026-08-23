@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.3.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.2.1...beads--v2.3.0) (2026-08-23)
+
+
+### Features
+
+* **beads:** prefix-scoped memory injection and folded session priming ([2764f36](https://github.com/srobroek/agentic-packages/commit/2764f364a3a085f889b8b957a155cdb317377be4))
+* **beads:** scope memory injection by key prefix and fold prime into the session hook ([2296d3b](https://github.com/srobroek/agentic-packages/commit/2296d3b2a0352ddff790051539a4d8c4718ba70d))
+
+
+### Bug Fixes
+
+* **beads:** make the formula anchor check actually evaluate the rule ([0d48e3f](https://github.com/srobroek/agentic-packages/commit/0d48e3f6b399ec659e6047948c12a73927efb4b1))
+* **beads:** spell unparsable correctly in a docstring ([7727ffd](https://github.com/srobroek/agentic-packages/commit/7727ffd80ec91ffb6897b5c8d5c24f2ea0be2dc3))
+* **beads:** spell unparsable correctly in the memory-injection tests ([eeb40d4](https://github.com/srobroek/agentic-packages/commit/eeb40d4779b63cf9a44e78f8a16094e2c7136c19))
+
 ## [2.2.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.2.0...beads--v2.2.1) (2026-08-23)
 
 
