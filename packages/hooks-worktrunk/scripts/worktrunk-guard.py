@@ -385,10 +385,12 @@ def positional(args: list[str]) -> list[str]:
 
 
 # `git worktree list` mutates nothing, and steering it to `wt list` was a net
-# loss: `wt list` computes uncommitted line counts via `git add -A` plus
-# `write-tree` against the SHARED object database, and write-tree output is
-# unreferenced by design, so every call leaks blobs and trees (measured: 30 of
-# 836 unreachable trees held untracked probe files, on runs that all exited 0).
+# loss: `wt list` computes uncommitted line counts by running `write-tree` once
+# per dirty worktree against the SHARED object database, and write-tree output is
+# unreferenced by design, so every call leaks blobs and trees (measured: loose
+# count 784 -> 802 over three calls with in-pack unchanged, and 30 of 836
+# unreachable trees held untracked probe files, on runs that all exited 0).
+# Nothing is ever staged -- a canary stays `??`, never `A `.
 # The porcelain form is also ~15x cheaper (0.13-0.33s vs 1.94-4.31s), which
 # matters inside a hook. Read-only inspection is allowed; the mutators below
 # still route through Worktrunk so it keeps owning the lifecycle.
