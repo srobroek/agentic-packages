@@ -470,6 +470,49 @@ def redirect_target(words: list[str], cwd: Path) -> Path:
         return cwd
 
 
+def command_cwd(commands: list[list[str]], session_cwd: Path) -> Path | None:
+    """Directory the commands run in, honouring a leading `cd <path> &&`.
+
+    The payload cwd is the SESSION's directory, but an agent harness routinely
+    prefixes a Bash call with `cd <path> &&`. Reading repository state from the
+    session directory then judges a repository the command never touches.
+
+    Returns None when a leading `cd` names a directory text cannot resolve -- a
+    substitution, a variable, a glob, more than one operand. Callers must stand
+    down: naming the session directory instead is the failure that matters. This
+    does not weaken GS-2, which denies an unresolvable `-C` target before this
+    runs.
+    """
+    words = commands[0] if commands else []
+    if words[:1] != ["cd"]:
+        return session_cwd
+
+    # `--` ends option parsing for `cd`; it names no directory. A bare `cd` goes
+    # home and `cd -` goes back, neither of which this can follow, but both leave
+    # the session repository as the only thing named.
+    arguments = [word for word in words[1:] if word != "--"]
+    if not arguments or arguments[0] in {"", "-"}:
+        return session_cwd
+
+    # Shell expansion the hook cannot perform. `punctuation_chars` splits `$(` into
+    # its own token, so test every operand rather than just the first.
+    if any(marker in word for word in arguments for marker in "$`*?()"):
+        return None
+    if len(arguments) != 1:
+        return None
+
+    import os
+
+    target = os.path.expanduser(arguments[0])
+    if not os.path.isabs(target):
+        target = os.path.join(str(session_cwd), target)
+    try:
+        resolved = Path(os.path.realpath(target))
+    except OSError:
+        return None
+    return resolved if resolved.is_dir() else None
+
+
 def _git_binary() -> str:
     """Absolute path to git, so the state read cannot follow a planted PATH entry.
 
@@ -814,6 +857,14 @@ def main() -> int:
         cwd = cwd.resolve()
     except OSError:
         pass
+
+    # A leading `cd` retargets every following command, so the state reads below
+    # must follow it. Unresolvable means stand down rather than judge the session
+    # repository.
+    resolved_cwd = command_cwd(commands, cwd)
+    if resolved_cwd is None:
+        return 0
+    cwd = resolved_cwd
 
     states: dict[tuple[str, tuple[str, ...], tuple[tuple[str, str], ...]], RepoState] = {}
 

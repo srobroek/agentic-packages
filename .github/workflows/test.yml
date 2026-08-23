@@ -222,26 +222,25 @@ jobs:
             echo "no pytest files in $PKG"
           fi
 
-      - name: Run standalone _test_*.py harnesses
+      - name: Run standalone Python assertion harnesses
         run: |
-          # Scripts named _test_*.py are __main__-style assertion harnesses, not
-          # pytest modules -- pytest's default discovery (test_*.py) skips the
-          # leading underscore, so run them directly. (e.g. speckit-dag-hooks'
-          # _test_dispatcher.py, which validates the dispatcher against nodes.json.)
-          # `rules-eval-test.py` is the same genre under a different name and no
-          # glob here matched it, so the contract evaluator's conformance suite ran
-          # nowhere. It is named explicitly rather than by a `*-test.py` glob:
-          # `hooks-smoke-test.py` matches that shape and fails on a roles.md drift
-          # tracked separately (astro-plan-78v0 follow-up).
-          harnesses=$(find "$PKG" \( -name '_test_*.py' -o -name 'rules-eval-test.py' \) \
-            2>/dev/null || true)
+          # These are __main__-style assertion harnesses, not pytest modules --
+          # pytest's default discovery (test_*.py) matches none of these names, so
+          # run them directly. Three naming genres in the tree: `_test_*.py`
+          # (leading underscore defeats discovery), `*-test.py` (hyphen is not a
+          # legal module name), and `fuzz-*.py` (property/attack layers that print
+          # findings and exit nonzero). Each carries its own PEP 723 header, so
+          # `uv run` resolves per-harness deps; `--with pyyaml` covers the ones
+          # that predate inline metadata.
+          harnesses=$(find "$PKG" \( -name '_test_*.py' -o -name '*-test.py' \
+            -o -name 'fuzz-*.py' \) 2>/dev/null || true)
           if [ -n "$harnesses" ]; then
             for h in $harnesses; do
               echo "harness: $h"
               ( cd "$(dirname "$h")" && uv run --no-project --with pyyaml "$(basename "$h")" )
             done
           else
-            echo "no _test_*.py harnesses in $PKG"
+            echo "no standalone Python harnesses in $PKG"
           fi
 
       - name: Run standalone _test_*.sh harnesses

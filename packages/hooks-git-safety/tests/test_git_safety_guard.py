@@ -641,3 +641,65 @@ def test_never_emits_ask(dirty_repo: Path) -> None:
         _, decision = run(command, dirty_repo)
         if decision is not None:
             assert decision["permissionDecision"] != "ask"
+
+
+# --- the effective repository is the command's, not the session's ---------------
+
+
+def test_a_cd_prefix_moves_the_state_read_to_the_named_repo(
+    repo: Path, dirty_repo: Path
+) -> None:
+    """`cd <dirty> && git reset --hard` warns even though the session repo is clean."""
+    clean = repo.parent / "clean"
+    subprocess.run(["cp", "-R", str(repo), str(clean)], check=True, capture_output=True)
+    git(clean, "checkout", "--", "tracked.txt")
+    assert verdict(f"cd {dirty_repo} && git reset --hard", clean) == "allow"
+
+
+def test_a_cd_prefix_silences_a_clean_repo_the_session_cannot_see(
+    repo: Path, dirty_repo: Path, tmp_path: Path
+) -> None:
+    """The session repo being dirty must not warn about a clean repo the cd names."""
+    clean = tmp_path / "elsewhere"
+    clean.mkdir()
+    git(clean, "init", "-q")
+    git(clean, "config", "user.email", "test@example.test")
+    git(clean, "config", "user.name", "test")
+    git(clean, "config", "commit.gpgsign", "false")
+    (clean / "f.txt").write_text("x\n")
+    git(clean, "add", "f.txt")
+    git(clean, "commit", "-qm", "initial")
+    assert verdict(f"cd {clean} && git reset --hard", dirty_repo) == "silent"
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        pytest.param("cd $TARGET", id="variable"),
+        pytest.param("cd $(cat p)", id="substitution"),
+        pytest.param("cd /nonexistent-xyz-123", id="missing-directory"),
+        pytest.param("cd /tmp /var", id="two-operands"),
+    ],
+)
+def test_an_unresolvable_cd_stands_down(prefix: str, dirty_repo: Path) -> None:
+    """An unresolvable cd must not fall back to judging the session repository."""
+    assert verdict(f"{prefix} && git reset --hard", dirty_repo) == "silent"
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        pytest.param("cd", id="bare-cd-goes-home"),
+        pytest.param("cd -", id="cd-dash-goes-back"),
+    ],
+)
+def test_a_cd_naming_no_path_keeps_the_session_repo(prefix: str, dirty_repo: Path) -> None:
+    assert verdict(f"{prefix} && git reset --hard", dirty_repo) == "allow"
+
+
+def test_a_literal_dash_C_is_honoured_while_a_variable_one_is_refused(
+    repo: Path, dirty_repo: Path
+) -> None:
+    """GS-2 must keep denying an unresolvable `-C`, and only that spelling."""
+    assert verdict(f'git -C "{dirty_repo}" reset --hard', repo) == "allow"
+    assert verdict("git -C $D reset --hard", repo) == "deny"
