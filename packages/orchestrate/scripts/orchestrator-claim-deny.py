@@ -27,7 +27,16 @@ import shlex
 import subprocess
 import sys
 
-BD = os.environ.get("BD_BIN", "bd")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from orchestrate_run_marker import (  # noqa: E402
+    BD,
+    emit_allow,
+    emit_deny,
+    marker_present,
+    show_bead,
+)
+
 CLAIM_BASELINE_KEY = "claim_metadata_baseline"
 # Global flags that consume the next token, which would otherwise read as the
 # subcommand or the bead id.
@@ -40,20 +49,6 @@ DENY_MSG = (
 VARIABLE_REF_RE = re.compile(r"^\$(?:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\})$")
 LEAD_ACTOR_RE = re.compile(r"(?:^|[/.:_-])(lead|orchestrator|root|t0)(?:$|[/.:_-])", re.I)
 WORKER_ACTOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*[-/][A-Za-z0-9._/-]+$")
-
-
-def emit_allow():
-    sys.stdout.write("{}\n")
-    sys.exit(0)
-
-
-def run_active() -> bool:
-    if os.environ.get("ORCHESTRATE_RUN"):
-        return True
-    marker = os.environ.get("ORCHESTRATE_MARKER_FILE", "")
-    if marker and os.path.isfile(marker):
-        return True
-    return os.path.isfile("./.orchestration/.active-run")
 
 
 def shell_segments(command: str) -> list[list[str]]:
@@ -187,32 +182,8 @@ def claim_bead_ids(segment: list[str]) -> list[str]:
 
 
 def bead_metadata(bead_id: str) -> dict[str, str] | None:
-    try:
-        out = subprocess.run(
-            [BD, "show", bead_id, "--json"],
-            capture_output=True,
-            text=True,
-            timeout=8,
-            env={
-                **os.environ,
-                "BD_JSON_ENVELOPE": "1",
-                "BD_NO_PAGER": "1",
-                "BD_NON_INTERACTIVE": "1",
-            },
-        )
-    except Exception:
-        return None
-    if out.returncode != 0 or not out.stdout.strip():
-        return None
-    try:
-        payload = json.loads(out.stdout)
-    except Exception:
-        return None
-    if isinstance(payload, dict) and "schema_version" in payload:
-        payload = payload.get("data")
-    if isinstance(payload, list):
-        payload = payload[0] if len(payload) == 1 else None
-    if not isinstance(payload, dict):
+    payload = show_bead(bead_id, timeout=8)
+    if payload is None:
         return None
     metadata = payload.get("metadata")
     return dict(metadata) if isinstance(metadata, dict) else {}
@@ -253,7 +224,7 @@ def snapshot_claim_baseline(command: str) -> None:
 
 
 def main():
-    if not run_active():
+    if not marker_present():
         emit_allow()  # not in a run -> never interfere
     try:
         raw = sys.stdin.read()
@@ -276,18 +247,7 @@ def main():
             pass
         emit_allow()
 
-    sys.stdout.write(
-        json.dumps(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": DENY_MSG,
-                }
-            }
-        )
-        + "\n"
-    )
+    emit_deny(DENY_MSG)
 
 
 if __name__ == "__main__":

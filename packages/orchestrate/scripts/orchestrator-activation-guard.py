@@ -8,8 +8,18 @@
 import json
 import os
 import re
-import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from orchestrate_run_marker import (  # noqa: E402
+    TERMINAL_STATUS,
+    active_run_id,
+    emit_allow,
+    emit_deny,
+    marker_present,
+    show_bead,
+)
 
 CLAIM_HOLDERS = {
     "advisor",
@@ -49,49 +59,6 @@ QUEUE_WAIT_RE = re.compile(
     rf"The controlling parent will release you with exactly CLAIM "
     rf"queue:(?P=queue)\.$"
 )
-BD = os.environ.get("BD_BIN", "bd")
-
-
-def emit_allow() -> None:
-    sys.stdout.write("{}\n")
-    raise SystemExit(0)
-
-
-def emit_deny(reason: str) -> None:
-    sys.stdout.write(
-        json.dumps(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": reason,
-                }
-            }
-        )
-        + "\n"
-    )
-    raise SystemExit(0)
-
-
-def run_active() -> bool:
-    if os.environ.get("ORCHESTRATE_RUN"):
-        return True
-    marker = os.environ.get("ORCHESTRATE_MARKER_FILE", "")
-    if marker and os.path.isfile(marker):
-        return True
-    return os.path.isfile("./.orchestration/.active-run")
-
-
-def active_run_id() -> str:
-    marker = os.environ.get("ORCHESTRATE_MARKER_FILE", "")
-    path = marker or "./.orchestration/.active-run"
-    try:
-        value = json.loads(open(path, encoding="utf-8").read())
-    except (OSError, json.JSONDecodeError, TypeError):
-        return ""
-    if isinstance(value, dict):
-        return str(value.get("run_id") or "")
-    return ""
 
 
 def require_bound_run() -> None:
@@ -139,40 +106,11 @@ def metadata(record: dict) -> dict:
     return {}
 
 
-def load_resource(resource_id: str) -> dict | None:
-    try:
-        proc = subprocess.run(
-            [BD, "show", resource_id, "--json"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            env={
-                **os.environ,
-                "BD_JSON_ENVELOPE": "1",
-                "BD_NO_PAGER": "1",
-                "BD_NON_INTERACTIVE": "1",
-            },
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if proc.returncode != 0:
-        return None
-    try:
-        value = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        return None
-    if isinstance(value, dict) and "data" in value:
-        value = value["data"]
-    if isinstance(value, list):
-        value = value[0] if value else None
-    return value if isinstance(value, dict) else None
-
-
 def require_live_resource(resource_id: str) -> dict:
-    record = load_resource(resource_id)
+    record = show_bead(resource_id)
     if record is None:
         emit_deny(f"CLAIM resource {resource_id!r} is not a live Beads bead or wisp")
-    if str(record.get("status") or "").lower() in {"closed", "tombstone"}:
+    if str(record.get("status") or "").lower() in TERMINAL_STATUS:
         emit_deny(f"CLAIM resource {resource_id!r} is terminal")
     return record
 
@@ -233,7 +171,7 @@ def validate_claim(message: str, tool_input: dict) -> None:
 
 
 def main() -> None:
-    if not run_active():
+    if not marker_present():
         emit_allow()
     try:
         payload = json.loads(sys.stdin.read() or "{}")
