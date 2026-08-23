@@ -1,5 +1,17 @@
 # Changelog
 
+## [29.3.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.2.1...srobroek-agentic--v29.3.0) (2026-08-23)
+
+
+### Features
+
+* **orchestrate:** add a standardised run-status report to the skill ([868048b](https://github.com/srobroek/agentic-packages/commit/868048bc246562bfd435edfcf6a89f3c239eb3d3))
+
+
+### Documentation
+
+* correct the gate type prescribed for machine waits and record bd init hook clobbering [skip tests] ([c41eb8d](https://github.com/srobroek/agentic-packages/commit/c41eb8db453dbf5c4c2e4f5b0120d7311f85f3cb))
+
 ## [29.2.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v29.2.0...srobroek-agentic--v29.2.1) (2026-08-23)
 
 
