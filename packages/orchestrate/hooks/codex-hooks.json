@@ -52,7 +52,7 @@
         ]
       },
       {
-        "matcher": "Agent|send_message|followup_task|send_input|multi_agent_v1send_input",
+        "matcher": "Agent|send_message|followup_task|send_input|multi_agent_v1send_input|resume_agent|multi_agent_v1resume_agent",
         "hooks": [
           {
             "type": "command",
