@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """Classify a PR review-bot round for one exact head SHA.
 
-Self-contained on purpose: orchestrate and pr-shepherd are separate tools, so
-nothing here may reach into another package's scripts at runtime. This is a copy
-of pr-shepherd's probe of the same name, on the same terms as conflict-probe.sh.
-
 Review bots (CodeRabbit, Copilot review, Greptile, ...) post findings outside
 every status check the merge decision already reads, and each signals
 actionability its own way. This script keeps that per-bot knowledge in one
@@ -127,6 +123,12 @@ def reopen_instant(at: str, minutes: int) -> datetime | None:
         return None
     if posted.tzinfo is None:
         posted = posted.replace(tzinfo=UTC)
+    # CLAMP: the figure comes from the bot's own prose, so it is data this tool does
+    # not control. `timedelta` raises OverflowError past its range, and main() catches
+    # only ValueError/JSONDecodeError, so "retry in 999999999999999999999999 minutes"
+    # exited 1 with a traceback instead of the documented exit 2. A week is far past
+    # any real backoff, and anything beyond it means the same thing operationally.
+    minutes = max(0, min(minutes, 7 * 24 * 60))
     return posted + timedelta(minutes=minutes)
 
 
@@ -193,8 +195,26 @@ def login_slug(login: str, slugs: list[str]) -> str | None:
     return None
 
 
+# The Checks API reports `status: completed`; the older commit-status API reports
+# `state: SUCCESS|FAILURE|PENDING|ERROR` and has no `status` at all. Only "completed"
+# counted as finished, so a status-API bot reporting SUCCESS read as "still running"
+# and the probe returned EXIT_WAITING forever -- a bot that had already answered kept
+# the merge waiting indefinitely.
+STATUS_API_TERMINAL = frozenset({"success", "failure", "error"})
+
+
 def check_state(check: dict[str, Any]) -> str:
-    return str(check.get("status") or check.get("state") or "").lower()
+    """The check's state, normalized to the Checks API vocabulary.
+
+    A commit-status `state` is mapped onto `completed` when it is terminal, so the one
+    caller comparing against "completed" treats both APIs alike. `pending` stays
+    itself, because it means the same thing in both.
+    """
+    status = str(check.get("status") or "").lower()
+    if status:
+        return status
+    state = str(check.get("state") or "").lower()
+    return "completed" if state in STATUS_API_TERMINAL else state
 
 
 def declines(
@@ -328,8 +348,10 @@ def classify(
     # A re-review at the same head supersedes the earlier one, so read the
     # LATEST round with a recognised count. Taking the maximum would let a
     # resolved round block the PR forever.
-    counted = [r for r in rounds if r.actionable is not None]
-    latest = counted[-1] if counted else rounds[-1]
+    # The latest review round supersedes every earlier round.  If its adapter
+    # cannot read a count, report pending rather than reusing an older clean
+    # count and treating an unrecognized review as approval.
+    latest = rounds[-1]
     changes = 1 if rounds[-1].changes_requested else 0
     result["changes_requested"] = changes
     result["summary"] = latest.url or "none"
@@ -365,13 +387,56 @@ def render(result: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+# Per-call bound on a `gh` read. None of the four sequential reads had a timeout, so a
+# wedged `gh` -- an auth prompt, a hung proxy -- hung the shepherd indefinitely rather
+# than failing. Verified: a `sleep 30` shim was still running when the harness killed
+# it.
+#
+# FIVE SECONDS, not thirty. Four reads run per probe, so the bound has to leave the
+# whole probe inside a caller's patience; a paginated GitHub read that has not answered
+# in five seconds is not about to. Overridable for a genuinely slow link.
+GH_TIMEOUT_SECONDS = int(os.environ.get("PR_SHEPHERD_GH_TIMEOUT", "5"))
+
+
 def gh_json(*args: str) -> Any:
-    completed = subprocess.run(
-        ["gh", *args], capture_output=True, text=True, check=False
-    )
+    try:
+        completed = subprocess.run(
+            ["gh", *args],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=GH_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(
+            f"gh {' '.join(args)} timed out after {GH_TIMEOUT_SECONDS}s"
+        ) from error
     if completed.returncode != 0:
         raise RuntimeError(f"gh {' '.join(args)} failed: {completed.stderr.strip()}")
-    return json.loads(completed.stdout or "null")
+    # EMPTY STDOUT IS NOT "no data". `gh` exiting 0 with nothing on stdout turned into
+    # `null`, which built a payload with an empty head and all-empty review arrays --
+    # and that classifies as `absent`, exit 0, clearing the merge as though the bot
+    # gate had been satisfied. Silence from an upstream read cannot be evidence that a
+    # check passed.
+    if not completed.stdout.strip():
+        raise RuntimeError(
+            f"gh {' '.join(args)} exited 0 with empty output; refusing to read silence "
+            f"as an answer"
+        )
+    return json.loads(completed.stdout)
+
+
+def gh_paginated_json(*args: str) -> list[dict[str, Any]]:
+    """Read and flatten REST pages emitted by ``gh api --paginate --slurp``."""
+    payload = gh_json("api", "--paginate", "--slurp", *args)
+    if not isinstance(payload, list):
+        raise RuntimeError("paginated gh response must be an array of pages")
+    rows: list[dict[str, Any]] = []
+    for page in payload:
+        if not isinstance(page, list) or not all(isinstance(row, dict) for row in page):
+            raise RuntimeError("paginated gh response contains a malformed page")
+        rows.extend(page)
+    return rows
 
 
 def fetch(repo: str, pr: str) -> dict[str, Any]:
@@ -383,9 +448,19 @@ def fetch(repo: str, pr: str) -> dict[str, Any]:
     a review.
     """
     view = gh_json("pr", "view", pr, "--repo", repo, "--json", "headRefOid,statusCheckRollup")
-    reviews = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/reviews")
-    comments = gh_json("api", "--paginate", f"repos/{repo}/pulls/{pr}/comments")
-    notices = gh_json("api", "--paginate", f"repos/{repo}/issues/{pr}/comments")
+    # A `null` or head-less view is not a PR with no reviews -- it is a read that did
+    # not answer. Without this the payload carried head="" and empty review arrays,
+    # which classifies as `absent` and exit 0, clearing the bot gate as though it had
+    # been satisfied. The head is the one field every downstream comparison needs, so
+    # its absence is the honest place to stop.
+    if not isinstance(view, dict) or not view.get("headRefOid"):
+        raise RuntimeError(
+            f"gh pr view {pr} returned no headRefOid; refusing to treat an "
+            f"unanswered read as an absent review"
+        )
+    reviews = gh_paginated_json(f"repos/{repo}/pulls/{pr}/reviews")
+    comments = gh_paginated_json(f"repos/{repo}/pulls/{pr}/comments")
+    notices = gh_paginated_json(f"repos/{repo}/issues/{pr}/comments")
     return {
         "notices": [
             {

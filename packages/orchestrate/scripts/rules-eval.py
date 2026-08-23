@@ -380,10 +380,10 @@ def hydrate_comments(bead: dict) -> None:
     top-level flags left those checks reading a permanently empty list -- a
     completion gate no agent could satisfy.
 
-    `replies-to` stays scoped to wisps. `thread-message.py` links every message
-    with `replies-to`, so following it on an ordinary bead would let an actor
-    satisfy its own completion check by sending itself a message whose first
-    token is a completion verb, with no wisp verdict in existence.
+    `replies-to` stays scoped to wisps. Every message links with `replies-to`,
+    so following it on an ordinary bead would let an actor satisfy its own
+    completion check by sending itself a message whose first token is a
+    completion verb, with no wisp verdict in existence.
     """
     bead_id = bead.get("id")
     if not bead_id:

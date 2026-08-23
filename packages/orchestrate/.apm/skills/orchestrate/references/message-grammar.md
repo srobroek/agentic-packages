@@ -39,7 +39,7 @@ does not copy the content into the harness message.
 
 ## Thread identity
 
-`scripts/thread-message.py` stores:
+Every message record carries:
 
 | Field | Meaning |
 |---|---|

@@ -267,10 +267,7 @@ stdlib-only Python or portable shell, with `_test_*.py` self-tests.
 | `discover-agents.py` | parses agent frontmatter into a catalog with model, tools, isolation | 0 |
 | `conflict-probe.sh` | `git merge-tree` conflict prediction without mutating a tree, plus PR check status | 0 clean · 1 conflicts · 2 error |
 | `worktree-sweep.sh` | reclaims checkouts through `wt remove`; quarantines broken orphans without deleting contents | 0 swept · 1 dirty, refused · 2 error |
-| `pull-worker.py` | one atomic `bd ready --claim` for a generic queue | 0 claimed or no-work · 2 unsafe · 3 beads failure |
 | `resolve-queue-dispatch.py` | maps a `release-queue-watch` record to an approved node | 0 resolved · 2 no owner · 3 ambiguous |
-| `thread-message.py` | creates and inspects wisp threads linked by `replies-to` | JSON envelope |
-| `msg-lint.py` | validates a message body against the 11-verb grammar | 0 valid |
 | `inject-comms.sh` | `SubagentStart` hook: injects the comms protocol into every spawn | always 0 |
 
 The scope gate is conservative by design: it serializes work that might have been

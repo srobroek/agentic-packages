@@ -183,7 +183,7 @@ def main() -> None:
     if not isinstance(tool_input, dict):
         emit_allow()
 
-    if tool_name in {"Agent", "Task", "spawn_agent", "agents.spawn_agent"}:
+    if tool_name == "Agent":
         agent_type = str(
             tool_input.get("subagent_type")
             or tool_input.get("agent_type")
@@ -202,11 +202,8 @@ def main() -> None:
     if tool_name in {
         "SendMessage",
         "send_message",
-        "agents.send_message",
         "followup_task",
-        "agents.followup_task",
         "send_input",
-        "agents.send_input",
         "multi_agent_v1send_input",
     }:
         message = str(
