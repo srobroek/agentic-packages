@@ -281,6 +281,16 @@ def main() -> int:
     elif isinstance(tool_input, str):
         command = tool_input
 
+    # Never spill a read of the spill store. The summary hands back a `sed` range
+    # over the spill file, so spilling that read emits a fresh pointer into a
+    # fresh file, and the output the agent asked for recedes one level per
+    # attempt. Observed live: an agent could not read a bead description at all
+    # and had to route `bd show --json` through a temp file to escape the loop.
+    # Retrieval must terminate, so the exemption is unconditional rather than
+    # threshold-based.
+    if command and directory in command:
+        return 0
+
     import hashlib
 
     # Name by content hash plus the tool_use_id, so a repeated identical command

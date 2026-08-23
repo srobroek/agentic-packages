@@ -310,3 +310,32 @@ def test_prune_bounds_the_store(tmp_path):
         (spill / f"old{i:04d}.txt").write_text("x")
     _run(_payload(_big()), tmp_path)
     assert len(list(spill.glob("*.txt"))) <= 201
+
+
+def test_reading_a_spill_file_is_never_itself_spilled(tmp_path):
+    """Retrieval has to terminate.
+
+    The summary hands back a `sed` range over the spill file. Spilling that read
+    emits a fresh pointer into a fresh file, so the output recedes one level per
+    attempt and the agent never reaches it. Observed live: an architect could not
+    read a bead description at all and had to route `bd show --json` through a
+    temp file to escape the loop.
+    """
+    spill = tmp_path / "agentic-tools" / "token-savings" / "spill"
+    spill.mkdir(parents=True, exist_ok=True)
+    target = spill / "abc123def456-12345678.txt"
+    target.write_text(_big(), encoding="utf-8")
+
+    for command in (
+        f"sed -n '18,217p' \"{target}\"",
+        f"cat {target}",
+        f"rg pattern \"{target}\"",
+    ):
+        summary = _run(_payload(_big(), command=command), tmp_path)
+        assert summary == "", f"a read of the spill store was spilled again: {command}"
+
+
+def test_an_unrelated_large_read_still_spills(tmp_path):
+    """The exemption is scoped to the spill store, not to reads in general."""
+    summary = _run(_payload(_big(), command="cat /tmp/some-other-file.txt"), tmp_path)
+    assert "[token-savings]" in summary
