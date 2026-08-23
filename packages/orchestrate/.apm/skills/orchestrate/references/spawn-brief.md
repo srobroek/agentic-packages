@@ -34,6 +34,11 @@ hits there belongs to another node. That is how a node ends up either resolving
 someone else's conflicts or switching branches to escape them, which strands its
 own branch/worktree anchors. Confirm the ref carries the target before stamping.
 
+When this node needs an upstream node's code, stamp the upstream's branch as
+`base_ref`. The upstream specialist pushes that code at REPORTED, so the
+dependent starts there rather than waiting for the merge. See
+`references/beads-store.md` for which dependency type each kind of wait takes.
+
 Set `metadata.integration_owner=orchestrate` on every merge bead this run
 creates, or the repository-global `pr-shepherd` may drain the run's PRs mid-flight.
 

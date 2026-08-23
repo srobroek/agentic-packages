@@ -135,7 +135,25 @@ Good scopes are the single most important planning decision:
 
 ## Concurrency cap
 
-Cap concurrent state-changing workers at `min(16, cores − 2)`, and lower
-further if disk is tight. Every git-backed worker carries its own build
-artifacts. Queue workers that have not claimed a bead do not count as useful
-parallelism; do not keep idle pollers running.
+The cap counts live agents, not CPU. Count every one of these:
+
+- each specialist
+- each child a specialist fans out to
+- each reviewer
+- the shepherd
+- the scribe
+
+An agent idle during review still holds a slot, because the run never recycles a
+worker.
+
+Nothing in a run is CPU-bound. The two limits to watch are the provider rate
+limit and the lead's own context budget.
+
+- While the provider accepts requests and the lead's context has room, raise the
+  cap.
+- On the first rate-limit rejection, lower the cap.
+- If disk is tight, lower it again. Every git-backed worker carries its own
+  build artifacts.
+
+Queue workers that have not claimed a bead do not count as useful parallelism.
+Do not keep idle pollers running.

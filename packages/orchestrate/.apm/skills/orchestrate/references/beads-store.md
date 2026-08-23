@@ -283,8 +283,17 @@ bd update <bead> --status <status>                    # only where status change
 Semantics that fall out of the status column:
 
 - **Deps clear on `closed`.** A dependent becomes ready only once its
-  upstreams are `merged`/`dismissed` -- it always starts from a base containing
-  the upstream's merged code.
+  upstreams are `merged`/`dismissed`.
+- **Pick the type from what the dependent waits for.** `blocks` waits for the
+  shepherd's merge, and the specialist already pushed the upstream's code at
+  `reported`.
+  - Needs the upstream CODE: use a non-blocking type and stamp
+    `base_ref=<upstream branch>` on the dependent. The dependent then starts at
+    the upstream's REPORTED push instead of its merge.
+  - Needs the upstream DECISION to land first: keep `blocks`, which gates
+    `bd ready`.
+  - A `base_ref` dependent rebases when the upstream takes review changes. That
+    rebase returns through the existing CONFLICT bounce-back path.
 - **`failed` = `blocked` status** → never satisfies a dependency, never
   reappears in `bd ready`. Stranded downstream = `bd dep tree <bead>`.
 - **`bd ready` excludes** `in_progress`, `blocked`, `deferred`, and gated
@@ -347,7 +356,10 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 - **Comment** = human-readable payload (the message fields), citing artifact
   paths instead of inlining long text.
 - **Artifacts**: full briefs/reports go to
-  `<artifacts>/<node>-<verb>-<n>.md`; the comment carries the absolute path.
+  `<artifacts>/<node>-<verb>-<resource>-<n>.md`, where `<resource>` is the id of
+  the claimed bead or wisp; the comment carries the absolute path. Every
+  dimension reviewer of one node writes its REVIEW artifact at the same time,
+  and the resource id is what keeps those filenames apart.
 - State-carrying verbs additionally flip status/label per the mapping table;
   `bd set-state` emits its own event bead, so transitions are double-anchored.
 
