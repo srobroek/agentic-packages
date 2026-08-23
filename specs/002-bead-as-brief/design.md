@@ -84,6 +84,13 @@ orc-pyq.
 }
 ```
 
+Superseded 2026-08-24. Bead orc-eopq retired the `lease_token`,
+`runtime_handle`, and `runtime_context` keys, together with the bind handshake
+that produced them. Write authority comes from holding the bead claim
+(`bd update <bead> --claim`, which sets the assignee). `worktree` stays. The
+SubagentStop hook resolves the claimed resource through it, so it must be an
+absolute path. See [contracts/hook-io.md](contracts/hook-io.md).
+
 Removed from the previous draft: `next_role`, `next_assignee` (the `agent:*`
 label is the routing signal), `review_dimensions` (labels, below).
 
@@ -202,6 +209,17 @@ pause:
 | Universal SubagentStop | Matcher-less, both runtimes | Resolve the activation resource by stamped `runtime_context`, including released and closed wisps; fall back to actor lookup for legacy resources. Apply the role rules and reject active claims at exit. |
 | Activation guard | PreToolUse on Agent and SendMessage, run-marker-gated | Require canonical WAIT allocation, live resources, runtime binding, and exact CLAIM activation |
 | Orchestrator claim-deny | PreToolUse on `bd … --claim`, run-marker-gated | Deny T0 claims; admit only worker commands with equal non-lead actor variables |
+
+Superseded 2026-08-24. Bead orc-eopq dropped `runtime_context` resolution from
+the universal SubagentStop row and the runtime binding from the activation-guard
+row. The hook now resolves as follows:
+
+1. Match the agent's `cwd` against the absolute `metadata.worktree` by
+   path-segment containment.
+2. Narrow to the active claim: status `in_progress` with a non-empty assignee.
+3. Fall back to `--assignee` lookup for a resource with no `worktree`.
+
+See [contracts/hook-io.md](contracts/hook-io.md).
 
 Deny output is structured JSON, failure-specific, diagnosis-only -- which
 check failed and what the bead shows. Remediation lives in the agent's own

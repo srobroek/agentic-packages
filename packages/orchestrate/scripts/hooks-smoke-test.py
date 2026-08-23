@@ -258,8 +258,6 @@ resources = {
         "metadata": {
             "worktree": "/tmp/research-1",
             "lease_token": "lease-1",
-            "runtime_handle": "researcher-r1@session-b807e068",
-            "runtime_context": "aresearcher-r1-cb8a2c084ff1c7fa",
         },
     },
 }

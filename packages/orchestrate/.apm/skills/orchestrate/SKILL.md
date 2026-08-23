@@ -52,8 +52,8 @@ Role: lead session / orchestrator.
    dedicated integration checkout per repository. Record each assigned
    branch/path on its activation resource. Writers self-commit, push, and
    report their Worktrunk branch. Allocation and activation are separate:
-   WAIT-only spawn, context acknowledgement, handle/context bind and stamp,
-   then an exact `CLAIM {resource-id}` to the routing handle.
+   a WAIT-only spawn, then an exact `CLAIM {resource-id}` as a separate
+   message.
 5. **Flat claim-holder tree.** Only you spawn claim-holding specialists,
    reviewers, advisors, researchers, scribes, and shepherds. A
    domain-specialist may spawn bounded throwaway implementation children in
@@ -156,18 +156,18 @@ Role: lead session / orchestrator.
    the writer checkout with plain Worktrunk (`wt switch --create <branch>`),
    then stamp the node's bead id on that branch with `wt config state vars
    set bead <bead-id> --branch <branch>`. Write the complete BRIEF and stamp
-   `branch` and canonical `worktree` (as `metadata.worktree`) on the unclaimed
-   node, then read them back. Spawn with `CLAIM {node-id}` as the whole prompt:
-   the bead already carries the task, the scope and the checkout, so there is
-   nothing to acknowledge and no runtime id to bind. The role definition owns
-   claim and validation.
+   `branch` and canonical `worktree` (as `metadata.worktree`, an absolute path)
+   on the unclaimed node, then read them back. Spawn with `CLAIM {node-id}` as
+   the whole prompt: the bead already carries the task, the scope and the
+   checkout, so there is nothing to acknowledge and no runtime id to bind. The
+   role definition owns claim and validation.
    A BOUNCE invalidates that attempt: repair the envelope and redispatch from
    durable state; never continue or close the bounced actor by manual
    messages. See `references/spawn-brief.md`.
 6. On `REPORTED`, create all review-wisp shells and merge-bead dependency
    edges before any reviewer starts. Give each tool-using reviewer its own
-   Worktrunk checkout, stamp and bind the wisp, then activate it with exactly
-   `CLAIM {review-wisp-id}`. Changes stay on the review wisp; wake the
+   Worktrunk checkout, stamp its absolute `worktree` on the wisp, then activate
+   it with exactly `CLAIM {review-wisp-id}`. Changes stay on the review wisp; wake the
    specialist with `CLAIM {same-node-id}` only after every dimension has a
    verdict. A blocked specialist similarly exchanges content with an advisor
    through an escalation wisp. The last approving reviewer closes the final

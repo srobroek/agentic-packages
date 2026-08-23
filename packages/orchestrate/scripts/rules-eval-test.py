@@ -441,75 +441,215 @@ run(
 
 print("=== live claim resolution ===")
 original_bd_json = MODULE.bd_json
-calls = []
 
 
-def fake_bd_json(*args):
-    calls.append(args)
-    if "--assignee" in args:
-        return []
-    return [
-        bead(
-            id="t21",
-            status="closed",
-            assignee="reviewer-code",
-            ephemeral=True,
-            wisp_type="escalation",
-            metadata={
-                "actor": "reviewer-code",
-                "runtime_context": "runtime-agent-21",
-            },
-        )
-    ]
+def check(name, ok, detail=""):
+    global passed, failed
+    if ok:
+        passed += 1
+        print(f"  ok   {name}")
+    else:
+        failed += 1
+        print(f"  FAIL {name} -> {detail}")
 
 
-MODULE.bd_json = fake_bd_json
-try:
-    resolved, violations = MODULE.resolve_claimed_bead(
-        {"agent_id": "runtime-agent-21", "agent_type": "reviewer"},
-        "reviewer",
-    )
-finally:
-    MODULE.bd_json = original_bd_json
+def resolve_with(resources, payload, agent_type, assignee_resources=None):
+    """Drive resolve_claimed_bead against fixture beads; returns (resolved, violations, calls)."""
+    seen = []
 
-if resolved and resolved.get("id") == "t21" and not violations:
-    passed += 1
-    print("  ok   runtime context resolves closed activation resource")
-else:
-    failed += 1
-    print(
-        f"  FAIL runtime context resolves closed activation resource -> {resolved!r} {violations!r}"
-    )
+    def fake_bd_json(*args):
+        seen.append(args)
+        if "--assignee" in args:
+            return list(assignee_resources or [])
+        return list(resources)
 
-if calls and "--include-infra" in calls[0] and "--all" in calls[0]:
-    passed += 1
-    print("  ok   live resolution includes terminal wisp resources")
-else:
-    failed += 1
-    print(f"  FAIL live resolution includes terminal wisp resources -> {calls!r}")
+    MODULE.bd_json = fake_bd_json
+    try:
+        resolved, violations = MODULE.resolve_claimed_bead(payload, agent_type)
+    finally:
+        MODULE.bd_json = original_bd_json
+    return resolved, violations, seen
 
-MODULE.bd_json = lambda *_args: [
+
+_wt_bead = bead(
+    id="t21",
+    status="in_progress",
+    assignee="reviewer-code",
+    updated_at="2026-01-01",
+    metadata={"actor": "reviewer-code", "worktree": "/x/arch-review"},
+)
+
+resolved, violations, calls = resolve_with(
+    [_wt_bead],
+    {
+        "cwd": "/x/arch-review/packages/orchestrate",
+        "agent_id": "agt_01H9xQ",
+        "agent_type": "reviewer",
+    },
+    "reviewer",
+)
+check(
+    "cwd inside the bead worktree resolves the active claim",
+    resolved and resolved.get("id") == "t21",
+    f"{resolved!r}",
+)
+check(
+    "cwd match rejects the active claim at stop",
+    any(item.get("check") == "claim_release" for item in violations),
+    f"{violations!r}",
+)
+check(
+    "live resolution includes terminal wisp resources",
+    bool(calls) and "--include-infra" in calls[0] and "--all" in calls[0],
+    f"{calls!r}",
+)
+
+resolved, _violations, _calls = resolve_with(
+    [_wt_bead],
+    {"cwd": "/x/arch-review", "agent_id": "agt_01H9xQ", "agent_type": "reviewer"},
+    "reviewer",
+)
+check(
+    "cwd equal to the worktree root resolves",
+    resolved and resolved.get("id") == "t21",
+    f"{resolved!r}",
+)
+
+# Proves the branch can fail: an unrelated cwd must resolve nothing at all.
+resolved, violations, _calls = resolve_with(
+    [_wt_bead],
+    {"cwd": "/x/elsewhere/deep", "agent_id": "agt_01H9xQ", "agent_type": "reviewer"},
+    "reviewer",
+)
+check(
+    "cwd outside every worktree resolves nothing",
+    resolved is None and violations == [],
+    f"{resolved!r} {violations!r}",
+)
+
+# Sibling worktrees: a prefix test would resolve the shorter path.
+_siblings = [
     bead(
-        id="t22",
+        id="t-wt",
         status="in_progress",
-        assignee="architect-files",
-        metadata={"runtime_context": "runtime-agent-22"},
-    )
+        assignee="arch1",
+        updated_at="2026-01-02",
+        metadata={"worktree": "/x/arch-worktrunk"},
+    ),
+    bead(
+        id="t-wt-int",
+        status="in_progress",
+        assignee="arch2",
+        updated_at="2026-01-01",
+        metadata={"worktree": "/x/arch-worktrunk-int"},
+    ),
 ]
-try:
-    _resolved, violations = MODULE.resolve_claimed_bead(
-        {"agent_id": "runtime-agent-22", "agent_type": "architect"},
-        "architect",
-    )
-finally:
-    MODULE.bd_json = original_bd_json
+resolved, violations, _calls = resolve_with(
+    _siblings,
+    {
+        "cwd": "/x/arch-worktrunk-int/pkg",
+        "agent_id": "agt_01H9xQ",
+        "agent_type": "architect",
+    },
+    "architect",
+)
+check(
+    "sibling worktree prefix does not cross-match",
+    resolved
+    and resolved.get("id") == "t-wt-int"
+    and [item["detail"] for item in violations] == ["active claims remain at stop: t-wt-int"],
+    f"{resolved!r} {violations!r}",
+)
 
-if any(item.get("check") == "claim_release" for item in violations):
-    passed += 1
-    print("  ok   live resolution rejects active claim at stop")
-else:
-    failed += 1
-    print(f"  FAIL live resolution rejects active claim at stop -> {violations!r}")
+# One worktree, several beads: only the in_progress+assigned one is the claim.
+_shared = [
+    bead(
+        id="t-open",
+        status="open",
+        assignee="",
+        updated_at="2026-01-03",
+        metadata={"worktree": "/x/arch-vocab"},
+    ),
+    bead(
+        id="t-closed",
+        status="closed",
+        assignee="arch9",
+        updated_at="2026-01-04",
+        metadata={"worktree": "/x/arch-vocab"},
+    ),
+    bead(
+        id="t-live",
+        status="in_progress",
+        assignee="arch9",
+        updated_at="2026-01-01",
+        metadata={"worktree": "/x/arch-vocab"},
+    ),
+]
+resolved, violations, _calls = resolve_with(
+    _shared,
+    {"cwd": "/x/arch-vocab/src", "agent_id": "agt_01H9xQ", "agent_type": "architect"},
+    "architect",
+)
+check(
+    "shared worktree resolves the active claim only",
+    resolved
+    and resolved.get("id") == "t-live"
+    and [item["detail"] for item in violations] == ["active claims remain at stop: t-live"],
+    f"{resolved!r} {violations!r}",
+)
+
+# A relative cwd must not key a bead. The worktree is the running process's cwd so
+# that resolve() on a relative payload cwd would land inside it if the guard were gone.
+resolved, violations, _calls = resolve_with(
+    [
+        bead(
+            id="t-rel",
+            status="in_progress",
+            assignee="arch3",
+            updated_at="2026-01-01",
+            metadata={"worktree": os.getcwd()},
+        )
+    ],
+    {"cwd": ".", "agent_id": "agt_01H9xQ", "agent_type": "architect"},
+    "architect",
+)
+check(
+    "relative cwd resolves no bead by worktree",
+    resolved is None and violations == [],
+    f"{resolved!r} {violations!r}",
+)
+
+# Branch B: artifact nodes carry no worktree, so assignee lookup is the only path.
+resolved, violations, calls = resolve_with(
+    [
+        bead(
+            id="t-art",
+            status="in_progress",
+            assignee="scribe-1",
+            updated_at="2026-01-01",
+            metadata={},
+        )
+    ],
+    {"cwd": "/x/nowhere", "agent_id": "scribe-1", "agent_type": "scribe"},
+    "scribe",
+    assignee_resources=[
+        bead(
+            id="t-art",
+            status="in_progress",
+            assignee="scribe-1",
+            updated_at="2026-01-01",
+            metadata={},
+        )
+    ],
+)
+check(
+    "assignee fallback resolves a bead with no worktree",
+    resolved
+    and resolved.get("id") == "t-art"
+    and any(item.get("check") == "claim_release" for item in violations)
+    and any("--assignee" in call for call in calls),
+    f"{resolved!r} {violations!r}",
+)
 
 # deny_metadata is presence-based (_has_metadata), so a role must not deny a key
 # the orchestrator is required to stamp pre-claim: the role gets blocked at exit
@@ -602,7 +742,7 @@ try:
 finally:
     os.unlink(_ANCHOR_RULES)
 
-for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "runtime_handle"):
+for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "execution_agent"):
     if _key in MODULE.ORCHESTRATOR_ANCHORS:
         passed += 1
         print(f"  ok   spawn-brief anchor {_key} is exempt")

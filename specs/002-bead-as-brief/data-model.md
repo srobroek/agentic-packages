@@ -16,6 +16,14 @@ One unit of run work. Durable, synced.
 | Landing | `merge_sha`, `pr` | bundled run shepherd or standalone pr-shepherd |
 | Counters | `stop_attempts`, `review_round` | hooks (reset at bounce) |
 
+Superseded 2026-08-24. Bead orc-eopq retired the `lease_token`,
+`runtime_handle`, and `runtime_context` activation keys, together with the bind
+handshake that produced them. Write authority comes from holding the bead claim
+(`bd update <bead> --claim`, which sets the assignee). The SubagentStop hook
+resolves the claimed resource by matching the agent's `cwd` against the absolute
+`metadata.worktree`, then narrowing to the active claim. See
+[contracts/hook-io.md](contracts/hook-io.md).
+
 Comments (durable thread, ≤6 healthy): BRIEF · REPORTED · verdict lines
 (`REVIEW dim=<d> round=<n> verdict=<v>`) · BOUNCE · FAILED · closing summary.
 
