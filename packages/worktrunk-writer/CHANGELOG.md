@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.3](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.3.2...worktrunk-writer--v2.3.3) (2026-08-23)
+
+
+### Bug Fixes
+
+* declare run-status.py in the pack contract and spell unparsable ([5d8f46a](https://github.com/srobroek/agentic-packages/commit/5d8f46a477a663fd62dbc319e8c14a0261b1f695))
+* **worktrunk-writer:** guard notebook writes, bound subprocess calls, drop dead classifier ([fe483a6](https://github.com/srobroek/agentic-packages/commit/fe483a69d67be5cf2f9f067cfa6bf9a60dfbe8b7))
+
 ## [2.3.2](https://github.com/srobroek/agentic-packages/compare/worktrunk-writer--v2.3.1...worktrunk-writer--v2.3.2) (2026-08-23)
 
 

@@ -1,5 +1,5 @@
 name: beads
-version: 2.2.0
+version: 2.2.1
 description: >-
   Beads (bd) conventions for persistent task DAGs, atomic claims, native reply
   threads, decision records, ambiguity handling, actor identity, JSON envelopes,

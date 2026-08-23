@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.2.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.2.0...beads--v2.2.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **worktrunk-writer:** guard notebook writes, bound subprocess calls, drop dead classifier ([fe483a6](https://github.com/srobroek/agentic-packages/commit/fe483a69d67be5cf2f9f067cfa6bf9a60dfbe8b7))
+
+
+### Documentation
+
+* correct the gate type prescribed for machine waits and record bd init hook clobbering [skip tests] ([c41eb8d](https://github.com/srobroek/agentic-packages/commit/c41eb8db453dbf5c4c2e4f5b0120d7311f85f3cb))
+
 ## [2.2.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.1.1...beads--v2.2.0) (2026-08-22)
 
 

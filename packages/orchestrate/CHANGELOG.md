@@ -1,5 +1,27 @@
 # Changelog
 
+## [16.5.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.4.0...orchestrate--v16.5.0) (2026-08-23)
+
+
+### Features
+
+* **orchestrate:** add a standardised run-status report to the skill ([868048b](https://github.com/srobroek/agentic-packages/commit/868048bc246562bfd435edfcf6a89f3c239eb3d3))
+* **orchestrate:** state the architect role as decompose, group, run, hand off ([59a0126](https://github.com/srobroek/agentic-packages/commit/59a01266261bd4311fab2906ac853f880a785602))
+
+
+### Bug Fixes
+
+* declare run-status.py in the pack contract and spell unparsable ([5d8f46a](https://github.com/srobroek/agentic-packages/commit/5d8f46a477a663fd62dbc319e8c14a0261b1f695))
+* **deps:** sync internal package pins (patch-level dep releases) ([a05348e](https://github.com/srobroek/agentic-packages/commit/a05348e157716e1228a3595bfaa40256606311e5))
+* **orchestrate:** delegate by category, and bundle before spawning ([c81f8b8](https://github.com/srobroek/agentic-packages/commit/c81f8b86f1fc94449adf61ada002ae17ace9b136))
+* **orchestrate:** enforce reachable state authority, bound bd writes, retire dead run markers ([2c0d1c4](https://github.com/srobroek/agentic-packages/commit/2c0d1c42ef676b4cd6034cb54b483001c64da776))
+* **worktrunk-writer:** guard notebook writes, bound subprocess calls, drop dead classifier ([fe483a6](https://github.com/srobroek/agentic-packages/commit/fe483a69d67be5cf2f9f067cfa6bf9a60dfbe8b7))
+
+
+### Documentation
+
+* correct the gate type prescribed for machine waits and record bd init hook clobbering [skip tests] ([c41eb8d](https://github.com/srobroek/agentic-packages/commit/c41eb8db453dbf5c4c2e4f5b0120d7311f85f3cb))
+
 ## [16.4.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v16.3.2...orchestrate--v16.4.0) (2026-08-23)
 
 
