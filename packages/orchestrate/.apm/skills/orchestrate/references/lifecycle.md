@@ -206,10 +206,11 @@ session open for it.
 
 Park the node instead. Record what is being awaited on the bead with
 `bd set-state <bead> state=waiting_gate --reason "<what is awaited and how to
-resume>"`, add `bd gate create --type=<ci|release|review> --blocks <bead>` when
-the wait has an external identifier worth storing, then continue unrelated nodes
-from `bd ready`. When nothing else is ready and only external waits remain, write
-the run report and exit; the gate bead plus the next pass own the wait.
+resume>"`, add `bd gate create --type=gh:run --blocks <bead> --await-id
+<run-id>` for a workflow run or `--type=gh:pr --await-id <pr#>` for a PR merge
+when the wait has an external identifier worth storing, then continue unrelated
+nodes from `bd ready`. When nothing else is ready and only external waits remain,
+write the run report and exit; the gate bead plus the next pass own the wait.
 
 This is the rule `pr-shepherd` already states for itself -- never re-poll a
 pending PR or stay alive as a watcher. Two campaign runs violated it on the final

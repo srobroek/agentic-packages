@@ -245,10 +245,11 @@ originating specialist repairs it.
 
 CI, release workflows, release PR checks, and long-running reviewers are gates
 rather than work. The lead parks the node with `state=waiting_gate` plus what is
-awaited and how to resume, adds `bd gate create --type=<ci|release|review>` when
-an identifier is worth storing, and takes the next ready node. Once only external
-waits remain, it writes the run report and exits. The gate bead and the next pass
-own the wait.
+awaited and how to resume, adds `bd gate create --type=gh:run --blocks <bead>
+--await-id <run-id>` for a workflow run or `--type=gh:pr --await-id <pr#>` for a
+PR merge when an identifier is worth storing, and takes the next ready node.
+Once only external waits remain, it writes the run report and exits. The gate
+bead and the next pass own the wait.
 
 Missing product intent takes a different path: an `ASK` wisp,
 `state=waiting_human`, and a `WAITING_HUMAN` comment whose `question` field names

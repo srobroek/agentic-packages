@@ -41,6 +41,11 @@ from pathlib import Path
 BD = os.environ.get("BD_BIN", "bd")
 RULES_DIR = os.environ.get("RULES_DIR", "")
 
+# Per-write ceiling. The bounce path runs three writes in sequence, so 3x this
+# must clear the SubagentStop hook's 45s timeout with room for the preceding
+# reads (bd_json, 20s each). A stalled bd write has been observed at 120s.
+BD_WRITE_TIMEOUT = 10
+
 # Metadata key holding the bead's metadata as of the claim, snapshotted by
 # orchestrator-claim-deny.py. beads records no per-key writer (`bd show --json`
 # carries no metadata field authorship, `bd history` is squashed, and the audit
@@ -123,11 +128,39 @@ def bd_json(*args) -> object:
         return None
 
 
+def bd_write(*args) -> None:
+    """Run a bd mutation, bounded and non-fatal.
+
+    Up to three of these run in sequence on the bounce path, so the budget is
+    sized to fit inside the SubagentStop hook's 45s timeout (claude-hooks.json).
+    An expiry must not propagate: the verdict is emitted after these calls, and
+    losing it would turn a slow write into no enforcement at all.
+    """
+    try:
+        subprocess.run([BD, *args], capture_output=True, timeout=BD_WRITE_TIMEOUT)
+    except Exception as exc:
+        sys.stderr.write(f"rules-eval: bd {args[0]} failed, contract state not advanced: {exc}\n")
+
+
 # ---- predicate evaluation -------------------------------------------------
 
 
 def _labels(bead: dict) -> list:
     return bead.get("labels") or []
+
+
+def _state_labels(bead: dict) -> set:
+    """Operational states carried as `state:<value>` labels.
+
+    `bd set-state` records state as an event bead plus this label and never
+    touches the built-in status, and `bd show --json` exposes no state field.
+    Of the states the rules files deny, only `closed` is also a bd status.
+    """
+    return {
+        lbl.removeprefix("state:")
+        for lbl in _labels(bead)
+        if isinstance(lbl, str) and lbl.startswith("state:") and lbl != "state:"
+    }
 
 
 def _comment_verbs(bead: dict) -> list:
@@ -484,14 +517,20 @@ def main() -> None:
     # Authority violations.
     violations = list(resolution_violations)
     authority = rules.get("authority") or {}
+    state_labels = _state_labels(bead)
     for ds in authority.get("deny_states") or []:
         if status == ds:
-            violations.append(
-                {
-                    "check": "state_authority",
-                    "detail": f"status={ds} set by an agent forbidden to set it",
-                }
-            )
+            surface = f"status={ds}"
+        elif ds in state_labels:
+            surface = f"label state:{ds}"
+        else:
+            continue
+        violations.append(
+            {
+                "check": "state_authority",
+                "detail": f"{surface} set by an agent forbidden to set it",
+            }
+        )
     baseline = _claim_baseline(bead)
     for dm in authority.get("deny_metadata") or []:
         if dm in ORCHESTRATOR_ANCHORS:
@@ -529,35 +568,23 @@ def main() -> None:
                     "violations": violations,
                 }
             )
-            subprocess.run(
-                [BD, "comment", bead_id, f"BOUNCE agent={agent_type} attempt={nxt} {reason}"],
-                capture_output=True,
-            )
+            bd_write("comment", bead_id, f"BOUNCE agent={agent_type} attempt={nxt} {reason}")
             if status == "closed":
-                subprocess.run(
-                    [BD, "reopen", bead_id, "--reason", "contract bounce"],
-                    capture_output=True,
-                )
-            subprocess.run(
-                [
-                    BD,
-                    "update",
-                    bead_id,
-                    "--assignee",
-                    "",
-                    "--status",
-                    "open",
-                    "--metadata",
-                    '{"stop_attempts":0,"review_round":0}',
-                ],
-                capture_output=True,
+                bd_write("reopen", bead_id, "--reason", "contract bounce")
+            bd_write(
+                "update",
+                bead_id,
+                "--assignee",
+                "",
+                "--status",
+                "open",
+                "--metadata",
+                '{"stop_attempts":0,"review_round":0}',
             )
         emit_allow()  # bounce force-allows
 
     if fixture_bead is None:
-        subprocess.run(
-            [BD, "update", bead_id, "--metadata", f'{{"stop_attempts":{nxt}}}'], capture_output=True
-        )
+        bd_write("update", bead_id, "--metadata", f'{{"stop_attempts":{nxt}}}')
 
     emit_block(
         {

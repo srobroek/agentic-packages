@@ -721,14 +721,77 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
     )
     check("direct CLAIM spawn outside run -> allow", out == {}, str(out))
 
+print("=== stale run marker liveness ===")
+# A crashed run leaves its marker behind, and marker presence alone then held the
+# repository under the protocol for every later session: claim-deny refused every
+# `bd ... --claim`, activation-guard refused every unrecognised spawn. Only a run
+# bead bd positively reports terminal retires the guards; every other reading --
+# pending, unparseable, unresolvable -- keeps them on, because these checks only
+# ever narrow a guard.
+with tempfile.TemporaryDirectory(prefix="orchestrate-marker-live-") as temp_dir:
+    temp = Path(temp_dir)
+    marker = temp / ".orchestration" / ".active-run"
+    marker.parent.mkdir(parents=True)
+    fake_bd = temp / "bd"
+    # /bin/sh, not python3: show_bead gives bd 10s, and an interpreter start that
+    # slow made the closed-run case flake to `enforces` (1 in 8 full-suite runs on
+    # a host with an exec-scanning security agent). Real `bd show` measures
+    # 0.46-0.86s, so the production budget is not what was tight.
+    fake_bd.write_text(
+        """#!/bin/sh
+case "$2" in
+  orc-closed) status=closed ;;
+  orc-live) status=in_progress ;;
+  *) exit 1 ;;
+esac
+printf '%s\\n' "{\\"schema_version\\":1,\\"data\\":[{\\"id\\":\\"$2\\",\\"status\\":\\"$status\\"}],\\"error\\":null}"
+""",
+        encoding="utf-8",
+    )
+    fake_bd.chmod(0o755)
+    hook_env = {"BD_BIN": str(fake_bd), "ORCHESTRATE_MARKER_FILE": str(marker)}
+
+    # Each payload is denied by its guard while a run is active and allowed once
+    # the guard goes inert, so one payload distinguishes both states.
+    lead_claim = {
+        "tool_input": {"command": 'BEADS_ACTOR="root" BD_ACTOR="root" bd update x --claim'}
+    }
+    unknown_spawn = {
+        "tool_name": "Agent",
+        "tool_input": {"subagent_type": "totally-made-up", "prompt": "go do the work."},
+    }
+
+    for label, contents, enforced in (
+        ("closed run bead", json.dumps({"schema_version": 1, "run_id": "orc-closed"}), False),
+        ("in_progress run bead", json.dumps({"schema_version": 1, "run_id": "orc-live"}), True),
+        ("pending run id", json.dumps({"schema_version": 1, "run_id": "pending"}), True),
+        ("unparseable marker", "{not json", True),
+        ("unresolvable run id", json.dumps({"schema_version": 1, "run_id": "orc-vanished"}), True),
+    ):
+        marker.write_text(contents + "\n", encoding="utf-8")
+        for script, payload in (
+            ("orchestrator-claim-deny.py", lead_claim),
+            ("orchestrator-activation-guard.py", unknown_spawn),
+        ):
+            out, _ = run_hook(script, payload, env=hook_env)
+            check(
+                f"{label} -> {script} {'enforces' if enforced else 'inert'}",
+                pretool_denied(out) if enforced else out == {},
+                str(out),
+            )
+
 print("=== script modes ===")
 # Every shipped script stays executable so a bare-path caller works whatever the
 # deployment does with modes: APM writes the source mode once and then skips
 # content-identical files, so a mode-only source fix never reaches an install
 # that already has the wrong bit. The _test_* harnesses are exempt: CI runs
-# those through `uv run`, never as commands. The repo-wide counterpart is
+# those through `uv run`, never as commands. So are shebang-less files: an
+# import-only module is never a command, and check-executables-have-shebangs
+# enforces the converse. The repo-wide counterpart is
 # .apm/scripts/check-script-invocation.py.
-mode_checked = sorted(Path(HERE).glob("*.py")) + [
+mode_checked = [
+    path for path in sorted(Path(HERE).glob("*.py")) if path.read_bytes().startswith(b"#!")
+] + [
     path
     for pattern in ("*.py", "*.sh")
     for path in sorted(Path(SKILL, "scripts").glob(pattern))

@@ -383,6 +383,47 @@ run(
 )
 
 
+# `bd set-state` never changes status: it writes a `state:<value>` label. Every
+# deny_states value except `closed` is an operational state, so matching status
+# alone left them all unreachable.
+run(
+    "deny_states matches a state: label",
+    "block",
+    bead(
+        id="t23",
+        status="in_progress",
+        labels=["state:approved"],
+        linked_comments=[{"text": "ADVICE use the indexed path"}],
+    ),
+    agent_type="advisor",
+    rules_file=ADVISOR,
+)
+
+run(
+    "an undenied state: label does not block",
+    "allow",
+    bead(
+        id="t24",
+        status="in_progress",
+        labels=["state:working"],
+        linked_comments=[{"text": "ADVICE use the indexed path"}],
+    ),
+    agent_type="advisor",
+    rules_file=ADVISOR,
+)
+
+run(
+    "denied status still blocks alongside an undenied state: label",
+    "block",
+    bead(
+        id="t25",
+        status="closed",
+        labels=["agent:reviewer", "state:working"],
+        metadata={"execution_kind": "git", "branch": "n", "push": "s"},
+        comments=[{"text": "REPORTED done"}],
+    ),
+)
+
 print("=== live claim resolution ===")
 original_bd_json = MODULE.bd_json
 calls = []
