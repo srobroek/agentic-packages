@@ -9,8 +9,10 @@ are disjoint from everything already being worked on. Disjoint scope is what
 lets parallel worktree coders run without merge collisions.
 
 Overlap rule (conservative): two glob sets overlap if any glob's non-wildcard
-prefix contains, equals, or matches the other's. False positives (serialize
-work that would have been safe) are acceptable; false negatives are not.
+prefix contains or matches the other's; when the prefixes are equal the globs
+themselves are compared, so per-extension splits of one directory stay
+concurrent. False positives (serialize work that would have been safe) are
+acceptable; false negatives are not.
 
 Usage:
     scope-check.py --candidate <bead-id> [--epic <epic-id>] [--bd <path-to-bd>]
@@ -34,20 +36,48 @@ def _die(msg: str, code: int = 2) -> None:
     sys.exit(code)
 
 
+def _deep_wildcard(glob: str) -> bool:
+    """Whether a wildcard sits above the glob's last path segment, which makes
+    the segment-wise text comparison in `_scopes_overlap` unsound: `src/a*/f.py`
+    and `src/*b/f.py` share `src/ab/f.py` while matching in neither direction.
+    Covers `**`, which fnmatch does not treat as spanning separators."""
+    return "*" in glob.rsplit("/", 1)[0]
+
+
 def _scopes_overlap(a: list[str], b: list[str]) -> bool:
-    """Two scope-glob sets overlap if any glob in one matches a literal path
-    prefix of a glob in the other. Compared glob-vs-glob conservatively by
-    treating the non-wildcard prefix of each glob as a literal path and testing
-    containment either direction."""
+    """Two scope-glob sets overlap if any pair of their globs can name a common
+    path.
+
+    Neither glob is a concrete path, so a pair sharing a directory is compared
+    by fnmatching each against the other as text; a match in one direction is
+    enough, since `src/api/*` subsumes `src/api/*.py` but not the reverse. Pairs
+    that text comparison cannot settle are reported as overlapping: a false
+    positive only serializes work that was safe to parallelize, a false negative
+    puts two agents on one file.
+    """
     for ga in a:
         pa = ga.split("*", 1)[0].rstrip("/")
         for gb in b:
             pb = gb.split("*", 1)[0].rstrip("/")
             if not pa or not pb:
                 return True  # a bare '**' owns everything -> always conflicts
-            if pa == pb or pa.startswith(pb + "/") or pb.startswith(pa + "/"):
+            if pa.startswith(pb + "/") or pb.startswith(pa + "/"):
                 return True
+            if pa == pb:
+                if "*" not in ga or "*" not in gb:
+                    return True  # a wildcard-free scope owns that whole path
+                if _deep_wildcard(ga) or _deep_wildcard(gb):
+                    return True
+                if fnmatch.fnmatch(ga, gb) or fnmatch.fnmatch(gb, ga):
+                    return True
+                continue
             if fnmatch.fnmatch(pa, gb) or fnmatch.fnmatch(pb, ga):
+                return True
+            # sibling prefixes diverging mid-segment: the wildcard that ended the
+            # shorter prefix can still expand across the longer one
+            if (pa.startswith(pb) and _deep_wildcard(gb)) or (
+                pb.startswith(pa) and _deep_wildcard(ga)
+            ):
                 return True
     return False
 
