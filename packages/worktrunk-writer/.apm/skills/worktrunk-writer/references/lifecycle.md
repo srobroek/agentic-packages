@@ -137,6 +137,10 @@ content. Run `wt remove --foreground --format=json <branch-or-path>`. Never use
 Project hooks in `.config/wt.toml` require the user to run `wt config approvals
 add`. Agents stop when approval is missing. They never pass `--yes`.
 
+Approval needs a real TTY: `--yes` does not grant it, and neither does piped
+stdin, so an unapproved project hook fails every headless run until a human
+approves it once interactively.
+
 | Hook | Suitable use |
 |---|---|
 | `pre-switch` / `post-switch` | Personal terminal or IDE routing; navigation notices. |
@@ -148,6 +152,17 @@ add`. Agents stop when approval is missing. They never pass `--yes`.
 Hooks prepare, validate, notify, or refuse. They do not claim or close tasks,
 acquire merge locks, push task databases, create nested worktrees, or infer
 task state from activity markers.
+
+No creation-time hook can read `vars.lease` or `vars.bead`. `prepare` stores
+those vars only after `wt switch --create` returns, so `pre-start` and
+`post-start` both run before the lease identity exists; a `post-start` hook is
+therefore not a place to stamp the task-to-worktree link. `pre-remove` does see
+them. Referencing an unset var is a render error, so read optional vars as
+`{{ vars.bead | default('') }}`.
+
+`pre-remove` is the only blocking teardown gate, and it guards `wt remove`
+alone: `git worktree remove` and `rm -rf` bypass it entirely, so it cannot be
+the sole protection against removing a worktree under live work.
 
 ### Lease lifecycle hooks
 
