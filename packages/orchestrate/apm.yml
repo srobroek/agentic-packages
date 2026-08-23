@@ -24,24 +24,17 @@ includes:
   - .apm/skills/orchestrate/references
   - .apm/skills/orchestrate/scripts/_test_bot_review_probe.py
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py
-  - .apm/skills/orchestrate/scripts/_test_decision_policy.py
   - .apm/skills/orchestrate/scripts/_test_discover_agents.py
-  - .apm/skills/orchestrate/scripts/_test_msg_lint.py
-  - .apm/skills/orchestrate/scripts/_test_pull_worker.py
   - .apm/skills/orchestrate/scripts/_test_resolve_queue_dispatch.py
   - .apm/skills/orchestrate/scripts/_test_scope_check.py
-  - .apm/skills/orchestrate/scripts/_test_thread_message.py
   - .apm/skills/orchestrate/scripts/_test_worktree_sweep.py
   - .apm/skills/orchestrate/scripts/bot-review-probe.py
   - .apm/skills/orchestrate/scripts/conflict-probe.sh
   - .apm/skills/orchestrate/scripts/discover-agents.py
   - .apm/skills/orchestrate/scripts/inject-comms.sh
-  - .apm/skills/orchestrate/scripts/msg-lint.py
-  - .apm/skills/orchestrate/scripts/pull-worker.py
   - .apm/skills/orchestrate/scripts/resolve-queue-dispatch.py
   - .apm/skills/orchestrate/scripts/run-status.py
   - .apm/skills/orchestrate/scripts/scope-check.py
-  - .apm/skills/orchestrate/scripts/thread-message.py
   - .apm/skills/orchestrate/scripts/worktree-sweep.sh
 dependencies:
   apm:

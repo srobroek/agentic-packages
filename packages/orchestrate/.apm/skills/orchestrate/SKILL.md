@@ -209,7 +209,7 @@ Role: lead session / orchestrator.
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
 | Scripts | `run-status.py` · `scope-check.py` · `discover-agents.py` ·
   `conflict-probe.sh` · `bot-review-probe.py` ·
-  `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
+  `inject-comms.sh` · `worktree-sweep.sh` (stdlib/portable;
   `_test_*.py` self-tests) |
 
 ## Reporting status

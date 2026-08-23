@@ -39,6 +39,20 @@ TWIN_SETS: list[tuple[str, list[str]]] = [
             "packages/dep-update/tests/test_dep_update_detect_fuzz.py",
         ],
     ),
+    (
+        "bot review probe",
+        [
+            "packages/pr-shepherd/.apm/skills/pr-shepherd/scripts/bot-review-probe.py",
+            "packages/orchestrate/.apm/skills/orchestrate/scripts/bot-review-probe.py",
+        ],
+    ),
+    (
+        "bot review probe tests",
+        [
+            "packages/pr-shepherd/.apm/skills/pr-shepherd/scripts/_test_bot_review_probe.py",
+            "packages/orchestrate/.apm/skills/orchestrate/scripts/_test_bot_review_probe.py",
+        ],
+    ),
 ]
 
 
