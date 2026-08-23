@@ -112,39 +112,11 @@ IN_RUN = in_run_env()
 # no run marker -> allow
 out, _ = run_hook("orchestrator-claim-deny.py", {"tool_input": {"command": "bd update x --claim"}})
 check("no run marker -> allow", out == {})
-# run marker + bd --claim -> deny
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {"tool_input": {"command": "bd update x --claim"}},
-    env=IN_RUN,
-)
-check("in run + bd --claim -> deny", pretool_denied(out), str(out))
-# A leading cd is the normal Claude Bash shape and must not hide the claim.
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {"tool_input": {"command": "cd /tmp/project\nbd update x --claim"}},
-    env=IN_RUN,
-)
-check("in run + multiline bd --claim -> deny", pretool_denied(out), str(out))
-# Shell whitespace variants must not bypass T0 authority enforcement.
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {"tool_input": {"command": "bd\tupdate x\t--claim"}},
-    env=IN_RUN,
-)
-check("in run + tab-separated bd --claim -> deny", pretool_denied(out), str(out))
-# Actor variables may prefix a worker claim, but T0 must still be denied.
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": 'cd /tmp/project && BEADS_ACTOR="lead" BD_ACTOR="lead" bd update x --claim'
-        }
-    },
-    env=IN_RUN,
-)
-check("in run + env-prefixed bd --claim -> deny", pretool_denied(out), str(out))
-# A worker claim must carry the same stable actor in both Beads variables.
+# T0 authority is now enforced by bd itself (worktrunk-writer's
+# assert_bead_authority/assert_bead_claim), not by guessing an actor from
+# BEADS_ACTOR/BD_ACTOR shell text. This hook only snapshots a claim's
+# pre-claim metadata now; every `bd ... --claim` while a run is active is
+# allowed.
 out, _ = run_hook(
     "orchestrator-claim-deny.py",
     {
@@ -157,20 +129,7 @@ out, _ = run_hook(
     },
     env={**IN_RUN, **BD_STUB},
 )
-check("in run + bound worker claim -> allow", out == {}, str(out))
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": (
-                'ACTOR="claude/researcher/session-123"; '
-                'BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update x --claim'
-            )
-        }
-    },
-    env={**IN_RUN, **BD_STUB},
-)
-check("in run + resolved worker ACTOR -> allow", out == {}, str(out))
+check("in run + bd --claim -> allow", out == {}, str(out))
 # The claim-time snapshot is what lets SubagentStop tell the role's own write
 # from a value another actor stamped before the claim (astro-plan-indxl).
 open(BD_STUB_CALLS, "w").close()
@@ -194,23 +153,6 @@ check(
     and "claim_metadata_baseline" in _calls
     and "https://x/pull/1" in _calls,
     _calls,
-)
-open(BD_STUB_CALLS, "w").close()
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": 'BEADS_ACTOR="root" BD_ACTOR="root" bd update astro-node-1 --claim'
-        }
-    },
-    env={**IN_RUN, **BD_STUB},
-)
-check(
-    # The bead is what must not be read: emit_deny probes the run bead's liveness
-    # through the same stub, so the call log is never empty on a denial.
-    "denied claim writes no snapshot",
-    pretool_denied(out) and "astro-node-1" not in Path(BD_STUB_CALLS).read_text(),
-    Path(BD_STUB_CALLS).read_text(),
 )
 # `--directory` is the long form of `-C`; treating it as a valueless flag read
 # the repo path as the subcommand and silently skipped the snapshot.
@@ -273,67 +215,6 @@ check(
     out == {} and "claim_metadata_baseline" not in _calls,
     _calls,
 )
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": (
-                'BEADS_ACTOR="claude/researcher/session-123" '
-                'BD_ACTOR="claude/reviewer/session-456" bd update x --claim'
-            )
-        }
-    },
-    env=IN_RUN,
-)
-check("in run + mismatched worker identity -> deny", pretool_denied(out), str(out))
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {"tool_input": {"command": 'BEADS_ACTOR="root" BD_ACTOR="root" bd update x --claim'}},
-    env=IN_RUN,
-)
-check("in run + lead identity envelope -> deny", pretool_denied(out), str(out))
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": ('ACTOR="lead"; BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update x --claim')
-        }
-    },
-    env=IN_RUN,
-)
-check("in run + lead hidden behind ACTOR -> deny", pretool_denied(out), str(out))
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": (
-                "bd update x --claim "
-                "BEADS_ACTOR=claude/researcher/session-123 "
-                "BD_ACTOR=claude/researcher/session-123"
-            )
-        }
-    },
-    env=IN_RUN,
-)
-check(
-    "in run + assignment-like claim arguments -> deny",
-    pretool_denied(out),
-    str(out),
-)
-out, _ = run_hook(
-    "orchestrator-claim-deny.py",
-    {
-        "tool_input": {
-            "command": (
-                'BEADS_ACTOR="claude/researcher/session-123" '
-                'BD_ACTOR="claude/researcher/session-123" bd update x --claim; '
-                "bd update y --claim"
-            )
-        }
-    },
-    env=IN_RUN,
-)
-check("in run + one unbound claim -> deny all", pretool_denied(out), str(out))
 # run marker + bd update without --claim -> allow
 out, _ = run_hook(
     "orchestrator-claim-deny.py",
@@ -763,11 +644,12 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
 
 print("=== stale run marker liveness ===")
 # A crashed run leaves its marker behind, and marker presence alone then held the
-# repository under the protocol for every later session: claim-deny refused every
-# `bd ... --claim`, activation-guard refused every unrecognised spawn. Only a run
-# bead bd positively reports terminal retires the guards; every other reading --
-# pending, unparsable, unresolvable -- keeps them on, because these checks only
-# ever narrow a guard.
+# repository under the protocol for every later session: activation-guard refused
+# every unrecognised spawn. Only a run bead bd positively reports terminal retires
+# the guard; every other reading -- pending, unparsable, unresolvable -- keeps it
+# on, because these checks only ever narrow a guard. orchestrator-claim-deny.py no
+# longer denies anything (it only snapshots claim metadata), so it has no liveness
+# behaviour left to exercise here.
 with tempfile.TemporaryDirectory(prefix="orchestrate-marker-live-") as temp_dir:
     temp = Path(temp_dir)
     marker = temp / ".orchestration" / ".active-run"
@@ -791,11 +673,8 @@ printf '%s\\n' "{\\"schema_version\\":1,\\"data\\":[{\\"id\\":\\"$2\\",\\"status
     fake_bd.chmod(0o755)
     hook_env = {"BD_BIN": str(fake_bd), "ORCHESTRATE_MARKER_FILE": str(marker)}
 
-    # Each payload is denied by its guard while a run is active and allowed once
-    # the guard goes inert, so one payload distinguishes both states.
-    lead_claim = {
-        "tool_input": {"command": 'BEADS_ACTOR="root" BD_ACTOR="root" bd update x --claim'}
-    }
+    # Denied by the guard while a run is active and allowed once the guard goes
+    # inert, so one payload distinguishes both states.
     unknown_spawn = {
         "tool_name": "Agent",
         "tool_input": {"subagent_type": "totally-made-up", "prompt": "go do the work."},
@@ -809,48 +688,41 @@ printf '%s\\n' "{\\"schema_version\\":1,\\"data\\":[{\\"id\\":\\"$2\\",\\"status
         ("unresolvable run id", json.dumps({"schema_version": 1, "run_id": "orc-vanished"}), True),
     ):
         marker.write_text(contents + "\n", encoding="utf-8")
-        for script, payload in (
-            ("orchestrator-claim-deny.py", lead_claim),
-            ("orchestrator-activation-guard.py", unknown_spawn),
-        ):
-            out, _ = run_hook(script, payload, env=hook_env)
-            check(
-                f"{label} -> {script} {'enforces' if enforced else 'inert'}",
-                pretool_denied(out) if enforced else out == {},
-                str(out),
-            )
+        out, _ = run_hook("orchestrator-activation-guard.py", unknown_spawn, env=hook_env)
+        check(
+            f"{label} -> orchestrator-activation-guard.py "
+            f"{'enforces' if enforced else 'inert'}",
+            pretool_denied(out) if enforced else out == {},
+            str(out),
+        )
 
-    # ORCHESTRATE_RUN engages the guards with no marker file to read a run id
+    # ORCHESTRATE_RUN engages the guard with no marker file to read a run id
     # from. The flag is boolean, so the id rides ORCHESTRATE_RUN_ID; without it
     # a markerless run reads as live and never retires. The marker path here
     # points at nothing, isolating the variables.
     marker.unlink()
     for label, run_id, enforced in (("closed", "orc-closed", False), ("live", "orc-live", True)):
         env = {**hook_env, "ORCHESTRATE_RUN": "1", "ORCHESTRATE_RUN_ID": run_id}
-        for script, payload in (
-            ("orchestrator-claim-deny.py", lead_claim),
-            ("orchestrator-activation-guard.py", unknown_spawn),
-        ):
-            out, _ = run_hook(script, payload, env=env)
-            check(
-                f"ORCHESTRATE_RUN_ID naming a {label} run -> {script} "
-                f"{'enforces' if enforced else 'inert'}",
-                pretool_denied(out) if enforced else out == {},
-                str(out),
-            )
-
-    # The flag's own value must never reach `bd show`: "1" fuzzy resolves to an
-    # unrelated bead, and one closed match silently disarms every guard.
-    for script, payload in (
-        ("orchestrator-claim-deny.py", lead_claim),
-        ("orchestrator-activation-guard.py", unknown_spawn),
-    ):
-        out, _ = run_hook(script, payload, env={**hook_env, "ORCHESTRATE_RUN": "orc-closed"})
+        out, _ = run_hook("orchestrator-activation-guard.py", unknown_spawn, env=env)
         check(
-            f"ORCHESTRATE_RUN is never read as a run id -> {script} enforces",
-            pretool_denied(out),
+            f"ORCHESTRATE_RUN_ID naming a {label} run -> orchestrator-activation-guard.py "
+            f"{'enforces' if enforced else 'inert'}",
+            pretool_denied(out) if enforced else out == {},
             str(out),
         )
+
+    # The flag's own value must never reach `bd show`: "1" fuzzy resolves to an
+    # unrelated bead, and one closed match silently disarms the guard.
+    out, _ = run_hook(
+        "orchestrator-activation-guard.py",
+        unknown_spawn,
+        env={**hook_env, "ORCHESTRATE_RUN": "orc-closed"},
+    )
+    check(
+        "ORCHESTRATE_RUN is never read as a run id -> orchestrator-activation-guard.py enforces",
+        pretool_denied(out),
+        str(out),
+    )
 
 print("=== script modes ===")
 # Every shipped script stays executable so a bare-path caller works whatever the

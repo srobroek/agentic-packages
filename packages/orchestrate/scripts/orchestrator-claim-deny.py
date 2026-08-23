@@ -3,21 +3,23 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""PreToolUse hook — orchestrator claim prohibition (run-marker gated).
+"""PreToolUse hook — claim baseline snapshot (run-marker gated).
 
-T0 (the orchestrator session) never claims beads; it routes. This hook denies
-any `bd ... --claim` issued while an orchestrate run is active. The run marker
-(env ORCHESTRATE_RUN or ./.orchestration/.active-run) scopes it so ordinary
-interactive sessions are untouched. ORCHESTRATE_RUN only arms the hook;
-ORCHESTRATE_RUN_ID names the run bead whose status can retire it.
+T0 never claiming beads is now enforced by bd itself: worktrunk-writer's
+assert_bead_authority/assert_bead_claim deny a write whose target checkout's
+Worktrunk `bead` var does not resolve back to the claiming assignee. Guessing
+the actor from BEADS_ACTOR/BD_ACTOR shell text was this hook's own enforcement
+before that landed, and it is redundant now, so it is gone.
 
-On an allowed worker claim it also snapshots the bead's metadata as of the
-claim into metadata.claim_metadata_baseline, which is what lets the
-SubagentStop evaluator tell a value the role wrote from one another actor
-stamped before the claim (astro-plan-indxl).
+What remains: on any `bd ... --claim` issued while an orchestrate run is
+active (env ORCHESTRATE_RUN or ./.orchestration/.active-run), snapshot the
+bead's metadata as of the claim into metadata.claim_metadata_baseline, which is
+what lets the SubagentStop evaluator tell a value the role wrote from one
+another actor stamped before the claim (astro-plan-indxl).
 
-Decision: a PreToolUse deny with a diagnosis-only message. Fails open on
-malformed input. Invoked directly via `uv run`.
+Decision: fails open on malformed input and on a snapshot failure alike --
+this hook only ever adds a baseline, it never blocks. Invoked directly via
+`uv run`.
 Contract: specs/002-bead-as-brief/contracts/hook-io.md
 """
 
@@ -33,7 +35,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from orchestrate_run_marker import (  # noqa: E402
     BD,
     emit_allow,
-    emit_deny,
     marker_present,
     show_bead,
 )
@@ -42,14 +43,6 @@ CLAIM_BASELINE_KEY = "claim_metadata_baseline"
 # Global flags that consume the next token, which would otherwise read as the
 # subcommand or the bead id.
 VALUE_FLAGS = frozenset({"-C", "--actor", "--db", "--directory", "--dolt-auto-commit"})
-
-DENY_MSG = (
-    "orchestrators route work, they never claim beads; only a worker command "
-    "carrying matching BEADS_ACTOR and BD_ACTOR identities may claim"
-)
-VARIABLE_REF_RE = re.compile(r"^\$(?:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\})$")
-LEAD_ACTOR_RE = re.compile(r"(?:^|[/.:_-])(lead|orchestrator|root|t0)(?:$|[/.:_-])", re.I)
-WORKER_ACTOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*[-/][A-Za-z0-9._/-]+$")
 
 
 def shell_segments(command: str) -> list[list[str]]:
@@ -112,49 +105,6 @@ def segment_invokes_bd_claim(segment: list[str]) -> bool:
 
 def invokes_bd_claim(command: str) -> bool:
     return any(segment_invokes_bd_claim(segment) for segment in shell_segments(command))
-
-
-def update_shell_assignments(segment: list[str], variables: dict[str, str]) -> bool:
-    tokens = segment[1:] if segment and segment[0] == "export" else segment
-    if not tokens or not all(is_assignment(token) for token in tokens):
-        return False
-    for token in tokens:
-        key, value = token.split("=", 1)
-        variables[key] = value
-    return True
-
-
-def resolve_actor(value: str | None, variables: dict[str, str]) -> str:
-    if not value:
-        return ""
-    match = VARIABLE_REF_RE.fullmatch(value)
-    if not match:
-        return value
-    return variables.get(match.group(1) or match.group(2), "")
-
-
-def valid_worker_actor(actor: str) -> bool:
-    return bool(actor and WORKER_ACTOR_RE.fullmatch(actor) and not LEAD_ACTOR_RE.search(actor))
-
-
-def has_worker_actor_envelope(command: str) -> bool:
-    variables: dict[str, str] = {}
-    claim_count = 0
-    for segment in shell_segments(command):
-        if update_shell_assignments(segment, variables):
-            continue
-        values = claim_envelope(segment)
-        if values is None:
-            continue
-        claim_count += 1
-        scope = {**variables, **values}
-        beads_actor = resolve_actor(values.get("BEADS_ACTOR"), scope)
-        bd_actor = resolve_actor(values.get("BD_ACTOR"), scope)
-        if not beads_actor or beads_actor != bd_actor:
-            return False
-        if not valid_worker_actor(beads_actor):
-            return False
-    return claim_count > 0
 
 
 def claim_bead_ids(segment: list[str]) -> list[str]:
@@ -239,16 +189,12 @@ def main():
     if not cmd:
         emit_allow()
 
-    if not invokes_bd_claim(cmd):
-        emit_allow()
-    if has_worker_actor_envelope(cmd):
+    if invokes_bd_claim(cmd):
         try:
             snapshot_claim_baseline(cmd)
         except Exception:
             pass
-        emit_allow()
-
-    emit_deny(DENY_MSG)
+    emit_allow()
 
 
 if __name__ == "__main__":
