@@ -231,13 +231,9 @@ Work in <your-checkout>. You own <exact file list> and must not touch anything
 else. <The task.> Report what you changed and what you verified.
 ```
 
-Do NOT run a PREPARE/WAIT/BIND/CLAIM handshake for a child. That protocol
-allocated a separate Worktrunk lease per actor, and a child deliberately shares
-yours -- so it has nothing to bind and the ceremony cannot complete. An architect
-that sends a `WAIT` bootstrap and waits for a bind that will never come has
-blocked itself, which has happened in a live run. If a hook advises you to
-complete that handshake, it cannot tell a deliberately-shared child from an
-unleased one: proceed, and report the advisory as noise.
+Never wait for a child to hand back a runtime id, and never bind one. A child
+shares your checkout, so there is nothing to allocate and nothing to acknowledge.
+An architect that sends a bootstrap and waits for a handshake has blocked itself.
 
 Tell every child which files are NOT its own, naming the sibling that holds them.
 A child cannot see its siblings, so file ownership is only as real as the brief
