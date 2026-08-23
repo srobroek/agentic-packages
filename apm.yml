@@ -29,11 +29,11 @@ scripts:
   install: apm install --target claude,codex
   audit-agentic-assets: uv run --script .apm/scripts/audit-agentic-assets.py
   slop-lint: >-
-    bash -c 'genre="${SLOP_GENRE:-consumer}"; paths="${SLOP_LINT_PATHS:-$(git
-    ls-files "*.md" | grep -v "^.audit-" | grep -v "CHANGELOG.md$")}";
-    gate="$HOME/.claude/skills/review-docs/scripts/slop-lint.sh"; test -f
-    "$gate" || { echo "slop-lint: apm install --global (needs slopvac)" >&2;
-    exit 2; }; bash "$gate" --genre "$genre" $paths'
+    bash -c 'profile="${SLOP_PROFILE:-normal}";
+    paths="${SLOP_LINT_PATHS:-$(git ls-files "README.md" "docs"
+    "packages/*/README.md" "templates/README.md" | grep -v "^.audit-")}";
+    test -n "$paths" || { echo "slop-lint: no user-facing docs matched" >&2;
+    exit 0; }; uvx slopvac lint --profile "$profile" $paths'
   audit-codex-config: uv run --script .apm/scripts/audit-codex-config.py
   sanitize-codex-hooks: python3 .apm/scripts/sanitize-codex-hooks.py
   sanitize-claude-hooks: python3 .apm/scripts/sanitize-claude-hooks.py

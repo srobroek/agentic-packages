@@ -207,7 +207,22 @@ Role: lead session / orchestrator.
 | `references/beads-store.md` | the state store: epic/node beads, state mapping, git-anchor contract, audit, merge-slot, gates |
 | `references/planning.md` | decomposition + pluggable frameworks + default DAG + concurrency cap |
 | `references/teams.md` | when/how to use Claude agent-teams (rare) |
-| Scripts | `scope-check.py` · `discover-agents.py` · `conflict-probe.sh` ·
-  `bot-review-probe.py` ·
+| Scripts | `run-status.py` · `scope-check.py` · `discover-agents.py` ·
+  `conflict-probe.sh` · `bot-review-probe.py` ·
   `inject-comms.sh` · `msg-lint.py` · `worktree-sweep.sh` (stdlib/portable;
   `_test_*.py` self-tests) |
+
+## Reporting status
+
+Asked for status -- of the run, one architect domain, or one actor -- run
+`scripts/run-status.py` and report what it prints. It rolls the epic up through
+its features, resolves blockers via `bd blocked`, and reads `metadata.actor`
+alongside `assignee` because `bd update --status` does not set an assignee.
+
+    scripts/run-status.py                    # live epics (closed ones hidden)
+    scripts/run-status.py --epic <id> --full # one epic, tasks and descriptions
+    scripts/run-status.py --feature <id>     # one architect domain
+    scripts/run-status.py --actor <name>     # what one actor holds
+
+Do not hand-assemble a status summary from `bd list`: it drops the blocker chain
+and the feature rollup, and two summaries written by hand never match.
