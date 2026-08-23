@@ -139,18 +139,11 @@ def main() -> int:
     cwd = payload.get("cwd")
     notice = ""
     if isinstance(cwd, str) and cwd:
-        try:
-            import subprocess
+        import subprocess
 
-            check = subprocess.run(
-                ["git", "-C", cwd, "rev-parse", "--git-dir"],
-                capture_output=True,
-                timeout=5,
-                check=False,
-            )
-            if check.returncode == 0:
-                notice = stale_notice(cwd)
-        except OSError:
+        try:
+            notice = stale_notice(cwd)
+        except (OSError, subprocess.TimeoutExpired):
             notice = ""
 
     if has_isolation:

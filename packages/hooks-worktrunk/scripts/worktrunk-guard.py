@@ -384,10 +384,19 @@ def positional(args: list[str]) -> list[str]:
     return result
 
 
+# `git worktree list` mutates nothing, and steering it to `wt list` was a net
+# loss: `wt list` computes uncommitted line counts via `git add -A` plus
+# `write-tree` against the SHARED object database, and write-tree output is
+# unreferenced by design, so every call leaks blobs and trees (measured: 30 of
+# 836 unreachable trees held untracked probe files, on runs that all exited 0).
+# The porcelain form is also ~15x cheaper (0.13-0.33s vs 1.94-4.31s), which
+# matters inside a hook. Read-only inspection is allowed; the mutators below
+# still route through Worktrunk so it keeps owning the lifecycle.
+READ_ONLY_WORKTREE_SUBCOMMANDS = frozenset({"list"})
+
+
 def worktree_guidance(subcommand: str, args: list[str]) -> str:
     command = f"git worktree {subcommand}".strip()
-    if subcommand == "list":
-        return "Use `wt list`."
     if subcommand == "remove":
         target = positional(args)
         suffix = f" {target[0]}" if target else " <branch-or-path>"
@@ -552,6 +561,8 @@ def analyze_segment(words: list[Token]) -> Violation | None:
     parsed = git_subcommand(words, index)
     if parsed is not None:
         subcommand, args = parsed
+        if subcommand in READ_ONLY_WORKTREE_SUBCOMMANDS:
+            return None
         shown = f"git worktree {subcommand}".strip()
         return Violation(shown, worktree_guidance(subcommand, args))
 

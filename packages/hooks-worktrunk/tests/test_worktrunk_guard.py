@@ -25,7 +25,6 @@ SPEC.loader.exec_module(guard)
 @pytest.mark.parametrize(
     ("command", "expected"),
     [
-        ("git worktree list", "wt list"),
         (
             "/usr/bin/git -C /repo worktree add -b feat/auth /tmp/auth origin/main",
             "wt switch --create feat/auth --base origin/main",
@@ -33,9 +32,6 @@ SPEC.loader.exec_module(guard)
         ("cd /repo && git worktree remove /tmp/auth", "wt remove /tmp/auth"),
         ("FOO=bar command git worktree prune", "wt step prune --dry-run"),
         ("sudo git worktree move /tmp/old /tmp/new", "wt step relocate /tmp/old"),
-        ("printf '%s\\n' \"$(git worktree list)\"", "wt list"),
-        ("bash -c 'git worktree list'", "wt list"),
-        ("zsh -lc 'git worktree list'", "wt list"),
         ("git-worktree lock /tmp/auth", "no general Worktrunk equivalent"),
         ("git worktree add --detach /tmp/review HEAD~1", "branch-oriented"),
         ("gh pr checkout 42", "wt switch pr:42"),
@@ -57,15 +53,8 @@ SPEC.loader.exec_module(guard)
         # P4b: timeout/setsid/flock wrappers.
         ("timeout 5 git worktree add /tmp/x", "wt switch --create <branch>"),
         ("timeout -k 10 30s git worktree add /tmp/x", "wt switch --create <branch>"),
-        ("timeout --signal=KILL 5 git worktree list", "wt list"),
-        ("setsid git worktree list", "wt list"),
         ("flock /tmp/lock git worktree add /tmp/x", "wt switch --create <branch>"),
         ("flock -w 5 /tmp/lock git worktree prune", "wt step prune"),
-        ("env -S 'git worktree list'", "wt list"),
-        ("env -S git worktree list", "wt list"),
-        ("env -Sgit worktree list", "wt list"),
-        ("git --config-env foo.bar=BAR worktree list", "wt list"),
-        ("flock -c 'git worktree list'", "wt list"),
     ],
 )
 def test_direct_worktree_management_is_denied(command: str, expected: str) -> None:
@@ -93,6 +82,19 @@ def test_direct_worktree_management_is_denied(command: str, expected: str) -> No
         "flock /tmp/lock echo git worktree add",
         "setsid echo git worktree list",
         "env FOO=bar echo git worktree list",
+        # `git worktree list` is read-only and allowed; these keep the shell
+        # lexer's wrapper-bypass parsing under test.
+        "git worktree list",
+        "printf '%s\\n' \"$(git worktree list)\"",
+        "bash -c 'git worktree list'",
+        "zsh -lc 'git worktree list'",
+        "timeout --signal=KILL 5 git worktree list",
+        "setsid git worktree list",
+        "env -S 'git worktree list'",
+        "env -S git worktree list",
+        "env -Sgit worktree list",
+        "git --config-env foo.bar=BAR worktree list",
+        "flock -c 'git worktree list'",
     ],
 )
 def test_non_management_commands_are_silent(command: str) -> None:
@@ -135,13 +137,13 @@ def run_guard(
 
 
 def test_object_payload_emits_cross_runtime_deny_contract(wt_on_path: str) -> None:
-    result = run_guard({"tool_input": {"command": "git worktree list"}}, path=wt_on_path)
+    result = run_guard({"tool_input": {"command": "git worktree prune"}}, path=wt_on_path)
     assert result.returncode == 0
     output = json.loads(result.stdout)
     decision = output["hookSpecificOutput"]
     assert decision["hookEventName"] == "PreToolUse"
     assert decision["permissionDecision"] == "deny"
-    assert "wt list" in decision["permissionDecisionReason"]
+    assert "wt step prune --dry-run" in decision["permissionDecisionReason"]
 
 
 def test_string_payload_is_supported(wt_on_path: str) -> None:
