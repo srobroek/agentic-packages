@@ -428,10 +428,16 @@ def test_stage_without_opt_in_is_inert(beads_repo, monkeypatch, capsys):
 
 def test_session_without_opt_in_is_inert(beads_repo, monkeypatch, capsys):
     """Oracle: 'hydrate: beads workspace WITHOUT opt-in is inert' and
-    'maintenance: inert without the opt-in'."""
+    'maintenance: inert without the opt-in'.
+
+    Asserts on the sync advisory rather than on empty stdout: `bd prime` shares this
+    hook's single advisory and is not opt-in gated, so a resolved workspace always
+    produces some output.
+    """
     code, out = drive("beads-sync-session", {"cwd": str(beads_repo)}, monkeypatch, capsys)
     assert code == 0
-    assert out is None
+    context = "" if out is None else out["hookSpecificOutput"]["additionalContext"]
+    assert "beads sync:" not in context
 
 
 def test_push_without_opt_in_is_inert(beads_repo, monkeypatch, capsys):

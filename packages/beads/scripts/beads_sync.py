@@ -215,18 +215,75 @@ def push_permitted(cwd: str, timeout: float = 30) -> int:
     return PUSH_PERMITTED
 
 
-def payload_cwd(payload: str, default: str) -> str:
-    """Directory the hook should act on, from the payload with a fallback."""
+def payload(raw: str) -> dict:
+    """Hook payload as a dict, empty when it is missing or unparsable."""
     try:
-        data = json.loads(payload)
+        data = json.loads(raw)
     except (ValueError, TypeError):
-        return default
-    if not isinstance(data, dict):
-        return default
-    candidate = data.get("cwd")
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def payload_cwd(raw: str, default: str) -> str:
+    """Directory the hook should act on, from the payload with a fallback."""
+    candidate = payload(raw).get("cwd")
     if isinstance(candidate, str) and candidate and os.path.isdir(candidate):
         return candidate
     return default
+
+
+def is_subagent(raw: str) -> bool:
+    """Whether the payload describes a spawned subagent rather than the operator."""
+    return bool(payload(raw).get("agent_id"))
+
+
+def memory_prefixes() -> list[str]:
+    """Memory key prefixes this actor may receive, from BEADS_MEMORY_PREFIXES.
+
+    Spawn-time env rather than `bd config`, because two actors sharing one workspace
+    need different prefixes. `global-` is recall-only and belongs in no actor's list.
+    """
+    raw = os.environ.get("BEADS_MEMORY_PREFIXES", "")
+    return [part for part in (item.strip() for item in raw.split(",")) if part]
+
+
+def memories(cwd: str, prefixes: list[str], *, timeout: float = 10) -> dict[str, str]:
+    """Memories whose KEY starts with one of prefixes.
+
+    Scoping happens here, on the key, over the full map: `bd memories <term>` matches
+    CONTENT as well as keys, so a memory whose body merely mentions a prefix comes
+    back, and `bd prime --memories-only` is unfiltered entirely.
+
+    Returns {} on any failure including the bound -- the call measured 1.67s, and
+    injecting nothing beats failing a session start.
+    """
+    if not prefixes:
+        return {}
+    result = run(["bd", "-C", cwd, "memories", "--json"], timeout=timeout, env=BD_ENV)
+    if result is None or result.returncode != 0:
+        return {}
+    data = envelope(result.stdout)
+    if not data:
+        return {}
+    # Flat key:content map carrying a schema_version stamp at the same level.
+    return {
+        key: value
+        for key, value in data.items()
+        if key != "schema_version"
+        and isinstance(value, str)
+        and any(key.startswith(prefix) for prefix in prefixes)
+    }
+
+
+def render_memories(selected: dict[str, str]) -> str:
+    """One text block for the selected memories, empty when there are none."""
+    if not selected:
+        return ""
+    lines = "\n".join(f"- {key}: {value}" for key, value in sorted(selected.items()))
+    return (
+        "Scoped beads memories (update in place with `bd remember --key <key>`):\n"
+        + lines
+    )
 
 
 def emit(event: str, context: str) -> None:

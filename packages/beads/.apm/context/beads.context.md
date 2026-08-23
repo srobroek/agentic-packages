@@ -9,9 +9,19 @@ NOT `bd edit` -- opens $EDITOR and blocks the agent; use `bd update` flags.
 
 MEMORY
 DEFAULT `bd remember "insight" --key <slug>` for repo-scoped durable facts any
-  agent or tool must see (gotchas, conventions, decisions); every memory is
-  injected verbatim via bd prime each session -- keep the set ≤30, prune stale
-  keys with `bd forget` during session review.
+  agent or tool must see (gotchas, conventions, decisions). `bd prime` injects
+  every memory verbatim each session, so keep the set ≤30.
+MUST Route each captured lesson by what it lands on:
+
+| the memory is | verb |
+|---|---|
+| wrong | `bd remember --key <k>` -- the same key updates in place |
+| obsolete | `bd forget <k>` |
+| neither | a new key |
+
+MUST Where a recalled memory contradicts what you observe, suspect the memory.
+DEFAULT Epic-scoped `<epic>-*` keys perish fastest, and a run reviews them at
+  run end.
 DEFAULT MemPalace keeps cross-session semantic recall; user/global knowledge
   stays in Claude auto-memory.
 

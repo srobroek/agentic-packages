@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""SessionStart hook: hydrate bead state, then report database growth.
+"""SessionStart hook: hydrate bead state, prime workflow context, report growth.
 
 Folds beads-sync-hydrate.sh and beads-maintenance-check.sh into one script, per the
 hook contract's rule 5: both bound SessionStart with the same empty matcher, so they
 paid two process startups and two payload parses to answer questions about the same
-workspace. Their advisories are now emitted as one message.
+workspace. Their advisories are now emitted as one message. `bd prime` is folded in
+for the same reason -- see prime().
 
 HYDRATION, native first, always:
   1. `bd dolt pull` where a Dolt remote exists and custom.dolt-auto-pull is on.
@@ -51,6 +52,9 @@ PULL_TIMEOUT = float(os.environ.get("BEADS_SYNC_PULL_TIMEOUT", "60"))
 # Commit count that warrants mentioning. Deliberately high: this fires once per
 # session and a false alarm trains people to ignore it.
 COMMIT_THRESHOLD = int(os.environ.get("BEADS_MAINTENANCE_COMMIT_THRESHOLD", "2000"))
+
+# `bd prime` reads the database only, so this bounds a hung read, not a network call.
+PRIME_TIMEOUT = float(os.environ.get("BEADS_PRIME_TIMEOUT", "20"))
 
 
 def report_previous_push(beads: str, notes: list[str]) -> None:
@@ -229,13 +233,38 @@ def maintenance(cwd: str, notes: list[str]) -> None:
     notes.append(f"maintenance: {message}")
 
 
+def prime(cwd: str, subagent: bool) -> str:
+    """Workflow context for this session start.
+
+    Folded in here rather than bound as its own hook, for the reason in the module
+    docstring: a second SessionStart entry with the same empty matcher would pay a
+    second process start and payload parse over the same workspace. `bd prime
+    --hook-json` would also emit a competing envelope; this returns text so the one
+    advisory below carries everything.
+
+    A subagent already has the contract from beads-subagent-reminder.py, so it gets
+    only its scoped memories -- measured 5714 chars for a full prime against 1273 for
+    memories alone.
+    """
+    if subagent:
+        return beads_sync.render_memories(
+            beads_sync.memories(cwd, beads_sync.memory_prefixes())
+        )
+    result = beads_sync.run(
+        ["bd", "-C", cwd, "prime"], timeout=PRIME_TIMEOUT, env=beads_sync.BD_ENV
+    )
+    if result is None or result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
 def main() -> int:
-    payload = sys.stdin.read()
+    raw = sys.stdin.read()
 
     if not beads_sync.bd_available():
         return 0
 
-    cwd = beads_sync.payload_cwd(payload, os.getcwd())
+    cwd = beads_sync.payload_cwd(raw, os.getcwd())
     beads = beads_sync.beads_dir(cwd)
     if not beads:
         return 0
@@ -245,8 +274,19 @@ def main() -> int:
     hydrate(cwd, beads, notes)
     maintenance(cwd, notes)
 
+    sections: list[str] = []
     if notes:
-        beads_sync.emit("SessionStart", "beads sync: " + " ".join(notes))
+        sections.append("beads sync: " + " ".join(notes))
+    # No parseable payload means no stated workspace, so the cwd here is a guess from
+    # whatever spawned the hook. Syncing a guessed workspace is safe; priming it is
+    # not -- it would inject another project's context.
+    if beads_sync.payload(raw):
+        context = prime(cwd, beads_sync.is_subagent(raw))
+        if context:
+            sections.append(context)
+
+    if sections:
+        beads_sync.emit("SessionStart", "\n\n".join(sections))
     return 0
 
 
