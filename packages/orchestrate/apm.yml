@@ -21,6 +21,7 @@ includes:
   - .apm/hooks
   - .apm/rules
   - .apm/skills/orchestrate/SKILL.md
+  - .apm/skills/orchestrate/formulas
   - .apm/skills/orchestrate/references
   - .apm/skills/orchestrate/scripts/_test_bot_review_probe.py
   - .apm/skills/orchestrate/scripts/_test_conflict_probe.py
