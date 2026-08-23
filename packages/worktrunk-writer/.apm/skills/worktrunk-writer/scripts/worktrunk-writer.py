@@ -910,12 +910,17 @@ def bind(args: argparse.Namespace) -> dict[str, Any]:
                 resource,
                 "--metadata",
                 json.dumps(
-                    {"runtime_handle": handle, "runtime_context": context},
+                    {
+                        "repo": str(repo),
+                        "runtime_handle": handle,
+                        "runtime_context": context,
+                    },
                     separators=(",", ":"),
                 ),
             ],
             env=os.environ.copy(),
         )
+        record_binding_repo(context, handle, repo, resource)
     result.update(
         {
             "status": "bound",
@@ -963,6 +968,7 @@ def release(args: argparse.Namespace) -> dict[str, Any]:
         clear_var(repo, branch, key)
     if variables.get(LEGACY_RUNTIME_BINDINGS_KEY) is not None:
         clear_var(repo, branch, LEGACY_RUNTIME_BINDINGS_KEY)
+    forget_binding_repo(set(released))
     return {
         "status": "released",
         "inventory_contract": "worktrunk-schema-2",
@@ -1093,7 +1099,9 @@ def subagent_exit() -> int:
         return 0
     cwd = Path(str(payload.get("cwd") or ".")).resolve()
     try:
-        repo = Path(run(["git", "-C", str(cwd), "rev-parse", "--show-toplevel"]).stdout.strip())
+        repo = indexed_state_repo(context) or Path(
+            run(["git", "-C", str(cwd), "rev-parse", "--show-toplevel"]).stdout.strip()
+        )
         inventory = wt_inventory(repo)
         holders = [item for item in inventory if context in bound_contexts(item)]
         if len(holders) != 1:
@@ -1107,6 +1115,7 @@ def subagent_exit() -> int:
         if stale_binding(repo, item):
             for key in ("context", "contexts", RUNTIME_BINDINGS_KEY):
                 clear_var(repo, branch, key)
+            forget_binding_repo({context})
             print(
                 f"worktrunk-writer: {context} exited and its resource is resolved; "
                 f"released the binding on {branch!r}.",
@@ -1249,6 +1258,112 @@ def assert_bound_handle(inventory: list[dict[str, Any]], handle: str) -> dict[st
             "and complete its context handshake before resuming the agent"
         )
     return matches[0]
+
+
+CONTEXT_INDEX_RELATIVE = Path("worktrunk-writer") / "contexts.json"
+
+
+def context_index_path() -> Path:
+    base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    return Path(base) / CONTEXT_INDEX_RELATIVE
+
+
+def read_binding_index() -> dict[str, dict[str, str]]:
+    """Runtime identifier to state-repo entries, filtered to the expected shape.
+
+    The file is user-writable, so an unreadable, non-object, or malformed entry is
+    dropped instead of raising: a corrupt index degrades to the cwd fallback rather
+    than taking the guard down.
+    """
+    try:
+        payload = json.loads(context_index_path().read_text())
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    entries: dict[str, dict[str, str]] = {}
+    for key, value in payload.items():
+        if not isinstance(key, str) or not key or not isinstance(value, dict):
+            continue
+        fields = {name: value.get(name) for name in ("repo", "bead", "context", "handle")}
+        if not all(isinstance(field, str) and field for field in fields.values()):
+            continue
+        entries[key] = {name: str(field) for name, field in fields.items()}
+    return entries
+
+
+def write_binding_index(entries: dict[str, dict[str, str]]) -> None:
+    path = context_index_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # A per-process staging name stops one hook replacing a file another is still
+    # writing. It does not make read-modify-write atomic: a prune racing a bind can
+    # still drop the other entry, which degrades that identifier to the cwd fallback.
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(entries, indent=2, sort_keys=True))
+    temporary.replace(path)
+
+
+def record_binding_repo(context: str, handle: str, repo: Path, bead: str) -> None:
+    """Index the state repo under both identifiers a hook can see.
+
+    A mutation hook knows the runtime context; a continuation or spawn hook fired by
+    an orchestrator that holds no lease of its own knows only the recipient handle.
+    """
+    entry = {"repo": str(repo), "bead": bead, "context": context, "handle": handle}
+    entries = read_binding_index()
+    entries[context] = entry
+    entries[handle] = dict(entry)
+    write_binding_index(entries)
+
+
+def forget_binding_repo(identifiers: set[str]) -> None:
+    entries = read_binding_index()
+    remaining = {
+        key: value
+        for key, value in entries.items()
+        if key not in identifiers
+        and value["context"] not in identifiers
+        and value["handle"] not in identifiers
+    }
+    if remaining != entries:
+        write_binding_index(remaining)
+
+
+def indexed_state_repo(*identifiers: str | None) -> Path | None:
+    """State repo for the first indexed identifier, confirmed against its bead.
+
+    The index only points; `metadata.repo` on the activation bead is the authority.
+    A readable bead raises unless its `metadata.repo` resolves to the indexed repo.
+    An unstamped bead raises as well: it is readable and declines to confirm, and a
+    cross-check that could not run must not read as one that passed.
+
+    An entry the bead cannot confirm is stale rather than hostile: a vanished
+    directory is a deleted or moved checkout, and an unreadable bead is a closed,
+    deleted, or unreachable one. Both drop the entry and leave the caller its
+    cwd-derived repo, because denying instead would block every mutation and
+    continuation for that identifier in any repository.
+    """
+    entries = read_binding_index()
+    entry = next((entries[key] for key in identifiers if key and key in entries), None)
+    if entry is None:
+        return None
+    repo = Path(entry["repo"]).resolve()
+    issue: dict[str, Any] | None = None
+    if repo.is_dir():
+        try:
+            issue = one_bead(repo, entry["bead"])
+        except (ContractError, OSError, ValueError):
+            issue = None
+    if issue is None:
+        forget_binding_repo({entry["context"], entry["handle"]})
+        return None
+    stamped = (issue.get("metadata") or {}).get("repo")
+    if not isinstance(stamped, str) or Path(stamped).resolve() != repo:
+        raise ContractError(
+            f"binding index names state repo {str(repo)!r} for {entry['context']!r}; "
+            f"bead {entry['bead']} metadata.repo is {stamped!r}"
+        )
+    return repo
 
 
 def resolve_checkout_repo(checkout: Path) -> Path | None:
@@ -1728,7 +1843,12 @@ def hook() -> int:
     if tool not in SPAWN_TOOLS | CONTINUATION_TOOLS | MUTATION_TOOLS:
         return 0
     cwd = Path(payload.get("cwd") or os.getcwd()).resolve()
-    repo = cwd
+    tool_input = payload.get("tool_input")
+    tool_input = tool_input if isinstance(tool_input, dict) else {}
+    try:
+        repo = indexed_state_repo(runtime_context(payload), runtime_recipient(tool_input)) or cwd
+    except ContractError as error:
+        return hook_deny(error)
     if not repo.exists() or shutil.which("wt") is None:
         return 0
     if subprocess.run(
@@ -1753,8 +1873,6 @@ def hook() -> int:
         if not expected_lease and not runtime_context(payload):
             return 0
         return hook_deny(error)
-    tool_input = payload.get("tool_input")
-    tool_input = tool_input if isinstance(tool_input, dict) else {}
     if not protocol_engaged(payload, inventory, cwd, expected_lease=expected_lease):
         if tool in SPAWN_TOOLS and advises_spawn(tool_input):
             return hook_advise(SPAWN_ADVISORY)

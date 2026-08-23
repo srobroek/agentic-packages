@@ -100,6 +100,27 @@ schema-1 top-level array is still accepted as compatibility residue.
 any other shape and join a task to exactly one item by both branch and absolute
 path. Activity markers are advisory presence only.
 
+## State repo resolution
+
+Leases live in the Worktrunk vars of one repository, and an agent's working
+directory may sit in another. `bind` records the state repo twice:
+
+- `metadata.repo` on the activation bead. This is the authority.
+- an entry in `${XDG_STATE_HOME:-~/.local/state}/worktrunk-writer/contexts.json`,
+  keyed by both the runtime context and the routing handle, holding that repo path
+  and the bead id.
+
+`hook` and `subagent-exit` resolve the state repo through the index, then read
+`metadata.repo` from the named bead. A readable bead refuses the call unless its
+`metadata.repo` resolves to the indexed repo. A bead carrying no `repo` key refuses
+too, because a cross-check that could not run is not a cross-check that passed.
+
+An identifier with no entry resolves the repository that owns the caller's
+working directory. So does an entry the bead cannot confirm: a repo path that no
+longer exists names a deleted checkout, and a bead that cannot be read is closed,
+deleted, or unreachable. The resolver drops such an entry. `release`, and a
+`subagent-exit` whose activation resource is already resolved, delete the entry.
+
 ## Merge and removal
 
 Before `wt merge`, confirm task approval, clean worktree state, no active Git
