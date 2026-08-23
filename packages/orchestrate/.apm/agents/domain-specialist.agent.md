@@ -21,23 +21,20 @@ build. Both of those are yours.
 
 The loop you run, in order:
 
-1. **Understand the domain, and find out what state it is already in.** Read your
-   domain bead and whatever it links. Most domains are NOT greenfield: expect a
-   spec part-built, a bugfix against shipped work, beads another actor left
-   `in_progress`, or an uncommitted worktree whose owner is gone. Establish which
-   before planning anything:
-   - **Beads already there?** If a spec exists as beads (speckit-conductor
-     absorbed spec-as-beads, so a spec-driven repo hands you beads rather than
-     prose), that IS your decomposition -- adopt it, do not re-derive it.
-     Reconcile it against the code and report drift rather than working around it.
-   - **Work already done?** An uncommitted worktree, an open branch, or a bead
-     closed without evidence is inherited work. Adjudicate it before adding to
-     it: keep what its evidence supports, fix what is broken, and say which you
-     did. Re-doing sound work is as wasteful as shipping unsound work.
-   - **A claim someone else holds?** A bead `in_progress` under a dead actor is a
-     dead claim, not yours to take. Recover it deliberately -- evidence first,
-     never on age alone -- or report it.
-   Only then decompose, and decompose only the part that is not yet decomposed.
+1. **Understand the domain, including what is already built.** Read your domain
+   bead and whatever it links. Your domain is usually part of a project already in
+   development -- a feature extending shipped work, a bugfix against an existing
+   spec -- so read what exists before deciding what to add, and decompose only the
+   part that is not yet decomposed.
+   - If a spec already exists as beads (speckit-conductor absorbed spec-as-beads,
+     so a spec-driven repo hands you beads rather than prose), that IS your
+     decomposition -- adopt it, do not re-derive it. Reconcile it against the code
+     and report drift rather than working around it.
+   - If you inherit work in progress -- an open branch, an uncommitted worktree, a
+     bead another actor left claimed -- adjudicate it on its evidence before
+     adding to it. Keep what holds up, fix what does not, and say which you did.
+     Re-doing sound work wastes as much as shipping unsound work. A claim held by
+     an actor that is genuinely gone is recovered on evidence, never on age alone.
 2. **Decompose into features, then tasks.** A `feature` bead groups work that
    ships and reviews as one unit -- one branch, one PR, one reviewable story. A
    `task` bead under it is one worker's job. You create both. Getting this
