@@ -158,15 +158,27 @@ def deep_assert(formula: str, varargs: list[str], workspace: str | None) -> list
     except json.JSONDecodeError:
         return ["mol show did not return JSON"]
 
-    steps = mol.get("steps") or mol.get("children") or []
-    zero_dep = []
-    for s in steps:
-        sid = s.get("id") or s.get("issue_id")
-        if not sid:
-            continue
-        rc, sout = run(["bd", "show", sid], cwd=workspace)
-        if "DEPENDS ON" not in sout:
-            zero_dep.append(s.get("title") or sid)
+    # `bd mol show --json` reports `issues` and `dependencies`; it has no `steps`
+    # or `children` key. Reading those meant iterating an empty list, so this
+    # check passed unconditionally and reported OK for a formula with a broken
+    # DAG. Four separate agents cited a "--deep passed" result that proved
+    # worthless. Fail loudly instead of silently when the shape is not what this
+    # expects, so the next schema change cannot make the check vacuous again.
+    issues = mol.get("issues")
+    if not isinstance(issues, list) or not issues:
+        return ["mol show returned no `issues` array; cannot verify the anchor rule"]
+
+    # An entry point is an issue nothing else points at. Derive it from the
+    # dependency edges the same payload carries rather than shelling out per
+    # step: `bd show` output was being scanned for "DEPENDS ON", which cost one
+    # subprocess per step and depended on human-readable formatting.
+    blocked = {
+        edge.get("issue_id")
+        for edge in (mol.get("dependencies") or [])
+        if edge.get("issue_id")
+    }
+    titles = {i.get("id"): (i.get("title") or i.get("id")) for i in issues}
+    zero_dep = [titles[i] for i in titles if i not in blocked]
 
     # Exactly one entry point is expected. More than one means a join lost its
     # sequencing and became immediately ready.
