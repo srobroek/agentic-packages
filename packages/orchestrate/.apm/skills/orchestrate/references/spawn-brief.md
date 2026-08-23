@@ -5,10 +5,12 @@ message is exactly `CLAIM {bead-or-wisp-id}` or `CLAIM queue:{filter}`. Do not
 put scope, commands, role mechanics, review items, or questions in that
 message.
 
-Spawn and activation are separate operations. Never spawn a claim-holder with
-`CLAIM`; the Agent call carries only the WAIT bootstrap. Send CLAIM to the
-waiting runtime as a separate message. Never repair an ordering failure with a
-combined WAIT plus CLAIM.
+Spawn the claim-holder with that `CLAIM` message as its whole prompt. There is
+no separate bootstrap and no acknowledgement to wait for: the bead already
+carries the task, the scope and the checkout, so a runtime has nothing to report
+back before it can start. Provisioning happens BEFORE the spawn -- stamp
+`branch` and the absolute `worktree` on the bead first, because that is where
+the agent reads its checkout from.
 
 Write authority comes from holding the claim. The claim-holder takes it with
 `bd update {bead-or-wisp-id} --claim`, which sets the assignee.
@@ -85,51 +87,17 @@ Do not append commands or a protocol block to the release message. If any
 stamp fails, keep the actor waiting, reclaim the checkout, and retry with a
 fresh runtime.
 
-The canonical WAIT text carries no task, command, question, review item, or
-protocol appendix. The activation resource must exist and remain unclaimed.
-Its canonical worktree must already be stamped on that resource, and the
-worker cross-checks its claimed bead against `wt -C <path> step eval
-'{{ vars.bead }}' --format json` before writing.
+The activation message carries no task, command, question, review item, or
+protocol appendix. The activation resource must exist and remain unclaimed. Its
+canonical worktree must already be stamped on that resource, and the worker
+cross-checks its claimed bead against `wt -C <path> step eval
+'{{ vars.bead }}' --format json` before writing. Those two facts -- a stamped
+`metadata.worktree` and a matching `vars.bead` -- are what make the checkout
+safe to write in; nothing is negotiated at spawn time.
 
-A claim-holder gets the resource form:
-
-```text
-WAIT checkout={absolute-worktree}
-RESOURCE {bead-or-wisp-id}
-Do not invoke tools or start work.
-The controlling parent will release you with exactly CLAIM {bead-or-wisp-id}.
-```
-
-A queue actor uses its prepared checkout:
-
-```text
-WAIT checkout={absolute-worktree}
-QUEUE {filter}
-Do not invoke tools or start work.
-The controlling parent will release you with exactly CLAIM queue:{filter}.
-```
-
-An actor that receives its task by resume rather than by claiming a resource uses
-the generic form, whose last line differs:
-
-```text
-WAIT checkout={absolute-worktree}
-Do not invoke tools or start work.
-The controlling parent will send your task after stamping your Worktrunk checkout.
-```
-
-Those three are the whole accepted set, matched byte-exact against
-`GENERIC_WAIT_RE`, `RESOURCE_WAIT_RE`, and `QUEUE_WAIT_RE`. Wording, line breaks,
-and trailing full stops all count, and the checkout must be absolute. A spawn
-carrying a `RESOURCE` line promises a `CLAIM`, so mixing the resource form with
-the generic closing line is rejected. Everything else is denied with
-`tool-using agent spawn is not parent-prepared`, including a bootstrap that is
-correct except for one reworded line.
-
-Claude has no checkout `cwd` field. Its wait bootstrap preserves the absolute
-path so every Bash call can start with `cd -- {absolute-worktree}`. Codex sets
-the command workdir to that path. File tools use absolute paths in both
-runtimes.
+Claude has no checkout `cwd` field, so every Bash call starts with
+`cd -- {absolute-worktree}`, read off the bead. Codex sets the command workdir to
+that path. File tools use absolute paths in both runtimes.
 
 ## Domain specialist
 

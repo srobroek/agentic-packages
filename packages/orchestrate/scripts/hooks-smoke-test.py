@@ -565,18 +565,17 @@ with open(os.path.join(SKILL, "references", "spawn-brief.md")) as fh:
 normalized_spawn_contract = " ".join(spawn_contract.split())
 check("spawn contract has no ASSIGN payload", "ASSIGN" not in spawn_contract)
 check(
-    "wait bootstrap names controlling CLAIM authority",
-    "controlling parent will release you with exactly CLAIM" in spawn_contract,
-)
-check(
     "release is exact CLAIM activation",
     "Send exactly `CLAIM {bead-or-wisp-id}`" in spawn_contract,
 )
+# Inverted rather than deleted. The WAIT bootstrap is retired: a spawn prompt is
+# a bare CLAIM, and no regex enforces the old grammar any more. Asserting its
+# ABSENCE stops the doctrine creeping back into the document that teaches it,
+# which is how SKILL.md kept instructing agents to wait for an acknowledgement
+# nothing sends.
 check(
-    "spawn and activation are separate messages",
-    "Spawn and activation are separate operations." in normalized_spawn_contract
-    and "Never repair an ordering failure with a combined WAIT plus CLAIM."
-    in normalized_spawn_contract,
+    "spawn contract documents no WAIT bootstrap",
+    "WAIT checkout=" not in spawn_contract and "combined WAIT plus CLAIM" not in spawn_contract,
 )
 
 with open(os.path.join(SKILL, "references", "comms-block.md")) as fh:

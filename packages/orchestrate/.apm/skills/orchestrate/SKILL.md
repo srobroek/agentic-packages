@@ -40,10 +40,9 @@ Role: lead session / orchestrator.
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
 3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: domain-specialist`), addressed
-   by their parent-visible runtime handles. Allocate every checkout with plain
-   Worktrunk, then stamp the bead id on the branch and the canonical worktree
-   path on the bead; the bead claim is the lock.
+   tool background subagents (`subagent_type: architect`). Allocate every
+   checkout with plain Worktrunk, then stamp the bead id on the branch and the
+   canonical worktree path on the bead; the bead claim is the lock.
    Decline the harness's suggestion to spawn teammates. Agent-teams are a
    Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
    unsure whether the trigger is met → use subagents.
@@ -51,14 +50,14 @@ Role: lead session / orchestrator.
    dispatched actor gets a prepared checkout; the bundled shepherd gets a
    dedicated integration checkout per repository. Record each assigned
    branch/path on its activation resource. Writers self-commit, push, and
-   report their Worktrunk branch. Allocation and activation are separate:
-   a WAIT-only spawn, then an exact `CLAIM {resource-id}` as a separate
-   message.
+   report their Worktrunk branch. Provision the checkout and stamp the bead
+   BEFORE spawning, because the agent reads its checkout from
+   `metadata.worktree`; the spawn prompt is then a bare `CLAIM {resource-id}`.
 5. **Flat claim-holder tree.** Only you spawn claim-holding specialists,
-   reviewers, advisors, researchers, scribes, and shepherds. A
-   domain-specialist may spawn bounded throwaway implementation children in
-   its prepared checkout; they never claim, manage worktrees, commit, push, or
-   spawn another writer. Every other actor spawns nothing.
+   reviewers, advisors, researchers, scribes, and shepherds. An architect may
+   spawn bounded throwaway implementation children in its prepared checkout;
+   they never claim, manage worktrees, commit, push, or spawn another writer.
+   Every other actor spawns nothing.
 6. **Route content peer to peer.** A blocked specialist writes an escalation
    wisp; an advisor claims and answers that wisp. A reviewer writes FIX
    material on its review wisp. You create shells, wake actors, and observe
@@ -134,7 +133,7 @@ Role: lead session / orchestrator.
    make the epic persistent, which it already is.
 3. Run `scripts/discover-agents.py` to catalog agents (name/model/tools).
    Match task→agent via `references/roles.md`. Bundled claim-holder roles are
-   `domain-specialist`, `researcher`, `reviewer`, `advisor`, `shepherd`, and
+   `architect`, `researcher`, `reviewer`, `advisor`, `shepherd`, and
    `scribe`. Broad research uses the fan-out/fan-in route in `roles.md`.
    Dispatch only those roles or a read-only ephemeral helper: during an active
    run a task-bearing spawn of any other agent type is denied, because its

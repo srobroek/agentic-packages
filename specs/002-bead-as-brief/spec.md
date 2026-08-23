@@ -124,10 +124,11 @@ Operational chatter -- checkpoints, advice threads, review working notes, ledger
 - **FR-001**: Node beads MUST carry all task data (metadata schema + BRIEF
   comment) sufficient for a fresh agent to execute the node after an exact
   CLAIM activation.
-- **FR-002**: Claim-holder allocation prompts MUST contain only the canonical
-  WAIT bootstrap with the resource id and optional checkout. Activation
-  messages MUST contain only `CLAIM <resource-id>` or
-  `CLAIM queue:<filter>`. Neither message may contain task data.
+- **FR-002**: A claim-holder spawn prompt MUST contain only
+  `CLAIM <resource-id>` or `CLAIM queue:<filter>`, and MUST NOT contain task
+  data. The resource MUST already carry its `branch` and absolute `worktree`
+  before the spawn, because the agent resolves its checkout from that metadata
+  rather than from the prompt.
 - **FR-003**: Every agent holding a durable-bead claim MUST be bound by its role's completion checklist and authority matrix at stop time; agents holding no claim MUST be exempt from all bead contracts.
 - **FR-004**: Role contracts MUST be declared as data (per-agent rules files) evaluated by one shared evaluator; the prose contract in each agent definition MUST be generated from the same rules file at compile time.
 - **FR-005**: Contract blocks MUST report structured, failure-specific diagnostics without remediation text; `state=failed` plus a FAILED/BLOCKED comment MUST be an unconditional exit; the third blocked stop MUST bounce (force-allow, BOUNCE evidence, unassign, counter reset in one act).
