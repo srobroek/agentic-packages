@@ -266,7 +266,7 @@ def _artifact_output_ref_contained(bead: dict) -> bool:
 
 
 def eval_predicate(req: str, bead: dict) -> bool:
-    """Evaluate one closed-vocabulary predicate. Unknown form -> True (fail open)."""
+    """Evaluate one closed-vocabulary predicate. Unknown form -> False (fail closed)."""
     req = req.strip()
     if req.startswith("metadata."):
         return _has_metadata(bead, req[len("metadata.") :])
@@ -275,7 +275,8 @@ def eval_predicate(req: str, bead: dict) -> bool:
         try:
             rx = re.compile(pat)
         except re.error:
-            return True
+            sys.stderr.write(f"rules-eval: uncompilable regex in require {req!r} — treated unmet.\n")
+            return False
         return any(rx.search(lbl) for lbl in _labels(bead))
     if req.startswith("comment.verb in "):
         wanted = _bracket_list(req)
@@ -288,7 +289,8 @@ def eval_predicate(req: str, bead: dict) -> bool:
     if req.startswith("state in "):
         wanted = _bracket_list(req)
         return _status(bead) in wanted
-    return True  # unknown predicate -> do not fail the node
+    sys.stderr.write(f"rules-eval: unrecognised require {req!r} — treated unmet.\n")
+    return False
 
 
 def _bracket_list(req: str) -> set:
@@ -444,12 +446,27 @@ def hydrate_comments(bead: dict) -> None:
 
 
 def resource_kind(bead: dict) -> str:
+    """Kind that gates `when`-scoped completion checks.
+
+    `metadata.execution_kind` is an explicit override that no production writer
+    stamps, so the kind is derived from the orchestrator-stamped anchors
+    (ORCHESTRATOR_ANCHORS) when it is absent. Derivation MUST NOT read branch,
+    push, or output_ref: those are the fields the gated checks require, so a node
+    that omitted one would be classified out of its own gate.
+    """
     metadata = bead.get("metadata") or {}
-    return str(
+    declared = (
         metadata.get("execution_kind")
         or bead.get("wisp_type")
         or ("wisp" if bead.get("ephemeral") else "")
     )
+    if declared:
+        return str(declared)
+    if metadata.get("worktree"):
+        return "git"
+    if metadata.get("artifacts_dir"):
+        return "artifact"
+    return ""
 
 
 # ---- main -----------------------------------------------------------------

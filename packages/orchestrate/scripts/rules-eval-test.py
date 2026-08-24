@@ -1025,6 +1025,103 @@ else:
     failed += 1
     print(f"  FAIL writes after read-budget expiry -> {_writes!r}")
 
+# --- derived resource kind ------------------------------------------------
+# These beads carry NO execution_kind: that is the production shape (no writer
+# stamps it), and fixtures that supplied it are why the gated checks were
+# provably never exercised. Keep them key-free or the gate goes vacuous again.
+
+run(
+    "derived git (no execution_kind) missing push",
+    "block",
+    bead(
+        id="d1",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata={"worktree": "/tmp/wt/d1", "branch": "node-d1"},
+        comments=[{"text": "REPORTED done"}],
+    ),
+)
+
+run(
+    "derived git (no execution_kind) complete",
+    "allow",
+    bead(
+        id="d2",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata={"worktree": "/tmp/wt/d2", "branch": "node-d2", "push": "abc123"},
+        comments=[{"text": "REPORTED done"}],
+    ),
+)
+
+run(
+    "derived artifact (no execution_kind) missing output_ref",
+    "block",
+    bead(
+        id="d3",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata={"artifacts_dir": "/tmp/art/d3"},
+        comments=[{"text": "REPORTED done"}],
+    ),
+)
+
+with tempfile.TemporaryDirectory() as _art:
+    _out = os.path.join(_art, "report.md")
+    run(
+        "derived artifact (no execution_kind) complete",
+        "allow",
+        bead(
+            id="d4",
+            status="in_progress",
+            labels=["orc-node", "agent:reviewer"],
+            metadata={"artifacts_dir": _art, "output_ref": _out},
+            comments=[{"text": "REPORTED done"}],
+        ),
+    )
+
+run(
+    "no anchors stamped leaves gated checks skipped",
+    "allow",
+    bead(
+        id="d5",
+        status="in_progress",
+        labels=["orc-node", "agent:reviewer"],
+        metadata={},
+        comments=[{"text": "REPORTED done"}],
+    ),
+)
+
+# --- predicate grammar fails closed ---------------------------------------
+
+with tempfile.TemporaryDirectory() as _rd:
+    def _rules(name, require):
+        path = os.path.join(_rd, name)
+        with open(path, "w") as fh:
+            json.dump({"completion": [{"check": "probe", "require": require}]}, fh)
+        return path
+
+    run(
+        "unknown predicate blocks",
+        "block",
+        bead(id="p1", status="in_progress"),
+        rules_file=_rules("typo.rules.json", "metadata_branch"),
+    )
+
+    run(
+        "uncompilable regex blocks",
+        "block",
+        bead(id="p2", status="in_progress", labels=["agent:reviewer"]),
+        rules_file=_rules("badrx.rules.json", "label ~ ^agent:(reviewer$"),
+    )
+
+    run(
+        "valid predicate in temp rules still passes",
+        "allow",
+        bead(id="p3", status="in_progress", metadata={"branch": "n"}),
+        rules_file=_rules("good.rules.json", "metadata.branch"),
+    )
+
 print()
 print(f"rules-eval conformance: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
