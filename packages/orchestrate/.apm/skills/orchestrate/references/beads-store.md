@@ -301,7 +301,7 @@ bd comment <bead> "<VERB> <node> field=… output_ref=<abs artifact path>"
 | dep structure / impact | `bd dep tree <bead>`, `bd graph` |
 | open waits | `bd gate list`, `bd merge-slot check` |
 | resume after crash | in-flight = `bd list --label orc-node --parent <epic> --status in_progress --json`, agent handle = bead `assignee`, location = metadata `worktree`/`branch` |
-| close-out gate | `bd dep cycles` clean AND `bd list --label orc-node --parent <epic> --status in_progress,blocked --json` empty (blocked = surfaced `failed` nodes) AND no stranded bead |
+| close-out gate | `bd dep cycles` clean AND `bd list --label orc-node --parent <epic> --status in_progress,blocked --json` empty (blocked = surfaced `failed` nodes) AND no stranded bead AND no undrainable merge bead |
 | stranded beads | `comm -13 <(bd ready --label orc-node --parent <epic> --json \| jq -r '.[].id' \| sort) <(bd list --label orc-node --parent <epic> --status open,blocked --no-assignee --json \| jq -r '.[].id' \| sort)`, which lists beads that are unassigned but not ready. Then run `bd list --label orc-node --parent <epic> --status in_progress --json` and check each nonempty `assignee` against a live actor. |
 
 A bead that is neither ready nor claimed counts as stranded. The store never
@@ -311,6 +311,23 @@ cases, both of which pass the `in_progress,blocked` gate:
 - A provider 403 killed two test shepherds before they wrote any claim or
   comment. Three merge beads stayed claimable after both actors died.
 - A bounced bead keeps an owner who never returns.
+
+Merge beads carry no `orc-node` label, so both queries above skip them. They
+strand a third way. The bead is open and unassigned, yet missing an anchor the
+cross-run queue matches on. Before close-out, run this query.
+
+```bash
+bd list --label-any pr:merge,agent:integrator --status open --json \
+  | jq -r '.[] | select((.labels|index("pr:merge")|not)
+      or (.labels|index("agent:integrator")|not)
+      or ([.metadata.repo,.metadata.origin_actor,.metadata.branch]|any(.==null))) | .id'
+```
+
+Empty output passes the gate. Any id listed is drainable by nobody.
+`pr-merge-bead-guard.py` requires all five anchors, and the queue that drains
+between runs finds a bead only when every one is present. A run on bd 1.2.2 made
+merge beads holding `agent:integrator` alone, so `bd list --label pr:merge`
+returned nothing against beads that existed. Presence checks pass that run.
 
 ## SpecKit / external frameworks
 
