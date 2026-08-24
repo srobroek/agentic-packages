@@ -8,7 +8,12 @@ hooks:
   SubagentStart:
     - hooks:
         - type: command
-          command: '"$CLAUDE_PROJECT_DIR"/.claude/skills/orchestrate/scripts/inject-comms.sh'
+          # Resolved rather than hardcoded to `.claude/`: APM installs this skill
+          # under the active runtime's directory, so a Codex-only install has the
+          # script under `.agents/` and a `.claude/` path points at nothing. The
+          # hook then never runs, and its own "must not happen silently" warning
+          # never prints -- the run loses the comms protocol with no signal.
+          command: 'for d in "$CLAUDE_PROJECT_DIR"/.claude "$CLAUDE_PROJECT_DIR"/.agents; do s="$d/skills/orchestrate/scripts/inject-comms.sh"; [ -x "$s" ] && exec "$s"; done; echo "orchestrate: inject-comms.sh not found under .claude or .agents; subagents start WITHOUT the comms protocol" >&2'
 ---
 
 # Orchestrate

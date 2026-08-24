@@ -295,8 +295,11 @@ yourself.
    to the Worktrunk branch for durability. Do not merge or touch the caller's
    branch.
 3. For Git evidence, create the open unassigned merge bead and dependency
-   before opening a draft PR. The PR body records the work and merge bead ids.
-   Stamp PR identity on the merge bead, never on review wisps.
+   before opening a draft PR. It carries BOTH `pr:merge` and `agent:integrator`,
+   plus `repo`, `origin_actor` and `branch` metadata: the queue matches a bead
+   against a live PR on those anchors, so a bead missing one is drainable by
+   nobody and the work strands after your run ends. The PR body records the work
+   and merge bead ids. Stamp PR identity on the merge bead, never on review wisps.
 4. Write the full report under `artifacts_dir`, stamp `metadata.push`, add the
    next `agent:reviewer` label, and write `REPORTED` on the node with branch,
    verification, PR, merge-bead, and report references. Clear the assignee
