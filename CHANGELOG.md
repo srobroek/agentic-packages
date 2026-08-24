@@ -1,5 +1,28 @@
 # Changelog
 
+## [32.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v31.0.0...srobroek-agentic--v32.0.0) (2026-08-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** the WAIT bootstrap is no longer part of claim-holder activation. A spawn prompt is exactly `CLAIM <resource-id>`; provision the checkout and stamp the bead before spawning.
+* **orchestrate:** scope the stop contract by checkout, not runtime id
+
+### Bug Fixes
+
+* git guards read the target directory, and CI runs the smoke and fuzz harnesses ([a8532f6](https://github.com/srobroek/agentic-packages/commit/a8532f649e0f574ef20dc49b2b4d6da9a05e3274))
+
+
+### Refactors
+
+* **orchestrate:** scope the stop contract by checkout, not runtime id ([da020ef](https://github.com/srobroek/agentic-packages/commit/da020ef4c7fc2f9fce5085e6d50cae08a7d2ed08))
+
+
+### Documentation
+
+* **orchestrate:** retire the WAIT bootstrap from the contract it still mandated ([c5aa62d](https://github.com/srobroek/agentic-packages/commit/c5aa62d8bf645b4b4b2a8a5ffcd8669420f18fd7))
+* **spec:** state claim-only activation, with no bind step ([2b1390e](https://github.com/srobroek/agentic-packages/commit/2b1390e7c400f23aab1ded39ed134bc7aab0e059))
+
 ## [31.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v30.0.0...srobroek-agentic--v31.0.0) (2026-08-23)
 
 
