@@ -92,7 +92,6 @@ ORCHESTRATOR_ANCHORS = frozenset(
         "execution_dispatch",
         "execution_kind",
         "execution_task_kind",
-        "lease_token",
         "scope",
         "worktree",
     }

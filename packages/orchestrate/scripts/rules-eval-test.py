@@ -712,7 +712,7 @@ with open(_ANCHOR_RULES, "w") as fh:
     json.dump(
         {
             "agent": "scribe",
-            "authority": {"deny_metadata": ["worktree", "branch", "lease_token", "output_ref"]},
+            "authority": {"deny_metadata": ["worktree", "branch", "output_ref"]},
         },
         fh,
     )
@@ -742,7 +742,7 @@ try:
 finally:
     os.unlink(_ANCHOR_RULES)
 
-for _key in ("branch", "worktree", "lease_token", "actor", "artifacts_dir", "execution_agent"):
+for _key in ("branch", "worktree", "actor", "artifacts_dir", "execution_agent"):
     if _key in MODULE.ORCHESTRATOR_ANCHORS:
         passed += 1
         print(f"  ok   spawn-brief anchor {_key} is exempt")

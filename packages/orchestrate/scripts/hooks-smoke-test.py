@@ -532,15 +532,12 @@ for cfg in ("orchestrate-claude-hooks.json", "orchestrate-codex-hooks.json"):
             stop_command,
         )
         pre_tool_groups = data["hooks"]["PreToolUse"]
-        # The claim-holder activation guard is gone: it forced the retired
-        # WAIT/CLAIM prompt grammar onto every named agent, denying 8 of 10
-        # spawnable types in every repo the hook was installed in. Activation
-        # authority now comes from the bead claim, so no PreToolUse:Agent hook
-        # may reintroduce a prompt-shape gate.
+        # Activation authority comes from the bead claim, so the only PreToolUse
+        # hook this manifest declares is the claim-baseline snapshot.
         check(
-            f"{cfg} declares no claim-holder activation guard",
-            not any(
-                "orchestrator-activation-guard.py" in hook.get("command", "")
+            f"{cfg} declares the claim-baseline PreToolUse hook",
+            any(
+                "orchestrator-claim-deny.py" in hook.get("command", "")
                 for group in pre_tool_groups
                 for hook in group.get("hooks", [])
             ),
@@ -568,14 +565,9 @@ check(
     "release is exact CLAIM activation",
     "Send exactly `CLAIM {bead-or-wisp-id}`" in spawn_contract,
 )
-# Inverted rather than deleted. The WAIT bootstrap is retired: a spawn prompt is
-# a bare CLAIM, and no regex enforces the old grammar any more. Asserting its
-# ABSENCE stops the doctrine creeping back into the document that teaches it,
-# which is how SKILL.md kept instructing agents to wait for an acknowledgement
-# nothing sends.
 check(
-    "spawn contract documents no WAIT bootstrap",
-    "WAIT checkout=" not in spawn_contract and "combined WAIT plus CLAIM" not in spawn_contract,
+    "spawn contract states the bare CLAIM prompt",
+    "as its whole prompt" in normalized_spawn_contract,
 )
 
 with open(os.path.join(SKILL, "references", "comms-block.md")) as fh:
