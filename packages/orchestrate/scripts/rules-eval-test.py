@@ -983,8 +983,12 @@ with tempfile.TemporaryDirectory() as _tmp:
         print(f"  FAIL stalled bd reads overran the 2s budget ({_elapsed:.1f}s)")
 
     # resolve_claimed_bead attempts three reads and hydration two more; the
-    # per-call cap alone would let all five run, for 5x the elapsed ceiling.
-    if 2 <= len(_stalled_calls) < 5:
+    # per-call cap alone would let all five run, for 5x the elapsed ceiling. Only
+    # the upper bound tests that. A lower bound of 2 made this flaky 1 run in 14
+    # on a loaded machine: when the deadline expires before the second read even
+    # starts, one stalled call is a STRONGER deadline than two, so the assertion
+    # failed in the safe direction and reported a binding deadline as broken.
+    if len(_stalled_calls) < 5:
         passed += 1
         print(f"  ok   the deadline refused reads past {len(_stalled_calls)} stalled calls")
     else:
