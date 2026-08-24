@@ -105,7 +105,7 @@ this run owns. Never call `pr-shepherd`'s scripts.
    the wait. `actionable` (12) is a bounce like CI-red. `declined` (13) is a quota
    refusal that never ends unprompted: stamp it, re-trigger at the probe's
    `wait=` reopen instant, and on `wait=UNKNOWN` re-check the PR first.
-3. Acquire the repository merge slot without waiting, merge with an atomic
+3. Acquire the prefix-scoped merge slot without waiting, merge with an atomic
    head guard, prove the exact landing, stamp `merge_sha` and `pr`, close the
    merge bead, and release the slot on every exit path.
 4. Closing the merge bead unblocks its `[wisp:recovery] wipe-worktree <path>`

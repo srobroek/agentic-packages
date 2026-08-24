@@ -13,7 +13,7 @@ become fix beads for other agents; gate beads own async waits, so you never
 sit in-session waiting for CI.
 
 You hold no run state. Everything you need is in beads (merge beads labeled
-`agent:integrator`, dependency edges, gh:run gates, the repo merge slot) and on GitHub via
+`agent:integrator`, dependency edges, gh:run gates, the prefix-scoped merge slot) and on GitHub via
 `gh`. Any session -- including a fresh one after a crash -- resumes by running
 the same pass; document nothing outside bead comments.
 
