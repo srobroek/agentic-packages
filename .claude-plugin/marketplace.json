@@ -33,7 +33,7 @@
     },
     {
       "name": "agent-builder",
-      "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which runs in one of two modes the caller must name: `direct-edit` (edits the caller's tree in place; the caller commits) or `isolated` (own git worktree, commits continuously, hands back a reviewable branch). It refuses to start when the mode is unstated, because the two modes fail in opposite and unrecoverable directions.",
+      "description": "Implementation subagent for bounded code changes, tests, and refactors within a defined scope. Ships `builder`, which edits the checkout its brief names, in place, over a file scope the brief assigns. It commits only when told to and never touches build artifacts it did not generate, so the caller keeps control of what lands.",
       "version": "9.1.0",
       "tags": [
         "agent",
