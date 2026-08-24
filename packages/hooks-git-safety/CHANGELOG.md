@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.1.0...hooks-git-safety--v4.1.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* git guards read the target directory, and CI runs the smoke and fuzz harnesses ([a8532f6](https://github.com/srobroek/agentic-packages/commit/a8532f649e0f574ef20dc49b2b4d6da9a05e3274))
+* **hooks-git-safety:** resolve repo state from the cd'd directory ([4d77a00](https://github.com/srobroek/agentic-packages/commit/4d77a00fbba472f80131fe193c1cd789d6b84f1c))
+
 ## [4.1.0](https://github.com/srobroek/agentic-packages/compare/hooks-git-safety--v4.0.3...hooks-git-safety--v4.1.0) (2026-08-17)
 
 

@@ -1,5 +1,37 @@
 # Changelog
 
+## [19.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v18.0.0...orchestrate--v19.0.0) (2026-08-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **orchestrate:** the WAIT bootstrap is no longer part of claim-holder activation. A spawn prompt is exactly `CLAIM <resource-id>`; provision the checkout and stamp the bead before spawning.
+* **orchestrate:** scope the stop contract by checkout, not runtime id
+
+### Features
+
+* **deps:** sync internal package pins (minor-level dep releases) ([f38fcd3](https://github.com/srobroek/agentic-packages/commit/f38fcd3ce87ef866ea37c92875658f2c39ccc0ab))
+
+
+### Bug Fixes
+
+* git guards read the target directory, and CI runs the smoke and fuzz harnesses ([a8532f6](https://github.com/srobroek/agentic-packages/commit/a8532f649e0f574ef20dc49b2b4d6da9a05e3274))
+
+
+### Refactors
+
+* **orchestrate:** drop lease_token and stop testing retired behaviour ([90f6b40](https://github.com/srobroek/agentic-packages/commit/90f6b406de911a0959dd6addda7482eade91de15))
+* **orchestrate:** scope the stop contract by checkout, not runtime id ([da020ef](https://github.com/srobroek/agentic-packages/commit/da020ef4c7fc2f9fce5085e6d50cae08a7d2ed08))
+
+
+### Documentation
+
+* **orchestrate:** fix artifact collisions, dependent bases, and the worker cap ([fe1a795](https://github.com/srobroek/agentic-packages/commit/fe1a795e528a8fc1b70377c1bd0212c70b54f1ce))
+* **orchestrate:** retire the WAIT bootstrap from the contract it still mandated ([c5aa62d](https://github.com/srobroek/agentic-packages/commit/c5aa62d8bf645b4b4b2a8a5ffcd8669420f18fd7))
+* **orchestrate:** state the bead vocabulary and its cardinality rule ([0cf294d](https://github.com/srobroek/agentic-packages/commit/0cf294dcd195fd6bb88a07a77921f063fe5ae7ab))
+* **orchestrate:** state the bead vocabulary and its cardinality rule ([f42b2c2](https://github.com/srobroek/agentic-packages/commit/f42b2c2bbbbeb7b98fb51cbd118bcd4da453738d))
+* **orchestrate:** stop instructing agents to run the retired handshake ([73d7d0d](https://github.com/srobroek/agentic-packages/commit/73d7d0d78a8395d81781980f4b06ea4059dd1e4a))
+
 ## [18.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v17.0.0...orchestrate--v18.0.0) (2026-08-23)
 
 

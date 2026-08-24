@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.1.2](https://github.com/srobroek/agentic-packages/compare/hooks-worktrunk--v4.1.1...hooks-worktrunk--v4.1.2) (2026-08-24)
+
+
+### Bug Fixes
+
+* git guards read the target directory, and CI runs the smoke and fuzz harnesses ([a8532f6](https://github.com/srobroek/agentic-packages/commit/a8532f649e0f574ef20dc49b2b4d6da9a05e3274))
+
+
+### Documentation
+
+* **hooks-worktrunk:** correct the wt list leak mechanism ([d8a6b75](https://github.com/srobroek/agentic-packages/commit/d8a6b75b8a9c6b1705f7a4a2739d644bb9ba4571))
+* **orchestrate:** stop instructing agents to run the retired handshake ([73d7d0d](https://github.com/srobroek/agentic-packages/commit/73d7d0d78a8395d81781980f4b06ea4059dd1e4a))
+
 ## [4.1.1](https://github.com/srobroek/agentic-packages/compare/hooks-worktrunk--v4.1.0...hooks-worktrunk--v4.1.1) (2026-08-23)
 
 
