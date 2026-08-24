@@ -1,5 +1,12 @@
 # Changelog
 
+## [19.0.3](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.2...orchestrate--v19.0.3) (2026-08-24)
+
+
+### Bug Fixes
+
+* **orchestrate:** make the contract marker honest and check that it holds ([8ce333a](https://github.com/srobroek/agentic-packages/commit/8ce333a85551e55182ad1190a56a32b5dad38fe0))
+
 ## [19.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.1...orchestrate--v19.0.2) (2026-08-24)
 
 
