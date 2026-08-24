@@ -240,7 +240,7 @@ A local choice that changes gets a new comment referencing the old comment; no
 comment is edited or erased. A cross-boundary change gets a replacement
 decision bead and explicit supersession. Duplicate, conflicting, superseded,
 and partially linked decisions follow the deterministic rules in
-`references/beads-store.md`; chronology alone never selects policy.
+`references/decisions.md`; chronology alone never selects policy.
 
 Restart recovery reads work-bead comments, decision beads, their dispositions
 and links, and `state:waiting_human` before resuming any agent. Message wisps

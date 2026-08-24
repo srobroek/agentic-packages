@@ -15,6 +15,45 @@ the agent reads its checkout from.
 Write authority comes from holding the claim. The claim-holder takes it with
 `bd update {bead-or-wisp-id} --claim`, which sets the assignee.
 
+## Target state: self-discovery replaces the CLAIM grammar
+
+Everything else on this page describes the grammar as it runs today. The
+`orchestrator-activation-guard.py` regexes and validators are live, so a
+malformed WAIT or CLAIM is still rejected. Do not treat the following as
+current behavior.
+
+The target is that an architect is not told its domain; it finds one. This
+filter selects unclaimed architect domains and nothing else:
+
+```text
+bd ready -t epic --has-metadata-key worktree \
+  --metadata-field role=architect --unassigned --json
+```
+
+Adding `--claim` makes taking one atomic and first-wins, which is what lets two
+architects race safely: a second `--claim` on the same bead fails with `issue
+already claimed by <actor>`.
+
+All four predicates carry weight. Dropping `-t epic` admits ordinary tasks that
+carry `role=architect`; dropping `--has-metadata-key worktree` admits the run
+epic, which is `role=architect` but is nobody's domain. A filter that returns a
+task where a domain was expected would have the architect decompose a leaf.
+
+`bd ready` excludes a bead whose ancestor has an open `blocks` dependency, so a
+domain under a not-yet-unblocked phase epic is invisible to this filter even
+when the domain itself is unblocked. A phase-scoped run must either clear the
+phase's blockers or pre-assign.
+
+Directed dispatch survives as pre-assignment: `bd update <bead> --assignee
+<actor>` is atomic in one update and makes the bead invisible to other actors'
+`--claim`. Self-discovery is the default; pre-assignment is the explicit order.
+
+Under self-discovery the spawn prompt carries nothing at all: the agent claims
+its own domain, reads `metadata.worktree` off it, cross-checks the worktree var,
+and starts. That removes the last thing the parent has to say, which is what
+retires the "the prompt is the channel" assumption behind both the WAIT
+grammars and the CLAIM regexes.
+
 ## Build the bead brief first
 
 Before allocating a runtime, write the complete machine envelope to metadata
