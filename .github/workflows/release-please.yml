@@ -111,3 +111,17 @@ jobs:
           git add -A
           git commit -m "chore: sync generated artifacts to released versions"
           git push origin "HEAD:$RELEASE_BRANCH"
+
+      # A run can report success having published NO tag for a release it just
+      # committed: orchestrate 19.0.0 landed in the manifest and on main while
+      # `git tag --contains <release-commit>` returned nothing, so an install
+      # pinned `>=19.0.0` could not resolve a version the repo believed it had.
+      # `check-release-baselines.py` catches exactly that, but it only ran on PRs,
+      # where the tag does not exist yet by definition. Run it on the release path
+      # too, where a missing tag is a real defect rather than an expected state.
+      - name: Verify every released version has its tag
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force origin
+          python3 .apm/scripts/check-release-baselines.py
