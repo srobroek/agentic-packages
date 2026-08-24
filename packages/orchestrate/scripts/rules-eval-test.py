@@ -654,14 +654,14 @@ check(
 # deny_metadata is presence-based (_has_metadata), so a role must not deny a key
 # the orchestrator is required to stamp pre-claim: the role gets blocked at exit
 # for a write it never made. spawn-brief.md requires `branch`, `worktree`, and
-# `lease_token` on every Worktrunk-backed node.
+# `worktree` on every Worktrunk-backed node.
 run(
     "scribe exit allows the orchestrator branch stamp",
     "allow",
     bead(
         status="closed",
         labels=["agent:scribe"],
-        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt"},
         linked_comments=[{"text": "REPORTED report=/run/artifacts/run-report.md"}],
     ),
     agent_type="scribe",
@@ -673,7 +673,7 @@ run(
     bead(
         status="closed",
         labels=["agent:integrator"],
-        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+        metadata={"branch": "orc/run-1", "worktree": "/tmp/wt"},
         comments=[{"body": "LANDED merge_sha=abc1234"}],
     ),
     agent_type="shepherd",
@@ -723,7 +723,7 @@ try:
         bead(
             status="closed",
             labels=["agent:scribe"],
-            metadata={"branch": "orc/run-1", "worktree": "/tmp/wt", "lease_token": "l1"},
+            metadata={"branch": "orc/run-1", "worktree": "/tmp/wt"},
         ),
         agent_type="scribe",
         rules_file=_ANCHOR_RULES,

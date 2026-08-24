@@ -112,11 +112,9 @@ IN_RUN = in_run_env()
 # no run marker -> allow
 out, _ = run_hook("orchestrator-claim-deny.py", {"tool_input": {"command": "bd update x --claim"}})
 check("no run marker -> allow", out == {})
-# T0 authority is now enforced by bd itself (worktrunk-writer's
-# assert_bead_authority/assert_bead_claim), not by guessing an actor from
-# BEADS_ACTOR/BD_ACTOR shell text. This hook only snapshots a claim's
-# pre-claim metadata now; every `bd ... --claim` while a run is active is
-# allowed.
+# Authority comes from the bead claim, not from guessing an actor out of
+# BEADS_ACTOR/BD_ACTOR shell text. This hook only snapshots a claim's pre-claim
+# metadata; every `bd ... --claim` while a run is active is allowed.
 out, _ = run_hook(
     "orchestrator-claim-deny.py",
     {
@@ -257,7 +255,6 @@ resources = {
         "assignee": "",
         "metadata": {
             "worktree": "/tmp/research-1",
-            "lease_token": "lease-1",
         },
     },
 }
@@ -296,19 +293,15 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         str(marker_state),
     )
 
-    wait_prompt = (
-        "WAIT checkout=/tmp/research-1\n"
-        "RESOURCE orc-run.1\n"
-        "Do not invoke tools or start work.\n"
-        "The controlling parent will release you with exactly CLAIM orc-run.1."
-    )
+    # Activation is the whole prompt now; the guard reads no grammar beyond it.
+    claim_prompt = "CLAIM orc-run.1"
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
         {
             "tool_name": "Agent",
             "tool_input": {
                 "subagent_type": "researcher",
-                "prompt": wait_prompt,
+                "prompt": claim_prompt,
             },
         },
         env=hook_env,
@@ -369,12 +362,12 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
             "tool_name": "Agent",
             "tool_input": {
                 "subagent_type": "researcher",
-                "prompt": wait_prompt,
+                "prompt": claim_prompt,
             },
         },
         env=hook_env,
     )
-    check("canonical checkout WAIT on live resource -> allow", out == {}, str(out))
+    check("CLAIM activation on live resource -> allow", out == {}, str(out))
 
     for ephemeral in ("general-purpose", "Explore", "docs-guard"):
         out, _ = run_hook(
@@ -394,7 +387,7 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
             "tool_input": {
                 "subagent_type": "shepherd",
                 "prompt": (
-                    "WAIT checkout=/tmp/shepherd-integration\n"
+                    "CLAIM queue:agent:integrator\n"
                     "QUEUE agent:integrator\n"
                     "Do not invoke tools or start work.\n"
                     "The controlling parent will release you with exactly "
@@ -404,7 +397,7 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         },
         env=hook_env,
     )
-    check("checkout-backed queue WAIT -> allow", out == {}, str(out))
+    check("queue CLAIM activation -> allow", out == {}, str(out))
 
     out, _ = run_hook(
         "orchestrator-activation-guard.py",
