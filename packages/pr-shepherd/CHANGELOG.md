@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.2](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.5.1...pr-shepherd--v6.5.2) (2026-08-24)
+
+
+### Documentation
+
+* **shepherd:** the merge slot is prefix-scoped, not per-repository ([dd31fcd](https://github.com/srobroek/agentic-packages/commit/dd31fcd02b3f2c261217b186ca9af7e276177f06))
+
 ## [6.5.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.5.0...pr-shepherd--v6.5.1) (2026-08-24)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [19.0.4](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.3...orchestrate--v19.0.4) (2026-08-24)
+
+
+### Documentation
+
+* **shepherd:** the merge slot is prefix-scoped, not per-repository ([dd31fcd](https://github.com/srobroek/agentic-packages/commit/dd31fcd02b3f2c261217b186ca9af7e276177f06))
+
 ## [19.0.3](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.2...orchestrate--v19.0.3) (2026-08-24)
 
 
