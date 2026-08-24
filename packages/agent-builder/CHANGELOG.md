@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.1.1](https://github.com/srobroek/agentic-packages/compare/agent-builder--v9.1.0...agent-builder--v9.1.1) (2026-08-24)
+
+
+### Refactors
+
+* **agent-builder:** drop the invocation mode the caller no longer chooses ([aab8f17](https://github.com/srobroek/agentic-packages/commit/aab8f17ba0d28c31469e083efe798283415dbdcd))
+
 ## [9.1.0](https://github.com/srobroek/agentic-packages/compare/agent-builder--v9.0.1...agent-builder--v9.1.0) (2026-08-17)
 
 
