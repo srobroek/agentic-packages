@@ -1,6 +1,6 @@
 {
   "name": "hooks-git-safety",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Git safety guard for autonomous agents, in one Python module with a real shell tokenizer. Denies exactly one thing: a destructive op aimed at another working tree through an unexpanded variable or ~, where the guard cannot resolve which tree is affected (GS-2). Everything else is non-blocking. reset --hard, checkout --, restore, and clean -f warn only when repository state shows work would really be lost (GS-3, GS-5, GS-6), so a clean tree stays silent and an untracked-only tree does not trip the reset rules. push --force always warns, because the loss is on the remote where local state cannot answer for it (GS-4). branch -D, tag -d, stash drop, and worktree remove --force pass silently, all being reflog-recoverable. State reads happen once, and only after a destructive verb matches. An unreadable tree warns rather than staying quiet. Never emits \"ask\". Cross-tool (Claude + Codex).",
   "author": {
     "name": "Sjors Robroek"
