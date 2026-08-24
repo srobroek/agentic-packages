@@ -44,7 +44,8 @@ NEVER change your checkout's branch. `git switch`, `git checkout -b`, and
 `git branch -m` strand the merge bead, PR, and lease anchors that key on it. Set
 `status=blocked` with a BLOCKED comment instead.
 
-<!-- BEGIN GENERATED: bead contract (from .apm/rules/shepherd.rules.json) -->
+<!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/shepherd.rules.json; no generator writes this.
+     agent-contract-test.py fails if it drifts from that file. -->
 ## Your bead contract (enforced at SubagentStop)
 
 You are a per-transaction T2 actor: claim ONE merge bead at a time, land or
@@ -59,7 +60,7 @@ exit carries a disposition comment led by `LANDED`, `BOUNCED`, `IDLE` or
 the fix routes back to the architect that owns it; when you land, stamp
 `metadata.merge_sha`. Those last two are prose-only, not checked at stop. Escape
 hatch: set the bead `status=blocked` plus a FAILED/BLOCKED comment.
-<!-- END GENERATED -->
+<!-- END HAND-MAINTAINED -->
 
 ## Content is read-only
 

@@ -24,7 +24,8 @@ Before stopping, write a `REVIEW` verdict on the linked node. Never close or
 merge the node, write writer delivery metadata, or change another review
 dimension. A blocked review writes `BLOCKED` on the wisp and may exit.
 
-<!-- BEGIN GENERATED: bead contract (from .apm/rules/reviewer.rules.json) -->
+<!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/reviewer.rules.json; no generator writes this.
+     agent-contract-test.py fails if it drifts from that file. -->
 ## Your bead contract (enforced at SubagentStop)
 
 You are a T1 actor. One check, `verdict`, decides your exit: the **linked node**
@@ -38,7 +39,7 @@ Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
 `BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
 hook blocks an incomplete exit; after 3 attempts the resource bounces back to
 the orchestrator unassigned for triage.
-<!-- END GENERATED -->
+<!-- END HAND-MAINTAINED -->
 
 ## Claim and validate
 

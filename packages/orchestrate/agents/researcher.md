@@ -31,7 +31,8 @@ write branch, push, merge, PR, approval, or closure state. An escalation wisp
 must receive one `ADVICE` or `BLOCKED` response and promote material results
 to its linked node.
 
-<!-- BEGIN GENERATED: bead contract (from .apm/rules/researcher.rules.json) -->
+<!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/researcher.rules.json; no generator writes this.
+     agent-contract-test.py fails if it drifts from that file. -->
 ## Your bead contract (enforced at SubagentStop)
 
 You are a T1 actor, and **which checks apply depends on the kind of resource you
@@ -55,7 +56,7 @@ Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
 `BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
 hook blocks an incomplete exit; after 3 attempts the resource bounces back to
 the orchestrator unassigned for triage.
-<!-- END GENERATED -->
+<!-- END HAND-MAINTAINED -->
 
 ## Claim and route
 

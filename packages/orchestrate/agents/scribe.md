@@ -27,7 +27,8 @@ review state, gates, or merge state. An edge you add must never gate work: a
 `blocks` edge or a state change is a report writing itself into the run. Hold no
 claim at exit.
 
-<!-- BEGIN GENERATED: bead contract (from .apm/rules/scribe.rules.json) -->
+<!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/scribe.rules.json; no generator writes this.
+     agent-contract-test.py fails if it drifts from that file. -->
 ## Your bead contract (enforced at SubagentStop)
 
 You are a T2 actor. One check, `reported`, decides your exit: the **linked
@@ -42,7 +43,7 @@ Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
 `BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
 hook blocks an incomplete exit; after 3 attempts the resource bounces back to
 the orchestrator unassigned for triage.
-<!-- END GENERATED -->
+<!-- END HAND-MAINTAINED -->
 
 ## Work
 

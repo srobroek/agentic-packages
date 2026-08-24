@@ -80,7 +80,8 @@ the two disagreeing means somebody else owns the tree. Stop and report rather
 than writing into it. A missing `metadata.worktree` on git-evidence work is a
 provisioning failure to report, never a cue to create your own worktree.
 
-<!-- BEGIN GENERATED: bead contract (from .apm/rules/architect.rules.json) -->
+<!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/architect.rules.json; no generator writes this.
+     agent-contract-test.py fails if it drifts from that file. -->
 ## Your bead contract (enforced at SubagentStop)
 
 You hold at most ONE durable-bead claim at a time. Before you stop, the bead
@@ -97,7 +98,7 @@ You may NEVER set status `closed` yourself, and never write `merge_sha` or `pr`
 exit for a genuinely stuck node. A SubagentStop hook blocks an incomplete exit
 with a failure-specific report; after 3 blocked attempts it bounces the bead
 back to the orchestrator (unassigned) for triage.
-<!-- END GENERATED -->
+<!-- END HAND-MAINTAINED -->
 
 ### The bead is a brief, not a specification
 
