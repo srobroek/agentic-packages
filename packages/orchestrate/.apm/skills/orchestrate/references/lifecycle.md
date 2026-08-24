@@ -86,17 +86,18 @@ missing contract data, or accept its later evidence.
    Confirm every stamped checkout through `wt list --format=json`. A recorded
    branch without a worktree is recovered with `wt switch {branch} --no-cd
    --format=json`; update the bead if Worktrunk returns a different path.
-   An unassigned `in_progress` node with `REPORTED` and
-   `agent:reviewer` is a valid review handoff; an unassigned `in_progress`
-   node without that evidence is inconsistent.
+   Rules check `REPORTED` and the `agent:reviewer` label independently, not
+   as a joined condition, and neither check reads `assignee` or `status`.
+   Treat an unassigned `in_progress` node as a valid review handoff only when
+   both checks pass. A node can still hold an assignee and pass both.
 3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
    shepherd. Resume the N7 landing transaction, or use its evidence-gated
    recovery command after proving the exact actor lease is dead.
 4. Resume every live assignee with `CLAIM {same-resource}` to its recovered
    handle. If that handle is dead, respawn the same actor and use the same
-   activation. Never route an assigned bead to a generic queue. Treat an
-   unassigned `in_progress` bead without the reported handoff evidence as
-   inconsistent and run dead-claim recovery before redispatch.
+   activation. Never route an assigned bead to a generic queue. If an
+   unassigned `in_progress` bead fails either handoff check, run dead-claim
+   recovery before redispatch.
 5. Restart each GitHub repository watcher with `--slots=1`. Replay every node
    whose current `queue_dispatch` or `queue_lifecycle` lacks its matching ack;
    pending or sent receipts identify the last completed delivery step. Only a
