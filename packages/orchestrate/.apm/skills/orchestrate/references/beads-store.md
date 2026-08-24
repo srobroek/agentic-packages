@@ -153,8 +153,8 @@ bd update <bead> --status <status>                    # only where status change
 |---|---|---|---|
 | `pending` | `open` | `state:pending` | orchestrator at `bd create` |
 | `ready` | `open` | -- (derived, never stored) | `bd ready --label orc-node --parent <epic>` + clean `scope-check.py` |
-| `working` | `in_progress` | `state:working` | domain-specialist: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
-| `reported` | `in_progress` | `state:reported` | domain-specialist, after push |
+| `working` | `in_progress` | `state:working` | architect: `bd update <bead> --claim` (atomic, first-wins, sets assignee) then `set-state` |
+| `reported` | `in_progress` | `state:reported` | architect, after push |
 | `in_review` | `in_progress` | `state:in_review` | orchestrator at reviewer spawn |
 | `changes_requested` | `in_progress` | `state:changes_requested` | orchestrator on `REVIEW verdict=changes` |
 | `approved` | `in_progress` | `state:approved` | orchestrator on `REVIEW verdict=approve` |
@@ -201,7 +201,7 @@ template.
 | Tool-using advisor/researcher prepared | orchestrator | stamp Worktrunk var `bead=<node-id>` on the checkout's branch, stamp the escalation wisp or research node with its own `branch` and canonical `worktree` |
 | Runtime waiting | orchestrator | send only `CLAIM {resource-id}` to the waiting runtime, as a separate message |
 | Claim | claim-holder | read `metadata.worktree` off the claimed bead (the only authoritative source of where it works); cross-check `wt -C <path> step eval '{{ vars.bead }}' --format json` returns the same bead id -- mismatch means another actor owns the tree, stop and do not write |
-| Report (after push) | domain-specialist | stamp `push=<pushed commit SHA>` (+ refresh `branch` if renamed) |
+| Report (after push) | architect | stamp `push=<pushed commit SHA>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 
 Add a `repo` key when work lands in a different repository than the run epic.
