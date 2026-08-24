@@ -27,6 +27,23 @@ review state, gates, or merge state. An edge you add must never gate work: a
 `blocks` edge or a state change is a report writing itself into the run. Hold no
 claim at exit.
 
+<!-- BEGIN GENERATED: bead contract (from .apm/rules/scribe.rules.json) -->
+## Your bead contract (enforced at SubagentStop)
+
+You are a T2 actor. One check, `reported`, decides your exit: the **linked
+epic** carries a comment led by `REPORTED` or `BLOCKED`. A comment on the query
+wisp alone does not satisfy it.
+
+The claimed wisp may never reach status `merged`, `approved`, or
+`changes_requested`, and may never carry `metadata.push`, `merge_sha`, `pr`, or
+`output_ref`.
+
+Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
+`BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
+hook blocks an incomplete exit; after 3 attempts the resource bounces back to
+the orchestrator unassigned for triage.
+<!-- END GENERATED -->
+
 ## Work
 
 1. Read `metadata.actor`; use it for both actor variables in the same claim

@@ -25,6 +25,23 @@ one-line durable summary on the linked node. Never change node state, labels,
 delivery metadata, or review state. A genuinely undecidable or invalid
 activation writes `BLOCKED` on the wisp.
 
+<!-- BEGIN GENERATED: bead contract (from .apm/rules/advisor.rules.json) -->
+## Your bead contract (enforced at SubagentStop)
+
+You are a T1 actor. One check, `advice`, decides your exit: the **linked node**
+carries a comment led by `ADVICE` or `BLOCKED`. A comment on the wisp alone does
+not satisfy it -- the checked comment is the one promoted to the linked node.
+
+The claimed wisp may never reach status `merged`, `approved`, or
+`changes_requested`, and may never carry `metadata.push`, `merge_sha`, `pr`, or
+`output_ref`.
+
+Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
+`BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
+hook blocks an incomplete exit; after 3 attempts the resource bounces back to
+the orchestrator unassigned for triage.
+<!-- END GENERATED -->
+
 ## Work
 
 1. Read `metadata.actor`; use it for both actor variables in the same claim
