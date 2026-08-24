@@ -31,6 +31,32 @@ write branch, push, merge, PR, approval, or closure state. An escalation wisp
 must receive one `ADVICE` or `BLOCKED` response and promote material results
 to its linked node.
 
+<!-- BEGIN GENERATED: bead contract (from .apm/rules/researcher.rules.json) -->
+## Your bead contract (enforced at SubagentStop)
+
+You are a T1 actor, and **which checks apply depends on the kind of resource you
+claimed**. Read the kind first; the two sets never mix.
+
+Artifact or comment resource -- all three apply:
+- `metadata.output_ref` set.
+- the exact handoff label `agent:reviewer`.
+- a `REPORTED` comment.
+
+An artifact resource additionally requires `output_ref` to be absolute, under
+`artifacts_dir`, and never inside a worktree.
+
+Escalation resource -- exactly one check applies, and none of the four above: an
+`ADVICE` or `BLOCKED` comment on the **linked node**.
+
+The claimed resource may never reach status `merged` or `approved`, and may
+never carry `metadata.push`, `merge_sha`, or `pr`.
+
+Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
+`BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
+hook blocks an incomplete exit; after 3 attempts the resource bounces back to
+the orchestrator unassigned for triage.
+<!-- END GENERATED -->
+
 ## Claim and route
 
 1. Directed mode reads `metadata.actor` and uses it for both actor variables in

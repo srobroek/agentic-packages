@@ -24,6 +24,22 @@ Before stopping, write a `REVIEW` verdict on the linked node. Never close or
 merge the node, write writer delivery metadata, or change another review
 dimension. A blocked review writes `BLOCKED` on the wisp and may exit.
 
+<!-- BEGIN GENERATED: bead contract (from .apm/rules/reviewer.rules.json) -->
+## Your bead contract (enforced at SubagentStop)
+
+You are a T1 actor. One check, `verdict`, decides your exit: the **linked node**
+carries a comment led by `REVIEW` or `BLOCKED`. A comment on the wisp alone does
+not satisfy it.
+
+The claimed wisp may never reach status `merged`, and may never carry
+`metadata.push`, `merge_sha`, or `pr`.
+
+Escape hatch, always permitted: set `status=blocked` and leave a `FAILED` or
+`BLOCKED` comment -- a valid exit for a genuinely stuck resource. A SubagentStop
+hook blocks an incomplete exit; after 3 attempts the resource bounces back to
+the orchestrator unassigned for triage.
+<!-- END GENERATED -->
+
 ## Claim and validate
 
 1. Read the wisp, its thread, and links. Read the linked node, BRIEF, prior
