@@ -41,6 +41,8 @@ claimed**. Read the kind first; the two sets never mix.
 Artifact or comment resource -- all three apply:
 - `metadata.output_ref` set.
 - the exact handoff label `agent:reviewer`.
+- a CLEARED assignee: the review handoff is an unclaimed reported node, so a
+  node you leave assigned to yourself blocks at exit -- no reviewer can claim it.
 - a `REPORTED` comment.
 
 An artifact resource additionally requires `output_ref` to be absolute, under

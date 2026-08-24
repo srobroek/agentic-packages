@@ -27,6 +27,7 @@ Predicate vocabulary (closed):
   "linked.comment.verb in [A,B]"
                                a linked durable resource has one of A,B
   "state in [A,B]"            bd status is one of A,B
+  "assignee cleared"          no assignee, i.e. the node is unclaimed
 """
 
 from __future__ import annotations
@@ -286,6 +287,12 @@ def eval_predicate(req: str, bead: dict) -> bool:
         return any(v in wanted for v in _linked_comment_verbs(bead))
     if req == "artifact.output_ref contained":
         return _artifact_output_ref_contained(bead)
+    if req == "assignee cleared":
+        # The review handoff is an UNCLAIMED reported node: the label alone does not
+        # express it, because `label ~` reads neither assignee nor status. A node that
+        # kept its assignee satisfied every completion check while no reviewer could
+        # claim it, so the work stalled looking finished (orc-m6if, orc-b5w3).
+        return not (bead.get("assignee") or "").strip()
     if req.startswith("state in "):
         wanted = _bracket_list(req)
         return _status(bead) in wanted

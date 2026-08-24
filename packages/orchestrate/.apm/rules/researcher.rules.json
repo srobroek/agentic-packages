@@ -6,7 +6,10 @@
     {
       "check": "output_ref",
       "require": "metadata.output_ref",
-      "when": ["artifact", "comment"]
+      "when": [
+        "artifact",
+        "comment"
+      ]
     },
     {
       "check": "artifact_path",
@@ -16,12 +19,26 @@
     {
       "check": "handoff",
       "require": "label ~ ^agent:reviewer$",
-      "when": ["artifact", "comment"]
+      "when": [
+        "artifact",
+        "comment"
+      ]
+    },
+    {
+      "check": "unclaimed",
+      "require": "assignee cleared",
+      "when": [
+        "artifact",
+        "comment"
+      ]
     },
     {
       "check": "reported",
       "require": "comment.verb in [REPORTED]",
-      "when": ["artifact", "comment"]
+      "when": [
+        "artifact",
+        "comment"
+      ]
     },
     {
       "check": "answer",
@@ -30,12 +47,21 @@
     }
   ],
   "authority": {
-    "deny_states": ["merged", "approved"],
-    "deny_metadata": ["push", "merge_sha", "pr"]
+    "deny_states": [
+      "merged",
+      "approved"
+    ],
+    "deny_metadata": [
+      "push",
+      "merge_sha",
+      "pr"
+    ]
   },
   "escape": {
     "state": "blocked",
     "require": "comment.verb in [FAILED, BLOCKED]"
   },
-  "bounce": { "max_attempts": 3 }
+  "bounce": {
+    "max_attempts": 3
+  }
 }

@@ -90,6 +90,8 @@ you claimed must satisfy:
 - **artifact node**: `metadata.output_ref` set (absolute, under `artifacts_dir`,
   never inside a worktree).
 - the exact handoff label `agent:reviewer`.
+- a CLEARED assignee: the review handoff is an unclaimed reported node, so a
+  node you leave assigned to yourself blocks at exit -- no reviewer can claim it.
 - a `REPORTED` comment on the bead.
 
 You may NEVER set status `closed` yourself, and never write `merge_sha` or `pr`
