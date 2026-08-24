@@ -1,5 +1,12 @@
 # Changelog
 
+## [32.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.0...srobroek-agentic--v32.0.1) (2026-08-24)
+
+
+### Refactors
+
+* **agent-builder:** drop the invocation mode the caller no longer chooses ([aab8f17](https://github.com/srobroek/agentic-packages/commit/aab8f17ba0d28c31469e083efe798283415dbdcd))
+
 ## [32.0.0](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v31.0.0...srobroek-agentic--v32.0.0) (2026-08-24)
 
 

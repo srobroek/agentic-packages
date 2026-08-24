@@ -1,5 +1,20 @@
 # Changelog
 
+## [19.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.0...orchestrate--v19.0.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **orchestrate:** close the fail-open holes in the contract evaluator ([afe1004](https://github.com/srobroek/agentic-packages/commit/afe100410acf7cdae321cc11d1b381cc2409e6da))
+* **orchestrate:** close the fail-open holes in the contract evaluator ([c39ae88](https://github.com/srobroek/agentic-packages/commit/c39ae882338522c280b6302c4490f56551869f3b))
+* **orchestrate:** make merge beads drainable and the comms hook runtime-agnostic ([a5b339d](https://github.com/srobroek/agentic-packages/commit/a5b339d030eb93e719ae7b3990b104a45c82a6d8))
+
+
+### Documentation
+
+* **orchestrate:** split decision protocol out of beads-store, document pull-model activation ([729b75d](https://github.com/srobroek/agentic-packages/commit/729b75d1eb1c525fde9bd63216bdbb8ee7a39fed))
+* **orchestrate:** split decision protocol out of beads-store, document pull-model activation ([068c47b](https://github.com/srobroek/agentic-packages/commit/068c47b09661694487bd21424e0369a171374dee))
+
 ## [19.0.0](https://github.com/srobroek/agentic-packages/compare/orchestrate--v18.0.0...orchestrate--v19.0.0) (2026-08-24)
 
 

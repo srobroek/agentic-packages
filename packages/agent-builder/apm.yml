@@ -1,5 +1,5 @@
 name: agent-builder
-version: 9.1.0
+version: 9.1.1
 description: >-
   Implementation subagent for bounded code changes, tests, and refactors within
   a defined scope. Ships `builder`, which edits the checkout its brief names, in
