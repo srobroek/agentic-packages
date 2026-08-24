@@ -1,5 +1,12 @@
 # Changelog
 
+## [19.0.5](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.4...orchestrate--v19.0.5) (2026-08-24)
+
+
+### Documentation
+
+* **orchestrate:** finish the architect rename in the reference tables ([e36ee43](https://github.com/srobroek/agentic-packages/commit/e36ee43a55a3234766f7e20cd7ed6b0f89c80791))
+
 ## [19.0.4](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.3...orchestrate--v19.0.4) (2026-08-24)
 
 
