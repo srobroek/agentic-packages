@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.5.1](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.5.0...pr-shepherd--v6.5.1) (2026-08-24)
+
+
+### Documentation
+
+* correct the concurrency cap and merge-slot scope ([010f337](https://github.com/srobroek/agentic-packages/commit/010f337ceb71c23fb4b86a00501473db7ddbacd8))
+* **orchestrate:** correct the concurrency cap and merge-slot scope ([36f5a66](https://github.com/srobroek/agentic-packages/commit/36f5a66aac67cd868337d5a412da9b8ff2458911))
+
 ## [6.5.0](https://github.com/srobroek/agentic-packages/compare/pr-shepherd--v6.4.1...pr-shepherd--v6.5.0) (2026-08-24)
 
 
