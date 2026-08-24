@@ -97,7 +97,8 @@ Exit 75 is Beads merge-slot contention only; a GitHub merge queue never returns 
 `land` (see `scripts/landing-contract.py` usage for its exact arguments)
 performs the transaction:
 
-1. Creates the repository merge slot and acquires under stable identity
+1. Creates the rig's merge slot (keyed on the Beads issue prefix, shared by
+   every repo and worktree on that prefix) and acquires under stable identity
    `pr-shepherd:<repo>#<pr>@<head_sha>` without bypassing earlier waiters.
 2. Re-reads PR state, exact head, `pr_base`, checks, and required approval.
 3. Fetches and probes the live `pr_base`, not the final landing branch.

@@ -363,9 +363,13 @@ terse result returns. Even a worker or hook failure is diagnosed by a delegated
 node reading the durable evidence, never by opening hook implementations in the
 lead.
 
-Concurrency caps at `min(16, cores - 2)` state-changing workers, lower when disk
-is tight, because every git-backed worker carries its own build artifacts. Idle
-queue workers that have claimed nothing do not count as parallelism.
+The concurrency cap counts live agents, not CPU cores, and nothing in a run is
+CPU-bound. The two real limits are the provider rate limit and the lead's own
+context budget. While the provider accepts requests and the lead's context
+has room, raise the cap. On the first rate-limit rejection, drop it. When disk
+is tight, drop it again, because every git-backed worker carries its own
+build artifacts. Idle queue workers that have claimed nothing do not count as
+parallelism.
 
 Claude agent-teams are a rare gated exception rather than the fan-out mechanism.
 Teammates cannot spawn background subagents, which breaks the brokered advisor
