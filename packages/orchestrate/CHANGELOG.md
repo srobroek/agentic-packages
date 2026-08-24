@@ -1,5 +1,20 @@
 # Changelog
 
+## [19.0.2](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.1...orchestrate--v19.0.2) (2026-08-24)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([82801e7](https://github.com/srobroek/agentic-packages/commit/82801e791ceaa8a4f85740e0fc83c102c323647b))
+
+
+### Documentation
+
+* close-out gate catches merge beads that no queue can drain ([d89e44f](https://github.com/srobroek/agentic-packages/commit/d89e44fc33ab883d16df4c4a2eda8f567ec67817))
+* **orchestrate:** check merge-bead anchors at close-out ([6cd236a](https://github.com/srobroek/agentic-packages/commit/6cd236ac81f494631e0ef51c1d416eff009ef8d1))
+* **orchestrate:** state the enforced stop contract for four roles ([6e11c71](https://github.com/srobroek/agentic-packages/commit/6e11c71408e0a88cebeb430622066de6795f6d8f))
+* state the enforced stop contract in four orchestrate role definitions ([afcb591](https://github.com/srobroek/agentic-packages/commit/afcb5911b79a83c6d3db356d0cb6a7faadf36f91))
+
 ## [19.0.1](https://github.com/srobroek/agentic-packages/compare/orchestrate--v19.0.0...orchestrate--v19.0.1) (2026-08-24)
 
 

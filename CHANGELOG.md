@@ -1,5 +1,13 @@
 # Changelog
 
+## [32.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.1...srobroek-agentic--v32.0.2) (2026-08-24)
+
+
+### Documentation
+
+* correct the concurrency cap and merge-slot scope ([010f337](https://github.com/srobroek/agentic-packages/commit/010f337ceb71c23fb4b86a00501473db7ddbacd8))
+* **orchestrate:** correct the concurrency cap and merge-slot scope ([36f5a66](https://github.com/srobroek/agentic-packages/commit/36f5a66aac67cd868337d5a412da9b8ff2458911))
+
 ## [32.0.1](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.0...srobroek-agentic--v32.0.1) (2026-08-24)
 
 
