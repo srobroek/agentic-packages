@@ -9,7 +9,7 @@ The shepherd is the only *generic* merge consumer. An orchestrate run's own
 integration shepherd owns that run's PRs; see orchestrate's `queue-watcher.md`
 for the run-scoped side of the same precedence rule. The shepherd still
 revalidates GitHub, uses Beads gates, probes conflicts, and acquires the
-repository merge slot.
+rig's merge slot (keyed on the Beads issue prefix, not the repository).
 
 ## Ownership and routing
 
