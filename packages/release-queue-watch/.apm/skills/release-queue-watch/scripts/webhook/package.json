@@ -6,7 +6,7 @@
 	"engines": {
 		"node": ">=20"
 	},
-	"packageManager": "pnpm@11.22.0",
+	"packageManager": "pnpm@11.26.0",
 	"bin": {
 		"release-queue-watch": "./bin/release-queue-watch.js"
 	},
