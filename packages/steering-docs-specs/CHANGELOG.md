@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v4.1.0...steering-docs-specs--v4.1.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **write-agentic:** keep authored assets on the current contract ([1444d3e](https://github.com/srobroek/agentic-packages/commit/1444d3e67fe3344e5e6a227a83942166c9bf1ff2))
+
 ## [4.1.0](https://github.com/srobroek/agentic-packages/compare/steering-docs-specs--v4.0.1...steering-docs-specs--v4.1.0) (2026-08-17)
 
 
