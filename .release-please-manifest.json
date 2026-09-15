@@ -64,7 +64,7 @@
   "packages/mcp-playwright": "1.4.0",
   "packages/mcp-serena": "1.5.0",
   "packages/mcp-tauri": "2.1.0",
-  "packages/orchestrate": "19.0.4",
+  "packages/orchestrate": "19.0.5",
   "packages/planning-product": "3.4.0",
   "packages/playwright": "4.3.0",
   "packages/pr-shepherd": "6.5.2",
