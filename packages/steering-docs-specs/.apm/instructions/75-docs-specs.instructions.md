@@ -3,5 +3,4 @@ description: Spec and SpecKit workflow steering.
 applyTo: "{specs/**,.specify/**}"
 ---
 
-For specs, spec modes, or `.specify/` workflow assets, read
-[docs and specs context](../context/docs-specs.docs-specs-index.context.md).
+Read [docs and specs context](../context/docs-specs.docs-specs-index.context.md) for work on specifications, SpecKit assets, or related writing.
