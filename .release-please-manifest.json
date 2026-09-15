@@ -83,7 +83,7 @@
   "packages/steering-backend": "1.2.0",
   "packages/steering-data": "1.2.0",
   "packages/steering-delivery": "1.2.0",
-  "packages/steering-docs-specs": "4.1.0",
+  "packages/steering-docs-specs": "4.1.1",
   "packages/steering-frontend": "2.2.0",
   "packages/steering-git-workflow": "4.1.0",
   "packages/steering-global-bootstrap": "1.2.0",
@@ -101,5 +101,5 @@
   "packages/verify": "3.1.0",
   "packages/web-fetch": "2.2.0",
   "packages/whats-new": "3.1.0",
-  "packages/write-agentic": "5.1.1"
+  "packages/write-agentic": "5.1.2"
 }
