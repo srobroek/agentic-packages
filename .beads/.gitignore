@@ -71,6 +71,9 @@ backup/
 *.db-shm
 db.sqlite
 bd.db
+
+# Beads gate lock artifacts
+*.gate.lock*
 # NOTE: Do NOT add negation patterns here.
 # They would override fork protection in .git/info/exclude.
 # Config files (metadata.json, config.yaml) are tracked by git by default
