@@ -1,5 +1,12 @@
 # Changelog
 
+## [12.2.3](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.2.2...agentic-maintenance--v12.2.3) (2026-09-19)
+
+
+### Bug Fixes
+
+* **deps:** sync internal package pins (patch-level dep releases) ([9b56922](https://github.com/srobroek/agentic-packages/commit/9b569220533c7b8e73190617bb6bff5c5c9b7566))
+
 ## [12.2.2](https://github.com/srobroek/agentic-packages/compare/agentic-maintenance--v12.2.1...agentic-maintenance--v12.2.2) (2026-08-24)
 
 

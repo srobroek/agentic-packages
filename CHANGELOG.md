@@ -1,5 +1,12 @@
 # Changelog
 
+## [32.0.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.2...srobroek-agentic--v32.0.3) (2026-09-19)
+
+
+### Bug Fixes
+
+* **beads:** pin client to v1.3.0 ([#928](https://github.com/srobroek/agentic-packages/issues/928)) ([782c5c1](https://github.com/srobroek/agentic-packages/commit/782c5c1db49ea8366a9d1ee5365b27f6ab105589))
+
 ## [32.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.1...srobroek-agentic--v32.0.2) (2026-08-24)
 
 
