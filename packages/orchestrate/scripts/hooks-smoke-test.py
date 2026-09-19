@@ -293,178 +293,6 @@ print(json.dumps({"schema_version": 1, "data": [record], "error": None}))
         str(marker_state),
     )
 
-    # Activation is the whole prompt now; the guard reads no grammar beyond it.
-    claim_prompt = "CLAIM orc-run.1"
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
-                "prompt": claim_prompt,
-            },
-        },
-        env=hook_env,
-    )
-    check("pending run marker blocks dispatch", pretool_denied(out), str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {"tool_name": "Bash", "tool_input": {"command": "echo hi"}},
-        env=hook_env,
-    )
-    check("pending run marker + non-Agent tool -> allow", out == {}, str(out))
-
-    bind = subprocess.run(
-        [
-            "uv",
-            "run",
-            "--quiet",
-            os.path.join(HERE, "orchestrator-run-activate.py"),
-            "bind",
-            "orc-run",
-        ],
-        capture_output=True,
-        text=True,
-        env={**os.environ, **hook_env},
-    )
-    marker_state = json.loads(marker.read_text(encoding="utf-8"))
-    check(
-        "run bind replaces pending marker before dispatch",
-        bind.returncode == 0
-        and marker_state.get("run_id") == "orc-run"
-        and marker_state.get("session_id") == "session-claude",
-        f"returncode={bind.returncode} stdout={bind.stdout!r} stderr={bind.stderr!r} "
-        f"state={marker_state}",
-    )
-
-    marker.write_text(
-        json.dumps({"schema_version": 1, "run_id": "orc-existing"}) + "\n",
-        encoding="utf-8",
-    )
-    out, _ = run_hook(
-        "orchestrator-run-activate.py",
-        {"prompt": "$orchestrate Resume the run", "thread_id": "thread-codex"},
-        env=hook_env,
-    )
-    marker_state = json.loads(marker.read_text(encoding="utf-8"))
-    check(
-        "$orchestrate prompt -> preserves durable run id",
-        out == {}
-        and marker_state.get("run_id") == "orc-existing"
-        and marker_state.get("session_id") == "thread-codex",
-        str(marker_state),
-    )
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
-                "prompt": claim_prompt,
-            },
-        },
-        env=hook_env,
-    )
-    check("CLAIM activation on live resource -> allow", out == {}, str(out))
-
-    for ephemeral in ("general-purpose", "Explore", "docs-guard"):
-        out, _ = run_hook(
-            "orchestrator-activation-guard.py",
-            {
-                "tool_name": "Agent",
-                "tool_input": {"subagent_type": ephemeral, "prompt": "summarize the notes."},
-            },
-            env=hook_env,
-        )
-        check(f"ephemeral helper {ephemeral} -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "shepherd",
-                "prompt": (
-                    "CLAIM queue:agent:integrator\n"
-                    "QUEUE agent:integrator\n"
-                    "Do not invoke tools or start work.\n"
-                    "The controlling parent will release you with exactly "
-                    "CLAIM queue:agent:integrator."
-                ),
-            },
-        },
-        env=hook_env,
-    )
-    check("queue CLAIM activation -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "followup_task",
-            "tool_input": {
-                "target": "researcher-r1@session-b807e068",
-                "message": "CLAIM orc-run.1",
-            },
-        },
-        env=hook_env,
-    )
-    check("Codex followup with distinct handle and hook context -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "send_input",
-            "tool_input": {
-                "id": "researcher-r1@session-b807e068",
-                "message": "CLAIM orc-run.1",
-            },
-        },
-        env=hook_env,
-    )
-    check("Codex legacy send_input id resolves bound handle -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "multi_agent_v1send_input",
-            "tool_input": {
-                "target": "researcher-r1@session-b807e068",
-                "message": "CLAIM orc-run.1",
-            },
-        },
-        env=hook_env,
-    )
-    check("Codex v1 namespaced send_input resolves bound handle -> allow", out == {}, str(out))
-
-    for resume_tool in ("resume_agent", "multi_agent_v1resume_agent"):
-        out, _ = run_hook(
-            "orchestrator-activation-guard.py",
-            {
-                "tool_name": resume_tool,
-                "tool_input": {
-                    "id": "researcher-r1@session-b807e068",
-                    "message": "CLAIM orc-run.1",
-                },
-            },
-            env=hook_env,
-        )
-        check(f"Codex {resume_tool} resolves bound handle -> allow", out == {}, str(out))
-
-    out, _ = run_hook(
-        "orchestrator-activation-guard.py",
-        {
-            "tool_name": "Agent",
-            "tool_input": {
-                "subagent_type": "researcher",
-                "prompt": "CLAIM orc-run.1",
-            },
-        },
-        env={"ORCHESTRATE_MARKER_FILE": str(temp / "inactive-marker")},
-    )
-    check("direct CLAIM spawn outside run -> allow", out == {}, str(out))
-
 print("=== script modes ===")
 # Every shipped script stays executable so a bare-path caller works whatever the
 # deployment does with modes: APM writes the source mode once and then skips
@@ -501,7 +329,6 @@ for cfg in ("orchestrate-claude-hooks.json", "orchestrate-codex-hooks.json"):
             "contract-start.py",
             "rules-eval.py",
             "orchestrator-claim-deny.py",
-            "orchestrator-activation-guard.py",
             "orchestrator-run-activate.py",
         ):
             if script in refs and not os.path.isfile(os.path.join(HERE, script)):
@@ -555,12 +382,14 @@ with open(os.path.join(SKILL, "references", "spawn-brief.md")) as fh:
 normalized_spawn_contract = " ".join(spawn_contract.split())
 check("spawn contract has no ASSIGN payload", "ASSIGN" not in spawn_contract)
 check(
-    "release is exact CLAIM activation",
-    "Send exactly `CLAIM {bead-or-wisp-id}`" in spawn_contract,
+    "spawn contract names claim-then-linked-worktree lifecycle",
+    "task agent runs in the parent checkout with isolation off" in normalized_spawn_contract
+    and "wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>" in normalized_spawn_contract,
 )
 check(
-    "spawn contract states the bare CLAIM prompt",
-    "as its whole prompt" in normalized_spawn_contract,
+    "spawn contract records branch/path and uses absolute work",
+    "record its absolute path and branch" in normalized_spawn_contract
+    and "absolute file paths" in normalized_spawn_contract,
 )
 
 with open(os.path.join(SKILL, "references", "comms-block.md")) as fh:
@@ -582,7 +411,7 @@ check(
     "`execution_task_kind` metadata" in planning_contract,
 )
 
-checkout_start_contract = "every claude bash input starts with the literal `cd -- <checkout> &&`"
+checkout_start_contract = "wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>"
 for name in (
     "architect",
     "researcher",
@@ -596,10 +425,12 @@ for name in (
         text = fh.read()
     normalized = " ".join(text.split())
     check(f"{name} has no ASSIGN activation", "ASSIGN" not in text)
-    check(f"{name} names CLAIM activation", "CLAIM {" in text or "CLAIM <" in text)
+    check(f"{name} names parent claim with isolation off", "parent checkout" in normalized and "isolation off" in normalized and "claim" in normalized.lower())
     check(
         f"{name} makes checkout startup operational",
-        checkout_start_contract in normalized.lower(),
+        checkout_start_contract in normalized
+        and "absolute path" in normalized
+        and "record" in normalized,
     )
     check(
         f"{name} has no checkout-exempt claim path",
