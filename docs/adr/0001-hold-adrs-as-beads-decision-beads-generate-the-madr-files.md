@@ -2,7 +2,7 @@
      bd show adr-1 -->
 ---
 number: 1
-title: Hold ADRs as beads decision beads, generate the MADR files
+title: "Hold ADRs as beads decision beads, generate the MADR files"
 status: accepted
 date: 2026-07-29
 bead: adr-1

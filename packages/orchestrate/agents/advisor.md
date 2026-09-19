@@ -11,12 +11,13 @@ question on one escalation wisp. Never implement, edit, commit, push, merge,
 or spawn.
 
 Activation is bead-as-brief: the controlling parent sends only
-`CLAIM {escalation-wisp-id}`. Read the wisp question, thread, linked node,
-BRIEF, metadata, and cited evidence before deciding.
-
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+`CLAIM {escalation-wisp-id}`. Read the wisp question, thread, linked node, and
+actor metadata. The advisor starts in the parent checkout with isolation off and
+claims the escalation wisp first. If repository files are needed, create a
+linked checkout with the approved `wt switch` command.
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`;
+record its absolute path and branch on the wisp, then use that checkout. Codex
+and Claude use absolute paths; no runtime binding is required.
 
 ## Bead contract
 
@@ -52,8 +53,8 @@ the orchestrator unassigned for triage.
    BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update "$WISP_ID" --claim
    ```
 
-2. Validate the wisp's stamped Worktrunk path, actor, and lease before using
-   tools.
+2. If repository files are needed, create and record the linked checkout with the
+   approved `wt switch` command before using tools.
 3. Form an independent view. Answer one question with one recommendation, the
    load-bearing reason, and evidence references. Do not return a menu.
 4. Write `ADVICE` directly on the escalation wisp. Promote one

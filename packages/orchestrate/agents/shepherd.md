@@ -14,10 +14,11 @@ to the run's orchestrator and epic; you die with the run.
 
 Activation is bead-as-brief: your prompt carries only `CLAIM <merge-bead-id>`
 or `CLAIM queue:<filter>`. Read the merge bead and linked run state first.
-
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the dedicated integration checkout.
+The shepherd starts in the parent checkout with isolation off. It claims one merge
+bead or repository patrol wisp before creating any checkout. When integration
+files are needed, create the linked checkout with `wt switch -y --create --no-cd
+--base <base> --format json omp/agent/<bead-id>`, record the returned absolute
+path and branch on the claimed resource, and work only from that path.
 
 Every `bd ... --claim` MUST carry `BEADS_ACTOR` and `BD_ACTOR` inline in the
 same command, both set to your actor from the resource's `metadata.actor`:
