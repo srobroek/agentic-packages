@@ -30,14 +30,14 @@ escalation wisp, not stored as a node state.
 | Transition | Trigger |
 |---|---|
 | `pending → ready` | `bd ready --label orc-node --parent <epic>` reports the node, no gate is open, scope is clean, and routing envelope is complete |
-| `ready → working` | directed worker receives only `CLAIM {bead-id}` and claims under `metadata.actor`; generic worker atomically claims one compatible queue bead |
-| `reported → in_review` | worker reports declared evidence; orchestrator creates every review-wisp shell, stamps each runtime, and activates reviewers by wisp id |
+| `ready → working` | native task agent runs in the parent checkout with isolation off, claims under `metadata.actor`, then creates and records its linked Worktrunk checkout |
+| `reported → in_review` | worker reports declared evidence; orchestrator creates every review-wisp shell and activates reviewers by wisp id |
 | `working` (blocked) | worker writes `BLOCKED` on a linked escalation wisp and exits or continues independent work; an advisor claims and answers that wisp directly |
 | `changes_requested → working` | same worker re-claims its node, reads all open review wisps, and applies the union of FIX items |
-| `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies its own identity/CI/review-bot safeguards, serializes on the merge slot, proves the final base, releases, and closes |
+| `approved → merged` | the last approving reviewer closes the final review wisp and makes the draft PR ready; the run shepherd claims the unblocked merge bead, applies its safeguards, serializes on the merge slot, proves the final base, releases, and closes |
 | `approved → dismissed` | non-git evidence only: orchestrator records accepted evidence, sets `state=dismissed`, closes, then dismisses worker and reviewer |
 | `waiting_human` | agent raised `ASK`; orchestrator records the question and holds the node. A node not started also gets `bd gate create --type=human --blocks <bead>` |
-| `waiting_gate` | only an external machine gate remains (CI, release workflow, release PR checks, a long reviewer); orchestrator parks the node with the awaited identifier and resume instruction, never polls it, and exits when nothing else is ready |
+| `waiting_gate` | only an external machine gate remains; orchestrator parks the node with the awaited identifier and resume instruction, never polls it, and exits when nothing else is ready |
 | `failed` | unrecoverable; set `state:failed` plus status `blocked`, log the error, and surface it |
 
 ## Completion paths
@@ -67,14 +67,12 @@ merge requirement.
 | Task-scoped | directed or generic worker; independent reviewer | activated by claim; resume is an optimization and respawn reads bead plus wisps |
 | Ephemeral | Researcher gatherers/synthesizer, Advisor/debugger, Tiebreaker, Scribe | claim one node or wisp, report there, release, exit |
 
-Stopped background subagents may resume on a content-free wake. A dead handle
-is respawned under the same stable actor with only `CLAIM {same-resource}`.
-Never run two actors against the same live claim.
-
-A `BOUNCE` comment invalidates that actor attempt. Repair the durable envelope,
-start a fresh WAIT-only runtime, bind and stamp it, then activate it with the
-separate CLAIM message. Do not continue the bounced handle, manually supply
-missing contract data, or accept its later evidence.
+A `BOUNCE` comment invalidates that actor attempt. Repair the durable envelope and
+redispatch a native task agent with isolation off. The replacement claims the
+resource in the parent checkout, creates a fresh linked Worktrunk checkout with
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`,
+records its branch and absolute path on the bead, and resumes from durable state.
+Do not continue the bounced handle or create a runtime binding.
 
 ## Resume after orchestrator compaction or crash
 
@@ -83,21 +81,19 @@ missing contract data, or accept its later evidence.
    --status in_progress --json`. Each recovery record carries exact actor in
    `assignee`, directed or generic mode in `execution_dispatch`, branch/worktree
    or non-git resource scope, and the fine-grained `state:` label.
-   Confirm every stamped checkout through `wt list --format=json`. A recorded
-   branch without a worktree is recovered with `wt switch {branch} --no-cd
-   --format=json`; update the bead if Worktrunk returns a different path.
-   Rules check `REPORTED` and the `agent:reviewer` label independently, not
-   as a joined condition, and neither check reads `assignee` or `status`.
-   Treat an unassigned `in_progress` node as a valid review handoff only when
-   both checks pass. A node can still hold an assignee and pass both.
+   Confirm every recorded checkout through `wt list --format=json`. A recorded
+   branch without a worktree is recovered by dispatching the replacement actor in
+   the parent checkout; it claims the bead and recreates the linked checkout with
+   `wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`.
+   Update the bead with the returned absolute path and branch.
 3. Run `bd merge-slot check`. Never infer a dead holder from age or a recycled
-   shepherd. Resume the N7 landing transaction, or use its evidence-gated
-   recovery command after proving the exact actor lease is dead.
-4. Resume every live assignee with `CLAIM {same-resource}` to its recovered
-   handle. If that handle is dead, respawn the same actor and use the same
-   activation. Never route an assigned bead to a generic queue. If an
-   unassigned `in_progress` bead fails either handoff check, run dead-claim
-   recovery before redispatch.
+   shepherd. Resume the landing transaction, or use evidence-gated recovery after
+   proving the exact actor is dead.
+4. Resume every live assignee from its claimed bead and recorded worktree. If its
+   handle is dead, dispatch the same actor in the parent checkout; it claims the
+   same resource and recreates its linked checkout. Never route an assigned bead
+   to a generic queue. If an unassigned `in_progress` bead lacks its review
+   handoff evidence, run dead-claim recovery before redispatch.
 5. Restart each GitHub repository watcher with `--slots=1`. Replay every node
    whose current `queue_dispatch` or `queue_lifecycle` lacks its matching ack;
    pending or sent receipts identify the last completed delivery step. Only a
@@ -128,10 +124,13 @@ bd update <bead> --assignee "" --status open
 bd set-state <bead> state=pending --reason "dead claim verified; redispatch"
 ```
 
-5. For directed recovery, stamp the replacement actor and runtime context
-   before sending only `CLAIM {bead-id}`. For generic recovery, restore one compatible
-   `agent:<queue>` and leave the bead unassigned. The replacement claims
-   atomically and receives every preserved anchor.
+5. For directed recovery, dispatch the replacement actor in the parent checkout.
+   It claims the bead and creates its linked Worktrunk checkout with the approved
+   `wt switch -y --create --no-cd --base <base> --format json
+   omp/agent/<bead-id>` command, then records the returned branch and absolute
+   path. For generic recovery, restore one compatible `agent:<queue>` and leave
+   the bead unassigned; the replacement claims atomically and creates its own
+   checkout.
 
 If holder death is uncertain, keep the assignment and record a revisit trigger.
 That safe default prevents two workers from mutating the same scope.

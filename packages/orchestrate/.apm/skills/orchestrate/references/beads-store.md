@@ -188,19 +188,18 @@ Semantics that fall out of the status column:
 
 ## Git-anchor metadata contract
 
-A node bead carries Worktrunk anchors in metadata so any session can find
-where the work physically lives. The orchestrator creates the checkout with
-`wt switch --create <branch> --base <base> --no-cd --format=json` and stores
-the returned branch/path before spawning. Never infer the path from the user
-template.
+A node bead carries Worktrunk anchors in metadata so any session can find where
+the claimed task physically lives. The native task agent starts in the parent
+checkout, claims the bead, then runs:
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`.
+It reads the returned JSON and records the absolute branch/path on the bead
+before editing. Never infer a path from a prompt or pre-create a checkout.
 
 | When | Who | Stamp |
 |---|---|---|
-| Writer checkout prepared | orchestrator | `wt switch --create <branch>`, stamp Worktrunk var `bead=<bead-id>` on the branch (`wt config state vars set bead <bead-id> --branch <branch>`), stamp node `branch`, canonical `worktree`, `base_sha` |
-| Tool-using reviewer prepared | orchestrator | stamp Worktrunk var `bead=<review-wisp-id>` on the review checkout's branch, stamp the review wisp with its own `branch` and canonical `worktree` |
-| Tool-using advisor/researcher prepared | orchestrator | stamp Worktrunk var `bead=<node-id>` on the checkout's branch, stamp the escalation wisp or research node with its own `branch` and canonical `worktree` |
-| Runtime waiting | orchestrator | send only `CLAIM {resource-id}` to the waiting runtime, as a separate message |
-| Claim | claim-holder | read `metadata.worktree` off the claimed bead (the only authoritative source of where it works); cross-check `wt -C <path> step eval '{{ vars.bead }}' --format json` returns the same bead id -- mismatch means another actor owns the tree, stop and do not write |
+| Claim | task agent | claim under `metadata.actor` in the parent checkout |
+| Linked checkout created | task agent | returned `branch`, absolute `worktree`, and `base_sha` on the claimed bead |
+| Tool-using reviewer/advisor/researcher | actor | claim its resource first, then create and record its own linked checkout |
 | Report (after push) | architect | stamp `push=<pushed commit SHA>` (+ refresh `branch` if renamed) |
 | Merge | shepherd | `bd update <bead> --metadata '{"pr":<n>,"merge_sha":"<sha>"}'` |
 

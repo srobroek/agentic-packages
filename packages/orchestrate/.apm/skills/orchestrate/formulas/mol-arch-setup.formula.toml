@@ -1,113 +1,74 @@
 formula = "mol-arch-setup"
-description = "static preamble the architect completes in {{repo}} before any worker claims {{owner_bead}}"
+description = "claim {{owner_bead}} then create its linked Worktrunk checkout"
 type = "workflow"
 
 [vars.repo]
 required = true
-description = "repository root the worktree is created from"
+description = "parent repository checkout where the task agent starts"
 
 [vars.branch]
 required = true
-description = "branch the worktree is created on"
+description = "base ref or branch carrying the target work"
 
 [vars.owner_bead]
 required = true
-description = "epic or feature bead this worktree is provisioned for; workers reach it by claiming"
+description = "bead the task agent claims before creating its checkout"
 
 [vars.copies_ignored]
 default = "true"
-description = "does the build need gitignored inputs copied in"
+description = "whether the new worktree needs copied gitignored inputs"
 
 [[steps]]
-id = "create-worktree"
-title = "create the worktree for {{branch}}"
+id = "claim-owner"
+title = "claim {{owner_bead}} in the parent checkout"
 type = "task"
-priority = 1
-labels = ["arch-setup", "phase:provision"]
+priority = 0
+labels = ["arch-setup", "phase:start"]
 description = """
-wt -C {{repo}} switch --create {{branch}} --no-cd -y
+Run in {{repo}} with isolation off:
 
-Refuse to continue if the path already carries a bead var naming a different
-bead: one path serves one bead, and a second stamp makes the cross-check in
-bind-vars ambiguous for every worker that lands there.
+BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update {{owner_bead}} --claim
+
+The claim is the ownership lock. Do not pre-assign the actor or pre-create a
+checkout for this bead.
 """
 
 [[steps]]
-id = "bind-vars"
-title = "stamp {{owner_bead}} on the worktree and the worktree on {{owner_bead}}"
+id = "create-linked-worktree"
+title = "create the linked worktree for {{owner_bead}}"
 type = "task"
-needs = ["create-worktree"]
+needs = ["claim-owner"]
 labels = ["arch-setup", "phase:provision"]
 description = """
-wt -C <worktree> config state vars set bead={{owner_bead}}
+After claiming, run:
 
-Then read it back:
+wt switch -y --create --no-cd --base {{branch}} --format json omp/agent/{{owner_bead}}
 
-wt -C <worktree> step eval '{{ vars.bead }}' --format json
-
-The result must be {{owner_bead}}. This pair -- the bead var on the path and
-metadata.worktree on the bead (stamp-owner) -- is the whole binding. It records
-where the work lives; it grants nothing and blocks on nothing, so there is no
-handshake to complete and no acquisition to retry. A worker finds its checkout by
-claiming the bead and reading metadata.worktree, then cross-checks with the eval
-above; an unverified write leaves that cross-check failing at claim time.
-"""
-
-[[steps]]
-id = "verify-writable"
-title = "verify the worktree is clean and writable"
-type = "task"
-needs = ["bind-vars"]
-labels = ["arch-setup", "phase:provision"]
-description = """
-git -C <worktree> status --porcelain must print nothing, and the path must be
-writable. A dirty inherited worktree mixes someone else's work into the first
-commit made against {{owner_bead}}.
+Read the JSON result and record the returned branch and absolute path on
+{{owner_bead}}. Continue only from that linked checkout using absolute paths.
 """
 
 [[steps]]
 id = "copy-ignored"
-title = "copy gitignored build inputs into the worktree"
+title = "copy gitignored build inputs into the linked worktree"
 type = "task"
-needs = ["bind-vars"]
+needs = ["create-linked-worktree"]
 condition = "{{copies_ignored}}"
 labels = ["arch-setup", "phase:provision"]
 description = """
-wt -C {{repo}} step copy-ignored --require-include <worktree>
-
-Skip only when the build genuinely needs no untracked inputs. A missing .env or
-target/ becomes a build failure attributed to the work rather than to setup.
+Run `wt step copy-ignored --require-include <worktree>` from the parent checkout
+when the repository requires copied dependencies. Skip only when no untracked
+inputs are needed.
 """
 
 [[steps]]
-id = "stamp-owner"
-title = "stamp the worktree path on {{owner_bead}}"
+id = "verify-linked-worktree"
+title = "verify the linked worktree for {{owner_bead}}"
 type = "task"
-needs = ["verify-writable"]
-labels = ["arch-setup", "phase:provision"]
+needs = ["create-linked-worktree", "copy-ignored"]
+labels = ["arch-setup", "phase:verify"]
 description = """
-bd update {{owner_bead}} --metadata '{"worktree":"<abs path>","branch":"{{branch}}"}'
-
-Metadata, not a label: exactly one worktree may be true per bead, and this single
-value is what a claiming worker reads to find its checkout. Two worktree labels
-would be two answers to a question with one answer.
-"""
-
-[[steps]]
-id = "ready-to-claim"
-title = "declare {{owner_bead}} ready to claim"
-type = "task"
-priority = 1
-needs = ["stamp-owner", "copy-ignored"]
-labels = ["arch-setup", "phase:provision"]
-description = """
-Preconditions all true: the worktree exists, its bead var reads {{owner_bead}},
-the tree is clean, ignored inputs are present, and metadata.worktree is stamped.
-Only now may a worker run
-`bd ready --parent {{owner_bead}} --label agent:<x> --claim`.
-
-The order is the rule, not a preference. A claim is how a worker discovers its
-work, and the claim carries no checkout with it. Claiming before this step
-consumes the claim with nowhere to work, and an already-consumed claim cannot be
-retried -- undoing it takes dead-claim recovery.
+Read back the bead metadata and Worktrunk JSON. Confirm the branch and absolute
+worktree path match the returned checkout, and confirm the tree is clean and
+writable before editing.
 """

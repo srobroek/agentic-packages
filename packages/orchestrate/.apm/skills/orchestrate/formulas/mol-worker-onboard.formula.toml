@@ -1,14 +1,14 @@
 formula = "mol-worker-onboard"
-description = "static preamble a spawned worker runs before touching {{bead}}"
+description = "claim {{bead}} then create its linked Worktrunk checkout before touching it"
 type = "workflow"
 
 [vars.bead]
 required = true
-description = "the bead this worker was told to claim"
+description = "the bead this worker claims"
 
 [vars.role]
 required = true
-description = "the role label this worker pulls on"
+description = "the role label used by a queue worker"
 
 [vars.needs_worktree]
 default = "true"
@@ -21,64 +21,53 @@ type = "task"
 priority = 0
 labels = ["onboard", "phase:start"]
 description = """
-bd ready --parent <owner> --label agent:{{role}} --claim --json
+Run in the parent checkout with isolation off:
 
-A worker discovers its work by claiming a bead, never from a handle passed in
-the prompt. The claim is a database operation and needs no worktree. If it
-returns nothing, the work was taken: report NO_WORK and exit rather than
-widening the filter.
+BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update {{bead}} --claim
+
+A worker claims before creating a worktree. A queue worker atomically claims one
+compatible ready bead and accepts the returned bead; an empty result writes
+NO_WORK and changes no node. Do not pre-assign, bind a runtime, or use a
+parent-prepared checkout.
 """
 
 [[steps]]
-id = "resolve-worktree"
-title = "resolve the worktree from the claimed bead"
+id = "create-linked-worktree"
+title = "create the linked checkout for {{bead}}"
 type = "task"
 needs = ["claim-bead"]
 condition = "{{needs_worktree}}"
 labels = ["onboard", "phase:start"]
 description = """
-Read metadata.worktree off the claimed bead. That is the only authoritative
-source: wt vars are per-branch and unreadable until you are already inside.
+After the claim succeeds, run:
 
-Absent metadata.worktree on git-evidence work is a provisioning failure. Report
-it; never create your own worktree.
-"""
+wt switch -y --create --no-cd --base <base> --format json omp/agent/{{bead}}
 
-[[steps]]
-id = "verify-ownership"
-title = "verify the worktree agrees it belongs to {{bead}}"
-type = "task"
-needs = ["claim-bead", "resolve-worktree"]
-condition = "{{needs_worktree}}"
-labels = ["onboard", "phase:start"]
-description = """
-wt -C <worktree> step eval '{{ vars.bead }}' --format json
-
-The result must equal the claimed bead id. A mismatch means the path belongs to
-another actor and writing into it corrupts their work: stop and report. Always
---format json, and slice from the first brace -- wt prints a schema banner ahead
-of the payload.
+Read the JSON result, record its returned absolute path and branch on the claimed
+bead, and continue from that path using absolute file paths. Run
+`wt step copy-ignored --require-include` in the new worktree when the repository
+needs copied gitignored dependencies.
 """
 
 [[steps]]
 id = "confirm-scope"
 title = "read the scope and acceptance criteria on {{bead}}"
 type = "task"
-needs = ["claim-bead"]
+needs = ["claim-bead", "create-linked-worktree"]
 labels = ["onboard", "phase:start"]
 description = """
-The bead carries the brief. Read its description, comments, and scope metadata
-before the first edit. Work outside the stamped scope is what collides with a
-sibling worker.
+Re-read the claimed bead, its BRIEF, comments, links, and scope metadata before
+the first edit. Work outside the stamped scope becomes a discovered bead or an
+escalation, not an expansion of this claim.
 """
 
 [[steps]]
 id = "begin-work"
 title = "begin work on {{bead}}"
 type = "task"
-needs = ["confirm-scope", "verify-ownership"]
+needs = ["confirm-scope"]
 labels = ["onboard", "phase:start"]
 description = """
-All preconditions hold: bead claimed, worktree resolved and cross-verified,
-scope understood. Only now edit files.
+All preconditions hold: bead claimed, linked worktree created and recorded, and
+scope understood. Only now edit files from the recorded absolute path.
 """

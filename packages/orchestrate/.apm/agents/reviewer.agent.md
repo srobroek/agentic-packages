@@ -13,10 +13,10 @@ directly through that wisp. Never edit, commit, push, merge, or spawn.
 Activation is bead-as-brief: the controlling parent sends only
 `CLAIM {review-wisp-id}`. The wisp and linked run records carry the dimension,
 branch, scope, PR, verification method, actor, and Worktrunk lease.
-
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+The reviewer starts in the parent checkout with isolation off and claims the
+wisp first. When repository files are needed, create a linked checkout with
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`;
+record its absolute path and branch on the claimed wisp before reviewing.
 
 ## Bead contract
 
@@ -51,12 +51,11 @@ the orchestrator unassigned for triage.
    ```text
    BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update "$WISP_ID" --claim
    ```
-
-3. When the wisp names a checkout, cross-check its `metadata.worktree` against
-   `wt -C <path> step eval '{{ vars.bead }}' --format json` before repository
-   tools. Refuse a missing path or a bead var that names a different bead.
-4. Re-read the wisp after claim. A claim race, wrong actor, missing node link,
-   or stale PR head is `BLOCKED`; do not review a guessed target.
+3. If repository files are needed, create and record the linked checkout with
+   the approved `wt switch` command before repository tools. A missing or
+   mismatched returned path is `BLOCKED`; never write into another actor's tree.
+4. Re-read the wisp after claim. A claim race, wrong actor, missing node link, or
+   stale PR head is `BLOCKED`; do not review a guessed target.
 
 ## Review
 

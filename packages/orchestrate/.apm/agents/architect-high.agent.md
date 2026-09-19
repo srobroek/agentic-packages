@@ -68,20 +68,14 @@ bead, making it one is the job in front of you.
 
 Activation is bead-as-brief: your prompt carries only `CLAIM <bead-id>` (or
 `CLAIM queue:<filter>`). Everything else -- task, scope, base, evidence kind --
-lives on the bead. Read it first.
+lives on the bead. Read it first. The task starts in the parent checkout with
+isolation off, claims the domain bead, then creates its linked checkout with:
 
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`
 
-Your checkout comes from the BEAD, not from your prompt: read
-`metadata.worktree` off your domain bead. Cross-check it before you write
-anything -- `wt -C <path> step eval '{{ vars.bead }}' --format json` must return
-that same bead id. The bead answers "where do I work" from anywhere; the
-worktree var answers "who owns this path" and is only readable from inside it, so
-the two disagreeing means somebody else owns the tree. Stop and report rather
-than writing into it. A missing `metadata.worktree` on git-evidence work is a
-provisioning failure to report, never a cue to create your own worktree.
+Read the returned JSON, record its absolute branch and path on the claimed bead,
+and use absolute paths from that checkout for all repository work. Do not expect
+a parent-prepared checkout or a runtime binding.
 
 <!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/architect.rules.json; no generator writes this.
      agent-contract-test.py fails if it drifts from that file. -->

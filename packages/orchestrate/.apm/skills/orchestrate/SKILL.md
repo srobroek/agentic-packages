@@ -44,49 +44,13 @@ Role: lead session / orchestrator.
 2. **Route by `references/roles.md`; cheapest capable model per role.**
    Escalate up only on hard cases. Never assign an expensive model to
    mechanical work.
-3. **Subagents only -- never agent-teams for parallel work.** Fan out via Agent
-   tool background subagents (`subagent_type: architect`). Allocate every
-   checkout with plain Worktrunk, then stamp the bead id on the branch and the
-   canonical worktree path on the bead; the bead claim is the lock.
-   Decline the harness's suggestion to spawn teammates. Agent-teams are a
-   Claude Code-only mechanism and are a rare gated exception (`references/teams.md`);
-   unsure whether the trigger is met → use subagents.
-4. **Every claim-holder and tool user runs in Worktrunk.** Each independently
-   dispatched actor gets a prepared checkout; the bundled shepherd gets a
-   dedicated integration checkout per repository. Record each assigned
-   branch/path on its activation resource. Writers self-commit, push, and
-   report their Worktrunk branch. Provision the checkout and stamp the bead
-   BEFORE spawning, because the agent reads its checkout from
-   `metadata.worktree`; the spawn prompt is then a bare `CLAIM {resource-id}`.
-5. **Flat claim-holder tree.** Only you spawn claim-holding specialists,
-   reviewers, advisors, researchers, scribes, and shepherds. An architect may
-   spawn bounded throwaway implementation children in its prepared checkout;
-   they never claim, manage worktrees, commit, push, or spawn another writer.
-   Every other actor spawns nothing.
-6. **Route content peer to peer.** A blocked specialist writes an escalation
-   wisp; an advisor claims and answers that wisp. A reviewer writes FIX
-   material on its review wisp. You create shells, wake actors, and observe
-   state, but never relay questions, advice, review findings, or task briefs.
-   A wake or recovery activation is only `CLAIM {bead-or-wisp-id}`.
-7. **Comms protocol is mandatory.** Bundled role definitions carry the
-   bead-as-brief and wisp protocol. Claude's skill-scoped `SubagentStart` hook
-   reinforces the generic claim contract. Codex activations remain the same
-   single CLAIM verb; do not paste a protocol block into an activation.
-8. **Durable state, bounded processes.** Beads, wisps, and GitHub are the
-   record. The bundled in-run `shepherd` owns this run's landing patrol and
-   owns its own landing safeguards -- orchestrate depends on no other package at
-   runtime. The standalone `pr-shepherd` is a separate tool that drains the
-   repository-global queue across runs. Scribes drain
-   ledger wisps on demand or at their timer boundary. No process or second
-   graph is authoritative.
-9. **Never wait on an external gate; park it.** CI, release workflows, release
-   PR checks, and long-running reviewers are gates, not work. Do not poll one
-   and do not hold the session open for one: park the node with
-   `state=waiting_gate`, record what is awaited and how to resume, then take the
-   next `bd ready` node. When only external waits remain, write the run report
-   and exit -- the gate bead and the next pass own the wait. A run that ends
-   mid-stream because the lead sat on a release gate has failed its record even
-   when the release itself landed. See `references/lifecycle.md`.
+3. **Subagents only -- never agent-teams for parallel work.** Fan out via native task agents with isolation off. A dispatched task starts in the parent checkout, claims its bead, then creates its linked Worktrunk checkout with the approved command and records the returned branch/path on the bead. The bead claim is the lock. Decline the harness's suggestion to spawn teammates. Agent-teams are a Claude Code-only mechanism and are a rare gated exception (`references/teams.md`); unsure whether the trigger is met → use subagents.
+4. **Claim, then create the linked checkout.** The task agent runs in the parent checkout long enough to claim its bead. It then runs `wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`, records the returned absolute path and branch on the bead, and continues from that worktree using absolute paths. Do not pre-create, pre-assign, bind, or stamp an activation resource before dispatch.
+5. **Flat claim-holder tree.** Only you spawn claim-holding specialists, reviewers, advisors, researchers, scribes, and shepherds. An architect may spawn bounded throwaway implementation children in its own linked checkout; they never claim, manage worktrees, commit, push, or spawn another writer. Every other actor spawns nothing.
+6. **Route content peer to peer.** A blocked specialist writes an escalation wisp; an advisor claims and answers that wisp. A reviewer writes FIX material on its review wisp. You create shells, wake actors, and observe state, but never relay questions, advice, review findings, or task briefs. A wake or recovery activation tells the actor to claim the same durable resource and resume from it.
+7. **Comms protocol is mandatory.** Bundled role definitions carry the bead-as-brief and wisp protocol. Activations contain the resource identifier; task data remains on Beads.
+8. **Durable state, bounded processes.** Beads, wisps, and GitHub are the record. The bundled in-run `shepherd` owns this run's landing patrol and its landing safeguards. Scribes drain ledger wisps on demand or at their timer boundary. No process or second graph is authoritative.
+9. **Never wait on an external gate; park it.** CI, release workflows, release PR checks, and long-running reviewers are gates, not work. Do not poll one or hold the session open: park the node with `state=waiting_gate`, record what is awaited and how to resume, then take the next `bd ready` node. When only external waits remain, write the run report and exit. See `references/lifecycle.md`.
 
 ## Workflow
 
@@ -98,17 +62,11 @@ Role: lead session / orchestrator.
    `<primary>/.orchestration/run-<id>/artifacts/`; resolve it to an absolute
    path, create it, and read the epic metadata back before dispatch. A relative
    path or a path under any Worktrunk checkout is invalid. Gitignore it. The
-   prompt hook creates `<primary>/.orchestration/.active-run` with
+   The prompt hook may create `<primary>/.orchestration/.active-run` with
    `run_id=pending` before the first tool call. Preserve an existing run id
-   during restart recovery; otherwise bind `pending` to this epic id with the
-   active runtime's installed hook entry, always through an interpreter so the
-   deployed file mode is never load-bearing:
-   `uv run --quiet
-   .claude/hooks/orchestrate/scripts/orchestrator-run-activate.py bind
-   {epic-id}` or the same command against
-   `.codex/hooks/orchestrate/scripts/`. Read the marker back before dispatch;
-   a pending marker makes claim-holder allocation invalid. Put run identity and
-   artifact paths on Beads; never broadcast them in activation prompts.
+   during restart recovery and record run identity and artifact paths on Beads.
+   Do not bind a runtime, create an activation resource, or make allocation
+   depend on a pending marker.
 2. Plan & decompose yourself at high level; delegate deep planning (read-only
    `Plan`) or speccing (`speckit-*`) for work spanning >3 tasks with
    cross-cutting deps or an unfamiliar subsystem. Beads-managed external
@@ -156,17 +114,14 @@ Role: lead session / orchestrator.
    every merge bead this run creates. Create scribe query wisps
    only when a bounded status or ledger drain is needed.
 5. Per ready node (`bd ready --label orc-node --parent <epic> --json`, then
-   `scope-check.py --candidate <bead> --epic <epic>` per candidate): create
-   the writer checkout with plain Worktrunk (`wt switch --create <branch>`),
-   then stamp the node's bead id on that branch with `wt config state vars
-   set bead <bead-id> --branch <branch>`. Write the complete BRIEF and stamp
-   `branch` and canonical `worktree` (as `metadata.worktree`, an absolute path)
-   on the unclaimed node, then read them back. Spawn with `CLAIM {node-id}` as
-   the whole prompt: the bead already carries the task, the scope and the
-   checkout, so there is nothing to acknowledge and no runtime id to bind. The
-   role definition owns claim and validation.
-   A BOUNCE invalidates that attempt: repair the envelope and redispatch from
-   durable state; never continue or close the bounced actor by manual
+   `scope-check.py --candidate <bead> --epic <epic>` per candidate): dispatch a
+   native task agent with isolation off. The agent claims the node in the parent
+   checkout, then runs `wt switch -y --create --no-cd --base <base> --format
+   json omp/agent/<bead-id>`. It records the returned absolute path and branch on
+   the bead, then works only from that linked checkout. Do not provision a
+   checkout or stamp an activation resource before dispatch. The durable BRIEF
+   remains authoritative. A BOUNCE invalidates that attempt: repair the durable
+   envelope and redispatch from Beads; never continue the bounced actor by manual
    messages. See `references/spawn-brief.md`.
 6. On `REPORTED`, create all review-wisp shells and merge-bead dependency
    edges before any reviewer starts. Give each tool-using reviewer its own

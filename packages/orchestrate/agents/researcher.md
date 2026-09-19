@@ -18,10 +18,10 @@ Activation is bead-as-brief:
 
 No task data comes from the activation. Read the claimed resource, BRIEF,
 metadata, comments, links, and worklog before researching.
-
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+The researcher starts in the parent checkout with isolation off. Claim the
+resource first. Create a linked checkout only when repository files are needed:
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`.
+Record the returned absolute path and branch on the claimed resource before use.
 
 ## Bead contract
 
@@ -75,7 +75,9 @@ the orchestrator unassigned for triage.
 3. Validate task kind, evidence kind, scope, capabilities, and access after
    claim. A mismatch is `BLOCKED`; do no research and do not steal or reroute
    the resource.
-4. Validate the stamped Worktrunk lease before tools.
+4. If repository files are needed, create and record the linked checkout with
+   the approved `wt switch` command before using tools. Read-only research that
+   needs no repository files stays in the parent checkout.
 
 ## Research
 

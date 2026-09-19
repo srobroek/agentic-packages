@@ -17,19 +17,16 @@ MUST Preview integrated cleanup with `wt step prune --dry-run`; cleanup is
   `wt step prune`.
 
 AGENT CHECKOUTS
-MUST Every agent that writes receives a parent-prepared Worktrunk checkout,
-  including domain specialists and delegated implementation agents.
-DEFAULT A claim-holder may bind throwaway implementation children to its
-  prepared checkout; those children never manage worktrees or durable state.
-MUST A tool-using reviewer, auditor, researcher, or advisor receives a separate
-  read-only Worktrunk checkout; a remote-only or conversational agent is exempt.
-MUST Capture `wt switch --create <branch> --base <base> --no-cd --format=json`
-  and record the returned branch/path in durable task state before spawn.
-NOT Use harness `isolation:"worktree"` when a workflow requires a
-  parent-prepared checkout and durable pre-spawn anchors.
-DEFAULT Ad hoc Claude isolation may use `isolation:"worktree"` after the
-  official Worktrunk plugin is installed; its lifecycle hooks route Claude's
-  create/remove events through Worktrunk. Codex has no equivalent isolation.
+MUST A native task agent starts in the parent's current checkout with harness
+  worktree isolation disabled, claims its bead, then creates a linked Worktrunk
+  checkout with `wt switch -y --create --no-cd --base <base> --format json
+  omp/agent/<bead-id>`.
+MUST Record the returned absolute path and branch on the claimed bead before
+  doing repository work, and use that absolute path for all subsequent commands.
+DEFAULT A claim-holder may bind throwaway implementation children to its prepared
+  checkout; those children never claim, manage worktrees, or durable state.
+NOT Use harness worktree isolation for the claim-holder; the bead claim and
+  linked Worktrunk checkout are the ownership boundary.
 
 PULL REQUESTS
 MUST Open a GitHub pull request with `wt switch pr:<number>` or its pull-request
