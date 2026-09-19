@@ -66,19 +66,15 @@ bead, making it one is the job in front of you.
 Activation is bead-as-brief: your prompt carries only `CLAIM <bead-id>` (or
 `CLAIM queue:<filter>`). Everything else -- task, scope, base, evidence kind --
 lives on the bead. Read it first.
+Every Claude Bash input starts in the parent checkout. Codex likewise starts in
+the parent checkout with isolation off. Claim the domain bead first, then create
+its linked checkout with:
 
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+`wt switch -y --create --no-cd --base <base> --format json omp/agent/<bead-id>`
 
-Your checkout comes from the BEAD, not from your prompt: read
-`metadata.worktree` off your domain bead. Cross-check it before you write
-anything -- `wt -C <path> step eval '{{ vars.bead }}' --format json` must return
-that same bead id. The bead answers "where do I work" from anywhere; the
-worktree var answers "who owns this path" and is only readable from inside it, so
-the two disagreeing means somebody else owns the tree. Stop and report rather
-than writing into it. A missing `metadata.worktree` on git-evidence work is a
-provisioning failure to report, never a cue to create your own worktree.
+Read the returned JSON, record its absolute branch and path on the claimed bead,
+and use absolute paths from that checkout for all repository work. Do not expect
+a parent-prepared checkout or a runtime binding.
 
 <!-- HAND-MAINTAINED: bead contract. Mirrors .apm/rules/architect.rules.json; no generator writes this.
      agent-contract-test.py fails if it drifts from that file. -->
@@ -258,18 +254,13 @@ Tell every child which files are NOT its own, naming the sibling that holds them
 A child cannot see its siblings, so file ownership is only as real as the brief
 that states it.
 
-## Work
-
-Read `metadata.actor` from the activation bead. Set both `BEADS_ACTOR` and
-`BD_ACTOR` to that exact stable actor on every mutating Beads process.
-
 1. `bd show <bead>` and `bd comments <bead> --json` -- read the BRIEF and
    metadata. Read your domain bead (linked `relates-to`) for standing context.
-2. Claim under the stable actor in the same process:
+2. Claim under the stable actor in the parent checkout:
    `BEADS_ACTOR="$ACTOR" BD_ACTOR="$ACTOR" bd update "$BEAD_ID" --claim`.
-   Read the bead back, then cross-check `metadata.worktree` against
-   `wt -C <path> step eval '{{ vars.bead }}' --format json`. Refuse a missing
-   `metadata.worktree` or a bead var that names a different bead.
+   Create the linked checkout with `wt switch -y --create --no-cd --base <base>
+   --format json omp/agent/<bead-id>`, record its absolute branch/path on the
+   bead, and then continue from that checkout.
 3. Own only your `scope` globs. Change outside scope seems needed → do NOT take
    it; file `bd create --discovered-from <bead> …` and leave it for the
    orchestrator to route, or raise ASK.

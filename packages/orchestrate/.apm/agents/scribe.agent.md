@@ -13,10 +13,10 @@ tracked files, product state, work nodes, or policy records.
 Activation is bead-as-brief: the controlling parent sends only
 `CLAIM {query-wisp-id}`. The wisp links to the run epic and carries the query,
 artifact destination, stable actor, and report boundary.
-
-Every Claude Bash input starts with the literal `cd -- <checkout> &&`,
-including the first resource read and claim. Codex sets the tool workdir to
-the allocated checkout.
+The scribe starts in the parent checkout with isolation off and claims its query
+wisp before reading. If repository files are needed, it creates a linked
+checkout with the approved `wt switch -y --create --no-cd --base <base> --format
+json omp/agent/<bead-id>` command and records the returned absolute path.
 
 ## Bead contract
 

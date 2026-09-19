@@ -140,30 +140,35 @@ Semantics that fall out of the status column:
 shepherd; `artifact`, `comment`, and `external` close as `dismissed` by the lead.
 Non-git work never creates an empty commit or a placeholder branch.
 
-## Dispatch: two-phase activation
+## Dispatch: claim then linked worktree
 
-Task data lives on the bead. An activation message is exactly `CLAIM {id}` or
-`CLAIM queue:{filter}`, with no scope, commands, review items, or questions.
-Spawn and activation are separate operations:
+Task data lives on the bead. The lead provisions no runtime handshake and sends
+no WAIT, PREPARE, or BIND message. A native task agent starts in the parent's
+current working directory with harness isolation disabled, claims its bead, and
+then creates its own linked worktree:
 
 ```mermaid
 sequenceDiagram
     participant L as lead
-    participant P as provisioner
-    participant A as agent runtime
-    L->>P: create worktree, then<br/>wt config state vars set bead {id} --branch {branch}
-    P-->>L: branch stamped with the bead var
-    L->>L: stamp branch · absolute worktree · base_sha<br/>on the UNCLAIMED bead, then read back
-    L->>A: Agent(...) with the WAIT bootstrap only
-    Note over A: spawns, invokes no tools
-    A-->>L: the WAIT line (entire first reply)
-    L->>A: SendMessage "CLAIM {id}"
-    A->>A: bd update {id} --claim, read metadata.worktree,<br/>cross-check wt -C {path} step eval '{{ vars.bead }}' --format json == {id},<br/>start work
+    participant A as native task agent
+    participant W as linked worktree
+    L->>A: spawn task agent in parent cwd (isolation off)
+    A->>A: bd update {id} --claim
+    A->>W: wt switch -y --create --no-cd<br/>--base {base} --format json omp/agent/{id}
+    A->>A: record branch and absolute path on the bead
+    A->>W: work by absolute path
 ```
 
-A `BOUNCE` invalidates that attempt. Repair the durable envelope and redispatch a
-fresh runtime; the bounced runtime is never continued or hand-fed the missing
-data.
+The claim is the ownership boundary. The worker records the branch and absolute
+worktree path on the claimed bead, and all subsequent file operations use that
+path. There is no activation resource, runtime bind, nested `omp` process, or
+per-spawn harness worktree isolation checkout.
+
+A `BOUNCE` invalidates that attempt. Repair the durable bead envelope and
+redispatch a fresh native task agent; the bounced runtime is never continued or
+hand-fed missing data.
+
+
 
 Routing applies one rule, in order:
 
@@ -286,17 +291,15 @@ call.
 
 | Event | Script | Effect |
 |---|---|---|
-| `UserPromptSubmit` | `orchestrator-run-activate.py` | writes `.orchestration/.active-run`; `bind <epic>` resolves `run_id=pending` |
+| `UserPromptSubmit` | `orchestrator-run-activate.py` | writes `.orchestration/.active-run`; run identity is recorded on the epic |
 | `SubagentStart` | `contract-start.py` | tells every spawn that claiming a bead binds its contract |
 | `SubagentStart` (skill-scoped) | `inject-comms.sh` | injects `comms-block.md`; a failure warns loudly on stderr and still exits 0 |
 | `PreToolUse` (Bash) | `orchestrator-claim-deny.py` | denies `bd ... --claim` in the lead while a run is active |
-| `PreToolUse` (Agent, SendMessage) | `orchestrator-activation-guard.py` | enforces the WAIT then CLAIM order |
 | `SubagentStop` | `rules-eval.py` | evaluates the stopping actor's claimed bead against its rules file |
 
-The activation guard refuses a `CLAIM` whose resource is terminal, absent, or
-already claimed. It also refuses one whose stamped checkout differs from the
-checkout its WAIT text names. It also denies a task-bearing spawn of an unrecognised agent type: an
-activation that cannot be verified is worse than a refused one.
+There is no activation resource or WAIT-then-CLAIM guard. A native task agent
+claims the bead, creates the linked worktree recorded in its metadata, and works
+from its absolute path. The bead claim and worktree metadata are authoritative.
 
 `rules-eval.py` reads one JSON rules file per role. That same file compiles the
 "Your bead contract" block into the agent definition, so the enforced contract
@@ -331,12 +334,11 @@ source of truth. After lead compaction or a crash:
    `assignee`, its dispatch mode, and its `state:` label. Confirm every stamped
    checkout through `wt list --format=json`.
 3. Run `bd merge-slot check`. Never infer a dead holder from age.
-4. Resume each live assignee with `CLAIM {same-resource}`, or respawn the same
-   actor and send the same activation.
-5. Restart watchers with `--slots=1` and replay any dispatch whose resource
-   carries no claim.
-
-Dead-claim recovery needs evidence rather than a timestamp. No ownership
+4. Resume each live assignee from the bead's recorded branch and absolute
+   worktree path, or respawn a native task agent to claim the bead and recreate
+   its linked worktree.
+5. Restart watchers with `--slots=1` and replay any dispatch whose bead remains
+   open and ready.
 timeout and no daemon exist. Clear ownership only once the platform reports the
 runtime stopped, the actor releases it, or the user confirms that the session is
 dead. Record that evidence, then:

@@ -1,0 +1,4 @@
+# Project-specific Worktrunk provisioning.
+# Keep the repository's ignored analysis artifacts available in fresh worktrees.
+[post-start]
+copy-ignored = "wt step copy-ignored --require-include"
