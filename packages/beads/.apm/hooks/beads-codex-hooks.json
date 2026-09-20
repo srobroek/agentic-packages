@@ -38,19 +38,6 @@
         ]
       }
     ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${PLUGIN_ROOT}/scripts/beads-sync-session.py",
-            "statusMessage": "Syncing beads (Dolt pull, JSONL fallback)...",
-            "timeout": 60
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",
