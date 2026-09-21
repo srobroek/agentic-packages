@@ -83,7 +83,7 @@ repos:
           rule or skill rather than an error. Six files were in that state when
           this was added, every one for the same reason: an unquoted colon-space
           inside a scalar value. 0.3s over 267 files.
-        entry: python3 .apm/scripts/check-frontmatter-parses.py
+        entry: uv run .apm/scripts/check-frontmatter-parses.py
         language: system
         pass_filenames: false
         files: ^packages/[^/]+/\.apm/.*\.md$
@@ -131,7 +131,7 @@ repos:
           docs/codex-compatibility.md is hand-maintained and drifts from the
           generated manifests silently. This fails on the drift, which has
           happened twice while removing packages. 0.19s.
-        entry: python3 .apm/scripts/audit-codex-config.py
+        entry: uv run .apm/scripts/audit-codex-config.py
         language: system
         pass_filenames: false
         files: ^(packages/[^/]+/(apm\.yml|\.apm/hooks/.*\.json)|docs/codex-compatibility\.md)$
@@ -189,7 +189,7 @@ repos:
           drift, regenerating nothing. This is the class that has cost two CI
           round trips today, including a README skill count taken from a stale
           generated copy during a merge. 0.35s.
-        entry: python3 .apm/scripts/render-docs.py all --check
+        entry: uv run .apm/scripts/render-docs.py all --check
         language: system
         pass_filenames: false
         files: ^(packages/[^/]+/apm\.yml|apm\.yml|docs/.*\.md|README\.md|release-please-config\.json|\.release-please-manifest\.json|\.apm/templates/.*)$
@@ -201,7 +201,7 @@ repos:
           Each package's Claude and Codex manifests plus its target-specific
           components are generated from apm.yml. --check fails on drift without
           writing. 0.41s.
-        entry: python3 .apm/scripts/build-native-plugins.py --check
+        entry: uv run .apm/scripts/build-native-plugins.py --check
         language: system
         pass_filenames: false
         files: ^packages/[^/]+/(apm\.yml|\.apm/.*)$
