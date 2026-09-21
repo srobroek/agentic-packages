@@ -31,9 +31,11 @@ committed file.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 # Interpreter forms that make the file mode irrelevant.
@@ -143,6 +145,67 @@ def resolve_runtime_ref(ref: str, root: Path) -> Path | None:
     return None
 
 
+STDLIB_MODULES = frozenset(sys.stdlib_module_names)
+PEP723_RE = re.compile(r"^# /// script$.*?^# ///$", re.MULTILINE | re.DOTALL)
+
+
+def top_level_imports(source: Path) -> set[str]:
+    """Root module name of every import in a script, ignoring failures to parse."""
+    try:
+        tree = ast.parse(source.read_text(encoding="utf-8", errors="ignore"))
+    except SyntaxError:
+        return set()
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            names.add(node.module.split(".")[0])
+    return names
+
+
+def check_dependency_declarations(root: Path) -> list[str]:
+    """A script importing a third-party module must declare it and run under uv.
+
+    `python3 <path>` resolves imports against whatever interpreter the shell
+    happens to expose. That works until the module is absent -- and a hook that
+    imports pyyaml under bare `python3` is one clean checkout away from
+    ModuleNotFoundError, having passed every green pipeline until then. A PEP 723
+    block makes the need explicit, and `uv run` is what reads it.
+
+    Scripts importing only the standard library are left alone deliberately:
+    they run correctly on the oldest interpreter present, and demanding a
+    resolver for them would buy nothing.
+    """
+    problems: list[str] = []
+    config = root / ".pre-commit-config.yaml"
+    if not config.is_file():
+        return problems
+    text = config.read_text(encoding="utf-8", errors="ignore")
+
+    for match in re.finditer(r"entry:\s*(?:python3|uv run(?:\s+--quiet)?)\s+(\S+\.py)", text):
+        rel = match.group(1)
+        source = root / rel
+        if not source.is_file():
+            continue
+        third_party = sorted(top_level_imports(source) - STDLIB_MODULES - {"__future__"})
+        if not third_party:
+            continue
+        entry = match.group(0)
+        declared = bool(PEP723_RE.search(source.read_text(encoding="utf-8", errors="ignore")))
+        if not declared:
+            problems.append(
+                f"{rel}: imports {', '.join(third_party)} but declares no PEP 723"
+                " block; add `# /// script` with its dependencies"
+            )
+        if not entry.startswith("entry: uv run"):
+            problems.append(
+                f"{rel}: imports {', '.join(third_party)} but the hook runs it as"
+                " bare python3; invoke it with `uv run` so the block resolves"
+            )
+    return problems
+
+
 def check(root: Path) -> list[str]:
     modes = committed_modes(root)
     problems: list[str] = []
@@ -193,13 +256,17 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    problems = check(args.root.resolve())
+    root = args.root.resolve()
+    problems = check(root) + check_dependency_declarations(root)
     if problems:
-        print(f"check-script-invocation: {len(problems)} bare-path mode defect(s):")
+        print(f"check-script-invocation: {len(problems)} invocation defect(s):")
         for problem in problems:
             print(f"  - {problem}")
         return 1
-    print("check-script-invocation: every bare-path invocation targets an executable")
+    print(
+        "check-script-invocation: every bare-path invocation targets an executable"
+        " and every third-party import is declared and resolved"
+    )
     return 0
 
 
