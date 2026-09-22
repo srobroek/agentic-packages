@@ -1,5 +1,5 @@
 {
-  ".": "32.0.2",
+  ".": "32.0.3",
   "packages/adr-as-beads": "1.1.0",
   "packages/agent-adversarial-challenger": "4.1.0",
   "packages/agent-builder": "9.1.1",
@@ -15,9 +15,9 @@
   "packages/agent-reasoner": "4.0.1",
   "packages/agent-reviewer-high": "3.0.1",
   "packages/agent-reviewer-low": "3.0.1",
-  "packages/agentic-maintenance": "12.2.2",
+  "packages/agentic-maintenance": "12.2.3",
   "packages/audit-steering": "2.2.0",
-  "packages/beads": "2.3.0",
+  "packages/beads": "2.3.1",
   "packages/brownfield-project": "2.1.0",
   "packages/catchup": "2.3.0",
   "packages/chezmoi-editor": "1.4.0",

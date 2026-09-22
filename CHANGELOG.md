@@ -1,5 +1,14 @@
 # Changelog
 
+## [32.0.3](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.2...srobroek-agentic--v32.0.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* **beads:** pin client to v1.3.0 ([#928](https://github.com/srobroek/agentic-packages/issues/928)) ([782c5c1](https://github.com/srobroek/agentic-packages/commit/782c5c1db49ea8366a9d1ee5365b27f6ab105589))
+* **hooks:** declare the PyYAML dependency check-hook-contract.py already imports ([#936](https://github.com/srobroek/agentic-packages/issues/936)) ([dfa261d](https://github.com/srobroek/agentic-packages/commit/dfa261df75eea8c4cd2400f28c9c5daa8e5e3c8e))
+* **hooks:** run PEP 723 scripts with uv, declare yamllint ([#933](https://github.com/srobroek/agentic-packages/issues/933)) ([76fa899](https://github.com/srobroek/agentic-packages/commit/76fa8995485f52c049df12935f1c71fffa77f394))
+
 ## [32.0.2](https://github.com/srobroek/agentic-packages/compare/srobroek-agentic--v32.0.1...srobroek-agentic--v32.0.2) (2026-08-24)
 
 

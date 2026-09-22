@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/srobroek/agentic-packages/compare/beads--v2.3.0...beads--v2.3.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **beads:** drop the redundant beads-sync-session Codex hook ([#931](https://github.com/srobroek/agentic-packages/issues/931)) ([207e312](https://github.com/srobroek/agentic-packages/commit/207e312073c54f062bd8b46cb8a97a6af842c72c))
+
 ## [2.3.0](https://github.com/srobroek/agentic-packages/compare/beads--v2.2.1...beads--v2.3.0) (2026-08-23)
 
 
