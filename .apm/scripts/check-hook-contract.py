@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6"]
+# ///
 """CI check: hook scripts must agree with the manifests and targets that ship them.
 
 Every defect a recent audit of this repository found was a WIRING defect, and each

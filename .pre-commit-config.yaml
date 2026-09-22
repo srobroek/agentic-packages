@@ -107,7 +107,7 @@ repos:
           routes it, a target:all script must emit only fields both runtimes
           accept, no script may emit permissionDecision "ask", and every hook
           script ships tests. 0.28s.
-        entry: python3 .apm/scripts/check-hook-contract.py
+        entry: uv run .apm/scripts/check-hook-contract.py
         language: system
         pass_filenames: false
         files: ^packages/[^/]+/(\.apm/hooks/.*\.json|scripts/.*\.py|tests/.*)$
