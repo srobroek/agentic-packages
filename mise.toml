@@ -14,4 +14,4 @@
 # dependency blocks resolve. Declared here rather than assumed: it otherwise
 # resolves from a machine's global mise config, which is the same
 # ambient-tool assumption those hooks were converted to remove.
-"uv" = "0.12.16"
+"uv" = "0.12.19"
