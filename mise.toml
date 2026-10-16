@@ -8,7 +8,7 @@
 # `mise ERROR No version is set for shim: yamllint`. CI installed it separately
 # with `pip install "yamllint==1.37.1"` in .github/workflows/lint.yml, so the
 # gate only ever ran there. Pinned to that same version.
-"pipx:yamllint" = "1.37.1"
+"pipx:yamllint" = "1.38.0"
 
 # uv — four pre-commit hooks invoke `uv run <script>` so PEP 723 inline
 # dependency blocks resolve. Declared here rather than assumed: it otherwise
