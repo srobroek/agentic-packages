@@ -31,6 +31,11 @@ from pathlib import Path
 
 ADR_DIR = Path("docs/adr")
 GENERATED_MARKER = "<!-- Generated from a beads decision bead."
+_BANNER = f"{GENERATED_MARKER} Edit the bead, not this file:"
+# A projection is a file that opens with the two banner lines `render_one`
+# writes. The marker elsewhere -- quoted in a hand-authored note, say -- does not
+# make a file generated, because generated files are deleted when stale.
+_GENERATED_HEADER = re.compile(re.escape(_BANNER) + r"\n     bd show (\S+) -->\n")
 
 # Bare `bd` inherits the caller's pager and interactive prompts. A git hook has
 # no tty, so an unset pager can hang the commit rather than fail it.
@@ -147,7 +152,7 @@ def render_one(bead: dict, number: int) -> str:
     date = str(bead.get("closed_at") or bead.get("updated_at") or "")[:10]
 
     lines = [
-        "<!-- Generated from a beads decision bead. Edit the bead, not this file:",
+        _BANNER,
         f"     bd show {bead.get('id')} -->",
         "---",
         f"number: {number}",
@@ -208,18 +213,19 @@ def render_one(bead: dict, number: int) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def generated_paths(target: Path) -> set[Path]:
-    """Find generated projections without claiming hand-authored ADRs."""
+def generated_paths(target: Path) -> dict[Path, str]:
+    """Map each generated projection to its bead id, ignoring hand-authored ADRs."""
     if not target.is_dir():
-        return set()
-    paths = set()
+        return {}
+    paths = {}
     for path in target.glob("*.md"):
         try:
-            head = path.read_text(encoding="utf-8", errors="replace")[:4096]
+            with path.open(encoding="utf-8", errors="replace") as handle:
+                head = handle.readline() + handle.readline()
         except OSError:
             continue
-        if GENERATED_MARKER in head:
-            paths.add(path)
+        if match := _GENERATED_HEADER.fullmatch(head):
+            paths[path] = match.group(1)
     return paths
 
 
@@ -265,7 +271,7 @@ def render_all(repo: Path, *, write: bool = True) -> tuple[list[Path], str | Non
         changed.append(path)
         if write:
             path.write_text(body, encoding="utf-8")
-    for path in sorted(existing - desired):
+    for path in sorted(existing.keys() - desired):
         changed.append(path)
         if write:
             path.unlink()

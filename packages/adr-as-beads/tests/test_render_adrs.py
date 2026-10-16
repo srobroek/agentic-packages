@@ -268,6 +268,41 @@ def test_renamed_decision_removes_old_projection(tmp_path, stub_export):
     assert (tmp_path / "docs/adr/0001-new-title.md").exists()
 
 
+def write_adr(tmp_path: Path, name: str, text: str) -> Path:
+    path = tmp_path / "docs/adr" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_marker_quoted_mid_body_does_not_make_a_file_generated(tmp_path, stub_export):
+    # Only the renderer's own header marks a projection. A hand-authored note
+    # that quotes the marker must survive the stale-projection cleanup.
+    text = (
+        "# Notes on the renderer\n\nIts files open with:\n\n"
+        f"    {mod.GENERATED_MARKER} Edit the bead, not this file:\n"
+        "         bd show adr-9 -->\n"
+    )
+    note = write_adr(tmp_path, "0001-renderer-notes.md", text)
+    stub_export([bead()])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert note not in changed
+    assert note.read_text(encoding="utf-8") == text
+
+
+def test_marker_quoted_mid_body_survives_when_no_decision_is_closed(tmp_path, stub_export):
+    text = f"# A note\n\nQuoting {mod.GENERATED_MARKER} here.\n"
+    note = write_adr(tmp_path, "notes.md", text)
+    stub_export([bead(status="open")])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert changed == []
+    assert note.read_text(encoding="utf-8") == text
+
+
 def test_removed_decisions_remove_all_projections(tmp_path, stub_export):
     stub_export([bead()])
     mod.render_all(tmp_path)
