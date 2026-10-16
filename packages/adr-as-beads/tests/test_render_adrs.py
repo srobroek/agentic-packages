@@ -254,18 +254,108 @@ def test_no_decisions_is_not_a_failure(tmp_path, stub_export):
     assert skipped == "no closed decision beads"
 
 
-def test_renamed_decision_removes_old_projection(tmp_path, stub_export):
+def test_retitled_decision_keeps_its_file(tmp_path, stub_export):
+    # The file name is a link target: a title edit must not break links to it.
     stub_export([bead(title="Old title")])
     mod.render_all(tmp_path)
-    old = tmp_path / "docs/adr/0001-old-title.md"
+    kept = tmp_path / "docs/adr/0001-old-title.md"
 
     stub_export([bead(title="New title")])
     changed, skipped = mod.render_all(tmp_path)
 
     assert skipped is None
-    assert old in changed
-    assert not old.exists()
-    assert (tmp_path / "docs/adr/0001-new-title.md").exists()
+    assert changed == [kept]
+    assert "# New title" in kept.read_text(encoding="utf-8")
+    assert sorted(p.name for p in (tmp_path / "docs/adr").iterdir()) == [kept.name]
+
+
+def write_adr(tmp_path: Path, name: str, text: str) -> Path:
+    path = tmp_path / "docs/adr" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_existing_projection_keeps_its_number(tmp_path, stub_export):
+    # adr-2 was rendered as 0004 while adr-1 already existed; creation order
+    # would now make adr-2 0002 and rename the file.
+    older = bead(id="adr-1", created_at="2026-01-01T00:00:00Z", title="Older")
+    newer = bead(id="adr-2", created_at="2026-02-01T00:00:00Z", title="Newer")
+    path = write_adr(tmp_path, "0004-newer.md", mod.render_one(newer, 4))
+    stub_export([older, newer])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert path.read_text(encoding="utf-8") == mod.render_one(newer, 4)
+    assert [p.name for p in changed] == ["0005-older.md"]
+
+
+def test_hand_written_adrs_are_never_renumbered_or_rewritten(tmp_path, stub_export):
+    first = write_adr(tmp_path, "0001-hand-written.md", "# ADR-0001: by hand\n")
+    second = write_adr(tmp_path, "0002-also-by-hand.md", "# ADR-0002: by hand\n")
+    stub_export([bead(id="adr-1", title="First")])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert [p.name for p in changed] == ["0003-first.md"]
+    assert first.read_text(encoding="utf-8") == "# ADR-0001: by hand\n"
+    assert second.read_text(encoding="utf-8") == "# ADR-0002: by hand\n"
+
+
+def test_new_decisions_take_the_next_free_numbers_in_creation_order(tmp_path, stub_export):
+    write_adr(tmp_path, "0001-hand-written.md", "# by hand\n")
+    kept = bead(id="adr-k", created_at="2026-03-01T00:00:00Z", title="Kept")
+    write_adr(tmp_path, "0002-kept.md", mod.render_one(kept, 2))
+    stub_export(
+        [
+            kept,
+            bead(id="adr-b", created_at="2026-02-01T00:00:00Z", title="Bee"),
+            bead(id="adr-a", created_at="2026-01-01T00:00:00Z", title="Ay"),
+        ]
+    )
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert [p.name for p in changed] == ["0003-ay.md", "0004-bee.md"]
+
+
+def test_marker_quoted_mid_body_does_not_make_a_file_generated(tmp_path, stub_export):
+    # Only the renderer's own header marks a projection. A hand-authored note
+    # that quotes the marker must survive the stale-projection cleanup.
+    text = (
+        "# Notes on the renderer\n\nIts files open with:\n\n"
+        f"    {mod.GENERATED_MARKER} Edit the bead, not this file:\n"
+        "         bd show adr-9 -->\n"
+    )
+    note = write_adr(tmp_path, "0001-renderer-notes.md", text)
+    stub_export([bead()])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert note not in changed
+    assert note.read_text(encoding="utf-8") == text
+
+
+def test_marker_quoted_mid_body_survives_when_no_decision_is_closed(tmp_path, stub_export):
+    text = f"# A note\n\nQuoting {mod.GENERATED_MARKER} here.\n"
+    note = write_adr(tmp_path, "notes.md", text)
+    stub_export([bead(status="open")])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert changed == []
+    assert note.read_text(encoding="utf-8") == text
+
+
+def test_unchanged_projection_is_left_byte_identical(tmp_path, stub_export):
+    path = write_adr(tmp_path, "0003-adopt-x-for-y.md", mod.render_one(bead(), 3))
+    before = path.read_bytes()
+    stub_export([bead()])
+
+    changed, _ = mod.render_all(tmp_path)
+
+    assert changed == []
+    assert path.read_bytes() == before
 
 
 def test_removed_decisions_remove_all_projections(tmp_path, stub_export):
@@ -298,12 +388,12 @@ def test_check_mode_does_not_write(tmp_path, stub_export):
     stub_export([bead()])
     mod.render_all(tmp_path, write=True)
     target = tmp_path / "docs/adr/0001-adopt-x-for-y.md"
-    target.write_text("hand-edited drift\n", encoding="utf-8")
+    target.write_text(target.read_text(encoding="utf-8") + "hand edit\n", encoding="utf-8")
 
     stale, _ = mod.render_all(tmp_path, write=False)
 
     assert stale == [target]
-    assert target.read_text(encoding="utf-8") == "hand-edited drift\n"
+    assert target.read_text(encoding="utf-8").endswith("hand edit\n")
 
 
 def test_check_mode_creates_no_directory(tmp_path, stub_export):
