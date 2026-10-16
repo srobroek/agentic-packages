@@ -140,9 +140,8 @@ def main() -> None:
             existing = Path(path)
             if not existing.is_file():
                 # A NEW file under docs/adr/ is not judged here. The renderer
-                # owns the numbering, so a hand-created file collides on the
-                # next run rather than being silently lost, and the pre-commit
-                # gate reports it.
+                # numbers new decisions after the highest existing number, so a
+                # hand-created file keeps its number and is never overwritten.
                 continue
             # Read only the head: the marker is on line one, and an ADR can be
             # long.

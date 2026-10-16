@@ -36,6 +36,7 @@ _BANNER = f"{GENERATED_MARKER} Edit the bead, not this file:"
 # writes. The marker elsewhere -- quoted in a hand-authored note, say -- does not
 # make a file generated, because generated files are deleted when stale.
 _GENERATED_HEADER = re.compile(re.escape(_BANNER) + r"\n     bd show (\S+) -->\n")
+_NUMBERED = re.compile(r"^(\d+)-")
 
 # Bare `bd` inherits the caller's pager and interactive prompts. A git hook has
 # no tty, so an unset pager can hang the commit rather than fail it.
@@ -213,6 +214,12 @@ def render_one(bead: dict, number: int) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def adr_number(path: Path) -> int | None:
+    """The `NNNN` a file name starts with, or None for an unnumbered file."""
+    match = _NUMBERED.match(path.name)
+    return int(match.group(1)) if match else None
+
+
 def generated_paths(target: Path) -> dict[Path, str]:
     """Map each generated projection to its bead id, ignoring hand-authored ADRs."""
     if not target.is_dir():
@@ -227,6 +234,36 @@ def generated_paths(target: Path) -> dict[Path, str]:
         if match := _GENERATED_HEADER.fullmatch(head):
             paths[path] = match.group(1)
     return paths
+
+
+def numbered_paths(
+    target: Path, closed: list[dict], generated: dict[Path, str]
+) -> list[tuple[int, Path, dict]]:
+    """Give each closed decision its number and file.
+
+    A decision keeps the number and file name it was first rendered with, so a
+    new decision, a retitle, or an ADR written by hand never renumbers or renames
+    an existing file. A decision with no projection yet takes the next number
+    after the highest one in the directory, in creation order; ties break on id
+    so the numbering is stable across runs. Creation order rather than bead id:
+    `adr-11` must not become 0011 with ten gaps.
+    """
+    rendered: dict[str, tuple[int, Path]] = {}
+    for path, bead_id in sorted(generated.items()):
+        if (number := adr_number(path)) is not None:
+            rendered.setdefault(bead_id, (number, path))
+    numbers = (adr_number(path) for path in target.glob("*.md"))
+    next_number = max((n for n in numbers if n is not None), default=0) + 1
+
+    out = []
+    for bead in sorted(closed, key=lambda b: (b.get("created_at") or "", b.get("id") or "")):
+        if bead.get("id") in rendered:
+            number, path = rendered[bead.get("id")]
+        else:
+            number, next_number = next_number, next_number + 1
+            path = target / f"{number:04d}-{slugify(bead.get('title') or '')}.md"
+        out.append((number, path, bead))
+    return out
 
 
 def render_all(repo: Path, *, write: bool = True) -> tuple[list[Path], str | None]:
@@ -252,18 +289,13 @@ def render_all(repo: Path, *, write: bool = True) -> tuple[list[Path], str | Non
                 path.unlink()
         return sorted(existing), None
 
-    # Number by creation order, not bead id: `adr-11` must not become 0011 with
-    # ten gaps. Ties break on id so the numbering is stable across runs.
-    closed.sort(key=lambda b: ((b.get("created_at") or ""), b.get("id") or ""))
-
     if write:
         target.mkdir(parents=True, exist_ok=True)
 
     changed = []
     desired = set()
-    for index, bead in enumerate(closed, start=1):
-        body = render_one(bead, index)
-        path = target / f"{index:04d}-{slugify(bead.get('title') or '')}.md"
+    for number, path, bead in numbered_paths(target, closed, existing):
+        body = render_one(bead, number)
         desired.add(path)
         # Compare before writing, so an unrelated commit does not restage every ADR.
         if path.is_file() and path.read_text(encoding="utf-8") == body:

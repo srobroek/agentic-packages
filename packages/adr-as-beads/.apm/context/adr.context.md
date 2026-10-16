@@ -75,7 +75,7 @@ THE GENERATED FILE
 |---|---|
 | Format | MADR 4.0.0 |
 | Path | `docs/adr/NNNN-kebab-title.md` |
-| Numbering | creation order among closed decisions, not the bead id |
+| Numbering | a rendered file keeps its number and name; a new decision takes the next number after the highest in `docs/adr/`, in creation order |
 | Written by | the `render-adrs` pre-commit hook, from `bd export` |
 
 NOT Edit a file under `docs/adr/`. It is regenerated from its bead on the next

@@ -105,7 +105,7 @@ re-superseding it per release destroys that.
 |---|---|
 | Format | MADR 4.0.0 |
 | Path | `docs/adr/NNNN-kebab-title.md` |
-| Numbering | creation order among closed decisions, not the bead id |
+| Numbering | a rendered file keeps its number and name; a new decision takes the next number after the highest in `docs/adr/`, in creation order |
 | Source | `bd export`, filtered to `issue_type == "decision"` |
 | Rendered | closed decisions only |
 
@@ -116,7 +116,10 @@ A `PreToolUse` guard enforces that rather than trusting a banner: it denies a
 `Write`, `Edit`, or Codex `apply_patch` to a generated ADR and names the bead plus
 the command to use.
 Only files carrying the generated marker are denied, so a hand-authored ADR in a
-repository that does not run the renderer stays editable.
+repository that does not run the renderer stays editable. The renderer is
+stricter: it treats a file as generated only when it opens with its own header,
+never renames or rewrites any other file, and numbers new decisions after the
+highest existing number.
 
 ## Installing the hook
 
