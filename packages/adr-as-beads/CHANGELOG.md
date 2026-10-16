@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/srobroek/agentic-packages/compare/adr-as-beads--v1.1.0...adr-as-beads--v1.1.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **adr-as-beads:** keep ADR numbers stable and detect generated files by header ([#941](https://github.com/srobroek/agentic-packages/issues/941)) ([93610c1](https://github.com/srobroek/agentic-packages/commit/93610c1e09b12682949d3a2b1f77690705338cca))
+
 ## [1.1.0](https://github.com/srobroek/agentic-packages/compare/adr-as-beads--v1.0.1...adr-as-beads--v1.1.0) (2026-08-17)
 
 
