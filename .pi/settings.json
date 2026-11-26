@@ -1,0 +1,7 @@
+{
+  "packages": [
+    "npm:@srobroek/pi-lang-python",
+    "npm:@srobroek/pi-speckit-beads"
+  ]
+}
+
