@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: Mint release-app token
         id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc  # v3.4.0
         with:
           client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
@@ -69,9 +69,9 @@ jobs:
       # persisted by checkout above, so it re-triggers the PR checks.
       - name: Set up Python
         if: ${{ steps.release.outputs.pr }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
-          python-version: "3.14"
+          python-version: "3.15"
           # No pip cache here: this job runs on the release path after
           # release-please-action publishes artifacts, so caching would be
           # flagged as cache-poisoning (zizmor: cache-poisoning) by the
@@ -79,7 +79,7 @@ jobs:
 
       - name: Set up uv
         if: ${{ steps.release.outputs.pr }}
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           enable-cache: false
 
